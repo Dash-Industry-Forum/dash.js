@@ -32,6 +32,10 @@ import FactoryMaker from './FactoryMaker';
 import Utils from './Utils.js';
 import Debug from '../core/Debug';
 import Constants from '../streaming/constants/Constants';
+import {
+    HTTPRequest
+}
+from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @class
@@ -328,6 +332,38 @@ function Settings() {
              * @memberof module:Settings.Schema
              */
             cacheLoadThresholds: {video: 50, audio: 5},
+            /**
+             * Time in milliseconds of which to reload a failed file load attempt.
+             *
+             * @param {int} value
+             * @default 500 milliseconds for manifest, 500 for xlink and 1000 for other file types
+             * @memberof Settings.Schema
+             */
+            retryIntervals: {
+                [HTTPRequest.MPD_TYPE]:                         500,
+                [HTTPRequest.XLINK_EXPANSION_TYPE]:             500,
+                [HTTPRequest.MEDIA_SEGMENT_TYPE]:               1000,
+                [HTTPRequest.INIT_SEGMENT_TYPE]:                1000,
+                [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
+                [HTTPRequest.INDEX_SEGMENT_TYPE]:               1000,
+                [HTTPRequest.OTHER_TYPE]:                       1000
+            },
+            /**
+             * Total number of retry attempts that will occur on a file load before it fails.
+             *
+             * @param {int} value
+             * @default 1 for xlink and 3 for other file types
+             * @memberof Settings.Schema
+             */
+            retryAttempts: {
+                [HTTPRequest.MPD_TYPE]:                         3,
+                [HTTPRequest.XLINK_EXPANSION_TYPE]:             1,
+                [HTTPRequest.MEDIA_SEGMENT_TYPE]:               3,
+                [HTTPRequest.INIT_SEGMENT_TYPE]:                3,
+                [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
+                [HTTPRequest.INDEX_SEGMENT_TYPE]:               3,
+                [HTTPRequest.OTHER_TYPE]:                       3
+            },
             abr: {
                 /**
                  * Sets the moving average method used for smoothing throughput estimates. Valid methods are

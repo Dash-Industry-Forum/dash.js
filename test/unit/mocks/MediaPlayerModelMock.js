@@ -185,7 +185,7 @@ class MediaPlayerModelMock {
         this.retryIntervals[type] = value;
     }
 
-    getRetryIntervalForType(type) {
+    getRetryIntervalsForType(type) {
         return this.retryIntervals[type];
     }
 

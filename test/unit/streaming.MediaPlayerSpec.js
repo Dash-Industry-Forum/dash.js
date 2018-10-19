@@ -11,6 +11,7 @@ import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
 import Settings from '../../src/core/Settings';
+import { HTTPRequest } from '../../src/streaming/vo/metrics/HTTPRequest';
 
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
@@ -528,6 +529,26 @@ describe('MediaPlayer', function () {
                 expect(player.setCacheLoadThresholdForType.bind(player, true, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
                 expect(player.setCacheLoadThresholdForType.bind(player, 1, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
                 expect(player.setCacheLoadThresholdForType.bind(player, 'text', 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setManifestLoaderRetryInterval should throw an exception', function () {
+                expect(player.setManifestLoaderRetryInterval.bind(player, HTTPRequest.MPD_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setManifestLoaderRetryInterval.bind(player, HTTPRequest.MPD_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setFragmentLoaderRetryInterval should throw an exception', function () {
+                expect(player.setFragmentLoaderRetryInterval.bind(player, HTTPRequest.MEDIA_SEGMENT_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setFragmentLoaderRetryInterval.bind(player, HTTPRequest.MEDIA_SEGMENT_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setManifestLoaderRetryAttempts should throw an exception', function () {
+                expect(player.setManifestLoaderRetryAttempts.bind(player, HTTPRequest.MPD_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setManifestLoaderRetryAttempts.bind(player, HTTPRequest.MPD_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+            });
+
+            it('Method setFragmentLoaderRetryAttempts should throw an exception', function () {
+                expect(player.setFragmentLoaderRetryAttempts.bind(player, HTTPRequest.MEDIA_SEGMENT_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
+                expect(player.setFragmentLoaderRetryAttempts.bind(player, HTTPRequest.MEDIA_SEGMENT_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
             it('Method isDynamic should get dynamic value', function () {
@@ -1092,46 +1113,6 @@ describe('MediaPlayer', function () {
 
             AbandonLoadTimeout = settings.get().streaming.abandonLoadTimeout;
             expect(AbandonLoadTimeout).to.equal(50);
-        });
-
-        it('should configure FragmentLoaderRetryAttempts', function () {
-            let FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MediaSegment');
-            expect(FragmentLoaderRetryAttempts).to.equal(3);
-
-            player.setFragmentLoaderRetryAttempts(50);
-
-            FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MediaSegment');
-            expect(FragmentLoaderRetryAttempts).to.equal(50);
-        });
-
-        it('should configure FragmentLoaderRetryInterval', function () {
-            let FragmentLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MediaSegment');
-            expect(FragmentLoaderRetryInterval).to.equal(1000);
-
-            player.setFragmentLoaderRetryInterval(50);
-
-            FragmentLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MediaSegment');
-            expect(FragmentLoaderRetryInterval).to.equal(50);
-        });
-
-        it('should configure ManifestLoaderRetryAttempts', function () {
-            let ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MPD');
-            expect(ManifestLoaderRetryAttempts).to.equal(3);
-
-            player.setManifestLoaderRetryAttempts(50);
-
-            ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MPD');
-            expect(ManifestLoaderRetryAttempts).to.equal(50);
-        });
-
-        it('should configure ManifestLoaderRetryInterval', function () {
-            let ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
-            expect(ManifestLoaderRetryInterval).to.equal(500);
-
-            player.setManifestLoaderRetryInterval(50);
-
-            ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
-            expect(ManifestLoaderRetryInterval).to.equal(50);
         });
 
         it('should configure XHRWithCredentials', function () {

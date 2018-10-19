@@ -30,10 +30,6 @@
  */
 import UTCTiming from '../../dash/vo/UTCTiming';
 import FactoryMaker from '../../core/FactoryMaker';
-import {
-    HTTPRequest
-}
-from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Settings from '../../core/Settings';
@@ -41,15 +37,6 @@ import { checkParameterType} from '../utils/SupervisorTools';
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-
-const FRAGMENT_RETRY_ATTEMPTS = 3;
-const FRAGMENT_RETRY_INTERVAL = 1000;
-
-const MANIFEST_RETRY_ATTEMPTS = 3;
-const MANIFEST_RETRY_INTERVAL = 500;
-
-const XLINK_RETRY_ATTEMPTS = 1;
-const XLINK_RETRY_INTERVAL = 500;
 
 const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
@@ -61,8 +48,6 @@ function MediaPlayerModel() {
 
     let instance,
         UTCTimingSources,
-        retryAttempts,
-        retryIntervals,
         xhrWithCredentials,
         customABRRule;
 
@@ -79,26 +64,6 @@ function MediaPlayerModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         customABRRule = [];
-
-        retryAttempts = {
-            [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]:             XLINK_RETRY_ATTEMPTS,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               FRAGMENT_RETRY_ATTEMPTS,
-            [HTTPRequest.INIT_SEGMENT_TYPE]:                FRAGMENT_RETRY_ATTEMPTS,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_ATTEMPTS,
-            [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_ATTEMPTS
-        };
-
-        retryIntervals = {
-            [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_INTERVAL,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]:             XLINK_RETRY_INTERVAL,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
-            [HTTPRequest.INIT_SEGMENT_TYPE]:                FRAGMENT_RETRY_INTERVAL,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]:               FRAGMENT_RETRY_INTERVAL,
-            [HTTPRequest.OTHER_TYPE]:                       FRAGMENT_RETRY_INTERVAL
-        };
     }
 
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
@@ -157,24 +122,12 @@ function MediaPlayerModel() {
         return !isNaN(settings.get().streaming.stableBufferTime) ? settings.get().streaming.stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
-    function setRetryAttemptsForType(type, value) {
-        if (typeof value !== 'number' || typeof type !== 'string' || (type !== HTTPRequest.MPD_TYPE && type !== HTTPRequest.MEDIA_SEGMENT_TYPE)) {
-            throw Constants.BAD_ARGUMENT_ERROR;
-        }
-        retryAttempts[type] = value;
-    }
-
     function getRetryAttemptsForType(type) {
-        return getLowLatencyEnabled() ? retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : retryAttempts[type];
+        return getLowLatencyEnabled() ? settings.get().streaming.retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : settings.get().streaming.retryAttempts[type];
     }
 
-    function setRetryIntervalForType(type, value) {
-        checkParameterType(value, 'number');
-        retryIntervals[type] = value;
-    }
-
-    function getRetryIntervalForType(type) {
-        return getLowLatencyEnabled() ? retryIntervals[type] / LOW_LATENCY_REDUCTION_FACTOR : retryIntervals[type];
+    function getRetryIntervalsForType(type) {
+        return getLowLatencyEnabled() ? settings.get().streaming.retryIntervals[type] / LOW_LATENCY_REDUCTION_FACTOR : settings.get().streaming.retryIntervals[type];
     }
 
     function getLiveDelay() {
@@ -248,10 +201,8 @@ function MediaPlayerModel() {
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
         getStableBufferTime: getStableBufferTime,
-        setRetryAttemptsForType: setRetryAttemptsForType,
         getRetryAttemptsForType: getRetryAttemptsForType,
-        setRetryIntervalForType: setRetryIntervalForType,
-        getRetryIntervalForType: getRetryIntervalForType,
+        getRetryIntervalsForType: getRetryIntervalsForType,
         getLiveDelay: getLiveDelay,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,

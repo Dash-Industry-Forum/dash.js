@@ -1952,7 +1952,10 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
-        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryAttempts: {}}};
+        s.streaming.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1965,7 +1968,10 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
-        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryIntervals: {}}};
+        s.streaming.retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1977,7 +1983,10 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
-        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryAttempts: {}}};
+        s.streaming.retryAttempts[HTTPRequest.MPD_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1989,7 +1998,10 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
-        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryIntervals: {}}};
+        s.streaming.retryIntervals[HTTPRequest.MPD_TYPE] = value;
+        settings.update(s);
     }
 
     /**
