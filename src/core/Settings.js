@@ -43,13 +43,43 @@ from '../streaming/vo/metrics/HTTPRequest';
  */
 function Settings() {
     let instance;
-    let logger = Debug(this.context).getInstance().getLogger(instance);
 
     /**
      * @namespace Schema
      * @memberof module:Settings
      */
     const defaultSettings = {
+        debug: {
+            /**
+             * Sets up the log level. The levels are cumulative. For example, if you set the log level
+             * to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be logged. Possible values
+             *
+             * <ul>
+             * <li>dashjs.Debug.LOG_LEVEL_NONE<br/>
+             * No message is written in the browser console.
+             *
+             * <li>dashjs.Debug.LOG_LEVEL_FATAL<br/>
+             * Log fatal errors. An error is considered fatal when it causes playback to fail completely.
+             *
+             * <li>dashjs.Debug.LOG_LEVEL_ERROR<br/>
+             * Log error messages.
+             *
+             * <li>dashjs.Debug.LOG_LEVEL_WARNING<br/>
+             * Log warning messages.
+             *
+             * <li>dashjs.Debug.LOG_LEVEL_INFO<br/>
+             * Log info messages.
+             *
+             * <li>dashjs.Debug.LOG_LEVEL_DEBUG<br/>
+             * Log debug messages.
+             * </ul>
+             * @param {number} value Log level
+             * @default LOG_LEVEL_WARNING
+             * @memberof module:Settings.Schema
+             * @instance
+             */
+            logLevel: Debug.LOG_LEVEL_WARNING
+        },
         streaming: {
             /**
              * A timeout value in seconds, which during the ABRController will block switch-up events.
@@ -518,10 +548,6 @@ function Settings() {
                     } else {
                         dest[n] = Utils.clone(source[n]);
                     }
-                } else {
-                    logger.warn('Warning: the settings option \'' + path + n + '\' wasn\'t found and will be ignored.');
-                    //If you're getting this warning, then the passed in partial object doesn't match whats expected.
-                    //Check it against the defaultSettings object.
                 }
             }
         }

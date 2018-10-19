@@ -29,10 +29,10 @@ const streamInfo = {
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
-const settings = Settings(context).getInstance();
 
 describe('BufferController', function () {
     // disable log
+    let settings = Settings(context).getInstance();
     const debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
     const streamProcessor = new StreamProcessorMock(testType, streamInfo);

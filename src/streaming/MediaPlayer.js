@@ -106,6 +106,7 @@ function MediaPlayer() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    let settings = Settings(context).getInstance();
     const debug = Debug(context).getInstance();
 
     let instance,
@@ -133,8 +134,7 @@ function MediaPlayer() {
         videoModel,
         textController,
         uriFragmentModel,
-        domStorage,
-        settings;
+        domStorage;
 
     /*
     ---------------------------------------------------------------------------
@@ -156,7 +156,6 @@ function MediaPlayer() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
-        settings = Settings(context).getInstance();
     }
 
     /**
@@ -3022,7 +3021,8 @@ function MediaPlayer() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
-            mssHandler: mssHandler
+            mssHandler: mssHandler,
+            settings: settings
         });
     }
 
