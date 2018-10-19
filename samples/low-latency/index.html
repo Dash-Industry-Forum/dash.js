@@ -10,16 +10,24 @@
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script class="code">
+        var player, minDrift, maxDrift, targetLatency;
+
         function init() {
             var video,
-                player,
                 url = "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd";
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
             player.setLowLatencyEnabled(true);
+            applyParameters();
 
+            return player;
+        }
+
+        function applyParameters() {
+            targetLatency = parseFloat(document.getElementById("target-latency").value, 10);
+            player.setLiveDelay(targetLatency);
         }
     </script>
 
@@ -28,16 +36,63 @@
             width: 640px;
             height: 360px;
         }
+
+        .d-flex {
+            display: flex;
+            flex-flow: row wrap;
+            margin-top: 1em;
+        }
+
+        .d-flex > div:nth-child(2) {
+            margin-left: 25px;
+        }
+
+        ul {
+            margin: 0;
+        }
+
+        input {
+            width: 2em;
+            border: 1px solid gray;
+            padding: 0 4px 0 8px;
+        }
     </style>
 </head>
 <body>
 <div>
     <video controls="true">
     </video>
+    
+    <div class="d-flex">
+        <div>
+            <p>Target Latency (secs): <input id="target-latency" value="3"></p>
+            <button onclick="applyParameters()">Apply</button>
+        </div>
+        <div>
+            <ul>
+                <li>Current latency: <span id="latency-tag"></span></li>
+                <li>Buffer: <span id="buffer-tag"></span></li>
+                <li>Playback rate: <span id="playbackrate-tag"></span></li>
+            </ul>
+        </div>
+    </div>
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        init();
+        var player = init();
+
+        setInterval(function() {
+            var metrics = player.getMetricsFor("video");
+            var dashMetrics = player.getDashMetrics();
+
+            var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
+            var currentBuffer = dashMetrics.getCurrentBufferLevel(metrics);
+            var currentPlaybackRate = player.getPlaybackRate();
+
+            document.getElementById("latency-tag").innerHTML = currentLatency + " secs";
+            document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
+            document.getElementById("playbackrate-tag").innerHTML = currentPlaybackRate;
+        }, 200);
     });
 </script>
 <script src="../highlighter.js"></script>
