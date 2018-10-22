@@ -699,7 +699,7 @@ describe('MediaPlayer', function () {
         });
         it('should configure MaxAllowedBitrateFor', function () {
             let MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
-            expect(isNaN(MaxAllowedBitrateFor)).to.be.true; // jshint ignore:line
+            expect(MaxAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
 
             player.setMaxAllowedBitrateFor('audio', 5);
 
@@ -709,7 +709,7 @@ describe('MediaPlayer', function () {
 
         it('should configure MinAllowedBitrateFor', function () {
             let MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
-            expect(isNaN(MinAllowedBitrateFor)).to.be.true; // jshint ignore:line
+            expect(MinAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
 
             player.setMinAllowedBitrateFor('audio', 5);
 
@@ -769,7 +769,7 @@ describe('MediaPlayer', function () {
 
         it('should configure initialRepresentationRatioFor', function () {
             let initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.be.null; // jshint ignore:line
+            expect(initialRepresentationRatioFor).to.equal(-1); // jshint ignore:line
 
             player.setInitialRepresentationRatioFor('video', 10);
 
@@ -882,7 +882,7 @@ describe('MediaPlayer', function () {
 
         it('should configure LiveDelay', function () {
             let livedelay = player.getLiveDelay();
-            expect(livedelay).to.be.undefined; // jshint ignore:line
+            expect(livedelay).to.be.null; // jshint ignore:line
         });
 
         it('should configure useSuggestedPresentationDelay', function () {

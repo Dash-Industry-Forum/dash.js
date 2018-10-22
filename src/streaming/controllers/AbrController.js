@@ -243,9 +243,9 @@ function AbrController() {
         let configBitrate = settings.get().streaming.abr.initialBitrate[type];
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
-        if (isNaN(configBitrate)) {
+        if (configBitrate === -1) {
             const s = { streaming: { abr: { initialBitrate: {}}}};
-            if (configRatio) {
+            if (configRatio > -1) {
                 const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
@@ -275,7 +275,7 @@ function AbrController() {
 
     function getMaxAllowedIndexFor(type) {
         const maxBitrate = getMaxAllowedBitrateFor(type);
-        if (maxBitrate) {
+        if (maxBitrate > -1) {
             return getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
         } else {
             return undefined;
@@ -285,7 +285,7 @@ function AbrController() {
     function getMinAllowedIndexFor(type) {
         const minBitrate = getMinAllowedBitrateFor(type);
 
-        if (minBitrate) {
+        if (minBitrate > -1) {
             const mediaInfo = streamProcessorDict[type].getMediaInfo();
             const bitrateList = getBitrateList(mediaInfo);
             // This returns the quality index <= for the given bitrate

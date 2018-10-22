@@ -847,7 +847,7 @@ function MediaPlayer() {
      * that lowest bitrate.
      *
      * You can set or remove this bitrate cap at anytime before or during playback.  To clear this setting you must use the API
-     * and set the value param to NaN.
+     * and set the value param to -1.
      *
      * This feature is typically used to reserve higher bitrates for playback only when the player is in large or full-screen format.
      *
@@ -871,7 +871,7 @@ function MediaPlayer() {
      * that lowest bitrate.
      *
      * You can set or remove this bitrate limit at anytime before or during playback. To clear this setting you must use the API
-     * and set the value param to NaN.
+     * and set the value param to -1.
      *
      * This feature is used to force higher quality playback.
      *
@@ -931,7 +931,7 @@ function MediaPlayer() {
      * as a proportion of the size of the representation set.
      *
      * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
-     * and set the value param to NaN.
+     * and set the value param to -1.
      *
      * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
      * i.e. the lowest value from executing these rules is used.
@@ -1246,14 +1246,14 @@ function MediaPlayer() {
      * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
      *
      * @param {number} value - Represents how many seconds to delay the live stream.
-     * @default undefined
+     * @default null
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value, if defined, is not number type.
      * @instance
      */
     function setLiveDelay(value) {
-        if (value !== undefined) { // undefined is the default value...
+        if (value !== null) { // null is the default value...
             checkParameterType(value, 'number');
         }
         const s = { streaming: { liveDelay: value }};

@@ -228,6 +228,24 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     // store a ref in window.player to provide an easy way to play with dash.js API
     window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
+    ////////////////////////////////////////
+    //
+    // Configuration file
+    //
+    ////////////////////////////////////////
+    let reqConfig = new XMLHttpRequest();
+    reqConfig.onload = function() {
+        if (reqConfig.status === 200) {
+            let config = JSON.parse(reqConfig.responseText);
+            if ($scope.player) {
+                $scope.player.updateSettings(config);
+            }
+        }
+    };
+    reqConfig.open("GET", "dashjs_config.json", true);
+    reqConfig.setRequestHeader("Content-type", "application/json");
+    reqConfig.send();
+
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         //use the new error callback
         if (!e.event) {

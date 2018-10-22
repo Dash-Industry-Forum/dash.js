@@ -107,7 +107,7 @@ function Settings() {
              * @default undefined
              * @memberof module:Settings.Schema
              */
-            liveDelay: undefined,
+            liveDelay: null,
             /**
              * Set to true if you would like dash.js to keep downloading fragments in the background
              * when the video element is paused.
@@ -187,10 +187,10 @@ function Settings() {
              * to see automatic bitrate switches but will have a larger buffer which
              * will increase stability.
              * @alias streaming.stableBufferTime
-             * @default NaN
+             * @default -1
              * @memberof module:Settings.Schema
              */
-            stableBufferTime: NaN,
+            stableBufferTime: -1,
             /**
              * The time that the internal buffer target will be set to once playing the top quality.
              * If there are multiple bitrates in your adaptation, and the media is playing at the highest
@@ -473,19 +473,19 @@ function Settings() {
                  * @property audio {number} Max bitrate for audio
                  * @property video {number} Max Bitrate for video
                  * @alias streaming.abr.maxBitrate
-                 * @default NaN
+                 * @default -1
                  * @memberof module:Settings.Schema
                  */
-                maxBitrate: { audio: NaN, video: NaN },
+                maxBitrate: { audio: -1, video: -1 },
                 /**
                  * The minimum bitrate that the ABR algorithms will choose. Use NaN for no limit.
                  * @property audio {number} Bitrate for audio
                  * @property video {number} Bitrate for video
                  * @alias streaming.abr.minBitrate
-                 * @default NaN
+                 * @default -1
                  * @memberof module:Settings.Schema
                  */
-                minBitrate: { audio: NaN, video: NaN },
+                minBitrate: { audio: -1, video: -1 },
                 /**
                  * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
                  * as a proportion of the size of the representation set.
@@ -508,20 +508,20 @@ function Settings() {
                  * @property audio {number} Bitrate for audio
                  * @property video {number} Bitrate for video
                  * @alias streaming.abr.initialBitrate
-                 * @default NaN
+                 * @default -1
                  * @memberof module:Settings.Schema
                  */
-                initialBitrate: { audio: NaN, video: NaN },
+                initialBitrate: { audio: -1, video: -1 },
                 /**
                  * Explicitly set the initial representation ratio. If initalBitrate is specified, this is ignored.
                  * @see{streaming.abr.maxRepresentationRatio}
                  * @property audio {number} Bitrate for audio
                  * @property video {number} Bitrate for video
                  * @alias streaming.abr.initialRepresentationRatio
-                 * @default NaN
+                 * @default -1
                  * @memberof module:Settings.Schema
                  */
-                initialRepresentationRatio: { audio: null, video: null },
+                initialRepresentationRatio: { audio: -1, video: -1 },
                 /**
                  * Indicates whether the player should enable ABR algorithms to switch the bitrate.
                  * @property audio {number} Flag for audio

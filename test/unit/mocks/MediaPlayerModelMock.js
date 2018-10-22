@@ -108,8 +108,8 @@ class MediaPlayerModelMock {
     setup() {
         this.UTCTimingSources = [];
         this.fastSwitchEnabled = false;
-        this.liveDelay = undefined; // Explicitly state that default is undefined
-        this.stableBufferTime = NaN;
+        this.liveDelay = null; // Explicitly state that default is null
+        this.stableBufferTime = -1;
         this.xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
@@ -170,7 +170,7 @@ class MediaPlayerModelMock {
     }
 
     getStableBufferTime() {
-        return !isNaN(this.stableBufferTime) ? this.stableBufferTime : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return this.stableBufferTime > -1 ? this.stableBufferTime : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     setRetryAttemptsForType(type, value) {
