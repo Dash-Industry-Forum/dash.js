@@ -207,6 +207,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
     $scope.videoAutoSwitchSelected = true;
+    $scope.videoQualities = [];
     $scope.ABRStrategy = 'abrDynamic';
 
     // Persistent license
@@ -340,6 +341,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
 
+        $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics('video');
@@ -434,6 +436,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.toggleOptionsGutter = function (bool) {
         $scope.optionsGutter = bool;
     };
+
+    $scope.selectVideoQuality = function (quality) {
+        $scope.player.setQualityFor('video', quality);
+    }
 
     $scope.doLoad = function () {
         $scope.initSession();
