@@ -168,6 +168,11 @@
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
                     </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables auto switch video quality using selected ABR strategy">
+                        <input type="checkbox" id="videoAutoSwitchCB" ng-model="videoAutoSwitchSelected" ng-change="toggleVideoAutoSwitch()" ng-checked="videoAutoSwitchSelected">
+                        Video Auto Switch
+                    </label>                    
                     <label data-toggle="tooltip" data-placement="right"
                            title="Dynamically switch between BOLA and Throughput strategies.">
                         <input  type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-click="changeABRStrategy('abrDynamic')" >
