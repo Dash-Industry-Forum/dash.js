@@ -486,6 +486,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.setBufferTimeAtTopQuality(bufferConfig.bufferTimeAtTopQuality);
         $scope.player.setBufferTimeAtTopQualityLongForm(bufferConfig.bufferTimeAtTopQualityLongForm);
         $scope.player.setLowLatencyEnabled($scope.lowLatencyModeSelected || bufferConfig.lowLatencyMode);
+        const initBitrate = parseInt($scope.initialVideoBitrate);
+        if (!isNaN(initBitrate)) {
+            $scope.player.setInitialBitrateFor('video', initBitrate);
+        }
 
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);
