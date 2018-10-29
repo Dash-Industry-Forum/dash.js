@@ -38,14 +38,21 @@
                 "width": "30rem"
             },
             {
+                "title": "Using the Control Bar",
+                "description": "This example shows how to add and configure the Akamai control bar with dash.js player.",
+                "href": "control/controlbar.html",
+                "width": "25rem"
+            },
+            {
                 "title": "Listening to events",
-                "description": "Example showing how to listen to dash.js events",
+                "description": "Example showing how to listen to events raised by dash.js.",
                 "href": "getting-started/listening-to-events.html"
             },
             {
-                "title": "Listening to SCTE-EMSG Events",
-                "description": "Example showing how to listen to SCTE EMSG events raised by dash.js",
-                "href": "getting-started/listening-to-SCTE-EMSG-events.html"
+                "title": "Log levels",
+                "description": "This examples shows how to configure dash.js logging levels.",
+                "href": "control/logging.html",
+                "width": "30rem"
             }
         ]
     },
@@ -175,22 +182,26 @@
         ]
     },
     {
-        "section": "Player Control",
-        "samples": [
-            {
-                "title": "Using the Control Bar",
-                "description": "This example shows how to add and configure the Akamai control bar with dash.js player.",
-                "href": "control/controlbar.html"
-            },
-            {
-                "title": "Logging to console",
-                "description": "This examples shows how to enable internal logging to get traces from dash.js.",
-                "href": "control/logging.html"
-            },
-            {
+        "section": "Advanced",
+        "samples": [{
                 "title": "Monitoring the stream",
-                "description": "This example shows how to add monitoring to the stream, fetch values from the Player, etc.",
-                "href": "monitoring/index.html"
+                "description": "This example shows how to monitor metrics of the streams played by dash.js.",
+                "href": "advanced/monitoring.html"
+            },
+            {
+                "title": "Listening to SCTE-EMSG Events",
+                "description": "Example showing how to listen to SCTE EMSG events raised by dash.js.",
+                "href": "advanced/listening-to-SCTE-EMSG-events.html"
+            },
+            {
+                "title": "Custom ABR Rules",
+                "description": "Example showing how to create and define custom ABR rules in dash.js.",
+                "href": "advanced/abr/index.html"
+            },
+            {
+                "title": "Extending Dash.js",
+                "description": "This sample shows how to use dash.js extend mechanism to add custom HTTP headers and modify URL's of the requests done by the player.",
+                "href": "advanced/extend.html"
             }
         ]
     }

@@ -47,13 +47,12 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     let instance,
         logger,
         buffer,
-        isAppendingInProgress;
+        isAppendingInProgress,
+        intervalId;
 
     let callbacks = [];
-
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let intervalId;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -301,7 +300,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         executeCallback();
     }
 
-
     function updateEndHandler() {
         if (buffer.updating) return;
 
@@ -311,7 +309,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function errHandler() {
         logger.error('SourceBufferSink error', mediaInfo.type);
     }
-
 
     function waitForUpdateEnd(buffer, callback) {
         callbacks.push(callback);
@@ -332,6 +329,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     };
 
     setup();
+
     return instance;
 }
 

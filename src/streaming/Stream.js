@@ -262,7 +262,7 @@ function Stream(config) {
 
     function checkConfig() {
         if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
@@ -447,7 +447,8 @@ function Stream(config) {
                 dashManifestModel: dashManifestModel,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
-                stream: instance
+                stream: instance,
+                timelineConverter: config.timelineConverter
             });
             return;
         }
@@ -750,6 +751,13 @@ function Stream(config) {
             // If there is no adaptation for neither the old or the new stream they're compatible
             return !newAdaptation && !currentAdaptation;
         }
+
+        // If any of the periods requires EME, we can't do smooth transition
+        if ((newAdaptation.ContentProtection && !currentAdaptation.ContentProtection) ||
+            (!newAdaptation.ContentProtection && currentAdaptation.ContentProtection)) {
+            return false;
+        }
+
 
         const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {

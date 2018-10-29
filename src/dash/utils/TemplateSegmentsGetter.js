@@ -68,7 +68,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
         endIdx = segmentRange.end;
 
         for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
-
             seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, periodSegIdx);
             seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
             url = template.media;

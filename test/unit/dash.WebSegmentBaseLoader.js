@@ -1,4 +1,5 @@
 import WebmSegmentBaseLoader from '../../src/dash/WebmSegmentBaseLoader';
+import Constants from '../../src/streaming/constants/Constants';
 
 const expect = require('chai').expect;
 
@@ -15,6 +16,6 @@ describe('WebmSegmentBaseLoader', function () {
     });
 
     it('should throw an exception when attempting to call setConfig with an empty config parameter or malformed', function () {
-        expect(webmSegmentBaseLoader.setConfig.bind(webmSegmentBaseLoader, {})).to.throw('Missing config parameter(s)');
+        expect(webmSegmentBaseLoader.setConfig.bind(webmSegmentBaseLoader, {})).to.throw(Constants.MISSING_CONFIG_ERROR);
     });
 });

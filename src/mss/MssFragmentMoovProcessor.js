@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+ import MssErrors from './errors/MssErrors';
+
 /**
  * @module MssFragmentMoovProcessor
  * @param {Object} config object
@@ -304,8 +306,8 @@ function MssFragmentMoovProcessor(config) {
                 return createMP4AudioSampleEntry(stsd, codec);
             default:
                 throw {
-                    name: 'Unsupported codec',
-                    message: 'Unsupported codec',
+                    code: MssErrors.MSS_UNSUPPORTED_CODEC_CODE,
+                    message: MssErrors.MSS_UNSUPPORTED_CODEC_MESSAGE,
                     data: {
                         codec: codec
                     }

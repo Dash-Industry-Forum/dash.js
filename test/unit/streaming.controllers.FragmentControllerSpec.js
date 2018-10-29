@@ -1,24 +1,29 @@
 import VoHelper from './helpers/VOHelper';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import FragmentController from '../../src/streaming/controllers/FragmentController';
+import EventBus from '../../src/core/EventBus';
 
-const expect = require('chai').expect;
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+
+const chai = require('chai');
+const expect = chai.expect;
 
 describe('FragmentController', function () {
+    let videoFragmentModel;
     const context = {};
     const voHelper = new VoHelper();
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
+    const eventBus = EventBus(context).getInstance();
+    const mediaPlayerModelMock = new MediaPlayerModelMock();
     const fragmentController = FragmentController(context).create({
-        mediaPlayerModel: mediaPlayerModel
+        mediaPlayerModel: mediaPlayerModelMock
     });
 
     Events.extend(MediaPlayerEvents);
 
     it('should create or return model for a given media type', function () {
-        const model = fragmentController.getModel('video');
-        expect(model).to.exist; // jshint ignore:line
+        videoFragmentModel = fragmentController.getModel('video');
+        expect(videoFragmentModel).to.exist; // jshint ignore:line
     });
 
     it('should always return the same model for the context', function () {
@@ -43,5 +48,25 @@ describe('FragmentController', function () {
         expect(fragmentController.isInitializationRequest(request)).to.not.be.ok; // jshint ignore:line
 
         expect(fragmentController.isInitializationRequest(null)).to.not.be.ok; // jshint ignore:line
+    });
+
+    it('should trigger INIT_FRAGMENT_LOADED event when an init segment download is completed.', function (done) {
+        let onInitFragmentLoaded = function () {
+            eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded);
+            done();
+        };
+
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {response: {}, request: {mediaType: 'video', type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
+    });
+
+    it('should trigger SERVICE_LOCATION_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {
+        let onInitFragmentLoadedWithError = function () {
+            eventBus.off(Events.SERVICE_LOCATION_BLACKLIST_ADD, onInitFragmentLoadedWithError);
+            done();
+        };
+
+        eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_ADD, onInitFragmentLoadedWithError, this);
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {error: {}, response: {}, request: {mediaType: 'video', type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
     });
 });

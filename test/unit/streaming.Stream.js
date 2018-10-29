@@ -4,6 +4,7 @@ import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
 import EventBus from '../../src/core/EventBus';
 import DashJSError from '../../src/streaming/vo/DashJSError';
 import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
+import Constants from '../../src/streaming/constants/Constants';
 
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
@@ -56,17 +57,17 @@ describe('Stream', function () {
 
     it('should throw an error when getBitrateListFor is called and config object is not defined', function () {
         const stream = Stream(context).create();
-        expect(stream.getBitrateListFor.bind(stream)).to.be.throw('Missing config parameter(s)');
+        expect(stream.getBitrateListFor.bind(stream)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should throw an error when getBitrateListFor is called and config object has not been set properly', function () {
         const stream = Stream(context).create({});
-        expect(stream.getBitrateListFor.bind(stream)).to.be.throw('Missing config parameter(s)');
+        expect(stream.getBitrateListFor.bind(stream)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should throw an error when activate is called and config object has not been set properly', function () {
         const stream = Stream(context).create({});
-        expect(stream.activate.bind(stream)).to.be.throw('Missing config parameter(s)');
+        expect(stream.activate.bind(stream)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should return null when isCompatibleWithStream is called but stream attribute is undefined', () => {

@@ -37,6 +37,7 @@ import ManifestInfo from '../streaming/vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import cea608parser from '../../externals/cea608-parser';
+import { checkInteger } from '../streaming/utils/SupervisorTools';
 
 function DashAdapter() {
     let instance,
@@ -342,21 +343,13 @@ function DashAdapter() {
         }
     }
 
-    function checkQuality(quality) {
-        const isInt = quality !== null && !isNaN(quality) && (quality % 1 === 0);
-
-        if (!isInt) {
-            throw new Error('quality argument is not an integer');
-        }
-    }
-
     function getInitRequest(streamProcessor, quality) {
         let representationController,
             representation,
             indexHandler;
 
         checkStreamProcessor(streamProcessor);
-        checkQuality(quality);
+        checkInteger(quality);
 
         representationController = streamProcessor.getRepresentationController();
         indexHandler = streamProcessor.getIndexHandler();
@@ -447,7 +440,7 @@ function DashAdapter() {
         let voRepresentation;
 
         if (quality !== undefined) {
-            checkQuality(quality);
+            checkInteger(quality);
             voRepresentation = representationController.getRepresentationForQuality(quality);
         } else {
             voRepresentation = representationController.getCurrentRepresentation();

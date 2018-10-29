@@ -1,5 +1,4 @@
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
-import URIFragmentModel from '../../src/streaming/models/URIFragmentModel';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
@@ -8,6 +7,7 @@ import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
+import URIFragmentModelMock from './mocks/URIFragmentModelMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -22,6 +22,7 @@ describe('PlaybackController', function () {
     let dashMetricsMock;
     let mediaPlayerModelMock;
     let streamControllerMock;
+    let uriFragmentModelMock;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
@@ -29,15 +30,16 @@ describe('PlaybackController', function () {
         dashMetricsMock = new DashMetricsMock();
         mediaPlayerModelMock = new MediaPlayerModelMock();
         streamControllerMock = new StreamControllerMock();
+        uriFragmentModelMock = new URIFragmentModelMock();
         playbackController = PlaybackController(context).getInstance();
-        URIFragmentModel(context).getInstance().initialize('http://urlOfManifest.com/manifest.mpd#t=18.2');
 
         playbackController.setConfig({
             videoModel: videoModelMock,
             metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
             mediaPlayerModel: mediaPlayerModelMock,
-            streamController: streamControllerMock
+            streamController: streamControllerMock,
+            uriFragmentModel: uriFragmentModelMock
         });
     });
 
@@ -130,6 +132,11 @@ describe('PlaybackController', function () {
             it('should return current video time', function () {
                 videoModelMock.time = 2;
                 expect(playbackController.getTime()).to.equal(videoModelMock.time);
+            });
+
+            it('should return current normalized video time', function () {
+                videoModelMock.time = 5;
+                expect(playbackController.getNormalizedTime()).to.equal(videoModelMock.time);
             });
 
             it('should return video playback rate', function () {

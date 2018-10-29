@@ -223,7 +223,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     ////////////////////////////////////////
 
     $scope.video = document.querySelector('.dash-video-player video');
-    $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
+    // store a ref in window.player to provide an easy way to play with dash.js API
+    window.player = $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         //use the new error callback
@@ -320,14 +321,14 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
         $scope[e.mediaType + 'Index'] = e.oldQuality + 1;
         $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
-        $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1);
+        $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
         $scope[e.mediaType + 'Index'] = e.newQuality + 1;
         $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
-        $scope.plotPoint('index', e.mediaType, e.newQuality + 1);
+        $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
 
@@ -454,7 +455,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             stableBufferTime: $scope.defaultStableBufferDelay,
             bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
             bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
-            lowLatencyMode: $scope.lowLatencyMode
+            lowLatencyMode: $scope.lowLatencyModeSelected
         };
         if ($scope.selectedItem.hasOwnProperty('bufferConfig')) {
             var selectedConfig = $scope.selectedItem.bufferConfig;
@@ -660,12 +661,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         }
     };
 
-    $scope.plotPoint = function (name, type, value) {
+    $scope.plotPoint = function (name, type, value, time) {
         if ($scope.chartEnabled) {
             var specificChart = $scope.chartState[type];
             if (specificChart) {
                 var data = specificChart[name].data;
-                data.push([$scope.video.currentTime, value]);
+                data.push([time, value]);
                 if (data.length > $scope.maxPointsToChart) {
                     data.splice(0, 1);
                 }
@@ -710,6 +711,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.chartOptions.legend.noColumns = Math.min($scope.chartData.length, 5);
     };
 
+    function getTimeForPlot() {
+        var now = new Date().getTime() / 1000;
+        return Math.max(now - $scope.sessionStartTime, 0);
+    }
+
     function updateMetrics(type) {
         var metrics = $scope.player.getMetricsFor(type);
         var dashMetrics = $scope.player.getDashMetrics();
@@ -741,16 +747,17 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             }
 
             if ($scope.chartCount % 2 === 0) {
-                $scope.plotPoint('buffer', type, bufferLevel);
-                $scope.plotPoint('index', type, index);
-                $scope.plotPoint('bitrate', type, bitrate);
-                $scope.plotPoint('droppedFPS', type, droppedFPS);
-                $scope.plotPoint('liveLatency', type, liveLatency);
+                var time = getTimeForPlot();
+                $scope.plotPoint('buffer', type, bufferLevel, time);
+                $scope.plotPoint('index', type, index, time);
+                $scope.plotPoint('bitrate', type, bitrate, time);
+                $scope.plotPoint('droppedFPS', type, droppedFPS, time);
+                $scope.plotPoint('liveLatency', type, liveLatency, time);
 
                 if (httpMetrics) {
-                    $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2));
-                    $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2));
-                    $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2));
+                    $scope.plotPoint('download', type, httpMetrics.download[type].average.toFixed(2), time);
+                    $scope.plotPoint('latency', type, httpMetrics.latency[type].average.toFixed(2), time);
+                    $scope.plotPoint('ratio', type, httpMetrics.ratio[type].average.toFixed(2), time);
                 }
                 $scope.safeApply();
             }
@@ -830,6 +837,19 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             try {
                 item = JSON.parse(atob(vars.stream));
             } catch (e) {}
+        }
+
+
+        if (vars && vars.hasOwnProperty('targetLatency')) {
+            let targetLatency = parseInt(vars.targetLatency, 10);
+            if (!isNaN(targetLatency)) {
+                item.bufferConfig = {
+                    lowLatencyMode: true,
+                    liveDelay: targetLatency / 1000
+                };
+
+                $scope.lowLatencyModeSelected = true;
+            }
         }
 
         if (item.url) {

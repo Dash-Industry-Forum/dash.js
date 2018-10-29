@@ -74,7 +74,7 @@
           "name": "Low Latency (Single-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 2.8
+            "liveDelay": 4
           }
         },
         {
@@ -82,7 +82,15 @@
           "name": "Low Latency (Multi-Rate) (livesim-chunked)",
           "bufferConfig" : {
             "lowLatencyMode": true,
-            "liveDelay": 2.8
+            "liveDelay": 4
+          }
+        },
+        {
+          "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
+          "name": "Akamai Low Latency Stream",
+          "bufferConfig" : {
+            "lowLatencyMode": true,
+            "liveDelay": 3
           }
         },
         {
@@ -175,6 +183,10 @@
         {
           "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
           "url": "http://livesim.dashif.org/livesim/testpic_2s/Manifest_thumbs.mpd"
+        },
+        {
+          "name": "SegmentBase, Single adaption set, 3x4 tiles",
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails.mpd"
         }
       ]
     },
@@ -212,7 +224,8 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -225,13 +238,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -244,13 +259,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -296,13 +313,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -315,13 +334,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -367,13 +388,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -386,13 +409,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiODAzOTliZjUtOGEyMS00MDE0LTgwNTMtZTI3ZTc0OGU5OGMwIiwiZW5jcnlwdGVkX2tleSI6ImxpTkpxVmFZa05oK01LY3hKRms3SWc9PSJ9LHsiaWQiOiI5MDk1M2UwOS02Y2IyLTQ5YTMtYTI2MC03YTVmZWZlYWQ0OTkiLCJlbmNyeXB0ZWRfa2V5Ijoia1l0SEh2cnJmQ01lVmRKNkxrYmtuZz09In0seyJpZCI6IjBlNGRhOTJiLWQwZTgtNGE2Ni04YzNmLWMyNWE5N2ViNjUzMiIsImVuY3J5cHRlZF9rZXkiOiI3dzdOWkhITE1nSjRtUUtFSzVMVE1RPT0ifSx7ImlkIjoiNTg1ZjIzM2YtMzA3Mi00NmYxLTlmYTQtNmRjMjJjNjZhMDE0IiwiZW5jcnlwdGVkX2tleSI6IkFjNFVVbVl0Qko1blBROU4xNXJjM2c9PSJ9LHsiaWQiOiI0MjIyYmQ3OC1iYzQ1LTQxYmYtYjYzZS02ZjgxNGRjMzkxZGYiLCJlbmNyeXB0ZWRfa2V5IjoiTzZGTzBmcVNXb3BwN2JqYy9ENGxNQT09In1dfX0.uF6YlKAREOmbniAeYiH070HSJhV0YS7zSKjlCtiDR5Y"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -438,13 +463,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -478,13 +505,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -518,13 +547,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
@@ -548,13 +579,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXNzYWdlIjp7InBsYXlyZWFkeSI6eyJtaW5fYXBwX3NlY3VyaXR5X2xldmVsIjoxNTAsInBsYXlfZW5hYmxlcnMiOlsiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3Il19LCJrZXlzIjpbeyJlbmNyeXB0ZWRfa2V5IjoiN1hIS21uL3NmdnVQTFd0UHRHVFpEUT09IiwiaWQiOiIxZWIzMzJiMi03NDM3LTQ5YWUtYmYzOS1lNzAwMTBjYjYyMGIifSx7ImVuY3J5cHRlZF9rZXkiOiJzUXRGWDh6Y2o5bEVyZ282RDdjNGh3PT0iLCJpZCI6IjlhYTYwZTNhLTljOTEtNDc0ZC04OTM3LTdkOGIzMjU5Y2NjZCJ9LHsiZW5jcnlwdGVkX2tleSI6Im8wUlY0a2tuVE1KTFFkeVh1a1VlT2c9PSIsImlkIjoiNTk0Nzk3YTctNmIwMC00NjczLWIyZTEtYWVmYzU1MmIxYmJjIn0seyJlbmNyeXB0ZWRfa2V5IjoiZVl1dlIvS1BhWCtXWG43Rkw5WkNxQT09IiwiaWQiOiJhYWUyNTc1OC1lNDgxLTQ4OTUtODEzMy1iODA5NDgzMzkzZDAifSx7ImVuY3J5cHRlZF9rZXkiOiIwQ1BUWVpMWmk1SmhZZ0NiZThKTnhRPT0iLCJpZCI6IjkzMTEzZDVlLTJlYzgtNDNjMS05MDgzLTEwZjNkZTIwM2EyOSJ9LHsiZW5jcnlwdGVkX2tleSI6IlFQUlBrQ09tenNORkl1cCszSFp3WWc9PSIsImlkIjoiZTQ4NzcwMzctNDM3Ni00ZWRkLTg1ODYtMTQ1MTk0MzU4ODAzIn0seyJlbmNyeXB0ZWRfa2V5IjoiVWtrWUZ0TXJGMnlET0hvYWxKRmZSZz09IiwiaWQiOiJlOGFkNTk3Mi04ODE5LTQzMjYtYWQ2YS1mOWExNTE2OGJjYTcifSx7ImVuY3J5cHRlZF9rZXkiOiJkdWhnRVJSRkRiZlFEcnlwUWRCUUVRPT0iLCJpZCI6IjI2YTA5MzlmLTNhMGMtNDI4OS1hZDZiLWJiNWNlYzE3ZmY0MCJ9LHsiZW5jcnlwdGVkX2tleSI6IjFOUHp1Q1JLM3p4bWpYK3FZZnU1bXc9PSIsImlkIjoiYTVlZDcxNzMtMzc4MS00Yzc0LTkwYWMtZjA4MzRlZjFhMWM4In0seyJlbmNyeXB0ZWRfa2V5IjoiYXVQTEJjd2NmTnFSRTV1WFdUZ1NLUT09IiwiaWQiOiIzMjlmNTMzZS1mYTc3LTQwNzAtYjY1Yi0zOTI5ODBiYWRhMGQifSx7ImVuY3J5cHRlZF9rZXkiOiI2NkE1MnFiZEcyQlg3SUhTaml6WUpRPT0iLCJpZCI6IjE5N2Y4Yjg0LTNiZjItNDg2MC1iMjNhLTVjNTQ2MjhhZDBiMSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhIUUE3WWlEZGZwTE05QWxwcklDK2c9PSIsImlkIjoiNGVjZGQ0YzctNGQyOS00M2ZmLWJkYWYtMDJiNzY5MDBmMTIzIn0seyJlbmNyeXB0ZWRfa2V5IjoiblBqNWl3N1IvZDR0WmdKZktoRFhYZz09IiwiaWQiOiJlZTc0NmQxMi1hNDg4LTQ5NzctYjFjYS03N2ExMDFiYjQ4M2MifSx7ImVuY3J5cHRlZF9rZXkiOiJ5U1Vma0Q5ZEliK0ExNmoydHNzNDV3PT0iLCJpZCI6IjQ5NGY5NmUxLTM1MzUtNGE4NC05MWMxLWZhYTI4M2IwNmE1NCJ9LHsiZW5jcnlwdGVkX2tleSI6InJlUHVsaXg0eFZNZHlsUnVpcG5FK0E9PSIsImlkIjoiNWMwN2JmZjQtYzcwYi00ZDAyLWEzNzgtMzgzMjZmOTEwMDBjIn0seyJlbmNyeXB0ZWRfa2V5Ijoialc3Z2E0aytMcDdxWTd4Zmo5dHB5Zz09IiwiaWQiOiIzMjgzYzM1ZS1hZTJjLTRmOGMtOGE0OS00YTc1MGFlZGYxNDIifSx7ImVuY3J5cHRlZF9rZXkiOiJLdHNNYlZRM0JXL1dwQlIwSlQwa2R3PT0iLCJpZCI6IjhkNzdiOWM0LTdmNmQtNDdmOS04NTYyLWE1ZTVlNGMzNTFjZSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhRTGZKQUpmSjFyelFMZGNFRWM5L2c9PSIsImlkIjoiODIzMTcxZDctZGZjMS00ZDBlLTgwM2YtNDBhMWY1ZTQzODY4In0seyJlbmNyeXB0ZWRfa2V5IjoiR0hQSVNYTXZKWEJ6WktGQm1ZMXFCZz09IiwiaWQiOiJjMTYyYWM3ZC00MGQ3LTQ2YzAtYjJjZC1lOTQyN2Q0MzljMzIifSx7ImVuY3J5cHRlZF9rZXkiOiJ2bzJhamlLaWV6Yk9xY2tyNTN0U3B3PT0iLCJpZCI6ImZhYTZkNmY1LTM1MDEtNDg1MS05MmViLWM3ZGE0NDRlY2FhYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ijg2QkEwUHYwYXk4UmV5Wk4zeElYa2c9PSIsImlkIjoiZmM0OWI3MTEtMWNiNi00MGE3LTk4NDAtODNjNDFiNTViOTliIn0seyJlbmNyeXB0ZWRfa2V5IjoibUhBbERaa0NYQWpCR1pLR2h0Y3Zpdz09IiwiaWQiOiI0M2QwMjIwNC04NjA5LTRkNDYtOTlhYy00MjVhNWI0ODAwOTgifSx7ImVuY3J5cHRlZF9rZXkiOiJ3bWhjREdZcG84YlZBSit0OGF4SUZnPT0iLCJpZCI6IjRkNmU0OTZhLTFmOTgtNGVlOC04Zjg3LTRiMTAzYmQzOGQwZiJ9LHsiZW5jcnlwdGVkX2tleSI6Ik92cWF3Y0JVQVE3cHM2T0xhSnZPRmc9PSIsImlkIjoiYzRlMGQ5ZjctZDQ4Mi00MWMzLThjYmItOTdiMTEyZDcyZTY2In0seyJlbmNyeXB0ZWRfa2V5IjoiM3dTMkdpemxWcGtuNDlRRExxcFBhZz09IiwiaWQiOiIxYzJkZTFlNC1lZDMwLTQ0NTItYTExNS0wOTIzYjk0MGM0ZWQifSx7ImVuY3J5cHRlZF9rZXkiOiJTNWRGQ25yRUNjREswOEVreHllY3lRPT0iLCJpZCI6ImRjZjQzODVmLTM1MDUtNGZmNS1iMDU1LTQ2MWQ1YTA3ZjBmNSJ9LHsiZW5jcnlwdGVkX2tleSI6IlBnRUhyK0Nrd3JYTStlSWFnUnl4b3c9PSIsImlkIjoiZjMyNGYwNGUtN2M3My00ZjM3LTgxMzUtYzg5ZjhjNGU2Y2Y0In0seyJlbmNyeXB0ZWRfa2V5IjoiSkx6UUZGMXp4MFpZMzZYSTdaR0VaUT09IiwiaWQiOiI1Y2I1M2RkOC0xMjk0LTRjOGUtOTY0ZS0yNTg2OWQ1M2EyNGEifSx7ImVuY3J5cHRlZF9rZXkiOiJVOHBRdW1HUmtrTGppSEg1cjlqWGhnPT0iLCJpZCI6IjA1NjgyYTI2LTg4NzctNDZkMy05NDY1LTEwNGEzYTQwMDEwYSJ9LHsiZW5jcnlwdGVkX2tleSI6IlVJTDZKNGRzZEpGNi9tQTM1dHIvVFE9PSIsImlkIjoiYmNlNTM0MTAtM2IwYy00OTE0LTg3YTMtNzIzNjNjYTE3NTMxIn0seyJlbmNyeXB0ZWRfa2V5IjoiM3pCaW1Dc2NlMTV2YkV0Mm8zNEhhUT09IiwiaWQiOiI0ZjRmOGExYy0zMjAyLTQ2YWUtODA5ZS00ZmNmOTMzZWU2NTQifSx7ImVuY3J5cHRlZF9rZXkiOiJDVHdTU3RQMnV1QjVZdStNUGpZY29RPT0iLCJpZCI6Ijg1MmNkN2Y3LTQwZTktNDgyZC04MjI1LWRjYmM4ZTA4ZGI4YiJ9LHsiZW5jcnlwdGVkX2tleSI6Im1ubXRuUWVHYm0rZUEzN2t6dFovRVE9PSIsImlkIjoiZWZkZGI4ZWUtODI3OC00NDM2LWE2OTgtNzJiODAzZDA1MGRiIn0seyJlbmNyeXB0ZWRfa2V5Ijoib3BicXltZVRiT3VWalJnYjJHMHpVdz09IiwiaWQiOiJkNWJkYmE1My02MDZmLTRkNDYtODg4ZC1hMWViNDRjZDVmNDEifSx7ImVuY3J5cHRlZF9rZXkiOiJiSWRsOFhoVmdobmc4Tis4cUZVbFRnPT0iLCJpZCI6ImFlZDQ5NjA5LTUwOTktNDExOC05YjA4LWI5NTM4ZGIwMGMwYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ikp1SS9UMSt5cUtzUU95MjZEbzRuZmc9PSIsImlkIjoiN2I1YzFlOWYtZjhiOC00OTkyLWFhM2UtYTA4NWZjMzY3MzExIn0seyJlbmNyeXB0ZWRfa2V5IjoiM2ladUZxalh3bzhiN1lkamxKZUVPUT09IiwiaWQiOiI1YmU0MGViZi0yZWE0LTQ5ZmItYjZlYy1iMDlkZTVhYjYxN2YifSx7ImVuY3J5cHRlZF9rZXkiOiJoQ3gybzJxQlJKL2hiZVNqKzY5dHF3PT0iLCJpZCI6ImU1MzBkZjFiLWZmN2UtNDJhNC1iNTNhLThkNmRlNjhmMDAxMCJ9LHsiZW5jcnlwdGVkX2tleSI6IjhveWlGM0pQTmdzd0tPajVrWjVIT0E9PSIsImlkIjoiYjk0OTg3NDUtODJlYS00ZmZhLWFiMmItZDczN2VmNTRmODYzIn0seyJlbmNyeXB0ZWRfa2V5IjoiTEs4TENTY28zQmZYZXhLMlh0WUZSQT09IiwiaWQiOiI0ZjUyOTc1Yi1lOWYzLTRmZDctYmI4OS00MDNiMjgwMGU4Y2YifV0sInR5cGUiOiJlbnRpdGxlbWVudF9tZXNzYWdlIn0sImNvbV9rZXlfaWQiOiJiMzM2NGViNS01MWY2LTRhZTMtOGM5OC0zM2NlZDVlMzFjNzgiLCJ2ZXJzaW9uIjoxfQ.kuZip7wOBZ6-FjAO_VcBq0r816426dFK4fTdfm99NqE"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXNzYWdlIjp7InBsYXlyZWFkeSI6eyJtaW5fYXBwX3NlY3VyaXR5X2xldmVsIjoxNTAsInBsYXlfZW5hYmxlcnMiOlsiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3Il19LCJrZXlzIjpbeyJlbmNyeXB0ZWRfa2V5IjoiN1hIS21uL3NmdnVQTFd0UHRHVFpEUT09IiwiaWQiOiIxZWIzMzJiMi03NDM3LTQ5YWUtYmYzOS1lNzAwMTBjYjYyMGIifSx7ImVuY3J5cHRlZF9rZXkiOiJzUXRGWDh6Y2o5bEVyZ282RDdjNGh3PT0iLCJpZCI6IjlhYTYwZTNhLTljOTEtNDc0ZC04OTM3LTdkOGIzMjU5Y2NjZCJ9LHsiZW5jcnlwdGVkX2tleSI6Im8wUlY0a2tuVE1KTFFkeVh1a1VlT2c9PSIsImlkIjoiNTk0Nzk3YTctNmIwMC00NjczLWIyZTEtYWVmYzU1MmIxYmJjIn0seyJlbmNyeXB0ZWRfa2V5IjoiZVl1dlIvS1BhWCtXWG43Rkw5WkNxQT09IiwiaWQiOiJhYWUyNTc1OC1lNDgxLTQ4OTUtODEzMy1iODA5NDgzMzkzZDAifSx7ImVuY3J5cHRlZF9rZXkiOiIwQ1BUWVpMWmk1SmhZZ0NiZThKTnhRPT0iLCJpZCI6IjkzMTEzZDVlLTJlYzgtNDNjMS05MDgzLTEwZjNkZTIwM2EyOSJ9LHsiZW5jcnlwdGVkX2tleSI6IlFQUlBrQ09tenNORkl1cCszSFp3WWc9PSIsImlkIjoiZTQ4NzcwMzctNDM3Ni00ZWRkLTg1ODYtMTQ1MTk0MzU4ODAzIn0seyJlbmNyeXB0ZWRfa2V5IjoiVWtrWUZ0TXJGMnlET0hvYWxKRmZSZz09IiwiaWQiOiJlOGFkNTk3Mi04ODE5LTQzMjYtYWQ2YS1mOWExNTE2OGJjYTcifSx7ImVuY3J5cHRlZF9rZXkiOiJkdWhnRVJSRkRiZlFEcnlwUWRCUUVRPT0iLCJpZCI6IjI2YTA5MzlmLTNhMGMtNDI4OS1hZDZiLWJiNWNlYzE3ZmY0MCJ9LHsiZW5jcnlwdGVkX2tleSI6IjFOUHp1Q1JLM3p4bWpYK3FZZnU1bXc9PSIsImlkIjoiYTVlZDcxNzMtMzc4MS00Yzc0LTkwYWMtZjA4MzRlZjFhMWM4In0seyJlbmNyeXB0ZWRfa2V5IjoiYXVQTEJjd2NmTnFSRTV1WFdUZ1NLUT09IiwiaWQiOiIzMjlmNTMzZS1mYTc3LTQwNzAtYjY1Yi0zOTI5ODBiYWRhMGQifSx7ImVuY3J5cHRlZF9rZXkiOiI2NkE1MnFiZEcyQlg3SUhTaml6WUpRPT0iLCJpZCI6IjE5N2Y4Yjg0LTNiZjItNDg2MC1iMjNhLTVjNTQ2MjhhZDBiMSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhIUUE3WWlEZGZwTE05QWxwcklDK2c9PSIsImlkIjoiNGVjZGQ0YzctNGQyOS00M2ZmLWJkYWYtMDJiNzY5MDBmMTIzIn0seyJlbmNyeXB0ZWRfa2V5IjoiblBqNWl3N1IvZDR0WmdKZktoRFhYZz09IiwiaWQiOiJlZTc0NmQxMi1hNDg4LTQ5NzctYjFjYS03N2ExMDFiYjQ4M2MifSx7ImVuY3J5cHRlZF9rZXkiOiJ5U1Vma0Q5ZEliK0ExNmoydHNzNDV3PT0iLCJpZCI6IjQ5NGY5NmUxLTM1MzUtNGE4NC05MWMxLWZhYTI4M2IwNmE1NCJ9LHsiZW5jcnlwdGVkX2tleSI6InJlUHVsaXg0eFZNZHlsUnVpcG5FK0E9PSIsImlkIjoiNWMwN2JmZjQtYzcwYi00ZDAyLWEzNzgtMzgzMjZmOTEwMDBjIn0seyJlbmNyeXB0ZWRfa2V5Ijoialc3Z2E0aytMcDdxWTd4Zmo5dHB5Zz09IiwiaWQiOiIzMjgzYzM1ZS1hZTJjLTRmOGMtOGE0OS00YTc1MGFlZGYxNDIifSx7ImVuY3J5cHRlZF9rZXkiOiJLdHNNYlZRM0JXL1dwQlIwSlQwa2R3PT0iLCJpZCI6IjhkNzdiOWM0LTdmNmQtNDdmOS04NTYyLWE1ZTVlNGMzNTFjZSJ9LHsiZW5jcnlwdGVkX2tleSI6IlhRTGZKQUpmSjFyelFMZGNFRWM5L2c9PSIsImlkIjoiODIzMTcxZDctZGZjMS00ZDBlLTgwM2YtNDBhMWY1ZTQzODY4In0seyJlbmNyeXB0ZWRfa2V5IjoiR0hQSVNYTXZKWEJ6WktGQm1ZMXFCZz09IiwiaWQiOiJjMTYyYWM3ZC00MGQ3LTQ2YzAtYjJjZC1lOTQyN2Q0MzljMzIifSx7ImVuY3J5cHRlZF9rZXkiOiJ2bzJhamlLaWV6Yk9xY2tyNTN0U3B3PT0iLCJpZCI6ImZhYTZkNmY1LTM1MDEtNDg1MS05MmViLWM3ZGE0NDRlY2FhYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ijg2QkEwUHYwYXk4UmV5Wk4zeElYa2c9PSIsImlkIjoiZmM0OWI3MTEtMWNiNi00MGE3LTk4NDAtODNjNDFiNTViOTliIn0seyJlbmNyeXB0ZWRfa2V5IjoibUhBbERaa0NYQWpCR1pLR2h0Y3Zpdz09IiwiaWQiOiI0M2QwMjIwNC04NjA5LTRkNDYtOTlhYy00MjVhNWI0ODAwOTgifSx7ImVuY3J5cHRlZF9rZXkiOiJ3bWhjREdZcG84YlZBSit0OGF4SUZnPT0iLCJpZCI6IjRkNmU0OTZhLTFmOTgtNGVlOC04Zjg3LTRiMTAzYmQzOGQwZiJ9LHsiZW5jcnlwdGVkX2tleSI6Ik92cWF3Y0JVQVE3cHM2T0xhSnZPRmc9PSIsImlkIjoiYzRlMGQ5ZjctZDQ4Mi00MWMzLThjYmItOTdiMTEyZDcyZTY2In0seyJlbmNyeXB0ZWRfa2V5IjoiM3dTMkdpemxWcGtuNDlRRExxcFBhZz09IiwiaWQiOiIxYzJkZTFlNC1lZDMwLTQ0NTItYTExNS0wOTIzYjk0MGM0ZWQifSx7ImVuY3J5cHRlZF9rZXkiOiJTNWRGQ25yRUNjREswOEVreHllY3lRPT0iLCJpZCI6ImRjZjQzODVmLTM1MDUtNGZmNS1iMDU1LTQ2MWQ1YTA3ZjBmNSJ9LHsiZW5jcnlwdGVkX2tleSI6IlBnRUhyK0Nrd3JYTStlSWFnUnl4b3c9PSIsImlkIjoiZjMyNGYwNGUtN2M3My00ZjM3LTgxMzUtYzg5ZjhjNGU2Y2Y0In0seyJlbmNyeXB0ZWRfa2V5IjoiSkx6UUZGMXp4MFpZMzZYSTdaR0VaUT09IiwiaWQiOiI1Y2I1M2RkOC0xMjk0LTRjOGUtOTY0ZS0yNTg2OWQ1M2EyNGEifSx7ImVuY3J5cHRlZF9rZXkiOiJVOHBRdW1HUmtrTGppSEg1cjlqWGhnPT0iLCJpZCI6IjA1NjgyYTI2LTg4NzctNDZkMy05NDY1LTEwNGEzYTQwMDEwYSJ9LHsiZW5jcnlwdGVkX2tleSI6IlVJTDZKNGRzZEpGNi9tQTM1dHIvVFE9PSIsImlkIjoiYmNlNTM0MTAtM2IwYy00OTE0LTg3YTMtNzIzNjNjYTE3NTMxIn0seyJlbmNyeXB0ZWRfa2V5IjoiM3pCaW1Dc2NlMTV2YkV0Mm8zNEhhUT09IiwiaWQiOiI0ZjRmOGExYy0zMjAyLTQ2YWUtODA5ZS00ZmNmOTMzZWU2NTQifSx7ImVuY3J5cHRlZF9rZXkiOiJDVHdTU3RQMnV1QjVZdStNUGpZY29RPT0iLCJpZCI6Ijg1MmNkN2Y3LTQwZTktNDgyZC04MjI1LWRjYmM4ZTA4ZGI4YiJ9LHsiZW5jcnlwdGVkX2tleSI6Im1ubXRuUWVHYm0rZUEzN2t6dFovRVE9PSIsImlkIjoiZWZkZGI4ZWUtODI3OC00NDM2LWE2OTgtNzJiODAzZDA1MGRiIn0seyJlbmNyeXB0ZWRfa2V5Ijoib3BicXltZVRiT3VWalJnYjJHMHpVdz09IiwiaWQiOiJkNWJkYmE1My02MDZmLTRkNDYtODg4ZC1hMWViNDRjZDVmNDEifSx7ImVuY3J5cHRlZF9rZXkiOiJiSWRsOFhoVmdobmc4Tis4cUZVbFRnPT0iLCJpZCI6ImFlZDQ5NjA5LTUwOTktNDExOC05YjA4LWI5NTM4ZGIwMGMwYyJ9LHsiZW5jcnlwdGVkX2tleSI6Ikp1SS9UMSt5cUtzUU95MjZEbzRuZmc9PSIsImlkIjoiN2I1YzFlOWYtZjhiOC00OTkyLWFhM2UtYTA4NWZjMzY3MzExIn0seyJlbmNyeXB0ZWRfa2V5IjoiM2ladUZxalh3bzhiN1lkamxKZUVPUT09IiwiaWQiOiI1YmU0MGViZi0yZWE0LTQ5ZmItYjZlYy1iMDlkZTVhYjYxN2YifSx7ImVuY3J5cHRlZF9rZXkiOiJoQ3gybzJxQlJKL2hiZVNqKzY5dHF3PT0iLCJpZCI6ImU1MzBkZjFiLWZmN2UtNDJhNC1iNTNhLThkNmRlNjhmMDAxMCJ9LHsiZW5jcnlwdGVkX2tleSI6IjhveWlGM0pQTmdzd0tPajVrWjVIT0E9PSIsImlkIjoiYjk0OTg3NDUtODJlYS00ZmZhLWFiMmItZDczN2VmNTRmODYzIn0seyJlbmNyeXB0ZWRfa2V5IjoiTEs4TENTY28zQmZYZXhLMlh0WUZSQT09IiwiaWQiOiI0ZjUyOTc1Yi1lOWYzLTRmZDctYmI4OS00MDNiMjgwMGU4Y2YifV0sInR5cGUiOiJlbnRpdGxlbWVudF9tZXNzYWdlIn0sImNvbV9rZXlfaWQiOiJiMzM2NGViNS01MWY2LTRhZTMtOGM5OC0zM2NlZDVlMzFjNzgiLCJ2ZXJzaW9uIjoxfQ.kuZip7wOBZ6-FjAO_VcBq0r816426dFK4fTdfm99NqE"
-              }
+              },
+              "httpTimeout": 5000
             }
           }
         },
@@ -577,6 +610,7 @@
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
               },
+              "httpTimeout": 5000,
               "audioRobustness": "SW_SECURE_CRYPTO",
               "videoRobustness": "SW_SECURE_DECODE"
             },
@@ -597,13 +631,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
@@ -621,13 +657,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNmU1YTFkMjYtMjc1Ny00N2Q3LTgwNDYtZWFhNWQxZDM0YjVhIn1dfX0.yF7PflOPv9qHnu3ZWJNZ12jgkqTabmwXbDWk_47tLNE"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
@@ -640,13 +678,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMTUzMGQzYTAtNjkwNC00NDZhLTkxYTEtMzNhMTE1YWE4YzQxIn0seyJpZCI6ImM4M2ViNjM5LWU2NjQtNDNmOC1hZTk4LTQwMzliMGMxM2IyZCJ9LHsiaWQiOiIzZDhjYzc2Mi0yN2FjLTQwMGYtOTg5Zi04YWI1ZGM3ZDc3NzUifSx7ImlkIjoiYmQ4ZGFkNTgtMDMyZC00YzI1LTg5ZmEtYzdiNzEwZTgyYWMyIn1dfX0.9t18lFmZFVHMzpoZxYDyqOS0Bk_evGhTBw_F2JnAK2k"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
@@ -664,13 +704,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
@@ -688,13 +730,15 @@
               "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
-              }
+              },
+              "httpTimeout": 5000
             },
             "com.microsoft.playready": {
               "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
               "httpRequestHeaders": {
                 "X-AxDRM-Message": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiNjllNTQwODgtZTllMC00NTMwLThjMWEtMWViNmRjZDBkMTRlIiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiNTNiZTc3NTctNzI4OC00YjZiLWIyMGEtZjA1YjY0YTRlZjc5In0seyJpZCI6IjBlZDgyMWE4LTgwZWQtNDBhYy1hODA0LTkyN2M5ZmRhZGJlOSJ9LHsiaWQiOiJlNDdkNzhjYS05NGRjLTQ1ZmItOWUzZC0yYTc3M2FlZjc0YjIifSx7ImlkIjoiMzJhMTQxZTktMjNhYi00NGZmLWE2YzctNTM0OWM4OTQ1MWNmIn0seyJpZCI6IjhkMDkxOTY2LTQ0YjUtNGNmOC04YTQ1LWVkMTJmZGIxOGQzNSJ9XX19.9YSK6QsDr4SYR7Q74ftq9mVtsT0ZkP3STE0zI-3mVIA"
-              }
+              },
+              "httpTimeout": 5000
             }
           },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
@@ -883,10 +927,6 @@
         {
           "name": "Unified Streaming - Timeline",
           "url": "http://demo.unified-streaming.com/video/ateam/ateam.ism/ateam.mpd"
-        },
-        {
-          "name": "Unified Streaming Live",
-          "url": "https://live.unified-streaming.com/smptebitc/smptebitc.isml/.mpd"
         },
         {
           "name": "Unified Streaming (Widevine, persistent)",

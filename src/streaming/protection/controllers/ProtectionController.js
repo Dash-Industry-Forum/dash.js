@@ -38,6 +38,10 @@ import DashJSError from '../../vo/DashJSError';
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 
+const LICENSE_SERVER_REQUEST_RETRIES = 3;
+const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
+const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
+
 /**
  * @module ProtectionController
  * @description Provides access to media protection information and functionality.  Each
@@ -548,8 +552,6 @@ function ProtectionController(config) {
         }
 
         // All remaining key system scenarios require a request to a remote license server
-        const xhr = new XMLHttpRequest();
-
         // Determine license server URL
         let url = null;
         if (protData && protData.serverURL) {
@@ -577,44 +579,16 @@ function ProtectionController(config) {
             return;
         }
 
-        const reportError = function (xhr, eventData, keySystemString, messageType) {
-            const errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
-            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
-        };
-
-        xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
-        xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
-        xhr.onload = function () {
-            if (!protectionModel) {
-                return;
-            }
-            if (this.status == 200) {
-                const licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
-                if (licenseMessage !== null) {
-                    sendLicenseRequestCompleteEvent(eventData);
-                    protectionModel.updateKeySession(sessionToken, licenseMessage);
-                } else {
-                    reportError(this, eventData, keySystemString, messageType);
-                }
-            } else {
-                reportError(this, eventData, keySystemString, messageType);
-            }
-        };
-        xhr.onabort = function () {
-            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState));
-        };
-        xhr.onerror = function () {
-            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState));
-        };
-
         // Set optional XMLHttpRequest headers from protection data and message
+        const reqHeaders = {};
+        let withCredentials = false;
         const updateHeaders = function (headers) {
             if (headers) {
                 for (const key in headers) {
                     if ('authorization' === key.toLowerCase()) {
-                        xhr.withCredentials = true;
+                        withCredentials = true;
                     }
-                    xhr.setRequestHeader(key, headers[key]);
+                    reqHeaders[key] = headers[key];
                 }
             }
         };
@@ -625,10 +599,101 @@ function ProtectionController(config) {
 
         // Overwrite withCredentials property from protData if present
         if (protData && typeof protData.withCredentials == 'boolean') {
-            xhr.withCredentials = protData.withCredentials;
+            withCredentials = protData.withCredentials;
         }
 
-        xhr.send(keySystem.getLicenseRequestFromMessage(message));
+        const reportError = function (xhr, eventData, keySystemString, messageType) {
+            const errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
+                ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' +
+                xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+        };
+
+        const onLoad = function (xhr) {
+            if (!protectionModel) {
+                return;
+            }
+
+            if (xhr.status === 200) {
+                const licenseMessage = licenseServerData.getLicenseMessage(xhr.response, keySystemString, messageType);
+                if (licenseMessage !== null) {
+                    sendLicenseRequestCompleteEvent(eventData);
+                    protectionModel.updateKeySession(sessionToken, licenseMessage);
+                } else {
+                    reportError(xhr, eventData, keySystemString, messageType);
+                }
+            } else {
+                reportError(xhr, eventData, keySystemString, messageType);
+            }
+        };
+
+        const onAbort = function (xhr) {
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
+                ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' +
+                xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+        };
+
+        const onError = function (xhr) {
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
+                ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' +
+                xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+        };
+
+        const reqPayload = keySystem.getLicenseRequestFromMessage(message);
+        const reqMethod = licenseServerData.getHTTPMethod(messageType);
+        const responseType = licenseServerData.getResponseType(keySystemString, messageType);
+        const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
+
+        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload,
+            LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+    }
+
+    // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
+    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open(method, url, true);
+        xhr.responseType = responseType;
+        xhr.withCredentials = withCredentials;
+        if (timeout > 0) {
+            xhr.timeout = timeout;
+        }
+        for (const key in headers) {
+            xhr.setRequestHeader(key, headers[key]);
+        }
+
+        const retryRequest = function () {
+            // fail silently and retry
+            retriesCount--;
+            setTimeout(function () {
+                doLicenseRequest(url, headers, method, responseType, withCredentials, payload,
+                    retriesCount, timeout, onLoad, onAbort, onError);
+            }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
+        };
+
+        xhr.onload = function () {
+            if (this.status === 200 || retriesCount <= 0) {
+                onLoad(this);
+            } else {
+                logger.warn('License request failed (' + this.status + '). Retrying it... Pending retries: ' + retriesCount);
+                retryRequest();
+            }
+        };
+
+        xhr.onerror = function () {
+            if (retriesCount <= 0) {
+                onError(this);
+            } else {
+                logger.warn('License request network request failed . Retrying it... Pending retries: ' + retriesCount);
+                retryRequest();
+            }
+        };
+
+        xhr.onabort = function () {
+            onAbort(this);
+        };
+
+        xhr.send(payload);
     }
 
     function onNeedKey(event, retry) {

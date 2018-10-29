@@ -53,7 +53,6 @@ function MetricsModel() {
     let eventBus = EventBus(context).getInstance();
 
     let instance,
-        adapter,
         streamMetrics;
 
     function setup() {
@@ -62,10 +61,6 @@ function MetricsModel() {
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
     }
 
     function metricsChanged() {

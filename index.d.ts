@@ -1,5 +1,3 @@
-import ClearKeyKeySet from "./src/streaming/protection/vo/ClearKeyKeySet";
-
 export = dashjs;
 export as namespace dashjs;
 
@@ -243,8 +241,11 @@ declare namespace dashjs {
         removeAllABRCustomRule(): void;
         getLowLatencyEnabled(): boolean;
         setLowLatencyEnabled(value: boolean): void;
-        getCatchUpPlaybackRate(): number;
-        setCatchUpPlaybackRate(value: number): void;
+        enableLowLatencyCatchUp(value: boolean): void;
+        getLowLatencyMinDrift(): number;
+        setLowLatencyMinDrift(value: number): void;
+        getLowLatencyMaxDriftBeforeSeeking(): number;
+        setLowLatencyMaxDriftBeforeSeeking(value: number): void;
         getUseDeadTimeLatencyForAbr(): boolean;
         setUseDeadTimeLatencyForAbr(value: boolean): void;
         getCurrentLiveLatency(): number;
@@ -276,6 +277,50 @@ declare namespace dashjs {
 
     export namespace MediaPlayer {
         export const events: MediaPlayerEvents;
+        export const errors: MediaPlayerErrors;
+    }
+
+    interface MediaPlayerErrors {
+        MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:          10;
+        MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:          11;
+        XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:             12;
+        SEGMENTS_UPDATE_FAILED_ERROR_CODE:                   13;
+        SEGMENTS_UNAVAILABLE_ERROR_CODE:                     14;
+        SEGMENT_BASE_LOADER_ERROR_CODE:                      15;
+        TIME_SYNC_FAILED_ERROR_CODE:                         16;
+        FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:          17;
+        FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:             18;
+        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:            19;
+        APPEND_ERROR_CODE:                                   20;
+        REMOVE_ERROR_CODE:                                   21;
+        DATA_UPDATE_FAILED_ERROR_CODE:                       22;
+        CAPABILITY_MEDIASOURCE_ERROR_CODE:                   23;
+        CAPABILITY_MEDIAKEYS_ERROR_CODE:                     24;
+        DOWNLOAD_ERROR_ID_MANIFEST_CODE:                     25;
+        DOWNLOAD_ERROR_ID_CONTENT_CODE:                      27;
+        DOWNLOAD_ERROR_ID_INITIALIZATION_CODE:               28;
+        DOWNLOAD_ERROR_ID_XLINK_CODE:                        29;
+        MANIFEST_ERROR_ID_PARSE_CODE:                        31;
+        MANIFEST_ERROR_ID_NOSTREAMS_CODE:                    32;
+        TIMED_TEXT_ERROR_ID_PARSE_CODE:                      33;
+        MANIFEST_ERROR_ID_MULTIPLEXED_CODE:                  34;
+        MEDIASOURCE_TYPE_UNSUPPORTED_CODE:                   35;
+        MEDIA_KEYERR_CODE:                                  100;
+        MEDIA_KEYERR_UNKNOWN_CODE:                          101;
+        MEDIA_KEYERR_CLIENT_CODE:                           102;
+        MEDIA_KEYERR_SERVICE_CODE:                          103;
+        MEDIA_KEYERR_OUTPUT_CODE:                           104;
+        MEDIA_KEYERR_HARDWARECHANGE_CODE:                   105;
+        MEDIA_KEYERR_DOMAIN_CODE:                           106;
+        MEDIA_KEY_MESSAGE_ERROR_CODE:                       107;
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE:          108;
+        SERVER_CERTIFICATE_UPDATED_ERROR_CODE:              109;
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE:              110;
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE:                112;
+        KEY_SESSION_CREATED_ERROR_CODE:                     113;
+        MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE:              114;
+        MSS_NO_TFRF_CODE:                                   200;        
     }
 
     interface MediaPlayerEvents {
@@ -307,8 +352,6 @@ declare namespace dashjs {
         METRIC_UPDATED: 'metricUpdated';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
-        PLAYBACK_CATCHUP_END: 'playbackCatchupEnd';
-        PLAYBACK_CATCHUP_START: 'playbackCatchupStart';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
         PLAYBACK_METADATA_LOADED: 'playbackMetaDataLoaded';
@@ -394,7 +437,55 @@ declare namespace dashjs {
         };
     }
 
-    export type ErrorEvent = GenericErrorEvent | DownloadErrorEvent | ManifestErrorEvent | TimedTextErrorEvent;
+    export interface MediaPlayerErrorEvent extends Event {
+        type: MediaPlayerEvents['ERROR'];
+        error: {
+            code: MediaPlayerErrors['MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE'] |
+                  MediaPlayerErrors['MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE'] |
+                  MediaPlayerErrors['XLINK_LOADER_LOADING_FAILURE_ERROR_CODE'] |
+                  MediaPlayerErrors['SEGMENTS_UPDATE_FAILED_ERROR_CODE'] |
+                  MediaPlayerErrors['SEGMENTS_UNAVAILABLE_ERROR_CODE'] |
+                  MediaPlayerErrors['SEGMENT_BASE_LOADER_ERROR_CODE'] |
+                  MediaPlayerErrors['TIME_SYNC_FAILED_ERROR_CODE'] |
+                  MediaPlayerErrors['FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE'] |
+                  MediaPlayerErrors['FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE'] |
+                  MediaPlayerErrors['URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE'] |
+                  MediaPlayerErrors['APPEND_ERROR_CODE'] |
+                  MediaPlayerErrors['REMOVE_ERROR_CODE'] |
+                  MediaPlayerErrors['DATA_UPDATE_FAILED_ERROR_CODE'] |
+                  MediaPlayerErrors['CAPABILITY_MEDIASOURCE_ERROR_CODE'] |
+                  MediaPlayerErrors['CAPABILITY_MEDIAKEYS_ERROR_CODE'] |
+                  MediaPlayerErrors['DOWNLOAD_ERROR_ID_MANIFEST_CODE'] |
+                  MediaPlayerErrors['DOWNLOAD_ERROR_ID_CONTENT_CODE'] |
+                  MediaPlayerErrors['DOWNLOAD_ERROR_ID_INITIALIZATION_CODE'] |
+                  MediaPlayerErrors['DOWNLOAD_ERROR_ID_XLINK_CODE'] |
+                  MediaPlayerErrors['MANIFEST_ERROR_ID_PARSE_CODE'] |
+                  MediaPlayerErrors['MANIFEST_ERROR_ID_NOSTREAMS_CODE'] |
+                  MediaPlayerErrors['TIMED_TEXT_ERROR_ID_PARSE_CODE'] |
+                  MediaPlayerErrors['MANIFEST_ERROR_ID_MULTIPLEXED_CODE'] |
+                  MediaPlayerErrors['MEDIASOURCE_TYPE_UNSUPPORTED_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_UNKNOWN_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_CLIENT_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_SERVICE_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_OUTPUT_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_HARDWARECHANGE_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEYERR_DOMAIN_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEY_MESSAGE_ERROR_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE'] |
+                  MediaPlayerErrors['SERVER_CERTIFICATE_UPDATED_ERROR_CODE'] |
+                  MediaPlayerErrors['KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE'] |
+                  MediaPlayerErrors['KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE'] |
+                  MediaPlayerErrors['KEY_SESSION_CREATED_ERROR_CODE'] |
+                  MediaPlayerErrors['MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE'] |
+                  MediaPlayerErrors['MSS_NO_TFRF_CODE'],
+            message:string,
+            data:object,
+        }
+    }
+
+    export type ErrorEvent = GenericErrorEvent | DownloadErrorEvent | ManifestErrorEvent | TimedTextErrorEvent | MediaPlayerErrorEvent;
 
     export interface CaptionRenderedEvent extends Event {
         type: MediaPlayerEvents['CAPTION_RENDERED'];
@@ -687,6 +778,7 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: 'video' | 'audio', periodIdx: number): number;
+        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
         getCurrentRepresentationSwitch(metrics: MetricsList): any[];
         getLatestBufferLevelVO(metrics: MetricsList): any[];
         getCurrentBufferLevel(metrics: MetricsList): number;

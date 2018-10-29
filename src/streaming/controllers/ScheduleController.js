@@ -217,12 +217,12 @@ function ScheduleController(config) {
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
                             request = nextFragmentRequestRule.execute(streamProcessor, replacement);
                             if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
-                                logger.info('Playing at the bleeding live edge and frag is not available yet');
+                                logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
                             }
                         }
 
                         if (request) {
-                            logger.debug('getNextFragment - request is ' + request.url);
+                            logger.debug('Next fragment request url is ' + request.url);
                             fragmentModel.executeRequest(request);
                         } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                             setFragmentProcessState(false);

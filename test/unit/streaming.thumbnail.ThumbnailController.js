@@ -1,7 +1,7 @@
 import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
-import ObjectsHelper from './helpers/ObjectsHelper';
 
+import ObjectsHelper from './helpers/ObjectsHelper';
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import AdapterMock from './mocks/AdapterMock';
 import StreamMock from './mocks/StreamMock';
@@ -95,29 +95,32 @@ describe('Thumbnails', function () {
             let thumbnail = thumbnailController.get();
             expect(thumbnail).to.be.null; // jshint ignore:line
 
-            thumbnail = thumbnailController.get(0);
-            expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(0);
-            expect(thumbnail.y).to.equal(0);
-            expect(thumbnail.width).to.equal(320);
-            expect(thumbnail.height).to.equal(180);
-            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            thumbnailController.get(0, thumbnail => {
+                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail.x).to.equal(0);
+                expect(thumbnail.y).to.equal(0);
+                expect(thumbnail.width).to.equal(320);
+                expect(thumbnail.height).to.equal(180);
+                expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            });
 
-            thumbnail = thumbnailController.get(11);
-            expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(320);
-            expect(thumbnail.y).to.equal(0);
-            expect(thumbnail.width).to.equal(320);
-            expect(thumbnail.height).to.equal(180);
-            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            thumbnailController.get(11, thumbnail => {
+                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail.x).to.equal(320);
+                expect(thumbnail.y).to.equal(0);
+                expect(thumbnail.width).to.equal(320);
+                expect(thumbnail.height).to.equal(180);
+                expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            });
 
-            thumbnail = thumbnailController.get(101);
-            expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(0);
-            expect(thumbnail.y).to.equal(0);
-            expect(thumbnail.width).to.equal(320);
-            expect(thumbnail.height).to.equal(180);
-            expect(thumbnail.url).to.equal('http://media/rep_id/2.jpg');
+            thumbnailController.get(101, thumbnail => {
+                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail.x).to.equal(0);
+                expect(thumbnail.y).to.equal(0);
+                expect(thumbnail.width).to.equal(320);
+                expect(thumbnail.height).to.equal(180);
+                expect(thumbnail.url).to.equal('http://media/rep_id/2.jpg');
+            });
         });
 
         it('should return a thumbnail when using multiple rows sprites ', function () {
@@ -128,30 +131,33 @@ describe('Thumbnails', function () {
                 baseURLController: objectsHelper.getDummyBaseURLController(),
                 stream: new StreamMock()
             });
-            let thumbnail = thumbnailController.get(0);
-            expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(0);
-            expect(thumbnail.y).to.equal(0);
-            expect(thumbnail.width).to.equal(102);
-            expect(thumbnail.height).to.equal(57);
-            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            thumbnailController.get(0, thumbnail => {
+                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail.x).to.equal(0);
+                expect(thumbnail.y).to.equal(0);
+                expect(thumbnail.width).to.equal(102);
+                expect(thumbnail.height).to.equal(57);
+                expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            });
 
 
-            thumbnail = thumbnailController.get(15);
-            expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(409.6);
-            expect(thumbnail.y).to.equal(0);
-            expect(thumbnail.width).to.equal(102);
-            expect(thumbnail.height).to.equal(57);
-            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            thumbnailController.get(15, thumbnail => {
+                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail.x).to.equal(409.6);
+                expect(thumbnail.y).to.equal(0);
+                expect(thumbnail.width).to.equal(102);
+                expect(thumbnail.height).to.equal(57);
+                expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            });
 
-            thumbnail = thumbnailController.get(40);
-            expect(thumbnail).to.be.not.null; // jshint ignore:line
-            expect(thumbnail.x).to.equal(204.8);
-            expect(thumbnail.y).to.equal(57.6);
-            expect(thumbnail.width).to.equal(102);
-            expect(thumbnail.height).to.equal(57);
-            expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            thumbnailController.get(40, thumbnail => {
+                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail.x).to.equal(204.8);
+                expect(thumbnail.y).to.equal(57.6);
+                expect(thumbnail.width).to.equal(102);
+                expect(thumbnail.height).to.equal(57);
+                expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
+            });
         });
 
         it('shouldnt return any thumbnail after reset', function () {
@@ -163,8 +169,9 @@ describe('Thumbnails', function () {
                 stream: new StreamMock()
             });
             thumbnailController.reset();
-            const thumbnail = thumbnailController.get(0);
-            expect(thumbnail).to.be.null; // jshint ignore:line
+            thumbnailController.get(0, thumbnail => {
+                expect(thumbnail).to.be.null; // jshint ignore:line
+            });
         });
 
         it('should return list of available bitrates', function () {

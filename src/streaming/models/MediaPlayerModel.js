@@ -28,17 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import UTCTiming from '../../dash/vo/UTCTiming';
 import FactoryMaker from '../../core/FactoryMaker';
 import {
     HTTPRequest
 }
 from '../vo/metrics/HTTPRequest';
 import Constants from '../constants/Constants';
+import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
+import { checkParameterType, checkRange, checkIsVideoOrAudioType } from '../utils/SupervisorTools';
 
-const DEFAULT_UTC_TIMING_SOURCE = {
-    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-    value: 'http://time.akamai.com/?iso&ms'
-};
 const LIVE_DELAY_FRAGMENT_COUNT = 4;
 
 const DEFAULT_LOCAL_STORAGE_BITRATE_EXPIRATION = 360000;
@@ -71,9 +70,12 @@ const MANIFEST_RETRY_INTERVAL = 500;
 const XLINK_RETRY_ATTEMPTS = 1;
 const XLINK_RETRY_INTERVAL = 500;
 
-const DEFAULT_LOW_LATENCY_LIVE_DELAY = 2.8;
+const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
+const LOW_LATENCY_CATCH_UP_MIN_DRIFT = 0.02;
+const LOW_LATENCY_CATCH_UP_MAX_DRIFT = 0;
+const LOW_LATENCY_CATCH_UP_PLAYBACK_RATE = 0.5;
 
 //This value influences the startup time for live (in ms).
 const WALLCLOCK_TIME_UPDATE_INTERVAL = 50;
@@ -115,7 +117,15 @@ function MediaPlayerModel() {
         smallGapLimit,
         lowLatencyEnabled,
         manifestUpdateRetryInterval,
-        keepProtectionMediaKeys;
+        keepProtectionMediaKeys,
+        liveCatchUpMinDrift,
+        liveCatchUpMaxDrift,
+        liveCatchUpPlaybackRate;
+
+    const DEFAULT_UTC_TIMING_SOURCE = {
+            scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+            value: 'http://time.akamai.com/?iso&ms'
+        };
 
     function setup() {
         UTCTimingSources = [];
@@ -155,6 +165,9 @@ function MediaPlayerModel() {
         customABRRule = [];
         movingAverageMethod = Constants.MOVING_AVERAGE_SLIDING_WINDOW;
         lowLatencyEnabled = false;
+        liveCatchUpMinDrift = LOW_LATENCY_CATCH_UP_MIN_DRIFT;
+        liveCatchUpMaxDrift = LOW_LATENCY_CATCH_UP_MAX_DRIFT;
+        liveCatchUpPlaybackRate = LOW_LATENCY_CATCH_UP_PLAYBACK_RATE;
 
         retryAttempts = {
             [HTTPRequest.MPD_TYPE]:                         MANIFEST_RETRY_ATTEMPTS,
@@ -186,7 +199,11 @@ function MediaPlayerModel() {
     //TODO Should we use Object.define to have setters/getters? makes more readable code on other side.
 
     function setABRStrategy(value) {
-        ABRStrategy = value;
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            ABRStrategy = value;
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     function getABRStrategy() {
@@ -194,6 +211,7 @@ function MediaPlayerModel() {
     }
 
     function setUseDefaultABRRules(value) {
+        checkParameterType(value, 'boolean');
         useDefaultABRRules = value;
     }
 
@@ -216,7 +234,10 @@ function MediaPlayerModel() {
     }
 
     function addABRCustomRule(type, rulename, rule) {
-
+        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+            typeof rulename !== 'string') {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         let index = findABRCustomRuleIndex(rulename);
         if (index === -1) {
             // add rule
@@ -247,6 +268,7 @@ function MediaPlayerModel() {
     }
 
     function setBandwidthSafetyFactor(value) {
+        checkParameterType(value, 'number');
         bandwidthSafetyFactor = value;
     }
 
@@ -255,6 +277,7 @@ function MediaPlayerModel() {
     }
 
     function setAbandonLoadTimeout(value) {
+        checkParameterType(value, 'number');
         abandonLoadTimeout = value;
     }
 
@@ -263,15 +286,19 @@ function MediaPlayerModel() {
     }
 
     function setStableBufferTime(value) {
+        checkParameterType(value, 'number');
         stableBufferTime = value;
     }
 
     function getStableBufferTime() {
-        const result = !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-        return getLowLatencyEnabled() ? result / LOW_LATENCY_REDUCTION_FACTOR : result;
+        if (getLowLatencyEnabled()) {
+            return getLiveDelay() * 0.6;
+        }
+        return !isNaN(stableBufferTime) ? stableBufferTime : fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function setBufferTimeAtTopQuality(value) {
+        checkParameterType(value, 'number');
         bufferTimeAtTopQuality = value;
     }
 
@@ -280,6 +307,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferTimeAtTopQualityLongForm(value) {
+        checkParameterType(value, 'number');
         bufferTimeAtTopQualityLongForm = value;
     }
 
@@ -288,6 +316,7 @@ function MediaPlayerModel() {
     }
 
     function setLongFormContentDurationThreshold(value) {
+        checkParameterType(value, 'number');
         longFormContentDurationThreshold = value;
     }
 
@@ -296,6 +325,7 @@ function MediaPlayerModel() {
     }
 
     function setSegmentOverlapToleranceTime(value) {
+        checkParameterType(value, 'number');
         segmentOverlapToleranceTime = value;
     }
 
@@ -304,6 +334,8 @@ function MediaPlayerModel() {
     }
 
     function setCacheLoadThresholdForType(type, value) {
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
         cacheLoadThresholds[type] = value;
     }
 
@@ -312,6 +344,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferToKeep(value) {
+        checkParameterType(value, 'number');
         bufferToKeep = value;
     }
 
@@ -320,6 +353,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferAheadToKeep(value) {
+        checkParameterType(value, 'number');
         bufferAheadToKeep = value;
     }
 
@@ -328,8 +362,11 @@ function MediaPlayerModel() {
     }
 
     function setLastBitrateCachingInfo(enable, ttl) {
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         lastBitrateCachingInfo.enabled = enable;
-        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
+        if (ttl !== undefined) {
             lastBitrateCachingInfo.ttl = ttl;
         }
     }
@@ -339,8 +376,11 @@ function MediaPlayerModel() {
     }
 
     function setLastMediaSettingsCachingInfo(enable, ttl) {
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         lastMediaSettingsCachingInfo.enabled = enable;
-        if (ttl !== undefined && !isNaN(ttl) && typeof (ttl) === 'number') {
+        if (ttl !== undefined) {
             lastMediaSettingsCachingInfo.ttl = ttl;
         }
     }
@@ -350,6 +390,7 @@ function MediaPlayerModel() {
     }
 
     function setBufferPruningInterval(value) {
+        checkParameterType(value, 'number');
         bufferPruningInterval = value;
     }
 
@@ -358,6 +399,9 @@ function MediaPlayerModel() {
     }
 
     function setRetryAttemptsForType(type, value) {
+        if (typeof value !== 'number' || typeof type !== 'string' || (type !== HTTPRequest.MPD_TYPE && type !== HTTPRequest.MEDIA_SEGMENT_TYPE)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
         retryAttempts[type] = value;
     }
 
@@ -366,6 +410,7 @@ function MediaPlayerModel() {
     }
 
     function setRetryIntervalForType(type, value) {
+        checkParameterType(value, 'number');
         retryIntervals[type] = value;
     }
 
@@ -374,6 +419,7 @@ function MediaPlayerModel() {
     }
 
     function setWallclockTimeUpdateInterval(value) {
+        checkParameterType(value, 'number');
         wallclockTimeUpdateInterval = value;
     }
 
@@ -382,6 +428,7 @@ function MediaPlayerModel() {
     }
 
     function setScheduleWhilePaused(value) {
+        checkParameterType(value, 'boolean');
         scheduleWhilePaused = value;
     }
 
@@ -390,6 +437,7 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelayFragmentCount(value) {
+        checkParameterType(value, 'number');
         liveDelayFragmentCount = value;
     }
 
@@ -398,6 +446,9 @@ function MediaPlayerModel() {
     }
 
     function setLiveDelay(value) {
+        if (value !== undefined) { // undefined is the default value...
+            checkParameterType(value, 'number');
+        }
         liveDelay = value;
     }
 
@@ -409,6 +460,7 @@ function MediaPlayerModel() {
     }
 
     function setUseManifestDateHeaderTimeSource(value) {
+        checkParameterType(value, 'boolean');
         useManifestDateHeaderTimeSource = value;
     }
 
@@ -417,6 +469,7 @@ function MediaPlayerModel() {
     }
 
     function setUseSuggestedPresentationDelay(value) {
+        checkParameterType(value, 'boolean');
         useSuggestedPresentationDelay = value;
     }
 
@@ -424,12 +477,34 @@ function MediaPlayerModel() {
         return useSuggestedPresentationDelay;
     }
 
-    function setUTCTimingSources(value) {
-        UTCTimingSources = value;
+    function addUTCTimingSource(schemeIdUri, value) {
+        removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
+        let vo = new UTCTiming();
+        vo.schemeIdUri = schemeIdUri;
+        vo.value = value;
+        UTCTimingSources.push(vo);
     }
 
     function getUTCTimingSources() {
         return UTCTimingSources;
+    }
+
+    function removeUTCTimingSource(schemeIdUri, value) {
+        checkParameterType(schemeIdUri, 'string');
+        checkParameterType(value, 'string');
+        UTCTimingSources.forEach(function (obj, idx) {
+            if (obj.schemeIdUri === schemeIdUri && obj.value === value) {
+                UTCTimingSources.splice(idx, 1);
+            }
+        });
+    }
+
+    function clearDefaultUTCTimingSources() {
+        UTCTimingSources = [];
+    }
+
+    function restoreDefaultUTCTimingSources() {
+        addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
     }
 
     function setXHRWithCredentialsForType(type, value) {
@@ -445,11 +520,7 @@ function MediaPlayerModel() {
     function getXHRWithCredentialsForType(type) {
         const useCreds = xhrWithCredentials[type];
 
-        if (useCreds === undefined) {
-            return xhrWithCredentials.default;
-        }
-
-        return useCreds;
+        return useCreds === undefined ? xhrWithCredentials.default : useCreds;
     }
 
     function getFastSwitchEnabled() {
@@ -457,14 +528,16 @@ function MediaPlayerModel() {
     }
 
     function setFastSwitchEnabled(value) {
-        if (typeof value !== 'boolean') {
-            return;
-        }
+        checkParameterType(value, 'boolean');
         fastSwitchEnabled = value;
     }
 
     function setMovingAverageMethod(value) {
-        movingAverageMethod = value;
+        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
+            movingAverageMethod = value;
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     function getMovingAverageMethod() {
@@ -472,6 +545,7 @@ function MediaPlayerModel() {
     }
 
     function setJumpGaps(value) {
+        checkParameterType(value, 'boolean');
         jumpGaps = value;
     }
 
@@ -480,6 +554,7 @@ function MediaPlayerModel() {
     }
 
     function setSmallGapLimit(value) {
+        checkParameterType(value, 'number');
         smallGapLimit = value;
     }
 
@@ -492,13 +567,41 @@ function MediaPlayerModel() {
     }
 
     function setLowLatencyEnabled(value) {
-        if (typeof value !== 'boolean') {
-            return;
-        }
+        checkParameterType(value, 'boolean');
         lowLatencyEnabled = value;
     }
 
+    function setCatchUpPlaybackRate(value) {
+        checkParameterType(value, 'number');
+        checkRange(value, 0.0, 0.5);
+
+        liveCatchUpPlaybackRate = value;
+    }
+
+    function getCatchUpPlaybackRate() {
+        return liveCatchUpPlaybackRate;
+    }
+
+    function setLowLatencyMinDrift(value) {
+        checkParameterType(value, 'number');
+        liveCatchUpMinDrift = value;
+    }
+
+    function getLowLatencyMinDrift() {
+        return liveCatchUpMinDrift;
+    }
+
+    function setLowLatencyMaxDriftBeforeSeeking(value) {
+        checkParameterType(value, 'number');
+        liveCatchUpMaxDrift = value;
+    }
+
+    function getLowLatencyMaxDriftBeforeSeeking() {
+        return liveCatchUpMaxDrift;
+    }
+
     function setManifestUpdateRetryInterval(value) {
+        checkParameterType(value, 'number');
         manifestUpdateRetryInterval = value;
     }
 
@@ -507,11 +610,16 @@ function MediaPlayerModel() {
     }
 
     function setKeepProtectionMediaKeys(value) {
+        checkParameterType(value, 'boolean');
         keepProtectionMediaKeys = value;
     }
 
     function getKeepProtectionMediaKeys() {
         return keepProtectionMediaKeys;
+    }
+
+    function getDefaultUtcTimingSource() {
+        return DEFAULT_UTC_TIMING_SOURCE;
     }
 
     function reset() {
@@ -569,8 +677,11 @@ function MediaPlayerModel() {
         setLiveDelay: setLiveDelay,
         setUseManifestDateHeaderTimeSource: setUseManifestDateHeaderTimeSource,
         getUseManifestDateHeaderTimeSource: getUseManifestDateHeaderTimeSource,
-        setUTCTimingSources: setUTCTimingSources,
+        addUTCTimingSource: addUTCTimingSource,
+        removeUTCTimingSource: removeUTCTimingSource,
         getUTCTimingSources: getUTCTimingSources,
+        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
+        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
         setFastSwitchEnabled: setFastSwitchEnabled,
@@ -583,10 +694,17 @@ function MediaPlayerModel() {
         getSmallGapLimit: getSmallGapLimit,
         getLowLatencyEnabled: getLowLatencyEnabled,
         setLowLatencyEnabled: setLowLatencyEnabled,
+        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
+        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
+        setLowLatencyMinDrift: setLowLatencyMinDrift,
+        getLowLatencyMinDrift: getLowLatencyMinDrift,
+        setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
+        getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
         setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
         getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
         setKeepProtectionMediaKeys: setKeepProtectionMediaKeys,
         getKeepProtectionMediaKeys: getKeepProtectionMediaKeys,
+        getDefaultUtcTimingSource: getDefaultUtcTimingSource,
         reset: reset
     };
 
@@ -597,7 +715,4 @@ function MediaPlayerModel() {
 
 //TODO see if you can move this and not export and just getter to get default value.
 MediaPlayerModel.__dashjs_factory_name = 'MediaPlayerModel';
-const factory = FactoryMaker.getSingletonFactory(MediaPlayerModel);
-factory.DEFAULT_UTC_TIMING_SOURCE = DEFAULT_UTC_TIMING_SOURCE;
-FactoryMaker.updateSingletonFactory(MediaPlayerModel.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getSingletonFactory(MediaPlayerModel);

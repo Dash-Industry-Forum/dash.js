@@ -32,7 +32,9 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-
+/**
+ * @module ErrorHandler
+ */
 function ErrorHandler() {
 
     let instance;
@@ -41,6 +43,7 @@ function ErrorHandler() {
 
     /**
      * @param {number} err  "mediasource"|"mediakeys"
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function capabilityError(err) {
@@ -51,6 +54,7 @@ function ErrorHandler() {
      * @param {string} id "manifest"|"SIDX"|"content"|"initialization"|"xlink"
      * @param {string} url ""
      * @param {object} request {XMLHttpRequest instance}
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function downloadError(id, url, request) {
@@ -62,6 +66,7 @@ function ErrorHandler() {
      * @param {string} id "parse"|"nostreams"
      * @param {obj} manifest {parsed manifest}
      * @param {obj} err
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function manifestError(message, id, manifest, err) {
@@ -72,6 +77,7 @@ function ErrorHandler() {
      * @param {string} message ''
      * @param {string} id 'parse'
      * @param {string} ccContent ''
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function timedTextError(message, id, ccContent) {
@@ -80,6 +86,7 @@ function ErrorHandler() {
 
     /**
      * @param {string} err
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function mediaSourceError(err) {
@@ -88,6 +95,7 @@ function ErrorHandler() {
 
     /**
      * @param {string} err
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function mediaKeySessionError(err) {
@@ -96,6 +104,7 @@ function ErrorHandler() {
 
     /**
      * @param {string} err
+     * @memberof module:ErrorHandler
      * @deprecated
      */
     function mediaKeyMessageError(err) {
@@ -104,6 +113,7 @@ function ErrorHandler() {
 
     /**
      * @param {object} err DashJSError with code, message and data attributes
+     * @memberof module:ErrorHandler
      */
     function error(err) {
         eventBus.trigger(Events.ERROR, {error: err});

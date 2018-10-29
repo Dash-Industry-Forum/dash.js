@@ -5,16 +5,16 @@ import {
     decideSegmentListRangeForTemplate
 } from '../../src/dash/utils/SegmentsUtils';
 
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import VoHelper from './helpers/VOHelper';
+import ObjectsHelper from './helpers/ObjectsHelper';
 
 const expect = require('chai').expect;
 
 describe('SegmentUtils', function () {
-    const context = {};
     const testType = 'fragmentedText';
     const voHelper = new VoHelper();
-    const timelineConverter = TimelineConverter(context).getInstance();
+    const objectsHelper = new ObjectsHelper();
+    const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const representation = voHelper.getDummyRepresentation(testType);
 
     describe('unescapeDollarsInTemplate', function () {

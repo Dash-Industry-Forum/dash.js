@@ -4,7 +4,7 @@ import EventBus from '../../src/core/EventBus';
 import FactoryMaker from '../../src/core/FactoryMaker.js';
 import Errors from '../../src/core/errors/Errors';
 
-import TextBufferMock from './mocks/TextBufferMock';
+import TextSourceBufferMock from './mocks/TextSourceBufferMock';
 import TextControllerMock from './mocks/TextControllerMock';
 import MediaSourceBufferMock from './mocks/MediaSourceBufferMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
@@ -51,7 +51,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(sink.getBuffer()).to.be.instanceOf(TextBufferMock); // jshint ignore:line
+            expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
         });
 
         it('should create and return a text buffer if codec is of type application/mp4;codecs="wvtt"', function () {
@@ -62,7 +62,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(sink.getBuffer()).to.be.instanceOf(TextBufferMock); // jshint ignore:line
+            expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
         });
 
         it('should create and return a text buffer if codec is of type text', function () {
@@ -74,7 +74,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            expect(sink.getBuffer()).to.be.instanceOf(TextBufferMock); // jshint ignore:line
+            expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
         });
 
         it('should throw an error if codec is unknonw', function () {
@@ -179,7 +179,7 @@ describe('SourceBufferSink', function () {
             }
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
-            expect(sink.getBuffer()).to.be.instanceOf(TextBufferMock);
+            expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock);
 
             sink.append({bytes: 'toto'});
         });
