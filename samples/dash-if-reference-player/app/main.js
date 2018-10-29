@@ -206,6 +206,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
+    $scope.videoAutoSwitchSelected = true;
+    $scope.videoQualities = [];
     $scope.ABRStrategy = 'abrDynamic';
 
     // Persistent license
@@ -279,6 +281,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_INFO);
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
     $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
+    $scope.player.setAutoSwitchQualityFor('video', $scope.videoAutoSwitchSelected);
     $scope.player.setJumpGaps($scope.jumpGapsSelected);
     $scope.player.attachVideoContainer(document.getElementById('videoContainer'));
     // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
@@ -327,7 +330,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
         $scope[e.mediaType + 'Index'] = e.newQuality + 1;
-        $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
@@ -339,6 +341,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
         stopMetricsInterval();
 
+        $scope.videoQualities = $scope.player.getBitrateInfoListFor('video');
         $scope.chartCount = 0;
         $scope.metricsTimer = setInterval(function () {
             updateMetrics('video');
@@ -405,6 +408,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
     };
 
+    $scope.toggleVideoAutoSwitch = function () {
+        $scope.player.setAutoSwitchQualityFor('video', $scope.videoAutoSwitchSelected);
+    };
+
     $scope.toggleScheduleWhilePaused = function () {
         $scope.player.setScheduleWhilePaused($scope.scheduleWhilePausedSelected);
     };
@@ -429,6 +436,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.toggleOptionsGutter = function (bool) {
         $scope.optionsGutter = bool;
     };
+
+    $scope.selectVideoQuality = function (quality) {
+        $scope.player.setQualityFor('video', quality);
+    }
 
     $scope.doLoad = function () {
         $scope.initSession();
@@ -486,6 +497,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.setBufferTimeAtTopQuality(bufferConfig.bufferTimeAtTopQuality);
         $scope.player.setBufferTimeAtTopQualityLongForm(bufferConfig.bufferTimeAtTopQualityLongForm);
         $scope.player.setLowLatencyEnabled($scope.lowLatencyModeSelected || bufferConfig.lowLatencyMode);
+        const initBitrate = parseInt($scope.initialVideoBitrate);
+        if (!isNaN(initBitrate)) {
+            $scope.player.setInitialBitrateFor('video', initBitrate);
+        }
 
         $scope.controlbar.reset();
         $scope.player.setProtectionData(protData);

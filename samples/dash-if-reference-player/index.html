@@ -133,6 +133,17 @@
             <div class="options-item">
                 <div class="options-item-title">Playback</div>
                 <div class="options-item-body">
+                    <label class="options-label">Playback Video quality:
+                        <div class="dropdown" data-toggle="tooltip" data-placement="left"
+                                title="Please select your video quality">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">Set Video Quality
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                                <li ng-repeat="bitrateInfo in videoQualities"><a ng-click="selectVideoQuality(bitrateInfo.qualityIndex)">{{bitrateInfo.qualityIndex + 1}}</a></li>
+                            </ul>
+                        </div>
+                    </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables automatic startup of the media once the media is loaded">
                         <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="autoPlaySelected">
@@ -168,6 +179,11 @@
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
                     </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables auto switch video quality using selected ABR strategy">
+                        <input type="checkbox" id="videoAutoSwitchCB" ng-model="videoAutoSwitchSelected" ng-change="toggleVideoAutoSwitch()" ng-checked="videoAutoSwitchSelected">
+                        Video Auto Switch
+                    </label>                    
                     <label data-toggle="tooltip" data-placement="right"
                            title="Dynamically switch between BOLA and Throughput strategies.">
                         <input  type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-click="changeABRStrategy('abrDynamic')" >
@@ -213,6 +229,8 @@
             <div class="options-item">
                 <div class="options-item-title">Initial Settings</div>
                 <div class="options-item-body">
+                    <label class="options-label">Initial bitrate Video:</label>
+                    <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate">
                     <label class="options-label">Audio:</label>
                     <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'" ng-model="initialSettings.audio">
                     <label class="options-label">Video:</label>
