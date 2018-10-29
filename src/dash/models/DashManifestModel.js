@@ -798,7 +798,7 @@ function DashManifestModel(config) {
                 if (eventStreams[i].hasOwnProperty(DashConstants.VALUE)) {
                     eventStream.value = eventStreams[i].value;
                 }
-                for (j = 0; j < eventStreams[i].Event_asArray.length; j++) {
+                for (j = 0; eventStreams[i].Event_asArray && j < eventStreams[i].Event_asArray.length; j++) {
                     const event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
