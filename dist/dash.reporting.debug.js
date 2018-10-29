@@ -364,6 +364,102 @@ module.exports = exports['default'];
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * Constants declaration
+ * @class
+ * @ignore
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Constants = (function () {
+    _createClass(Constants, [{
+        key: 'init',
+        value: function init() {
+            this.STREAM = 'stream';
+            this.VIDEO = 'video';
+            this.AUDIO = 'audio';
+            this.TEXT = 'text';
+            this.FRAGMENTED_TEXT = 'fragmentedText';
+            this.EMBEDDED_TEXT = 'embeddedText';
+            this.MUXED = 'muxed';
+            this.IMAGE = 'image';
+            this.LOCATION = 'Location';
+            this.INITIALIZE = 'initialize';
+            this.TEXT_SHOWING = 'showing';
+            this.TEXT_HIDDEN = 'hidden';
+            this.CC1 = 'CC1';
+            this.CC3 = 'CC3';
+            this.STPP = 'stpp';
+            this.TTML = 'ttml';
+            this.VTT = 'vtt';
+            this.WVTT = 'wvtt';
+            this.UTF8 = 'utf-8';
+            this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
+            this.SCHEME_ID_URI = 'schemeIdUri';
+            this.START_TIME = 'starttime';
+            this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+            this.ABR_STRATEGY_BOLA = 'abrBola';
+            this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+            this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+            this.MOVING_AVERAGE_EWMA = 'ewma';
+            this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
+            this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+        }
+    }]);
+
+    function Constants() {
+        _classCallCheck(this, Constants);
+
+        this.init();
+    }
+
+    return Constants;
+})();
+
+var constants = new Constants();
+exports['default'] = constants;
+module.exports = exports['default'];
+
+},{}],4:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -372,23 +468,23 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utilsDVBErrorsTranslator = _dereq_(17);
+var _utilsDVBErrorsTranslator = _dereq_(18);
 
 var _utilsDVBErrorsTranslator2 = _interopRequireDefault(_utilsDVBErrorsTranslator);
 
-var _MetricsReportingEvents = _dereq_(4);
+var _MetricsReportingEvents = _dereq_(5);
 
 var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
-var _controllersMetricsCollectionController = _dereq_(5);
+var _controllersMetricsCollectionController = _dereq_(6);
 
 var _controllersMetricsCollectionController2 = _interopRequireDefault(_controllersMetricsCollectionController);
 
-var _metricsMetricsHandlerFactory = _dereq_(10);
+var _metricsMetricsHandlerFactory = _dereq_(11);
 
 var _metricsMetricsHandlerFactory2 = _interopRequireDefault(_metricsMetricsHandlerFactory);
 
-var _reportingReportingFactory = _dereq_(15);
+var _reportingReportingFactory = _dereq_(16);
 
 var _reportingReportingFactory2 = _interopRequireDefault(_reportingReportingFactory);
 
@@ -447,7 +543,7 @@ dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, f
 exports['default'] = factory;
 module.exports = exports['default'];
 
-},{"10":10,"15":15,"17":17,"4":4,"5":5}],4:[function(_dereq_,module,exports){
+},{"11":11,"16":16,"18":18,"5":5,"6":6}],5:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -515,7 +611,7 @@ var metricsReportingEvents = new MetricsReportingEvents();
 exports['default'] = metricsReportingEvents;
 module.exports = exports['default'];
 
-},{"2":2}],5:[function(_dereq_,module,exports){
+},{"2":2}],6:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -555,15 +651,15 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _MetricsController = _dereq_(6);
+var _MetricsController = _dereq_(7);
 
 var _MetricsController2 = _interopRequireDefault(_MetricsController);
 
-var _utilsManifestParsing = _dereq_(19);
+var _utilsManifestParsing = _dereq_(20);
 
 var _utilsManifestParsing2 = _interopRequireDefault(_utilsManifestParsing);
 
-var _MetricsReportingEvents = _dereq_(4);
+var _MetricsReportingEvents = _dereq_(5);
 
 var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
@@ -645,7 +741,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(MetricsCollectionContro
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"19":19,"4":4,"6":6}],6:[function(_dereq_,module,exports){
+},{"20":20,"5":5,"7":7}],7:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -685,15 +781,15 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _RangeController = _dereq_(8);
+var _RangeController = _dereq_(9);
 
 var _RangeController2 = _interopRequireDefault(_RangeController);
 
-var _ReportingController = _dereq_(9);
+var _ReportingController = _dereq_(10);
 
 var _ReportingController2 = _interopRequireDefault(_ReportingController);
 
-var _MetricsHandlersController = _dereq_(7);
+var _MetricsHandlersController = _dereq_(8);
 
 var _MetricsHandlersController2 = _interopRequireDefault(_MetricsHandlersController);
 
@@ -763,7 +859,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(MetricsController);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"7":7,"8":8,"9":9}],7:[function(_dereq_,module,exports){
+},{"10":10,"8":8,"9":9}],8:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -803,7 +899,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _metricsMetricsHandlerFactory = _dereq_(10);
+var _metricsMetricsHandlerFactory = _dereq_(11);
 
 var _metricsMetricsHandlerFactory2 = _interopRequireDefault(_metricsMetricsHandlerFactory);
 
@@ -884,7 +980,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(MetricsHandlersControll
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"10":10}],8:[function(_dereq_,module,exports){
+},{"11":11}],9:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -924,7 +1020,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utilsCustomTimeRanges = _dereq_(26);
+var _utilsCustomTimeRanges = _dereq_(27);
 
 var _utilsCustomTimeRanges2 = _interopRequireDefault(_utilsCustomTimeRanges);
 
@@ -999,7 +1095,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(RangeController);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"26":26}],9:[function(_dereq_,module,exports){
+},{"27":27}],10:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1039,7 +1135,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _reportingReportingFactory = _dereq_(15);
+var _reportingReportingFactory = _dereq_(16);
 
 var _reportingReportingFactory2 = _interopRequireDefault(_reportingReportingFactory);
 
@@ -1092,7 +1188,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ReportingController);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"15":15}],10:[function(_dereq_,module,exports){
+},{"16":16}],11:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1132,19 +1228,19 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _handlersBufferLevelHandler = _dereq_(11);
+var _handlersBufferLevelHandler = _dereq_(12);
 
 var _handlersBufferLevelHandler2 = _interopRequireDefault(_handlersBufferLevelHandler);
 
-var _handlersDVBErrorsHandler = _dereq_(12);
+var _handlersDVBErrorsHandler = _dereq_(13);
 
 var _handlersDVBErrorsHandler2 = _interopRequireDefault(_handlersDVBErrorsHandler);
 
-var _handlersHttpListHandler = _dereq_(14);
+var _handlersHttpListHandler = _dereq_(15);
 
 var _handlersHttpListHandler2 = _interopRequireDefault(_handlersHttpListHandler);
 
-var _handlersGenericMetricHandler = _dereq_(13);
+var _handlersGenericMetricHandler = _dereq_(14);
 
 var _handlersGenericMetricHandler2 = _interopRequireDefault(_handlersGenericMetricHandler);
 
@@ -1212,7 +1308,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFacto
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"11":11,"12":12,"13":13,"14":14}],11:[function(_dereq_,module,exports){
+},{"12":12,"13":13,"14":14,"15":15}],12:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1252,7 +1348,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utilsHandlerHelpers = _dereq_(18);
+var _utilsHandlerHelpers = _dereq_(19);
 
 var _utilsHandlerHelpers2 = _interopRequireDefault(_utilsHandlerHelpers);
 
@@ -1335,7 +1431,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(BufferLevelHandler);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"18":18}],12:[function(_dereq_,module,exports){
+},{"19":19}],13:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1375,7 +1471,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _MetricsReportingEvents = _dereq_(4);
+var _MetricsReportingEvents = _dereq_(5);
 
 var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
@@ -1431,7 +1527,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"4":4}],13:[function(_dereq_,module,exports){
+},{"5":5}],14:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1507,7 +1603,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(GenericMetricHandler);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1547,7 +1643,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utilsHandlerHelpers = _dereq_(18);
+var _utilsHandlerHelpers = _dereq_(19);
 
 var _utilsHandlerHelpers2 = _interopRequireDefault(_utilsHandlerHelpers);
 
@@ -1629,7 +1725,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(HttpListHandler);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"18":18}],15:[function(_dereq_,module,exports){
+},{"19":19}],16:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1669,7 +1765,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _reportersDVBReporting = _dereq_(16);
+var _reportersDVBReporting = _dereq_(17);
 
 var _reportersDVBReporting2 = _interopRequireDefault(_reportersDVBReporting);
 
@@ -1725,7 +1821,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(ReportingFactory);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"16":16}],16:[function(_dereq_,module,exports){
+},{"17":17}],17:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1765,11 +1861,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utilsMetricSerialiser = _dereq_(20);
+var _utilsMetricSerialiser = _dereq_(21);
 
 var _utilsMetricSerialiser2 = _interopRequireDefault(_utilsMetricSerialiser);
 
-var _utilsRNG = _dereq_(21);
+var _utilsRNG = _dereq_(22);
 
 var _utilsRNG2 = _interopRequireDefault(_utilsRNG);
 
@@ -1926,7 +2022,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(DVBReporting);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"20":20,"21":21}],17:[function(_dereq_,module,exports){
+},{"21":21,"22":22}],18:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1966,11 +2062,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voDVBErrors = _dereq_(22);
+var _voDVBErrors = _dereq_(23);
 
 var _voDVBErrors2 = _interopRequireDefault(_voDVBErrors);
 
-var _MetricsReportingEvents = _dereq_(4);
+var _MetricsReportingEvents = _dereq_(5);
 
 var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 
@@ -2109,7 +2205,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(DVBErrorsTranslator
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"22":22,"4":4}],18:[function(_dereq_,module,exports){
+},{"23":23,"5":5}],19:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2189,7 +2285,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2198,15 +2294,15 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voMetrics = _dereq_(23);
+var _voMetrics = _dereq_(24);
 
 var _voMetrics2 = _interopRequireDefault(_voMetrics);
 
-var _voRange = _dereq_(24);
+var _voRange = _dereq_(25);
 
 var _voRange2 = _interopRequireDefault(_voRange);
 
-var _voReporting = _dereq_(25);
+var _voReporting = _dereq_(26);
 
 var _voReporting2 = _interopRequireDefault(_voReporting);
 
@@ -2328,7 +2424,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(ManifestParsing);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"23":23,"24":24,"25":25}],20:[function(_dereq_,module,exports){
+},{"24":24,"25":25,"26":26}],21:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2434,7 +2530,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(MetricSerialiser);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2539,7 +2635,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(RNG);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2647,7 +2743,7 @@ DVBErrors.BECAME_REPORTER = 'S00';
 exports['default'] = DVBErrors;
 module.exports = exports['default'];
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2701,7 +2797,7 @@ var Metrics = function Metrics() {
 exports['default'] = Metrics;
 module.exports = exports['default'];
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2758,7 +2854,7 @@ var Range = function Range() {
 exports["default"] = Range;
 module.exports = exports["default"];
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2812,7 +2908,7 @@ var Reporting = function Reporting() {
 exports['default'] = Reporting;
 module.exports = exports['default'];
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 /**
 * The copyright in this software is being made available under the BSD License,
 * included below. This software may be subject to other third party and contributor
@@ -2854,6 +2950,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'd
 var _coreFactoryMaker = _dereq_(1);
 
 var _coreFactoryMaker2 = _interopRequireDefault(_coreFactoryMaker);
+
+var _utilsSupervisorTools = _dereq_(28);
 
 function CustomTimeRanges() /*config*/{
     var customTimeRangeArray = [];
@@ -2948,16 +3046,8 @@ function CustomTimeRanges() /*config*/{
         return false;
     }
 
-    function checkIndex(index) {
-        var isInt = index !== null && !isNaN(index) && index % 1 === 0;
-
-        if (!isInt) {
-            throw new Error('index argument is not an integer');
-        }
-    }
-
     function start(index) {
-        checkIndex(index);
+        (0, _utilsSupervisorTools.checkInteger)(index);
 
         if (index >= this.customTimeRangeArray.length || index < 0) {
             return NaN;
@@ -2967,7 +3057,7 @@ function CustomTimeRanges() /*config*/{
     }
 
     function end(index) {
-        checkIndex(index);
+        (0, _utilsSupervisorTools.checkInteger)(index);
 
         if (index >= this.customTimeRangeArray.length || index < 0) {
             return NaN;
@@ -2991,6 +3081,79 @@ CustomTimeRanges.__dashjs_factory_name = 'CustomTimeRanges';
 exports['default'] = _coreFactoryMaker2['default'].getClassFactory(CustomTimeRanges);
 module.exports = exports['default'];
 
-},{"1":1}]},{},[3])(3)
+},{"1":1,"28":28}],28:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports.checkParameterType = checkParameterType;
+exports.checkInteger = checkInteger;
+exports.checkRange = checkRange;
+exports.checkIsVideoOrAudioType = checkIsVideoOrAudioType;
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _constantsConstants = _dereq_(3);
+
+var _constantsConstants2 = _interopRequireDefault(_constantsConstants);
+
+function checkParameterType(parameter, type) {
+    if (typeof parameter !== type) {
+        throw _constantsConstants2['default'].BAD_ARGUMENT_ERROR;
+    }
+}
+
+function checkInteger(parameter) {
+    var isInt = parameter !== null && !isNaN(parameter) && parameter % 1 === 0;
+
+    if (!isInt) {
+        throw _constantsConstants2['default'].BAD_ARGUMENT_ERROR + ' : argument is not an integer';
+    }
+}
+
+function checkRange(parameter, min, max) {
+    if (parameter < min || parameter > max) {
+        throw _constantsConstants2['default'].BAD_ARGUMENT_ERROR + ' : argument out of range';
+    }
+}
+
+function checkIsVideoOrAudioType(type) {
+    if (typeof type !== 'string' || type !== _constantsConstants2['default'].AUDIO && type !== _constantsConstants2['default'].VIDEO) {
+        throw _constantsConstants2['default'].BAD_ARGUMENT_ERROR;
+    }
+}
+
+},{"3":3}]},{},[4])(4)
 });
 //# sourceMappingURL=dash.reporting.debug.js.map

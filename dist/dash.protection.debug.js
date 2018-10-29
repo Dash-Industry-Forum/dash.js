@@ -940,6 +940,10 @@ var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 var NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 var NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 
+var LICENSE_SERVER_REQUEST_RETRIES = 3;
+var LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
+var LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
+
 /**
  * @module ProtectionController
  * @description Provides access to media protection information and functionality.  Each
@@ -1457,8 +1461,6 @@ function ProtectionController(config) {
         }
 
         // All remaining key system scenarios require a request to a remote license server
-        var xhr = new XMLHttpRequest();
-
         // Determine license server URL
         var url = null;
         if (protData && protData.serverURL) {
@@ -1486,44 +1488,16 @@ function ProtectionController(config) {
             return;
         }
 
-        var reportError = function reportError(xhr, eventData, keySystemString, messageType) {
-            var errorMsg = xhr.response ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE';
-            sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
-        };
-
-        xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
-        xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
-        xhr.onload = function () {
-            if (!protectionModel) {
-                return;
-            }
-            if (this.status == 200) {
-                var licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
-                if (licenseMessage !== null) {
-                    sendLicenseRequestCompleteEvent(eventData);
-                    protectionModel.updateKeySession(sessionToken, licenseMessage);
-                } else {
-                    reportError(this, eventData, keySystemString, messageType);
-                }
-            } else {
-                reportError(this, eventData, keySystemString, messageType);
-            }
-        };
-        xhr.onabort = function () {
-            sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState));
-        };
-        xhr.onerror = function () {
-            sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState));
-        };
-
         // Set optional XMLHttpRequest headers from protection data and message
+        var reqHeaders = {};
+        var withCredentials = false;
         var updateHeaders = function updateHeaders(headers) {
             if (headers) {
                 for (var key in headers) {
                     if ('authorization' === key.toLowerCase()) {
-                        xhr.withCredentials = true;
+                        withCredentials = true;
                     }
-                    xhr.setRequestHeader(key, headers[key]);
+                    reqHeaders[key] = headers[key];
                 }
             }
         };
@@ -1534,10 +1508,93 @@ function ProtectionController(config) {
 
         // Overwrite withCredentials property from protData if present
         if (protData && typeof protData.withCredentials == 'boolean') {
-            xhr.withCredentials = protData.withCredentials;
+            withCredentials = protData.withCredentials;
         }
 
-        xhr.send(keySystem.getLicenseRequestFromMessage(message));
+        var reportError = function reportError(xhr, eventData, keySystemString, messageType) {
+            var errorMsg = xhr.response ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE';
+            sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+        };
+
+        var onLoad = function onLoad(xhr) {
+            if (!protectionModel) {
+                return;
+            }
+
+            if (xhr.status === 200) {
+                var licenseMessage = licenseServerData.getLicenseMessage(xhr.response, keySystemString, messageType);
+                if (licenseMessage !== null) {
+                    sendLicenseRequestCompleteEvent(eventData);
+                    protectionModel.updateKeySession(sessionToken, licenseMessage);
+                } else {
+                    reportError(xhr, eventData, keySystemString, messageType);
+                }
+            } else {
+                reportError(xhr, eventData, keySystemString, messageType);
+            }
+        };
+
+        var onAbort = function onAbort(xhr) {
+            sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+        };
+
+        var onError = function onError(xhr) {
+            sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+        };
+
+        var reqPayload = keySystem.getLicenseRequestFromMessage(message);
+        var reqMethod = licenseServerData.getHTTPMethod(messageType);
+        var responseType = licenseServerData.getResponseType(keySystemString, messageType);
+        var timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
+
+        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+    }
+
+    // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
+    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.open(method, url, true);
+        xhr.responseType = responseType;
+        xhr.withCredentials = withCredentials;
+        if (timeout > 0) {
+            xhr.timeout = timeout;
+        }
+        for (var key in headers) {
+            xhr.setRequestHeader(key, headers[key]);
+        }
+
+        var retryRequest = function retryRequest() {
+            // fail silently and retry
+            retriesCount--;
+            setTimeout(function () {
+                doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError);
+            }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
+        };
+
+        xhr.onload = function () {
+            if (this.status === 200 || retriesCount <= 0) {
+                onLoad(this);
+            } else {
+                logger.warn('License request failed (' + this.status + '). Retrying it... Pending retries: ' + retriesCount);
+                retryRequest();
+            }
+        };
+
+        xhr.onerror = function () {
+            if (retriesCount <= 0) {
+                onError(this);
+            } else {
+                logger.warn('License request network request failed . Retrying it... Pending retries: ' + retriesCount);
+                retryRequest();
+            }
+        };
+
+        xhr.onabort = function () {
+            onAbort(this);
+        };
+
+        xhr.send(payload);
     }
 
     function onNeedKey(event, retry) {
@@ -2809,23 +2866,66 @@ var ProtectionErrors = (function (_ErrorsBase) {
 
     _get(Object.getPrototypeOf(ProtectionErrors.prototype), 'constructor', this).call(this);
 
+    /**
+     *  Generid key Error code
+     */
     this.MEDIA_KEYERR_CODE = 100;
+    /**
+     *  Error code returned by keyerror api for ProtectionModel_01b
+     */
     this.MEDIA_KEYERR_UNKNOWN_CODE = 101;
+    /**
+     *  Error code returned by keyerror api for ProtectionModel_01b
+     */
     this.MEDIA_KEYERR_CLIENT_CODE = 102;
+    /**
+     *  Error code returned by keyerror api for ProtectionModel_01b
+     */
     this.MEDIA_KEYERR_SERVICE_CODE = 103;
+    /**
+     *  Error code returned by keyerror api for ProtectionModel_01b
+     */
     this.MEDIA_KEYERR_OUTPUT_CODE = 104;
+    /**
+     *  Error code returned by keyerror api for ProtectionModel_01b
+     */
     this.MEDIA_KEYERR_HARDWARECHANGE_CODE = 105;
+    /**
+     *  Error code returned by keyerror api for ProtectionModel_01b
+     */
     this.MEDIA_KEYERR_DOMAIN_CODE = 106;
 
+    /**
+     *  Error code returned when an error occured in keymessage event for ProtectionModel_01b
+     */
     this.MEDIA_KEY_MESSAGE_ERROR_CODE = 107;
-
+    /**
+     *  Error code returned when challenge is invalid in keymessage event (event triggered by CDM)
+     */
     this.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE = 108;
-
+    /**
+     *  Error code returned when License server certificate has not been successfully updated
+     */
     this.SERVER_CERTIFICATE_UPDATED_ERROR_CODE = 109;
+    /**
+     *  Error code returned when license validity has expired
+     */
     this.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE = 110;
+    /**
+     *  Error code returned when no licenser url is defined
+     */
     this.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE = 111;
+    /**
+     *  Error code returned when key system access is denied
+     */
     this.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE = 112;
+    /**
+     *  Error code returned when key session has not been successfully created
+     */
     this.KEY_SESSION_CREATED_ERROR_CODE = 113;
+    /**
+     *  Error code returned when license request failed after a keymessage event has been triggered
+     */
     this.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE = 114;
 
     this.MEDIA_KEYERR_UNKNOWN_MESSAGE = 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
@@ -3064,6 +3164,12 @@ function ProtectionModel_01b(config) {
         // Replacing the previous element
         if (videoElement) {
             removeEventListeners();
+
+            // Close any open sessions - avoids memory leak on LG webOS 2016/2017 TVs
+            for (var i = 0; i < sessions.length; i++) {
+                closeKeySession(sessions[i]);
+            }
+            sessions = [];
         }
 
         videoElement = mediaElement;
