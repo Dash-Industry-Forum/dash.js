@@ -55,14 +55,14 @@ function HTTPLoader(cfg) {
     let instance;
     let requests;
     let delayedRequests;
-    let retryTimers;
+    let retryRequests;
     let downloadErrorToRequestTypeMap;
     let newDownloadErrorToRequestTypeMap;
 
     function setup() {
         requests = [];
         delayedRequests = [];
-        retryTimers = [];
+        retryRequests = [];
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST,
@@ -139,11 +139,16 @@ function HTTPLoader(cfg) {
 
                 if (remainingAttempts > 0) {
                     remainingAttempts--;
-                    retryTimers.push(
-                        setTimeout(function () {
-                            internalLoad(config, remainingAttempts);
-                        }, mediaPlayerModel.getRetryIntervalForType(request.type))
-                    );
+                    let retryRequest = { config: config };
+                    retryRequests.push(retryRequest);
+                    retryRequest.timeout = setTimeout(function () {
+                        if (retryRequests.indexOf(retryRequest) === -1) {
+                            return;
+                        } else {
+                            retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
+                        }
+                        internalLoad(config, remainingAttempts);
+                    }, mediaPlayerModel.getRetryIntervalForType(request.type));
                 } else {
                     errHandler.downloadError(
                         downloadErrorToRequestTypeMap[request.type],
@@ -297,8 +302,14 @@ function HTTPLoader(cfg) {
      * @instance
      */
     function abort() {
-        retryTimers.forEach(t => clearTimeout(t));
-        retryTimers = [];
+        retryRequests.forEach(t => {
+            clearTimeout(t.timeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (t.config.request && t.config.abort) {
+                t.config.abort(t.config.request);
+            }
+        });
+        retryRequests = [];
 
         delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
         delayedRequests = [];
