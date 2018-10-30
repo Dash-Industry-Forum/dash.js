@@ -272,6 +272,7 @@ function MediaPlayer() {
         attachSource(null);
         attachView(null);
         protectionData = null;
+        mediaPlayerInitialized = false;
         if (protectionController) {
             protectionController.reset();
             protectionController = null;
