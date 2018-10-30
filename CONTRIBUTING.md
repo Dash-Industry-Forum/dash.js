@@ -1,5 +1,5 @@
 # How to contribute #
-As an open source project, operating under a [meritocratic governance model](governance-model/), we welcome contributions of any kind. Naturally this includes software contributions, but we also welcome help on documentation, testing, project coordination, marketing, [release preparation](Release-Management) and more.
+As an open source project, operating under a [meritocratic governance model](https://github.com/Dash-Industry-Forum/dash.js/wiki/governance-model), we welcome contributions of any kind. Naturally this includes software contributions, but we also welcome help on documentation, testing, project coordination, marketing, [release preparation](https://github.com/Dash-Industry-Forum/dash.js/wiki/Release-Management) and more.
 
 For any kind of contribution your first port of call should be to join our [mailing list]( https://groups.google.com/d/forum/dashjs). We welcome all contributions to the mailing list (including asking questions which demonstrate our documentation needs to be improved).
 
