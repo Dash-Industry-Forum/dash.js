@@ -778,6 +778,16 @@
           }
         },
         {
+          "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0 (persistent)",
+          "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
+          "protData": {
+            "com.microsoft.playready": {
+              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
+              "sessionType": "persistent-license"
+            }
+          }
+        },
+        {
           "name": "Source: XBox One commercial video",
           "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
           "protData": {
@@ -940,9 +950,14 @@
         },
         {
           "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
-          "name": "Super Speedway + PlayReady DRM",
+          "name": "Super Speedway + PlayReady DRM"
+        },
+        {
+          "url": "http://test.playready.microsoft.com/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
+          "name": "Super Speedway + PlayReady DRM (persistent)",
           "protData": {
             "com.microsoft.playready": {
+                "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",                
                 "sessionType": "persistent-license"
               }
           }
