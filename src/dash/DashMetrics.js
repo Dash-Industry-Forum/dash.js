@@ -203,17 +203,11 @@ function DashMetrics(config) {
 
         const list = metrics[metricName];
 
-        if (!list) {
+        if (!list || list.length <= 0) {
             return null;
         }
 
-        const length = list.length;
-
-        if (length <= 0) {
-            return null;
-        }
-
-        return list[length - 1];
+        return list[list.length - 1];
     }
 
     /**
