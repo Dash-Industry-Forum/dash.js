@@ -124,6 +124,10 @@ function HTTPLoader(cfg) {
                         httpRequest.response ? httpRequest.response.responseHeaders : [],
                     success ? traces : null
                 );
+
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    metricsModel.addManifestUpdate('stream', request.type, request.requestStartDate, request.requestEndDate);
+                }
             }
         };
 
