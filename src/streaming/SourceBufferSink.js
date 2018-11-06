@@ -68,6 +68,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 throw new Error('not really supported');
             }
             buffer = oldBuffer ? oldBuffer : mediaSource.addSourceBuffer(codec);
+            if (buffer.changeType && oldBuffer) {
+                logger.debug('Doing period transition with changeType');
+                buffer.changeType(codec);
+            }
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
