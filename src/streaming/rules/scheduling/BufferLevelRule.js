@@ -66,7 +66,7 @@ function BufferLevelRule(config) {
             if (isNaN(representationInfo.fragmentDuration)) {
                 bufferTarget = videoBufferLevel;
             } else {
-                bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
+                bufferTarget = videoBufferLevel + representationInfo.fragmentDuration;
             }
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
