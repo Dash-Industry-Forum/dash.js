@@ -58,10 +58,6 @@ function MetricsModel() {
         streamMetrics = {};
     }
 
-    function setConfig(config) {
-        if (!config) return;
-    }
-
     function metricsChanged() {
         eventBus.trigger(Events.METRICS_CHANGED);
     }
@@ -384,8 +380,7 @@ function MetricsModel() {
         addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
         addPlayList: addPlayList,
-        addDVBErrors: addDVBErrors,
-        setConfig: setConfig
+        addDVBErrors: addDVBErrors
     };
 
     setup();
