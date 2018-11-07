@@ -125,7 +125,7 @@ function AbrController() {
     }
 
     function resetInitialSettings() {
-        bitrateStore = { video: {autoSwitch: true }, audio: {autoSwitch: true}};
+        bitrateStore = { video: {autoSwitch: true }, audio: {autoSwitch: true}, fragmentedText: {}, text: {}};
         ratioStore = {};
         abandonmentStateDict = {};
         streamProcessorDict = {};
@@ -246,6 +246,9 @@ function AbrController() {
      */
     function getInitialBitrateFor(type) {
         checkConfig();
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
+            return NaN;
+        }
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
 
         if (!bitrateStore[type].hasOwnProperty('init')) {
