@@ -206,16 +206,14 @@ function ProtectionModel_21Jan2015(config) {
         // Generate initial key request.
         // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
         const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && protData && protData.clearkeys ? 'keyids' : 'cenc';
-        if (initData.constructor === Uint8Array) {
-            session.generateRequest(dataType, initData).then(function () {
-                logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
-            }).catch(function (error) {
-                // TODO: Better error string
-                removeSession(sessionToken);
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)});
-            });
-        }
+        session.generateRequest(dataType, initData).then(function () {
+            logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+        }).catch(function (error) {
+            // TODO: Better error string
+            removeSession(sessionToken);
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)});
+        });
     }
 
     function updateKeySession(sessionToken, message) {
