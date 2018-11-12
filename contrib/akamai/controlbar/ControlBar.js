@@ -491,7 +491,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (!trackSwitchMenu && trackSwitchBtn) {
                 var availableTracks = {menuType: "track"};
                 availableTracks.audio = player.getTracksFor("audio");
-                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to cehck for null
+                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to check for null
 
                 if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                     contentFunc = function (element) {
