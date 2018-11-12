@@ -241,9 +241,6 @@ function MediaPlayer() {
         adapter.setConfig({
             dashManifestModel: dashManifestModel
         });
-        metricsModel.setConfig({
-            adapter: adapter
-        });
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
