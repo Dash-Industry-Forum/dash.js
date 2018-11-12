@@ -478,7 +478,7 @@ function ScheduleController(config) {
 
         setFragmentProcessState(false);
         if (isReplacementRequest && !isNaN(e.startTime)) {
-            //replace requests process is in progress, call schedule in nextScheduleTime seconds.
+            //replace requests process is in progress, call schedule in n seconds.
             //it is done in order to not add a fragment at the new quality at the end of the buffer before replace process is over.
             //Indeed, if schedule is called too early, the executed request tested is the same that the one tested during previous schedule (at the new quality).
             const currentTime = playbackController.getTime();
