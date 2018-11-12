@@ -1,7 +1,7 @@
 <!-- If you are raising a bug playing a stream, you must fill out the following or your issue may not be responded to. For features or improvements, you may delete this. -->
 ##### Environment
 <!-- Replace [] with [x] to check off the list -->
-- [] The MPD passes the DASH-IF Conformance Tool on http://dashif.org/conformance.html
+- [] The MPD passes the DASH-IF Conformance Tool on https://conformance.dashif.org/
 - [] The stream has correct Access-Control-Allow-Origin headers (CORS)
 - [] There are no network errors such as 404s in the browser console when trying to play the stream
 - [] The issue observed is not mentioned on https://github.com/Dash-Industry-Forum/dash.js/wiki/FAQ
