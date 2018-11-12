@@ -83,7 +83,7 @@ function ScheduleController(config) {
         switchTrack,
         bufferResetInProgress,
         mediaRequest,
-        nextScheduleTime;
+        isReplacementRequest;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -267,7 +267,7 @@ function ScheduleController(config) {
 
             if (fastSwitchModeEnabled && (trackChanged || qualityChanged) && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
                 replaceRequest(request);
-                nextScheduleTime = request.startTime - time;
+                isReplacementRequest = true;
                 logger.debug('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
                 // The buffer has better quality it in then what we would request so set append point to end of buffer!!
@@ -477,12 +477,20 @@ function ScheduleController(config) {
         }
 
         setFragmentProcessState(false);
-        if (nextScheduleTime) {
+        if (isReplacementRequest && !isNaN(e.startTime)) {
             //replace requests process is in progress, call schedule in nextScheduleTime seconds.
             //it is done in order to not add a fragment at the new quality at the end of the buffer before replace process is over.
             //Indeed, if schedule is called too early, the executed request tested is the same that the one tested during previous schedule (at the new quality).
-            startScheduleTimer(nextScheduleTime * 1000);
-            nextScheduleTime = undefined;
+            const currentTime = playbackController.getTime();
+            const fragEndTime = e.startTime + currentRepresentationInfo.fragmentDuration;
+            const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
+            if ((currentTime + safeBufferLevel) >= fragEndTime) {
+                startScheduleTimer(0);
+            }
+            else {
+                startScheduleTimer((fragEndTime - (currentTime + safeBufferLevel)) * 1000);
+            }
+            isReplacementRequest = false;
         } else {
             startScheduleTimer(0);
         }
@@ -671,6 +679,7 @@ function ScheduleController(config) {
         switchTrack = false;
         bufferResetInProgress = false;
         mediaRequest = null;
+        isReplacementRequest = false;
     }
 
     function reset() {
