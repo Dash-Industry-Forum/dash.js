@@ -239,6 +239,9 @@ function AbrController() {
      */
     function getInitialBitrateFor(type) {
         checkConfig();
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
+            return NaN;
+        }
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
         let configBitrate = settings.get().streaming.abr.initialBitrate[type];
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
