@@ -439,7 +439,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     $scope.selectVideoQuality = function (quality) {
         $scope.player.setQualityFor('video', quality);
-    }
+    };
 
     $scope.doLoad = function () {
         $scope.initSession();
@@ -527,13 +527,13 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
         stopMetricsInterval();
-    }
+    };
 
     $scope.changeTrackSwitchMode = function (mode, type) {
         $scope.player.setTrackSwitchModeFor(type, mode);
     };
 
-    $scope.setLogLevel = function (mode) {
+    $scope.setLogLevel = function () {
         var level = $("input[name='log-level']:checked").val();
         switch(level) {
             case 'none':
@@ -559,8 +559,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             default:
             $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_DEBUG);
         }
-
-    }
+    };
 
     $scope.hasLogo = function (item) {
         return (item.hasOwnProperty('logo') && item.logo);
