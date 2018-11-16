@@ -729,8 +729,39 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isCompatibleWithStream(stream) {
+    function isMediaCodecCompatible(stream) {
         return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
+    }
+
+    function isProtectionCompatible(stream) {
+        return compareProtectionConfig(stream, Constants.VIDEO) && compareProtectionConfig(stream, Constants.AUDIO);
+    }
+
+    function compareProtectionConfig(stream, type) {
+        if (!stream) {
+            return false;
+        }
+        const newStreamInfo = stream.getStreamInfo();
+        const currentStreamInfo = getStreamInfo();
+
+        if (!newStreamInfo || !currentStreamInfo) {
+            return false;
+        }
+
+        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+
+        if (!newAdaptation || !currentAdaptation) {
+            // If there is no adaptation for neither the old or the new stream they're compatible
+            return !newAdaptation && !currentAdaptation;
+        }
+
+        // If any of the periods requires EME, we can't do smooth transition
+        if (newAdaptation.ContentProtection || currentAdaptation.ContentProtection) {
+            return false;
+        }
+
+        return true;
     }
 
     function compareCodecs(stream, type) {
@@ -751,13 +782,6 @@ function Stream(config) {
             // If there is no adaptation for neither the old or the new stream they're compatible
             return !newAdaptation && !currentAdaptation;
         }
-
-        // If any of the periods requires EME, we can't do smooth transition
-        if ((newAdaptation.ContentProtection && !currentAdaptation.ContentProtection) ||
-            (!newAdaptation.ContentProtection && currentAdaptation.ContentProtection)) {
-            return false;
-        }
-
 
         const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
@@ -835,7 +859,8 @@ function Stream(config) {
         reset: reset,
         getProcessors: getProcessors,
         setMediaSource: setMediaSource,
-        isCompatibleWithStream: isCompatibleWithStream,
+        isMediaCodecCompatible: isMediaCodecCompatible,
+        isProtectionCompatible: isProtectionCompatible,
         getPreloaded: getPreloaded,
         addInbandEvents: addInbandEvents
     };

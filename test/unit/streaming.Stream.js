@@ -72,7 +72,14 @@ describe('Stream', function () {
 
     it('should return null when isCompatibleWithStream is called but stream attribute is undefined', () => {
         const stream = Stream(context).create({});
-        const isCompatible = stream.isCompatibleWithStream();
+        const isCompatible = stream.isMediaCodecCompatible();
+
+        expect(isCompatible).to.be.false;                // jshint ignore:line
+    });
+
+    it('should return null when isProtectionCompatible is called but stream attribute is undefined', () => {
+        const stream = Stream(context).create({});
+        const isCompatible = stream.isProtectionCompatible();
 
         expect(isCompatible).to.be.false;                // jshint ignore:line
     });
