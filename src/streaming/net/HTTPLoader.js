@@ -52,12 +52,12 @@ function HTTPLoader(cfg) {
     const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
 
-    let instance;
-    let requests;
-    let delayedRequests;
-    let retryRequests;
-    let downloadErrorToRequestTypeMap;
-    let newDownloadErrorToRequestTypeMap;
+    let instance,
+        requests,
+        delayedRequests,
+        retryRequests,
+        downloadErrorToRequestTypeMap,
+        newDownloadErrorToRequestTypeMap;
 
     function setup() {
         requests = [];

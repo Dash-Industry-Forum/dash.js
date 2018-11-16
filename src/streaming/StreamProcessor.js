@@ -43,7 +43,6 @@ function StreamProcessor(config) {
     config = config || {};
     let context = this.context;
 
-    let indexHandler;
     let type = config.type;
     let errHandler = config.errHandler;
     let mimeType = config.mimeType;
@@ -70,7 +69,8 @@ function StreamProcessor(config) {
         liveEdgeFinder,
         representationController,
         fragmentModel,
-        spExternalControllers;
+        spExternalControllers,
+        indexHandler;
 
     function setup() {
         if (playbackController && playbackController.getIsDynamic()) {
@@ -161,7 +161,6 @@ function StreamProcessor(config) {
     }
 
     function reset(errored, keepBuffers) {
-
         indexHandler.reset();
 
         if (bufferController) {
