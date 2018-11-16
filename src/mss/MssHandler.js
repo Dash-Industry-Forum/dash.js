@@ -58,9 +58,8 @@ function MssHandler(config) {
         debug: config.debug,
         errHandler: config.errHandler
     });
-    let mssParser;
-
-    let instance;
+    let mssParser,
+        instance;
 
     function setup() {}
 
@@ -69,17 +68,10 @@ function MssHandler(config) {
         let request = new FragmentRequest();
         let representationController = streamProcessor.getRepresentationController();
         let representation = representationController.getCurrentRepresentation();
-        let period,
-            presentationStartTime;
-
-        period = representation.adaptation.period;
 
         request.mediaType = representation.adaptation.type;
         request.type = initSegmentType;
         request.range = representation.range;
-        presentationStartTime = period.start;
-        //request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic);
-        //request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
         request.quality = representation.index;
         request.mediaInfo = streamProcessor.getMediaInfo();
         request.representationId = representation.id;
