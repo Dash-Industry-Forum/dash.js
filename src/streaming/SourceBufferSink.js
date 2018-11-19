@@ -36,6 +36,8 @@ import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
 
+const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
+
 /**
  * @class SourceBufferSink
  * @implements FragmentSink
@@ -137,6 +139,24 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             logger.error('getAllBufferRanges exception: ' + e.message);
             return null;
         }
+    }
+
+    function hasDiscontinuitiesAfter(time) {
+        try {
+            const ranges = getAllBufferRanges();
+            if (ranges && ranges.length > 1) {
+                for (let i = 0, len = ranges.length; i < len; i++) {
+                    if (i > 0) {
+                        if (time < ranges.start(i) && ranges.start(i) > ranges.end(i - 1) + MAX_ALLOWED_DISCONTINUITY) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            logger.error('hasDiscontinuities exception: ' + e.message);
+        }
+        return false;
     }
 
     function append(chunk) {
@@ -329,7 +349,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         remove: remove,
         abort: abort,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter
     };
 
     setup();

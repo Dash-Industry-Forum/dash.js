@@ -35,7 +35,8 @@ class BufferControllerMock {
 
     getBuffer() {
         return {
-            getAllBufferRanges: () => {}
+            getAllBufferRanges: () => {},
+            hasDiscontinuitiesAfter: () => {return false;}
         };
     }
 }
