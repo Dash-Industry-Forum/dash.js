@@ -51,14 +51,14 @@ function NextFragmentRequestRule(config) {
         if (!streamProcessor) {
             return null;
         }
-        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        const representationInfo = streamProcessor.getRepresentationInfo();
         const mediaInfo = representationInfo.mediaInfo;
         const mediaType = mediaInfo.type;
         const scheduleController = streamProcessor.getScheduleController();
         const seekTarget = scheduleController.getSeekTarget();
         const hasSeekTarget = !isNaN(seekTarget);
         const bufferController = streamProcessor.getBufferController();
-        const currentTime = streamProcessor.getPlaybackController().getTime();
+        const currentTime = streamProcessor.getPlaybackController().getNormalizedTime();
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         let bufferIsDivided = false;
         let request;
@@ -76,11 +76,10 @@ function NextFragmentRequestRule(config) {
         if (bufferController) {
             let range = bufferController.getRangeAt(time);
             const playingRange = bufferController.getRangeAt(currentTime);
-            const bufferRanges = bufferController.getBuffer().getAllBufferRanges();
-            const numberOfBuffers = bufferRanges ? bufferRanges.length : 0;
+            const hasDiscontinuities = bufferController.getBuffer().hasDiscontinuitiesAfter(currentTime);
             if ((range !== null || playingRange !== null) && !hasSeekTarget) {
-                if ( !range || (playingRange && playingRange.start != range.start && playingRange.end != range.end) ) {
-                    if (numberOfBuffers > 1 ) {
+                if (!range || (playingRange && playingRange.start != range.start && playingRange.end != range.end)) {
+                    if (hasDiscontinuities && mediaType !== Constants.FRAGMENTED_TEXT) {
                         streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(playingRange.end);
                         bufferIsDivided = true;
                     }
@@ -93,19 +92,19 @@ function NextFragmentRequestRule(config) {
 
         if (requestToReplace) {
             time = requestToReplace.startTime + (requestToReplace.duration / 2);
-            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
+            request = adapter.getFragmentRequest(streamProcessor, representationInfo, time, {
                 timeThreshold: 0,
                 ignoreIsFinished: true
             });
         } else {
-            request = adapter.getFragmentRequestForTime(streamProcessor, representationInfo, time, {
+            request = adapter.getFragmentRequest(streamProcessor, representationInfo, time, {
                 keepIdx: !hasSeekTarget && !bufferIsDivided
             });
 
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
-                request = adapter.getNextFragmentRequest(streamProcessor, representationInfo);
+                request = adapter.getFragmentRequest(streamProcessor, representationInfo);
             }
             if (request) {
                 if (!isNaN(request.startTime + request.duration)) {

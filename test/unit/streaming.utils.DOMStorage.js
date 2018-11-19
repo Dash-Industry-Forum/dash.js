@@ -1,4 +1,5 @@
 import DOMStorage from '../../src/streaming/utils/DOMStorage';
+import Constants from '../../src/streaming/constants/Constants';
 
 const expect = require('chai').expect;
 
@@ -7,10 +8,10 @@ const domStorage = DOMStorage(context).getInstance({});
 
 describe('DOMStorage', function () {
     it('should throw an error when getSavedBitrateSettings is called and config object has not been set properly', function () {
-        expect(domStorage.getSavedBitrateSettings.bind('video')).to.be.throw('Missing config parameter(s)');
+        expect(domStorage.getSavedBitrateSettings.bind('video')).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should throw an error when getSavedMediaSettings is called and config object has not been set properly', function () {
-        expect(domStorage.getSavedMediaSettings.bind('video')).to.be.throw('Missing config parameter(s)');
+        expect(domStorage.getSavedMediaSettings.bind('video')).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 });

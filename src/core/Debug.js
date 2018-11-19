@@ -205,10 +205,6 @@ function Debug() {
     }
 
     function doLog(level, _this, ...params) {
-        if (logLevel < level) {
-            return;
-        }
-
         let message = '';
         let logTime = null;
 
@@ -232,12 +228,13 @@ function Debug() {
             message += item + ' ';
         });
 
-        if (logFn[level]) {
+        // log to console if the log level is high enough
+        if (logFn[level] && logLevel >= level) {
             logFn[level](message);
         }
 
-        // TODO: To be removed
-        eventBus.trigger(Events.LOG, {message: message});
+        // send log event regardless of log level
+        eventBus.trigger(Events.LOG, {message: message, level: level});
     }
 
     instance = {

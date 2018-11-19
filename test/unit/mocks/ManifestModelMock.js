@@ -6,6 +6,10 @@ class ManifestModelMock {
     getValue() {
         return this.manifestValue;
     }
+
+    setValue(value) {
+        this.manifestValue = value;
+    }
 }
 
 export default ManifestModelMock;

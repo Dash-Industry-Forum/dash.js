@@ -1,12 +1,10 @@
-class DashManifestModelMock {
+function DashManifestModelMock () {
 
-    constructor() {}
-
-    getIsTextTrack() {
+    this.getIsTextTrack = function () {
         return false;
-    }
+    };
 
-    getAdaptationForType() {
+    this.getAdaptationForType = function () {
         return {
             Representation: [
                 {
@@ -20,19 +18,31 @@ class DashManifestModelMock {
                 }
             ]
         };
-    }
+    };
 
-    setRepresentation(res) {
+    this.setRepresentation = function (res) {
         this.representation = res;
-    }
+    };
 
-    getRepresentationsForAdaptation() {
+    this.getRepresentationsForAdaptation = function () {
         if (this.representation) {
             return [this.representation];
         } else {
             return [];
         }
-    }
+    };
+
+    this.getBaseURLsFromElement = function () {
+        const baseUrls = [];
+        return baseUrls;
+    };
+
+    this.getRepresentationSortFunction = function () {
+    };
+
+    this.getIndexForAdaptation = function () {
+        return 0;
+    };
 }
 
 export default DashManifestModelMock;

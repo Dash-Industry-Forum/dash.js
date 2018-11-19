@@ -40,7 +40,8 @@
 
 import ProtectionKeyController from '../controllers/ProtectionKeyController';
 import NeedKey from '../vo/NeedKey';
-import KeyError from '../vo/KeyError';
+import DashJSError from '../../vo/DashJSError';
+import ProtectionErrors from '../errors/ProtectionErrors';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import KeySystemAccess from '../vo/KeySystemAccess';
@@ -338,7 +339,7 @@ function ProtectionModel_3Feb2014(config) {
                 switch (event.type) {
                     case api.error:
                         let errorStr = 'KeyError'; // TODO: Make better string from event
-                        eventBus.trigger(events.KEY_ERROR, { data: new KeyError(this, errorStr) });
+                        eventBus.trigger(events.KEY_ERROR, { data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, errorStr, this) });
                         break;
                     case api.message:
                         let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;

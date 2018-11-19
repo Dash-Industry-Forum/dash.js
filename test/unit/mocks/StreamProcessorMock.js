@@ -1,4 +1,5 @@
 import PlaybackControllerMock from './PlaybackControllerMock';
+import RepresentationControllerMock from './RepresentationControllerMock';
 
 class FragmentModelMock {
     constructor() {
@@ -17,14 +18,15 @@ class FragmentModelMock {
 class BufferControllerMock {
     constructor() {
         this.seekStartTime = 0;
+        this.isBufferingCompleted = false;
     }
 
     setSeekStartTime(time) {
         this.seekStartTime = time;
     }
 
-    isBufferingCompleted() {
-        return false;
+    getIsBufferingCompleted() {
+        return this.isBufferingCompleted;
     }
 
     getRangeAt() {
@@ -33,52 +35,48 @@ class BufferControllerMock {
 
     getBuffer() {
         return {
-            getAllBufferRanges: () => {}
+            getAllBufferRanges: () => {},
+            hasDiscontinuitiesAfter: () => {return false;}
         };
     }
 }
 
-class RepresentationControllerMock {
-    constructor() {}
+function StreamProcessorMock (testType, streamInfo) {
+    this.type = testType;
+    this.streamInfo = streamInfo;
+    this.representationController = new RepresentationControllerMock();
+    this.fragmentModel = new FragmentModelMock();
+    this.bufferController = new BufferControllerMock();
 
-    getCurrentRepresentation() {
-        return {adaptation: {period: {mpd: {manifest: {type: 'dynamic', Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 10000000}}]}]}}, index: 0}, index: 0}};
-    }
-}
-
-class StreamProcessorMock {
-    constructor(testType, streamInfo) {
-        this.type = testType;
-        this.streamInfo = streamInfo;
-        this.representationController = new RepresentationControllerMock();
-        this.fragmentModel = new FragmentModelMock();
-        this.bufferController = new BufferControllerMock();
-    }
-
-    getBufferController() {
+    this.getBufferController = function () {
         return this.bufferController;
-    }
+    };
 
-    getType() {
+    this.getType = function () {
         return this.type;
-    }
+    };
 
-    getCurrentTrack() {}
+    this.getCurrentTrack = function () {};
 
-    getMediaInfo() {
+    this.getMediaInfo = function () {
         return {
             bitrateList: [],
-            mimeType: 'video/mp4'
+            mimeType: 'video/mp4',
+            streamInfo: this.streamInfo
         };
-    }
+    };
 
-    getIndexHandler() {
+    this.getIndexHandler = function () {
         return {
-            updateRepresentation: () => {}
+            updateRepresentation: () => {},
+            getInitRequest: () => { return null;},
+            getNextSegmentRequest: () => { return null;},
+            getCurrentTime: () => {},
+            setCurrentTime: () => {}
         };
-    }
+    };
 
-    getScheduleController() {
+    this.getScheduleController = function () {
         return {
             getBufferTarget() {
                 return 20;
@@ -94,50 +92,50 @@ class StreamProcessorMock {
             setTimeToLoadDelay() {
             }
         };
-    }
+    };
 
-    getRepresentationController() {
+    this.getRepresentationController = function () {
         return this.representationController;
-    }
+    };
 
-    getFragmentModel() {
+    this.getFragmentModel = function () {
         return this.fragmentModel;
-    }
+    };
 
-    isDynamic() {
+    this.isDynamic = function () {
         return true;
-    }
+    };
 
-    getRepresentationInfoForQuality(quality) {
-        let offest = quality ? 2 : 1;
-        return {
-            MSETimeOffset: offest
-        };
-    }
-
-    getStreamInfo() {
+    this.getStreamInfo = function () {
         return this.streamInfo;
-    }
+    };
 
-    getCurrentRepresentationInfo() {
-        return {mediaInfo: {type: this.type}};
-    }
+    this.getRepresentationInfo = function (quality) {
+        if (quality !== undefined) {
+            let offset = quality ? 2 : 1;
+            return {
+                MSETimeOffset: offset
+            };
+        } else {
+            return {mediaInfo: {type: this.type, streamInfo: this.streamInfo}, fragmentDuration: 6};
+        }
+    };
 
-    isBufferingCompleted() {
-        return this.bufferController.isBufferingCompleted();
-    }
+    this.isBufferingCompleted = function () {
+        return this.bufferController.getIsBufferingCompleted();
+    };
 
-    getFragmentController() {
+    this.getFragmentController = function () {
         return null;
-    }
+    };
 
-    getPlaybackController() {
+    this.getPlaybackController = function () {
         return new PlaybackControllerMock();
-    }
+    };
 
-    switchInitData() {}
+    this.switchInitData = function () {};
 
-    reset() {}
+    this.reset = function () {};
 }
 
 export default StreamProcessorMock;

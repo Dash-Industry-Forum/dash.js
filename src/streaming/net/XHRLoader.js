@@ -45,13 +45,8 @@ function XHRLoader(cfg) {
     function load(httpRequest) {
 
         // Variables will be used in the callback functions
-        let firstProgress = true; /*jshint ignore:line*/
-        let needFailureReport = true; /*jshint ignore:line*/
-        let requestStartTime = new Date();
-        let lastTraceTime = requestStartTime; /*jshint ignore:line*/
-        let lastTraceReceivedCount = 0; /*jshint ignore:line*/
-
-        let request = httpRequest.request;
+        const requestStartTime = new Date();
+        const request = httpRequest.request;
 
         let xhr = new XMLHttpRequest();
         xhr.open(httpRequest.method, httpRequest.url, true);

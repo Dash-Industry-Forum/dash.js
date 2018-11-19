@@ -1,8 +1,9 @@
 import EventBus from '../../src/core/EventBus';
-import VoHelper from './helpers/VOHelper';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import Events from '../../src/core/events/Events';
+
 import SpecHelper from './helpers/SpecHelper';
+import VoHelper from './helpers/VOHelper';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');

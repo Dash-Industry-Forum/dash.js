@@ -35,6 +35,7 @@ import DashJSError from '../streaming/vo/DashJSError';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
@@ -50,8 +51,6 @@ import SegmentsGetter from './utils/SegmentsGetter';
 
 import SegmentBaseLoader from './SegmentBaseLoader';
 import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
-
-const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
 
 function DashHandler(config) {
 
@@ -73,7 +72,6 @@ function DashHandler(config) {
         index,
         requestedTime,
         currentTime,
-        earliestTime,
         streamProcessor,
         segmentsGetter;
 
@@ -101,11 +99,22 @@ function DashHandler(config) {
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
 
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-
         segmentBaseLoader.initialize();
 
-        segmentsGetter = SegmentsGetter(context).create(config, isDynamic);
+        segmentsGetter = SegmentsGetter(context).create(config, isDynamic());
+    }
+
+    function getType() {
+        return streamProcessor ? streamProcessor.getType() : null;
+    }
+
+    function isDynamic() {
+        const streamInfo = streamProcessor ? streamProcessor.getStreamInfo() : null;
+        return streamInfo ? streamInfo.manifestInfo.isDynamic : null;
+    }
+
+    function getMediaInfo() {
+        return streamProcessor ? streamProcessor.getMediaInfo() : null;
     }
 
     function getStreamProcessor() {
@@ -120,10 +129,6 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getEarliestTime() {
-        return earliestTime;
-    }
-
     function resetIndex() {
         index = -1;
     }
@@ -131,7 +136,6 @@ function DashHandler(config) {
     function resetInitialSettings() {
         resetIndex();
         currentTime = 0;
-        earliestTime = NaN;
         requestedTime = null;
         streamProcessor = null;
         segmentsGetter = null;
@@ -174,15 +178,15 @@ function DashHandler(config) {
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const isDynamicStream = isDynamic();
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
         request.range = representation.range;
-        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamic);
-        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
+        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamicStream);
+        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamicStream);
         request.quality = representation.index;
-        request.mediaInfo = streamProcessor ? streamProcessor.getMediaInfo() : null;
+        request.mediaInfo = getMediaInfo();
         request.representationId = representation.id;
 
         if (setRequestUrl(request, representation.initialization, representation)) {
@@ -192,16 +196,15 @@ function DashHandler(config) {
 
     function getInitRequest(representation) {
         if (!representation) return null;
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const request = generateInitRequest(representation, type);
+        const request = generateInitRequest(representation, getType());
         return request;
     }
 
     function isMediaFinished(representation) {
         let isFinished = false;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const isDynamicStream = isDynamic();
 
-        if (!isDynamic && index === representation.availableSegmentsNumber) {
+        if (!isDynamicStream && index === representation.availableSegmentsNumber) {
             isFinished = true;
         } else {
             const seg = getSegmentByIndex(index, representation);
@@ -209,7 +212,7 @@ function DashHandler(config) {
                 const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 const duration = representation.adaptation.period.duration;
                 logger.debug(representation.segmentInfoType + ': ' + time + ' / ' + duration);
-                isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? false : time >= duration;
+                isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamicStream ? false : time >= duration;
             } else {
                 logger.debug('isMediaFinished - no segment found');
             }
@@ -223,11 +226,9 @@ function DashHandler(config) {
     }
 
     function onSegmentListUpdated(voRepresentation, segments) {
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         voRepresentation.segments = segments;
         if (segments && segments.length > 0) {
-            earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
-            if (isDynamic) {
+            if (isDynamic()) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime;
                 const metrics = metricsModel.getMetricsFor(Constants.STREAM);
@@ -251,18 +252,16 @@ function DashHandler(config) {
     function updateRepresentation(voRepresentation, keepIdx) {
         const hasInitialization = Representation.hasInitialization(voRepresentation);
         const hasSegments = Representation.hasSegments(voRepresentation);
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         let error;
 
         if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
             updateSegmentList(voRepresentation);
         }
 
-        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
+        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
@@ -280,7 +279,7 @@ function DashHandler(config) {
         }
 
         if (!hasSegments) {
-            segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation.indexRange);
+            segmentBaseLoader.loadSegments(voRepresentation, getType(), voRepresentation.indexRange);
         }
 
         if (hasInitialization && hasSegments) {
@@ -331,7 +330,6 @@ function DashHandler(config) {
         const bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
         let url = segment.media;
-        const type = streamProcessor ? streamProcessor.getType() : null;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -339,7 +337,7 @@ function DashHandler(config) {
         url = replaceIDForTemplate(url, representation.id);
         url = unescapeDollarsInTemplate(url);
 
-        request.mediaType = type;
+        request.mediaType = getType();
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
@@ -350,7 +348,7 @@ function DashHandler(config) {
         request.wallStartTime = segment.wallStartTime;
         request.quality = representation.index;
         request.index = segment.availabilityIdx;
-        request.mediaInfo = streamProcessor.getMediaInfo();
+        request.mediaInfo = getMediaInfo();
         request.adaptationIndex = representation.adaptation.index;
         request.representationId = representation.id;
 
@@ -368,8 +366,7 @@ function DashHandler(config) {
             return null;
         }
 
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const type = getType();
         const idx = index;
         const keepIdx = options ? options.keepIdx : false;
         const timeThreshold = options ? options.timeThreshold : null;
@@ -399,7 +396,7 @@ function DashHandler(config) {
             request.action = FragmentRequest.ACTION_COMPLETE;
             request.index = index;
             request.mediaType = type;
-            request.mediaInfo = streamProcessor.getMediaInfo();
+            request.mediaInfo = getMediaInfo();
             logger.debug('Signal complete in getSegmentRequestForTime -', type);
         } else {
             segment = getSegmentByIndex(index, representation);
@@ -407,7 +404,7 @@ function DashHandler(config) {
         }
 
         if (keepIdx && idx >= 0) {
-            index = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? index : idx;
+            index = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic() ? index : idx;
         }
 
         return request;
@@ -422,8 +419,8 @@ function DashHandler(config) {
             return null;
         }
 
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const type = getType();
+        const isDynamicStream = isDynamic();
 
         requestedTime = null;
         index++;
@@ -432,7 +429,7 @@ function DashHandler(config) {
 
         // check that there is a segment in this index. If none, update segments and wait for next time loop is called
         const seg = getSegmentByIndex(index, representation);
-        if (!seg && isDynamic) {
+        if (!seg && isDynamicStream) {
             logger.debug('No segment found at index: ' + index + '. Wait for next loop');
             updateSegments(representation);
             index--;
@@ -445,13 +442,13 @@ function DashHandler(config) {
             request.action = FragmentRequest.ACTION_COMPLETE;
             request.index = index;
             request.mediaType = type;
-            request.mediaInfo = streamProcessor.getMediaInfo();
+            request.mediaInfo = getMediaInfo();
             logger.debug('Signal complete -', type);
         } else {
             updateSegments(representation);
             segment = getSegmentByIndex(index, representation);
             request = getRequestForSegment(segment);
-            if (!segment && isDynamic) {
+            if (!segment && isDynamicStream) {
                 /*
                  Sometimes when playing dynamic streams with 0 fragment delay at live edge we ask for
                  an index before it is available so we decrement index back and send null request
@@ -473,9 +470,7 @@ function DashHandler(config) {
     }
 
     function onSegmentsLoaded(e) {
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        if (e.error || (type !== e.mediaType)) return;
+        if (e.error || (getType() !== e.mediaType)) return;
 
         const fragments = e.segments;
         const representation = e.representation;
@@ -492,7 +487,7 @@ function DashHandler(config) {
 
             seg = getTimeBasedSegment(
                 timelineConverter,
-                isDynamic,
+                isDynamic(),
                 representation,
                 s.startTime,
                 s.duration,
@@ -526,7 +521,6 @@ function DashHandler(config) {
         updateSegmentList: updateSegmentList,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
-        getEarliestTime: getEarliestTime,
         reset: reset,
         resetIndex: resetIndex
     };
@@ -537,7 +531,4 @@ function DashHandler(config) {
 }
 
 DashHandler.__dashjs_factory_name = 'DashHandler';
-const factory = FactoryMaker.getClassFactory(DashHandler);
-factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(DashHandler);

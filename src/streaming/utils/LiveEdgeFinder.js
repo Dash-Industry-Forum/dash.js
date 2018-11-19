@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../constants/Constants';
 
 /**
  * @param {Object} config
@@ -43,14 +44,14 @@ function LiveEdgeFinder(config) {
     let streamProcessor = config.streamProcessor;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getCurrentRepresentationInfo')) {
-            throw new Error('Missing config parameter(s)');
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationInfo')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
     function getLiveEdge() {
         checkConfig();
-        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
+        const representationInfo = streamProcessor.getRepresentationInfo();
         let liveEdge = representationInfo.DVRWindow.end;
         if (representationInfo.useCalculatedLiveEdgeTime) {
             liveEdge = timelineConverter.getExpectedLiveEdge();

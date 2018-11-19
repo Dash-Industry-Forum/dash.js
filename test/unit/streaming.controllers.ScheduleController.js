@@ -79,6 +79,11 @@ describe('ScheduleController', function () {
         });
     });
 
+    it('should return 12 if streamProcessor is defined and current representation is video and videoTrackPresent is true', function () {
+        const bufferTarget = scheduleController.getBufferTarget();
+        expect(bufferTarget).to.be.equal(12); // jshint ignore:line
+    });
+
     it('should stop is controller is started', function (done) {
 
         let onStreamInit = function () {

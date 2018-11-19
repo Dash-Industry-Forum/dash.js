@@ -34,7 +34,6 @@ import Stream from '../Stream';
 import ManifestUpdater from '../ManifestUpdater';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import MediaPlayerModel from '../models/MediaPlayerModel';
 import FactoryMaker from '../../core/FactoryMaker';
 import {
     PlayList,
@@ -47,6 +46,8 @@ import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
 import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
@@ -98,9 +99,10 @@ function StreamController() {
         preloadTimerId,
         wallclockTicked,
         buffers,
-        compatible,
+        useSmoothPeriodTransition,
         preloading,
-        lastPlaybackTime;
+        lastPlaybackTime,
+        supportsChangeType;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -134,18 +136,37 @@ function StreamController() {
             dashManifestModel: dashManifestModel
         });
 
-        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        registerEvents();
+    }
+
+    function registerEvents() {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
+        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+    }
+
+    function unRegisterEvents() {
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
+        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
+        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
     }
 
     /*
@@ -153,7 +174,7 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(/*e*/) {
-        if (isVideoTrackPresent()) {
+        if (isTrackTypePresent(Constants.VIDEO)) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
@@ -223,7 +244,7 @@ function StreamController() {
                 eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
             } else {
                 logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
-                playbackController.seek(seekToPosition);
+                playbackController.seek(seekToPosition, true, true);
             }
         }
     }
@@ -304,7 +325,7 @@ function StreamController() {
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
                 const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
-                logger.info('[StreamController][toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
+                logger.info('[toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
                 preloadTimerId = setTimeout(onStreamCanLoadNext,  preloadDelay);
             }
         }
@@ -317,7 +338,7 @@ function StreamController() {
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (mediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order to switch to a new period, wait until the end of playing
-            logger.info('[StreamController][onStreamBufferingCompleted] end of period detected');
+            logger.info('[onStreamBufferingCompleted] end of period detected');
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
@@ -329,9 +350,15 @@ function StreamController() {
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && !isLast) {
             const newStream = getNextStream();
-            compatible = activeStream.isCompatibleWithStream(newStream);
-            if (compatible) {
-                logger.info('[StreamController][onStreamCanLoadNext] Preloading next stream');
+
+            // Smooth period transition allowed only if both of these conditions are true:
+            // 1.- None of the periods uses contentProtection.
+            // 2.- changeType method implemented by browser or periods use the same codec.
+            useSmoothPeriodTransition = activeStream.isProtectionCompatible(newStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(newStream));
+
+            if (useSmoothPeriodTransition) {
+                logger.info('[onStreamCanLoadNext] Preloading next stream');
                 activeStream.stopEventController();
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
@@ -424,8 +451,8 @@ function StreamController() {
 
     function getNextStream() {
         if (activeStream) {
-            const start = activeStream.getStreamInfo().start;
-            const duration = activeStream.getStreamInfo().duration;
+            const start = getActiveStreamInfo().start;
+            const duration = getActiveStreamInfo().duration;
 
             return streams.filter(function (stream) {
                 return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
@@ -442,31 +469,33 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
-        compatible = false;
+        useSmoothPeriodTransition = false;
         if (oldStream) {
             oldStream.stopEventController();
-            compatible = activeStream.isCompatibleWithStream(newStream) && !seekTime || newStream.getPreloaded();
-            oldStream.deactivate(compatible);
+            useSmoothPeriodTransition = (activeStream.isProtectionCompatible(newStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(newStream))) &&
+                !seekTime || newStream.getPreloaded();
+            oldStream.deactivate(useSmoothPeriodTransition);
         }
 
         activeStream = newStream;
         preloading = false;
-        playbackController.initialize(activeStream.getStreamInfo(), compatible);
+        playbackController.initialize(getActiveStreamInfo(), useSmoothPeriodTransition);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
-            openMediaSource(seekTime, oldStream, false, compatible);
+            openMediaSource(seekTime, oldStream, false, useSmoothPeriodTransition);
         } else {
             preloadStream(seekTime);
         }
     }
 
     function preloadStream(seekTime) {
-        activateStream(seekTime, compatible);
+        activateStream(seekTime, useSmoothPeriodTransition);
     }
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
-            playbackController.initialize(activeStream.getStreamInfo());
+            playbackController.initialize(getActiveStreamInfo());
             openMediaSource(seekTime, null, true, false);
         }
     }
@@ -522,6 +551,15 @@ function StreamController() {
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
         videoTrackDetected = checkTrackPresence(Constants.VIDEO);
 
+        // check if change type is supported by the browser
+        if (buffers) {
+            const keys = Object.keys(buffers);
+            if (keys.length > 0 && buffers[keys[0]].changeType) {
+                logger.debug('SourceBuffer changeType method supported. Use it to switch codecs in periods transitions');
+                supportsChangeType = true;
+            }
+        }
+
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
@@ -542,12 +580,12 @@ function StreamController() {
 
         isStreamSwitchingInProgress = false;
         eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
-            toStreamInfo: activeStream.getStreamInfo()
+            toStreamInfo: getActiveStreamInfo()
         });
     }
 
     function setMediaDuration(duration) {
-        const manifestDuration = duration ? duration : activeStream.getStreamInfo().manifestInfo.duration;
+        const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
         const mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
         logger.debug('Duration successfully set to: ' + mediaDuration);
     }
@@ -627,6 +665,7 @@ function StreamController() {
 
         } catch (e) {
             errHandler.manifestError(e.message, 'nostreamscomposed', manifestModel.getValue());
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
         }
@@ -676,7 +715,7 @@ function StreamController() {
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
             allUTCTimingSources.forEach(function (item) {
-                if (item.value.replace(/.*?:\/\//g, '') === MediaPlayerModel.DEFAULT_UTC_TIMING_SOURCE.value.replace(/.*?:\/\//g, '')) {
+                if (item.value.replace(/.*?:\/\//g, '') === mediaPlayerModel.getDefaultUtcTimingSource().value.replace(/.*?:\/\//g, '')) {
                     item.value = item.value.replace(isHTTPS ? new RegExp(/^(http:)?\/\//i) : new RegExp(/^(https:)?\/\//i), isHTTPS ? 'https://' : 'http://');
                     logger.debug('Matching default timing source protocol to manifest protocol: ', item.value);
                 }
@@ -696,12 +735,22 @@ function StreamController() {
         }
     }
 
-    function isAudioTrackPresent() {
-        return audioTrackDetected;
-    }
+    function isTrackTypePresent(trackType) {
+        let isTrackTypeDetected;
 
-    function isVideoTrackPresent() {
-        return videoTrackDetected;
+        if (!trackType) {
+            return isTrackTypeDetected;
+        }
+
+        switch (trackType) {
+            case Constants.VIDEO :
+                isTrackTypeDetected = videoTrackDetected;
+                break;
+            case Constants.AUDIO :
+                isTrackTypeDetected = audioTrackDetected;
+                break;
+        }
+        return isTrackTypeDetected;
     }
 
     function checkTrackPresence(type) {
@@ -749,7 +798,6 @@ function StreamController() {
         }
     }
 
-
     function onPlaybackError(e) {
         if (!e.error) return;
 
@@ -791,6 +839,7 @@ function StreamController() {
             logger.fatal(e.error);
         }
         errHandler.mediaSourceError(msg);
+        errHandler.error(new DashJSError(e.error.code, msg));
         reset();
     }
 
@@ -806,7 +855,8 @@ function StreamController() {
 
     function checkSetConfigCall() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
-            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset')) {
+            !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
+            !metricsModel || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
     }
@@ -928,16 +978,7 @@ function StreamController() {
             stream.reset(hasMediaError);
         }
 
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
+        unRegisterEvents();
 
         baseURLController.reset();
         manifestUpdater.reset();
@@ -980,8 +1021,7 @@ function StreamController() {
     instance = {
         initialize: initialize,
         getActiveStreamInfo: getActiveStreamInfo,
-        isVideoTrackPresent: isVideoTrackPresent,
-        isAudioTrackPresent: isAudioTrackPresent,
+        isTrackTypePresent: isTrackTypePresent,
         switchToVideoElement: switchToVideoElement,
         getStreamById: getStreamById,
         getStreamForTime: getStreamForTime,

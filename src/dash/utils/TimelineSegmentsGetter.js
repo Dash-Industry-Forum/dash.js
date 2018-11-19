@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../../streaming/constants/Constants';
 
 import {getTimeBasedSegment} from './SegmentsUtils';
 
@@ -41,9 +42,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
     let instance;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime') || !timelineConverter.hasOwnProperty('calcSegmentAvailabilityRange') ||
-            !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime')) {
-            throw new Error('Missing config parameter(s)');
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime') ||
+            !timelineConverter.hasOwnProperty('calcSegmentAvailabilityRange')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

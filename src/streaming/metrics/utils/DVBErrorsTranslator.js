@@ -35,11 +35,10 @@ import MetricsReportingEvents from '../MetricsReportingEvents';
 function DVBErrorsTranslator(config) {
 
     config = config || {};
-    let instance;
-    let eventBus = config.eventBus;
-    let metricModel = config.metricsModel;
-    let mpd;
-
+    let instance,
+        mpd;
+    const eventBus = config.eventBus;
+    const metricModel = config.metricsModel;
     const metricsConstants = config.metricsConstants;
     //MediaPlayerEvents have been added to Events in MediaPlayer class
     const Events = config.events;

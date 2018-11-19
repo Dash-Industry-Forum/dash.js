@@ -201,7 +201,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (typeof value === "number") {
                 volumebar.value = value;
             }
-            player.setVolume(volumebar.value);
+            player.setVolume(parseFloat(volumebar.value));
             player.setMute(player.getVolume() === 0);
             if (isNaN(lastVolumeLevel)) {
                 lastVolumeLevel = player.getVolume();
@@ -271,38 +271,40 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Get thumbnail information
-            var thumbnail = player.getThumbnail(mouseTime);
-            if (!thumbnail) return;
+            player.getThumbnail(mouseTime, (thumbnail) => {
+                if (!thumbnail) return;
 
-            // Adjust left variable for positioning thumbnail with regards to its viewport
-            left += (seekbarRect.left - videoContainerRect.left);
-            // Take into account thumbnail control
-            var ctrlWidth = parseInt(window.getComputedStyle(thumbnailElem).width);
-            if (!isNaN(ctrlWidth)) {
-                left -= ctrlWidth / 2;
-            }
-
-            var scale = (videoContainerRect.height * maxPercentageThumbnailScreen)/thumbnail.height;
-            if (scale > maximumScale) {
-                scale = maximumScale;
-            }
-
-            // Set thumbnail control position
-            thumbnailContainer.style.left = left + 'px';
-            thumbnailContainer.style.display = '';
-            thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail ) + 'px';
-            thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
-
-            var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
-                 'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
-            thumbnailElem.style.background = backgroundStyle;
-            thumbnailElem.style.width = thumbnail.width + 'px';
-            thumbnailElem.style.height = thumbnail.height + 'px';
-            thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
-
-            if (thumbnailTimeLabel) {
-                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? player.formatUTC(mouseTime) : player.convertToTimeCode(mouseTime);
-            }
+                // Adjust left variable for positioning thumbnail with regards to its viewport
+                left += (seekbarRect.left - videoContainerRect.left);
+                // Take into account thumbnail control
+                var ctrlWidth = parseInt(window.getComputedStyle(thumbnailElem).width);
+                if (!isNaN(ctrlWidth)) {
+                    left -= ctrlWidth / 2;
+                }
+    
+                var scale = (videoContainerRect.height * maxPercentageThumbnailScreen)/thumbnail.height;
+                if (scale > maximumScale) {
+                    scale = maximumScale;
+                }
+    
+                // Set thumbnail control position
+                thumbnailContainer.style.left = left + 'px';
+                thumbnailContainer.style.display = '';
+                thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail ) + 'px';
+                thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
+                
+                var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
+                     'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
+                thumbnailElem.style.background = backgroundStyle;
+                thumbnailElem.style.width = thumbnail.width + 'px';
+                thumbnailElem.style.height = thumbnail.height + 'px';
+                thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
+    
+                if (thumbnailTimeLabel) {
+                    thumbnailTimeLabel.textContent = displayUTCTimeCodes ? player.formatUTC(mouseTime) : player.convertToTimeCode(mouseTime);
+                }
+            });
+            
 
         },
 

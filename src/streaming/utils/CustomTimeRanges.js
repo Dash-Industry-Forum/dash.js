@@ -29,6 +29,7 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 */
 import FactoryMaker from '../../core/FactoryMaker';
+import { checkInteger } from '../utils/SupervisorTools';
 
 function CustomTimeRanges(/*config*/) {
     let customTimeRangeArray = [];
@@ -125,16 +126,8 @@ function CustomTimeRanges(/*config*/) {
         return false;
     }
 
-    function checkIndex(index) {
-        const isInt = index !== null && !isNaN(index) && (index % 1 === 0);
-
-        if (!isInt) {
-            throw new Error('index argument is not an integer');
-        }
-    }
-
     function start(index) {
-        checkIndex(index);
+        checkInteger(index);
 
         if (index >= this.customTimeRangeArray.length || index < 0) {
             return NaN;
@@ -144,7 +137,7 @@ function CustomTimeRanges(/*config*/) {
     }
 
     function end(index) {
-        checkIndex(index);
+        checkInteger(index);
 
         if (index >= this.customTimeRangeArray.length || index < 0) {
             return NaN;

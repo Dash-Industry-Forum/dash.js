@@ -1,8 +1,8 @@
 import DashAdapter from '../../src/dash/DashAdapter';
-import StreamProcessor from '../../src/streaming/StreamProcessor';
-import RepresentationController from '../../src/dash/controllers/RepresentationController';
-import Events from '../../src/core/events/Events';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+import Constants from '../../src/streaming/constants/Constants';
+
+import RepresentationControllerMock from './mocks/RepresentationControllerMock';
+import StreamProcessorMock from './mocks/StreamProcessorMock';
 
 const expect = require('chai').expect;
 
@@ -91,12 +91,8 @@ describe('DashAdapter', function () {
             expect(dashAdapter.getInitRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
-        it('should throw an error when getNextFragmentRequest is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getNextFragmentRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getFragmentRequestForTime is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getFragmentRequestForTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
+        it('should throw an error when getFragmentRequest is called and streamProcessor parameter is undefined', function () {
+            expect(dashAdapter.getFragmentRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
         it('should throw an error when getIndexHandlerTime is called and streamProcessor parameter is undefined', function () {
@@ -115,12 +111,8 @@ describe('DashAdapter', function () {
             expect(dashAdapter.getInitRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
-        it('should throw an error when getNextFragmentRequest is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getNextFragmentRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getFragmentRequestForTime is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getFragmentRequestForTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
+        it('should throw an error when getFragmentRequest is called and streamProcessor is an empty object', function () {
+            expect(dashAdapter.getFragmentRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
         it('should throw an error when getIndexHandlerTime is called and streamProcessor is an empty object', function () {
@@ -137,66 +129,50 @@ describe('DashAdapter', function () {
     });
 
     describe('streamProcessor parameter is properly defined, without its attributes', () => {
-        const streamProcessor = StreamProcessor(context).create({
-            mimeType: 'video/mp4',
-            timelineConverter: {},
-            adapter: dashAdapter,
-            baseURLController: {}
-        });
+        const streamProcessorMock = new StreamProcessorMock('video/mp4');
 
         it('should return null when getInitRequest is called and streamProcessor is defined, without its attributes', function () {
-            const initRequest = dashAdapter.getInitRequest(streamProcessor, 0);
+            const initRequest = dashAdapter.getInitRequest(streamProcessorMock, 0);
 
             expect(initRequest).to.be.null;                // jshint ignore:line
         });
 
-        it('should return null when getNextFragmentRequest is called and streamProcessor is defined, without its attributes', function () {
-            const nextFragRequest = dashAdapter.getNextFragmentRequest(streamProcessor);
+        it('should return null when getFragmentRequest is called and streamProcessor is defined, without its attributes', function () {
+            const nextFragRequest = dashAdapter.getFragmentRequest(streamProcessorMock);
 
             expect(nextFragRequest).to.be.null;                // jshint ignore:line
         });
 
-        it('should return null when getFragmentRequestForTime is called and streamProcessor is defined, without its attributes', function () {
-            const fragRequest = dashAdapter.getFragmentRequestForTime(streamProcessor);
-
-            expect(fragRequest).to.be.null;                // jshint ignore:line
-        });
-
         it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
-            const time = dashAdapter.getIndexHandlerTime(streamProcessor);
+            const time = dashAdapter.getIndexHandlerTime(streamProcessorMock);
 
             expect(time).to.be.NaN;                // jshint ignore:line
         });
 
         it('should not throw an error when setIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
-            expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter, streamProcessor)).to.not.throw();
+            expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter, streamProcessorMock)).to.not.throw();
         });
 
         it('should not throw an error when updateData is called and streamProcessor is defined, without its attributes', function () {
-            expect(dashAdapter.updateData.bind(dashAdapter, streamProcessor)).to.not.throw();
+            expect(dashAdapter.updateData.bind(dashAdapter, streamProcessorMock)).to.not.throw();
         });
 
         it('should throw an error when getInitRequest is called and streamProcessor is defined, but quality is not a number', function () {
-            expect(dashAdapter.getInitRequest.bind(dashAdapter, streamProcessor, {})).to.be.throw('quality argument is not an integer');
+            expect(dashAdapter.getInitRequest.bind(dashAdapter, streamProcessorMock, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
 
     describe('representationController parameter is missing or malformed', () => {
-        it('should throw an error when getRepresentationInfoForQuality is called and representationController parameter is undefined', function () {
-            expect(dashAdapter.getRepresentationInfoForQuality.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getCurrentRepresentationInfo is called and representationController parameter is undefined', function () {
-            expect(dashAdapter.getCurrentRepresentationInfo.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
+        it('should throw an error when getRepresentationInfo is called and representationController parameter is undefined', function () {
+            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
         });
     });
 
     describe('representationController parameter is properly defined, without its attributes', () => {
-        Events.extend(MediaPlayerEvents);
-        const representationController = RepresentationController(context).create();
+        const representationControllerMock = new RepresentationControllerMock();
 
-        it('should throw an error when getRepresentationInfoForQuality is called and representationController parameter is defined, but quality is not a number', function () {
-            expect(dashAdapter.getRepresentationInfoForQuality.bind(dashAdapter, representationController, {})).to.be.throw('quality argument is not an integer');
+        it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
+            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter, representationControllerMock, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
 });

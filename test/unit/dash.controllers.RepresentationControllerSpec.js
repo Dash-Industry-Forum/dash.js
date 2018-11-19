@@ -5,15 +5,14 @@ import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
 import MediaController from '../../src/streaming/controllers/MediaController';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
-import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import VideoModel from '../../src/streaming/models/VideoModel';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import SpecHelper from './helpers/SpecHelper';
-import AbrController from '../../src/streaming/controllers/AbrController';
-import DOMStorage from '../../src/streaming/utils/DOMStorage';
+
+import AbrControllerMock from './mocks/AbrControllerMock';
+import DomStorageMock from './mocks/DomStorageMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -36,36 +35,26 @@ describe('RepresentationController', function () {
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
     const mediaController = MediaController(context).getInstance();
     const timelineConverter = TimelineConverter(context).getInstance();
     const dashManifestModel = DashManifestModel(context).getInstance({
         mediaController: mediaController,
         timelineConverter: timelineConverter
     });
-    const videoModel = VideoModel(context).getInstance();
-
 
     Events.extend(MediaPlayerEvents);
 
     manifestModel.setValue(mpd);
 
-    const abrController = AbrController(context).getInstance();
-    const domStorage = DOMStorage(context).getInstance({
-        mediaPlayerModel: mediaPlayerModel
-    });
+    const abrControllerMock = new AbrControllerMock();
+    const domStorageMock = new DomStorageMock();
 
-    abrController.setConfig({
-        domStorage: domStorage,
-        mediaPlayerModel: mediaPlayerModel,
-        videoModel: videoModel
-    });
-    abrController.registerStreamType(testType, streamProcessor);
+    abrControllerMock.registerStreamType();
 
     const representationController = RepresentationController(context).create();
     representationController.setConfig({
-        abrController: abrController,
-        domStorage: domStorage,
+        abrController: abrControllerMock,
+        domStorage: domStorageMock,
         dashManifestModel: dashManifestModel,
         manifestModel: manifestModel,
         streamProcessor: streamProcessor
@@ -124,6 +113,14 @@ describe('RepresentationController', function () {
             const expectedValue = 0;
 
             expect(representationController.getRepresentationForQuality(quality).index).to.equal(expectedValue);
+        });
+
+        it('should return null if quality is undefined', function () {
+            expect(representationController.getRepresentationForQuality()).to.equal(null);
+        });
+
+        it('should return null if quality is greater than voAvailableRepresentations.length - 1', function () {
+            expect(representationController.getRepresentationForQuality(150)).to.equal(null);
         });
     });
 

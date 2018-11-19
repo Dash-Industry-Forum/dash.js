@@ -1,6 +1,7 @@
 import ManifestUpdater from './../../src/streaming/ManifestUpdater';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
+import Errors from '../../src/core/errors/Errors';
 
 import ManifestModelMock from './mocks/ManifestModelMock';
 import DashManifestModelMock from './mocks/DashManifestModelMock';
@@ -8,7 +9,8 @@ import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
-const expect = require('chai').expect;
+const chai = require('chai');
+const expect = chai.expect;
 
 describe('ManifestUpdater', function () {
     const context = {};
@@ -34,10 +36,33 @@ describe('ManifestUpdater', function () {
 
     manifestUpdater.initialize();
 
-    it('should return an error when parsing error occurs', function () {
+    it('should not call MANIFEST_UPDATED if a loading error occurs, no error should be sent', function () {
+        const spy = chai.spy();
+        eventBus.on(Events.MANIFEST_UPDATED, spy);
+
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
-            error: {message: manifestErrorMockText}
+            error: {code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE, message: manifestErrorMockText}
         });
-        expect(errHandlerMock.error).to.equal(manifestErrorMockText);
+
+        expect(spy).to.have.not.been.called(); // jshint ignore:line
+
+        eventBus.off(Events.MANIFEST_UPDATED, spy);
+
+        expect(errHandlerMock.errorCode).to.equal(undefined); // jshint ignore:line
+    });
+
+    it('should not call MANIFEST_UPDATED if a parsing error occurs, errorHandler should send an error', function () {
+        const spy = chai.spy();
+        eventBus.on(Events.MANIFEST_UPDATED, spy);
+
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+            error: {code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE, message: manifestErrorMockText}
+        });
+
+        expect(spy).to.have.not.been.called(); // jshint ignore:line
+
+        eventBus.off(Events.MANIFEST_UPDATED, spy);
+
+        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE); // jshint ignore:line
     });
 });

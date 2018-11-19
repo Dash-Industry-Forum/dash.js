@@ -32,6 +32,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
+import Errors from '../core/errors/Errors';
 
 function ManifestUpdater() {
 
@@ -47,8 +48,8 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         dashManifestModel,
-        mediaPlayerModel,
-        errHandler;
+        errHandler,
+        mediaPlayerModel;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -169,8 +170,8 @@ function ManifestUpdater() {
     function onManifestLoaded(e) {
         if (!e.error) {
             update(e.manifest);
-        } else {
-            errHandler.manifestError(e.error.message, e.error.code);
+        } else if (e.error.code === Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) {
+            errHandler.error(e.error);
         }
     }
 
