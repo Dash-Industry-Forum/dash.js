@@ -192,7 +192,7 @@ function BufferController(config) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality);
+        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality,  ', data size:', e.chunk.bytes.byteLength);
         appendToBuffer(e.chunk);
     }
 
@@ -200,7 +200,7 @@ function BufferController(config) {
         const chunk = initCache.extract(streamId, representationId);
         bufferResetInProgress = bufferResetEnabled === true ? bufferResetEnabled : false;
         if (chunk) {
-            logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality);
+            logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
             appendToBuffer(chunk);
         } else {
             eventBus.trigger(Events.INIT_REQUESTED, { sender: instance });
