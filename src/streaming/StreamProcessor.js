@@ -362,10 +362,6 @@ function StreamProcessor(config) {
         return controller;
     }
 
-    function getPlaybackController() {
-        return playbackController;
-    }
-
     instance = {
         initialize: initialize,
         isUpdating: isUpdating,
@@ -377,7 +373,6 @@ function StreamProcessor(config) {
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
-        getPlaybackController: getPlaybackController,
         getRepresentationInfo: getRepresentationInfo,
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,

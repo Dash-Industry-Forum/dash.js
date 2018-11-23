@@ -103,7 +103,8 @@ function ScheduleController(config) {
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: adapter,
-            textController: textController
+            textController: textController,
+            playbackController: playbackController
         });
 
         if (dashManifestModel.getIsTextTrack(config.mimeType)) {
