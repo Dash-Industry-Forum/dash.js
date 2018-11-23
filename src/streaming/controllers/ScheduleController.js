@@ -523,14 +523,17 @@ function ScheduleController(config) {
             return;
         }
 
-        if (e.unintended) {
-            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-            streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(e.from,
-                streamProcessor.getStreamInfo().duration);
-        } else {
-            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-                streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-                streamProcessor.getStreamInfo().duration);
+        const streamInfo = streamProcessor.getStreamInfo();
+        if (streamInfo) {
+            if (e.unintended) {
+                // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+                streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(e.from,
+                    streamInfo.duration);
+            } else {
+                streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
+                    streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
+                    streamInfo.duration);
+            }
         }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
