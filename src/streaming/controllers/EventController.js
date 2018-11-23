@@ -122,8 +122,8 @@ function EventController() {
     function addInbandEvents(values) {
         checkSetConfigCall();
 
-        for (var i = 0; i < values.length; i++) {
-            var event = values[i];
+        for (let i = 0; i < values.length; i++) {
+            let event = values[i];
             if (!(event.id in inbandEvents)) {
                 if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
                     handleManifestReloadEvent(event);
@@ -161,12 +161,12 @@ function EventController() {
      */
     function removeEvents() {
         if (activeEvents) {
-            var currentVideoTime = playbackController.getTime();
-            var eventIds = Object.keys(activeEvents);
+            let currentVideoTime = playbackController.getTime();
+            let eventIds = Object.keys(activeEvents);
 
-            for (var i = 0; i < eventIds.length; i++) {
-                var eventId = eventIds[i];
-                var curr = activeEvents[eventId];
+            for (let i = 0; i < eventIds.length; i++) {
+                let eventId = eventIds[i];
+                let curr = activeEvents[eventId];
                 if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
                     logger.debug('Remove Event ' + eventId + ' at time ' + currentVideoTime);
                     curr = null;
@@ -201,15 +201,15 @@ function EventController() {
     }
 
     function triggerEvents(events) {
-        var currentVideoTime = playbackController.getTime();
-        var presentationTime;
+        let currentVideoTime = playbackController.getTime();
+        let presentationTime;
 
         /* == Trigger events that are ready == */
         if (events) {
-            var eventIds = Object.keys(events);
-            for (var i = 0; i < eventIds.length; i++) {
-                var eventId = eventIds[i];
-                var curr = events[eventId];
+            let eventIds = Object.keys(events);
+            for (let i = 0; i < eventIds.length; i++) {
+                let eventId = eventIds[i];
+                let curr = events[eventId];
 
                 if (curr !== undefined) {
                     presentationTime = curr.presentationTime / curr.eventStream.timescale;
