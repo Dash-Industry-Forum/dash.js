@@ -80,13 +80,7 @@ function StreamProcessorMock (testType, streamInfo) {
             getBufferTarget() {
                 return 20;
             },
-            getSeekTarget() {
-                return 1;
-            },
             setSeekTarget() {
-            },
-            getTimeToLoadDelay() {
-                return 0;
             },
             setTimeToLoadDelay() {
             }

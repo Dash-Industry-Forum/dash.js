@@ -24,7 +24,7 @@ describe('NextFragmentRequestRule', function () {
         const streamInfo = {
             id: 'id'
         };
-        const result = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo));
+        const result = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), 1);
 
         expect(result).to.be.null;  // jshint ignore:line
     });
@@ -34,7 +34,7 @@ describe('NextFragmentRequestRule', function () {
         const streamInfo = {
             id: 'id'
         };
-        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), {startTime: 0, duration: 1});
+        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), 1,{startTime: 0, duration: 1});
 
         expect(request.startTime).to.be.equal(0);  // jshint ignore:line
         expect(request.duration).to.be.equal(2);  // jshint ignore:line
@@ -45,7 +45,7 @@ describe('NextFragmentRequestRule', function () {
         const streamInfo = {
             id: 'id'
         };
-        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo));
+        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), 1);
 
         expect(request.startTime).to.be.equal(0);  // jshint ignore:line
         expect(request.duration).to.be.equal(2);  // jshint ignore:line
