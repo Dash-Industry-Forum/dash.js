@@ -30,6 +30,12 @@ describe('KeySystemPlayready', function () {
         expect(keySystem.getCDMData.bind(keySystem)).to.throw('Missing config parameter(s)');
     });
 
+    /* only allow utf-8 and utf-16 formats */
+    it('should throw an exception when messageformat is not supported', function () {
+        keySystem = KeySystemPlayReady(context).getInstance();
+        expect(keySystem.setPlayReadyMessageFormat.bind(keySystem, 'utf8')).to.throw('Specified message format is not one of "utf-8" or "utf-16"');
+    });
+
     it('should return the correct cdmData', function () {
         keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64});
         keySystem.init(protData);
