@@ -106,8 +106,8 @@ function EventController() {
         inlineEvents = {};
 
         if (values) {
-            for (var i = 0; i < values.length; i++) {
-                var event = values[i];
+            for (let i = 0; i < values.length; i++) {
+                let event = values[i];
                 inlineEvents[event.id] = event;
                 logger.debug('Add inline event with id ' + event.id);
             }
