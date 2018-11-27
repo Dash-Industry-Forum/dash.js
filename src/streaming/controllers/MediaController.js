@@ -359,7 +359,7 @@ function MediaController() {
     }
 
     function matchSettings(settings, track) {
-        const matchLang = !settings.lang || (settings.lang === track.lang);
+        const matchLang = !settings.lang || (track.lang.match(settings.lang));
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return item === settings.role;
