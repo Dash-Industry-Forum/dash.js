@@ -241,9 +241,7 @@ function MediaPlayer() {
         adapter = DashAdapter(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
 
-        dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel
-        });
+        dashMetrics = DashMetrics(context).getInstance();
 
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({

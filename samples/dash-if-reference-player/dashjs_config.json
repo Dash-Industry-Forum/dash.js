@@ -3,6 +3,7 @@
         "logLevel": 5
     },
     "streaming": {
+        "metricsMaxListDepth": 50,
         "abandonLoadTimeout": 10000,
         "liveDelayFragmentCount": 4,
         "liveDelay": null,

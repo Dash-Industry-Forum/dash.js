@@ -82,6 +82,13 @@ function Settings() {
         },
         streaming: {
             /**
+             * change the maximum list depth of metrics.
+             * @alias streaming.metricsMaxListDepth
+             * @default true
+             * @memberof module:Settings.Schema
+             */
+            metricsMaxListDepth: 1000,
+            /**
              * A timeout value in seconds, which during the ABRController will block switch-up events.
              * This will only take effect after an abandoned fragment event occurs.
              * @alias streaming.abandonLoadTimeout
