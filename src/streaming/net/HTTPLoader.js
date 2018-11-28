@@ -140,7 +140,7 @@ function HTTPLoader(cfg) {
                             retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
                         }
                         internalLoad(config, remainingAttempts);
-                    }, mediaPlayerModel.getRetryIntervalForType(request.type));
+                    }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
                     errHandler.downloadError(
                         downloadErrorToRequestTypeMap[request.type],
