@@ -161,7 +161,7 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused()) {
+        if (isPaused && !settings.get().streaming.scheduleWhilePaused) {
             return;
         }
         if (isUpdating) {
