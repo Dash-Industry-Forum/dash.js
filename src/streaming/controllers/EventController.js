@@ -33,11 +33,15 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import XHRLoader from '../net/XHRLoader';
 
 function EventController() {
 
     const MPD_RELOAD_SCHEME = 'urn:mpeg:dash:event:2012';
     const MPD_RELOAD_VALUE = 1;
+
+    const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
+    const MPD_CALLBACK_VALUE = 1;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -186,6 +190,16 @@ function EventController() {
         manifestUpdater.refreshManifest();
     }
 
+    function sendCallbackRequest(url) {
+        let loader = XHRLoader(context).create({});
+        loader.load({
+            method: 'get',
+            url: url,
+            request: {
+                responseType: 'arraybuffer'
+            }});
+    }
+
     function triggerEvents(events) {
         var currentVideoTime = playbackController.getTime();
         var presentationTime;
@@ -208,6 +222,8 @@ function EventController() {
                             if (curr.duration !== 0 || curr.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                                 refreshManifest();
                             }
+                        } else if (curr.eventStream.schemeIdUri == MPD_CALLBACK_SCHEME && curr.eventStream.value == MPD_CALLBACK_VALUE) {
+                            sendCallbackRequest(curr.messageData);
                         } else {
                             eventBus.trigger(curr.eventStream.schemeIdUri, {event: curr});
                         }
