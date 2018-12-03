@@ -803,8 +803,14 @@ function Stream(config) {
     // Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
     function codecRootCompatibleWithCodec(codec1, codec2) {
         const codecRoot = codec1.split('.')[0];
-        const compatTableCodec = codecCompatibilityTable.find((compat) => compat.codec === codecRoot);
         const rootCompatible = codec2.indexOf(codecRoot) === 0;
+        let compatTableCodec;
+        for (let i = 0; i < codecCompatibilityTable.length; i++) {
+            if (codecCompatibilityTable[i].codec === codecRoot) {
+                compatTableCodec = codecCompatibilityTable[i];
+                break;
+            }
+        }
         if (compatTableCodec) {
             return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
         }
