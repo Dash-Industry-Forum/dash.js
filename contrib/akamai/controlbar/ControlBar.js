@@ -271,7 +271,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Get thumbnail information
-            player.getThumbnail(mouseTime, (thumbnail) => {
+            player.getThumbnail(mouseTime, function(thumbnail) {
                 if (!thumbnail) return;
 
                 // Adjust left variable for positioning thumbnail with regards to its viewport
