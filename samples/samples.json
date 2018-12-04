@@ -202,6 +202,11 @@
                 "title": "Extending Dash.js",
                 "description": "This sample shows how to use dash.js extend mechanism to add custom HTTP headers and modify URL's of the requests done by the player.",
                 "href": "advanced/extend.html"
+            },
+            {
+                "title": "Autoplay Browser policy",
+                "description": "This sample shows how to deal with autoplay browsers policy. It uses an event listener to detect when auto playback is interrupted by the browser and how to recover from this situation muting audio." ,
+                "href": "advanced/auto-play-browser-policy.html"
             }
         ]
     }
