@@ -2137,30 +2137,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Returns instance of Video Container that was attached by calling attachVideoContainer()
-     * @returns {Object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoContainer() {
-        return videoModel ? videoModel.getVideoContainer() : null;
-    }
-
-    /**
-     * Use this method to attach an HTML5 element that wraps the video element.
-     *
-     * @param {HTMLElement} container - The HTML5 element containing the video element.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function attachVideoContainer(container) {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
-        videoModel.setVideoContainer(container);
-    }
-
-    /**
      * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
      *
      * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
@@ -2943,7 +2919,6 @@ function MediaPlayer() {
         getVersion: getVersion,
         getDebug: getDebug,
         getBufferLength: getBufferLength,
-        getVideoContainer: getVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         getVideoElement: getVideoElement,
         getSource: getSource,
@@ -3056,7 +3031,6 @@ function MediaPlayer() {
         setProtectionData: setProtectionData,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
-        attachVideoContainer: attachVideoContainer,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,

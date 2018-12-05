@@ -1015,20 +1015,6 @@ describe('MediaPlayer', function () {
                 expect(areEquals).to.be.true; // jshint ignore:line
             });
 
-            it('should be able to attach video container', function () {
-                let videoContainer = player.getVideoContainer();
-                expect(videoContainer).to.be.undefined; // jshint ignore:line
-
-                const myVideoContainer = {
-                    videoContainer: 'videoContainer'
-                };
-                player.attachVideoContainer(myVideoContainer);
-
-                videoContainer = player.getVideoContainer();
-                const areEquals = objectUtils.areEqual(myVideoContainer, videoContainer);
-                expect(areEquals).to.be.true; // jshint ignore:line
-            });
-
             it('should be able to attach view', function () {
                 let element = player.getVideoElement();
                 const objectUtils = ObjectUtils(context).getInstance();

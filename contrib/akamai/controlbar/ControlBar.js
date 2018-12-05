@@ -795,7 +795,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             initControls(suffix);
             video.controls = false;
-            videoContainer = player.getVideoContainer();
+            videoContainer = video.parentNode;
             captionBtn.classList.add("hide");
             if (trackSwitchBtn) {
                 trackSwitchBtn.classList.add("hide");
