@@ -390,20 +390,22 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         }
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED, function (e) { /* jshint ignore:line */
-        if (e.data) {
-            $scope.selectedKeySystem = e.data.keySystem.systemString;
-        }
-    }, $scope);
-
-    $scope.player.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function (e) { /* jshint ignore:line */
-        if (e.data) {
-            var session = e.data;
-            if (session.getSessionType() === 'persistent-license') {
-                $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+    if(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED) {
+        $scope.player.on(dashjs.MediaPlayer.events.KEY_SYSTEM_SELECTED, function (e) { /* jshint ignore:line */
+            if (e.data) {
+                $scope.selectedKeySystem = e.data.keySystem.systemString;
             }
-        }
-    }, $scope);
+        }, $scope);
+
+        $scope.player.on(dashjs.MediaPlayer.events.KEY_SESSION_CREATED, function (e) { /* jshint ignore:line */
+            if (e.data) {
+                var session = e.data;
+                if (session.getSessionType() === 'persistent-license') {
+                    $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+                }
+            }
+        }, $scope);
+    }
 
     ////////////////////////////////////////
     //
