@@ -41,10 +41,10 @@ import { checkParameterType } from '../utils/SupervisorTools';
 function TextController() {
 
     let context = this.context;
-    let instance;
-    let textSourceBuffer;
 
-    let errHandler,
+    let instance,
+        textSourceBuffer,
+        errHandler,
         dashManifestModel,
         manifestModel,
         mediaController,

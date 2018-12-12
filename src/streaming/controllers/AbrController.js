@@ -598,7 +598,7 @@ function AbrController() {
     }
 
     function isPlayingAtTopQuality(streamInfo) {
-        const streamId = streamInfo.id;
+        const streamId = streamInfo ? streamInfo.id : null;
         const audioQuality = getQualityFor(Constants.AUDIO);
         const videoQuality = getQualityFor(Constants.VIDEO);
 

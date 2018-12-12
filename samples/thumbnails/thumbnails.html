@@ -24,7 +24,6 @@
             player = dashjs.MediaPlayer({}).create();
             player.initialize(video, url, true);
 
-            player.attachVideoContainer(document.getElementById("videoContainer"));
             controlbar = new ControlBar(player);
             controlbar.initialize();
         }

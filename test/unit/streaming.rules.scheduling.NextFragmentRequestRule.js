@@ -3,12 +3,14 @@ import NextFragmentRequestRule from '../../src/streaming/rules/scheduling/NextFr
 import TextControllerMock from './mocks/TextControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import AdapterMock from './mocks/AdapterMock';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
 const nextFragmentRequestRule = NextFragmentRequestRule(context).create({adapter: new AdapterMock(),
-                                                                         textController: new TextControllerMock()});
+                                                                         textController: new TextControllerMock(),
+                                                                         playbackController: new PlaybackControllerMock()});
 
 describe('NextFragmentRequestRule', function () {
     it('should return null if streamProcessor is undefined', function () {
@@ -22,7 +24,7 @@ describe('NextFragmentRequestRule', function () {
         const streamInfo = {
             id: 'id'
         };
-        const result = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo));
+        const result = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), 1);
 
         expect(result).to.be.null;  // jshint ignore:line
     });
@@ -32,7 +34,7 @@ describe('NextFragmentRequestRule', function () {
         const streamInfo = {
             id: 'id'
         };
-        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), {startTime: 0, duration: 1});
+        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), 1,{startTime: 0, duration: 1});
 
         expect(request.startTime).to.be.equal(0);  // jshint ignore:line
         expect(request.duration).to.be.equal(2);  // jshint ignore:line
@@ -43,7 +45,7 @@ describe('NextFragmentRequestRule', function () {
         const streamInfo = {
             id: 'id'
         };
-        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo));
+        const request = nextFragmentRequestRule.execute(new StreamProcessorMock(testType, streamInfo), 1);
 
         expect(request.startTime).to.be.equal(0);  // jshint ignore:line
         expect(request.duration).to.be.equal(2);  // jshint ignore:line

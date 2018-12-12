@@ -270,6 +270,18 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
         });
 
+        it('should not set uncorrect track', function () {
+            let track = {};
+            let trackType = 'audio';
+            let streamInfo = {
+                id: 'id'
+            };
+
+            mediaController.setTrack(track);
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.false; // jshint ignore:line
+        });
+
         it('should add and set current track', function () {
 
             let trackType = 'audio';

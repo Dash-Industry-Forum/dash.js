@@ -103,7 +103,8 @@ function ScheduleController(config) {
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: adapter,
-            textController: textController
+            textController: textController,
+            playbackController: playbackController
         });
 
         if (dashManifestModel.getIsTextTrack(config.mimeType)) {
@@ -216,7 +217,15 @@ function ScheduleController(config) {
                         let request;
                         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
-                            request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                            request = nextFragmentRequestRule.execute(streamProcessor, seekTarget, replacement);
+                            setSeekTarget(NaN);
+                            if (request && !replacement) {
+                                if (!isNaN(request.startTime + request.duration)) {
+                                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                                }
+                                request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
+                                setTimeToLoadDelay(0);
+                            }
                             if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
                                 logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
                             }
@@ -522,14 +531,17 @@ function ScheduleController(config) {
             return;
         }
 
-        if (e.unintended) {
-            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-            streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(e.from,
-                streamProcessor.getStreamInfo().duration);
-        } else {
-            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-                streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-                streamProcessor.getStreamInfo().duration);
+        const streamInfo = streamProcessor.getStreamInfo();
+        if (streamInfo) {
+            if (e.unintended) {
+                // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+                fragmentModel.removeExecutedRequestsAfterTime(e.from,
+                    streamInfo.duration);
+            } else {
+                fragmentModel.syncExecutedRequestsWithBufferedRange(
+                    streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
+                    streamInfo.duration);
+            }
         }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
@@ -604,20 +616,12 @@ function ScheduleController(config) {
         }
     }
 
-    function getSeekTarget() {
-        return seekTarget;
-    }
-
     function setSeekTarget(value) {
         seekTarget = value;
     }
 
     function setTimeToLoadDelay(value) {
         timeToLoadDelay = value;
-    }
-
-    function getTimeToLoadDelay() {
-        return timeToLoadDelay;
     }
 
     function getBufferTarget() {
@@ -713,10 +717,8 @@ function ScheduleController(config) {
     instance = {
         initialize: initialize,
         getType: getType,
-        getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,
         setTimeToLoadDelay: setTimeToLoadDelay,
-        getTimeToLoadDelay: getTimeToLoadDelay,
         replaceRequest: replaceRequest,
         switchTrackAsked: switchTrackAsked,
         isStarted: isStarted,

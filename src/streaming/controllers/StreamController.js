@@ -183,7 +183,7 @@ function StreamController() {
     }
 
     function onWallclockTimeUpdated(/*e*/) {
-        if (!mediaPlayerModel.getJumpGaps() || !activeStream || activeStream.getProcessors().length === 0 ||
+        if (!mediaPlayerModel.getJumpGaps() || getActiveStreamProcessors() === 0 ||
             playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
             hasMediaError || hasInitialisationError) {
             return;
@@ -202,7 +202,7 @@ function StreamController() {
     }
 
     function jumpGap(time) {
-        const streamProcessors = activeStream.getProcessors();
+        const streamProcessors = getActiveStreamProcessors();
         const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
         let seekToPosition;
 
@@ -566,7 +566,7 @@ function StreamController() {
             } else {
                 let startTime = playbackController.getStreamStartTime(true);
                 if (!keepBuffers) {
-                    activeStream.getProcessors().forEach(p => {
+                    getActiveStreamProcessors().forEach(p => {
                         adapter.setIndexHandlerTime(p, startTime);
                     });
                 }
@@ -755,13 +755,11 @@ function StreamController() {
 
     function checkTrackPresence(type) {
         let isDetected = false;
-        if (activeStream) {
-            activeStream.getProcessors().forEach(p => {
-                if (p.getMediaInfo().type === type) {
-                    isDetected = true;
-                }
-            });
-        }
+        getActiveStreamProcessors().forEach(p => {
+            if (p.getMediaInfo().type === type) {
+                isDetected = true;
+            }
+        });
         return isDetected;
     }
 
@@ -769,14 +767,12 @@ function StreamController() {
         time = time || new Date();
 
         if (playListMetrics) {
-            if (activeStream) {
-                activeStream.getProcessors().forEach(p => {
-                    const ctrlr = p.getScheduleController();
-                    if (ctrlr) {
-                        ctrlr.finalisePlayList(time, reason);
-                    }
-                });
-            }
+            getActiveStreamProcessors().forEach(p => {
+                const ctrlr = p.getScheduleController();
+                if (ctrlr) {
+                    ctrlr.finalisePlayList(time, reason);
+                }
+            });
             metricsModel.addPlayList(playListMetrics);
             playListMetrics = null;
         }
@@ -788,14 +784,12 @@ function StreamController() {
         playListMetrics.mstart = playbackController.getTime() * 1000;
         playListMetrics.starttype = startReason;
 
-        if (activeStream) {
-            activeStream.getProcessors().forEach(p => {
-                let ctrlr = p.getScheduleController();
-                if (ctrlr) {
-                    ctrlr.setPlayList(playListMetrics);
-                }
-            });
-        }
+        getActiveStreamProcessors().forEach(p => {
+            let ctrlr = p.getScheduleController();
+            if (ctrlr) {
+                ctrlr.setPlayList(playListMetrics);
+            }
+        });
     }
 
     function onPlaybackError(e) {
