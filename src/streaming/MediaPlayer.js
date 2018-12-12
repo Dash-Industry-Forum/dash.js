@@ -2137,6 +2137,18 @@ function MediaPlayer() {
     }
 
     /**
+     * Use this method to attach an HTML5 element that wraps the video element.
+     *
+     * @param {HTMLElement} container - The HTML5 element containing the video element.
+     * @memberof module:MediaPlayer
+     * @instance
+     * @deprecated
+     */
+    function attachVideoContainer(container) { /* jshint ignore:line */
+        logger.warn('attachVideoContainer method has been deprecated and will be removed in dash.js v3.0.0');
+    }
+
+    /**
      * Use this method to attach an HTML5 VideoElement for dash.js to operate upon.
      *
      * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
@@ -3031,6 +3043,7 @@ function MediaPlayer() {
         setProtectionData: setProtectionData,
         enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
+        attachVideoContainer: attachVideoContainer,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,
