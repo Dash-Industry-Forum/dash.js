@@ -145,7 +145,6 @@ declare namespace dashjs {
         getDebug(): Debug;
         getBufferLength(type: 'video' | 'audio' | 'fragmentedText'): number;
         getVideoModel(): VideoModel;
-        getVideoContainer(): HTMLElement | null;
         getTTMLRenderingDiv(): HTMLDivElement | null;
         getVideoElement(): HTMLVideoElement;
         getSource(): string | object;
