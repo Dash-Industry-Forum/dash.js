@@ -994,10 +994,6 @@ describe('MediaPlayer', function () {
                 expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
 
-            it('Method attachVideoContainer should throw an exception', function () {
-                expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
-            });
-
             it('Method attachTTMLRenderingDiv should throw an exception', function () {
                 expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });

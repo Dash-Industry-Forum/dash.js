@@ -229,7 +229,6 @@ declare namespace dashjs {
         setProtectionData(value: ProtectionData): void;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
-        attachVideoContainer(container: HTMLElement): void;
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
         getCurrentTextTrackIndex(): number;
         setJumpGaps(value: boolean): void;
@@ -322,7 +321,7 @@ declare namespace dashjs {
         KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE:                112;
         KEY_SESSION_CREATED_ERROR_CODE:                     113;
         MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE:              114;
-        MSS_NO_TFRF_CODE:                                   200;        
+        MSS_NO_TFRF_CODE:                                   200;
     }
 
     interface MediaPlayerEvents {
