@@ -4,7 +4,7 @@ import AbrController from '../../src/streaming/controllers/AbrController';
 import BitrateInfo from '../../src/streaming/vo/BitrateInfo';
 import Constants from '../../src/streaming/constants/Constants';
 
-import DashManifestModelMock from './mocks/DashManifestModelMock';
+import AdapterMock from './mocks/AdapterMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import DomStorageMock from './mocks/DomStorageMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
@@ -25,7 +25,7 @@ describe('AbrController', function () {
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const manifestModelMock = new ManifestModelMock();
-    const dashManifestModelMock = new DashManifestModelMock();
+    const adapterMock = new AdapterMock();
     const videoModelMock = new VideoModelMock();
     const domStorageMock = new DomStorageMock();
     const metricsModelMock = new MetricsModelMock();
@@ -37,7 +37,7 @@ describe('AbrController', function () {
             dashMetrics: dashMetricsMock,
             videoModel: videoModelMock,
             manifestModel: manifestModelMock,
-            dashManifestModel: dashManifestModelMock,
+            adapter: adapterMock,
             domStorage: domStorageMock
         });
         abrCtrl.registerStreamType('video', streamProcessor);

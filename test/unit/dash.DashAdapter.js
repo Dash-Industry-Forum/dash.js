@@ -3,13 +3,49 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
+import DashManifestModelMock from './mocks/DashManifestModelMock';
 
 const expect = require('chai').expect;
 
 const context = {};
+const mediaControllerMock = new MediaControllerMock();
+const dashManifestModelMock = new DashManifestModelMock();
 const dashAdapter = DashAdapter(context).getInstance();
+dashAdapter.setConfig({
+    dashManifestModel: dashManifestModelMock,
+    mediaController: mediaControllerMock
+});
 
 describe('DashAdapter', function () {
+
+    it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
+        const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: 'video' }, { id: 1, mimeType: 'video' }] }] };
+        const adaptation = dashAdapter.getAdaptationForType(manifest, 0, 'video');
+
+        expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
+
+    /*it('should return the correct adaptation when getAdaptationForType is called', () => {
+        const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
+
+        const streamInfo = {
+            id: 'id'
+        };
+
+        const track1 = { codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng', mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo };
+        const track2 = { codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu', mimeType: 'audio/mp4', roles: ['main'], streamInfo: streamInfo };
+
+        mediaControllerMock.addTrack(track1);
+        mediaControllerMock.addTrack(track2);
+        mediaControllerMock.setTrack(track2);
+
+        const adaptation = dashAdapter.getAdaptationForType(manifest, 0, 'audio', streamInfo);
+
+        //in the mediaControllerMock, the currentTrack is lang= deu
+
+        expect(adaptation.lang).to.equal('deu'); // jshint ignore:line
+    });*/
 
     it('should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined', function () {
         expect(dashAdapter.getStreamsInfo.bind(dashAdapter,{})).to.throw('setConfig function has to be called previously');

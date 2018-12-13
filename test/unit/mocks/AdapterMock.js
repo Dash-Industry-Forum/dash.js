@@ -33,6 +33,22 @@ class AdapterMock {
     getStreamsInfo() {
         return [];
     }
+
+    getAdaptationForType() {
+        return {
+            Representation: [
+                {
+                    width: 500
+                },
+                {
+                    width: 750
+                },
+                {
+                    width: 900
+                }
+            ]
+        };
+    }
 }
 
 export default AdapterMock;
