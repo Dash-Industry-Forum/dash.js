@@ -549,7 +549,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 

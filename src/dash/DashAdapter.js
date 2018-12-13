@@ -30,6 +30,7 @@
  */
 
 import Constants from '../streaming/constants/Constants';
+import DashConstants from './constants/DashConstants';
 import RepresentationInfo from '../streaming/vo/RepresentationInfo';
 import MediaInfo from '../streaming/vo/MediaInfo';
 import StreamInfo from '../streaming/vo/StreamInfo';
@@ -42,6 +43,7 @@ import { checkInteger } from '../streaming/utils/SupervisorTools';
 function DashAdapter() {
     let instance,
         dashManifestModel,
+        mediaController,
         voPeriods,
         voAdaptations;
 
@@ -54,6 +56,10 @@ function DashAdapter() {
 
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+
+        if (config.mediaController) {
+            mediaController = config.mediaController;
         }
     }
 
@@ -195,7 +201,7 @@ function DashAdapter() {
         }
 
         const manifest = voPeriods[0].mpd.manifest;
-        let realAdaptation = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
+        let realAdaptation = getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
         if (!realAdaptation) return null;
 
         let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
@@ -205,6 +211,39 @@ function DashAdapter() {
         voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
         return convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
+    }
+
+    function getIsMain(adaptation) {
+        return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
+            return role.value === DashConstants.MAIN;
+        })[0];
+    }
+
+    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
+        const adaptations = dashManifestModel.getAdaptationsForType(manifest, periodIndex, type);
+
+        if (!adaptations || adaptations.length === 0) return null;
+
+        if (adaptations.length > 1 && streamInfo) {
+            const currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
+            const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
+
+            if (currentTrack) {
+                for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                    if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
+                        return adaptations[i];
+                    }
+                }
+            }
+
+            for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                if (getIsMain(adaptations[i])) {
+                    return adaptations[i];
+                }
+            }
+        }
+
+        return adaptations[0];
     }
 
     function getAllMediaInfoForType(streamInfo, type, externalManifest) {
@@ -509,6 +548,7 @@ function DashAdapter() {
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
         getRepresentationInfo: getRepresentationInfo,
+        getAdaptationForType: getAdaptationForType,
         updateData: updateData,
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,

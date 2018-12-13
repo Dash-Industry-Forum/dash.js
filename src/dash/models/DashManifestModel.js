@@ -55,9 +55,7 @@ function DashManifestModel(config) {
 
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
-    const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
-    const adapter = config.adapter;
     const errHandler = config.errHandler;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
@@ -195,12 +193,6 @@ function DashManifestModel(config) {
         return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
-    function getIsMain(adaptation) {
-        return getRolesForAdaptation(adaptation).filter(function (role) {
-            return role.value === DashConstants.MAIN;
-        })[0];
-    }
-
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
@@ -269,33 +261,6 @@ function DashManifestModel(config) {
         }
 
         return adaptations;
-    }
-
-    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
-        const adaptations = getAdaptationsForType(manifest, periodIndex, type);
-
-        if (!adaptations || adaptations.length === 0) return null;
-
-        if (adaptations.length > 1 && streamInfo) {
-            const currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
-            const allMediaInfoForType = adapter.getAllMediaInfoForType(streamInfo, type);
-
-            if (currentTrack) {
-                for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
-                        return adaptations[i];
-                    }
-                }
-            }
-
-            for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                if (getIsMain(adaptations[i])) {
-                    return adaptations[i];
-                }
-            }
-        }
-
-        return adaptations[0];
     }
 
     function getCodec(adaptation, representationId, addResolutionInfo) {
@@ -1043,7 +1008,6 @@ function DashManifestModel(config) {
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
         getAdaptationsForType: getAdaptationsForType,
-        getAdaptationForType: getAdaptationForType,
         getCodec: getCodec,
         getMimeType: getMimeType,
         getKID: getKID,
