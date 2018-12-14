@@ -43,9 +43,9 @@ import { checkInteger } from '../streaming/utils/SupervisorTools';
 function DashAdapter() {
     let instance,
         dashManifestModel,
-        mediaController,
         voPeriods,
-        voAdaptations;
+        voAdaptations,
+        currentMediaInfo;
 
     function setup() {
         reset();
@@ -56,10 +56,6 @@ function DashAdapter() {
 
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
-        }
-
-        if (config.mediaController) {
-            mediaController = config.mediaController;
         }
     }
 
@@ -225,12 +221,11 @@ function DashAdapter() {
         if (!adaptations || adaptations.length === 0) return null;
 
         if (adaptations.length > 1 && streamInfo) {
-            const currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
             const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
 
-            if (currentTrack) {
+            if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
                 for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
+                    if (currentMediaInfo[streamInfo.id][type].isMediaInfoEqual(allMediaInfoForType[i])) {
                         return adaptations[i];
                     }
                 }
@@ -536,9 +531,16 @@ function DashAdapter() {
         return events;
     }
 
+    function setCurrentMediaInfo(streamId, type, mediaInfo) {
+        currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
+        currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
+        currentMediaInfo[streamId][type] = mediaInfo;
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
+        currentMediaInfo = {};
     }
 
     instance = {
@@ -559,7 +561,8 @@ function DashAdapter() {
         setConfig: setConfig,
         updatePeriods: updatePeriods,
         reset: reset,
-        resetIndexHandler: resetIndexHandler
+        resetIndexHandler: resetIndexHandler,
+        setCurrentMediaInfo: setCurrentMediaInfo
     };
 
     setup();

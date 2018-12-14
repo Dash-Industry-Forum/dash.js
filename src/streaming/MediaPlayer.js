@@ -237,7 +237,6 @@ function MediaPlayer() {
         });
 
         adapter.setConfig({
-            mediaController: mediaController,
             dashManifestModel: dashManifestModel
         });
 

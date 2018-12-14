@@ -39,6 +39,10 @@ function DashManifestModelMock () {
     this.getIndexForAdaptation = function () {
         return 0;
     };
+
+    this.getRolesForAdaptation = function () {
+        return [];
+    };
 }
 
 export default DashManifestModelMock;

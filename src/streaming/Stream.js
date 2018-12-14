@@ -346,6 +346,8 @@ function Stream(config) {
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
+        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
+
         logger.debug('Stream -  Update stream controller');
         if (manifest.refreshManifestOnSwitchTrack) {
             logger.debug('Stream -  Refreshing manifest for switch track');
