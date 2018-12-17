@@ -202,11 +202,18 @@ function OfflineController() {
         return 0;
     }
 
+    function resetRecords() {
+        downloads.forEach((download) => {
+            download.resetRecord();
+        });
+    }
+
     /**
      * Reset
      * @instance
      */
     function reset() {
+        resetRecords();
         schemeLoaderFactory.unregisterLoader(OfflineConstants.OFFLINE_SCHEME);
     }
 
@@ -219,6 +226,7 @@ function OfflineController() {
         deleteDownload: deleteDownload,
         getDownloadProgression: getDownloadProgression,
         getAllRecords: getAllRecords,
+        resetRecords: resetRecords,
         reset: reset
     };
 

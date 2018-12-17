@@ -2110,10 +2110,10 @@ function MediaPlayer() {
     }
 
     function initializePlayback() {
-        /* if (offlineControllerInitialized && offlineController.isRecording()) {
-            offlineController.resetRecord();
+        if (offlineControllerInitialized) {
+            offlineController.resetRecords();
         }
-        */
+
         if (!streamingInitialized && source) {
             streamingInitialized = true;
             logger.info('Streaming Initialized');
