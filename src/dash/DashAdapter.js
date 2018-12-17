@@ -362,29 +362,28 @@ function DashAdapter() {
         return streams;
     }
 
-    function checkStreamProcessor(streamProcessor) {
-        if (!streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationController') ||
-            !streamProcessor.hasOwnProperty('getMediaInfo') || !streamProcessor.hasOwnProperty('getType') || !streamProcessor.hasOwnProperty('getStreamInfo')) {
-            throw new Error('streamProcessor parameter is missing or malformed!');
-        }
-    }
-
-    function updateData(streamProcessor) {
-        checkStreamProcessor(streamProcessor);
-
-        const selectedVoPeriod = getPeriodForStreamInfo(streamProcessor.getStreamInfo(), voPeriods);
-        const mediaInfo = streamProcessor.getMediaInfo();
-        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
-        const type = streamProcessor.getType();
-
+    function getRealAdaptation(streamInfo, mediaInfo) {
         let id,
             realAdaptation;
 
+        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
+
         id = mediaInfo ? mediaInfo.id : null;
+
         if (voPeriods.length > 0) {
             realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
-            streamProcessor.getRepresentationController().updateData(realAdaptation, voAdaptation, type);
         }
+
+        return realAdaptation;
+    }
+
+    function getVoRepresentations(mediaInfo) {
+        let voReps;
+
+        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
+        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+
+        return voReps;
     }
 
     function getEvent(eventBox, eventStreams, startTime) {
@@ -454,7 +453,8 @@ function DashAdapter() {
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
         getAdaptationForType: getAdaptationForType,
-        updateData: updateData,
+        getRealAdaptation: getRealAdaptation,
+        getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
         setConfig: setConfig,

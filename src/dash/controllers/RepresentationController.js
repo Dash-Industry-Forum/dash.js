@@ -44,7 +44,6 @@ function RepresentationController() {
 
     let instance,
         realAdaptation,
-        realAdaptationIndex,
         updating,
         voAvailableRepresentations,
         currentVoRepresentation,
@@ -54,7 +53,6 @@ function RepresentationController() {
         metricsModel,
         domStorage,
         timelineConverter,
-        dashManifestModel,
         dashMetrics,
         streamProcessor,
         manifestModel;
@@ -83,9 +81,6 @@ function RepresentationController() {
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
@@ -112,10 +107,6 @@ function RepresentationController() {
         return realAdaptation;
     }
 
-    function getDataIndex() {
-        return realAdaptationIndex;
-    }
-
     function isUpdating() {
         return updating;
     }
@@ -126,7 +117,6 @@ function RepresentationController() {
 
     function resetInitialSettings() {
         realAdaptation = null;
-        realAdaptationIndex = -1;
         updating = true;
         voAvailableRepresentations = [];
         abrController = null;
@@ -134,7 +124,6 @@ function RepresentationController() {
         metricsModel = null;
         domStorage = null;
         timelineConverter = null;
-        dashManifestModel = null;
         dashMetrics = null;
     }
 
@@ -149,7 +138,7 @@ function RepresentationController() {
         resetInitialSettings();
     }
 
-    function updateData(newRealAdaptation, voAdaptation, type) {
+    function updateData(newRealAdaptation, availableRepresentations, type) {
         const streamInfo = streamProcessor.getStreamInfo();
         const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
         const minIdx = abrController.getMinAllowedIndexFor(type);
@@ -161,7 +150,7 @@ function RepresentationController() {
         updating = true;
         eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
 
-        voAvailableRepresentations = updateRepresentations(voAdaptation);
+        voAvailableRepresentations = availableRepresentations;
 
         if ((realAdaptation === null || (realAdaptation.id != newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
             averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
@@ -227,15 +216,6 @@ function RepresentationController() {
         }
 
         return true;
-    }
-
-    function updateRepresentations(voAdaptation) {
-        let voReps;
-
-        realAdaptationIndex = dashManifestModel.getIndexForAdaptation(realAdaptation, voAdaptation.period.mpd.manifest, voAdaptation.period.index);
-        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
-
-        return voReps;
     }
 
     function updateAvailabilityWindow(isDynamic) {
@@ -376,7 +356,6 @@ function RepresentationController() {
         initialize: initialize,
         setConfig: setConfig,
         getData: getData,
-        getDataIndex: getDataIndex,
         isUpdating: isUpdating,
         updateData: updateData,
         getStreamProcessor: getStreamProcessor,

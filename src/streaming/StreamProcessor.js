@@ -124,7 +124,6 @@ function StreamProcessor(config) {
             domStorage: domStorage,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
@@ -249,7 +248,11 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        adapter.updateData(this);
+        const realAdaptation = adapter.getRealAdaptation(getStreamInfo(), mediaInfo);
+        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+        if (representationController) {
+            representationController.updateData(realAdaptation, voRepresentations, type);
+        }
     }
 
     function addMediaInfo(newMediaInfo, selectNewMediaInfo) {

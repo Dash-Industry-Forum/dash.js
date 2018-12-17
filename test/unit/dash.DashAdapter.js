@@ -1,13 +1,15 @@
 import DashAdapter from '../../src/dash/DashAdapter';
 import MediaInfo from '../../src/streaming/vo/MediaInfo';
 
-import StreamProcessorMock from './mocks/StreamProcessorMock';
+
 import DashManifestModelMock from './mocks/DashManifestModelMock';
+import VoHelper from './helpers/VOHelper';
 
 const expect = require('chai').expect;
 
 const context = {};
 const dashManifestModelMock = new DashManifestModelMock();
+const voHelper = new VoHelper();
 const dashAdapter = DashAdapter(context).getInstance();
 dashAdapter.setConfig({
     dashManifestModel: dashManifestModelMock
@@ -122,21 +124,23 @@ describe('DashAdapter', function () {
         expect(event).to.be.an('object');
     });
 
-    describe('streamProcessor parameter is missing or malformed', () => {
-        it('should throw an error when updateData is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.updateData.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
+    it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
+        const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo('video'));
 
-        it('should throw an error when updateData is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.updateData.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
+        expect(realAdaptation).to.be.undefined; // jshint ignore:line
     });
 
-    describe('streamProcessor parameter is properly defined, without its attributes', () => {
-        const streamProcessorMock = new StreamProcessorMock('video/mp4');
+    it('should return undefined when getRealAdaptation is called and mediaInfo parameter is null or undefined', function () {
+        const realAdaptation = dashAdapter.getRealAdaptation(voHelper.getDummyStreamInfo(), null);
 
-        it('should not throw an error when updateData is called and streamProcessor is defined, without its attributes', function () {
-            expect(dashAdapter.updateData.bind(dashAdapter, streamProcessorMock)).to.not.throw();
-        });
+        expect(realAdaptation).to.be.undefined; // jshint ignore:line
+    });
+
+    it('should return undefined when getVoRepresentations is called and mediaInfo parameter is null or undefined', function () {
+        dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
+        const voRepresentations = dashAdapter.getVoRepresentations();
+
+        expect(voRepresentations).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(voRepresentations).to.be.empty;                // jshint ignore:line
     });
 });
