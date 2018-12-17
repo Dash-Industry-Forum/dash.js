@@ -125,40 +125,8 @@ describe('DashAdapter', function () {
     });
 
     describe('streamProcessor parameter is missing or malformed', () => {
-        it('should throw an error when getInitRequest is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getInitRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getFragmentRequest is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getFragmentRequest.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getIndexHandlerTime is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.getIndexHandlerTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when setIndexHandlerTime is called and streamProcessor parameter is undefined', function () {
-            expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
         it('should throw an error when updateData is called and streamProcessor parameter is undefined', function () {
             expect(dashAdapter.updateData.bind(dashAdapter)).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getInitRequest is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getInitRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getFragmentRequest is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getFragmentRequest.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when getIndexHandlerTime is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.getIndexHandlerTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
-        });
-
-        it('should throw an error when setIndexHandlerTime is called and streamProcessor is an empty object', function () {
-            expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter, {})).to.be.throw('streamProcessor parameter is missing or malformed!');
         });
 
         it('should throw an error when updateData is called and streamProcessor is an empty object', function () {
@@ -169,34 +137,8 @@ describe('DashAdapter', function () {
     describe('streamProcessor parameter is properly defined, without its attributes', () => {
         const streamProcessorMock = new StreamProcessorMock('video/mp4');
 
-        it('should return null when getInitRequest is called and streamProcessor is defined, without its attributes', function () {
-            const initRequest = dashAdapter.getInitRequest(streamProcessorMock, 0);
-
-            expect(initRequest).to.be.null;                // jshint ignore:line
-        });
-
-        it('should return null when getFragmentRequest is called and streamProcessor is defined, without its attributes', function () {
-            const nextFragRequest = dashAdapter.getFragmentRequest(streamProcessorMock);
-
-            expect(nextFragRequest).to.be.null;                // jshint ignore:line
-        });
-
-        it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
-            const time = dashAdapter.getIndexHandlerTime(streamProcessorMock);
-
-            expect(time).to.be.NaN;                // jshint ignore:line
-        });
-
-        it('should not throw an error when setIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
-            expect(dashAdapter.setIndexHandlerTime.bind(dashAdapter, streamProcessorMock)).to.not.throw();
-        });
-
         it('should not throw an error when updateData is called and streamProcessor is defined, without its attributes', function () {
             expect(dashAdapter.updateData.bind(dashAdapter, streamProcessorMock)).to.not.throw();
-        });
-
-        it('should throw an error when getInitRequest is called and streamProcessor is defined, but quality is not a number', function () {
-            expect(dashAdapter.getInitRequest.bind(dashAdapter, streamProcessorMock, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
 

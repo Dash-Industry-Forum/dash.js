@@ -102,7 +102,6 @@ function ScheduleController(config) {
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
-            adapter: adapter,
             textController: textController,
             playbackController: playbackController
         });
@@ -221,7 +220,7 @@ function ScheduleController(config) {
                             setSeekTarget(NaN);
                             if (request && !replacement) {
                                 if (!isNaN(request.startTime + request.duration)) {
-                                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                                    streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
                                 }
                                 request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
                                 setTimeToLoadDelay(0);
@@ -307,7 +306,7 @@ function ScheduleController(config) {
     }
 
     function getInitRequest(quality) {
-        const request = adapter.getInitRequest(streamProcessor, quality);
+        const request = streamProcessor.getInitRequest(quality);
         if (request) {
             setFragmentProcessState(true);
             request.url = replaceTokenForTemplate(request.url, 'Bandwidth', currentRepresentationInfo ? currentRepresentationInfo.bandwidth : null);
@@ -405,7 +404,7 @@ function ScheduleController(config) {
             const liveEdge = liveEdgeFinder.getLiveEdge();
             const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
             const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
-            const request = adapter.getFragmentRequest(streamProcessor, currentRepresentationInfo, startTime, {
+            const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
             });
 

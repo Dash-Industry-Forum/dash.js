@@ -365,7 +365,7 @@ function DashAdapter() {
     }
 
     function checkStreamProcessor(streamProcessor) {
-        if (!streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationController') || !streamProcessor.hasOwnProperty('getIndexHandler') ||
+        if (!streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationController') ||
             !streamProcessor.hasOwnProperty('getMediaInfo') || !streamProcessor.hasOwnProperty('getType') || !streamProcessor.hasOwnProperty('getStreamInfo')) {
             throw new Error('streamProcessor parameter is missing or malformed!');
         }
@@ -374,74 +374,6 @@ function DashAdapter() {
     function checkRepresentationController(representationController) {
         if (!representationController || !representationController.hasOwnProperty('getRepresentationForQuality') || !representationController.hasOwnProperty('getCurrentRepresentation')) {
             throw new Error('representationController parameter is missing or malformed!');
-        }
-    }
-
-    function getInitRequest(streamProcessor, quality) {
-        let representationController,
-            representation,
-            indexHandler;
-
-        checkStreamProcessor(streamProcessor);
-        checkInteger(quality);
-
-        representationController = streamProcessor.getRepresentationController();
-        indexHandler = streamProcessor.getIndexHandler();
-
-        representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
-
-        return indexHandler ? indexHandler.getInitRequest(representation) : null;
-    }
-
-    function getFragmentRequest(streamProcessor, representationInfo, time, options) {
-        let representationController,
-            representation,
-            indexHandler;
-
-        let fragRequest = null;
-
-        checkStreamProcessor(streamProcessor);
-
-        representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
-        indexHandler = streamProcessor.getIndexHandler();
-
-        if (indexHandler) {
-            //if time and options are undefined, it means the next segment is requested
-            //otherwise, the segment at this specific time is requested.
-            if (time !== undefined && options !== undefined) {
-                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
-            } else {
-                fragRequest = indexHandler.getNextSegmentRequest(representation);
-            }
-        }
-
-        return fragRequest;
-    }
-
-    function getIndexHandlerTime(streamProcessor) {
-        checkStreamProcessor(streamProcessor);
-
-        const indexHandler = streamProcessor.getIndexHandler();
-
-        return indexHandler ? indexHandler.getCurrentTime() : NaN;
-    }
-
-    function setIndexHandlerTime(streamProcessor, value) {
-        checkStreamProcessor(streamProcessor);
-
-        const indexHandler = streamProcessor.getIndexHandler();
-        if (indexHandler) {
-            indexHandler.setCurrentTime(value);
-        }
-    }
-
-    function resetIndexHandler(streamProcessor) {
-        checkStreamProcessor(streamProcessor);
-
-        const indexHandler = streamProcessor.getIndexHandler();
-        if (indexHandler) {
-            indexHandler.resetIndex();
         }
     }
 
@@ -552,17 +484,12 @@ function DashAdapter() {
         getRepresentationInfo: getRepresentationInfo,
         getAdaptationForType: getAdaptationForType,
         updateData: updateData,
-        getInitRequest: getInitRequest,
-        getFragmentRequest: getFragmentRequest,
-        getIndexHandlerTime: getIndexHandlerTime,
-        setIndexHandlerTime: setIndexHandlerTime,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        reset: reset,
-        resetIndexHandler: resetIndexHandler,
-        setCurrentMediaInfo: setCurrentMediaInfo
+        setCurrentMediaInfo: setCurrentMediaInfo,
+        reset: reset
     };
 
     setup();

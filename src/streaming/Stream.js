@@ -361,8 +361,8 @@ function Stream(config) {
                 processor.getFragmentModel().abortRequests();
             } else {
                 processor.getScheduleController().setSeekTarget(NaN);
-                adapter.setIndexHandlerTime(processor, currentTime);
-                adapter.resetIndexHandler(processor);
+                processor.setIndexHandlerTime(currentTime);
+                processor.resetIndexHandler();
             }
         }
     }
@@ -394,7 +394,7 @@ function Stream(config) {
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
+            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);

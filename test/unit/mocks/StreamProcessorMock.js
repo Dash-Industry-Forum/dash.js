@@ -47,6 +47,11 @@ function StreamProcessorMock (testType, streamInfo) {
     this.fragmentModel = new FragmentModelMock();
     this.bufferController = new BufferControllerMock();
 
+    this.getFragmentRequest = function () {
+        return {startTime: 0,
+            duration: 2};
+    };
+
     this.getBufferController = function () {
         return this.bufferController;
     };

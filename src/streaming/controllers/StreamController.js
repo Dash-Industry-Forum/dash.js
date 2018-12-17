@@ -379,7 +379,7 @@ function StreamController() {
                 newStream.preload(mediaSource, buffers);
                 preloading = newStream;
                 newStream.getProcessors().forEach(p => {
-                    adapter.setIndexHandlerTime(p, newStream.getStartTime());
+                    p.setIndexHandlerTime(newStream.getStartTime());
                 });
             }
         }

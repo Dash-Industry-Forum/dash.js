@@ -37,7 +37,6 @@ function NextFragmentRequestRule(config) {
 
     config = config || {};
     const context = this.context;
-    const adapter = config.adapter;
     const textController = config.textController;
     const playbackController = config.playbackController;
 
@@ -57,7 +56,7 @@ function NextFragmentRequestRule(config) {
         const hasSeekTarget = !isNaN(seekTarget);
         const bufferController = streamProcessor.getBufferController();
         const currentTime = playbackController.getNormalizedTime();
-        let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
+        let time = hasSeekTarget ? seekTarget : streamProcessor.getIndexHandlerTime();
         let bufferIsDivided = false;
         let request;
 
@@ -88,19 +87,19 @@ function NextFragmentRequestRule(config) {
 
         if (requestToReplace) {
             time = requestToReplace.startTime + (requestToReplace.duration / 2);
-            request = adapter.getFragmentRequest(streamProcessor, representationInfo, time, {
+            request = streamProcessor.getFragmentRequest(representationInfo, time, {
                 timeThreshold: 0,
                 ignoreIsFinished: true
             });
         } else {
-            request = adapter.getFragmentRequest(streamProcessor, representationInfo, time, {
+            request = streamProcessor.getFragmentRequest(representationInfo, time, {
                 keepIdx: !hasSeekTarget && !bufferIsDivided
             });
 
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
-                request = adapter.getFragmentRequest(streamProcessor, representationInfo);
+                request = streamProcessor.getFragmentRequest(representationInfo);
             }
         }
 

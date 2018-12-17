@@ -35,6 +35,7 @@ import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
+import { checkInteger } from './utils/SupervisorTools';
 
 import DashHandler from '../dash/DashHandler';
 
@@ -362,6 +363,48 @@ function StreamProcessor(config) {
         return controller;
     }
 
+    function setIndexHandlerTime(value) {
+        if (indexHandler) {
+            indexHandler.setCurrentTime(value);
+        }
+    }
+
+    function getIndexHandlerTime() {
+        return indexHandler ? indexHandler.getCurrentTime() : NaN;
+    }
+
+    function resetIndexHandler() {
+        if (indexHandler) {
+            indexHandler.resetIndex();
+        }
+    }
+
+    function getInitRequest(quality) {
+        checkInteger(quality);
+
+        let representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+
+        return indexHandler ? indexHandler.getInitRequest(representation) : null;
+    }
+
+    function getFragmentRequest(representationInfo, time, options) {
+        let fragRequest = null;
+
+        let representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+        if (indexHandler) {
+            //if time and options are undefined, it means the next segment is requested
+            //otherwise, the segment at this specific time is requested.
+            if (time !== undefined && options !== undefined) {
+                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
+            } else {
+                fragRequest = indexHandler.getNextSegmentRequest(representation);
+            }
+        }
+
+        return fragRequest;
+    }
+
     instance = {
         initialize: initialize,
         isUpdating: isUpdating,
@@ -395,6 +438,11 @@ function StreamProcessor(config) {
         getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
         addInbandEvents: addInbandEvents,
+        setIndexHandlerTime: setIndexHandlerTime,
+        getIndexHandlerTime: getIndexHandlerTime,
+        resetIndexHandler: resetIndexHandler,
+        getInitRequest: getInitRequest,
+        getFragmentRequest: getFragmentRequest,
         reset: reset
     };
 

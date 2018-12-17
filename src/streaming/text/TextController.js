@@ -260,7 +260,7 @@ function TextController() {
                                     break;
                                 }
                             }
-                            streamProcessor.getIndexHandler().setCurrentTime(videoModel.getTime());
+                            streamProcessor.setIndexHandlerTime(videoModel.getTime());
                             streamProcessor.getScheduleController().start();
                         }
                     }

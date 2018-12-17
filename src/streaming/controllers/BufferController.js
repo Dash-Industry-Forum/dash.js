@@ -297,7 +297,7 @@ function BufferController(config) {
                 const currentTime = playbackController.getTime();
                 logger.debug('AppendToBuffer seek target should be ' + currentTime);
                 streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                streamProcessor.setIndexHandlerTime(currentTime);
             }
         }
 
@@ -703,7 +703,7 @@ function BufferController(config) {
             maxAppendedIndex = 0;
             if (!bufferResetInProgress) {
                 streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                streamProcessor.setIndexHandlerTime(currentTime);
             }
         }
 
@@ -724,7 +724,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            adapter.setIndexHandlerTime(streamProcessor, e.from);
+            streamProcessor.setIndexHandlerTime(e.from);
         }
 
         if (isPruningInProgress) {
