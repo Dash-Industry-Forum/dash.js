@@ -1,8 +1,6 @@
 import DashAdapter from '../../src/dash/DashAdapter';
 import MediaInfo from '../../src/streaming/vo/MediaInfo';
-import Constants from '../../src/streaming/constants/Constants';
 
-import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 
@@ -139,20 +137,6 @@ describe('DashAdapter', function () {
 
         it('should not throw an error when updateData is called and streamProcessor is defined, without its attributes', function () {
             expect(dashAdapter.updateData.bind(dashAdapter, streamProcessorMock)).to.not.throw();
-        });
-    });
-
-    describe('representationController parameter is missing or malformed', () => {
-        it('should throw an error when getRepresentationInfo is called and representationController parameter is undefined', function () {
-            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter)).to.be.throw('representationController parameter is missing or malformed!');
-        });
-    });
-
-    describe('representationController parameter is properly defined, without its attributes', () => {
-        const representationControllerMock = new RepresentationControllerMock();
-
-        it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
-            expect(dashAdapter.getRepresentationInfo.bind(dashAdapter, representationControllerMock, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
 });

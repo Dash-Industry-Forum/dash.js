@@ -40,4 +40,12 @@ describe('StreamProcessor', function () {
 
         expect(nextFragRequest).to.be.null;                // jshint ignore:line
     });
+
+    describe('representationController parameter is properly defined, without its attributes', () => {
+        const streamProcessor = StreamProcessor(context).create({});
+
+        it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
+            expect(streamProcessor.getRepresentationInfo.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
+        });
+    });
 });

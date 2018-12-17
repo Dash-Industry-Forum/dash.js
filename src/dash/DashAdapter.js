@@ -38,7 +38,6 @@ import ManifestInfo from '../streaming/vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import cea608parser from '../../externals/cea608-parser';
-import { checkInteger } from '../streaming/utils/SupervisorTools';
 
 function DashAdapter() {
     let instance,
@@ -64,7 +63,6 @@ function DashAdapter() {
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-
         if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations[mediaInfo.streamInfo.id]) return null;
         return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
     }
@@ -371,12 +369,6 @@ function DashAdapter() {
         }
     }
 
-    function checkRepresentationController(representationController) {
-        if (!representationController || !representationController.hasOwnProperty('getRepresentationForQuality') || !representationController.hasOwnProperty('getCurrentRepresentation')) {
-            throw new Error('representationController parameter is missing or malformed!');
-        }
-    }
-
     function updateData(streamProcessor) {
         checkStreamProcessor(streamProcessor);
 
@@ -393,26 +385,6 @@ function DashAdapter() {
             realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
             streamProcessor.getRepresentationController().updateData(realAdaptation, voAdaptation, type);
         }
-    }
-
-    /**
-     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
-     * Otherwise, this function will return the current voRepresentation used by the representationController.
-     * @param {RepresentationController} representationController - RepresentationController reference
-     * @param {number} quality - quality index of the voRepresentaion expected.
-     */
-    function getRepresentationInfo(representationController, quality) {
-        checkRepresentationController(representationController);
-        let voRepresentation;
-
-        if (quality !== undefined) {
-            checkInteger(quality);
-            voRepresentation = representationController.getRepresentationForQuality(quality);
-        } else {
-            voRepresentation = representationController.getCurrentRepresentation();
-        }
-
-        return voRepresentation ? convertRepresentationToRepresentationInfo(voRepresentation) : null;
     }
 
     function getEvent(eventBox, eventStreams, startTime) {
@@ -481,7 +453,6 @@ function DashAdapter() {
         getStreamsInfo: getStreamsInfo,
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
-        getRepresentationInfo: getRepresentationInfo,
         getAdaptationForType: getAdaptationForType,
         updateData: updateData,
         getEventsFor: getEventsFor,

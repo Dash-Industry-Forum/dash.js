@@ -286,8 +286,22 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
+    /**
+     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
+     * Otherwise, this function will return the current voRepresentation used by the representationController.
+     * @param {number} quality - quality index of the voRepresentaion expected.
+     */
     function getRepresentationInfo(quality) {
-        return adapter.getRepresentationInfo(representationController, quality);
+        let voRepresentation;
+
+        if (quality !== undefined) {
+            checkInteger(quality);
+            voRepresentation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+        } else {
+            voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
+        }
+
+        return voRepresentation ? adapter.convertDataToRepresentationInfo(voRepresentation) : null;
     }
 
     function isBufferingCompleted() {
