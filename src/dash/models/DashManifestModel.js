@@ -373,7 +373,8 @@ function DashManifestModel() {
                 bandwidth: realRepresentation.bandwidth,
                 width: realRepresentation.width || 0,
                 height: realRepresentation.height || 0,
-                scanType: realRepresentation.scanType || null
+                scanType: realRepresentation.scanType || null,
+                id: realRepresentation.id || null
             };
         });
     }

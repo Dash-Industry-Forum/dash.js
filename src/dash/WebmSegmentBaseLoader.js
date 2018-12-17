@@ -7,7 +7,7 @@ import Debug from '../core/Debug';
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import HTTPLoader from '../streaming/net/HTTPLoader';
+import URLLoader from '../streaming/net/URLLoader';
 import DashJSError from '../streaming/vo/DashJSError';
 import Errors from '../core/errors/Errors';
 
@@ -23,7 +23,7 @@ function WebmSegmentBaseLoader() {
         requestModifier,
         dashMetrics,
         mediaPlayerModel,
-        httpLoader,
+        urlLoader,
         baseURLController;
 
     function setup() {
@@ -95,7 +95,7 @@ function WebmSegmentBaseLoader() {
 
     function initialize() {
         requestModifier = RequestModifier(context).getInstance();
-        httpLoader = HTTPLoader(context).create({
+        urlLoader = URLLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
@@ -285,7 +285,7 @@ function WebmSegmentBaseLoader() {
             callback(null);
         };
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: onload,
             error: onloadend
@@ -334,7 +334,7 @@ function WebmSegmentBaseLoader() {
             });
         };
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: onload,
             error: onloadend
@@ -380,7 +380,7 @@ function WebmSegmentBaseLoader() {
             callback(null, representation, type);
         };
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: onload,
             error: onloadend

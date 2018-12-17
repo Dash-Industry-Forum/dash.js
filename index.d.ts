@@ -192,6 +192,7 @@ declare namespace dashjs {
         on(type: ManifestLoadedEvent['type'], listener: (e: ManifestLoadedEvent) => void, scope?: object): void;
         on(type: MetricEvent['type'], listener: (e: MetricEvent) => void, scope?: object): void;
         on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
+        on(type: OfflineStreamEvent['type'], listener: (e: OfflineStreamEvent) => void, scope?: object): void;
         on(type: PeriodSwitchEvent['type'], listener: (e: PeriodSwitchEvent) => void, scope?: object): void;
         on(type: PlaybackErrorEvent['type'], listener: (e: PlaybackErrorEvent) => void, scope?: object): void;
         on(type: PlaybackPausedEvent['type'], listener: (e: PlaybackPausedEvent) => void, scope?: object): void;

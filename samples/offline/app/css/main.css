@@ -1,0 +1,563 @@
+body {
+    background: #eee;
+    min-width: 320px;
+    overflow-x: hidden;
+}
+
+label input {
+    display: inline;
+}
+
+iframe {
+    border: none;
+    overflow: hidden;
+}
+
+a:hover {
+    color: rgba(42, 100, 150, 1);
+}
+
+.container {
+    max-width: 1600px;
+}
+
+.btn:focus {
+  outline: none;
+}
+
+/****************************
+    HEADER TITLE BAR
+*****************************/
+
+.title-header a img {
+    height: 50px;
+}
+
+.title-header span {
+    font-size: 24px;
+    line-height: 50px;
+}
+
+.top-buttons {
+    float: right;
+    margin-right: -20px;;
+    margin-top: 10px;
+}
+
+.branding {
+    float: left;
+}
+
+.form-control {
+    width: 91%;
+}
+
+#commit-info {
+    font-size: smaller;
+}
+
+/****************************
+        OPTIONS PANEL
+*****************************/
+.options-show {
+    transition-property: all;
+    transition-duration: .5s;
+}
+
+.options-hide {
+    height: 0px;
+    transition-property: all;
+    transition-duration: .5s;
+}
+
+.options-wrapper {
+    background-color: rgb(43, 43, 43);
+    overflow-x: hidden;
+}
+
+.options-item {
+    background-color: #dfe2e2;
+    margin: 2px;
+    padding: 5px;
+    min-height: 230px;
+    float: left;
+}
+
+.options-label {
+    margin-left: 4px;
+}
+
+.options-item-body input,
+.options-item-body label {
+    cursor: pointer;
+    clear: both;
+    float: left;
+    margin-bottom: 2px !important;
+}
+
+.options-item-body input {
+    margin-right: 5px;
+}
+
+.options-item-title {
+    background-color: #136bfb;
+    height: 20px;
+    padding-top: .2rem;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 2px;
+    line-height: 15px;
+}
+
+.options-item-body {
+    width: 200px;
+    height: 145px;
+    margin: 5px;
+}
+
+/****************************
+    OFFLINE REPRESENTATION
+*****************************/
+
+.qualityLabelTitle {
+    font-weight: bold;
+    margin: 5px;
+}
+
+/****************************
+    MIDDLE ROW VIDEO
+*****************************/
+
+.row {
+    margin-bottom: 7px;
+    margin-right: 0px;
+    margin-left: 0px;
+}
+
+.dash-video-player {
+    background-color: #000000;
+}
+
+.col-md-9 video {
+    width: 100%;
+    height: auto;
+    margin: auto;
+}
+
+.col-md-9 {
+    width: 65%;
+    padding-top: 15px;
+}
+
+.col-md-3 {
+    width: 35%;
+}
+
+.videoContainer {
+    position: relative;
+}
+
+.video-controller {
+    margin-top: -5px !important;
+}
+
+.btn-play-pause,
+.control-icon-layout {
+    padding: 4px 10px !important;
+}
+
+.cue-image {
+    z-index: 2147483648;
+    pointer-events: none;
+    display: block;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    visibility: visible !important;
+    position: absolute !important;
+}
+
+/****************************
+        STATS PANELS
+*****************************/
+
+.text-success {
+    color:black !important;
+    font-size: 1.05em ;
+    white-space: nowrap;
+    overflow: hidden
+}
+
+.text-primary {
+    color:#428bca;
+    font-weight: 500;
+    padding-right: 3px;
+}
+
+.panel-stats label {
+    margin-left: 5px;
+}
+
+.tabs-section .nav > li > a {
+    padding: 10px 11px;
+}
+
+.tab-content {
+    margin-left: 1px;
+    margin-top: -1px;
+    background-color: #fff;
+}
+
+.tab-pane {
+    font-size: 14px;
+}
+
+/****************************
+    ERROR MODAL
+*****************************/
+
+.errorModalHeader {
+    background-color: #ff1a1a;
+    color: white;
+}
+
+/****************************
+    CHARTING AND CHART TABS
+*****************************/
+
+flot{
+    display: block;
+    width: 100%;
+    height: 200px;
+}
+
+#chart-inventory {
+    position:relative;
+    background-color: #ececec;
+}
+
+.legendLabel {
+    color:black;
+    padding-right: 15px;
+    padding-left: 10px;
+}
+
+.chart-controls {
+    padding-top: 15px;
+    padding-left: 15px;
+    height: 50px;
+    width: 100%;
+}
+
+div#chart-wrapper{
+    padding: 15px;
+}
+
+.chart-panel {
+    background-color: #ffffff;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+button#disable-chart-btn {
+    float: left;
+}
+
+div#legend-wrapper {
+    margin-top: 10px;
+    margin-left: 10px;
+    float: right;
+}
+
+/****************************
+        FOOTER SECTION
+*****************************/
+.footer-text {
+    height: 50px;
+    color: #bdc1c5;
+    display: block;
+}
+
+.footer-area {
+    background-color: #ffffff;
+}
+
+.footer-text img {
+    max-height: 40px;
+    max-width: 150px;
+}
+
+.footer-area a {
+    margin: 18px 33px;
+    display: inline-block;
+}
+
+.contributor {
+    font-size: 22px;
+    color: #555;
+}
+
+/****************************
+    MEDIA SCREEN CONTROL
+*****************************/
+
+@media (min-width: 993px) {
+
+    #desktop-streams {
+        display: table-cell;
+    }
+
+    #mobile-streams {
+        display: none;
+    }
+}
+
+@media (min-width: 0px) and (max-width: 992px) {
+    .col-md-9 {
+        width: 100%;
+    }
+
+    .col-md-3 {
+        width: 100%;
+        padding: 0;
+        margin-top: 15px;
+    }
+
+    #desktop-streams {
+        display: none;
+    }
+
+    #mobile-streams {
+        display: table-cell;
+    }
+
+    #big-title {
+        display: none;
+    }
+
+    .legend-row {
+        display: none;
+    }
+}
+
+@media (max-width: 530px) {
+    .top-buttons {
+        display: none;
+    }
+}
+
+/****************************
+MOBILE SOURCE MENU MODAL LIST
+*****************************/
+
+.modal-list {
+    height: 100%;
+    overflow: scroll;
+    background: white;
+    list-style: none;
+    padding: 15px;
+    font-size: 16px;
+
+    -webkit-border-radius: 12px;
+    -moz-border-radius: 12px;
+    border-radius: 12px;
+}
+
+.modal-list > ul {
+    padding: 15px;
+}
+
+.modal-list > ul > li {
+    margin-bottom: 20px;
+    list-style: none;
+    font-size: 20px;
+    font-weight: 200;
+    padding: 10px 0;
+    cursor: pointer;
+    border-bottom: 3px solid #999;
+}
+
+.modal-list > ul > li > span {
+    font-weight: 900;
+    margin-bottom: 8px;
+}
+
+.modal-list > ul > li > ul > li {
+    border-top: 1px solid #ccc;
+    padding: 6px 0;
+}
+
+/****************************
+        DESKTOP MENU
+*****************************/
+.tooltip-inner {
+    white-space:pre-wrap;
+}
+
+.dropdown-menu > li > a {
+    cursor: pointer;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    -webkit-border-radius: 0 6px 6px 6px;
+    -moz-border-radius: 0 6px 6px;
+    border-radius: 0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+
+.dropdown-submenu > a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #ccc;
+    margin-top: 5px;
+    margin-right: -10px;
+}
+
+.dropdown-submenu:hover > a:after {
+    border-left-color: #fff;
+}
+
+.dropdown-submenu.pull-left {
+    float: none;
+}
+
+.dropdown-submenu.pull-left > .dropdown-menu {
+    left: -100%;
+    margin-left: 10px;
+    -webkit-border-radius: 6px 0 6px 6px;
+    -moz-border-radius: 6px 0 6px 6px;
+    border-radius: 6px 0 6px 6px;
+}
+
+/********************************************************
+CONTROL BAR CSS NEEDS TO MOVE INTO THE CONTROL BAR
+*********************************************************/
+
+#videoTracksBtn .dropdown-menu a,
+#audioTracksBtn .dropdown-menu a {
+    color: #fff !important;
+    padding: 2px 20px;
+}
+
+#videoTracksBtn span,
+#audioTracksBtn span {
+    position: relative;
+}
+
+#videoTracksBtn span em,
+#audioTracksBtn span em {
+    height: 20px;
+    width: 20px;
+    position: absolute;
+    top: 0px;
+}
+
+#videoTracksBtn .dropdown-menu,
+#audioTracksBtn .dropdown-menu {
+    top: initial !important;
+    left: initial !important;
+    float: initial !important;
+    margin: initial !important;
+    border: initial !important;
+    border-radius: initial !important;
+    box-shadow: initial !important;
+    background-clip: initial !important;
+}
+
+#videoTracksBtn .dropdown-menu a:hover,
+#audioTracksBtn .dropdown-menu a:hover {
+    background: #fff;
+    color: #000 !important;
+    text-decoration: none;
+}
+
+#caption-bubble {
+    bottom: -45px;
+    right: 20px;
+    width: 0px;
+    position: relative;
+    float: right;
+    color: white;
+    font-size: 12px;
+    white-space: nowrap
+}
+
+#caption-bubble:after {
+    content: '';
+    width: 95px;
+    background: black;
+    display: block;
+    top: -2px;
+    left: -5px;
+    bottom: -1px;
+    z-index: -10;
+    position: absolute;
+    -webkit-border-radius: 12px;
+    -moz-border-radius: 12px;
+    border-radius: 5px;
+}
+
+.tracklisting {
+    right: 11%;
+    margin-top: -132px;
+    background-color: #000;
+    text-align: center;
+    bottom: 31px;
+    overflow: hidden;
+    position: absolute;
+    list-style: none;
+    font-size: .9em !important;
+    padding: 0px;
+}
+
+.list-group{
+    margin-top: 30px;
+}
+
+.download{
+    font-size:16px;
+}
+/********************************************************
+Label offline information
+*********************************************************/
+.list-group-item{
+    height: 40px;
+    padding: 10px 15px;
+}
+
+.lb-md {
+    font-size: 16px;
+}
+
+/********************************************************
+Download Messages
+*********************************************************/
+.alert.alert-warning{
+    display: none;
+}
+
+.alert.alert-danger{
+    display: none;
+}
+
+.alert.alert-success{
+    display: none;
+}

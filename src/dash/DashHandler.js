@@ -40,10 +40,13 @@ import {
     replaceIDForTemplate,
     unescapeDollarsInTemplate,
     replaceTokenForTemplate,
-    getTimeBasedSegment
+    getTimeBasedSegment,
+    getSegmentByIndex
 } from './utils/SegmentsUtils';
+import SegmentsGetter from './utils/SegmentsGetter';
 
-import SegmentsController from './controllers/SegmentsController';
+import SegmentBaseLoader from './SegmentBaseLoader';
+import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
 
 function DashHandler(config) {
 
@@ -54,14 +57,17 @@ function DashHandler(config) {
     const type = config.type;
     const streamInfo = config.streamInfo;
 
+    let segmentBaseLoader;
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
+    const settings = config.settings;
 
     let instance,
         logger,
-        segmentIndex,
-        lastSegment,
+        index,
         requestedTime,
         currentTime,
         isDynamicManifest,
@@ -71,7 +77,13 @@ function DashHandler(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        segmentsController = SegmentsController(context).create(config);
+        segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
+        segmentBaseLoader.setConfig({
+            baseURLController: baseURLController,
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler
+        });
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
@@ -100,8 +112,7 @@ function DashHandler(config) {
     }
 
     function resetIndex() {
-        segmentIndex = -1;
-        lastSegment = null;
+        index = -1;
     }
 
     function resetInitialSettings() {
@@ -171,9 +182,52 @@ function DashHandler(config) {
         return request;
     }
 
-    function setExpectedLiveEdge(liveEdge) {
-        timelineConverter.setExpectedLiveEdge(liveEdge);
-        dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
+    function isMediaFinished(representation) {
+        let isFinished = false;
+        const isDynamicStream = isDynamic();
+
+        if (!isDynamicStream && index === representation.availableSegmentsNumber) {
+            isFinished = true;
+        } else {
+            const seg = getSegmentByIndex(index, representation);
+            if (seg) {
+                const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
+                const duration = representation.adaptation.period.duration;
+                logger.debug(representation.segmentInfoType + ': ' + time + ' / ' + duration);
+                isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamicStream ? false : time >= duration;
+            } else {
+                logger.debug('isMediaFinished - no segment found');
+            }
+        }
+
+        return isFinished;
+    }
+
+    function updateSegments(voRepresentation, allSegments) {
+        segmentsGetter.getSegments(voRepresentation, requestedTime, index, onSegmentListUpdated, allSegments ? Infinity : undefined);
+    }
+
+    function onSegmentListUpdated(voRepresentation, segments) {
+        voRepresentation.segments = segments;
+        if (segments && segments.length > 0) {
+            if (isDynamic()) {
+                const lastSegment = segments[segments.length - 1];
+                const liveEdge = lastSegment.presentationStartTime;
+                // the last segment is the Expected, not calculated, live edge.
+                timelineConverter.setExpectedLiveEdge(liveEdge);
+                dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
+            }
+        }
+    }
+
+    function updateSegmentList(voRepresentation, allSegments) {
+        if (!voRepresentation) {
+            throw new Error('no representation');
+        }
+
+        voRepresentation.segments = null;
+
+        updateSegments(voRepresentation, allSegments);
     }
 
     function onRepresentationUpdateStarted(eventObj) {
@@ -263,11 +317,12 @@ function DashHandler(config) {
 
         const idx = segmentIndex;
         const keepIdx = options ? options.keepIdx : false;
+        const timeThreshold = options ? options.timeThreshold : null;
         const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
-            logger.debug('Getting the request for time : ' + time);
+            logger.debug('Getting the request for ' + type + ' time : ' + time);
         }
 
         const segment = segmentsController.getSegmentByTime(representation, time);
@@ -298,14 +353,14 @@ function DashHandler(config) {
     function getNextSegmentRequest(mediaInfo, representation) {
         let request = null;
 
-        if (!representation || !representation.segmentInfoType) {
+        if (!representation || index === -1) {
             return null;
         }
 
         requestedTime = null;
+        index++;
 
-        const indexToRequest = segmentIndex + 1;
-        logger.debug('Getting the next request at index: ' + indexToRequest);
+        logger.debug('Getting the next request at index: ' + index + ', type: ' + type);
 
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
@@ -380,11 +435,9 @@ function DashHandler(config) {
                 s.mediaRange,
                 count);
 
-            if (seg) {
-                segments.push(seg);
-                seg = null;
-                count++;
-            }
+            segments.push(seg);
+            seg = null;
+            count++;
         }
 
         if (segments.length > 0) {
@@ -412,10 +465,12 @@ function DashHandler(config) {
         getType: getType, //need to be public in order to be used by logger
         getStreamInfo: getStreamInfo,
         getInitRequest: getInitRequest,
+        getRequestForSegment: getRequestForSegment,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
+        isMediaFinished: isMediaFinished,
         reset: reset,
         resetIndex: resetIndex
     };

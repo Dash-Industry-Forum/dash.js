@@ -45,6 +45,8 @@ import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import AbrController from './controllers/AbrController';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory';
+import OfflineController from '../offline/controllers/OfflineController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
@@ -114,10 +116,13 @@ function MediaPlayer() {
         source,
         protectionData,
         mediaPlayerInitialized,
+        offlineControllerInitialized,
         streamingInitialized,
         playbackInitialized,
         autoPlay,
         abrController,
+        schemeLoaderFactory,
+        offlineController,
         timelineConverter,
         mediaController,
         protectionController,
@@ -146,10 +151,12 @@ function MediaPlayer() {
     function setup() {
         logger = debug.getLogger(instance);
         mediaPlayerInitialized = false;
+        offlineControllerInitialized = false;
         playbackInitialized = false;
         streamingInitialized = false;
         autoPlay = true;
         protectionController = null;
+        offlineController = null;
         protectionData = null;
         adapter = null;
         Events.extend(MediaPlayerEvents);
@@ -183,6 +190,9 @@ function MediaPlayer() {
         }
         if (config.abrController) {
             abrController = config.abrController;
+        }
+        if (config.schemeLoaderFactory) {
+            schemeLoaderFactory = config.schemeLoaderFactory;
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
@@ -229,6 +239,10 @@ function MediaPlayer() {
             abrController = AbrController(context).getInstance();
         }
 
+        if (!schemeLoaderFactory) {
+            schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+        }
+
         if (!playbackController) {
             playbackController = PlaybackController(context).getInstance();
         }
@@ -236,6 +250,7 @@ function MediaPlayer() {
         if (!mediaController) {
             mediaController = MediaController(context).getInstance();
         }
+
 
         adapter = DashAdapter(context).getInstance();
 
@@ -293,6 +308,11 @@ function MediaPlayer() {
         }
 
         settings.reset();
+
+        if (offlineController) {
+            offlineController.reset();
+            offlineControllerInitialized = false;
+        }
     }
 
     /**
@@ -1021,6 +1041,104 @@ function MediaPlayer() {
     function getXHRWithCredentialsForType(type) {
         return mediaPlayerModel.getXHRWithCredentialsForType(type);
     }
+
+    /*
+    ---------------------------------------------------------------------------
+
+        OFFLINE
+
+    ---------------------------------------------------------------------------
+    */
+
+    function record(manifestURL) {
+        if (!offlineControllerInitialized) {
+            createRecordControllers();
+        }
+        offlineController.record(manifestURL);
+    }
+
+    function stopDownload(id) {
+        if (offlineControllerInitialized) {
+            offlineController.stopDownload(id);
+        }
+    }
+
+    function resumeDownload(id) {
+        if (offlineControllerInitialized) {
+            offlineController.resumeDownload(id);
+        }
+    }
+
+    function getAllRecords() {
+        if (!offlineControllerInitialized) {
+            createRecordControllers();
+        }
+        return offlineController.getAllRecords();
+    }
+
+    function deleteDownload(manifestId) {
+        if (!offlineControllerInitialized) {
+            createRecordControllers();
+        }
+        return offlineController.deleteDownload(manifestId);
+    }
+
+
+    function getDownloadProgression(id) {
+        if (offlineControllerInitialized) {
+            return offlineController.getDownloadProgression(id);
+        }
+    }
+
+    function createRecordControllers() {
+        errHandler = ErrorHandler(context).getInstance();
+
+        const manifestLoader = createManifestLoader();
+
+        // init some controllers and models
+
+        if (!schemeLoaderFactory) {
+            schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+        }
+        adapter = DashAdapter(context).getInstance();
+        dashManifestModel = DashManifestModel(context).getInstance({
+            mediaController: mediaController,
+            timelineConverter: timelineConverter,
+            adapter: adapter
+        });
+        manifestModel = ManifestModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance({
+            manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel
+        });
+
+        adapter.setConfig({
+            dashManifestModel: dashManifestModel
+        });
+
+        if (!offlineController) {
+            offlineController = OfflineController(context).create();
+        }
+
+        offlineController.setConfig({
+            manifestLoader: manifestLoader,
+            mediaPlayerModel: mediaPlayerModel,
+            manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel,
+            adapter: adapter,
+            errHandler: errHandler,
+            schemeLoaderFactory: schemeLoaderFactory
+        });
+
+        offlineControllerInitialized = true;
+    }
+
+    function startDownload(id, allSelectedMediaInfos) {
+        if (allSelectedMediaInfos) {
+            offlineController.startDownload(id, allSelectedMediaInfos);
+        }
+    }
+
 
     /*
     ---------------------------------------------------------------------------
@@ -1992,6 +2110,10 @@ function MediaPlayer() {
     }
 
     function initializePlayback() {
+        /* if (offlineControllerInitialized && offlineController.isRecording()) {
+            offlineController.resetRecord();
+        }
+        */
         if (!streamingInitialized && source) {
             streamingInitialized = true;
             logger.info('Streaming Initialized');
@@ -2105,10 +2227,17 @@ function MediaPlayer() {
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getThumbnail: getThumbnail,
+        record: record,
         getDashAdapter: getDashAdapter,
         getSettings: getSettings,
         updateSettings: updateSettings,
         resetSettings: resetSettings,
+        stopDownload: stopDownload,
+        getAllRecords: getAllRecords,
+        deleteDownload: deleteDownload,
+        resumeDownload: resumeDownload,
+        getDownloadProgression: getDownloadProgression,
+        startDownload: startDownload,
         reset: reset
     };
 

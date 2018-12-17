@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import HTTPLoader from './net/HTTPLoader';
+import URLLoader from './net/URLLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
@@ -44,11 +44,11 @@ function FragmentLoader(config) {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        httpLoader;
+        urlLoader;
 
     function setup() {
         const boxParser = BoxParser(context).getInstance();
-        httpLoader = HTTPLoader(context).create({
+        urlLoader = URLLoader(context).create({
             errHandler: config.errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
@@ -70,8 +70,7 @@ function FragmentLoader(config) {
 
         if (request) {
             let headRequest = new HeadRequest(request.url);
-
-            httpLoader.load({
+            urlLoader.load({
                 request: headRequest,
                 success: function () {
                     report(true);
@@ -96,7 +95,7 @@ function FragmentLoader(config) {
         };
 
         if (request) {
-            httpLoader.load({
+            urlLoader.load({
                 request: request,
                 progress: function (event) {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
@@ -143,15 +142,15 @@ function FragmentLoader(config) {
     }
 
     function abort() {
-        if (httpLoader) {
-            httpLoader.abort();
+        if (urlLoader) {
+            urlLoader.abort();
         }
     }
 
     function reset() {
-        if (httpLoader) {
-            httpLoader.abort();
-            httpLoader = null;
+        if (urlLoader) {
+            urlLoader.abort();
+            urlLoader = null;
         }
     }
 

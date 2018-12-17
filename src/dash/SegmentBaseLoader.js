@@ -37,7 +37,7 @@ import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import HTTPLoader from '../streaming/net/HTTPLoader';
+import URLLoader from '../streaming/net/URLLoader';
 import Errors from '../core/errors/Errors';
 
 function SegmentBaseLoader() {
@@ -52,7 +52,7 @@ function SegmentBaseLoader() {
         requestModifier,
         dashMetrics,
         mediaPlayerModel,
-        httpLoader,
+        urlLoader,
         baseURLController;
 
     function setup() {
@@ -62,7 +62,7 @@ function SegmentBaseLoader() {
     function initialize() {
         boxParser = BoxParser(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
-        httpLoader = HTTPLoader(context).create({
+        urlLoader = URLLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
@@ -134,7 +134,7 @@ function SegmentBaseLoader() {
             eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
         };
 
-        httpLoader.load({request: request, success: onload, error: onerror});
+        urlLoader.load({request: request, success: onload, error: onerror});
 
         logger.debug('Perform init search: ' + info.url);
     }
@@ -244,13 +244,13 @@ function SegmentBaseLoader() {
             callback(null, representation, type);
         };
 
-        httpLoader.load({request: request, success: onload, error: onerror});
+        urlLoader.load({request: request, success: onload, error: onerror});
         logger.debug('Perform SIDX load: ' + info.url + ' with range : ' + info.range.start + ' - ' + info.range.end);
     }
 
     function reset() {
-        httpLoader.abort();
-        httpLoader = null;
+        urlLoader.abort();
+        urlLoader = null;
         errHandler = null;
         boxParser = null;
         requestModifier = null;
