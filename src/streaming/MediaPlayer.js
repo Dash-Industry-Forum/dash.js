@@ -2750,8 +2750,7 @@ function MediaPlayer() {
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             manifestModel: manifestModel,
-            videoModel: videoModel,
-            adapter: adapter
+            videoModel: videoModel
         });
         abrController.createAbrRulesCollection();
 

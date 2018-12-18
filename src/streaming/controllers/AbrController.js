@@ -122,8 +122,7 @@ function AbrController() {
         abrRulesCollection = ABRRulesCollection(context).create({
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            adapter: adapter
+            mediaPlayerModel: mediaPlayerModel
         });
 
         abrRulesCollection.initialize();
