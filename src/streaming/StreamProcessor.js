@@ -315,14 +315,6 @@ function StreamProcessor(config) {
         return false;
     }
 
-    function timeIsBuffered(time) {
-        if (bufferController) {
-            return bufferController.getRangeAt(time, 0) !== null;
-        }
-
-        return false;
-    }
-
     function getBufferLevel() {
         return bufferController.getBufferLevel();
     }
@@ -437,7 +429,6 @@ function StreamProcessor(config) {
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
-        timeIsBuffered: timeIsBuffered,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
         selectMediaInfo: selectMediaInfo,
