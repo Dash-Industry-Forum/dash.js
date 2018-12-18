@@ -68,7 +68,6 @@ function RepresentationController() {
     }
 
     function setConfig(config) {
-        // allow the abrController created in setup to be overidden
         if (config.abrController) {
             abrController = config.abrController;
         }
