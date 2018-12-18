@@ -397,17 +397,20 @@ function DashManifestModel(config) {
     }
 
     function getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation) {
-        let realRepresentation = getRealAdaptationFor(voAdaptation).Representation_asArray[0];
+        let realAdaptation = getRealAdaptationFor(voAdaptation);
+        let realRepresentation = realAdaptation ? realAdaptation.Representation_asArray[0] : null;
         let segmentInfo;
-        if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
-            segmentInfo = realRepresentation.SegmentList;
-            return segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ?
-                isLastRepeatAttributeValid(segmentInfo.SegmentTimeline) :
-                true;
-        } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
-            segmentInfo = realRepresentation.SegmentTemplate;
-            if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
-                return isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
+        if (realRepresentation) {
+            if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+                segmentInfo = realRepresentation.SegmentList;
+                return segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ?
+                    isLastRepeatAttributeValid(segmentInfo.SegmentTimeline) :
+                    true;
+            } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
+                segmentInfo = realRepresentation.SegmentTemplate;
+                if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
+                    return isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
+                }
             }
         }
 

@@ -35,6 +35,12 @@ describe('DashManifestModel', function () {
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
     });
 
+    it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and adaptation is undefined', () => {
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation();
+
+        expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
+    });
+
     it('should return false when getIsTextTrack is called and type is undefined', () => {
         const isTextTrack = dashManifestModel.getIsTextTrack();
 
