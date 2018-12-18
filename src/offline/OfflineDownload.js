@@ -308,6 +308,7 @@ function OfflineDownload(params) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STOPPED);
             eventBus.trigger(Events.DOWNLOADING_STOPPED, {
                 sender: this,
+                id: manifestId,
                 status: OfflineConstants.OFFLINE_STATUS_STOPPED,
                 message: 'Downloading has been stopped for this stream !'
             });

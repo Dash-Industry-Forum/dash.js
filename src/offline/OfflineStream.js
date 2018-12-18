@@ -263,7 +263,7 @@ function OfflineStream(config) {
     function onStreamCompleted() {
         finishedOfflineStreamProcessors++;
         if (finishedOfflineStreamProcessors === offlineStreamProcessors.length) {
-            eventBus.trigger(Events.DOWNLOADING_FINISHED, {sender: this, message: 'Downloading has been successfully completed for this stream !'});
+            eventBus.trigger(Events.DOWNLOADING_FINISHED, {sender: this, id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
         }
     }
 
@@ -280,7 +280,7 @@ function OfflineStream(config) {
     function checkIfAllOfflineStreamProcessorsStarted() {
         startedOfflineStreamProcessors++;
         if (startedOfflineStreamProcessors === offlineStreamProcessors.length) {
-            eventBus.trigger(Events.DOWNLOADING_STARTED, {sender: this, message: 'Downloading started for this stream !'});
+            eventBus.trigger(Events.DOWNLOADING_STARTED, {sender: this, id: manifestId, message: 'Downloading started for this stream !'});
         }
     }
 
