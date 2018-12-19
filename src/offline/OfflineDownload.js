@@ -136,6 +136,15 @@ function OfflineDownload(params) {
         setupOfflineEvents();
         manifestLoader.load(url);
         isRecordingStatus = true;
+
+        let offlineManifest = {
+            'fragmentStore': manifestId,
+            'status': OfflineConstants.OFFLINE_STATUS_CREATED,
+            'manifestId': manifestId,
+            'url': OfflineConstants.OFFLINE_SCHEME + '://' + manifestId,
+            'originalURL': url
+        };
+        return createOfflineManifest(offlineManifest);
     }
 
     function setupOfflineEvents() {
@@ -233,8 +242,17 @@ function OfflineDownload(params) {
      * @param {object} offlineManifest
      * @instance
      */
-    function storeOfflineManifest(offlineManifest) {
-        return offlineStoreController.storeOfflineManifest(offlineManifest);
+    function createOfflineManifest(offlineManifest) {
+        return offlineStoreController.createOfflineManifest(offlineManifest);
+    }
+
+    /**
+     * Store in database the string representation of offline manifest (with only downloaded representations)
+     * @param {object} offlineManifest
+     * @instance
+     */
+    function updateOfflineManifest(offlineManifest) {
+        return offlineStoreController.updateOfflineManifest(offlineManifest);
     }
 
     /**
@@ -287,7 +305,7 @@ function OfflineDownload(params) {
                     'originalURL': manifest.url,
                     'manifest': parsedManifest
                 };
-                return storeOfflineManifest(offlineManifest);
+                return updateOfflineManifest(offlineManifest);
             } else {
                 return Promise.reject('falling parsing offline manifest');
             }

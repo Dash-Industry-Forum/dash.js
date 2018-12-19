@@ -312,6 +312,7 @@ function OfflineStream(config) {
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             offlineStreamProcessors[i].resume();
         }
+        eventBus.trigger(Events.DOWNLOADING_STARTED, {sender: this, id: manifestId, message: 'Downloading started for this stream !'});
     }
 
     /**

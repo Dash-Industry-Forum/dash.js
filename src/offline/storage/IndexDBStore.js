@@ -69,7 +69,7 @@ function IndexDBStore() {
      * @param {string} storeName
      * @memberof module:IndexDBStore
      * @instance
-    */
+     */
     function createFragmentStore(storeName) {
         console.log('setStore  ' + storeName);
         let fragmentStore = localforage.createInstance({
@@ -89,7 +89,7 @@ function IndexDBStore() {
      * @param {string} newStatus
      * @returns {Promise} promise
      * @instance
-    */
+     */
     function setDownloadingStatus(manifestId, newStatus) {
         return getManifestById(manifestId).then(function (item) {
             item.status = newStatus;
@@ -108,7 +108,7 @@ function IndexDBStore() {
      * @param {number} key
      * @returns {Promise} fragment
      * @instance
-    */
+     */
     function getFragmentByKey(manifestId, key) {
         let fragmentStore = fragmentStores[manifestId];
         return fragmentStore.getItem(key).then(function (value) {
@@ -125,7 +125,7 @@ function IndexDBStore() {
      * @param {number} id
      * @returns {Promise} {Object[]} manifests
      * @instance
-    */
+     */
     function getManifestById(id) {
         return getAllManifests().then(function (array) {
             if (array) {
@@ -154,10 +154,12 @@ function IndexDBStore() {
      * @memberof module:IndexDBStore
      * @returns {Promise} {Object[]} manifests
      * @instance
-    */
+     */
     function getAllManifests() {
         return manifestStore.getItem('manifest').then(function (array) {
-            return Promise.resolve(array ? array : { 'manifests': [] });
+            return Promise.resolve(array ? array : {
+                'manifests': []
+            });
         }).catch(function (err) {
             return Promise.reject(err);
         });
@@ -168,7 +170,7 @@ function IndexDBStore() {
      * @memberof module:IndexDBStore
      * @returns {Promise} number
      * @instance
-    */
+     */
     function getCurrentHigherManifestId() {
         return getAllManifests().then(function (array) {
             let higherManifestId = 0;
@@ -193,7 +195,7 @@ function IndexDBStore() {
      * @param {Object} manifest à jour
      * @returns {Promise} Object promise de l'action
      * @instance
-    */
+     */
     function updateManifest(manifest) {
         return getAllManifests().then(function (array) {
             try {
@@ -202,7 +204,7 @@ function IndexDBStore() {
                         array.manifests[i] = manifest;
                     }
                 }
-                return manifestStore.setItem('manifest',array);
+                return manifestStore.setItem('manifest', array);
             } catch (err) {
                 throw new Error('Any results found !');
             }
@@ -214,12 +216,14 @@ function IndexDBStore() {
      * @memberof module:IndexDBStore
      * @param {Object} manifest
      * @instance
-    */
+     */
     function storeManifest(manifest) {
         return manifestStore.getItem('manifest').then(function (results) {
-            let array = results ? results : { 'manifests': [] };
+            let array = results ? results : {
+                'manifests': []
+            };
             array.manifests.push(manifest);
-            return manifestStore.setItem('manifest',array);
+            return manifestStore.setItem('manifest', array);
         });
     }
 
@@ -231,7 +235,7 @@ function IndexDBStore() {
      * @param {Object} fragmentData
      * @returns {Promise} résultat de l'ajout
      * @instance
-    */
+     */
     function storeFragment(manifestId, fragmentId, fragmentData) {
         let fragmentStore = fragmentStores[manifestId];
         return fragmentStore.setItem(fragmentId, fragmentData, function () {
@@ -252,7 +256,7 @@ function IndexDBStore() {
      * @memberof module:IndexDBStore
      * @returns {Promise} résultat de la suppression
      * @instance
-    */
+     */
     function dropAll() {
         return localforage.clear().then(function () {
             return Promise.resolve();
@@ -266,7 +270,7 @@ function IndexDBStore() {
      * @param {string} storeName
      * @memberof module:IndexDBStore
      * @instance
-    */
+     */
     function dropFragmentStore(storeName) {
         localforage.dropInstance({
             driver: localforage.INDEXEDDB,
@@ -285,7 +289,7 @@ function IndexDBStore() {
      * @param {number} manifestId
      * @returns {Promise} résultat de la suppression
      * @instance
-    */
+     */
     function deleteDownloadById(manifestId) {
         return manifestStore.getItem('manifest').then(function (array) {
             if (array) {
@@ -315,7 +319,7 @@ function IndexDBStore() {
      * @param {string} storeName
      * @returns {Promise} résultat de la suppression
      * @instance
-    */
+     */
     function deleteFragmentStore(storeName) {
         localforage.createInstance({
             name: 'dash_offline_db',

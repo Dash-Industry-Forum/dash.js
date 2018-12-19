@@ -1,6 +1,5 @@
 'use strict';
 
-const OFFLINE_STREAMS_TITLE = 'Offline';
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./service-worker.js').then(function (registration) {
         console.log('registered service work : ', registration);
@@ -43,7 +42,7 @@ angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVe
     });
 });
 
-app.controller('DashController', function ($scope, $timeout, $q, sources, contributors, dashifTestVectors) {
+app.controller('DashController', function ($scope, $timeout, $q, sources, contributors, dashifTestVectors, DownloadService) {
     let updateNetworkStatus = function () {
         if (navigator.onLine) {
             $scope.isOffline = 'ONLINE';
@@ -73,7 +72,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         }
 
         // DASH Industry Forum Test Vectors
-        dashifTestVectors.query(function(data) {
+        dashifTestVectors.query(function (data) {
             $scope.availableStreams.splice(7, 0, {
                 name: 'DASH Industry Forum Test Vectors',
                 submenu: data.items
@@ -140,27 +139,117 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.chartData = [];
 
     $scope.chartState = {
-        audio:{
-            buffer:         {data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level'},
-            bitrate:        {data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (kbps)'},
-            index:          {data: [], selected: false, color: '#ffd446', label: 'Audio Current Index'},
-            pendingIndex:   {data: [], selected: false, color: '#FF6700', label: 'AudioPending Index'},
-            ratio:          {data: [], selected: false, color: '#329d61', label: 'Audio Ratio'},
-            download:       {data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)'},
-            latency:        {data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)'},
-            droppedFPS:     {data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS'},
-            liveLatency:     {data: [], selected: false, color: '#65080c', label: 'Live Latency'}
+        audio: {
+            buffer: {
+                data: [],
+                selected: false,
+                color: '#65080c',
+                label: 'Audio Buffer Level'
+            },
+            bitrate: {
+                data: [],
+                selected: false,
+                color: '#00CCBE',
+                label: 'Audio Bitrate (kbps)'
+            },
+            index: {
+                data: [],
+                selected: false,
+                color: '#ffd446',
+                label: 'Audio Current Index'
+            },
+            pendingIndex: {
+                data: [],
+                selected: false,
+                color: '#FF6700',
+                label: 'AudioPending Index'
+            },
+            ratio: {
+                data: [],
+                selected: false,
+                color: '#329d61',
+                label: 'Audio Ratio'
+            },
+            download: {
+                data: [],
+                selected: false,
+                color: '#44c248',
+                label: 'Audio Download Rate (Mbps)'
+            },
+            latency: {
+                data: [],
+                selected: false,
+                color: '#326e88',
+                label: 'Audio Latency (ms)'
+            },
+            droppedFPS: {
+                data: [],
+                selected: false,
+                color: '#004E64',
+                label: 'Audio Dropped FPS'
+            },
+            liveLatency: {
+                data: [],
+                selected: false,
+                color: '#65080c',
+                label: 'Live Latency'
+            }
         },
-        video:{
-            buffer:         {data: [], selected: true, color: '#00589d', label: 'Video Buffer Level'},
-            bitrate:        {data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (kbps)'},
-            index:          {data: [], selected: false, color: '#326e88', label: 'Video Current Quality'},
-            pendingIndex:   {data: [], selected: false, color: '#44c248', label: 'Video Pending Index'},
-            ratio:          {data: [], selected: false, color: '#00CCBE', label: 'Video Ratio'},
-            download:       {data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)'},
-            latency:        {data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)'},
-            droppedFPS:     {data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS'},
-            liveLatency:     {data: [], selected: false, color: '#65080c', label: 'Live Latency'}
+        video: {
+            buffer: {
+                data: [],
+                selected: true,
+                color: '#00589d',
+                label: 'Video Buffer Level'
+            },
+            bitrate: {
+                data: [],
+                selected: true,
+                color: '#ff7900',
+                label: 'Video Bitrate (kbps)'
+            },
+            index: {
+                data: [],
+                selected: false,
+                color: '#326e88',
+                label: 'Video Current Quality'
+            },
+            pendingIndex: {
+                data: [],
+                selected: false,
+                color: '#44c248',
+                label: 'Video Pending Index'
+            },
+            ratio: {
+                data: [],
+                selected: false,
+                color: '#00CCBE',
+                label: 'Video Ratio'
+            },
+            download: {
+                data: [],
+                selected: false,
+                color: '#FF6700',
+                label: 'Video Download Rate (Mbps)'
+            },
+            latency: {
+                data: [],
+                selected: false,
+                color: '#329d61',
+                label: 'Video Latency (ms)'
+            },
+            droppedFPS: {
+                data: [],
+                selected: false,
+                color: '#65080c',
+                label: 'Video Dropped FPS'
+            },
+            liveLatency: {
+                data: [],
+                selected: false,
+                color: '#65080c',
+                label: 'Live Latency'
+            }
         }
     };
 
@@ -233,9 +322,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.error = '';
     $scope.errorType = '';
 
-    //Offline
-    $scope.recordProgression = 0;
-    let progressTimer;
     ////////////////////////////////////////
     //
     // Player Setup
@@ -246,7 +332,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.player = dashjs.MediaPlayer().create(); /* jshint ignore:line */
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
-        var message = e.event.message ? e.event.message : typeof e.event === 'string' ? e.event: e.event.url ? e.event.url : '';
+        var message = e.event.message ? e.event.message : typeof e.event === 'string' ? e.event : e.event.url ? e.event.url : '';
         $scope.$apply(function () {
             $scope.error = message;
             $scope.errorType = e.error;
@@ -275,17 +361,20 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     const initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
 
     //get default track switch mode
-    if(initVideoTrackSwitchMode === 'alwaysReplace') {
+    if (initVideoTrackSwitchMode === 'alwaysReplace') {
         document.getElementById('always-replace-video').checked = true;
     } else {
         document.getElementById('never-replace-video').checked = true;
     }
 
-    if(initAudioTrackSwitchMode === 'alwaysReplace') {
+    if (initAudioTrackSwitchMode === 'alwaysReplace') {
         document.getElementById('always-replace-audio').checked = true;
     } else {
         document.getElementById('never-replace-audio').checked = true;
     }
+
+    $scope.downloads = DownloadService.getDownloads();
+    DownloadService.init($scope.player);
 
     $scope.controlbar = new ControlBar($scope.player); /* jshint ignore:line */
     $scope.controlbar.initialize();
@@ -300,7 +389,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         console.log(JSON.stringify(e.data));
         $scope.availableMedia = e.data.availableMedia;
         $scope.manifestId = e.data.id;
-        $scope.refreshAvailableStreams();
         $scope.showRepresentationModal();
     }, $scope);
 
@@ -505,7 +593,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
     $scope.setLogLevel = function (mode) {
         var level = $("input[name='log-level']:checked").val();
-        switch(level) {
+        switch (level) {
             case 'none':
                 $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_NONE);
                 break;
@@ -838,28 +926,19 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     // Offline
     //
     ////////////////////////////////////////
-      //Init
-    $(".progress").hide();
-    $(".stopDownload").hide();
-    $(".resumeDownload").hide();
-
 
     $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_STARTED, function (e) { /* jshint ignore:line */
-        $scope.successMessage  = e.message;
+        $scope.successMessage = e.message;
         $(".alert.alert-success").show();
-        $(".alert.alert-success").fadeTo(2500, 500).slideUp(500, function(){
+        $(".alert.alert-success").fadeTo(2500, 500).slideUp(500, function () {
             $(".alert.alert-success").slideUp(500);
         });
-        $scope.updateRecordProgression();
-        $(".progress").show();
-        $(".stopDownload").show();
-        $(".resumeDownload").show();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_FINISHED, function (e) { /* jshint ignore:line */
-        $scope.successMessage  = e.message;
+        $scope.successMessage = e.message;
         $(".alert.alert-success").show();
-        $(".alert.alert-success").fadeTo(2500, 500).slideUp(500, function(){
+        $(".alert.alert-success").fadeTo(2500, 500).slideUp(500, function () {
             $(".alert.alert-success").slideUp(500);
         });
     }, $scope);
@@ -867,7 +946,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_STOPPED, function (e) { /* jshint ignore:line */
         $scope.warningMessage = e.message;
         $(".alert.alert-warning").show();
-        $(".alert.alert-warning").fadeTo(2500, 500).slideUp(500, function(){
+        $(".alert.alert-warning").fadeTo(2500, 500).slideUp(500, function () {
             $(".alert.alert-warning").slideUp(500);
         });
     }, $scope);
@@ -879,7 +958,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         $('#representationModal').modal('hide');
     }
 
-    $scope.getSelectedRepresentations = function() {
+    $scope.getSelectedRepresentations = function () {
         let representations = {};
         representations.video = [];
         $('input[type="checkbox"][name="video"]:checked').each(function () {
@@ -904,106 +983,12 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     }
 
     $scope.doDownload = function () {
-        $scope.player.record($scope.selectedItem.url);
+        DownloadService.doDownload($scope.selectedItem.url);
     }
 
-    $scope.doStopDownload = function () {
-        $scope.player.stopDownload($scope.manifestId);
-        $scope.lastManifestId = $scope.manifestId;
-        $scope.manifestId = undefined;
-        $timeout.cancel(progressTimer);
-        progressTimer = null;
-    }
-
-    $scope.doResumeDownload = function () {
-        $scope.manifestId = $scope.lastManifestId;
-        $scope.lastManifestId = undefined;
-        $scope.player.resumeDownload($scope.manifestId);
-    }
-
-    $scope.updateRecordProgression = function () {
-        progressTimer = $timeout(function () {
-            $scope.recordProgression = $scope.player.getDownloadProgression($scope.manifestId);
-            $scope.updateRecordProgression();
-        }, 200);
-    }
-
-    $scope.getDownloadProgression = function () {
-        return $scope.recordProgression;
-    }
-
-    $scope.refreshAvailableStreams = function () {
-        setAvailableRecords();
-    }
-
-    ///////////////////////////////////////////
-    //
-    // Async calls
-    //
-    ////////////////////////////////////////
-
-    let getAllRecords = function() {
-        let deferred = $q.defer();
-
-        $scope.player.getAllRecords().then(function (items) {
-            deferred.resolve(items);
-        });
-
-        return deferred.promise;
-    };
-
-    let deleteDownload = function(manifestId) {
-        let deferred = $q.defer();
-
-        $scope.player.deleteDownload(manifestId).then(function (success) {
-            deferred.resolve(success);
-        });
-
-        return deferred.promise;
-    };
-
-    setAvailableRecords();
-    ////Init stored streals
-    function setAvailableRecords() {
-        getAllRecords().then(function (items) {
-
-            // update availableStreams with offline
-            let index = $scope.availableStreams.findIndex((element) => {
-                return element.name === OFFLINE_STREAMS_TITLE;
-            });
-
-            if (index > -1) {
-                $scope.availableStreams.splice(index);
-            }
-            if (items && items.manifests.length > 0) {
-                let menu = {
-                    name: OFFLINE_STREAMS_TITLE,
-                    submenu: []
-                };
-
-                items.manifests.forEach((item) => {
-                    menu.submenu.push({
-                        url: item.url,
-                        name: item.fragmentStore +  ' : ' + item.originalURL,
-                        manifestId: item.manifestId
-                    });
-                });
-
-                $scope.availableStreams.push(menu);
-            }
-        });
-    }
-
-    $scope.deleteStream = function (manifestId) {
-        deleteDownload(manifestId).then(function (success) {
-            setAvailableRecords();
-        }).catch(function (err) {
-            console.log(err);
-        });
-    };
-
-    $scope.isOfflineItem = function (item) {
-        return item.name === OFFLINE_STREAMS_TITLE;
+    $scope.onLoadDownload = function (download) {
+        $scope.selectedItem = download;
+        $scope.doLoad();
     }
 });
 

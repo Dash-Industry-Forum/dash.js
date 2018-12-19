@@ -73,8 +73,14 @@ function OfflineStoreController() {
         });
     }
 
-    function storeOfflineManifest(manifest) {
+    function createOfflineManifest(manifest) {
         return indexDBStore.storeManifest(manifest).catch(function (err) {
+            manageDOMError(err);
+        });
+    }
+
+    function updateOfflineManifest(manifest) {
+        return indexDBStore.updateManifest(manifest).catch(function (err) {
             manageDOMError(err);
         });
     }
@@ -127,7 +133,8 @@ function OfflineStoreController() {
     instance = {
         setConfig: setConfig,
         storeFragment: storeFragment,
-        storeOfflineManifest: storeOfflineManifest,
+        createOfflineManifest: createOfflineManifest,
+        updateOfflineManifest: updateOfflineManifest,
         createFragmentStore: createFragmentStore,
         getCurrentHigherManifestId: getCurrentHigherManifestId,
         getAllManifests: getAllManifests,

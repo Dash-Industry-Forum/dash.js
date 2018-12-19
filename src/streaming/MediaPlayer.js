@@ -555,7 +555,7 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
+        if (typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
         getVideoElement().volume = value;
@@ -1054,7 +1054,7 @@ function MediaPlayer() {
         if (!offlineControllerInitialized) {
             createRecordControllers();
         }
-        offlineController.record(manifestURL);
+        return offlineController.record(manifestURL);
     }
 
     function stopDownload(id) {

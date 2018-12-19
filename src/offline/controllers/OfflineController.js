@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Events from '../../core/events/Events';
+import Debug from '../../core/Debug';
 import OfflineEvents from '../events/OfflineEvents';
 import OfflineConstants from '../constants/OfflineConstants';
 import DOMExceptionsEvents from '../events/DOMExceptionsEvents';
@@ -52,7 +53,7 @@ function OfflineController() {
         adapter,
         schemeLoaderFactory,
         baseURLController,
-
+        logger,
         manifestLoader,
         manifestModel,
         dashManifestModel,
@@ -65,9 +66,10 @@ function OfflineController() {
         offlineStoreController = OfflineStoreController(context).create();
         baseURLController = BaseURLController(context).getInstance();
         offlineUtlUtils = OfflineUrlUtils(context).getInstance();
-        URLUtils(context).getInstance().registerUrlRegex(offlineUtlUtils.getRegex(),offlineUtlUtils);
+        URLUtils(context).getInstance().registerUrlRegex(offlineUtlUtils.getRegex(), offlineUtlUtils);
         Events.extend(OfflineEvents);
         Events.extend(DOMExceptionsEvents);
+        logger = Debug(context).getInstance().getLogger(instance);
 
         downloads = [];
     }
@@ -114,7 +116,7 @@ function OfflineController() {
         schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
     }
 
-    function getDownloadFromId (id) {
+    function getDownloadFromId(id) {
         let download = downloads.find((item) => {
             return item.getId() === id;
         });
@@ -127,29 +129,35 @@ function OfflineController() {
     }
 
     function record(url) {
-        let manifestId = generateManifestId();
+        return new Promise(function (resolve, reject) {
+            let manifestId = generateManifestId();
 
-        // create download controller
-        let download = OfflineDownload(context).create({
-            id: manifestId
+            // create download controller
+            let download = OfflineDownload(context).create({
+                id: manifestId
+            });
+
+            download.setConfig({
+                manifestLoader: manifestLoader,
+                mediaPlayerModel: mediaPlayerModel,
+                manifestModel: manifestModel,
+                dashManifestModel: dashManifestModel,
+                adapter: adapter,
+                errHandler: errHandler,
+                schemeLoaderFactory: schemeLoaderFactory,
+                offlineStoreController: offlineStoreController,
+                baseURLController: baseURLController
+            });
+
+            download.record(url).then(() => {
+                downloads.push(download);
+                resolve();
+            })
+            .catch((e) => {
+                logger.error('Failed to download ' + e);
+                reject(e);
+            });
         });
-
-        download.setConfig({
-            manifestLoader: manifestLoader,
-            mediaPlayerModel: mediaPlayerModel,
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
-            adapter: adapter,
-            errHandler: errHandler,
-            schemeLoaderFactory: schemeLoaderFactory,
-            offlineStoreController: offlineStoreController,
-            baseURLController: baseURLController
-        });
-
-        download.record(url);
-
-        downloads.push(download);
-        return manifestId;
     }
 
 
@@ -177,7 +185,7 @@ function OfflineController() {
             // download is running
             download.deleteDownload();
             let index = downloads.indexOf(download);
-            downloads.splice(index,1);
+            downloads.splice(index, 1);
         }
 
         return offlineStoreController.deleteDownloadById(id).then(function () {

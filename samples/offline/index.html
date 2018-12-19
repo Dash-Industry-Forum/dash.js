@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-theme.css">
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap-glyphicons.css">
     <link rel="stylesheet" href="app/css/main.css">
+    <link rel="stylesheet" href="app/offline/css/offline.css">
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
     <link rel="manifest" href="./manifest.json">
 
@@ -31,6 +32,8 @@
     <script src="../../dist/dash.mss.debug.js"></script>
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
+    <script src="app/offline/services/downloadService.js"></script>
+    <script src="app/offline/directives/download.js"></script>
     <script src="app/rules/DownloadRatioRule.js"></script>
     <script src="app/rules/ThroughputRule.js"></script>
 
@@ -97,7 +100,7 @@
                                 </li>
                                 <li ng-repeat="subitem in item.submenu" ng-if="subitem.url">
                                     <a title="{{ subitem.moreInfo && 'See ' + subitem.moreInfo + ' for more information' || undefined }}"
-                                       ng-click="setStream(subitem)">{{subitem.name}}  <span ng-if="isOfflineItem(item)" class="btn btn-danger btn-sm" ng-click="deleteStream(subitem.manifestId); $event.stopPropagation();">Delete</span>
+                                       ng-click="setStream(subitem)">{{subitem.name}}
                                     </a>
                                 </li>
                             </ul>
@@ -113,6 +116,7 @@
                 <span class="input-group-btn">
                     <button class="btn btn-default" ng-click="toggleOptionsGutter(!optionsGutter)" ng-cloak>{{getOptionsButtonLabel()}}</button>
                     <button class="btn btn-default" type="button" ng-click="doStop()">Stop</button>
+                    <button class="btn btn-default" type="button" ng-click="doDownload()">Download</button>
                     <button class="btn btn-primary" type="button" ng-click="doLoad()">Load</button>
                 </span>
             </div>
@@ -305,22 +309,22 @@
                 </div>
             </div>
 
-            <!-- DOWNLOAD SECTION -->
-            <div class="container col-md-2 col-sm-3 col-xs-5 col-lg-2">
-                <div class="list-group">
-                        <a href="#" class="list-group-item list-group-item-action active download" ng-click="doDownload()"><p class="text-center">Download</p></a>
-                        <a href="#" class="list-group-item list-group-item-action stopDownload" ng-click="doStopDownload()"><p class="text-center">Stop Download</p></a>
-                        <a href="#" class="list-group-item list-group-item-action resumeDownload" ng-click="doResumeDownload()"><p class="text-center">Resume Download</p></a>
+            <div class="container col-md-4">
+                <!-- DOWNLOAD SECTION -->
+                <div class="download-list">
+                    <h2>Downloads</h2>
+                    <h4 ng-if="downloads.length ===0">No available offline streams</h4>
+                    <div ng-repeat="download in downloads">
+                        <dash-download download="download" on-load="onLoadDownload"></dash-download>
+                    </div>
                 </div>
-                <div class="progress">
-                    <div class="progress-bar" role="progressbar" ng-style="{ 'width': getDownloadProgression() + '%' }" aria-valuenow="{{ getDownloadProgression() }}" aria-valuemin="0" aria-valuemax="100">{{ getDownloadProgression() }} %</div>
-                </div>
+                <!-- NETWORK STATUS !-->
+                <h2><b>Network Status</b>
+                <span class="label label-info lb-md">
+                    {{isOffline}}
+                </span>
+                </h2>
             <!-- NETWORK STATUS !-->
-                    <p class="text-center"><b>Network Status</b>
-                        <span class="label label-info lb-md">
-                            {{isOffline}}
-                        </span>
-                    </p>
             </div>
 
         </div>
