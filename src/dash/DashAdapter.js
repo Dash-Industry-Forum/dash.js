@@ -31,10 +31,10 @@
 
 import Constants from '../streaming/constants/Constants';
 import DashConstants from './constants/DashConstants';
-import RepresentationInfo from '../streaming/vo/RepresentationInfo';
-import MediaInfo from '../streaming/vo/MediaInfo';
-import StreamInfo from '../streaming/vo/StreamInfo';
-import ManifestInfo from '../streaming/vo/ManifestInfo';
+import RepresentationInfo from './vo/RepresentationInfo';
+import MediaInfo from './vo/MediaInfo';
+import StreamInfo from './vo/StreamInfo';
+import ManifestInfo from './vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import cea608parser from '../../externals/cea608-parser';
