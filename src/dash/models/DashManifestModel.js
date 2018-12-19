@@ -55,7 +55,6 @@ function DashManifestModel(config) {
 
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
-    const timelineConverter = config.timelineConverter;
     const errHandler = config.errHandler;
     const BASE64 = config.BASE64;
 
@@ -549,13 +548,20 @@ function DashManifestModel(config) {
                     }
                 }
 
-                voRepresentation.MSETimeOffset = timelineConverter.calcMSETimeOffset(voRepresentation);
+                voRepresentation.MSETimeOffset = calcMSETimeOffset(voRepresentation);
                 voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
                 voRepresentations.push(voRepresentation);
             }
         }
 
         return voRepresentations;
+    }
+
+    function calcMSETimeOffset(representation) {
+        // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
+        const presentationOffset = representation.presentationTimeOffset;
+        const periodStart = representation.adaptation.period.start;
+        return (periodStart - presentationOffset);
     }
 
     function getAdaptationsForPeriod(voPeriod) {

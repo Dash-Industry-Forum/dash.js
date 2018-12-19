@@ -222,7 +222,6 @@ function MediaPlayer() {
 
         adapter = DashAdapter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance({
-            timelineConverter: timelineConverter,
             errHandler: errHandler,
             BASE64: BASE64
         });
