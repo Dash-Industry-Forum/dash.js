@@ -241,9 +241,6 @@ function MediaPlayer() {
         adapter.setConfig({
             dashManifestModel: dashManifestModel
         });
-        metricsModel.setConfig({
-            adapter: adapter
-        });
 
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
@@ -2140,27 +2137,15 @@ function MediaPlayer() {
     }
 
     /**
-     * Returns instance of Video Container that was attached by calling attachVideoContainer()
-     * @returns {Object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getVideoContainer() {
-        return videoModel ? videoModel.getVideoContainer() : null;
-    }
-
-    /**
      * Use this method to attach an HTML5 element that wraps the video element.
      *
      * @param {HTMLElement} container - The HTML5 element containing the video element.
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated
      */
-    function attachVideoContainer(container) {
-        if (!videoModel.getElement()) {
-            throw ELEMENT_NOT_ATTACHED_ERROR;
-        }
-        videoModel.setVideoContainer(container);
+    function attachVideoContainer(container) { /* jshint ignore:line */
+        logger.warn('attachVideoContainer method has been deprecated and will be removed in dash.js v3.0.0');
     }
 
     /**
@@ -2946,7 +2931,6 @@ function MediaPlayer() {
         getVersion: getVersion,
         getDebug: getDebug,
         getBufferLength: getBufferLength,
-        getVideoContainer: getVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         getVideoElement: getVideoElement,
         getSource: getSource,

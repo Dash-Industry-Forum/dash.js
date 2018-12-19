@@ -79,11 +79,11 @@ function MssFragmentMoofProcessor(config) {
         const segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         const entries = tfrf.entry;
         let entry,
-            segmentTime;
+            segmentTime,
+            range;
         let segment = null;
         let t = 0;
         let availabilityStartTime = null;
-        let range;
 
         if (entries.length === 0) {
             return;
@@ -197,7 +197,6 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function convertFragment(e, sp) {
-
         let i;
 
         // e.request contains request description object

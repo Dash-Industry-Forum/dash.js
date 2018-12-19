@@ -38,9 +38,8 @@ import ReportingFactory from './reporting/ReportingFactory';
 function MetricsReporting() {
 
     let context = this.context;
-    let instance;
-
-    let dvbErrorsTranslator;
+    let instance,
+        dvbErrorsTranslator;
 
     /**
      * Create a MetricsCollectionController, and a DVBErrorsTranslator

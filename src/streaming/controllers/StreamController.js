@@ -99,9 +99,10 @@ function StreamController() {
         preloadTimerId,
         wallclockTicked,
         buffers,
-        compatible,
+        useSmoothPeriodTransition,
         preloading,
-        lastPlaybackTime;
+        lastPlaybackTime,
+        supportsChangeType;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -182,7 +183,7 @@ function StreamController() {
     }
 
     function onWallclockTimeUpdated(/*e*/) {
-        if (!mediaPlayerModel.getJumpGaps() || !activeStream || activeStream.getProcessors().length === 0 ||
+        if (!mediaPlayerModel.getJumpGaps() || getActiveStreamProcessors() === 0 ||
             playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
             hasMediaError || hasInitialisationError) {
             return;
@@ -201,7 +202,7 @@ function StreamController() {
     }
 
     function jumpGap(time) {
-        const streamProcessors = activeStream.getProcessors();
+        const streamProcessors = getActiveStreamProcessors();
         const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
         let seekToPosition;
 
@@ -243,7 +244,7 @@ function StreamController() {
                 eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
             } else {
                 logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
-                playbackController.seek(seekToPosition);
+                playbackController.seek(seekToPosition, true, true);
             }
         }
     }
@@ -324,7 +325,7 @@ function StreamController() {
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
                 const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
-                logger.info('[StreamController][toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
+                logger.info('[toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
                 preloadTimerId = setTimeout(onStreamCanLoadNext,  preloadDelay);
             }
         }
@@ -337,7 +338,7 @@ function StreamController() {
             mediaSourceController.signalEndOfStream(mediaSource);
         } else if (mediaSource && playbackEndedTimerId === undefined) {
             //send PLAYBACK_ENDED in order to switch to a new period, wait until the end of playing
-            logger.info('[StreamController][onStreamBufferingCompleted] end of period detected');
+            logger.info('[onStreamBufferingCompleted] end of period detected');
             isStreamBufferingCompleted = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();
@@ -349,9 +350,15 @@ function StreamController() {
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && !isLast) {
             const newStream = getNextStream();
-            compatible = activeStream.isCompatibleWithStream(newStream);
-            if (compatible) {
-                logger.info('[StreamController][onStreamCanLoadNext] Preloading next stream');
+
+            // Smooth period transition allowed only if both of these conditions are true:
+            // 1.- None of the periods uses contentProtection.
+            // 2.- changeType method implemented by browser or periods use the same codec.
+            useSmoothPeriodTransition = activeStream.isProtectionCompatible(newStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(newStream));
+
+            if (useSmoothPeriodTransition) {
+                logger.info('[onStreamCanLoadNext] Preloading next stream');
                 activeStream.stopEventController();
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
@@ -462,26 +469,28 @@ function StreamController() {
             toStreamInfo: newStream.getStreamInfo()
         });
 
-        compatible = false;
+        useSmoothPeriodTransition = false;
         if (oldStream) {
             oldStream.stopEventController();
-            compatible = activeStream.isCompatibleWithStream(newStream) && !seekTime || newStream.getPreloaded();
-            oldStream.deactivate(compatible);
+            useSmoothPeriodTransition = (activeStream.isProtectionCompatible(newStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(newStream))) &&
+                !seekTime || newStream.getPreloaded();
+            oldStream.deactivate(useSmoothPeriodTransition);
         }
 
         activeStream = newStream;
         preloading = false;
-        playbackController.initialize(getActiveStreamInfo(), compatible);
+        playbackController.initialize(getActiveStreamInfo(), useSmoothPeriodTransition);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
-            openMediaSource(seekTime, oldStream, false, compatible);
+            openMediaSource(seekTime, oldStream, false, useSmoothPeriodTransition);
         } else {
             preloadStream(seekTime);
         }
     }
 
     function preloadStream(seekTime) {
-        activateStream(seekTime, compatible);
+        activateStream(seekTime, useSmoothPeriodTransition);
     }
 
     function switchToVideoElement(seekTime) {
@@ -542,13 +551,22 @@ function StreamController() {
         audioTrackDetected = checkTrackPresence(Constants.AUDIO);
         videoTrackDetected = checkTrackPresence(Constants.VIDEO);
 
+        // check if change type is supported by the browser
+        if (buffers) {
+            const keys = Object.keys(buffers);
+            if (keys.length > 0 && buffers[keys[0]].changeType) {
+                logger.debug('SourceBuffer changeType method supported. Use it to switch codecs in periods transitions');
+                supportsChangeType = true;
+            }
+        }
+
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
             } else {
                 let startTime = playbackController.getStreamStartTime(true);
                 if (!keepBuffers) {
-                    activeStream.getProcessors().forEach(p => {
+                    getActiveStreamProcessors().forEach(p => {
                         adapter.setIndexHandlerTime(p, startTime);
                     });
                 }
@@ -737,13 +755,11 @@ function StreamController() {
 
     function checkTrackPresence(type) {
         let isDetected = false;
-        if (activeStream) {
-            activeStream.getProcessors().forEach(p => {
-                if (p.getMediaInfo().type === type) {
-                    isDetected = true;
-                }
-            });
-        }
+        getActiveStreamProcessors().forEach(p => {
+            if (p.getMediaInfo().type === type) {
+                isDetected = true;
+            }
+        });
         return isDetected;
     }
 
@@ -751,14 +767,12 @@ function StreamController() {
         time = time || new Date();
 
         if (playListMetrics) {
-            if (activeStream) {
-                activeStream.getProcessors().forEach(p => {
-                    const ctrlr = p.getScheduleController();
-                    if (ctrlr) {
-                        ctrlr.finalisePlayList(time, reason);
-                    }
-                });
-            }
+            getActiveStreamProcessors().forEach(p => {
+                const ctrlr = p.getScheduleController();
+                if (ctrlr) {
+                    ctrlr.finalisePlayList(time, reason);
+                }
+            });
             metricsModel.addPlayList(playListMetrics);
             playListMetrics = null;
         }
@@ -770,14 +784,12 @@ function StreamController() {
         playListMetrics.mstart = playbackController.getTime() * 1000;
         playListMetrics.starttype = startReason;
 
-        if (activeStream) {
-            activeStream.getProcessors().forEach(p => {
-                let ctrlr = p.getScheduleController();
-                if (ctrlr) {
-                    ctrlr.setPlayList(playListMetrics);
-                }
-            });
-        }
+        getActiveStreamProcessors().forEach(p => {
+            let ctrlr = p.getScheduleController();
+            if (ctrlr) {
+                ctrlr.setPlayList(playListMetrics);
+            }
+        });
     }
 
     function onPlaybackError(e) {

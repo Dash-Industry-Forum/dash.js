@@ -333,10 +333,10 @@ function MssParser(config) {
         const segmentTimeline = {};
         const chunks = streamIndex.getElementsByTagName('c');
         const segments = [];
-        let segment;
-        let prevSegment;
-        let tManifest;
-        let i,j,r;
+        let segment,
+            prevSegment,
+            tManifest,
+            i,j,r;
         let duration = 0;
 
         for (i = 0; i < chunks.length; i++) {

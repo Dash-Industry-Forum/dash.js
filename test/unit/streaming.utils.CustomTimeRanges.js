@@ -33,4 +33,17 @@ describe('CustomTimeRanges', function () {
 
         expect(end).to.be.NaN;                // jshint ignore:line
     });
+
+    it('should return the correct start and end value', function () {
+        customTimeRanges.add(2, 4);
+
+        const end = customTimeRanges.end(0);
+        const start = customTimeRanges.start(0);
+
+        expect(start).to.equal(2);                // jshint ignore:line
+        expect(end).to.equal(4);                // jshint ignore:line
+
+        customTimeRanges.clear();
+        expect(customTimeRanges.length).to.equal(0);                // jshint ignore:line
+    });
 });

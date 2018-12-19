@@ -463,6 +463,11 @@ function TextTracks() {
                             cue.size = currentItem.styles.size;
                         }
                     }
+                    cue.onenter = function () {
+                        if (track.mode === Constants.TEXT_SHOWING) {
+                            eventBus.trigger(Events.CAPTION_RENDERED, {currentTrackIdx});
+                        }
+                    };
                 }
             }
             try {

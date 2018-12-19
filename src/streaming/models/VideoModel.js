@@ -40,7 +40,6 @@ function VideoModel() {
         logger,
         element,
         TTMLRenderingDiv,
-        videoContainer,
         previousPlaybackRate;
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
@@ -164,14 +163,6 @@ function VideoModel() {
 
     function getSource() {
         return element ? element.src : null;
-    }
-
-    function getVideoContainer() {
-        return videoContainer;
-    }
-
-    function setVideoContainer(value) {
-        videoContainer = value;
     }
 
     function getTTMLRenderingDiv() {
@@ -422,8 +413,6 @@ function VideoModel() {
         setElement: setElement,
         setSource: setSource,
         getSource: getSource,
-        getVideoContainer: getVideoContainer,
-        setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
         getPlaybackQuality: getPlaybackQuality,

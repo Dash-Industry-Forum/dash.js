@@ -39,6 +39,7 @@ function NextFragmentRequestRule(config) {
     const context = this.context;
     const adapter = config.adapter;
     const textController = config.textController;
+    const playbackController = config.playbackController;
 
     let instance,
         logger;
@@ -47,25 +48,18 @@ function NextFragmentRequestRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function execute(streamProcessor, requestToReplace) {
+    function execute(streamProcessor, seekTarget, requestToReplace) {
         if (!streamProcessor) {
             return null;
         }
         const representationInfo = streamProcessor.getRepresentationInfo();
-        const mediaInfo = representationInfo.mediaInfo;
-        const mediaType = mediaInfo.type;
-        const scheduleController = streamProcessor.getScheduleController();
-        const seekTarget = scheduleController.getSeekTarget();
+        const mediaType = streamProcessor.getType();
         const hasSeekTarget = !isNaN(seekTarget);
         const bufferController = streamProcessor.getBufferController();
-        const currentTime = streamProcessor.getPlaybackController().getNormalizedTime();
+        const currentTime = playbackController.getNormalizedTime();
         let time = hasSeekTarget ? seekTarget : adapter.getIndexHandlerTime(streamProcessor);
         let bufferIsDivided = false;
         let request;
-
-        if (hasSeekTarget) {
-            scheduleController.setSeekTarget(NaN);
-        }
 
         if (isNaN(time) || (mediaType === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
             return null;
@@ -76,18 +70,19 @@ function NextFragmentRequestRule(config) {
         if (bufferController) {
             let range = bufferController.getRangeAt(time);
             const playingRange = bufferController.getRangeAt(currentTime);
-            const bufferRanges = bufferController.getBuffer().getAllBufferRanges();
-            const numberOfBuffers = bufferRanges ? bufferRanges.length : 0;
+            const hasDiscontinuities = bufferController.getBuffer().hasDiscontinuitiesAfter(currentTime);
             if ((range !== null || playingRange !== null) && !hasSeekTarget) {
-                if ( !range || (playingRange && playingRange.start != range.start && playingRange.end != range.end) ) {
-                    if (numberOfBuffers > 1 && mediaType !== Constants.FRAGMENTED_TEXT) {
+                if (!range || (playingRange && playingRange.start != range.start && playingRange.end != range.end)) {
+                    if (hasDiscontinuities && mediaType !== Constants.FRAGMENTED_TEXT) {
                         streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(playingRange.end);
                         bufferIsDivided = true;
                     }
                     range = playingRange;
                 }
-                logger.debug('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
-                time = range.end;
+                if (time !== range.end) {
+                    logger.debug('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
+                    time = range.end;
+                }
             }
         }
 
@@ -106,13 +101,6 @@ function NextFragmentRequestRule(config) {
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
                 request = adapter.getFragmentRequest(streamProcessor, representationInfo);
-            }
-            if (request) {
-                if (!isNaN(request.startTime + request.duration)) {
-                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
-                }
-                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-                scheduleController.setTimeToLoadDelay(0);
             }
         }
 
