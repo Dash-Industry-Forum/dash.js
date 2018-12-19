@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import cea608parser from '../../externals/cea608-parser';
 import Constants from './constants/Constants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
@@ -238,7 +239,9 @@ function MediaPlayer() {
         });
 
         adapter.setConfig({
-            dashManifestModel: dashManifestModel
+            dashManifestModel: dashManifestModel,
+            constants: Constants,
+            cea608parser: cea608parser
         });
 
         restoreDefaultUTCTimingSources();

@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../streaming/constants/Constants';
 import DashConstants from './constants/DashConstants';
 import RepresentationInfo from './vo/RepresentationInfo';
 import MediaInfo from './vo/MediaInfo';
@@ -37,14 +36,15 @@ import StreamInfo from './vo/StreamInfo';
 import ManifestInfo from './vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
-import cea608parser from '../../externals/cea608-parser';
 
 function DashAdapter() {
     let instance,
         dashManifestModel,
         voPeriods,
         voAdaptations,
-        currentMediaInfo;
+        currentMediaInfo,
+        constants,
+        cea608parser;
 
     function setup() {
         reset();
@@ -55,6 +55,14 @@ function DashAdapter() {
 
         if (config.dashManifestModel) {
             dashManifestModel = config.dashManifestModel;
+        }
+
+        if (config.constants) {
+            constants = config.constants;
+        }
+
+        if (config.cea608parser) {
+            cea608parser = config.cea608parser;
         }
     }
 
@@ -144,7 +152,7 @@ function DashAdapter() {
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
         mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
         mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
-        mediaInfo.type = Constants.EMBEDDED_TEXT;
+        mediaInfo.type = constants.EMBEDDED_TEXT;
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
@@ -153,7 +161,7 @@ function DashAdapter() {
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {
-        mediaInfo.type = Constants.IMAGE;
+        mediaInfo.type = constants.IMAGE;
     }
 
     function convertPeriodToStreamInfo(period) {
@@ -261,7 +269,7 @@ function DashAdapter() {
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
         const periodId = selectedVoPeriod.id;
-        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== Constants.EMBEDDED_TEXT ? type : Constants.VIDEO);
+        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== constants.EMBEDDED_TEXT ? type : constants.VIDEO);
 
         if (!adaptationsForType) return mediaArr;
 
@@ -272,7 +280,7 @@ function DashAdapter() {
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
 
-            if (type === Constants.EMBEDDED_TEXT) {
+            if (type === constants.EMBEDDED_TEXT) {
                 let accessibilityLength = media.accessibility.length;
                 for (j = 0; j < accessibilityLength; j++) {
                     if (!media) {
@@ -302,12 +310,12 @@ function DashAdapter() {
                             }
                         }
                     } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
-                        convertVideoInfoToEmbeddedTextInfo(media, Constants.CC1, 'eng');
+                        convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
                         mediaArr.push(media);
                         media = null;
                     }
                 }
-            } else if (type === Constants.IMAGE) {
+            } else if (type === constants.IMAGE) {
                 convertVideoInfoToThumbnailInfo(media);
                 mediaArr.push(media);
                 media = null;
