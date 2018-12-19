@@ -43,13 +43,16 @@ import TimelineConverter from './../dash/utils/TimelineConverter';
 
 /**
  * @module  OfflineStreamProcessor
+ * @param {object} config configuration
  * @description Arrange downloading for each type
  */
-function OfflineStreamProcessor() {
+function OfflineStreamProcessor(config) {
 
+    config = config || {};
     let context = this.context;
 
     let instance,
+        manifestId,
         adapter,
         logger,
         indexHandler,
@@ -66,6 +69,7 @@ function OfflineStreamProcessor() {
         updating,
         currentVoRepresentation,
         offlineDownloaderRequestRule,
+        offlineStoreController,
         downloadedSegments,
         isInitialized,
         isStopped,
@@ -119,9 +123,14 @@ function OfflineStreamProcessor() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
+
+        if (config.offlineStoreController) {
+            offlineStoreController = config.offlineStoreController;
+        }
     }
 
     function setup() {
+        manifestId = config.id;
         resetInitialSettings();
         logger = Debug(context).getInstance().getLogger(instance);
         eventBus = EventBus(context).getInstance();
@@ -136,6 +145,12 @@ function OfflineStreamProcessor() {
         if (e.sender !== fragmentModel) {
             return;
         }
+
+        if (e.request !== null) {
+            let fragmentName = e.request.representationId + '_' + e.request.index;
+            offlineStoreController.storeFragment(manifestId, fragmentName, e.response);
+        }
+
         downloadedSegments++;
 
         if (e.error && e.request.serviceLocation && !isStopped) {
@@ -277,7 +292,7 @@ function OfflineStreamProcessor() {
                 let request = offlineDownloaderRequestRule.execute(currentVoRepresentation);
 
                 if (request) {
-                    logger.info('getNextFragment - request is ' + request.url);
+                    logger.info(`[${manifestId}] getNextFragment - request is ${request.url}`);
                     fragmentModel.executeRequest(request);
                 }
             }

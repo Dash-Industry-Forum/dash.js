@@ -55,6 +55,7 @@ function OfflineStream(config) {
         mediaPlayerModel,
         offlineStreamProcessor,
         offlineStreamProcessors,
+        offlineStoreController,
         startedOfflineStreamProcessors,
         finishedOfflineStreamProcessors,
         errHandler,
@@ -107,6 +108,9 @@ function OfflineStream(config) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
 
+        if (config.offlineStoreController) {
+            offlineStoreController = config.offlineStoreController;
+        }
     }
 
     /**
@@ -243,7 +247,7 @@ function OfflineStream(config) {
 
     function createStreamProcessor (mediaInfo, bitrate) {
 
-        let streamProcessor = OfflineStreamProcessor(context).create();
+        let streamProcessor = OfflineStreamProcessor(context).create({id: manifestId});
         streamProcessor.setConfig({
             type: mediaInfo.type,
             mimeType: mediaInfo.mimeType,
@@ -254,7 +258,8 @@ function OfflineStream(config) {
             baseURLController: baseURLController,
             errHandler: errHandler,
             stream: instance,
-            mediaPlayerModel: mediaPlayerModel
+            mediaPlayerModel: mediaPlayerModel,
+            offlineStoreController: offlineStoreController
         });
         offlineStreamProcessors.push(streamProcessor);
         streamProcessor.initialize();

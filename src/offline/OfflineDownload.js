@@ -60,6 +60,7 @@ function OfflineDownload(params) {
         streams,
         manifest,
         isRecordingStatus,
+        isComposed,
         logger;
 
     const eventBus = EventBus(context).getInstance();
@@ -72,6 +73,7 @@ function OfflineDownload(params) {
 
         streams = [];
         isRecordingStatus = false;
+        isComposed = false;
     }
 
     function setConfig(config) {
@@ -165,6 +167,9 @@ function OfflineDownload(params) {
     }
 
     function onManifestUpdated(e) {
+        if (isComposed) {
+            return;
+        }
         if (!e.error) {
             try {
                 manifest = e.manifest;
@@ -210,21 +215,16 @@ function OfflineDownload(params) {
                     adapter: adapter,
                     errHandler: errHandler,
                     baseURLController: baseURLController,
-                    mediaPlayerModel: mediaPlayerModel
+                    mediaPlayerModel: mediaPlayerModel,
+                    offlineStoreController: offlineStoreController
                 });
                 stream.initialize(streamInfo);
                 streams.push(stream);
             }
+            isComposed = true;
             eventBus.trigger(Events.STREAMS_COMPOSED);
         } catch (e) {
             logger.info(e);
-        }
-    }
-
-    function storeFragment(e) {
-        if (e.request !== null) {
-            let fragmentName = e.request.representationId + '_' + e.request.index;
-            offlineStoreController.storeFragment(manifestId, fragmentName, e.response);
         }
     }
 
@@ -260,7 +260,6 @@ function OfflineDownload(params) {
      * @param {Object[]} e
      */
     function onOriginalManifestLoaded(e) {
-        eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, storeFragment, instance);
         XMLManifest = e.originalManifest;
     }
 
@@ -380,7 +379,6 @@ function OfflineDownload(params) {
         isRecordingStatus = false;
         streams = [];
         manifestId = null;
-        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, storeFragment, instance);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.off(Events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
         resetOfflineEvents();
