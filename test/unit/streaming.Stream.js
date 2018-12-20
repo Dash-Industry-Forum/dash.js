@@ -10,6 +10,7 @@ import AdapterMock from './mocks/AdapterMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
+
 const expect = require('chai').expect;
 const sinon = require('sinon');
 
