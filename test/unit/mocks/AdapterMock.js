@@ -41,6 +41,18 @@ class AdapterMock {
             ]
         };
     }
+    
+    setRepresentation (res) {
+        this.representation = res;
+    }
+
+    getVoRepresentations() {
+        if (this.representation) {
+            return [this.representation];
+        } else {
+            return [];
+        }
+    }
 }
 
 export default AdapterMock;

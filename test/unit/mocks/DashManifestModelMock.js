@@ -16,10 +16,6 @@ function DashManifestModelMock () {
         return adaptationsArray;
     };
 
-    this.setRepresentation = function (res) {
-        this.representation = res;
-    };
-
     this.getRepresentationsForAdaptation = function () {
         if (this.representation) {
             return [this.representation];
@@ -43,6 +39,7 @@ function DashManifestModelMock () {
     this.getRolesForAdaptation = function () {
         return [];
     };
+
 }
 
 export default DashManifestModelMock;

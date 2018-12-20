@@ -109,7 +109,7 @@ function ThumbnailTracks(config) {
     }
 
     function addTracks() {
-        if (!stream || !dashManifestModel || !adapter) {
+        if (!stream || !adapter) {
             return;
         }
 
@@ -124,12 +124,8 @@ function ThumbnailTracks(config) {
             return;
         }
 
-        const voAdaptation = adapter.getDataForMedia(mediaInfo);
-        if (!voAdaptation) {
-            return;
-        }
+        const voReps = adapter.getVoRepresentations(mediaInfo);
 
-        const voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
                 if (rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media)
