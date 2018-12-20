@@ -955,6 +955,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         $('#representationModal').modal('show');
     }
     $scope.hideRepresentationModal = function () {
+        $scope.manifestId = undefined;
         $('#representationModal').modal('hide');
     }
 
@@ -972,11 +973,12 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         return representations;
     }
 
-    $scope.validateForm = function () {
+    $scope.onStartDownload = function () {
         let selectedRepresentation = $scope.getSelectedRepresentations();
 
         if (selectedRepresentation.video.length >= 1 || selectedRepresentation.audio.length >= 1) {
             $scope.player.startDownload($scope.manifestId, selectedRepresentation);
+            $scope.hideRepresentationModal();
         } else {
             alert('You must select at least 1 quality !');
         }
