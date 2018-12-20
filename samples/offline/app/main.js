@@ -373,9 +373,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         document.getElementById('never-replace-audio').checked = true;
     }
 
-    $scope.downloads = DownloadService.getDownloads();
-    DownloadService.init($scope.player);
-
     $scope.controlbar = new ControlBar($scope.player); /* jshint ignore:line */
     $scope.controlbar.initialize();
     $scope.controlbar.disable();
@@ -383,13 +380,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
     $scope.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) { /* jshint ignore:line */
         $scope.isDynamic = e.data.type === 'dynamic';
-    }, $scope);
-
-    $scope.player.on(dashjs.MediaPlayer.events.MEDIA_INFO_LOADED, function (e) { /* jshint ignore:line */
-        console.log(JSON.stringify(e.data));
-        $scope.availableMedia = e.data.availableMedia;
-        $scope.manifestId = e.data.id;
-        $scope.showRepresentationModal();
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
@@ -441,6 +431,35 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
                 $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
             }
         }
+    }, $scope);
+
+    ////////////////////////////////////////
+    //
+    // Record setup
+    //
+    ////////////////////////////////////////
+    $scope.recorder = dashjs.MediaPlayer().create(); /* jshint ignore:line */
+    $scope.recorder.initialize($scope.video, null, $scope.autoPlaySelected);
+
+    $scope.recorder.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
+        var message = e.event.message ? e.event.message : typeof e.event === 'string' ? e.event : e.event.url ? e.event.url : '';
+        $scope.$apply(function () {
+            $scope.error = message;
+            $scope.errorType = e.error;
+        });
+        $("#errorModal").modal('show');
+    }, $scope);
+
+    $scope.recorder.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_INFO);
+
+    $scope.downloads = DownloadService.getDownloads();
+    DownloadService.init($scope.recorder);
+
+    $scope.recorder.on(dashjs.MediaPlayer.events.MEDIA_INFO_LOADED, function (e) { /* jshint ignore:line */
+        console.log(JSON.stringify(e.data));
+        $scope.availableMedia = e.data.availableMedia;
+        $scope.manifestId = e.data.id;
+        $scope.showRepresentationModal();
     }, $scope);
 
     ////////////////////////////////////////
@@ -977,7 +996,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         let selectedRepresentation = $scope.getSelectedRepresentations();
 
         if (selectedRepresentation.video.length >= 1 || selectedRepresentation.audio.length >= 1) {
-            $scope.player.startDownload($scope.manifestId, selectedRepresentation);
+            $scope.recorder.startDownload($scope.manifestId, selectedRepresentation);
             $scope.hideRepresentationModal();
         } else {
             alert('You must select at least 1 quality !');

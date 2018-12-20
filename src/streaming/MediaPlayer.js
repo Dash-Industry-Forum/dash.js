@@ -287,6 +287,9 @@ function MediaPlayer() {
             attachSource(source);
         }
 
+        if (!offlineControllerInitialized) {
+            createRecordControllers();
+        }
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
 
