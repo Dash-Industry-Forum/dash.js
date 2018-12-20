@@ -45,7 +45,7 @@ function TextController() {
     let instance,
         textSourceBuffer,
         errHandler,
-        dashManifestModel,
+        adapter,
         manifestModel,
         mediaController,
         videoModel,
@@ -85,8 +85,8 @@ function TextController() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
@@ -113,7 +113,7 @@ function TextController() {
         // create config for source buffer
         textSourceBuffer.setConfig({
             errHandler: errHandler,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             manifestModel: manifestModel,
             mediaController: mediaController,
             videoModel: videoModel,

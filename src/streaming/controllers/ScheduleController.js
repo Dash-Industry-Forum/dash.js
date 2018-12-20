@@ -50,7 +50,6 @@ function ScheduleController(config) {
     const metricsModel = config.metricsModel;
     const adapter = config.adapter;
     const dashMetrics = config.dashMetrics;
-    const dashManifestModel = config.dashManifestModel;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
@@ -106,7 +105,7 @@ function ScheduleController(config) {
             playbackController: playbackController
         });
 
-        if (dashManifestModel.getIsTextTrack(config.mimeType)) {
+        if (adapter.getIsTextTrack(config.mimeType)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -264,7 +263,7 @@ function ScheduleController(config) {
             threshold: 0
         })[0];
 
-        if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
+        if (request && replaceRequestArray.indexOf(request) === -1 && !adapter.getIsTextTrack(type)) {
             const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
@@ -455,7 +454,7 @@ function ScheduleController(config) {
         }
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined',
             ', Range:', e.request.range ? e.request.range : 'undefined');
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(type)) {
             setFragmentProcessState(false);
         }
 
@@ -704,7 +703,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

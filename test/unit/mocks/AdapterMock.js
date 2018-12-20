@@ -69,6 +69,10 @@ class AdapterMock {
             ]
         };
     }
+
+    getIsTextTrack () {
+        return false;
+    }
 }
 
 export default AdapterMock;

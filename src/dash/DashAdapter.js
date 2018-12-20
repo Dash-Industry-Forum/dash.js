@@ -445,6 +445,10 @@ function DashAdapter() {
         currentMediaInfo[streamId][type] = mediaInfo;
     }
 
+    function getIsTextTrack(type) {
+        return dashManifestModel.getIsTextTrack(type);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -465,6 +469,7 @@ function DashAdapter() {
         setConfig: setConfig,
         updatePeriods: updatePeriods,
         setCurrentMediaInfo: setCurrentMediaInfo,
+        getIsTextTrack: getIsTextTrack,
         reset: reset
     };
 

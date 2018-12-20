@@ -60,7 +60,6 @@ function StreamProcessor(config) {
     let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
-    let dashManifestModel = config.dashManifestModel;
 
     let instance,
         mediaInfo,
@@ -108,7 +107,6 @@ function StreamProcessor(config) {
             metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,

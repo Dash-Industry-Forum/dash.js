@@ -3,15 +3,15 @@ import TTMLParser from '../../src/streaming/utils/TTMLParser';
 import Errors from '../../src/core/errors/Errors';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
-import DashManifestModelMock from './mocks/DashManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import AdapterMock from './mocks/AdapterMock';
 
 const chai = require('chai');
 const expect = chai.expect;
 
 const context = {};
 const streamControllerMock = new StreamControllerMock();
-const dashManifestModelMock = new DashManifestModelMock();
+const adapterMock = new AdapterMock();
 const errorHandlerMock = new ErrorHandlerMock();
 const ttmlParser = TTMLParser(context).getInstance();
 
@@ -19,7 +19,7 @@ describe('TextSourceBuffer', function () {
 
     let textSourceBuffer = TextSourceBuffer(context).getInstance();
     textSourceBuffer.setConfig({streamController: streamControllerMock,
-                                dashManifestModel: dashManifestModelMock,
+                                adapter: adapterMock,
                                 errHandler: errorHandlerMock,
                                 ttmlParser: ttmlParser});
 

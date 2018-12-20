@@ -374,7 +374,6 @@ function Stream(config) {
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: config.dashMetrics,

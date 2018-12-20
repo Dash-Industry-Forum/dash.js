@@ -2752,7 +2752,6 @@ function MediaPlayer() {
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             adapter: adapter,
-            manifestModel: manifestModel,
             videoModel: videoModel
         });
         abrController.createAbrRulesCollection();
@@ -2760,7 +2759,7 @@ function MediaPlayer() {
         textController.setConfig({
             errHandler: errHandler,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             mediaController: mediaController,
             streamController: streamController,
             videoModel: videoModel

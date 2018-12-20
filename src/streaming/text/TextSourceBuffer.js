@@ -54,7 +54,7 @@ function TextSourceBuffer() {
         logger,
         boxParser,
         errHandler,
-        dashManifestModel,
+        adapter,
         manifestModel,
         mediaController,
         parser,
@@ -118,7 +118,7 @@ function TextSourceBuffer() {
     }
 
     function addMediaInfos(mimeType, streamProcessor) {
-        const isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
+        const isFragmented = !adapter.getIsTextTrack(mimeType);
         if (streamProcessor) {
             mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
 
@@ -231,8 +231,8 @@ function TextSourceBuffer() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
@@ -297,7 +297,7 @@ function TextSourceBuffer() {
         textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
         textTrackInfo.isTTML = checkTTML();
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = !dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+        textTrackInfo.isFragmented = !adapter.getIsTextTrack(mediaInfo.mimeType);
         textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
         textTrackInfo.kind = getKind();
         textTrackInfo.roles = mediaInfo.roles;
