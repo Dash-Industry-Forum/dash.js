@@ -34,7 +34,6 @@ import OfflineEvents from '../events/OfflineEvents';
 import OfflineConstants from '../constants/OfflineConstants';
 import DOMExceptionsEvents from '../events/DOMExceptionsEvents';
 import FactoryMaker from '../../core/FactoryMaker';
-import BaseURLController from '../../streaming/controllers/BaseURLController';
 import OfflineStoreController from './OfflineStoreController';
 import OfflineDownload from '../OfflineDownload';
 import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader';
@@ -52,7 +51,6 @@ function OfflineController() {
         downloads,
         adapter,
         schemeLoaderFactory,
-        baseURLController,
         logger,
         manifestLoader,
         manifestModel,
@@ -64,7 +62,6 @@ function OfflineController() {
 
     function setup() {
         offlineStoreController = OfflineStoreController(context).create();
-        baseURLController = BaseURLController(context).getInstance();
         offlineUtlUtils = OfflineUrlUtils(context).getInstance();
         URLUtils(context).getInstance().registerUrlRegex(offlineUtlUtils.getRegex(), offlineUtlUtils);
         Events.extend(OfflineEvents);
@@ -105,10 +102,6 @@ function OfflineController() {
             schemeLoaderFactory = config.schemeLoaderFactory;
         }
 
-        baseURLController.setConfig({
-            dashManifestModel: dashManifestModel
-        });
-
         offlineStoreController.setConfig({
             errHandler: errHandler
         });
@@ -145,8 +138,7 @@ function OfflineController() {
                 adapter: adapter,
                 errHandler: errHandler,
                 schemeLoaderFactory: schemeLoaderFactory,
-                offlineStoreController: offlineStoreController,
-                baseURLController: baseURLController
+                offlineStoreController: offlineStoreController
             });
 
             download.record(url).then(() => {

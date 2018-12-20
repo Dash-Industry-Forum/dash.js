@@ -53,6 +53,7 @@ function OfflineStreamProcessor(config) {
 
     let instance,
         manifestId,
+        completedCb,
         adapter,
         logger,
         indexHandler,
@@ -131,6 +132,8 @@ function OfflineStreamProcessor(config) {
 
     function setup() {
         manifestId = config.id;
+        completedCb = config.completed;
+
         resetInitialSettings();
         logger = Debug(context).getInstance().getLogger(instance);
         eventBus = EventBus(context).getInstance();
@@ -168,9 +171,10 @@ function OfflineStreamProcessor(config) {
         if (e.fragmentModel !== fragmentModel) {
             return;
         }
-
+        logger.info(`[${manifestId}] Stream is complete`);
         stop();
-        logger.info('Stream is complete');
+        reset();
+        completedCb();
     }
 
     /**

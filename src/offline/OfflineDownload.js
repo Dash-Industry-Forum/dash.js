@@ -34,6 +34,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import OfflineConstants from './constants/OfflineConstants';
 import ManifestUpdater from '../streaming/ManifestUpdater';
+import BaseURLController from '../streaming/controllers/BaseURLController';
 import OfflineStream from './OfflineStream';
 import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser';
 
@@ -69,6 +70,7 @@ function OfflineDownload(params) {
         manifestId = params.id;
 
         manifestUpdater = ManifestUpdater(context).create();
+        baseURLController = BaseURLController(context).create();
         logger = Debug(context).getInstance().getLogger(instance);
 
         streams = [];
@@ -111,9 +113,9 @@ function OfflineDownload(params) {
             offlineStoreController = config.offlineStoreController;
         }
 
-        if (config.baseURLController) {
-            baseURLController = config.baseURLController;
-        }
+        baseURLController.setConfig({
+            dashManifestModel: dashManifestModel
+        });
 
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
@@ -152,8 +154,6 @@ function OfflineDownload(params) {
     function setupOfflineEvents() {
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.on(Events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
-        eventBus.on(Events.DOWNLOADING_STARTED, onDownloadingStarted, instance);
-        eventBus.on(Events.DOWNLOADING_FINISHED, onDownloadingFinished, instance);
         setupIndexedDBEvents();
     }
 
@@ -183,16 +183,24 @@ function OfflineDownload(params) {
     }
 
     function onDownloadingStarted(e) {
+        if (e.id !== manifestId) {
+            return;
+        }
         if (!e.error && manifestId !== null) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STARTED);
+            eventBus.trigger(Events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
         } else {
             throw e.error;
         }
     }
 
     function onDownloadingFinished(e) {
+        if (e.id !== manifestId) {
+            return;
+        }
         if (!e.error && manifestId !== null) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED);
+            eventBus.trigger(Events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
         } else {
             throw e.error;
         }
@@ -208,7 +216,9 @@ function OfflineDownload(params) {
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
                 const streamInfo = streamsInfo[i];
                 let stream = OfflineStream(context).create({
-                    id: manifestId
+                    id: manifestId,
+                    started: onDownloadingStarted,
+                    finished: onDownloadingFinished
                 });
                 stream.setConfig({
                     dashManifestModel: dashManifestModel,
@@ -385,8 +395,6 @@ function OfflineDownload(params) {
     }
 
     function resetOfflineEvents() {
-        eventBus.off(Events.DOWNLOADING_STARTED, onDownloadingStarted, instance);
-        eventBus.off(Events.DOWNLOADING_FINISHED, onDownloadingFinished, instance);
         resetIndexedDBEvents();
     }
 

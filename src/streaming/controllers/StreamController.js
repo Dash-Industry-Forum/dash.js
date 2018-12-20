@@ -44,7 +44,6 @@ import InitCache from '../utils/InitCache';
 import URLUtils from '../utils/URLUtils';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import TimeSyncController from './TimeSyncController';
-import BaseURLController from './BaseURLController';
 import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
@@ -105,7 +104,6 @@ function StreamController() {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         timeSyncController = TimeSyncController(context).getInstance();
-        baseURLController = BaseURLController(context).getInstance();
         mediaSourceController = MediaSourceController(context).getInstance();
         initCache = InitCache(context).getInstance();
         urlUtils = URLUtils(context).getInstance();
@@ -918,6 +916,9 @@ function StreamController() {
         }
         if (config.settings) {
             settings = config.settings;
+        }
+        if (config.baseURLController) {
+            baseURLController = config.baseURLController;
         }
     }
 

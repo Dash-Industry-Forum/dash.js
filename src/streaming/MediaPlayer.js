@@ -131,6 +131,7 @@ function MediaPlayer() {
         adapter,
         mediaPlayerModel,
         errHandler,
+        baseURLController,
         capabilities,
         streamController,
         playbackController,
@@ -228,6 +229,10 @@ function MediaPlayer() {
         if (!capabilities.supportsMediaSource()) {
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
+        }
+
+        if (!baseURLController) {
+            baseURLController = BaseURLController(context).create();
         }
 
         if (mediaPlayerInitialized) return;
@@ -1965,7 +1970,8 @@ function MediaPlayer() {
             abrController: abrController,
             mediaController: mediaController,
             textController: textController,
-            settings: settings
+            settings: settings,
+            baseURLController: baseURLController
         });
 
         playbackController.setConfig({
@@ -2083,7 +2089,7 @@ function MediaPlayer() {
                 manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
-                baseURLController: BaseURLController(context).getInstance(),
+                baseURLController: baseURLController,
                 errHandler: errHandler,
                 events: Events,
                 constants: Constants,

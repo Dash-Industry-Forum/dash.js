@@ -49,6 +49,8 @@ function OfflineStream(config) {
 
     let instance,
         manifestId,
+        startedCb,
+        finishedCb,
         adapter,
         baseURLController,
         dashManifestModel,
@@ -70,6 +72,8 @@ function OfflineStream(config) {
         Events.extend(OfflineEvents);
 
         manifestId = config.id;
+        startedCb = config.started;
+        finishedCb = config.finished;
     }
 
     /**
@@ -122,7 +126,6 @@ function OfflineStream(config) {
         getAvailableMedia(streamInfo);
         setAvailableSegments();
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
     }
 
     /**
@@ -247,7 +250,10 @@ function OfflineStream(config) {
 
     function createStreamProcessor (mediaInfo, bitrate) {
 
-        let streamProcessor = OfflineStreamProcessor(context).create({id: manifestId});
+        let streamProcessor = OfflineStreamProcessor(context).create({
+            id: manifestId,
+            completed: onStreamCompleted
+        });
         streamProcessor.setConfig({
             type: mediaInfo.type,
             mimeType: mediaInfo.mimeType,
@@ -268,7 +274,7 @@ function OfflineStream(config) {
     function onStreamCompleted() {
         finishedOfflineStreamProcessors++;
         if (finishedOfflineStreamProcessors === offlineStreamProcessors.length) {
-            eventBus.trigger(Events.DOWNLOADING_FINISHED, {sender: this, id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+            finishedCb({sender: this, id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
         }
     }
 
@@ -285,7 +291,7 @@ function OfflineStream(config) {
     function checkIfAllOfflineStreamProcessorsStarted() {
         startedOfflineStreamProcessors++;
         if (startedOfflineStreamProcessors === offlineStreamProcessors.length) {
-            eventBus.trigger(Events.DOWNLOADING_STARTED, {sender: this, id: manifestId, message: 'Downloading started for this stream !'});
+            startedCb({sender: this, id: manifestId, message: 'Downloading started for this stream !'});
         }
     }
 
