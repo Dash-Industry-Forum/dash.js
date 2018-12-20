@@ -173,7 +173,6 @@ function OfflineStreamProcessor(config) {
         }
         logger.info(`[${manifestId}] Stream is complete`);
         stop();
-        reset();
         completedCb();
     }
 
