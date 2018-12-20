@@ -75,7 +75,6 @@ function AbrController() {
         windowResizeEventCalled,
         elementWidth,
         elementHeight,
-        manifestModel,
         adapter,
         videoModel,
         mediaPlayerModel,
@@ -186,9 +185,6 @@ function AbrController() {
         if (config.adapter) {
             adapter = config.adapter;
         }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
         if (config.videoModel) {
             videoModel = config.videoModel;
         }
@@ -259,9 +255,7 @@ function AbrController() {
 
         if (!bitrateDict.hasOwnProperty(type)) {
             if (ratioDict.hasOwnProperty(type)) {
-                const manifest = manifestModel.getValue();
-                const representation = adapter.getAdaptationForType(manifest, 0, type).Representation;
-
+                const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
                     bitrateDict[type] = representation[repIdx].bandwidth;
@@ -683,8 +677,7 @@ function AbrController() {
             setElementSize();
         }
 
-        const manifest = manifestModel.getValue();
-        const representation = adapter.getAdaptationForType(manifest, 0, type).Representation;
+        const representation = adapter.getAdaptationForType(0, type).Representation;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {

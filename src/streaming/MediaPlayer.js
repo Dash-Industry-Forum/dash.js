@@ -2751,6 +2751,7 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
+            adapter: adapter,
             manifestModel: manifestModel,
             videoModel: videoModel
         });

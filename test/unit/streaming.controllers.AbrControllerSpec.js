@@ -4,12 +4,11 @@ import AbrController from '../../src/streaming/controllers/AbrController';
 import BitrateInfo from '../../src/streaming/vo/BitrateInfo';
 import Constants from '../../src/streaming/constants/Constants';
 
-import AdapterMock from './mocks/AdapterMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import DomStorageMock from './mocks/DomStorageMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
-import ManifestModelMock from './mocks/ManifestModelMock';
+import AdapterMock from './mocks/AdapterMock';
 
 const expect = require('chai').expect;
 
@@ -24,7 +23,6 @@ describe('AbrController', function () {
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
-    const manifestModelMock = new ManifestModelMock();
     const adapterMock = new AdapterMock();
     const videoModelMock = new VideoModelMock();
     const domStorageMock = new DomStorageMock();
@@ -36,7 +34,6 @@ describe('AbrController', function () {
             metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
             videoModel: videoModelMock,
-            manifestModel: manifestModelMock,
             adapter: adapterMock,
             domStorage: domStorageMock
         });

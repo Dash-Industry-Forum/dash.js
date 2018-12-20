@@ -217,7 +217,8 @@ function DashAdapter() {
         })[0];
     }
 
-    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
+    function getAdaptationForType(periodIndex, type, streamInfo) {
+        const manifest = voPeriods[0].mpd.manifest;
         const adaptations = dashManifestModel.getAdaptationsForType(manifest, periodIndex, type);
 
         if (!adaptations || adaptations.length === 0) return null;
