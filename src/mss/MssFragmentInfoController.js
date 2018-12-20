@@ -38,15 +38,15 @@ function MssFragmentInfoController(config) {
     config = config || {};
     const context = this.context;
 
-    let instance;
-    let logger;
-    let fragmentModel;
-    let started;
-    let type;
-    let bufferTimeout;
-    let startTime;
-    let startFragmentTime;
-    let index;
+    let instance,
+        logger,
+        fragmentModel,
+        started,
+        type,
+        bufferTimeout,
+        startTime,
+        startFragmentTime,
+        index;
 
     const streamProcessor = config.streamProcessor;
     const eventBus = config.eventBus;

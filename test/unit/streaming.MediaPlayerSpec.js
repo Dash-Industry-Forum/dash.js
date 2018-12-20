@@ -994,10 +994,6 @@ describe('MediaPlayer', function () {
                 expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
 
-            it('Method attachVideoContainer should throw an exception', function () {
-                expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
-            });
-
             it('Method attachTTMLRenderingDiv should throw an exception', function () {
                 expect(player.getVideoElement).to.throw(ELEMENT_NOT_ATTACHED_ERROR);
             });
@@ -1012,20 +1008,6 @@ describe('MediaPlayer', function () {
 
                 const element = player.getVideoElement();
                 const areEquals = objectUtils.areEqual(element, videoElementMock);
-                expect(areEquals).to.be.true; // jshint ignore:line
-            });
-
-            it('should be able to attach video container', function () {
-                let videoContainer = player.getVideoContainer();
-                expect(videoContainer).to.be.undefined; // jshint ignore:line
-
-                const myVideoContainer = {
-                    videoContainer: 'videoContainer'
-                };
-                player.attachVideoContainer(myVideoContainer);
-
-                videoContainer = player.getVideoContainer();
-                const areEquals = objectUtils.areEqual(myVideoContainer, videoContainer);
                 expect(areEquals).to.be.true; // jshint ignore:line
             });
 

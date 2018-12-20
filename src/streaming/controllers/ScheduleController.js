@@ -82,7 +82,8 @@ function ScheduleController(config) {
         replaceRequestArray,
         switchTrack,
         bufferResetInProgress,
-        mediaRequest;
+        mediaRequest,
+        isReplacementRequest;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -102,7 +103,8 @@ function ScheduleController(config) {
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
             adapter: adapter,
-            textController: textController
+            textController: textController,
+            playbackController: playbackController
         });
 
         if (dashManifestModel.getIsTextTrack(config.mimeType)) {
@@ -215,7 +217,15 @@ function ScheduleController(config) {
                         let request;
                         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
-                            request = nextFragmentRequestRule.execute(streamProcessor, replacement);
+                            request = nextFragmentRequestRule.execute(streamProcessor, seekTarget, replacement);
+                            setSeekTarget(NaN);
+                            if (request && !replacement) {
+                                if (!isNaN(request.startTime + request.duration)) {
+                                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                                }
+                                request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
+                                setTimeToLoadDelay(0);
+                            }
                             if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
                                 logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
                             }
@@ -247,10 +257,11 @@ function ScheduleController(config) {
     function validateExecutedFragmentRequest() {
         // Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
+        const time = playbackController.getTime();
         const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: playbackController.getTime() + safeBufferLevel,
+            time: time + safeBufferLevel,
             threshold: 0
         })[0];
 
@@ -265,6 +276,7 @@ function ScheduleController(config) {
 
             if (fastSwitchModeEnabled && (trackChanged || qualityChanged) && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
                 replaceRequest(request);
+                isReplacementRequest = true;
                 logger.debug('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality) {
                 // The buffer has better quality it in then what we would request so set append point to end of buffer!!
@@ -474,7 +486,23 @@ function ScheduleController(config) {
         }
 
         setFragmentProcessState(false);
-        startScheduleTimer(0);
+        if (isReplacementRequest && !isNaN(e.startTime)) {
+            //replace requests process is in progress, call schedule in n seconds.
+            //it is done in order to not add a fragment at the new quality at the end of the buffer before replace process is over.
+            //Indeed, if schedule is called too early, the executed request tested is the same that the one tested during previous schedule (at the new quality).
+            const currentTime = playbackController.getTime();
+            const fragEndTime = e.startTime + currentRepresentationInfo.fragmentDuration;
+            const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
+            if ((currentTime + safeBufferLevel) >= fragEndTime) {
+                startScheduleTimer(0);
+            }
+            else {
+                startScheduleTimer((fragEndTime - (currentTime + safeBufferLevel)) * 1000);
+            }
+            isReplacementRequest = false;
+        } else {
+            startScheduleTimer(0);
+        }
     }
 
     function onFragmentLoadingAbandoned(e) {
@@ -503,14 +531,17 @@ function ScheduleController(config) {
             return;
         }
 
-        if (e.unintended) {
-            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-            streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(e.from,
-                streamProcessor.getStreamInfo().duration);
-        } else {
-            streamProcessor.getFragmentModel().syncExecutedRequestsWithBufferedRange(
-                streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-                streamProcessor.getStreamInfo().duration);
+        const streamInfo = streamProcessor.getStreamInfo();
+        if (streamInfo) {
+            if (e.unintended) {
+                // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+                fragmentModel.removeExecutedRequestsAfterTime(e.from,
+                    streamInfo.duration);
+            } else {
+                fragmentModel.syncExecutedRequestsWithBufferedRange(
+                    streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
+                    streamInfo.duration);
+            }
         }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
@@ -585,20 +616,12 @@ function ScheduleController(config) {
         }
     }
 
-    function getSeekTarget() {
-        return seekTarget;
-    }
-
     function setSeekTarget(value) {
         seekTarget = value;
     }
 
     function setTimeToLoadDelay(value) {
         timeToLoadDelay = value;
-    }
-
-    function getTimeToLoadDelay() {
-        return timeToLoadDelay;
     }
 
     function getBufferTarget() {
@@ -660,6 +683,7 @@ function ScheduleController(config) {
         switchTrack = false;
         bufferResetInProgress = false;
         mediaRequest = null;
+        isReplacementRequest = false;
     }
 
     function reset() {
@@ -693,10 +717,8 @@ function ScheduleController(config) {
     instance = {
         initialize: initialize,
         getType: getType,
-        getSeekTarget: getSeekTarget,
         setSeekTarget: setSeekTarget,
         setTimeToLoadDelay: setTimeToLoadDelay,
-        getTimeToLoadDelay: getTimeToLoadDelay,
         replaceRequest: replaceRequest,
         switchTrackAsked: switchTrackAsked,
         isStarted: isStarted,

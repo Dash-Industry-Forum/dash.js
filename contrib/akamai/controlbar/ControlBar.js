@@ -271,7 +271,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Get thumbnail information
-            player.getThumbnail(mouseTime, (thumbnail) => {
+            player.getThumbnail(mouseTime, function(thumbnail) {
                 if (!thumbnail) return;
 
                 // Adjust left variable for positioning thumbnail with regards to its viewport
@@ -491,7 +491,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (!trackSwitchMenu && trackSwitchBtn) {
                 var availableTracks = {menuType: "track"};
                 availableTracks.audio = player.getTracksFor("audio");
-                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to cehck for null
+                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to check for null
 
                 if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                     contentFunc = function (element) {
@@ -795,7 +795,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             initControls(suffix);
             video.controls = false;
-            videoContainer = player.getVideoContainer();
+            videoContainer = video.parentNode;
             captionBtn.classList.add("hide");
             if (trackSwitchBtn) {
                 trackSwitchBtn.classList.add("hide");
