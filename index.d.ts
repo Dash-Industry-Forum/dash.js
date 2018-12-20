@@ -786,7 +786,7 @@ declare namespace dashjs {
         getCurrentBufferLevel(metrics: MetricsList): number;
         getCurrentHttpRequest(metrics: MetricsList): any;
         getHttpRequests(metrics: MetricsList): any[];
-        getCurrentDroppedFrames(metrics: MetricsList): any[];
+        getCurrentDroppedFrames(metrics: MetricsList): any;
         getCurrentSchedulingInfo(metrics: MetricsList): any[];
         getCurrentDVRInfo(metrics: MetricsList): any[];
         getCurrentManifestUpdate(metrics: MetricsList): any[];
