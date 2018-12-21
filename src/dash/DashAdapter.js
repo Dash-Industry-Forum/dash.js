@@ -449,6 +449,11 @@ function DashAdapter() {
         return dashManifestModel.getIsTextTrack(type);
     }
 
+    function getUTCTimingSources() {
+        const manifest = voPeriods[0].mpd.manifest;
+        return dashManifestModel.getUTCTimingSources(manifest);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -470,6 +475,7 @@ function DashAdapter() {
         updatePeriods: updatePeriods,
         setCurrentMediaInfo: setCurrentMediaInfo,
         getIsTextTrack: getIsTextTrack,
+        getUTCTimingSources: getUTCTimingSources,
         reset: reset
     };
 

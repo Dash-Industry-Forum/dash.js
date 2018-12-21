@@ -724,7 +724,7 @@ function StreamController() {
                 }
             }
 
-            let manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
+            let manifestUTCTimingSources = adapter.getUTCTimingSources();
             let allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
