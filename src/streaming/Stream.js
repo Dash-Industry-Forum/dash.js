@@ -445,7 +445,6 @@ function Stream(config) {
 
         if (type === Constants.IMAGE) {
             thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
                 stream: instance,

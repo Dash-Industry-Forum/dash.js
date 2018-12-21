@@ -257,9 +257,8 @@ function DashAdapter() {
 
         if (manifest) {
             checkSetConfigCall();
-            const mpd = dashManifestModel.getMpd(manifest);
 
-            voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
+            voLocalPeriods = getPeriodsFromManifest(manifest);
         } else {
             if (voPeriods.length > 0) {
                 manifest = voPeriods[0].mpd.manifest;
@@ -339,10 +338,15 @@ function DashAdapter() {
 
         checkSetConfigCall();
 
-        const mpd = dashManifestModel.getMpd(newManifest);
+        voPeriods = getPeriodsFromManifest(newManifest);
 
-        voPeriods = dashManifestModel.getRegularPeriods(mpd);
         voAdaptations = {};
+    }
+
+    function getPeriodsFromManifest(manifest) {
+        const mpd = getMpd(manifest);
+
+        return getRegularPeriods(mpd);
     }
 
     function getStreamsInfo(externalManifest, maxStreamsInfo) {
@@ -352,9 +356,7 @@ function DashAdapter() {
         //if manifest is defined, getStreamsInfo is for an outside manifest, not the current one
         if (externalManifest) {
             checkSetConfigCall();
-            const mpd = dashManifestModel.getMpd(externalManifest);
-
-            voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
+            voLocalPeriods = getPeriodsFromManifest(externalManifest);
         }
 
         if (!maxStreamsInfo) {
@@ -459,9 +461,29 @@ function DashAdapter() {
         return dashManifestModel.getSuggestedPresentationDelay(mpd);
     }
 
-    function getAvailabilityStartTime() {
-        const mpd = voPeriods[0].mpd;
+    function getAvailabilityStartTime(externalMpd) {
+        const mpd = externalMpd ? externalMpd : voPeriods[0].mpd;
         return dashManifestModel.getAvailabilityStartTime(mpd);
+    }
+
+    function getIsDynamic(externalManifest) {
+        const manifest = externalManifest ? externalManifest : voPeriods[0].mpd.manifest;
+        return dashManifestModel.getIsDynamic(manifest);
+    }
+
+    function getDuration(externalManifest) {
+        const manifest = externalManifest ? externalManifest : voPeriods[0].mpd.manifest;
+        return dashManifestModel.getDuration(manifest);
+    }
+
+    function getRegularPeriods(externalMpd) {
+        const mpd = externalMpd ? externalMpd : voPeriods[0].mpd;
+        return dashManifestModel.getRegularPeriods(mpd);
+    }
+
+    function getMpd(externalManifest) {
+        const manifest = externalManifest ? externalManifest : voPeriods[0].mpd.manifest;
+        return dashManifestModel.getMpd(manifest);
     }
 
     function reset() {
@@ -488,6 +510,10 @@ function DashAdapter() {
         getUTCTimingSources: getUTCTimingSources,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
         getAvailabilityStartTime: getAvailabilityStartTime,
+        getIsDynamic: getIsDynamic,
+        getDuration: getDuration,
+        getRegularPeriods: getRegularPeriods,
+        getMpd: getMpd,
         reset: reset
     };
 

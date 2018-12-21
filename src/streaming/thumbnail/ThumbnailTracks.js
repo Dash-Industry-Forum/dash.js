@@ -45,7 +45,6 @@ export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
 function ThumbnailTracks(config) {
     const context = this.context;
 
-    const dashManifestModel = config.dashManifestModel;
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
@@ -91,7 +90,7 @@ function ThumbnailTracks(config) {
 
             seg = getTimeBasedSegment(
                 timelineConverter,
-                dashManifestModel.getIsDynamic(),
+                adapter.getIsDynamic(),
                 representation,
                 s.startTime,
                 s.duration,

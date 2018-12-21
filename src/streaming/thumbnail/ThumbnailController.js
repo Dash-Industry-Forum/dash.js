@@ -46,7 +46,6 @@ function ThumbnailController(config) {
     function setup() {
         reset();
         thumbnailTracks = ThumbnailTracks(context).create({
-            dashManifestModel: config.dashManifestModel,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
             stream: config.stream,

@@ -2822,7 +2822,7 @@ function MediaPlayer() {
                 debug: debug,
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
-                dashManifestModel: dashManifestModel,
+                adapter: adapter,
                 metricsModel: metricsModel,
                 events: Events,
                 constants: Constants,
