@@ -125,6 +125,7 @@ class DashConstants {
         this.CENC_DEFAULT_KID = 'cenc:default_KID';
         this.DVB_PRIORITY = 'dvb:priority';
         this.DVB_WEIGHT = 'dvb:weight';
+        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
     }
 
     constructor () {
