@@ -186,8 +186,8 @@ function DashAdapter() {
         manifestInfo.availableFrom = mpd.availabilityStartTime;
         manifestInfo.minBufferTime = mpd.manifest.minBufferTime;
         manifestInfo.maxFragmentDuration = mpd.maxSegmentDuration;
-        manifestInfo.duration = dashManifestModel.getDuration(mpd.manifest);
-        manifestInfo.isDynamic = dashManifestModel.getIsDynamic(mpd.manifest);
+        manifestInfo.duration = getDuration(mpd.manifest);
+        manifestInfo.isDynamic = getIsDynamic(mpd.manifest);
 
         return manifestInfo;
     }
@@ -486,6 +486,14 @@ function DashAdapter() {
         return dashManifestModel.getMpd(manifest);
     }
 
+    function getLocation(manifest) {
+        return dashManifestModel.getLocation(manifest);
+    }
+
+    function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
+        return dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -514,6 +522,8 @@ function DashAdapter() {
         getDuration: getDuration,
         getRegularPeriods: getRegularPeriods,
         getMpd: getMpd,
+        getLocation: getLocation,
+        getManifestUpdatePeriod: getManifestUpdatePeriod,
         reset: reset
     };
 

@@ -47,7 +47,7 @@ function ManifestUpdater() {
         isUpdating,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
+        adapter,
         errHandler,
         mediaPlayerModel;
 
@@ -61,8 +61,8 @@ function ManifestUpdater() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
@@ -129,7 +129,7 @@ function ManifestUpdater() {
         isUpdating = true;
         const manifest = manifestModel.getValue();
         let url = manifest.url;
-        const location = dashManifestModel.getLocation(manifest);
+        const location = adapter.getLocation(manifest);
         if (location) {
             url = location;
         }
@@ -142,7 +142,7 @@ function ManifestUpdater() {
 
         const date = new Date();
         const latencyOfLastUpdate = (date.getTime() - manifest.loadedTime.getTime()) / 1000;
-        refreshDelay = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
+        refreshDelay = adapter.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
         // setTimeout uses a 32 bit number to store the delay. Any number greater than it
         // will cause event associated with setTimeout to trigger immediately
         if (refreshDelay * 1000 > 0x7FFFFFFF) {
