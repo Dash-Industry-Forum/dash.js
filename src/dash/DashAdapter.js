@@ -454,6 +454,16 @@ function DashAdapter() {
         return dashManifestModel.getUTCTimingSources(manifest);
     }
 
+    function getSuggestedPresentationDelay() {
+        const mpd = voPeriods[0].mpd;
+        return dashManifestModel.getSuggestedPresentationDelay(mpd);
+    }
+
+    function getAvailabilityStartTime() {
+        const mpd = voPeriods[0].mpd;
+        return dashManifestModel.getAvailabilityStartTime(mpd);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -476,6 +486,8 @@ function DashAdapter() {
         setCurrentMediaInfo: setCurrentMediaInfo,
         getIsTextTrack: getIsTextTrack,
         getUTCTimingSources: getUTCTimingSources,
+        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
+        getAvailabilityStartTime: getAvailabilityStartTime,
         reset: reset
     };
 

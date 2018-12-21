@@ -56,7 +56,6 @@ class Constants {
         this.VTT = 'vtt';
         this.WVTT = 'wvtt';
         this.UTF8 = 'utf-8';
-        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
         this.SCHEME_ID_URI = 'schemeIdUri';
         this.START_TIME = 'starttime';
         this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';

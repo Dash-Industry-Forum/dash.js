@@ -1010,6 +1010,14 @@ function DashManifestModel(config) {
         return undefined;
     }
 
+    function getSuggestedPresentationDelay(mpd) {
+        return mpd && mpd.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY) ? mpd.suggestedPresentationDelay : null;
+    }
+
+    function getAvailabilityStartTime(mpd) {
+        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) ? mpd.availabilityStartTime.getTime() : null;
+    }
+
     instance = {
         getIsTypeOf: getIsTypeOf,
         getIsTextTrack: getIsTextTrack,
@@ -1046,6 +1054,8 @@ function DashManifestModel(config) {
         getRepresentationSortFunction: getRepresentationSortFunction,
         getLocation: getLocation,
         getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation
+        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
+        getAvailabilityStartTime: getAvailabilityStartTime
     };
 
     setup();

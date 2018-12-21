@@ -29,10 +29,22 @@ describe('DashManifestModel', function () {
     it('should throw an exception when attempting to call getIsTypeOf with undefined parameters', function () {
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw('adaptation is not defined');
 
-        var adaptation = mpdHelper.composeAdaptation('video');
+        const adaptation = mpdHelper.composeAdaptation('video');
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw('type is not defined');
 
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
+    });
+
+    it('should return null when getSuggestedPresentationDelay is called and mpd is undefined', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay();
+
+        expect(suggestedPresentationDelay).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return null when getAvailabilityStartTime is called and mpd is undefined', () => {
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime();
+
+        expect(availabilityStartTime).to.be.null;  // jshint ignore:line
     });
 
     it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and adaptation is undefined', () => {
