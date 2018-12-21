@@ -76,7 +76,7 @@ function BaseURLController() {
 
     function update(manifest) {
         baseURLTreeModel.update(manifest);
-        baseURLSelector.chooseSelectorFromManifest(manifest);
+        baseURLSelector.chooseSelector(dashManifestModel.getIsDVB(manifest));
     }
 
     function resolve(path) {
