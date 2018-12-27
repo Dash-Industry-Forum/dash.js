@@ -592,7 +592,13 @@ function PlaybackController() {
     }
 
     function onPlaybackProgression() {
-        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && !isPaused() && !isSeeking()) {
+        if (
+            isDynamic &&
+            mediaPlayerModel.getLowLatencyEnabled() &&
+            mediaPlayerModel.getCatchUpPlaybackRate() > 0 &&
+            !isPaused() &&
+            !isSeeking()
+        ) {
             if (needToCatchUp()) {
                 startPlaybackCatchUp();
             } else {
