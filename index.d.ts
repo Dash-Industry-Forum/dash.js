@@ -3,11 +3,11 @@ export as namespace dashjs;
 
 declare namespace dashjs {
     interface Logger {
-        debug(...params): void;
-        info(...params): void;
-        warn(...params): void;
-        error(...params): void;
-        fatal(...params): void;
+        debug(...params: any[]): void;
+        info(...params: any[]): void;
+        warn(...params: any[]): void;
+        error(...params: any[]): void;
+        fatal(...params: any[]): void;
     }
 
     enum LogLevel {
