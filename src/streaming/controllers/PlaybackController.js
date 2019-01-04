@@ -744,15 +744,18 @@ function PlaybackController() {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamInfo.id !== streamInfo.id) return;
 
-        if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
-            if (!playbackStalled) {
-                playbackStalled = true;
-                if (!mediaPlayerModel.getLowLatencyEnabled()) {
+        if (mediaPlayerModel.getLowLatencyEnabled()) {
+            if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
+                if (!playbackStalled) {
+                    playbackStalled = true;
                     stopPlaybackCatchUp();
                 }
             }
+        } else {
+            videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
         }
     }
+
 
     function onPlaybackStalled(e) {
         eventBus.trigger(Events.PLAYBACK_STALLED, {
