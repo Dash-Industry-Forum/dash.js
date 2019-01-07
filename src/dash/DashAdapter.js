@@ -146,7 +146,7 @@ function DashAdapter() {
             });
         }
 
-        mediaInfo.isText = dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+        mediaInfo.isText = getIsTextTrack(mediaInfo.mimeType);
 
         return mediaInfo;
     }
