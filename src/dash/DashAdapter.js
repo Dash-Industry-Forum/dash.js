@@ -496,6 +496,11 @@ function DashAdapter() {
         return dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
     }
 
+    function getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo) {
+        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
+        return dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
+    }
+
     function getIsDVB(manifest) {
         return dashManifestModel.hasProfile(manifest, PROFILE_DVB);
     }
@@ -532,6 +537,7 @@ function DashAdapter() {
         setConfig: setConfig,
         updatePeriods: updatePeriods,
         setCurrentMediaInfo: setCurrentMediaInfo,
+        getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
         getIsTextTrack: getIsTextTrack,
         getUTCTimingSources: getUTCTimingSources,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
