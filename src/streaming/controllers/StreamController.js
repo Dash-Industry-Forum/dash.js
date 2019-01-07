@@ -62,7 +62,6 @@ function StreamController() {
         manifestUpdater,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
         adapter,
         metricsModel,
         dashMetrics,
@@ -902,9 +901,6 @@ function StreamController() {
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
-        }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;

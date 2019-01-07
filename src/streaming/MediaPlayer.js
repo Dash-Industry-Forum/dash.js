@@ -2716,7 +2716,6 @@ function MediaPlayer() {
             capabilities: capabilities,
             manifestLoader: manifestLoader,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
