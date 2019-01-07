@@ -1,38 +1,12 @@
 import DashMetrics from '../../src/dash/DashMetrics';
 
-import MpdHelper from './helpers/MPDHelper';
-import ManifestModelMock from './mocks/ManifestModelMock';
-
 const expect = require('chai').expect;
 
 const context = {};
-const mpdHelper = new MpdHelper();
-const mpd = mpdHelper.getMpd('static');
-const manifestModelMock = new ManifestModelMock();
-const dashMetrics = DashMetrics(context).getInstance({dashManifestModel: {}, manifestModel: manifestModelMock });
+const dashMetrics = DashMetrics(context).getInstance();
 
-manifestModelMock.setValue(mpd);
 
 describe('DashMetrics', function () {
-
-    it('should return null when getBandwidthForRepresentation is called and representationId and periodId are undefined', () => {
-        const bdwth = dashMetrics.getBandwidthForRepresentation();
-
-        expect(bdwth).to.be.null;  // jshint ignore:line
-    });
-
-    it('should return -1 when getIndexForRepresentation is called and representationId and periodIdx are undefined', () => {
-        const index = dashMetrics.getIndexForRepresentation();
-
-        expect(index).to.be.equal(-1);  // jshint ignore:line
-    });
-
-    it('should return -1 when getMaxIndexForBufferType is called and bufferType and periodIdx are undefined', () => {
-        const index = dashMetrics.getMaxIndexForBufferType();
-
-        expect(index).to.be.equal(-1);  // jshint ignore:line
-    });
-
     it('should return null when getCurrentRepresentationSwitch is called and metrics is undefined', () => {
         const representation = dashMetrics.getCurrentRepresentationSwitch();
 

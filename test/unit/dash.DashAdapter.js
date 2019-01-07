@@ -143,4 +143,28 @@ describe('DashAdapter', function () {
         expect(voRepresentations).to.be.instanceOf(Array);    // jshint ignore:line
         expect(voRepresentations).to.be.empty;                // jshint ignore:line
     });
+
+    it('should return null when getBandwidthForRepresentation is called and representationId and periodId are undefined', () => {
+        dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
+        dashAdapter.updatePeriods({});
+        const bdwth = dashAdapter.getBandwidthForRepresentation();
+
+        expect(bdwth).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return -1 when getIndexForRepresentation is called and representationId and periodIdx are undefined', () => {
+        dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
+        dashAdapter.updatePeriods({});
+        const index = dashAdapter.getIndexForRepresentation();
+
+        expect(index).to.be.equal(-1);  // jshint ignore:line
+    });
+
+    it('should return -1 when getMaxIndexForBufferType is called and bufferType and periodIdx are undefined', () => {
+        dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
+        dashAdapter.updatePeriods({});
+        const index = dashAdapter.getMaxIndexForBufferType();
+
+        expect(index).to.be.equal(-1);  // jshint ignore:line
+    });
 });

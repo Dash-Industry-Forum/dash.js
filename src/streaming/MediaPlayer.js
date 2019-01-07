@@ -226,10 +226,7 @@ function MediaPlayer() {
             BASE64: BASE64
         });
         manifestModel = ManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel
-        });
+        dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
 
         textController = TextController(context).getInstance();
@@ -2893,6 +2890,18 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * Returns the DashAdapter.js Module.
+     *
+     * @see {@link module:DashAdapter}
+     * @returns {Object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getDashAdapter() {
+        return adapter;
+    }
+
     instance = {
         initialize: initialize,
         setConfig: setConfig,
@@ -3046,6 +3055,7 @@ function MediaPlayer() {
         setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         getThumbnail: getThumbnail,
         keepProtectionMediaKeys: keepProtectionMediaKeys,
+        getDashAdapter: getDashAdapter,
         reset: reset
     };
 

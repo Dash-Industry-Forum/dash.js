@@ -40,6 +40,13 @@ function DashManifestModelMock () {
         return [];
     };
 
+    this.getMpd = function () {
+        return {};
+    };
+
+    this.getRegularPeriods = function () {
+        return [];
+    };
 }
 
 export default DashManifestModelMock;

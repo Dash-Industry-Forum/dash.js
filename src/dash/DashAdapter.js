@@ -52,6 +52,8 @@ function DashAdapter() {
         reset();
     }
 
+    // #region PUBLIC FUNCTIONS
+    // --------------------------------------------------
     function setConfig(config) {
         if (!config) return;
 
@@ -73,18 +75,6 @@ function DashAdapter() {
         return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
     }
 
-    function getPeriodForStreamInfo(streamInfo, voPeriodsArray) {
-        const ln = voPeriodsArray.length;
-
-        for (let i = 0; i < ln; i++) {
-            let voPeriod = voPeriodsArray[i];
-
-            if (streamInfo.id === voPeriod.id) return voPeriod;
-        }
-
-        return null;
-    }
-
     function convertRepresentationToRepresentationInfo(voRepresentation) {
         let representationInfo = new RepresentationInfo();
         const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
@@ -100,98 +90,6 @@ function DashAdapter() {
         representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);
 
         return representationInfo;
-    }
-
-    function convertAdaptationToMediaInfo(adaptation) {
-        let mediaInfo = new MediaInfo();
-        const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
-        let viewpoint;
-
-        mediaInfo.id = adaptation.id;
-        mediaInfo.index = adaptation.index;
-        mediaInfo.type = adaptation.type;
-        mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
-        mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
-        mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
-        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
-        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation).map(function (accessibility) {
-            let accessibilityValue = accessibility.value;
-            let accessibilityData = accessibilityValue;
-            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
-                if (accessibilityValue) {
-                    accessibilityData = 'cea-608:' + accessibilityValue;
-                } else {
-                    accessibilityData = 'cea-608';
-                }
-                mediaInfo.embeddedCaptions = true;
-            }
-            return accessibilityData;
-        });
-
-        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
-            return audioChannelConfiguration.value;
-        });
-        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
-            return role.value;
-        });
-        mediaInfo.codec = getCodec(realAdaptation);
-        mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
-        mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
-        mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
-
-        if (mediaInfo.contentProtection) {
-            mediaInfo.contentProtection.forEach(function (item) {
-                item.KID = dashManifestModel.getKID(item);
-            });
-        }
-
-        mediaInfo.isText = getIsTextTrack(mediaInfo.mimeType);
-
-        return mediaInfo;
-    }
-
-    function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
-        mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
-        mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
-        mediaInfo.type = constants.EMBEDDED_TEXT;
-        mediaInfo.codec = 'cea-608-in-SEI';
-        mediaInfo.isText = true;
-        mediaInfo.isEmbedded = true;
-        mediaInfo.lang = lang;
-        mediaInfo.roles = ['caption'];
-    }
-
-    function convertVideoInfoToThumbnailInfo(mediaInfo) {
-        mediaInfo.type = constants.IMAGE;
-    }
-
-    function convertPeriodToStreamInfo(period) {
-        let streamInfo = new StreamInfo();
-        const THRESHOLD = 1;
-
-        streamInfo.id = period.id;
-        streamInfo.index = period.index;
-        streamInfo.start = period.start;
-        streamInfo.duration = period.duration;
-        streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
-        streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
-
-        return streamInfo;
-    }
-
-    function convertMpdToManifestInfo(mpd) {
-        let manifestInfo = new ManifestInfo();
-
-        manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
-        manifestInfo.loadedTime = mpd.manifest.loadedTime;
-        manifestInfo.availableFrom = mpd.availabilityStartTime;
-        manifestInfo.minBufferTime = mpd.manifest.minBufferTime;
-        manifestInfo.maxFragmentDuration = mpd.maxSegmentDuration;
-        manifestInfo.duration = getDuration(mpd.manifest);
-        manifestInfo.isDynamic = getIsDynamic(mpd.manifest);
-
-        return manifestInfo;
     }
 
     function getMediaInfoForType(streamInfo, type) {
@@ -327,12 +225,6 @@ function DashAdapter() {
         }
 
         return mediaArr;
-    }
-
-    function checkSetConfigCall() {
-        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getMpd') || !dashManifestModel.hasOwnProperty('getRegularPeriods')) {
-            throw new Error('setConfig function has to be called previously');
-        }
     }
 
     function updatePeriods(newManifest) {
@@ -517,13 +409,229 @@ function DashAdapter() {
         return dashManifestModel.getCodec(adaptation, representationId, addResolutionInfo);
     }
 
+    function getBandwidthForRepresentation(representationId, periodId) {
+        let representation;
+        let period = getPeriod(periodId);
+
+        representation = findRepresentation(period, representationId);
+
+        return representation ? representation.bandwidth : null;
+    }
+
+    /**
+     *
+     * @param {string} representationId
+     * @param {number} periodIdx
+     * @returns {*}
+     */
+    function getIndexForRepresentation(representationId, periodIdx) {
+        let period = getPeriod(periodIdx);
+
+        return findRepresentationIndex(period, representationId);
+    }
+
+    /**
+     * This method returns the current max index based on what is defined in the MPD.
+     *
+     * @param {string} bufferType - String 'audio' or 'video',
+     * @param {number} periodIdx - Make sure this is the period index not id
+     * @return {number}
+     * @memberof module:DashAdapter
+     * @instance
+     */
+    function getMaxIndexForBufferType(bufferType, periodIdx) {
+        let period = getPeriod(periodIdx);
+
+        return findMaxBufferIndex(period, bufferType);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
         currentMediaInfo = {};
     }
+    // #endregion PUBLIC FUNCTIONS
+
+    // #region PRIVATE FUNCTIONS
+    // --------------------------------------------------
+    function getPeriodForStreamInfo(streamInfo, voPeriodsArray) {
+        const ln = voPeriodsArray.length;
+
+        for (let i = 0; i < ln; i++) {
+            let voPeriod = voPeriodsArray[i];
+
+            if (streamInfo.id === voPeriod.id) return voPeriod;
+        }
+
+        return null;
+    }
+
+    function convertAdaptationToMediaInfo(adaptation) {
+        let mediaInfo = new MediaInfo();
+        const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
+        let viewpoint;
+
+        mediaInfo.id = adaptation.id;
+        mediaInfo.index = adaptation.index;
+        mediaInfo.type = adaptation.type;
+        mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
+        mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
+        mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
+        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
+        mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
+        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation).map(function (accessibility) {
+            let accessibilityValue = accessibility.value;
+            let accessibilityData = accessibilityValue;
+            if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
+                if (accessibilityValue) {
+                    accessibilityData = 'cea-608:' + accessibilityValue;
+                } else {
+                    accessibilityData = 'cea-608';
+                }
+                mediaInfo.embeddedCaptions = true;
+            }
+            return accessibilityData;
+        });
+
+        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
+            return audioChannelConfiguration.value;
+        });
+        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
+            return role.value;
+        });
+        mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
+        mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
+        mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
+        mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
+
+        if (mediaInfo.contentProtection) {
+            mediaInfo.contentProtection.forEach(function (item) {
+                item.KID = dashManifestModel.getKID(item);
+            });
+        }
+
+        mediaInfo.isText = dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+
+        return mediaInfo;
+    }
+
+    function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
+        mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
+        mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
+        mediaInfo.type = constants.EMBEDDED_TEXT;
+        mediaInfo.codec = 'cea-608-in-SEI';
+        mediaInfo.isText = true;
+        mediaInfo.isEmbedded = true;
+        mediaInfo.lang = lang;
+        mediaInfo.roles = ['caption'];
+    }
+
+    function convertVideoInfoToThumbnailInfo(mediaInfo) {
+        mediaInfo.type = constants.IMAGE;
+    }
+
+    function convertPeriodToStreamInfo(period) {
+        let streamInfo = new StreamInfo();
+        const THRESHOLD = 1;
+
+        streamInfo.id = period.id;
+        streamInfo.index = period.index;
+        streamInfo.start = period.start;
+        streamInfo.duration = period.duration;
+        streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
+        streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+
+        return streamInfo;
+    }
+
+    function convertMpdToManifestInfo(mpd) {
+        let manifestInfo = new ManifestInfo();
+
+        manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
+        manifestInfo.loadedTime = mpd.manifest.loadedTime;
+        manifestInfo.availableFrom = mpd.availabilityStartTime;
+        manifestInfo.minBufferTime = mpd.manifest.minBufferTime;
+        manifestInfo.maxFragmentDuration = mpd.maxSegmentDuration;
+        manifestInfo.duration = dashManifestModel.getDuration(mpd.manifest);
+        manifestInfo.isDynamic = dashManifestModel.getIsDynamic(mpd.manifest);
+
+        return manifestInfo;
+    }
+
+    function checkSetConfigCall() {
+        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getMpd') || !dashManifestModel.hasOwnProperty('getRegularPeriods')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
+    function getPeriod(periodId) {
+        if (voPeriods.length === 0) {
+            return null;
+        }
+        const manifest = voPeriods[0].mpd.manifest;
+        return manifest.Period_asArray[periodId];
+    }
+
+    function findRepresentationIndex(period, representationId) {
+        const index = findRepresentation(period, representationId, true);
+
+        return index !== null ? index : -1;
+    }
+
+    function findRepresentation(period, representationId, returnIndex) {
+        let adaptationSet,
+            adaptationSetArray,
+            representation,
+            representationArray,
+            adaptationSetArrayIndex,
+            representationArrayIndex;
+
+        if (period) {
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
+                    representation = representationArray[representationArrayIndex];
+                    if (representationId === representation.id) {
+                        if (returnIndex) {
+                            return representationArrayIndex;
+                        } else {
+                            return representation;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function findMaxBufferIndex(period, bufferType) {
+        let adaptationSet,
+            adaptationSetArray,
+            representationArray,
+            adaptationSetArrayIndex;
+
+        if (!period || !bufferType) return -1;
+
+        adaptationSetArray = period.AdaptationSet_asArray;
+        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+            representationArray = adaptationSet.Representation_asArray;
+            if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
+                return representationArray.length;
+            }
+        }
+
+        return -1;
+    }
+    // #endregion PRIVATE FUNCTIONS
 
     instance = {
+        getBandwidthForRepresentation: getBandwidthForRepresentation,
+        getIndexForRepresentation: getIndexForRepresentation,
+        getMaxIndexForBufferType: getMaxIndexForBufferType,
         convertDataToRepresentationInfo: convertRepresentationToRepresentationInfo,
         getDataForMedia: getAdaptationForMediaInfo,
         getStreamsInfo: getStreamsInfo,
