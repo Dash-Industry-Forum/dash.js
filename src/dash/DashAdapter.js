@@ -135,7 +135,7 @@ function DashAdapter() {
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
             return role.value;
         });
-        mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
+        mediaInfo.codec = getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
@@ -508,6 +508,10 @@ function DashAdapter() {
         return dashManifestModel.getRepresentationSortFunction();
     }
 
+    function getCodec(adaptation, representationId, addResolutionInfo) {
+        return dashManifestModel.getCodec(adaptation, representationId, addResolutionInfo);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -541,6 +545,7 @@ function DashAdapter() {
         getIsDVB: getIsDVB,
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
+        getCodec: getCodec,
         reset: reset
     };
 

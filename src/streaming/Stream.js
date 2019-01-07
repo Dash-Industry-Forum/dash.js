@@ -47,7 +47,6 @@ function Stream(config) {
     const eventBus = EventBus(context).getInstance();
 
     const manifestModel = config.manifestModel;
-    const dashManifestModel = config.dashManifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
@@ -558,7 +557,7 @@ function Stream(config) {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            const codec = dashManifestModel.getCodec(realAdaptation, i, true);
+            const codec = adapter.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
                 logger.error('[Stream] codec not supported: ' + codec);
                 return false;

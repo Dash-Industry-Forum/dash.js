@@ -638,7 +638,6 @@ function StreamController() {
                 if (!stream) {
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
-                        dashManifestModel: dashManifestModel,
                         mediaPlayerModel: mediaPlayerModel,
                         metricsModel: metricsModel,
                         dashMetrics: dashMetrics,
