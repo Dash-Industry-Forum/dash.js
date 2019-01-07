@@ -133,7 +133,7 @@ function StreamController() {
         manifestUpdater.initialize();
 
         baseURLController.setConfig({
-            dashManifestModel: dashManifestModel
+            adapter: adapter
         });
 
         registerEvents();

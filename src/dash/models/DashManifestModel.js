@@ -58,8 +58,6 @@ function DashManifestModel(config) {
     const errHandler = config.errHandler;
     const BASE64 = config.BASE64;
 
-    const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
-
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
             isFinite(value) &&
@@ -314,10 +312,6 @@ function DashManifestModel(config) {
         }
 
         return has;
-    }
-
-    function getIsDVB(manifest) {
-        return hasProfile(manifest, PROFILE_DVB);
     }
 
     function getDuration(manifest) {
@@ -1035,7 +1029,7 @@ function DashManifestModel(config) {
         getKID: getKID,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
-        getIsDVB: getIsDVB,
+        hasProfile: hasProfile,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
         getManifestUpdatePeriod: getManifestUpdatePeriod,

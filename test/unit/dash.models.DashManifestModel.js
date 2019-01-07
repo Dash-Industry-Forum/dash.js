@@ -537,28 +537,28 @@ describe('DashManifestModel', function () {
         expect(representationArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return false when getIsDVB is called and manifest is undefined', () => {
-        const IsDVB = dashManifestModel.getIsDVB();
+    it('should return false when hasProfile is called and manifest is undefined', () => {
+        const IsDVB = dashManifestModel.hasProfile();
 
         expect(IsDVB).to.be.false;    // jshint ignore:line
     });
 
-    it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
+    it('should return true when hasProfile is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
         };
 
-        const isDVB = dashManifestModel.getIsDVB(manifest);
+        const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
         expect(isDVB).to.be.true; // jshint ignore:line
     });
 
-    it('should return false when getIsDVB is called and manifest does not contain a valid DVB profile', () => {
+    it('should return false when hasProfile is called and manifest does not contain a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:mpeg:dash:profile:isoff-on-demand:2011, http://dashif.org/guildelines/dash264'
         };
 
-        const isDVB = dashManifestModel.getIsDVB(manifest);
+        const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
         expect(isDVB).to.be.false; // jshint ignore:line
     });

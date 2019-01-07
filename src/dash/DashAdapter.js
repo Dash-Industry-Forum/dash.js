@@ -46,6 +46,8 @@ function DashAdapter() {
         constants,
         cea608parser;
 
+    const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
+
     function setup() {
         reset();
     }
@@ -494,6 +496,18 @@ function DashAdapter() {
         return dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
     }
 
+    function getIsDVB(manifest) {
+        return dashManifestModel.hasProfile(manifest, PROFILE_DVB);
+    }
+
+    function getBaseURLsFromElement(node) {
+        return dashManifestModel.getBaseURLsFromElement(node);
+    }
+
+    function getRepresentationSortFunction() {
+        return dashManifestModel.getRepresentationSortFunction();
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -524,6 +538,9 @@ function DashAdapter() {
         getMpd: getMpd,
         getLocation: getLocation,
         getManifestUpdatePeriod: getManifestUpdatePeriod,
+        getIsDVB: getIsDVB,
+        getBaseURLsFromElement: getBaseURLsFromElement,
+        getRepresentationSortFunction: getRepresentationSortFunction,
         reset: reset
     };
 

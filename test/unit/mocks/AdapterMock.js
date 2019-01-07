@@ -1,60 +1,42 @@
-class AdapterMock {
-    constructor() {
-        this.metricsList = {
-            BUFFER_STATE: 'BUFFER_STATE'
-        };
-    }
+function AdapterMock () {
+    this.metricsList = {
+        BUFFER_STATE: 'BUFFER_STATE'
+    };
 
-    getEventsFor() {
+    this.getEventsFor = function () {
         return null;
-    }
+    };
 
-    getAllMediaInfoForType() {
+    this.getAllMediaInfoForType = function () {
         return [{codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main']},
                 {codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main']}];
-    }
+    };
 
-    getDataForMedia() {
+    this.getDataForMedia = function () {
         return {};
-    }
+    };
 
-    getMediaInfoForType() {
+    this.getMediaInfoForType = function () {
         return {};
-    }
+    };
 
-    getStreamsInfo() {
+    this.getStreamsInfo = function () {
         return [];
-    }
+    };
 
-    getAdaptationForType() {
-        return {
-            Representation: [
-                {
-                    width: 500
-                },
-                {
-                    width: 750
-                },
-                {
-                    width: 900
-                }
-            ]
-        };
-    }
-    
-    setRepresentation (res) {
+    this.setRepresentation = function (res) {
         this.representation = res;
-    }
+    };
 
-    getVoRepresentations() {
+    this.getVoRepresentations = function () {
         if (this.representation) {
             return [this.representation];
         } else {
             return [];
         }
-    }
+    };
 
-    getAdaptationForType() {
+    this.getAdaptationForType = function () {
         return {
             Representation: [
                 {
@@ -68,11 +50,19 @@ class AdapterMock {
                 }
             ]
         };
-    }
+    };
 
-    getIsTextTrack () {
+    this.getIsTextTrack = function () {
         return false;
-    }
+    };
+
+    this.getBaseURLsFromElement = function () {
+        return [];
+    };
+
+    this.getRepresentationSortFunction = function () {
+        return [];
+    };
 }
 
 export default AdapterMock;

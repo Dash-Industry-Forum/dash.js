@@ -47,7 +47,7 @@ class Node {
 function BaseURLTreeModel() {
     let instance,
         root,
-        dashManifestModel;
+        adapter;
 
     const context = this.context;
     const objectUtils = ObjectUtils(context).getInstance();
@@ -57,19 +57,19 @@ function BaseURLTreeModel() {
     }
 
     function setConfig(config) {
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
     }
 
     function checkSetConfigCall() {
-        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getBaseURLsFromElement') || !dashManifestModel.hasOwnProperty('getRepresentationSortFunction')) {
+        if (!adapter || !adapter.hasOwnProperty('getBaseURLsFromElement') || !adapter.hasOwnProperty('getRepresentationSortFunction')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
     function updateChildData(node, index, element) {
-        let baseUrls = dashManifestModel.getBaseURLsFromElement(element);
+        let baseUrls = adapter.getBaseURLsFromElement(element);
 
         if (!node[index]) {
             node[index] = new Node(baseUrls);
@@ -83,7 +83,7 @@ function BaseURLTreeModel() {
 
     function getBaseURLCollectionsFromManifest(manifest) {
         checkSetConfigCall();
-        let baseUrls = dashManifestModel.getBaseURLsFromElement(manifest);
+        let baseUrls = adapter.getBaseURLsFromElement(manifest);
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
@@ -100,7 +100,7 @@ function BaseURLTreeModel() {
 
                         if (a.Representation_asArray) {
                             a.Representation_asArray.sort(
-                                dashManifestModel.getRepresentationSortFunction()
+                                adapter.getRepresentationSortFunction()
                             ).forEach((r, ri) => {
                                 updateChildData(
                                     root.children[pi].children[ai].children,
