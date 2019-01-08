@@ -53,7 +53,7 @@ function EventController() {
         activeEvents, // Holds all Events currently running
         eventInterval, // variable holding the setInterval
         refreshDelay, // refreshTime for the setInterval
-        presentationTimeThreshold,
+        lastEventTimerCall,
         manifestUpdater,
         playbackController,
         isStarted;
@@ -70,7 +70,7 @@ function EventController() {
         activeEvents = {};
         eventInterval = null;
         refreshDelay = 100;
-        presentationTimeThreshold = refreshDelay / 1000;
+        lastEventTimerCall = Date.now() / 1000;
     }
 
     function checkSetConfigCall() {
@@ -180,8 +180,12 @@ function EventController() {
      * Iterate through the eventList and trigger/remove the events
      */
     function onEventTimer() {
-        triggerEvents(inbandEvents);
-        triggerEvents(inlineEvents);
+        var currentVideoTime = playbackController.getTime();
+        var presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
+        lastEventTimerCall = currentVideoTime;
+
+        triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
+        triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
         removeEvents();
     }
 
@@ -200,8 +204,7 @@ function EventController() {
             }});
     }
 
-    function triggerEvents(events) {
-        var currentVideoTime = playbackController.getTime();
+    function triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
         var presentationTime;
 
         /* == Trigger events that are ready == */
