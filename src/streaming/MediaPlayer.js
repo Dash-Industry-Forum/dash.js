@@ -221,9 +221,7 @@ function MediaPlayer() {
 
         adapter = DashAdapter(context).getInstance();
         dashManifestModel = DashManifestModel(context).getInstance({
-            mediaController: mediaController,
             timelineConverter: timelineConverter,
-            adapter: adapter,
             errHandler: errHandler
         });
         manifestModel = ManifestModel(context).getInstance();
@@ -2750,7 +2748,6 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             manifestModel: manifestModel,
             videoModel: videoModel,
             adapter: adapter
