@@ -1,4 +1,3 @@
-import PlaybackControllerMock from './PlaybackControllerMock';
 import RepresentationControllerMock from './RepresentationControllerMock';
 
 class FragmentModelMock {
@@ -81,13 +80,7 @@ function StreamProcessorMock (testType, streamInfo) {
             getBufferTarget() {
                 return 20;
             },
-            getSeekTarget() {
-                return 1;
-            },
             setSeekTarget() {
-            },
-            getTimeToLoadDelay() {
-                return 0;
             },
             setTimeToLoadDelay() {
             }
@@ -127,10 +120,6 @@ function StreamProcessorMock (testType, streamInfo) {
 
     this.getFragmentController = function () {
         return null;
-    };
-
-    this.getPlaybackController = function () {
-        return new PlaybackControllerMock();
     };
 
     this.switchInitData = function () {};

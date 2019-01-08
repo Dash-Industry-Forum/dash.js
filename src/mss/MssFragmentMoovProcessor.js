@@ -376,7 +376,6 @@ function MssFragmentMoovProcessor(config) {
         let AVCLevelIndication = 0;
         let profile_compatibility = 0;
 
-
         let nalus = representation.codecPrivateData.split('00000001').slice(1);
         let naluBytes, naluType;
 
@@ -559,10 +558,10 @@ function MssFragmentMoovProcessor(config) {
     }
 
     function createProtectionSystemSpecificHeaderBox(moov, keySystems) {
-        let pssh_bytes;
-        let pssh;
-        let i;
-        let parsedBuffer;
+        let pssh_bytes,
+            pssh,
+            i,
+            parsedBuffer;
 
         for (i = 0; i < keySystems.length; i += 1) {
             pssh_bytes = keySystems[i].initData;
@@ -587,7 +586,6 @@ function MssFragmentMoovProcessor(config) {
     }
 
     function createTrexBox(moov) {
-
         let trex = ISOBoxer.createFullBox('trex', moov);
 
         trex.track_ID = trackId;

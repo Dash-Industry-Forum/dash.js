@@ -85,6 +85,12 @@ describe('BoxParser', function () {
 
             expect(res.found).to.be.false; // jshint ignore:line
         });
+
+        it('should return null when data is empty', () => {
+            const res = boxParser.findInitRange();
+
+            expect(res).to.be.null; // jshint ignore:line
+        });
     });
 
     describe('when data is provided', () => {
@@ -124,6 +130,13 @@ describe('BoxParser', function () {
             const res = boxParser.findLastTopIsoBoxCompleted(['moov'], data.buffer);
             expect(res.found).to.be.false; // jshint ignore:line
             expect(res.lastCompletedOffset).to.equal(36); // jshint ignore:line
+        });
+
+        it('should not return null when looking for init range in a completed init segment', () => {
+            const data = new Uint8Array(initSegmentCompleted);
+            let res = boxParser.findInitRange(data.buffer);
+            expect(res).not.to.be.null; // jshint ignore:line
+            expect(res).to.equal('0-944'); // jshint ignore:line
         });
     });
 

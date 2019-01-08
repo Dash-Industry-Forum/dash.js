@@ -1,18 +1,15 @@
 import VoHelper from './helpers/VOHelper';
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AbrController from '../../src/streaming/controllers/AbrController';
-import MediaController from '../../src/streaming/controllers/MediaController';
-import MetricsModel from '../../src/streaming/models/MetricsModel';
-import DashMetrics from '../../src/dash/DashMetrics';
-import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import ManifestModel from '../../src/streaming/models/ManifestModel';
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import BitrateInfo from '../../src/streaming/vo/BitrateInfo';
 import Constants from '../../src/streaming/constants/Constants';
 
 import DashManifestModelMock from './mocks/DashManifestModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import DomStorageMock from './mocks/DomStorageMock';
+import MetricsModelMock from './mocks/MetricsModelMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
+import ManifestModelMock from './mocks/ManifestModelMock';
 
 const expect = require('chai').expect;
 
@@ -22,32 +19,24 @@ describe('AbrController', function () {
     const voHelper = new VoHelper();
     const objectsHelper = new ObjectsHelper();
     const defaultQuality = AbrController.QUALITY_DEFAULT;
-    const metricsModel = MetricsModel(context).getInstance();
-    const mediaController = MediaController(context).getInstance();
-    const timelineConverter = TimelineConverter(context).getInstance();
-    const dashManifestModel = DashManifestModel(context).getInstance({
-        mediaController: mediaController,
-        timelineConverter: timelineConverter
-    });
 
-    const dashMetrics = DashMetrics(context).getInstance({
-        dashManifestModel: dashManifestModel
-    });
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(testType);
     const representationCount = dummyMediaInfo.representationCount;
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
-    const manifestModel = ManifestModel().getInstance();
+    const manifestModelMock = new ManifestModelMock();
     const dashManifestModelMock = new DashManifestModelMock();
     const videoModelMock = new VideoModelMock();
     const domStorageMock = new DomStorageMock();
+    const metricsModelMock = new MetricsModelMock();
+    const dashMetricsMock = new DashMetricsMock();
 
     beforeEach(function () {
         abrCtrl.setConfig({
-            metricsModel: metricsModel,
-            dashMetrics: dashMetrics,
+            metricsModel: metricsModelMock,
+            dashMetrics: dashMetricsMock,
             videoModel: videoModelMock,
-            manifestModel: manifestModel,
+            manifestModel: manifestModelMock,
             dashManifestModel: dashManifestModelMock,
             domStorage: domStorageMock
         });
@@ -127,6 +116,11 @@ describe('AbrController', function () {
         autoSwitchBitrateForVideo = abrCtrl.getAutoSwitchBitrateFor(Constants.VIDEO);
 
         expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
+    });
+
+    it('should return true if isPlayingAtTopQuality function is called without parameter', function () {
+        let isPlayingTopQuality = abrCtrl.isPlayingAtTopQuality();
+        expect(isPlayingTopQuality).to.be.true; // jshint ignore:line
     });
 
     it('should not set setMaxAllowedBitrateFor value if it\'s not a number type or NaN or if type is not Video or Audio', function () {

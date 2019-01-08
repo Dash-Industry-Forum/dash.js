@@ -271,7 +271,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Get thumbnail information
-            player.getThumbnail(mouseTime, (thumbnail) => {
+            player.getThumbnail(mouseTime, function(thumbnail) {
                 if (!thumbnail) return;
 
                 // Adjust left variable for positioning thumbnail with regards to its viewport
@@ -795,7 +795,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             initControls(suffix);
             video.controls = false;
-            videoContainer = player.getVideoContainer();
+            videoContainer = video.parentNode;
             captionBtn.classList.add("hide");
             if (trackSwitchBtn) {
                 trackSwitchBtn.classList.add("hide");

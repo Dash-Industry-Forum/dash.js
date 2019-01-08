@@ -283,7 +283,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.player.setFastSwitchEnabled($scope.fastSwitchSelected);
     $scope.player.setAutoSwitchQualityFor('video', $scope.videoAutoSwitchSelected);
     $scope.player.setJumpGaps($scope.jumpGapsSelected);
-    $scope.player.attachVideoContainer(document.getElementById('videoContainer'));
     // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
     if (doesTimeMarchesOn()) {
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
@@ -439,7 +438,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     $scope.selectVideoQuality = function (quality) {
         $scope.player.setQualityFor('video', quality);
-    }
+    };
 
     $scope.doLoad = function () {
         $scope.initSession();
@@ -458,6 +457,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         // Check if persistent license session ID is stored for current stream
         var sessionId = $scope.persistentSessionId[$scope.selectedItem.url];
         if (sessionId) {
+            if (!protData) {
+                protData = {};
+            }
+            if (!protData[$scope.selectedKeySystem]) {
+                protData[$scope.selectedKeySystem] = {};
+            }
             protData[$scope.selectedKeySystem].sessionId = sessionId;
         }
 
@@ -527,13 +532,13 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
         stopMetricsInterval();
-    }
+    };
 
     $scope.changeTrackSwitchMode = function (mode, type) {
         $scope.player.setTrackSwitchModeFor(type, mode);
     };
 
-    $scope.setLogLevel = function (mode) {
+    $scope.setLogLevel = function () {
         var level = $("input[name='log-level']:checked").val();
         switch(level) {
             case 'none':
@@ -559,8 +564,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             default:
             $scope.player.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_DEBUG);
         }
-
-    }
+    };
 
     $scope.hasLogo = function (item) {
         return (item.hasOwnProperty('logo') && item.logo);

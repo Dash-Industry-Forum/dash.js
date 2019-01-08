@@ -50,7 +50,6 @@ function TimeSyncController() {
         logger,
         offsetToDeviceTimeMs,
         isSynchronizing,
-        isInitialised,
         useManifestDateHeaderTimeSource,
         handlers,
         metricsModel,
@@ -65,7 +64,6 @@ function TimeSyncController() {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
         offsetToDeviceTimeMs = 0;
         isSynchronizing = false;
-        isInitialised = false;
 
         // a list of known schemeIdUris and a method to call with @value
         handlers = {
@@ -94,7 +92,6 @@ function TimeSyncController() {
 
         if (!getIsSynchronizing()) {
             attemptSync(timingSources);
-            setIsInitialised(true);
         }
     }
 
@@ -124,10 +121,6 @@ function TimeSyncController() {
 
     function getIsSynchronizing() {
         return isSynchronizing;
-    }
-
-    function setIsInitialised(value) {
-        isInitialised = value;
     }
 
     function setOffsetMs(value) {
@@ -365,7 +358,6 @@ function TimeSyncController() {
     }
 
     function reset() {
-        setIsInitialised(false);
         setIsSynchronizing(false);
     }
 
