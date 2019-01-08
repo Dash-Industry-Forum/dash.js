@@ -119,7 +119,7 @@ describe('DashAdapter', function () {
     });
 
     it('should return an empty event object when getEvent is called and eventBox and eventStreams parameters are set', function () {
-        const event = dashAdapter.getEvent({scheme_id_uri: 0}, [{schemeIdUri: {}}]);
+        const event = dashAdapter.getEvent({scheme_id_uri: 'id', value: 'value'}, {'id/value': {}});
 
         expect(event).to.be.an('object');
     });

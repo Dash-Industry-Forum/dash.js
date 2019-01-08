@@ -497,9 +497,9 @@ function DashAdapter() {
         const messageData = eventBox.message_data;
         const presentationTime = startTime * timescale + presentationTimeDelta;
 
-        if (!eventStreams[schemeIdUri]) return null;
+        if (!eventStreams[schemeIdUri + '/' + value]) return null;
 
-        event.eventStream = eventStreams[schemeIdUri];
+        event.eventStream = eventStreams[schemeIdUri + '/' + value];
         event.eventStream.value = value;
         event.eventStream.timescale = timescale;
         event.duration = duration;
