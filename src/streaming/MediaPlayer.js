@@ -288,7 +288,7 @@ function MediaPlayer() {
         }
 
         if (!offlineControllerInitialized) {
-            createRecordControllers();
+            createOfflineControllers();
         }
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
@@ -1058,11 +1058,11 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
 
-    function record(manifestURL) {
+    function download(manifestURL) {
         if (!offlineControllerInitialized) {
-            createRecordControllers();
+            createOfflineControllers();
         }
-        return offlineController.record(manifestURL);
+        return offlineController.download(manifestURL);
     }
 
     function stopDownload(id) {
@@ -1077,16 +1077,16 @@ function MediaPlayer() {
         }
     }
 
-    function getAllRecords() {
+    function getAllDownloads() {
         if (!offlineControllerInitialized) {
-            createRecordControllers();
+            createOfflineControllers();
         }
-        return offlineController.getAllRecords();
+        return offlineController.getAllDownloads();
     }
 
     function deleteDownload(manifestId) {
         if (!offlineControllerInitialized) {
-            createRecordControllers();
+            createOfflineControllers();
         }
         return offlineController.deleteDownload(manifestId);
     }
@@ -1098,7 +1098,7 @@ function MediaPlayer() {
         }
     }
 
-    function createRecordControllers() {
+    function createOfflineControllers() {
         errHandler = ErrorHandler(context).getInstance();
 
         const manifestLoader = createManifestLoader();
@@ -2120,7 +2120,7 @@ function MediaPlayer() {
 
     function initializePlayback() {
         if (offlineControllerInitialized) {
-            offlineController.resetRecords();
+            offlineController.resetDownloads();
         }
 
         if (!streamingInitialized && source) {
@@ -2236,13 +2236,13 @@ function MediaPlayer() {
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getThumbnail: getThumbnail,
-        record: record,
+        download: download,
         getDashAdapter: getDashAdapter,
         getSettings: getSettings,
         updateSettings: updateSettings,
         resetSettings: resetSettings,
         stopDownload: stopDownload,
-        getAllRecords: getAllRecords,
+        getAllDownloads: getAllDownloads,
         deleteDownload: deleteDownload,
         resumeDownload: resumeDownload,
         getDownloadProgression: getDownloadProgression,

@@ -9,18 +9,18 @@ angular.module('DashPlayer').
       link: function (scope) {
 
         scope.progressTimer;
-        scope.recordProgression = 0;
+        scope.downloadProgression = 0;
 
         scope.$watch('download.status', function(newValue, oldValue) {
           if (newValue === 'started') {
-            scope.updateRecordProgression()
+            scope.updateDownloadProgression()
           } else {
             $timeout.cancel(scope.progressTimer);
           }
         });
 
         scope.getDownloadProgression = function () {
-          return scope.recordProgression;
+          return scope.downloadProgression;
         }
 
         scope.doPlay =  function(){
@@ -39,10 +39,10 @@ angular.module('DashPlayer').
           DownloadService.doDeleteDownload(scope.download.manifestId);
         }
 
-        scope.updateRecordProgression = function () {
+        scope.updateDownloadProgression = function () {
           scope.progressTimer = $timeout(function () {
-            scope.recordProgression = DownloadService.getDownloadProgression(scope.download.manifestId);
-            scope.updateRecordProgression();
+            scope.downloadProgression = DownloadService.getDownloadProgression(scope.download.manifestId);
+            scope.updateDownloadProgression();
           }, 200);
         }
 

@@ -328,7 +328,7 @@ function OfflineStream(config) {
 
     /**
      * Returns the progression (nbDownloaded/availableSegments)
-     * @returns {number} recordProgression
+     * @returns {number} Download progression
      */
     function getDownloadProgression() {
         let getDownloadedSegments = 0;

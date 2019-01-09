@@ -60,7 +60,7 @@ function OfflineDownload(params) {
         errHandler,
         streams,
         manifest,
-        isRecordingStatus,
+        isDownloadingStatus,
         isComposed,
         logger;
 
@@ -74,7 +74,7 @@ function OfflineDownload(params) {
         logger = Debug(context).getInstance().getLogger(instance);
 
         streams = [];
-        isRecordingStatus = false;
+        isDownloadingStatus = false;
         isComposed = false;
     }
 
@@ -132,14 +132,14 @@ function OfflineDownload(params) {
     }
 
     /**
-     * Record a stream, from url of manifest
+     * Download a stream, from url of manifest
      * @param {string} url
      * @instance
      */
-    function record(url) {
+    function download(url) {
         setupOfflineEvents();
         manifestLoader.load(url);
-        isRecordingStatus = true;
+        isDownloadingStatus = true;
 
         let offlineManifest = {
             'fragmentStore': manifestId,
@@ -162,8 +162,8 @@ function OfflineDownload(params) {
         eventBus.on(Events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
     }
 
-    function isRecording() {
-        return isRecordingStatus;
+    function isDownloading() {
+        return isDownloadingStatus;
     }
 
     function onManifestUpdated(e) {
@@ -204,7 +204,7 @@ function OfflineDownload(params) {
         } else {
             throw e.error;
         }
-        resetRecord();
+        resetDownload();
     }
 
     function composeStreams() {
@@ -328,7 +328,7 @@ function OfflineDownload(params) {
      * @instance
      */
     function stopDownload() {
-        if (manifestId !== null && isRecording) {
+        if (manifestId !== null && isDownloading) {
             for (let i = 0, ln = streams.length; i < ln; i++) {
                 streams[i].stopOfflineStreamProcessors();
             }
@@ -349,7 +349,7 @@ function OfflineDownload(params) {
     function deleteDownload() {
         if (streams.length >= 1) {
             stopDownload();
-            isRecordingStatus = false;
+            isDownloadingStatus = false;
         }
     }
 
@@ -358,7 +358,7 @@ function OfflineDownload(params) {
      * @instance
      */
     function resumeDownload() {
-        if (isRecording()) {
+        if (isDownloading()) {
             for (let i = 0, ln = streams.length; i < ln; i++) {
                 streams[i].resumeOfflineStreamProcessors();
             }
@@ -382,11 +382,11 @@ function OfflineDownload(params) {
      * Reset events listeners
      * @instance
      */
-    function resetRecord() {
+    function resetDownload() {
         for (let i = 0, ln = streams.length; i < ln; i++) {
             streams[i].reset();
         }
-        isRecordingStatus = false;
+        isDownloadingStatus = false;
         streams = [];
         manifestId = null;
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
@@ -408,8 +408,8 @@ function OfflineDownload(params) {
      * @instance
      */
     function reset() {
-        if (isRecording()) {
-            resetRecord();
+        if (isDownloading()) {
+            resetDownload();
         }
         baseURLController.reset();
         manifestUpdater.reset();
@@ -418,7 +418,7 @@ function OfflineDownload(params) {
 
     instance = {
         getId: getId,
-        record: record,
+        download: download,
         onManifestUpdated: onManifestUpdated,
         setConfig: setConfig,
         composeStreams: composeStreams,
@@ -427,9 +427,9 @@ function OfflineDownload(params) {
         resumeDownload: resumeDownload,
         deleteDownload: deleteDownload,
         getDownloadProgression: getDownloadProgression,
-        isRecording: isRecording,
+        isDownloading: isDownloading,
         reset: reset,
-        resetRecord: resetRecord
+        resetDownload: resetDownload
     };
 
     setup();

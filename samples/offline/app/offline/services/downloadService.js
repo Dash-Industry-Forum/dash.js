@@ -40,13 +40,13 @@ service('DownloadService', function ($q) {
             }
         }, this);
 
-        this.getAllRecords();
+        this.getAllDownloads();
     }
 
-    this.getAllRecords = function () {
+    this.getAllDownloads = function () {
         let deferred = $q.defer();
 
-        player.getAllRecords().then(function (items) {
+        player.getAllDownloads().then(function (items) {
             downloads.splice(0, downloads.length);
             items.manifests.forEach(element => {
                 downloads.push(element);
@@ -58,14 +58,14 @@ service('DownloadService', function ($q) {
     };
 
     this.doDownload = function (url) {
-        player.record(url).then(() => {
-            this.getAllRecords();
+        player.download(url).then(() => {
+            this.getAllDownloads();
         });
     }
 
     this.doDeleteDownload = function (manifestId) {
         player.deleteDownload(manifestId).then(() => {
-            this.getAllRecords();
+            this.getAllDownloads();
         });
     }
 

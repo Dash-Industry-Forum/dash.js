@@ -121,7 +121,7 @@ function OfflineController() {
         return timestamp;
     }
 
-    function record(url) {
+    function download(url) {
         return new Promise(function (resolve, reject) {
             let manifestId = generateManifestId();
 
@@ -141,7 +141,7 @@ function OfflineController() {
                 offlineStoreController: offlineStoreController
             });
 
-            download.record(url).then(() => {
+            download.download(url).then(() => {
                 downloads.push(download);
                 resolve();
             })
@@ -160,7 +160,7 @@ function OfflineController() {
         }
     }
 
-    function getAllRecords() {
+    function getAllDownloads() {
         return offlineStoreController.getAllManifests();
     }
 
@@ -202,9 +202,9 @@ function OfflineController() {
         return 0;
     }
 
-    function resetRecords() {
+    function resetDownloads() {
         downloads.forEach((download) => {
-            download.resetRecord();
+            download.resetDownload();
         });
     }
 
@@ -213,20 +213,20 @@ function OfflineController() {
      * @instance
      */
     function reset() {
-        resetRecords();
+        resetDownloads();
         schemeLoaderFactory.unregisterLoader(OfflineConstants.OFFLINE_SCHEME);
     }
 
     instance = {
         setConfig: setConfig,
-        record: record,
+        download: download,
         startDownload: startDownload,
         stopDownload: stopDownload,
         resumeDownload: resumeDownload,
         deleteDownload: deleteDownload,
         getDownloadProgression: getDownloadProgression,
-        getAllRecords: getAllRecords,
-        resetRecords: resetRecords,
+        getAllDownloads: getAllDownloads,
+        resetDownloads: resetDownloads,
         reset: reset
     };
 
