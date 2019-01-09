@@ -94,7 +94,7 @@ function StreamController() {
         playListMetrics,
         videoTrackDetected,
         audioTrackDetected,
-        isStreamBufferingCompleted,
+        isPeriodSwitchInProgress,
         playbackEndedTimerId,
         preloadTimerId,
         wallclockTicked,
@@ -147,6 +147,7 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.on(Events.BUFFERING_COMPLETED, onTrackBufferingCompleted, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
@@ -162,6 +163,7 @@ function StreamController() {
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
+        eventBus.off(Events.BUFFERING_COMPLETED, onTrackBufferingCompleted, this);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
@@ -252,10 +254,10 @@ function StreamController() {
     function onPlaybackSeeking(e) {
         const seekingStream = getStreamForTime(e.seekTime);
 
-        //if end period has been detected, stop timer and reset isStreamBufferingCompleted
+        //if end period has been detected, stop timer and reset isPeriodSwitchInProgress
         if (playbackEndedTimerId) {
             stopEndPeriodTimer();
-            isStreamBufferingCompleted = false;
+            isPeriodSwitchInProgress = false;
         }
 
         if (preloadTimerId) {
@@ -315,21 +317,38 @@ function StreamController() {
 
     function toggleEndPeriodTimer() {
         //stream buffering completed has not been detected, nothing to do....
-        if (isStreamBufferingCompleted) {
+        if (isPeriodSwitchInProgress) {
             //stream buffering completed has been detected, if end period timer is running, stop it, otherwise start it....
             if (playbackEndedTimerId) {
                 stopEndPeriodTimer();
             } else {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
-                let delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-                if (delayPlaybackEnded < 0) {
-                    delayPlaybackEnded = 0;
-                }
+                const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
                 const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
-                logger.info('[toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
+                logger.debug('[toggleEndPeriodTimer] Going to fire preload in', preloadDelay, 'milliseconds');
                 preloadTimerId = setTimeout(onStreamCanLoadNext,  preloadDelay);
-                logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
+                logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in',delayPlaybackEnded, 'milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
+            }
+        }
+    }
+
+    function onTrackBufferingCompleted(e) {
+        // In multiperiod situations, as soon as one of the tracks (AUDIO, VIDEO) is finished we should
+        // start doing prefetching of the next period
+        if (!e.sender) {
+            return;
+        }
+        if (e.sender.getType() !== Constants.AUDIO && e.sender.getType() !== Constants.VIDEO) {
+            return;
+        }
+
+        const isLast = getActiveStreamInfo().isLast;
+        if (mediaSource && !isLast && playbackEndedTimerId === undefined) {
+            logger.info('[onTrackBufferingCompleted] end of period detected. Track', e.sender.getType(), 'has finished');
+            isPeriodSwitchInProgress = true;
+            if (isPaused === false) {
+                toggleEndPeriodTimer();
             }
         }
     }
@@ -339,13 +358,6 @@ function StreamController() {
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
-        } else if (mediaSource && playbackEndedTimerId === undefined) {
-            //send PLAYBACK_ENDED in order to switch to a new period, wait until the end of playing
-            logger.info('[onStreamBufferingCompleted] end of period detected');
-            isStreamBufferingCompleted = true;
-            if (isPaused === false) {
-                toggleEndPeriodTimer();
-            }
         }
     }
 
@@ -449,7 +461,7 @@ function StreamController() {
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
         playbackEndedTimerId = undefined;
-        isStreamBufferingCompleted = false;
+        isPeriodSwitchInProgress = false;
     }
 
     function getNextStream() {
@@ -955,7 +967,7 @@ function StreamController() {
         autoPlay = true;
         playListMetrics = null;
         playbackEndedTimerId = undefined;
-        isStreamBufferingCompleted = false;
+        isPeriodSwitchInProgress = false;
         wallclockTicked = 0;
     }
 

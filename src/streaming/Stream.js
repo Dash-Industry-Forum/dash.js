@@ -642,13 +642,12 @@ function Stream(config) {
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
             if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
-                logger.warn('onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
+                logger.warn('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
                 return;
             }
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
             streamInfo: streamInfo
         });
@@ -750,8 +749,8 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible
@@ -777,8 +776,8 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible
