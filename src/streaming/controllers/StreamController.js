@@ -323,10 +323,10 @@ function StreamController() {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in ' + delayPlaybackEnded + ' milliseconds');
-                playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
                 const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
                 logger.info('[toggleEndPeriodTimer] Going to fire preload in ' + preloadDelay);
                 preloadTimerId = setTimeout(onStreamCanLoadNext,  preloadDelay);
+                playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
             }
         }
     }
