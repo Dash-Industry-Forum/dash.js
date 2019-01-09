@@ -40,12 +40,32 @@ function DashManifestModelMock () {
         return [];
     };
 
-    this.getMpd = function () {
-        return {};
+    this.getMpd = function (manifest) {
+        let mpd = {};
+        if (manifest) {
+            mpd.manifest = manifest;
+        }
+
+        return mpd;
     };
 
-    this.getRegularPeriods = function () {
-        return [];
+    this.getRegularPeriods = function (mpd) {
+        const voPeriods = [];
+        if (mpd && mpd.manifest && mpd.manifest.Period_asArray) {
+            voPeriods.push({mpd: mpd});
+        }
+
+        return voPeriods;
+    };
+
+    this.getAdaptationsForPeriod = function (voPeriod) {
+        let voAdaptations = [];
+
+        if (voPeriod) {
+            voAdaptations.push(voPeriod.mpd.manifest.Period_asArray[0]);
+        }
+
+        return voAdaptations;
     };
 }
 

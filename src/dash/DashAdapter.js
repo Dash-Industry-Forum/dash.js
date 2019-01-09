@@ -99,7 +99,7 @@ function DashAdapter() {
         }
 
         const manifest = voPeriods[0].mpd.manifest;
-        let realAdaptation = getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
+        let realAdaptation = getAdaptationForType(streamInfo.index, type, streamInfo);
         if (!realAdaptation) return null;
 
         let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
@@ -153,7 +153,8 @@ function DashAdapter() {
             idx,
             i,
             j,
-            ln;
+            ln,
+            periodId;
 
         if (manifest) {
             checkSetConfigCall();
@@ -168,7 +169,9 @@ function DashAdapter() {
         }
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
-        const periodId = selectedVoPeriod.id;
+        if (selectedVoPeriod) {
+            periodId = selectedVoPeriod.id;
+        }
         const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== constants.EMBEDDED_TEXT ? type : constants.VIDEO);
 
         if (!adaptationsForType) return mediaArr;
