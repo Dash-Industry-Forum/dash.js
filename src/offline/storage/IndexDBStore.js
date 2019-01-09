@@ -45,6 +45,10 @@ function IndexDBStore() {
     function setup() {
         fragmentStores = {};
 
+        if (typeof window === 'undefined') {
+            return;
+        }
+
         localforage.config({
             driver: localforage.INDEXEDDB,
             name: 'dash_offline_db'
@@ -279,6 +283,8 @@ function IndexDBStore() {
             storeName: storeName
         }).then(function () {
             delete fragmentStores[storeName];
+        }).catch(function (err) {
+            console.log('dropFragmentStore failed ' + err);
         });
         return;
     }
