@@ -46,7 +46,7 @@ describe('DashAdapter', function () {
 
         const adaptation = dashAdapter.getAdaptationForType(manifest, 0, 'audio', streamInfo);
 
-        expect(adaptation.lang).to.equal('engd'); // jshint ignore:line
+        expect(adaptation.lang).to.equal('engds'); // jshint ignore:line
     });
 
     it('should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined', function () {
