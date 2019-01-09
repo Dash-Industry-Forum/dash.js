@@ -310,7 +310,7 @@ function StreamController() {
     }
 
     function stopPreloadTimer() {
-        logger.debug('[PreloadTimer] stop period preload timer.');
+        logger.debug('[PreloadTimer] stop period preload timersss.');
         clearTimeout(preloadTimerId);
         preloadTimerId = undefined;
     }
