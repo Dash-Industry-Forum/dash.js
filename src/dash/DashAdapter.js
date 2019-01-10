@@ -36,6 +36,7 @@ import StreamInfo from './vo/StreamInfo';
 import ManifestInfo from './vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
+import DashManifestModel from './models/DashManifestModel';
 
 function DashAdapter() {
     let instance,
@@ -46,9 +47,12 @@ function DashAdapter() {
         constants,
         cea608parser;
 
+    const context = this.context;
+
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
     function setup() {
+        dashManifestModel = DashManifestModel(context).getInstance();
         reset();
     }
 
@@ -57,16 +61,16 @@ function DashAdapter() {
     function setConfig(config) {
         if (!config) return;
 
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-
         if (config.constants) {
             constants = config.constants;
         }
 
         if (config.cea608parser) {
             cea608parser = config.cea608parser;
+        }
+
+        if (config.errHandler) {
+            dashManifestModel.setConfig({errHandler: config.errHandler});
         }
     }
 
@@ -561,8 +565,8 @@ function DashAdapter() {
         return manifestInfo;
     }
 
-        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getMpd') || !dashManifestModel.hasOwnProperty('getRegularPeriods')) {
     function checkConfig() {
+        if (!constants) {
             throw new Error('setConfig function has to be called previously');
         }
     }

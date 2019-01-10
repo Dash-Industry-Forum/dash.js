@@ -46,17 +46,14 @@ import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
 
-function DashManifestModel(config) {
-
-    config = config || {};
-
+function DashManifestModel() {
     let instance,
-        logger;
+        logger,
+        errHandler,
+        BASE64;
 
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
-    const errHandler = config.errHandler;
-    const BASE64 = config.BASE64;
 
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
@@ -730,8 +727,14 @@ function DashManifestModel(config) {
         return mpd;
     }
 
+    function checkConfig() {
+        if (!errHandler || !errHandler.hasOwnProperty('error')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
 
     function getEndTimeForLastPeriod(voPeriod) {
+        checkConfig();
         const isDynamic = getIsDynamic(voPeriod.mpd.manifest);
 
         let periodEnd;
@@ -1012,6 +1015,14 @@ function DashManifestModel(config) {
         return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) ? mpd.availabilityStartTime.getTime() : null;
     }
 
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+    }
+
     instance = {
         getIsTypeOf: getIsTypeOf,
         getIsTextTrack: getIsTextTrack,
@@ -1049,7 +1060,8 @@ function DashManifestModel(config) {
         getLocation: getLocation,
         getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
-        getAvailabilityStartTime: getAvailabilityStartTime
+        getAvailabilityStartTime: getAvailabilityStartTime,
+        setConfig: setConfig
     };
 
     setup();

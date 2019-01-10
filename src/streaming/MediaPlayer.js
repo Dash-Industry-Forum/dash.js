@@ -61,7 +61,6 @@ from './../core/Version';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
-import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
 import {
@@ -114,7 +113,6 @@ function MediaPlayer() {
         streamController,
         playbackController,
         dashMetrics,
-        dashManifestModel,
         manifestModel,
         videoModel,
         textController,
@@ -221,10 +219,6 @@ function MediaPlayer() {
         }
 
         adapter = DashAdapter(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance({
-            errHandler: errHandler,
-            BASE64: BASE64
-        });
         manifestModel = ManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
@@ -235,9 +229,10 @@ function MediaPlayer() {
         });
 
         adapter.setConfig({
-            dashManifestModel: dashManifestModel,
             constants: Constants,
-            cea608parser: cea608parser
+            cea608parser: cea608parser,
+            errHandler: errHandler,
+            BASE64: BASE64
         });
 
         restoreDefaultUTCTimingSources();

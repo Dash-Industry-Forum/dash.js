@@ -1,16 +1,16 @@
 import DashAdapter from '../../src/dash/DashAdapter';
 import MediaInfo from '../../src/dash/vo/MediaInfo';
 import Constants from '../../src/streaming/constants/Constants';
-import DashManifestModel from '../../src/dash/models/DashManifestModel';
 
-import DashManifestModelMock from './mocks/DashManifestModelMock';
 import VoHelper from './helpers/VOHelper';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
 const voHelper = new VoHelper();
 const dashAdapter = DashAdapter(context).getInstance();
+const errorHandlerMock = new ErrorHandlerMock();
 
 describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
@@ -105,7 +105,7 @@ describe('DashAdapter', function () {
 
     describe('SetConfig previously called', function () {
         it('should return undefined when getVoRepresentations is called and mediaInfo parameter is null or undefined', function () {
-            dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
+            dashAdapter.setConfig({constants: Constants});
             const voRepresentations = dashAdapter.getVoRepresentations();
 
             expect(voRepresentations).to.be.instanceOf(Array);    // jshint ignore:line
@@ -113,24 +113,24 @@ describe('DashAdapter', function () {
         });
 
         it('should return null when getBandwidthForRepresentation is called and representationId and periodId are undefined', () => {
-            dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
-            dashAdapter.updatePeriods({});
+            dashAdapter.setConfig({constants: Constants});
+            dashAdapter.updatePeriods({loadedTime: new Date()});
             const bdwth = dashAdapter.getBandwidthForRepresentation();
 
             expect(bdwth).to.be.null;  // jshint ignore:line
         });
 
         it('should return -1 when getIndexForRepresentation is called and representationId and periodIdx are undefined', () => {
-            dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
-            dashAdapter.updatePeriods({});
+            dashAdapter.setConfig({constants: Constants});
+            dashAdapter.updatePeriods({loadedTime: new Date()});
             const index = dashAdapter.getIndexForRepresentation();
 
             expect(index).to.be.equal(-1);  // jshint ignore:line
         });
 
         it('should return -1 when getMaxIndexForBufferType is called and bufferType and periodIdx are undefined', () => {
-            dashAdapter.setConfig({dashManifestModel: new DashManifestModelMock()});
-            dashAdapter.updatePeriods({});
+            dashAdapter.setConfig({constants: Constants});
+            dashAdapter.updatePeriods({loadedTime: new Date()});
             const index = dashAdapter.getMaxIndexForBufferType();
 
             expect(index).to.be.equal(-1);  // jshint ignore:line
@@ -138,8 +138,8 @@ describe('DashAdapter', function () {
 
         it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
             dashAdapter.setConfig({
-                dashManifestModel: DashManifestModel(context).getInstance(),
-                constants: Constants
+                constants: Constants,
+                errHandler: errorHandlerMock
             });
             const manifest = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: 'video' }, { id: 1, mimeType: 'video' }] }] };
             dashAdapter.updatePeriods(manifest);
@@ -151,7 +151,6 @@ describe('DashAdapter', function () {
         it('should return the correct adaptation when getAdaptationForType is called', () => {
             const manifest = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
             dashAdapter.setConfig({
-                dashManifestModel: DashManifestModel(context).getInstance(),
                 constants: Constants
             });
             const streamInfo = {

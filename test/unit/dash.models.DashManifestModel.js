@@ -2,18 +2,16 @@ import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 import MpdHelper from './helpers/MPDHelper';
-import ObjectsHelper from './helpers/ObjectsHelper';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
-const objectsHelper = new ObjectsHelper();
 const errorHandlerMock = new ErrorHandlerMock();
-const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
-const dashManifestModel = DashManifestModel(context).getInstance({
-    timelineConverter: timelineConverterMock,
+const dashManifestModel = DashManifestModel(context).getInstance();
+
+dashManifestModel.setConfig({
     errHandler: errorHandlerMock
 });
 
