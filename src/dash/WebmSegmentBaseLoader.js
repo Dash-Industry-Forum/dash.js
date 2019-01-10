@@ -293,14 +293,14 @@ function WebmSegmentBaseLoader() {
         logger.debug('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
     function loadInitialization(representation, loadingInfo) {
-        checkSetConfigCall();
+        checkConfig();
         let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
@@ -343,7 +343,7 @@ function WebmSegmentBaseLoader() {
     }
 
     function loadSegments(representation, type, theRange, callback) {
-        checkSetConfigCall();
+        checkConfig();
         let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;

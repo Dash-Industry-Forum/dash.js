@@ -115,7 +115,7 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
-        checkSetConfigCall();
+        checkConfig();
 
         autoPlay = autoPl;
         protectionData = protData;
@@ -860,7 +860,7 @@ function StreamController() {
         })[0];
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
             !metricsModel || !playbackController) {
@@ -868,19 +868,19 @@ function StreamController() {
         }
     }
 
-    function checkInitializeCall() {
+    function checkInitialize() {
         if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
             throw new Error('initialize function has to be called previously');
         }
     }
 
     function load(url) {
-        checkSetConfigCall();
+        checkConfig();
         manifestLoader.load(url);
     }
 
     function loadWithManifest(manifest) {
-        checkInitializeCall();
+        checkInitialize();
         manifestUpdater.setManifest(manifest);
     }
 
@@ -967,7 +967,7 @@ function StreamController() {
     }
 
     function reset() {
-        checkSetConfigCall();
+        checkConfig();
 
         timeSyncController.reset();
 

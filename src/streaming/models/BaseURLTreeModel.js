@@ -62,7 +62,7 @@ function BaseURLTreeModel() {
         }
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!adapter || !adapter.hasOwnProperty('getBaseURLsFromElement') || !adapter.hasOwnProperty('getRepresentationSortFunction')) {
             throw new Error('setConfig function has to be called previously');
         }
@@ -82,7 +82,7 @@ function BaseURLTreeModel() {
     }
 
     function getBaseURLCollectionsFromManifest(manifest) {
-        checkSetConfigCall();
+        checkConfig();
         let baseUrls = adapter.getBaseURLsFromElement(manifest);
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {

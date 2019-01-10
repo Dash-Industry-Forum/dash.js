@@ -157,7 +157,7 @@ function DashAdapter() {
             periodId;
 
         if (manifest) {
-            checkSetConfigCall();
+            checkConfig();
 
             voLocalPeriods = getPeriodsFromManifest(manifest);
         } else {
@@ -233,7 +233,7 @@ function DashAdapter() {
     function updatePeriods(newManifest) {
         if (!newManifest) return null;
 
-        checkSetConfigCall();
+        checkConfig();
 
         voPeriods = getPeriodsFromManifest(newManifest);
 
@@ -252,7 +252,7 @@ function DashAdapter() {
 
         //if manifest is defined, getStreamsInfo is for an outside manifest, not the current one
         if (externalManifest) {
-            checkSetConfigCall();
+            checkConfig();
             voLocalPeriods = getPeriodsFromManifest(externalManifest);
         }
 
@@ -561,8 +561,8 @@ function DashAdapter() {
         return manifestInfo;
     }
 
-    function checkSetConfigCall() {
         if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getMpd') || !dashManifestModel.hasOwnProperty('getRegularPeriods')) {
+    function checkConfig() {
             throw new Error('setConfig function has to be called previously');
         }
     }
