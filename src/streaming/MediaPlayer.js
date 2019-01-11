@@ -1058,11 +1058,24 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
 
-    function download(manifestURL) {
+    function createDownload(manifestURL) {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
         }
-        return offlineController.download(manifestURL);
+        return offlineController.createDownload(manifestURL);
+    }
+
+    function startDownload(id, selectedRepresentations) {
+        if (selectedRepresentations) {
+            offlineController.startDownload(id, selectedRepresentations);
+        }
+    }
+
+    function deleteDownload(id) {
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
+        return offlineController.deleteDownload(id);
     }
 
     function stopDownload(id) {
@@ -1083,14 +1096,6 @@ function MediaPlayer() {
         }
         return offlineController.getAllDownloads();
     }
-
-    function deleteDownload(manifestId) {
-        if (!offlineControllerInitialized) {
-            createOfflineControllers();
-        }
-        return offlineController.deleteDownload(manifestId);
-    }
-
 
     function getDownloadProgression(id) {
         if (offlineControllerInitialized) {
@@ -1140,13 +1145,6 @@ function MediaPlayer() {
 
         offlineControllerInitialized = true;
     }
-
-    function startDownload(id, allSelectedMediaInfos) {
-        if (allSelectedMediaInfos) {
-            offlineController.startDownload(id, allSelectedMediaInfos);
-        }
-    }
-
 
     /*
     ---------------------------------------------------------------------------
@@ -2236,7 +2234,7 @@ function MediaPlayer() {
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getThumbnail: getThumbnail,
-        download: download,
+        createDownload: createDownload,
         getDashAdapter: getDashAdapter,
         getSettings: getSettings,
         updateSettings: updateSettings,

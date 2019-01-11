@@ -45,7 +45,7 @@ class MediaPlayerEvents extends EventsBase {
          * Triggered when all mediaInfo has been loaded on OfflineStream
          * Return a list of available bitrateInfo needed to download stream.
          */
-        this.MEDIA_INFO_LOADED = 'availableMediaInfoLoaded';
+        this.DOWNLOADABLE_REPRESENTATIONS_LOADED = 'downloadableRepresentationsInfoLoaded';
 
         /**
          * Triggered when all mediaInfo has been loaded on OfflineStream

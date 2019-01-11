@@ -40,7 +40,7 @@ import EventsBase from './EventsBase';
 class CoreEvents extends EventsBase {
     constructor () {
         super();
-        this.MEDIA_INFO_LOADED = 'availableMediaInfoLoaded';
+        this.DOWNLOADABLE_REPRESENTATIONS_LOADED = 'downloadableRepresentationsInfoLoaded';
         this.AVAILABLE_BITRATES_LOADED = 'availableBitratesLoaded';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';

@@ -454,9 +454,9 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.downloads = DownloadService.getDownloads();
     DownloadService.init($scope.downloader);
 
-    $scope.downloader.on(dashjs.MediaPlayer.events.MEDIA_INFO_LOADED, function (e) { /* jshint ignore:line */
+    $scope.downloader.on(dashjs.MediaPlayer.events.DOWNLOADABLE_REPRESENTATIONS_LOADED, function (e) { /* jshint ignore:line */
         console.log(JSON.stringify(e.data));
-        $scope.availableMedia = e.data.availableMedia;
+        $scope.downloadableRepresentations = e.data.downloadableRepresentations;
         $scope.manifestId = e.data.id;
         $scope.showRepresentationModal();
     }, $scope);

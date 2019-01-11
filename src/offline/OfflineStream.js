@@ -123,17 +123,14 @@ function OfflineStream(config) {
      */
     function initialize(initStreamInfo) {
         streamInfo = initStreamInfo;
-        getAvailableMedia(streamInfo);
-        setAvailableSegments();
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
     }
 
     /**
-     * Creates media bitrate list
-     * @param {Object} streamInfo
+     * Creates media bitrate list, so that user will be able to choose the representation he wants to download
      */
-    function getAvailableMedia(streamInfo) {
-        let availableMedia = {
+    function getDownloadableRepresentations() {
+        let downloadableRepresentations = {
             video: [],
             audio: []
         };
@@ -141,7 +138,7 @@ function OfflineStream(config) {
         if (mediaInfo.length > 0) {
             mediaInfo.forEach((item) => {
                 item.bitrateList.forEach((bitrate) => {
-                    availableMedia.video.push({
+                    downloadableRepresentations.video.push({
                         id: bitrate.id,
                         bandwidth: bitrate.bandwidth,
                         width: bitrate.width,
@@ -154,7 +151,7 @@ function OfflineStream(config) {
         if (mediaInfo.length > 0) {
             mediaInfo.forEach((item) => {
                 item.bitrateList.forEach((bitrate) => {
-                    availableMedia.audio.push({
+                    downloadableRepresentations.audio.push({
                         id: bitrate.id,
                         bandwidth: bitrate.bandwidth,
                         lang: item.lang
@@ -165,30 +162,30 @@ function OfflineStream(config) {
         /** 1st, we download audio and video.
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.TEXT);
         if (mediaInfo.length > 0) {
-            availableMedia.push(mediaInfo);
+            downloadableRepresentations.push(mediaInfo);
         }
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.FRAGMENTED_TEXT);
         if (mediaInfo.length > 0) {
-            availableMedia.push(mediaInfo);
+            downloadableRepresentations.push(mediaInfo);
         }
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.EMBEDDED_TEXT);
         if (mediaInfo.length > 0) {
-            availableMedia.push(mediaInfo);
+            downloadableRepresentations.push(mediaInfo);
         }
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.MUXED);
         if (mediaInfo.length > 0) {
-            availableMedia.push(mediaInfo);
+            downloadableRepresentations.push(mediaInfo);
         }
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.IMAGE);
         if (mediaInfo.length > 0) {
-            availableMedia.push(mediaInfo);
+            downloadableRepresentations.push(mediaInfo);
         }
         */
 
-        eventBus.trigger(Events.MEDIA_INFO_LOADED, {
+        eventBus.trigger(Events.DOWNLOADABLE_REPRESENTATIONS_LOADED, {
             data: {
                 id: manifestId,
-                availableMedia: availableMedia
+                downloadableRepresentations: downloadableRepresentations
             },
             sender: this
         });
@@ -376,6 +373,7 @@ function OfflineStream(config) {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
+        getDownloadableRepresentations: getDownloadableRepresentations,
         initializeAllMediasInfoList: initializeAllMediasInfoList,
         offlineStreamProcessor: offlineStreamProcessor,
         getStreamInfo: getStreamInfo,

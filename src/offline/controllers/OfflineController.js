@@ -109,6 +109,13 @@ function OfflineController() {
         schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
     }
 
+    /*
+    ---------------------------------------------------------------------------
+
+        DOWNLOAD LIST FUNCTIONS
+
+    ---------------------------------------------------------------------------
+    */
     function getDownloadFromId(id) {
         let download = downloads.find((item) => {
             return item.getId() === id;
@@ -116,18 +123,14 @@ function OfflineController() {
         return download;
     }
 
-    function generateManifestId() {
-        let timestamp = new Date().getTime();
-        return timestamp;
-    }
+    function createDownloadFromId(id) {
+        let download;
+        download = getDownloadFromId(id);
 
-    function download(url) {
-        return new Promise(function (resolve, reject) {
-            let manifestId = generateManifestId();
-
+        if (!download) {
             // create download controller
-            let download = OfflineDownload(context).create({
-                id: manifestId
+            download = OfflineDownload(context).create({
+                id: id
             });
 
             download.setConfig({
@@ -140,23 +143,56 @@ function OfflineController() {
                 schemeLoaderFactory: schemeLoaderFactory,
                 offlineStoreController: offlineStoreController
             });
+            downloads.push(download);
+        }
 
-            download.download(url).then(() => {
-                downloads.push(download);
+        return download;
+    }
+
+    function removeDownloadFromId(id) {
+        let download = getDownloadFromId(id);
+        if (download) {
+            // download is running
+            download.deleteDownload();
+            let index = downloads.indexOf(download);
+            downloads.splice(index, 1);
+        }
+    }
+
+    /*
+    ---------------------------------------------------------------------------
+
+        DOWNLOAD FUNCTIONS
+
+    ---------------------------------------------------------------------------
+    */
+    function generateManifestId() {
+        let timestamp = new Date().getTime();
+        return timestamp;
+    }
+
+    function createDownload(url) {
+        return new Promise(function (resolve, reject) {
+            let id = generateManifestId();
+
+            // create download controller
+            let download = createDownloadFromId(id);
+
+            download.downloadFromUrl(url).then(() => {
                 resolve();
             })
             .catch((e) => {
                 logger.error('Failed to download ' + e);
+                removeDownloadFromId(id);
                 reject(e);
             });
         });
     }
 
-
-    function startDownload(id, allSelectedMediaInfos) {
+    function startDownload(id, selectedRepresentations) {
         let download = getDownloadFromId(id);
         if (download) {
-            download.startDownload(allSelectedMediaInfos);
+            download.startDownload(selectedRepresentations);
         }
     }
 
@@ -172,13 +208,7 @@ function OfflineController() {
     }
 
     function deleteDownload(id) {
-        let download = getDownloadFromId(id);
-        if (download) {
-            // download is running
-            download.deleteDownload();
-            let index = downloads.indexOf(download);
-            downloads.splice(index, 1);
-        }
+        removeDownloadFromId(id);
 
         return offlineStoreController.deleteDownloadById(id).then(function () {
             return Promise.resolve();
@@ -219,7 +249,7 @@ function OfflineController() {
 
     instance = {
         setConfig: setConfig,
-        download: download,
+        createDownload: createDownload,
         startDownload: startDownload,
         stopDownload: stopDownload,
         resumeDownload: resumeDownload,

@@ -58,7 +58,7 @@ service('DownloadService', function ($q) {
     };
 
     this.doDownload = function (url) {
-        player.download(url).then(() => {
+        player.createDownload(url).then(() => {
             this.getAllDownloads();
         });
     }

@@ -340,12 +340,12 @@
                         <form>
                             <div class="form-group" >
                                 <div class="qualityLabelTitle">Video :</div>
-                                <div ng-repeat="media in availableMedia.video">
+                                <div ng-repeat="media in downloadableRepresentations.video">
                                     <input type="checkbox" name="video" value="{{media.id}}"/>
                                     {{media.id}} ({{media.width}} x {{media.height}}) : {{media.bandwidth}} bits
                                 </div>
                                 <div class="qualityLabelTitle">Audio :</div>
-                                <div ng-repeat="media in availableMedia.audio">
+                                <div ng-repeat="media in downloadableRepresentations.audio">
                                     <input type="checkbox" name="audio" value="{{media.id}}"/>
                                     {{media.id}} ({{media.lang}}) : {{media.bandwidth}} bits
                                 </div>

@@ -136,7 +136,7 @@ function OfflineDownload(params) {
      * @param {string} url
      * @instance
      */
-    function download(url) {
+    function downloadFromUrl(url) {
         setupOfflineEvents();
         manifestLoader.load(url);
         isDownloadingStatus = true;
@@ -173,9 +173,14 @@ function OfflineDownload(params) {
         if (!e.error) {
             try {
                 manifest = e.manifest;
-                adapter.updatePeriods(manifest);
-                baseURLController.initialize(manifest);
-                composeStreams();
+
+                // initialise offline streams
+                composeStreams(manifest);
+
+                // get downloadable representations
+                getDownloadableRepresentations();
+
+                eventBus.trigger(Events.STREAMS_COMPOSED);
             } catch (err) {
                 throw new Error(err);
             }
@@ -209,6 +214,8 @@ function OfflineDownload(params) {
 
     function composeStreams() {
         try {
+            adapter.updatePeriods(manifest);
+            baseURLController.initialize(manifest);
             const streamsInfo = adapter.getStreamsInfo();
             if (streamsInfo.length === 0) {
                 throw new Error('There are no streams');
@@ -228,14 +235,22 @@ function OfflineDownload(params) {
                     mediaPlayerModel: mediaPlayerModel,
                     offlineStoreController: offlineStoreController
                 });
-                stream.initialize(streamInfo);
                 streams.push(stream);
+
+                // initialise stream and get downloadable representations
+                stream.initialize(streamInfo);
             }
             isComposed = true;
-            eventBus.trigger(Events.STREAMS_COMPOSED);
         } catch (e) {
             logger.info(e);
+            throw e.error;
         }
+    }
+
+    function getDownloadableRepresentations() {
+        streams.forEach(stream => {
+            stream.getDownloadableRepresentations();
+        });
     }
 
     /**
@@ -273,17 +288,17 @@ function OfflineDownload(params) {
         XMLManifest = e.originalManifest;
     }
 
-    function initializeAllMediasInfoList(allSelectedMediaInfos) {
+    function initializeAllMediasInfoList(selectedRepresentations) {
         for (let i = 0; i < streams.length; i++) {
-            streams[i].initializeAllMediasInfoList(allSelectedMediaInfos);
+            streams[i].initializeAllMediasInfoList(selectedRepresentations);
         }
     }
 
-    function startDownload(allSelectedMediaInfos) {
+    function startDownload(selectedRepresentations) {
         try {
             createFragmentStore(manifestId);
-            generateOfflineManifest(XMLManifest, allSelectedMediaInfos, manifestId).then(function () {
-                initializeAllMediasInfoList(allSelectedMediaInfos);
+            generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId).then(function () {
+                initializeAllMediasInfoList(selectedRepresentations);
             });
         } catch (err) {
             throw new Error(err);
@@ -294,14 +309,14 @@ function OfflineDownload(params) {
      * Create the parser used to convert original manifest in offline manifest
      * Creates a JSON object that will be stored in database
      * @param {string} XMLManifest
-     * @param {Object[]} allSelectedMediaInfos
+     * @param {Object[]} selectedRepresentations
      * @param {number} manifestId
      * @instance
      */
-    function generateOfflineManifest(XMLManifest, allSelectedMediaInfos, manifestId) {
+    function generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId) {
         let parser = OfflineIndexDBManifestParser(context).create({
             manifestId: manifestId,
-            allMediaInfos: allSelectedMediaInfos
+            allMediaInfos: selectedRepresentations
         });
 
         return parser.parse(XMLManifest).then(function (parsedManifest) {
@@ -365,7 +380,6 @@ function OfflineDownload(params) {
         }
     }
 
-
     /**
      * Compute the progression of download
      * @instance
@@ -417,18 +431,16 @@ function OfflineDownload(params) {
     }
 
     instance = {
+        reset: reset,
         getId: getId,
-        download: download,
-        onManifestUpdated: onManifestUpdated,
         setConfig: setConfig,
-        composeStreams: composeStreams,
+        downloadFromUrl: downloadFromUrl,
         startDownload: startDownload,
         stopDownload: stopDownload,
         resumeDownload: resumeDownload,
         deleteDownload: deleteDownload,
         getDownloadProgression: getDownloadProgression,
         isDownloading: isDownloading,
-        reset: reset,
         resetDownload: resetDownload
     };
 
