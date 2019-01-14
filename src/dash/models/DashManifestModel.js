@@ -57,6 +57,7 @@ function DashManifestModel(config) {
     const urlUtils = URLUtils(context).getInstance();
     const timelineConverter = config.timelineConverter;
     const errHandler = config.errHandler;
+    const BASE64 = config.BASE64;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
@@ -784,13 +785,17 @@ function DashManifestModel(config) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
 
-                    // From Cor.1: 'NOTE: this attribute is an alternative
-                    // to specifying a complete XML element(s) in the Event.
-                    // It is useful when an event leans itself to a compact
-                    // string representation'.
-                    event.messageData =
-                        eventStreams[i].Event_asArray[j].messageData ||
-                        eventStreams[i].Event_asArray[j].__text;
+                    if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
+                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary);
+                    } else {
+                        // From Cor.1: 'NOTE: this attribute is an alternative
+                        // to specifying a complete XML element(s) in the Event.
+                        // It is useful when an event leans itself to a compact
+                        // string representation'.
+                        event.messageData =
+                            eventStreams[i].Event_asArray[j].messageData ||
+                            eventStreams[i].Event_asArray[j].__text;
+                    }
 
                     events.push(event);
                 }
