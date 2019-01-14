@@ -72,6 +72,10 @@ function DashAdapter() {
         if (config.errHandler) {
             dashManifestModel.setConfig({errHandler: config.errHandler});
         }
+
+        if (config.BASE64) {
+            dashManifestModel.setConfig({BASE64: config.BASE64});
+        }
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {

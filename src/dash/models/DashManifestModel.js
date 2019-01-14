@@ -1021,6 +1021,10 @@ function DashManifestModel() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
+
+        if (config.BASE64) {
+            BASE64 = config.BASE64;
+        }
     }
 
     instance = {
