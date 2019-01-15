@@ -128,7 +128,6 @@ function SegmentBaseLoader() {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
                 loadInitialization(representation, info);
             }
-
         };
 
         const onerror = function () {
