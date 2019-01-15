@@ -64,6 +64,13 @@ describe('SegmentUtils', function () {
     });
 
     describe('decideSegmentListRangeForTemplate', function () {
+        it('should return a range {start: NaN, end: NaN} if representation object is undefined', function () {
+            representation.availabilityWindow = null;
+            const range = decideSegmentListRangeForTemplate(timelineConverter, true, undefined, null, -1);
+            expect(range.start).to.be.NaN;  // jshint ignore:line
+            expect(range.end).to.be.NaN;  // jshint ignore:line
+        });
+
         it('should return a range {start: NaN, end: NaN} if representation object has no availabilityWindow attribute', function () {
             representation.availabilityWindow = null;
             const range = decideSegmentListRangeForTemplate(timelineConverter, true, representation, null, -1);

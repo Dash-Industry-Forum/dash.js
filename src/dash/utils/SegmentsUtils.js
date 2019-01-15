@@ -220,6 +220,9 @@ export function getSegmentByIndex(index, representation) {
 }
 
 export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, givenAvailabilityUpperLimit) {
+    if (!representation) {
+        return {start: NaN, end: NaN};
+    }
     const duration = representation.segmentDuration;
     const minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
     const availabilityWindow = representation.segmentAvailabilityRange;
