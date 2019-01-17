@@ -257,6 +257,11 @@ function RepresentationController() {
     function onRepresentationUpdated(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
 
+        if (e.error) {
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, error: e.error});
+            return;
+        }
+
         let r = e.representation;
         let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
         var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);

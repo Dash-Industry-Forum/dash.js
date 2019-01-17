@@ -376,7 +376,7 @@ function ScheduleController(config) {
     }
 
     function onStreamInitialized(e) {
-        if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+        if (streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
             return;
         }
 

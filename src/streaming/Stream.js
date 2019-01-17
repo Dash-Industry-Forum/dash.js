@@ -593,10 +593,13 @@ function Stream(config) {
             }
         }
 
-        eventBus.trigger(Events.STREAM_INITIALIZED, {
-            streamInfo: streamInfo,
-            error: error
-        });
+        if (error) {
+            errHandler.error(error);
+        } else {
+            eventBus.trigger(Events.STREAM_INITIALIZED, {
+                streamInfo: streamInfo
+            });
+        }
     }
 
     function getMediaInfo(type) {
