@@ -218,12 +218,12 @@ function KeySystemPlayReady(config) {
      * messages using UTF16, while others return them as UTF8.  Use this function
      * to modify the message format to expect when parsing CDM messages.
      *
-     * @param {string} format the expected message format.  Either "utf8" or "utf16".
+     * @param {string} format the expected message format.  Either "utf-8" or "utf-16".
      * @throws {Error} Specified message format is not one of "utf8" or "utf16"
      */
     function setPlayReadyMessageFormat(format) {
         if (format !== 'utf-8' && format !== 'utf-16') {
-            throw new Error('Illegal PlayReady message format! -- ' + format);
+            throw new Error('Specified message format is not one of "utf-8" or "utf-16"');
         }
         messageFormat = format;
     }
