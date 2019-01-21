@@ -468,6 +468,10 @@ function AbrController() {
             }
             setQualityFor(type, id, newQuality);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
+            const bitrate = throughputHistory.getAverageThroughput(type);
+            if (!isNaN(bitrate)) {
+                domStorage.setSavedBitrateSettings(type, bitrate);
+            }
         }
     }
 

@@ -68,7 +68,6 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
-        domStorage,
         abrController,
         mediaController,
         textController,
@@ -646,7 +645,6 @@ function StreamController() {
                         capabilities: capabilities,
                         errHandler: errHandler,
                         baseURLController: baseURLController,
-                        domStorage: domStorage,
                         abrController: abrController,
                         playbackController: playbackController,
                         mediaController: mediaController,
@@ -928,9 +926,6 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
-        }
-        if (config.domStorage) {
-            domStorage = config.domStorage;
         }
         if (config.abrController) {
             abrController = config.abrController;

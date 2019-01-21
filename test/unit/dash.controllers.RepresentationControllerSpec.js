@@ -9,7 +9,6 @@ import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import SpecHelper from './helpers/SpecHelper';
 
 import AbrControllerMock from './mocks/AbrControllerMock';
-import DomStorageMock from './mocks/DomStorageMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -39,14 +38,12 @@ describe('RepresentationController', function () {
     manifestModel.setValue(mpd);
 
     const abrControllerMock = new AbrControllerMock();
-    const domStorageMock = new DomStorageMock();
 
     abrControllerMock.registerStreamType();
 
     const representationController = RepresentationController(context).create();
     representationController.setConfig({
         abrController: abrControllerMock,
-        domStorage: domStorageMock,
         manifestModel: manifestModel,
         streamProcessor: streamProcessor
     });

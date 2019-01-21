@@ -379,7 +379,6 @@ function Stream(config) {
             baseURLController: config.baseURLController,
             stream: instance,
             abrController: abrController,
-            domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
             streamController: config.streamController,

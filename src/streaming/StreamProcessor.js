@@ -57,7 +57,6 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
 
@@ -119,7 +118,6 @@ function StreamProcessor(config) {
         representationController = RepresentationController(context).create();
         representationController.setConfig({
             abrController: abrController,
-            domStorage: domStorage,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             manifestModel: manifestModel,
