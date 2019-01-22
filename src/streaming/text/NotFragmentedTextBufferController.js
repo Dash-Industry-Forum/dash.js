@@ -156,7 +156,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.sender.getStreamProcessor() !== streamProcessor || e.error) {
             return;
         }
 

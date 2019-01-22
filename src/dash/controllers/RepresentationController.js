@@ -51,7 +51,6 @@ function RepresentationController() {
         indexHandler,
         playbackController,
         metricsModel,
-        domStorage,
         timelineConverter,
         dashMetrics,
         streamProcessor,
@@ -70,9 +69,6 @@ function RepresentationController() {
     function setConfig(config) {
         if (config.abrController) {
             abrController = config.abrController;
-        }
-        if (config.domStorage) {
-            domStorage = config.domStorage;
         }
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
@@ -121,7 +117,6 @@ function RepresentationController() {
         abrController = null;
         playbackController = null;
         metricsModel = null;
-        domStorage = null;
         timelineConverter = null;
         dashMetrics = null;
     }
@@ -257,6 +252,11 @@ function RepresentationController() {
     function onRepresentationUpdated(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
 
+        if (e.error) {
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, error: e.error});
+            return;
+        }
+
         let r = e.representation;
         let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
         var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
@@ -331,14 +331,8 @@ function RepresentationController() {
     function onQualityChanged(e) {
         if (e.mediaType !== streamProcessor.getType() || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        if (e.oldQuality !== e.newQuality) {
-            currentVoRepresentation = getRepresentationForQuality(e.newQuality);
-            const bitrate = abrController.getThroughputHistory().getAverageThroughput(e.mediaType);
-            if (!isNaN(bitrate)) {
-                domStorage.setSavedBitrateSettings(e.mediaType, bitrate);
-            }
-            addRepresentationSwitch();
-        }
+        currentVoRepresentation = getRepresentationForQuality(e.newQuality);
+        addRepresentationSwitch();
     }
 
     function onManifestValidityChanged(e) {

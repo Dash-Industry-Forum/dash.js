@@ -2717,7 +2717,6 @@ function MediaPlayer() {
             timelineConverter: timelineConverter,
             videoModel: videoModel,
             playbackController: playbackController,
-            domStorage: domStorage,
             abrController: abrController,
             mediaController: mediaController,
             textController: textController
