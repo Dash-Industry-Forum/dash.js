@@ -190,6 +190,7 @@ function DashHandler(config) {
         request.representationId = representation.id;
 
         if (setRequestUrl(request, representation.initialization, representation)) {
+            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
             return request;
         }
     }
