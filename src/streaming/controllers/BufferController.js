@@ -108,7 +108,7 @@ function BufferController(config) {
     function initialize(Source) {
         setMediaSource(Source);
 
-        requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
+        requiredQuality = abrController.getQualityFor(type);
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);

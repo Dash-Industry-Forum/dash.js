@@ -928,7 +928,7 @@ function MediaPlayer() {
             }
             return thumbnailController.getCurrentTrackIndex();
         }
-        return abrController.getQualityFor(type, streamController.getActiveStreamInfo());
+        return abrController.getQualityFor(type);
     }
 
     /**

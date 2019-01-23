@@ -29,6 +29,7 @@ class AbrControllerMock{
         this.usePixelRatioInLimitBitrateByPortal = false;
         this.autoSwitchBitrate = {video: true, audio: true};
         this.throughputHistory = undefined;
+        this.currentStreamId = undefined;
     }
 
     initialize() {}
@@ -158,24 +159,24 @@ class AbrControllerMock{
 
     isPlayingAtTopQuality() {}
 
-    getQualityFor(type, streamInfo) {
+    getQualityFor(type) {
 
-        var id = streamInfo.id;
         var quality;
 
-        if (!this.qualityDict.hasOwnProperty(id)) {
+        if (!this.currentStreamId || !this.qualityDict.hasOwnProperty(this.currentStreamId)) {
             return QUALITY_DEFAULT;
         }
 
-        if (!this.qualityDict[id].hasOwnProperty(type)) {
+        if (!this.qualityDict[this.currentStreamId].hasOwnProperty(type)) {
             return QUALITY_DEFAULT;
         }
 
-        quality = this.qualityDict[id][type];
+        quality = this.qualityDict[this.currentStreamId][type];
         return quality;
     }
 
     setQualityFor(type, id, value) {
+        this.currentStreamId = id;
         this.qualityDict[id] = this.qualityDict[id] || {};
         this.qualityDict[id][type] = value;
     }

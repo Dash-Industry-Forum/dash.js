@@ -151,7 +151,7 @@ function RepresentationController() {
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
         } else {
-            quality = abrController.getQualityFor(type, streamInfo);
+            quality = abrController.getQualityFor(type);
         }
 
         if (minIdx !== undefined && quality < minIdx) {
