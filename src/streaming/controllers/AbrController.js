@@ -94,7 +94,7 @@ function AbrController() {
     }
 
     function registerStreamType(type, streamProcessor) {
-        switchHistoryDict[type] = SwitchRequestHistory(context).create();
+        switchHistoryDict[type] = switchHistoryDict[type] || SwitchRequestHistory(context).create();
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
@@ -102,13 +102,13 @@ function AbrController() {
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         if (type == Constants.VIDEO) {
             eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
-            droppedFramesHistory = DroppedFramesHistory(context).create();
+            droppedFramesHistory = droppedFramesHistory || DroppedFramesHistory(context).create();
             setElementSize();
         }
         eventBus.on(Events.METRIC_ADDED, onMetricAdded, this);
         eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
 
-        throughputHistory = ThroughputHistory(context).create({
+        throughputHistory = throughputHistory || ThroughputHistory(context).create({
             mediaPlayerModel: mediaPlayerModel
         });
     }
