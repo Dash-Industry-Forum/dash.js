@@ -88,6 +88,10 @@ function MediaPlayer() {
     * @inner
     */
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
+    /**
+    * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
+    * @inner
+    */
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
@@ -2148,6 +2152,7 @@ function MediaPlayer() {
      * Returns instance of Video Element that was attached by calling attachView()
      * @returns {Object}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
      * @instance
      */
     function getVideoElement() {
@@ -2215,6 +2220,7 @@ function MediaPlayer() {
      *
      * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
      * @instance
      */
     function attachTTMLRenderingDiv(div) {
