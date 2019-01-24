@@ -98,6 +98,10 @@ function MediaPlayer() {
     * @inner
     */
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
+    /**
+    * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
+    * @inner
+    */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
     const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
     const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
@@ -1220,6 +1224,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      * @returns {number|NaN} Current live stream latency in seconds. It is the difference between current time and time position at the playback head.
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      */
     function getCurrentLiveLatency() {
         if (!mediaPlayerInitialized) {
@@ -2184,6 +2189,7 @@ function MediaPlayer() {
      *
      * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function attachView(element) {
@@ -2337,6 +2343,7 @@ function MediaPlayer() {
      * @param {string} type
      * @param {Object} value
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
@@ -2357,6 +2364,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {Object}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function getInitialMediaSettingsFor(type) {
@@ -2385,6 +2393,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function getTrackSwitchModeFor(type) {
@@ -2407,6 +2416,7 @@ function MediaPlayer() {
      * @param {string} type
      * @param {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function setTrackSwitchModeFor(type, mode) {
@@ -2428,6 +2438,7 @@ function MediaPlayer() {
      *
      * @param {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function setSelectionModeForInitialTrack(mode) {
@@ -2442,6 +2453,7 @@ function MediaPlayer() {
      *
      * @returns {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function getSelectionModeForInitialTrack() {
@@ -2614,7 +2626,7 @@ function MediaPlayer() {
      * parsed manifest object.
      *
      *
-     * @throws "MediaPlayer not initialized!"
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      *
      * @memberof module:MediaPlayer
      * @instance
