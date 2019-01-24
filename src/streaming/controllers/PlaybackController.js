@@ -343,7 +343,7 @@ function PlaybackController() {
             uriParameters = {};
             const r = parseInt(fragData.r, 10);
             if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
-                fragData.t = Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize + r;
+                fragData.t = Math.max(Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize, (streamInfo.manifestInfo.availableFrom.getTime() / 1000) + streamInfo.start) + r;
             }
             uriParameters.fragS = parseFloat(fragData.s);
             uriParameters.fragT = parseFloat(fragData.t);
