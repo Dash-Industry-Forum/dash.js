@@ -78,10 +78,14 @@ import { checkParameterType } from './utils/SupervisorTools';
  * events to build a robust DASH media player.
  */
 function MediaPlayer() {
-
+    /**
+    * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+    * @inner
+    */
     const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
-    /** @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-    *   @inner
+    /**
+    * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+    * @inner
     */
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
@@ -869,6 +873,7 @@ function MediaPlayer() {
      * @param {string} type - 'video' or 'audio' are the type options.
      * @memberof module:MediaPlayer
      * @returns {BitrateInfo | null}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getTopBitrateInfoFor(type) {
@@ -930,6 +935,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getQualityFor(type) {
@@ -959,6 +965,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function setQualityFor(type, value) {
@@ -1048,6 +1055,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getInitialBitrateFor(type) {
@@ -2227,6 +2235,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {Array}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getBitrateInfoListFor(type) {
@@ -2242,6 +2251,7 @@ function MediaPlayer() {
      * @param {Object} manifest
      * @returns {Array} list of {@link StreamInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getStreamsFromManifest(manifest) {
@@ -2256,6 +2266,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getTracksFor(type) {
@@ -2273,6 +2284,7 @@ function MediaPlayer() {
      * @param {Object} streamInfo
      * @returns {Array}  list of {@link MediaInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getTracksForTypeFromManifest(type, manifest, streamInfo) {
@@ -2290,6 +2302,7 @@ function MediaPlayer() {
      * @returns {Object|null} {@link MediaInfo}
      *
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getCurrentTrackFor(type) {
@@ -2345,6 +2358,7 @@ function MediaPlayer() {
     /**
      * @param {MediaInfo} track - instance of {@link MediaInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function setCurrentTrack(track) {
@@ -2679,6 +2693,13 @@ function MediaPlayer() {
         FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
+    /**
+     * This method returns the active stream
+     *
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function getActiveStream() {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
