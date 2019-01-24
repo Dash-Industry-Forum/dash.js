@@ -448,6 +448,7 @@ function MediaPlayer() {
      * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
      * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -621,6 +622,7 @@ function MediaPlayer() {
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
      * @instance
      */
     function setMute(value) {
@@ -642,6 +644,7 @@ function MediaPlayer() {
      * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type, or is NaN or not between 0 and 1.
      * @instance
      */
     function setVolume(value) {
@@ -1172,6 +1175,7 @@ function MediaPlayer() {
      * @default true
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#attachView attachView()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
      * @instance
      *
      */
