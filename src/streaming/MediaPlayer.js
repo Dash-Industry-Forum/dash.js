@@ -528,6 +528,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0.5
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is not between 0 and 0.5.
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
@@ -1202,6 +1203,7 @@ function MediaPlayer() {
      * @default 4
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      */
     function setLiveDelayFragmentCount(value) {
@@ -1218,6 +1220,7 @@ function MediaPlayer() {
      * @default undefined
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value, if defined, is not number type.
      * @instance
      */
     function setLiveDelay(value) {
@@ -1258,6 +1261,7 @@ function MediaPlayer() {
      * @default false
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function useSuggestedPresentationDelay(value) {
@@ -1275,6 +1279,7 @@ function MediaPlayer() {
      * @param {number=} ttl - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
      * @default enable = True, ttl = 360000 (1 hour)
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, enable is not boolean type and, if defined, ttl is not a number or is NaN.
      * @instance
      *
      */
@@ -1293,6 +1298,7 @@ function MediaPlayer() {
      * @param {number=} [ttl] - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
      * @default enable = True, ttl = 360000 (1 hour)
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, enable is not boolean type and, if defined, ttl is not a number or is NaN.
      * @instance
      *
      */
@@ -1307,6 +1313,7 @@ function MediaPlayer() {
      * @default true
      * @param {boolean} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function setScheduleWhilePaused(value) {
@@ -1345,6 +1352,7 @@ function MediaPlayer() {
      * @param {boolean} value
      * @default {boolean} false
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
@@ -1396,6 +1404,7 @@ function MediaPlayer() {
      * @param {boolean} value
      * @default true
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
      * @instance
      */
     function useDefaultABRRules(value) {
@@ -1410,6 +1419,7 @@ function MediaPlayer() {
      * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
      * @param {object} rule - the rule object instance
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
      * @instance
      */
     function addABRCustomRule(type, rulename, rule) {
@@ -1452,6 +1462,7 @@ function MediaPlayer() {
      * @param {string} value
      * @default {string} 'slidingWindow'
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not slidingWindow or ewma.
      * @instance
      */
     function setMovingAverageMethod(value) {
@@ -1485,6 +1496,7 @@ function MediaPlayer() {
      * Browser compatibility (Check row 'ReadableStream response body'): https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
      * @param {boolean} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function setLowLatencyEnabled(value) {
@@ -1531,6 +1543,7 @@ function MediaPlayer() {
      * @param {string} value - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, schemeIdUri and value are not string type.
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
@@ -1578,6 +1591,7 @@ function MediaPlayer() {
      * @default {boolean} True
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function enableManifestDateHeaderTimeSource(value) {
@@ -1592,6 +1606,7 @@ function MediaPlayer() {
      * @default 20 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferToKeep(value) {
@@ -1606,6 +1621,7 @@ function MediaPlayer() {
      * @default 80 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferAheadToKeep(value) {
@@ -1619,6 +1635,7 @@ function MediaPlayer() {
      * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not a number type.
      * @instance
      */
     function setBufferPruningInterval(value) {
@@ -1639,6 +1656,7 @@ function MediaPlayer() {
      * @default 12 seconds.
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setStableBufferTime(value) {
@@ -1669,6 +1687,7 @@ function MediaPlayer() {
      * @default 30 seconds.
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
@@ -1697,6 +1716,7 @@ function MediaPlayer() {
      * @see {@link module:MediaPlayer#setBufferTimeAtTopQuality setBufferTimeAtTopQuality()}
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
@@ -1724,6 +1744,7 @@ function MediaPlayer() {
      * @default 600 seconds (10 minutes).
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
@@ -1744,6 +1765,7 @@ function MediaPlayer() {
      * @default 0.05 seconds.
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
     */
     function setSegmentOverlapToleranceTime(value) {
@@ -1759,6 +1781,7 @@ function MediaPlayer() {
      * @param {string} type 'video' or 'audio' are the type options.
      * @param {number} value Threshold value in milliseconds.
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, type not a string type and its value is not audio or video, value not number type.
      * @instance
      */
     function setCacheLoadThresholdForType(type, value) {
@@ -1773,6 +1796,7 @@ function MediaPlayer() {
      *
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
@@ -1811,6 +1835,7 @@ function MediaPlayer() {
      * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setAbandonLoadTimeout(value) {
@@ -1828,6 +1853,7 @@ function MediaPlayer() {
      * @default 3
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
@@ -1840,6 +1866,7 @@ function MediaPlayer() {
      * @default 1000 milliseconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
@@ -1903,6 +1930,7 @@ function MediaPlayer() {
      * @param {boolean} value
      * @default false
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      *
      */
@@ -1923,9 +1951,10 @@ function MediaPlayer() {
     /**
      * Time in seconds for a gap to be considered small.
      *
-     * @param {boolean} value
+     * @param {number} value
      * @default 0.8
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      *
      */
@@ -1951,6 +1980,7 @@ function MediaPlayer() {
      * @param {int} value
      * @default 100
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      * @see {@link module:MediaPlayer#getManifestUpdateRetryInterval getManifestUpdateRetryInterval()}
      *
@@ -2574,6 +2604,7 @@ function MediaPlayer() {
      * @param {boolean=} value - True or false flag.
      *
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function keepProtectionMediaKeys(value) {
