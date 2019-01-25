@@ -552,7 +552,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0.02
-     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is NaN, or value is not between 0 and 0.5.
      * @instance
      */
     function setLowLatencyMinDrift(value) {
@@ -592,7 +592,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0
-     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is NaN, or value is negative.
      * @instance
      */
     function setLowLatencyMaxDriftBeforeSeeking(value) {
