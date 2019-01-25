@@ -239,6 +239,7 @@ function MediaPlayer() {
         }
 
         adapter = DashAdapter(context).getInstance();
+
         manifestModel = ManifestModel(context).getInstance();
 
         dashMetrics = DashMetrics(context).getInstance();
