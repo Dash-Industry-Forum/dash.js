@@ -2844,6 +2844,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
+                manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
                 baseURLController: BaseURLController(context).getInstance(),
