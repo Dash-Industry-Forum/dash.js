@@ -1,1 +1,1 @@
-java -jar selenium-server-standalone-3.4.0.jar -role node -nodeConfig  Win10nodeConfig.json
+java -jar selenium-server-standalone-3.14.0.jar -role node -nodeConfig  Win10nodeConfig.json
