@@ -72,5 +72,14 @@ define(function(require) {
         conf.testPage = intern.args.appurl;
     }
 
+    // tests suites
+    if (intern.args.tests) {
+        var tests = intern.args.tests.split(',');
+        conf.suites = [];
+        tests.forEach(function(test) {
+            conf.suites.push(test);
+        });
+    }
+
     return conf;
 });
