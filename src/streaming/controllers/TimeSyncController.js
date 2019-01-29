@@ -275,7 +275,7 @@ function TimeSyncController() {
     }
 
     function checkForDateHeader() {
-        let metrics = metricsModel.getReadOnlyMetricsFor(Constants.STREAM);
+        let metrics = metricsModel.getMetricsFor(Constants.STREAM, true);
         let dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
         let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 

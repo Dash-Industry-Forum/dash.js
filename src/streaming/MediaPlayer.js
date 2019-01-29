@@ -2025,7 +2025,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMetricsFor(type) {
-        return metricsModel.getReadOnlyMetricsFor(type);
+        return metricsModel.getMetricsFor(type, true);
     }
     /*
     ---------------------------------------------------------------------------

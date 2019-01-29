@@ -58,7 +58,7 @@ function InsufficientBufferRule(config) {
     }
 
     function checkConfig() {
-        if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor') || !dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel')) {
+        if (!metricsModel || !metricsModel.hasOwnProperty('getMetricsFor') || !dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -82,7 +82,7 @@ function InsufficientBufferRule(config) {
         checkConfig();
 
         const mediaType = rulesContext.getMediaType();
-        const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         const lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;

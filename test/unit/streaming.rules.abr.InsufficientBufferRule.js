@@ -33,7 +33,7 @@ describe('InsufficientBufferRule', function () {
     it('should return an empty switch request when bufferState is empty', function () {
         const dashMetricsMock = new DashMetricsMock();
         const metricsModelMockWithEmptyBufferState = {
-            getReadOnlyMetricsFor: function () {
+            getMetricsFor: function () {
                 return {
                     BufferState: []
                 };
@@ -57,7 +57,7 @@ describe('InsufficientBufferRule', function () {
     it('should return an empty switch request when first call is done with a buffer in state bufferStalled', function () {
         const dashMetricsMock = new DashMetricsMock();
         const metricsModelMockWithBufferState = {
-            getReadOnlyMetricsFor: function () {
+            getMetricsFor: function () {
                 return {
                     BufferState: [{ state: 'bufferStalled' }]
                 };
@@ -81,7 +81,7 @@ describe('InsufficientBufferRule', function () {
     it('should return an empty switch request when first call is done with a buffer in state bufferLoaded and fragmentDuration is NaN', function () {
         const dashMetricsMock = new DashMetricsMock();
         const metricsModelMockWithBufferState = {
-            getReadOnlyMetricsFor: function () {
+            getMetricsFor: function () {
                 return {
                     BufferState: [{ state: 'bufferLoaded' }]
                 };
@@ -109,7 +109,7 @@ describe('InsufficientBufferRule', function () {
         let representationInfo = { fragmentDuration: NaN };
         const dashMetricsMock = new DashMetricsMock();
         const metricsModelMockBuffer = {
-            getReadOnlyMetricsFor: function () {
+            getMetricsFor: function () {
                 return {
                     BufferState: [bufferState]
                 };

@@ -87,16 +87,8 @@ function MetricsModel() {
         metricsChanged();
     }
 
-    function getReadOnlyMetricsFor(type) {
-        if (streamMetrics.hasOwnProperty(type)) {
-            return streamMetrics[type];
-        }
-
-        return null;
-    }
-
-    function getMetricsFor(type) {
-        let metrics;
+    function getMetricsFor(type, readOnly) {
+        let metrics = null;
 
         if (!type) {
             return metrics;
@@ -104,7 +96,7 @@ function MetricsModel() {
 
         if (streamMetrics.hasOwnProperty(type)) {
             metrics = streamMetrics[type];
-        } else {
+        } else if (!readOnly) {
             metrics = new MetricsList();
             streamMetrics[type] = metrics;
         }
@@ -369,7 +361,6 @@ function MetricsModel() {
     instance = {
         clearCurrentMetricsForType: clearCurrentMetricsForType,
         clearAllCurrentMetrics: clearAllCurrentMetrics,
-        getReadOnlyMetricsFor: getReadOnlyMetricsFor,
         getMetricsFor: getMetricsFor,
         addHttpRequest: addHttpRequest,
         addRepresentationSwitch: addRepresentationSwitch,

@@ -49,7 +49,7 @@ function ThroughputRule(config) {
     }
 
     function checkConfig() {
-        if (!metricsModel || !metricsModel.hasOwnProperty('getReadOnlyMetricsFor')) {
+        if (!metricsModel || !metricsModel.hasOwnProperty('getMetricsFor')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -66,7 +66,7 @@ function ThroughputRule(config) {
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
-        const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         const scheduleController = rulesContext.getScheduleController();
         const abrController = rulesContext.getAbrController();
         const streamInfo = rulesContext.getStreamInfo();

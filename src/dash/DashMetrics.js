@@ -181,7 +181,7 @@ function DashMetrics() {
      * @instance
      */
     function getCurrentDVRInfo() {
-        const metrics = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
+        const metrics = metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
         return getCurrent(metrics, MetricsConstants.DVR_INFO);
     }
 

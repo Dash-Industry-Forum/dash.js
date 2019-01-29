@@ -62,7 +62,7 @@ function DownloadRatioRuleClass() {
         let metricsModel = MetricsModel(context).getInstance();
         let dashMetrics = DashMetrics(context).getInstance();
         let dashManifest = DashManifestModel(context).getInstance();
-        let metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        let metrics = metricsModel.getMetricsFor(mediaType, true);
         let streamController = StreamController(context).getInstance();
         let abrController = rulesContext.getAbrController();
         let current = abrController.getQualityFor(mediaType, streamController.getActiveStreamInfo());

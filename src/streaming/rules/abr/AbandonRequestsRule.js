@@ -81,7 +81,7 @@ function AbandonRequestsRule(config) {
             setFragmentRequestDict(mediaType, req.index);
 
             const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getMetricsFor(mediaType, true));
             if ( bufferLevel > stableBufferTime ) {
                 return switchRequest;
             }

@@ -7,10 +7,14 @@ describe('MetricsModel', function () {
     const context = {};
     const metricsModel = MetricsModel(context).getInstance();
 
-    it('should return undefined when getMetricsFor is called and type is undefined', function () {
+    beforeEach(function () {
+        metricsModel.clearAllCurrentMetrics();
+    });
+
+    it('should return null when getMetricsFor is called and type is undefined', function () {
         const metrics = metricsModel.getMetricsFor();
 
-        expect(metrics).to.be.undefined;                // jshint ignore:line
+        expect(metrics).to.be.null;                // jshint ignore:line
     });
 
     it('should return an empty MetricsList when getMetricsFor is called and type is defined', function () {
@@ -18,5 +22,11 @@ describe('MetricsModel', function () {
 
         expect(metrics.TcpList).to.be.instanceOf(Array); // jshint ignore:line
         expect(metrics.TcpList).to.be.empty; // jshint ignore:line
+    });
+
+    it('should return null when getMetricsFor is called and type is defined and readOnly is true', function () {
+        const metrics = metricsModel.getMetricsFor('video', true);
+
+        expect(metrics).to.be.null;                // jshint ignore:line
     });
 });

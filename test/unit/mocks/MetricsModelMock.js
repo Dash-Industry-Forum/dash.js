@@ -11,18 +11,18 @@ function MetricsModelMock () {
         this.bufferState = bufferLevel;
     };
 
-    this.getReadOnlyMetricsFor = function () {
-        return {
-            BufferState: ['bufferStalled']
-        };
-    };
-
     this.clearAllCurrentMetrics = function () {
 
     };
 
-    this.getMetricsFor = function (/*type*/) {
-        return;
+    this.getMetricsFor = function (type, readOnly) {
+        if (readOnly) {
+            return {
+                BufferState: ['bufferStalled']
+            };
+        } else {
+            return;
+        }
     };
 }
 
