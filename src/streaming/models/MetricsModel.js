@@ -98,6 +98,10 @@ function MetricsModel() {
     function getMetricsFor(type) {
         let metrics;
 
+        if (!type) {
+            return metrics;
+        }
+
         if (streamMetrics.hasOwnProperty(type)) {
             metrics = streamMetrics[type];
         } else {

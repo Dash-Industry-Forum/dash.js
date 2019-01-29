@@ -108,7 +108,8 @@ function SegmentBaseLoader() {
             },
             searching: false,
             bytesLoaded: 0,
-            bytesToLoad: 1500
+            bytesToLoad: 1500,
+            mediaType: representation.adaptation.type
         };
 
         logger.debug('Start searching for initialization.');
@@ -157,7 +158,8 @@ function SegmentBaseLoader() {
             range: hasRange ? range : { start: 0, end: 1500 },
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
-            bytesToLoad: 1500
+            bytesToLoad: 1500,
+            mediaType: representation.adaptation.type
         };
 
         const request = getFragmentRequest(info);
@@ -292,6 +294,7 @@ function SegmentBaseLoader() {
         request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.url = info.url;
         request.range = info.range.start + '-' + info.range.end;
+        request.mediaType = info.mediaType;
 
         return request;
     }
