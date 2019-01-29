@@ -702,7 +702,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRWindowSize() {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         if (!metric) {
             return 0;
         }
@@ -721,7 +721,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRSeekOffset(value) {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         if (!metric) {
             return 0;
         }
@@ -758,7 +758,7 @@ function MediaPlayer() {
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
-            let metric = getDVRInfoMetric();
+            let metric = dashMetrics.getCurrentDVRInfo();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
         }
 
@@ -781,7 +781,7 @@ function MediaPlayer() {
 
         if (playbackController.getIsDynamic()) {
 
-            let metric = getDVRInfoMetric();
+            let metric = dashMetrics.getCurrentDVRInfo();
             let range;
 
             if (!metric) {
@@ -2828,7 +2828,6 @@ function MediaPlayer() {
 
         playbackController.setConfig({
             streamController: streamController,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             adapter: adapter,
@@ -2952,13 +2951,8 @@ function MediaPlayer() {
         }
     }
 
-    function getDVRInfoMetric() {
-        let metric = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
-        return dashMetrics.getCurrentDVRInfo(metric);
-    }
-
     function getAsUTC(valToConvert) {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         let availableFrom,
             utcValue;
 

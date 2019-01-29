@@ -176,12 +176,12 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentDVRInfo(metrics) {
+    function getCurrentDVRInfo() {
+        const metrics = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
         return getCurrent(metrics, MetricsConstants.DVR_INFO);
     }
 

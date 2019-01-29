@@ -45,7 +45,6 @@ function PlaybackController() {
     let instance,
         logger,
         streamController,
-        metricsModel,
         dashMetrics,
         adapter,
         videoModel,
@@ -161,8 +160,7 @@ function PlaybackController() {
     }
 
     function seekToLive() {
-        const metrics = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo();
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
 
         seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
@@ -308,9 +306,6 @@ function PlaybackController() {
         if (config.streamController) {
             streamController = config.streamController;
         }
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
-        }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
@@ -393,8 +388,7 @@ function PlaybackController() {
     }
 
     function getActualPresentationTime(currentTime) {
-        const metrics = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo(metrics);
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo();
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         let actualTime;
 
