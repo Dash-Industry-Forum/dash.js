@@ -20,6 +20,10 @@ function MetricsModelMock () {
     this.clearAllCurrentMetrics = function () {
 
     };
+
+    this.getMetricsFor = function (/*type*/) {
+        return;
+    };
 }
 
 export default MetricsModelMock;

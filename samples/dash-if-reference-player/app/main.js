@@ -742,7 +742,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         if (metrics && dashMetrics && $scope.streamInfo) {
             var periodIdx = $scope.streamInfo.index;
-            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
+            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
             var index = $scope.player.getQualityFor(type);

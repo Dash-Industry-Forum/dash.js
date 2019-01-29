@@ -1,13 +1,18 @@
 import DashMetrics from '../../src/dash/DashMetrics';
 
+import ManifestModelMock from './mocks/ManifestModelMock';
+import MetricsModelMock from './mocks/MetricsModelMock';
+
 const expect = require('chai').expect;
 
 const context = {};
-const dashMetrics = DashMetrics(context).getInstance();
 
+const metricsModelMock = new MetricsModelMock();
+const manifestModelMock = new ManifestModelMock();
+const dashMetrics = DashMetrics(context).getInstance({manifestModel: manifestModelMock, metricsModel: metricsModelMock });
 
 describe('DashMetrics', function () {
-    it('should return null when getCurrentRepresentationSwitch is called and metrics is undefined', () => {
+    it('should return null when getCurrentRepresentationSwitch is called and type is undefined', () => {
         const representation = dashMetrics.getCurrentRepresentationSwitch();
 
         expect(representation).to.be.null;  // jshint ignore:line

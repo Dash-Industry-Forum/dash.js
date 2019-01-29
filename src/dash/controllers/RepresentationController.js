@@ -259,7 +259,6 @@ function RepresentationController() {
 
         let r = e.representation;
         let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
-        var metrics = metricsModel.getMetricsFor(getCurrentRepresentation().adaptation.type);
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
         let alreadyAdded = false;
         let postponeTimePeriod = 0;
@@ -304,7 +303,7 @@ function RepresentationController() {
             abrController.setPlaybackQuality(streamProcessor.getType(), streamProcessor.getStreamInfo(), getQualityForRepresentation(currentVoRepresentation));
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentVoRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
-            repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
+            repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 
             if (!repSwitch) {
                 addRepresentationSwitch();

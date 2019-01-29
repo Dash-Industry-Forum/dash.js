@@ -38,14 +38,16 @@ import Round10 from './utils/Round10';
  */
 function DashMetrics() {
     let instance;
+    let metricsModel = config.metricsModel;
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} type
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentRepresentationSwitch(metrics) {
+    function getCurrentRepresentationSwitch(type) {
+        let metrics = metricsModel.getMetricsFor(type);
         return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
     }
 
