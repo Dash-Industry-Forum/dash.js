@@ -281,7 +281,13 @@ function KeySystemPlayReady(config) {
         return null;
     }
 
-    function getSessionId(/*cp*/) {
+    function getSessionId(cp) {
+        // Get sessionId from protectionData or from manifest
+        if (protData && protData.sessionId) {
+            return protData.sessionId;
+        } else if (cp && cp.sessionId) {
+            return cp.sessionId;
+        }
         return null;
     }
 

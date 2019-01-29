@@ -55,10 +55,9 @@ function DashManifestModel(config) {
 
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
-    const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
-    const adapter = config.adapter;
     const errHandler = config.errHandler;
+    const BASE64 = config.BASE64;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
@@ -195,12 +194,6 @@ function DashManifestModel(config) {
         return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
-    function getIsMain(adaptation) {
-        return getRolesForAdaptation(adaptation).filter(function (role) {
-            return role.value === DashConstants.MAIN;
-        })[0];
-    }
-
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
@@ -269,33 +262,6 @@ function DashManifestModel(config) {
         }
 
         return adaptations;
-    }
-
-    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
-        const adaptations = getAdaptationsForType(manifest, periodIndex, type);
-
-        if (!adaptations || adaptations.length === 0) return null;
-
-        if (adaptations.length > 1 && streamInfo) {
-            const currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
-            const allMediaInfoForType = adapter.getAllMediaInfoForType(streamInfo, type);
-
-            if (currentTrack) {
-                for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
-                        return adaptations[i];
-                    }
-                }
-            }
-
-            for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                if (getIsMain(adaptations[i])) {
-                    return adaptations[i];
-                }
-            }
-        }
-
-        return adaptations[0];
     }
 
     function getCodec(adaptation, representationId, addResolutionInfo) {
@@ -819,13 +785,17 @@ function DashManifestModel(config) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
 
-                    // From Cor.1: 'NOTE: this attribute is an alternative
-                    // to specifying a complete XML element(s) in the Event.
-                    // It is useful when an event leans itself to a compact
-                    // string representation'.
-                    event.messageData =
-                        eventStreams[i].Event_asArray[j].messageData ||
-                        eventStreams[i].Event_asArray[j].__text;
+                    if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
+                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary);
+                    } else {
+                        // From Cor.1: 'NOTE: this attribute is an alternative
+                        // to specifying a complete XML element(s) in the Event.
+                        // It is useful when an event leans itself to a compact
+                        // string representation'.
+                        event.messageData =
+                            eventStreams[i].Event_asArray[j].messageData ||
+                            eventStreams[i].Event_asArray[j].__text;
+                    }
 
                     events.push(event);
                 }
@@ -1043,7 +1013,6 @@ function DashManifestModel(config) {
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
         getAdaptationsForType: getAdaptationsForType,
-        getAdaptationForType: getAdaptationForType,
         getCodec: getCodec,
         getMimeType: getMimeType,
         getKID: getKID,

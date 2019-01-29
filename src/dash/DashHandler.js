@@ -386,7 +386,7 @@ function DashHandler(config) {
             index = getIndexForSegments(time, representation, timeThreshold);
         }
 
-        if (index > 0) {
+        if (index >= 0) {
             logger.debug('Index for ' + type + ' time ' + time + ' is ' + index );
         }
 

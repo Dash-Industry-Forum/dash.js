@@ -1,15 +1,53 @@
 import DashAdapter from '../../src/dash/DashAdapter';
+import MediaInfo from '../../src/streaming/vo/MediaInfo';
 import Constants from '../../src/streaming/constants/Constants';
 
 import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
+import DashManifestModelMock from './mocks/DashManifestModelMock';
 
 const expect = require('chai').expect;
 
 const context = {};
+const dashManifestModelMock = new DashManifestModelMock();
 const dashAdapter = DashAdapter(context).getInstance();
+dashAdapter.setConfig({
+    dashManifestModel: dashManifestModelMock
+});
 
 describe('DashAdapter', function () {
+
+    it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
+        const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: 'video' }, { id: 1, mimeType: 'video' }] }] };
+        const adaptation = dashAdapter.getAdaptationForType(manifest, 0, 'video');
+
+        expect(adaptation.id).to.equal(0); // jshint ignore:line
+    });
+
+    it('should return the correct adaptation when getAdaptationForType is called', () => {
+        const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
+
+        const streamInfo = {
+            id: 'id'
+        };
+
+        const track = new MediaInfo();
+
+        track.id = undefined;
+        track.index = 1;
+        track.streamInfo = streamInfo;
+        track.representationCount = 0;
+        track.lang = 'deu';
+        track.roles = ['main'];
+        track.codec = 'audio/mp4;codecs="mp4a.40.2"';
+        track.mimeType = 'audio/mp4';
+
+        dashAdapter.setCurrentMediaInfo(streamInfo.id, 'audio', track);
+
+        const adaptation = dashAdapter.getAdaptationForType(manifest, 0, 'audio', streamInfo);
+
+        expect(adaptation.lang).to.equal('eng'); // jshint ignore:line
+    });
 
     it('should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined', function () {
         expect(dashAdapter.getStreamsInfo.bind(dashAdapter,{})).to.throw('setConfig function has to be called previously');
@@ -81,7 +119,7 @@ describe('DashAdapter', function () {
     });
 
     it('should return an empty event object when getEvent is called and eventBox and eventStreams parameters are set', function () {
-        const event = dashAdapter.getEvent({scheme_id_uri: 0}, [{schemeIdUri: {}}]);
+        const event = dashAdapter.getEvent({scheme_id_uri: 'id', value: 'value'}, {'id/value': {}});
 
         expect(event).to.be.an('object');
     });

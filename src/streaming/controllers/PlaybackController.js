@@ -343,7 +343,7 @@ function PlaybackController() {
             uriParameters = {};
             const r = parseInt(fragData.r, 10);
             if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
-                fragData.t = Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize + r;
+                fragData.t = Math.max(Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize, (streamInfo.manifestInfo.availableFrom.getTime() / 1000) + streamInfo.start) + r;
             }
             uriParameters.fragS = parseFloat(fragData.s);
             uriParameters.fragT = parseFloat(fragData.t);
@@ -592,7 +592,13 @@ function PlaybackController() {
     }
 
     function onPlaybackProgression() {
-        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && !isPaused() && !isSeeking()) {
+        if (
+            isDynamic &&
+            mediaPlayerModel.getLowLatencyEnabled() &&
+            mediaPlayerModel.getCatchUpPlaybackRate() > 0 &&
+            !isPaused() &&
+            !isSeeking()
+        ) {
             if (needToCatchUp()) {
                 startPlaybackCatchUp();
             } else {
@@ -744,15 +750,18 @@ function PlaybackController() {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamInfo.id !== streamInfo.id) return;
 
-        if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
-            if (!playbackStalled) {
-                playbackStalled = true;
-                if (!mediaPlayerModel.getLowLatencyEnabled()) {
+        if (mediaPlayerModel.getLowLatencyEnabled()) {
+            if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
+                if (!playbackStalled) {
+                    playbackStalled = true;
                     stopPlaybackCatchUp();
                 }
             }
+        } else {
+            videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
         }
     }
+
 
     function onPlaybackStalled(e) {
         eventBus.trigger(Events.PLAYBACK_STALLED, {
