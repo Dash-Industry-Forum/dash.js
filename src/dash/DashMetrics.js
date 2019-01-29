@@ -77,16 +77,6 @@ function DashMetrics() {
 
     /**
      * @param {MetricsList} metrics
-     * @returns {null|*|vo}
-     * @memberof module:DashMetrics
-     * @instance
-     */
-    function getRequestsQueue(metrics) {
-        return metrics ? metrics.RequestsQueue : null;
-    }
-
-    /**
-     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -99,15 +89,13 @@ function DashMetrics() {
         const httpList = metrics.HttpList;
         let currentHttpList = null;
 
-        let httpListLength,
-            httpListLastIndex;
+        let httpListLastIndex;
 
         if (!httpList || httpList.length <= 0) {
             return null;
         }
 
-        httpListLength = httpList.length;
-        httpListLastIndex = httpListLength - 1;
+        httpListLastIndex = httpList.length - 1;
 
         while (httpListLastIndex >= 0) {
             if (httpList[httpListLastIndex].responsecode) {
@@ -260,14 +248,12 @@ function DashMetrics() {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
-        getHttpRequests: getHttpRequests,
         getCurrentDroppedFrames: getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,
         getCurrentDVRInfo: getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
-        getRequestsQueue: getRequestsQueue
+        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID
     };
 
     return instance;
