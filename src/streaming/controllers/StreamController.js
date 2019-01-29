@@ -619,7 +619,7 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
+            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
             metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
                 currentTime: playbackController.getTime(),
                 buffered: videoModel.getBufferRange(),

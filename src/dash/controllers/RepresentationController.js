@@ -258,8 +258,7 @@ function RepresentationController() {
         }
 
         let r = e.representation;
-        let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
-        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(streamMetrics);
+        let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
         let postponeTimePeriod = 0;
         let repInfo,

@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../streaming/constants/Constants';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
@@ -165,13 +166,13 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentManifestUpdate(metrics) {
-        return getCurrent(metrics, MetricsConstants.MANIFEST_UPDATE);
+    function getCurrentManifestUpdate() {
+        let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
+        return getCurrent(streamMetrics, MetricsConstants.MANIFEST_UPDATE);
     }
 
     /**
