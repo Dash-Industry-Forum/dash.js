@@ -258,7 +258,6 @@ function DashMetrics() {
 
     instance = {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
-        getLatestBufferLevelVO: getLatestBufferLevelVO,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
