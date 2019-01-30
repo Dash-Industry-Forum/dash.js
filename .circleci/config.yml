@@ -42,7 +42,7 @@ jobs:
               echo "Not development branch, dry run only"
             fi
 
-  test:
+  functional-test:
     branches:
       only:
         - circle-ci-functional-tests
