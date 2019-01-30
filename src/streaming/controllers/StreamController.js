@@ -735,7 +735,6 @@ function StreamController() {
             baseURLController.initialize(manifest);
 
             timeSyncController.setConfig({
-                metricsModel: metricsModel,
                 dashMetrics: dashMetrics,
                 baseURLController: baseURLController
             });

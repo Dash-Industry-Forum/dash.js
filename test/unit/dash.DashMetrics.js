@@ -38,8 +38,8 @@ describe('DashMetrics', function () {
         });
 
         it('should return null when getCurrentHttpRequest is called and metrics.httpList is undefined', () => {
-            const metrics = {};
-            const currentHttpRequest = dashMetrics.getCurrentHttpRequest(metrics);
+            metricsModelMock.setMetrics({});
+            const currentHttpRequest = dashMetrics.getCurrentHttpRequest();
 
             expect(currentHttpRequest).to.be.null;  // jshint ignore:line
         });
@@ -54,8 +54,8 @@ describe('DashMetrics', function () {
         });
 
         it('should return an empty array when getHttpRequests is called and metrics.httpList is undefined', () => {
-            const metrics = {};
-            const httpRequestArray = dashMetrics.getHttpRequests(metrics);
+            metricsModelMock.setMetrics({});
+            const httpRequestArray = dashMetrics.getHttpRequests();
 
             expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
             expect(httpRequestArray).to.be.empty;                // jshint ignore:line
@@ -69,23 +69,24 @@ describe('DashMetrics', function () {
     });
 
     describe('getLatestMPDRequestHeaderValueByID', () => {
-        it('should return null when getLatestMPDRequestHeaderValueByID is called and metrics and id are undefined', () => {
+        it('should return null when getLatestMPDRequestHeaderValueByID is called and id is undefined', () => {
             const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID();
 
             expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
         });
 
-        it('should return null when getLatestMPDRequestHeaderValueByID is called and id is undefined', () => {
+        it('should return null when getLatestMPDRequestHeaderValueByID is called and metrics is defined but id is undefined', () => {
             const metrics = { HttpList: [{type: 'MPD', _responseHeaders: ''}, {type: 'MPD', _responseHeaders: ''}]};
+            metricsModelMock.setMetrics(metrics);
 
-            const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics);
+            const lastMpdRequestHeader = dashMetrics.getLatestMPDRequestHeaderValueByID();
 
             expect(lastMpdRequestHeader).to.be.null;  // jshint ignore:line
         });
     });
 
     describe('getLatestFragmentRequestHeaderValueByID', () => {
-        it('should return null when getLatestFragmentRequestHeaderValueByID is called and metrics and id are undefined', () => {
+        it('should return null when getLatestFragmentRequestHeaderValueByID is called and metrics, type and id are undefined', () => {
             const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID();
 
             expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line
@@ -93,7 +94,8 @@ describe('DashMetrics', function () {
 
         it('should return null when getLatestFragmentRequestHeaderValueByID is called and httpRequest._responseHeaders and id are undefined', () => {
             const metrics = { HttpList: [{responsecode: 200}, {responsecode: 200}]};
-            const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID(metrics);
+            metricsModelMock.setMetrics(metrics);
+            const lastFragmentRequestHeader = dashMetrics.getLatestFragmentRequestHeaderValueByID('stream');
 
             expect(lastFragmentRequestHeader).to.be.null;  // jshint ignore:line
         });

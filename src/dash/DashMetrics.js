@@ -191,17 +191,18 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestMPDRequestHeaderValueByID(metrics, id) {
+    function getLatestMPDRequestHeaderValueByID(id) {
         let headers = {};
         let httpRequestList,
             httpRequest,
             i;
+
+        let metrics = metricsModel.getMetricsFor(Constants.STREAM, true);
 
         httpRequestList = getHttpRequests(metrics);
 
@@ -218,14 +219,15 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} type
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestFragmentRequestHeaderValueByID(metrics, id) {
+    function getLatestFragmentRequestHeaderValueByID(type, id) {
         let headers = {};
+        let metrics = metricsModel.getMetricsFor(type, true);
         let httpRequest = getCurrentHttpRequest(metrics);
         if (httpRequest) {
             headers = parseResponseHeaders(httpRequest._responseHeaders);

@@ -2,6 +2,7 @@ function MetricsModelMock () {
 
     this.bufferState = 0;
     this.bufferLevel = 0;
+    this.metrics = null;
 
     this.addBufferState = function (type, bufferState/*, bufferTarget*/) {
         this.bufferState = bufferState;
@@ -12,17 +13,15 @@ function MetricsModelMock () {
     };
 
     this.clearAllCurrentMetrics = function () {
-
+        this.metrics = null;
     };
 
-    this.getMetricsFor = function (type, readOnly) {
-        if (readOnly) {
-            return {
-                BufferState: ['bufferStalled']
-            };
-        } else {
-            return;
-        }
+    this.setMetrics = function (metrics) {
+        this.metrics = metrics;
+    };
+
+    this.getMetricsFor = function (/*type, readOnly*/) {
+        return this.metrics;
     };
 }
 
