@@ -26,7 +26,7 @@ define([
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
     var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
     var SEEK_TIMEOUT = 5; // Timeout (in sec.) for checking seek to be completed
-    var SEEK_COUNT = 1; // Number of seek tests
+    var SEEK_COUNT = 3; // Number of seek tests
 
     // Test variables
     var seekPos;
