@@ -24,9 +24,9 @@ define([
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 7; // Timeout (in sec.) for checking playback progress
+    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
     var SEEK_TIMEOUT = 5; // Timeout (in sec.) for checking seek to be completed
-    var SEEK_COUNT = 3; // Number of seek tests
+    var SEEK_COUNT = 1; // Number of seek tests
 
     // Test variables
     var seekPos;
@@ -58,14 +58,8 @@ define([
                     utils.log(NAME, 'Check if playing');
                     return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
                 })
-                // Get the stream duration
                 .then(function(playing) {
                     assert.isTrue(playing);
-                    return command.execute(player.getDuration)
-                })
-                .then(function(duration) {
-                    stream.duration = duration;
-                    utils.log(NAME, 'Duration: ' + duration);
                 });
             }
         })
@@ -79,11 +73,16 @@ define([
                 if (!stream.available) {
                     this.skip();
                 }
-                // Generate randomly a seek position
-                seekPos = generateSeekPos(stream.duration);
-                utils.log(NAME, 'Seek: ' + seekPos);
-                // Seek the player
-                return command.executeAsync(player.seek, [seekPos, SEEK_TIMEOUT])
+                // Get the stream duration (applies for static and dynamic streams)
+                return command.execute(player.getDuration)
+                .then(function(duration) {
+                    utils.log(NAME, 'Duration: ' + duration);
+                    // Generate randomly a seek position
+                    seekPos = generateSeekPos(duration);
+                    utils.log(NAME, 'Seek: ' + seekPos);
+                    // Seek the player
+                    return command.executeAsync(player.seek, [seekPos, SEEK_TIMEOUT]);
+                })
                 .then(function(seeked) {
                     assert.isTrue(seeked);
                     // Check if correctly seeked
