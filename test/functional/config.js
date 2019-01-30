@@ -61,16 +61,27 @@ define(function(require) {
 
     // Tests configuration from command line
 
+    // protocol
+    conf.protocol = 'https';
+    if (intern.args.protocol) {
+        conf.protocol = intern.args.protocol;
+    }
+
     // application
     conf.testPage = applications.local;
     if (intern.args.app) {
         conf.testPage = applications[intern.args.app];
-        conf.smoothEnabled = decodeURIComponent((new RegExp('[?|&]mss=' + '([^&;]+?)(&|#|;|$)').exec(conf.testPage)||[,""])[1].replace(/\+/g, '%20')) || 'false';
+        // conf.smoothEnabled = decodeURIComponent((new RegExp('[?|&]mss=' + '([^&;]+?)(&|#|;|$)').exec(conf.testPage)||[,""])[1].replace(/\+/g, '%20')) || 'false';
     }
 
     if (intern.args.appurl) {
         conf.testPage = intern.args.appurl;
     }
+
+    // Set application protocol
+    conf.testPage = conf.protocol + '://' + conf.testPage
+
+    console.log('conf.testPage: ' + conf.testPage);
 
     // tests suites
     if (intern.args.tests) {
@@ -80,6 +91,8 @@ define(function(require) {
             conf.suites.push(test);
         });
     }
+
+    // console.log(JSON.stringify(conf, null, '  '));
 
     return conf;
 });

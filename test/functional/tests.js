@@ -14,7 +14,6 @@ define([
 
     var registerSuites = function (stream) {
         var suites = intern.config.suites || ['play', 'pause', 'seek'];
-        console.log(JSON.stringify(suites));
 
         setup.register(stream);
 
