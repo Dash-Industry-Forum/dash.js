@@ -62,7 +62,7 @@ describe('DashMetrics', function () {
         });
     });
 
-    it('should return null when getCurrentDroppedFrames is called and mediaType is undefined', () => {
+    it('should return null when getCurrentDroppedFrames is called', () => {
         const droppedFrames = dashMetrics.getCurrentDroppedFrames();
 
         expect(droppedFrames).to.be.null;  // jshint ignore:line

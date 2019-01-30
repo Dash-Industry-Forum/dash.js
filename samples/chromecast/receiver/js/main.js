@@ -40,9 +40,9 @@ function ReceiverController($scope) {
                 droppedFramesValue = 0;
 
             if (dashMetrics) {
-                repSwitch = dashMetrics.getCurrentRepresentationSwitch(type);
-                bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-                httpRequest = dashMetrics.getCurrentHttpRequest(type);
+                repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
+                bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
+                httpRequest = dashMetrics.getCurrentHttpRequest(type, true);
                 droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
 
                 if (repSwitch !== null) {

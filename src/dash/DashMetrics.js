@@ -43,12 +43,13 @@ function DashMetrics() {
 
     /**
      * @param {string} type
+     * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentRepresentationSwitch(type) {
-        let metrics = metricsModel.getMetricsFor(type);
+    function getCurrentRepresentationSwitch(type, readOnly) {
+        let metrics = metricsModel.getMetricsFor(type, readOnly);
         return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
     }
 
@@ -84,12 +85,13 @@ function DashMetrics() {
 
     /**
      * @param {string} mediaType
+     * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentHttpRequest(mediaType) {
-        let metrics = metricsModel.getMetricsFor(mediaType, true);
+    function getCurrentHttpRequest(mediaType, readOnly) {
+        let metrics = metricsModel.getMetricsFor(mediaType, readOnly);
 
         if (!metrics) {
             return null;
@@ -153,13 +155,12 @@ function DashMetrics() {
     }
 
     /**
-     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentDroppedFrames(mediaType) {
-        let metrics = metricsModel.getMetricsFor(mediaType);
+    function getCurrentDroppedFrames() {
+        let metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
         return getCurrent(metrics, MetricsConstants.DROPPED_FRAMES);
     }
 
@@ -228,7 +229,7 @@ function DashMetrics() {
      */
     function getLatestFragmentRequestHeaderValueByID(type, id) {
         let headers = {};
-        let httpRequest = getCurrentHttpRequest(type);
+        let httpRequest = getCurrentHttpRequest(type, true);
         if (httpRequest) {
             headers = parseResponseHeaders(httpRequest._responseHeaders);
         }

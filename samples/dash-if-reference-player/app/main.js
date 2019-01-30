@@ -741,9 +741,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         if (dashMetrics && $scope.streamInfo) {
             var periodIdx = $scope.streamInfo.index;
-            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type);
+
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
-            var bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
+            var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
             var index = $scope.player.getQualityFor(type);
 
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
