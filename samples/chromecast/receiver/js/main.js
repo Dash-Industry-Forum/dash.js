@@ -25,7 +25,6 @@ function ReceiverController($scope) {
 
         getMetricsFor = function (type) {
             var video = document.querySelector(".dash-video-player video"),
-                metrics = player.getMetricsFor(type),
                 dashMetrics = player.getDashMetrics(),
                 repSwitch,
                 bufferLevel,
@@ -40,10 +39,10 @@ function ReceiverController($scope) {
                 lastFragmentDownloadTime,
                 droppedFramesValue = 0;
 
-            if (metrics && dashMetrics) {
-                repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
+            if (dashMetrics) {
+                repSwitch = dashMetrics.getCurrentRepresentationSwitch(type);
                 bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-                httpRequest = dashMetrics.getCurrentHttpRequest(metrics);
+                httpRequest = dashMetrics.getCurrentHttpRequest(type);
                 droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
 
                 if (repSwitch !== null) {

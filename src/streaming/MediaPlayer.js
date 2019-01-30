@@ -2017,16 +2017,6 @@ function MediaPlayer() {
         return dashMetrics;
     }
 
-    /**
-     *
-     * @param {string} type
-     * @returns {Object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getMetricsFor(type) {
-        return metricsModel.getMetricsFor(type, true);
-    }
     /*
     ---------------------------------------------------------------------------
 
@@ -3050,7 +3040,6 @@ function MediaPlayer() {
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getDashMetrics: getDashMetrics,
-        getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
         updatePortalSize: updatePortalSize,

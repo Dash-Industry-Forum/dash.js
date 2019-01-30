@@ -83,12 +83,14 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentHttpRequest(metrics) {
+    function getCurrentHttpRequest(mediaType) {
+        let metrics = metricsModel.getMetricsFor(mediaType, true);
+
         if (!metrics) {
             return null;
         }
@@ -115,12 +117,13 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getHttpRequests(metrics) {
+    function getHttpRequests(mediaType) {
+        let metrics = metricsModel.getMetricsFor(mediaType, true);
         if (!metrics) {
             return [];
         }
@@ -202,9 +205,7 @@ function DashMetrics() {
             httpRequest,
             i;
 
-        let metrics = metricsModel.getMetricsFor(Constants.STREAM, true);
-
-        httpRequestList = getHttpRequests(metrics);
+        httpRequestList = getHttpRequests(Constants.STREAM);
 
         for (i = httpRequestList.length - 1; i >= 0; i--) {
             httpRequest = httpRequestList[i];
@@ -227,8 +228,7 @@ function DashMetrics() {
      */
     function getLatestFragmentRequestHeaderValueByID(type, id) {
         let headers = {};
-        let metrics = metricsModel.getMetricsFor(type, true);
-        let httpRequest = getCurrentHttpRequest(metrics);
+        let httpRequest = getCurrentHttpRequest(type);
         if (httpRequest) {
             headers = parseResponseHeaders(httpRequest._responseHeaders);
         }

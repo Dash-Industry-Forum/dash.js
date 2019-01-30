@@ -139,7 +139,6 @@
         var player = init();
 
         setInterval(function() {
-            var metrics = player.getMetricsFor("video");
             var dashMetrics = player.getDashMetrics();
 
             var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);

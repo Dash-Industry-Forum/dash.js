@@ -1199,14 +1199,6 @@ describe('MediaPlayer', function () {
                 const metricsExt = player.getDashMetrics();
                 expect(metricsExt).to.exist; // jshint ignore:line
             });
-
-            it('Method getMetricsFor should return no metrics', function () {
-                const audioMetrics = player.getMetricsFor('audio');
-                const videoMetrics = player.getMetricsFor('video');
-
-                expect(audioMetrics).to.be.null; // jshint ignore:line
-                expect(videoMetrics).to.be.null; // jshint ignore:line
-            });
         });
     });
 });

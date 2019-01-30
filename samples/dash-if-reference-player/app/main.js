@@ -736,11 +736,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     }
 
     function updateMetrics(type) {
-        var metrics = $scope.player.getMetricsFor(type);
         var dashMetrics = $scope.player.getDashMetrics();
         var dashAdapter = $scope.player.getDashAdapter();
 
-        if (metrics && dashMetrics && $scope.streamInfo) {
+        if (dashMetrics && $scope.streamInfo) {
             var periodIdx = $scope.streamInfo.index;
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type);
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
@@ -761,7 +760,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             $scope[type + 'DroppedFrames'] = droppedFPS;
             $scope[type + 'LiveLatency'] = liveLatency;
 
-            var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(metrics));
+            var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(type));
             if (httpMetrics) {
                 $scope[type + 'Download'] = httpMetrics.download[type].low.toFixed(2) + ' | ' + httpMetrics.download[type].average.toFixed(2) + ' | ' + httpMetrics.download[type].high.toFixed(2);
                 $scope[type + 'Latency'] = httpMetrics.latency[type].low.toFixed(2) + ' | ' + httpMetrics.latency[type].average.toFixed(2) + ' | ' + httpMetrics.latency[type].high.toFixed(2);

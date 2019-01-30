@@ -31,7 +31,7 @@ describe('DashMetrics', function () {
     });
 
     describe('getCurrentHttpRequest', () => {
-        it('should return null when getCurrentHttpRequest is called and metrics is undefined', () => {
+        it('should return null when getCurrentHttpRequest is called and mediaType is undefined', () => {
             const currentHttpRequest = dashMetrics.getCurrentHttpRequest();
 
             expect(currentHttpRequest).to.be.null;  // jshint ignore:line
@@ -39,7 +39,7 @@ describe('DashMetrics', function () {
 
         it('should return null when getCurrentHttpRequest is called and metrics.httpList is undefined', () => {
             metricsModelMock.setMetrics({});
-            const currentHttpRequest = dashMetrics.getCurrentHttpRequest();
+            const currentHttpRequest = dashMetrics.getCurrentHttpRequest('audio');
 
             expect(currentHttpRequest).to.be.null;  // jshint ignore:line
         });
