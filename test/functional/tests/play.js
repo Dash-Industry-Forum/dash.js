@@ -23,7 +23,7 @@ define([
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 7; // Timeout (in sec.) for checking playback progress
+    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
 
     var load = function(stream) {
         registerSuite({
@@ -51,6 +51,7 @@ define([
                 utils.log(NAME, 'Play');
                 return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
                 .then(function (playing) {
+                    stream.available = playing;
                     return assert.isTrue(playing);
                 });
             },
@@ -62,6 +63,7 @@ define([
                 utils.log(NAME, 'Progress');
                 return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
                 .then(function (progressing) {
+                    stream.available = progressing;
                     return assert.isTrue(progressing);
                 });
             }
