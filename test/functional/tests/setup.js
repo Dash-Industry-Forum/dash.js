@@ -5,8 +5,9 @@ SETUP:
 **/
 define([
     'intern!object',
+    'intern/chai!assert',
     'test/functional/tests/scripts/utils'
-], function(registerSuite, utils) {
+], function(registerSuite, assert, utils) {
 
     // Suite name
     var NAME = 'SETUP';
@@ -19,8 +20,9 @@ define([
                 utils.log(NAME, 'Setup stream: ' + stream.name);
                 // Check stream availability
                 return this.remote.executeAsync(utils.checkIfFileExits, [stream.url])
-                .then (function (exists) {
+                .then(function (exists) {
                     stream.available = exists;
+                    return assert.isTrue(exists);
                 });
             }
         });
