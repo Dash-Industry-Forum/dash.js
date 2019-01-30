@@ -2840,7 +2840,6 @@ function MediaPlayer() {
             streamController: streamController,
             domStorage: domStorage,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             adapter: adapter,
             videoModel: videoModel

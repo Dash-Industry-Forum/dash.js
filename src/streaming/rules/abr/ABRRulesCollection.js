@@ -46,7 +46,6 @@ function ABRRulesCollection(config) {
     const context = this.context;
 
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
     let instance,
@@ -68,7 +67,6 @@ function ABRRulesCollection(config) {
             );
             qualitySwitchRules.push(
                 ThroughputRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics
                 })
             );

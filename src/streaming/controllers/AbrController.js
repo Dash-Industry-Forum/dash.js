@@ -84,7 +84,6 @@ function AbrController() {
         droppedFramesHistory,
         throughputHistory,
         isUsingBufferOccupancyABRDict,
-        metricsModel,
         dashMetrics,
         useDeadTimeLatency;
 
@@ -119,7 +118,6 @@ function AbrController() {
 
     function createAbrRulesCollection() {
         abrRulesCollection = ABRRulesCollection(context).create({
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel
         });
@@ -175,9 +173,6 @@ function AbrController() {
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
-        }
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
