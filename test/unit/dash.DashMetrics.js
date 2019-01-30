@@ -62,11 +62,10 @@ describe('DashMetrics', function () {
         });
     });
 
-    it('should return null when getCurrentDroppedFrames is called and metrics[MetricsList.DROPPED_FRAMES] is undefined', () => {
-        const metrics = {};
-        const httpRequestArray = dashMetrics.getCurrentDroppedFrames(metrics);
+    it('should return null when getCurrentDroppedFrames is called and mediaType is undefined', () => {
+        const droppedFrames = dashMetrics.getCurrentDroppedFrames();
 
-        expect(httpRequestArray).to.be.null;  // jshint ignore:line
+        expect(droppedFrames).to.be.null;  // jshint ignore:line
     });
 
     describe('getLatestMPDRequestHeaderValueByID', () => {

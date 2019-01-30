@@ -44,7 +44,7 @@ function ReceiverController($scope) {
                 repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
                 bufferLevel = dashMetrics.getCurrentBufferLevel(type);
                 httpRequest = dashMetrics.getCurrentHttpRequest(metrics);
-                droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames(metrics);
+                droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
 
                 if (repSwitch !== null) {
                     bitrateIndexValue = dashMetrics.getIndexForRepresentation(repSwitch.to);

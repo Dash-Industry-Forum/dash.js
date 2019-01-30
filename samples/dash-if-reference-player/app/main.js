@@ -746,8 +746,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
             var bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             var index = $scope.player.getQualityFor(type);
+
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
-            var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
+            var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
+            var droppedFPS = droppedFramesMetrics ? droppedFramesMetrics.droppedFrames : 0;
             var liveLatency = 0;
             if ($scope.isDynamic) {
                 liveLatency = $scope.player.getCurrentLiveLatency();

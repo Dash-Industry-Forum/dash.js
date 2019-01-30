@@ -150,12 +150,13 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentDroppedFrames(metrics) {
+    function getCurrentDroppedFrames(mediaType) {
+        let metrics = metricsModel.getMetricsFor(mediaType);
         return getCurrent(metrics, MetricsConstants.DROPPED_FRAMES);
     }
 
