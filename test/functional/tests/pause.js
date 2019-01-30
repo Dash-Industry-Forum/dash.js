@@ -28,7 +28,7 @@ define([
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 7; // Timeout (in sec.) for checking playback progress
+    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
     var PAUSE_DELAY = 5; // Delay (in s) for checking is player is still paused (= not progressing)
     var PAUSE_COUNT = 3; // Number of pause tests
 
