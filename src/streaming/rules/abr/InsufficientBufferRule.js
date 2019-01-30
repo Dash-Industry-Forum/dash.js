@@ -35,6 +35,7 @@ import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
 import Constants from '../../constants/Constants';
+import MetricsConstants from '../../constants/MetricsConstants';
 
 function InsufficientBufferRule(config) {
 
@@ -82,8 +83,8 @@ function InsufficientBufferRule(config) {
         checkConfig();
 
         const mediaType = rulesContext.getMediaType();
-        const metrics = metricsModel.getMetricsFor(mediaType, true);
-        const lastBufferStateVO = (metrics.BufferState.length > 0) ? metrics.BufferState[metrics.BufferState.length - 1] : null;
+        const lastBufferStateVO = dashMetrics.getLatestBufferInfoVO(mediaType, true, MetricsConstants.BUFFER_STATE);
+        //lastBufferStateVO = lastBufferLevelVO && (lastBufferLevelVO.BufferState.length > 0) ? lastBufferLevelVO.BufferState[lastBufferLevelVO.BufferState.length - 1] : null;
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
 
@@ -101,7 +102,7 @@ function InsufficientBufferRule(config) {
             const abrController = rulesContext.getAbrController();
             const throughputHistory = abrController.getThroughputHistory();
 
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
             const throughput = throughputHistory.getAverageThroughput(mediaType);
             const latency = throughputHistory.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;

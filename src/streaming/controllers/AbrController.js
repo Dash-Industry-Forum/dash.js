@@ -439,7 +439,7 @@ function AbrController() {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
                 } else if (debug.getLogToBrowserConsole()) {
-                    const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getMetricsFor(type, true));
+                    const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                     logger.debug('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
             }
@@ -463,7 +463,7 @@ function AbrController() {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const id = streamInfo ? streamInfo.id : null;
             if (debug.getLogToBrowserConsole()) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getMetricsFor(type, true));
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                 logger.info('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);

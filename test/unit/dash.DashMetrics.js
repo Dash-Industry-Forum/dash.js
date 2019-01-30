@@ -18,7 +18,13 @@ describe('DashMetrics', function () {
         expect(representation).to.be.null;  // jshint ignore:line
     });
 
-    it('should return 0 when getCurrentBufferLevel is called and metrics is undefined', () => {
+    it('should return null when getLatestBufferLevelVO is called and metrics is undefined', () => {
+        const bufferLevel = dashMetrics.getLatestBufferLevelVO();
+
+        expect(bufferLevel).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return 0 when getCurrentBufferLevel is called and type is undefined', () => {
         const bufferLevel = dashMetrics.getCurrentBufferLevel();
 
         expect(bufferLevel).to.be.equal(0);  // jshint ignore:line

@@ -7,6 +7,10 @@ function DashMetricsMock () {
     this.getCurrentBufferLevel = function () {
         return 15;
     };
+
+    this.getLatestBufferLevelVO = function () {
+        return null;
+    };
 }
 
 export default DashMetricsMock;

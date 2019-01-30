@@ -42,7 +42,7 @@ function ReceiverController($scope) {
 
             if (metrics && dashMetrics) {
                 repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
-                bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+                bufferLevel = dashMetrics.getCurrentBufferLevel(type);
                 httpRequest = dashMetrics.getCurrentHttpRequest(metrics);
                 droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames(metrics);
 

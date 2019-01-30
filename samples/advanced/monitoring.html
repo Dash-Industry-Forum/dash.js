@@ -28,13 +28,12 @@
 
             var eventPoller = setInterval(function() {
                 var streamInfo = player.getActiveStream().getStreamInfo();
-                var metrics = player.getMetricsFor('video');
                 var dashMetrics = player.getDashMetrics();
 
-                if (metrics && dashMetrics && streamInfo) {
+                if (dashMetrics && streamInfo) {
                     const periodIdx = streamInfo.index;
-                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
-                    var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video');
+                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video');
                     var bitrate = repSwitch ? Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
                     document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
                     document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";

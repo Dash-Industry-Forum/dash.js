@@ -62,7 +62,6 @@ function ABRRulesCollection(config) {
             // This is controlled by useBufferOccupancyABR mechanism in AbrController.
             qualitySwitchRules.push(
                 BolaRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel
                 })
@@ -87,7 +86,6 @@ function ABRRulesCollection(config) {
             );
             abandonFragmentRules.push(
                 AbandonRequestsRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel
                 })

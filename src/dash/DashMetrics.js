@@ -53,23 +53,27 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
+     * @param {boolean} readOnly
+     * @param {string} infoType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestBufferLevelVO(metrics) {
-        return getCurrent(metrics, MetricsConstants.BUFFER_LEVEL);
+    function getLatestBufferInfoVO(mediaType, readOnly, infoType) {
+        let metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+        return getCurrent(metrics, infoType);
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} type
+     * @param {boolean} readOnly
      * @returns {number}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentBufferLevel(metrics) {
-        const vo = getLatestBufferLevelVO(metrics);
+    function getCurrentBufferLevel(type, readOnly) {
+        const vo = getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_LEVEL);
 
         if (vo) {
             return Round10.round10(vo.level / 1000, -3);
@@ -249,6 +253,7 @@ function DashMetrics() {
 
     instance = {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
+        getLatestBufferInfoVO: getLatestBufferInfoVO,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
