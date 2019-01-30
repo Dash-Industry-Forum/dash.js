@@ -1,5 +1,7 @@
 function DashMetricsMock () {
 
+    this.bufferState = null;
+
     this.getCurrentDVRInfo = function () {
         return null;
     };
@@ -8,8 +10,12 @@ function DashMetricsMock () {
         return 15;
     };
 
-    this.getLatestBufferLevelVO = function () {
-        return null;
+    this.getLatestBufferInfoVO = function () {
+        return this.bufferState;
+    };
+
+    this.setBufferState = function (state) {
+        this.bufferState = state;
     };
 }
 

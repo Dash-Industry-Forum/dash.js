@@ -74,7 +74,6 @@ function ABRRulesCollection(config) {
             );
             qualitySwitchRules.push(
                 InsufficientBufferRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics
                 })
             );

@@ -18,8 +18,8 @@ describe('DashMetrics', function () {
         expect(representation).to.be.null;  // jshint ignore:line
     });
 
-    it('should return null when getLatestBufferLevelVO is called and metrics is undefined', () => {
-        const bufferLevel = dashMetrics.getLatestBufferLevelVO();
+    it('should return null when getLatestBufferInfoVO is called and mediaType, readOnly and infoType are undefined', () => {
+        const bufferLevel = dashMetrics.getLatestBufferInfoVO();
 
         expect(bufferLevel).to.be.null;  // jshint ignore:line
     });

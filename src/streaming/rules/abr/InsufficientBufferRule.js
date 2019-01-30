@@ -45,7 +45,6 @@ function InsufficientBufferRule(config) {
     const context = this.context;
 
     const eventBus = EventBus(context).getInstance();
-    const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
     let instance,
@@ -59,7 +58,7 @@ function InsufficientBufferRule(config) {
     }
 
     function checkConfig() {
-        if (!metricsModel || !metricsModel.hasOwnProperty('getMetricsFor') || !dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel')) {
+        if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel') || !dashMetrics.hasOwnProperty('getLatestBufferInfoVO')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -84,7 +83,6 @@ function InsufficientBufferRule(config) {
 
         const mediaType = rulesContext.getMediaType();
         const lastBufferStateVO = dashMetrics.getLatestBufferInfoVO(mediaType, true, MetricsConstants.BUFFER_STATE);
-        //lastBufferStateVO = lastBufferLevelVO && (lastBufferLevelVO.BufferState.length > 0) ? lastBufferLevelVO.BufferState[lastBufferLevelVO.BufferState.length - 1] : null;
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
 
