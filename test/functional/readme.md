@@ -22,32 +22,29 @@ Also in order to automate and check the tests results we do use the Chai Asserti
 All the tests can interact with the video element and the MediaPlayer instance provided by the tested web application with the help of functions declared in ```test/video_functions.js``` and ```test/player_functions.js```
 
 ## Selenium and tests configuration
-In ```config``` folder, you will multiple configurations files that are used by the ```testCommon.js``` script to run tests:
+In ```config``` folder, you will multiple configurations files that are used by the ```config.js``` script to run tests:
 - ```selenium.js``` provides the configuration for the Selenium nodes configuration. Only 'local' configuration is provided so far
 - ```os.js``` and ```browsers/*.js``` provides the available Selenium configurations for executing the tests on the different browsers on different platforms
 - ```applications.js``` provides the configuration for some web application that can be used to execute the tests
-- ```streams.json``` provides the streams configuration that can be used by the different tests
-- ```testsConfig.js``` provides some configuration parameters for each test contained in ```tests``` folder
-- ```testsSuites.js``` provides some suites of tests that can be run independently
+- ```streams.js``` provides the list of input streams to be used by the tests, based on streams list provided in dash-if-reference-player sample.
 
 ## Running tests on Windows
 #### WebDrivers
-In ```tools``` folder, the following web drivers are available:
+In ```selenium``` folder, the following web drivers are available:
 - Chrome
 - Firefox
 - Edge
-- IE11
 
 #### Launch the tests
 1. Start selenium hub. Open a new terminal and launch the command:
 ```sh
-cd test/functional/tools
+cd test/functional/selenium
 startHub.bat
 ```
 
 2. Start selenium node. Open a new terminal and launch the command:
 ```sh
-cd test/functional/tools
+cd test/functional/selenium
 startClient.bat
 ```
 
@@ -67,14 +64,14 @@ browser=<browser_names_separated_by_comma>
 ```sh
 app=<app_name_from_config_file> or appurl=<app_url>
 ```
-- only for a specific suite of tests (see ```config/testsSuites.js```)
+- only for a specific suite of tests
 ```sh
 tests=<test_suites_names_separated_by_comma>
 ```
 
 For example:
 ```sh
-node node_modules/intern/runner.js config=test/functional/testsCommon.js os=windows browsers=chrome|firefox appurl=http://... tests=play
+node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome|firefox appurl=http://... tests=play
 ```
 
 ## Running tests on Mac OSX
