@@ -46,7 +46,7 @@ define([], function () {
                 },
                 _onTimeout = function() {
                     _onComplete(false);
-                };
+                },
                 _onPlaying = function() {
                     _onComplete(true);
                 };
@@ -55,7 +55,7 @@ define([], function () {
                 done(true);
             } else {
                 _timeout = setTimeout(_onTimeout, timeout * 1000);
-                player.on('playbackPlaying', _onPlaying);    
+                player.on('playbackPlaying', _onPlaying);
             }
         },
 
@@ -69,13 +69,12 @@ define([], function () {
                 },
                 _onTimeout = function() {
                     _onComplete(false);
-                };
+                },
                 _onTimeUpdate = function(e) {
-                    console.log(JSON.stringify(e));
                     if (_startTime < 0) {
-                        _startTime = player.time();
+                        _startTime = e.time;
                     } else {
-                        if (player.time() >= _startTime + progress) {
+                        if (e.time >= _startTime + progress) {
                             _onComplete(true);
                         }
                     }
