@@ -233,7 +233,7 @@ function DashHandler(config) {
                 const liveEdge = lastSegment.presentationStartTime;
                 // the last segment is the Expected, not calculated, live edge.
                 timelineConverter.setExpectedLiveEdge(liveEdge);
-                metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(), {presentationStartTime: liveEdge});
+                dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
             }
         }
     }

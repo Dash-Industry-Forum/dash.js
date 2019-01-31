@@ -619,8 +619,7 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+            dashMetrics.updateManifestUpdateInfo({
                 currentTime: playbackController.getTime(),
                 buffered: videoModel.getBufferRange(),
                 presentationStartTime: streamsInfo[0].start,
@@ -658,7 +657,7 @@ function StreamController() {
                     stream.updateData(streamInfo);
                 }
 
-                metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
+                dashMetrics.addManifestUpdateStreamInfo(streamInfo);
             }
 
             if (!activeStream) {

@@ -198,6 +198,28 @@ function DashMetrics() {
     }
 
     /**
+     * @param {object} updatedFields fields to be updated
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function updateManifestUpdateInfo(updatedFields) {
+        const manifestUpdate = this.getCurrentManifestUpdate();
+        metricsModel.updateManifestUpdateInfo(manifestUpdate, updatedFields);
+    }
+
+    /**
+     * @param {object} streamInfo
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addManifestUpdateStreamInfo(streamInfo) {
+        if (streamInfo) {
+            const manifestUpdate = this.getCurrentManifestUpdate();
+            metricsModel.addManifestUpdateStreamInfo(manifestUpdate, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
+        }
+    }
+
+    /**
      * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -293,7 +315,9 @@ function DashMetrics() {
         getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
         getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
         addRepresentationSwitch: addRepresentationSwitch,
-        addDVRInfo: addDVRInfo
+        addDVRInfo: addDVRInfo,
+        updateManifestUpdateInfo: updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo
     };
 
     return instance;

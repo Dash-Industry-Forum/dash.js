@@ -428,8 +428,7 @@ function ScheduleController(config) {
                 playbackController.seek(seekTarget);
             }
 
-            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+            dashMetrics.updateManifestUpdateInfo({
                 currentTime: seekTarget,
                 presentationStartTime: liveEdge,
                 latency: liveEdge - seekTarget,
@@ -592,9 +591,8 @@ function ScheduleController(config) {
             start();
         }
 
-        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
-        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+        dashMetrics.updateManifestUpdateInfo({
             latency: latency
         });
 

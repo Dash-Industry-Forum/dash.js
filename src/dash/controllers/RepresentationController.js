@@ -300,7 +300,7 @@ function RepresentationController() {
         if (isAllRepresentationsUpdated()) {
             updating = false;
             abrController.setPlaybackQuality(streamProcessor.getType(), streamProcessor.getStreamInfo(), getQualityForRepresentation(currentVoRepresentation));
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {latency: currentVoRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
+            dashMetrics.updateManifestUpdateInfo({latency: currentVoRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 
