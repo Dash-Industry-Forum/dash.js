@@ -2924,7 +2924,7 @@ function MediaPlayer() {
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,

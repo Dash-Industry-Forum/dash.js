@@ -180,7 +180,7 @@ function RepresentationController() {
         const currentRepresentation = getCurrentRepresentation();
         const currentVideoTimeMs = playbackController.getTime() * 1000;
 
-        metricsModel.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
+        dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
     }
 
     function addDVRMetric() {
@@ -188,7 +188,7 @@ function RepresentationController() {
         const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
         const isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
         const range = timelineConverter.calcSegmentAvailabilityRange(currentVoRepresentation, isDynamic);
-        metricsModel.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), manifestInfo, range);
+        dashMetrics.addDVRInfo(streamProcessor.getType(), playbackController.getTime(), manifestInfo, range);
     }
 
     function getRepresentationForQuality(quality) {

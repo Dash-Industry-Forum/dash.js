@@ -43,7 +43,7 @@ function MssFragmentMoofProcessor(config) {
     let instance,
         type,
         logger;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const errorHandler = config.errHandler;
     const eventBus = config.eventBus;
@@ -173,11 +173,10 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateDVR(type, range, manifestInfo) {
-                metricsModel.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
-            }
         const dvrInfos = dashMetrics.getCurrentDVRInfo(type);
         if (!dvrInfos || (range.end > dvrInfos.range.end)) {
             logger.debug('Update DVR Infos [' + range.start + ' - ' + range.end + ']');
+            dashMetrics.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
         }
     }
 

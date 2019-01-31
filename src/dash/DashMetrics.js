@@ -55,6 +55,19 @@ function DashMetrics() {
 
     /**
      * @param {string} mediaType
+     * @param {Date} t time of the switch event
+     * @param {Date} mt media presentation time
+     * @param {string} to id of representation
+     * @param {string} lto if present, subrepresentation reference
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addRepresentationSwitch(mediaType, t, mt, to, lto) {
+        metricsModel.addRepresentationSwitch(mediaType, t, mt, to, lto);
+    }
+
+    /**
+     * @param {string} mediaType
      * @param {boolean} readOnly
      * @param {string} infoType
      * @returns {*}
@@ -196,6 +209,17 @@ function DashMetrics() {
     }
 
     /**
+     * @param {string} mediaType
+     * @param {Date} currentTime time of the switch event
+     * @param {object} mpd mpd reference
+     * @param {object} range range of the dvr info
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addDVRInfo(mediaType, currentTime, mpd, range) {
+        metricsModel.addDVRInfo(mediaType, currentTime, mpd, range);
+    }
+    /**
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
@@ -267,7 +291,9 @@ function DashMetrics() {
         getCurrentDVRInfo: getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID
+        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
+        addRepresentationSwitch: addRepresentationSwitch,
+        addDVRInfo: addDVRInfo
     };
 
     return instance;
