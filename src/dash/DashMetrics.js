@@ -220,6 +220,19 @@ function DashMetrics() {
     }
 
     /**
+     * @param {object} representation
+     * @param {string} mediaType
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addManifestUpdateRepresentationInfo(representation, mediaType) {
+        if (representation) {
+            const manifestUpdateInfo = this.getCurrentManifestUpdate();
+            metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, representation.id, representation.index, representation.streamIndex, mediaType, representation.presentationTimeOffset, representation.startNumber, representation.fragmentInfoType);
+        }
+    }
+
+    /**
      * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -317,7 +330,8 @@ function DashMetrics() {
         addRepresentationSwitch: addRepresentationSwitch,
         addDVRInfo: addDVRInfo,
         updateManifestUpdateInfo: updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo
+        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo
     };
 
     return instance;

@@ -118,7 +118,7 @@ function StreamProcessor(config) {
         representationController = RepresentationController(context).create();
         representationController.setConfig({
             abrController: abrController,
-            metricsModel: metricsModel,
+            domStorage: domStorage,
             dashMetrics: dashMetrics,
             manifestModel: manifestModel,
             playbackController: playbackController,

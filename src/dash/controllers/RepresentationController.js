@@ -50,7 +50,7 @@ function RepresentationController() {
         abrController,
         indexHandler,
         playbackController,
-        metricsModel,
+        domStorage,
         timelineConverter,
         dashMetrics,
         streamProcessor,
@@ -70,8 +70,8 @@ function RepresentationController() {
         if (config.abrController) {
             abrController = config.abrController;
         }
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
+        if (config.domStorage) {
+            domStorage = config.domStorage;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
@@ -116,7 +116,7 @@ function RepresentationController() {
         voAvailableRepresentations = [];
         abrController = null;
         playbackController = null;
-        metricsModel = null;
+        domStorage = null;
         timelineConverter = null;
         dashMetrics = null;
     }
@@ -292,8 +292,7 @@ function RepresentationController() {
             }
 
             if (!alreadyAdded) {
-                metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, r.id, r.index, r.adaptation.period.index,
-                        streamProcessor.getType(),r.presentationTimeOffset, r.startNumber, r.segmentInfoType);
+                dashMetrics.addManifestUpdateRepresentationInfo(r, streamProcessor.getType());
             }
         }
 
