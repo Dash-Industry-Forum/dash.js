@@ -185,12 +185,13 @@ function DashMetrics() {
     }
 
     /**
+     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentDVRInfo() {
-        const metrics = metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
+    function getCurrentDVRInfo(mediaType) {
+        const metrics = mediaType ? metricsModel.getMetricsFor(mediaType, true) : metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
         return getCurrent(metrics, MetricsConstants.DVR_INFO);
     }
 

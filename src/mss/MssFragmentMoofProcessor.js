@@ -173,12 +173,11 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateDVR(type, range, manifestInfo) {
-        const dvrInfos = metricsModel.getMetricsFor(type).DVRInfo;
-        if (dvrInfos) {
-            if (dvrInfos.length === 0 || (dvrInfos.length > 0 && range.end > dvrInfos[dvrInfos.length - 1].range.end)) {
-                logger.debug('Update DVR Infos [' + range.start + ' - ' + range.end + ']');
                 metricsModel.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
             }
+        const dvrInfos = dashMetrics.getCurrentDVRInfo(type);
+        if (!dvrInfos || (range.end > dvrInfos.range.end)) {
+            logger.debug('Update DVR Infos [' + range.start + ' - ' + range.end + ']');
         }
     }
 
