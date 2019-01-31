@@ -50,6 +50,9 @@ define([
                 if (!stream.available) {
                     this.skip();
                 }
+                if (stream.dynamic) {
+                    this.skip();
+                }
                 utils.log(NAME, 'Setup');
                 command = this.remote.get(require.toUrl(intern.config.testPage));
                 return command.execute(player.loadStream, [stream])
@@ -71,6 +74,9 @@ define([
 
             seek: function() {
                 if (!stream.available) {
+                    this.skip();
+                }
+                if (stream.dynamic) {
                     this.skip();
                 }
                 // Get the stream duration (applies for static and dynamic streams)
@@ -96,6 +102,9 @@ define([
 
             playing: function() {
                 if (!stream.available) {
+                    this.skip();
+                }
+                if (stream.dynamic) {
                     this.skip();
                 }
                 utils.log(NAME, 'Check if playing');
