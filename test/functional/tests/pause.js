@@ -61,7 +61,7 @@ define([
                 if (!stream.available) {
                     this.skip();
                 }
-                var currentTime = 0;
+                var pauseTime = 0;
                 // Execute a play in case previous pause test has failed
                 utils.log(NAME, 'Play');
                 return command.execute(player.play)
@@ -82,7 +82,7 @@ define([
                     return command.execute(player.getTime);
                 })
                 .then(function(time) {
-                    currentTime = time;
+                    pauseTime = time;
                     utils.log(NAME, 'Check if not progressing');
                     utils.log(NAME, 'Playback time = ' + time);
                     utils.log(NAME, 'Wait ' + PAUSE_DELAY + 's...');
@@ -91,7 +91,12 @@ define([
                 .then(function(time) {
                     // Check if the playback is really paused (not playing/progressing)
                     utils.log(NAME, 'Playback time = ' + time);
-                    assert.strictEqual(time, currentTime);
+                    if (stream.dynamic) {
+                        // For dynamic streams, when paused, current time is progressing backward
+                        assert.isAtMost(time, (pauseTime - PAUSE_DELAY + 1)); // +1 for 1 sec tolerance
+                    } else {
+                        assert.strictEqual(time, pauseTime);
+                    }
                     // Resume the player
                     utils.log(NAME, 'Resume playback');
                     return command.execute(player.play);
