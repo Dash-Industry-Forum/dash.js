@@ -3,9 +3,7 @@ define([], function () {
     return {
 
         loadStream: function (stream) {
-            player.attachSource(stream.url);
-            // browser stack hardware is limited, use low resolution
-            player.setMaxAllowedBitrateFor('video', 1000);
+            loadStream(stream);
         },
 
         getDuration: function () {
@@ -51,7 +49,9 @@ define([], function () {
                     _onComplete(true);
                 };
 
-            if (!player.isPaused() && player.getPlaybackRate() > 0) {
+            // if (!player.isPaused() && player.getPlaybackRate() > 0) {
+            if (isPlaying()) {
+                    console.log('already playing');
                 done(true);
             } else {
                 _timeout = setTimeout(_onTimeout, timeout * 1000);
