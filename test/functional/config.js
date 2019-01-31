@@ -92,6 +92,11 @@ define(function(require) {
         });
     }
 
+    // Test stream
+    if (intern.args.stream) {
+        conf.testStream = intern.args.stream;
+    }
+
     // console.log(JSON.stringify(conf, null, '  '));
 
     return conf;

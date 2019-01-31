@@ -27,6 +27,11 @@ define([
     // Filter streams according to application protocol (http/https)
     streams = streams.filter(stream => /^(https?|)/.exec(stream.url)[0] === intern.config.protocol)
 
+    // Filter streams if input stream name is set
+    if (intern.config.testStream) {
+        streams = streams.filter(stream => stream.name === intern.config.testStream)
+    }
+
     // streams = streams.slice(0, 1);
 
     return {
