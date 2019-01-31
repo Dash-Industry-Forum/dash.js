@@ -67,14 +67,43 @@ define([
                     return assert.isTrue(progressing);
                 });
             }
-
         });
     };
+
+    var getInfos = function(stream) {
+        registerSuite({
+            name: NAME,
+
+            isDynamic: function() {
+                if (!stream.available) {
+                    this.skip();
+                }
+                return command.execute(player.isDynamic)
+                .then(function (dynamic) {
+                    utils.log(NAME, 'dynamic: ' + dynamic);
+                    stream.dynamic = dynamic;
+                });
+            },
+
+            getDuration: function() {
+                if (!stream.available) {
+                    this.skip();
+                }
+                return command.execute(player.getDuration)
+                .then(function (duration) {
+                    utils.log(NAME, 'duration: ' + duration);
+                    stream.duration = duration;
+                });
+            }
+        });
+    };
+
 
     return {
         register: function (stream) {
             load(stream);
             play(stream);
+            getInfos(stream);
         }
     }
 });
