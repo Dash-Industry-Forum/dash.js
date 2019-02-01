@@ -5,6 +5,8 @@ import Events from '../../src/core/events/Events';
 import FragmentModel from '../../src/streaming/models/FragmentModel';
 import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
 
+import DashMetricsMock from './mocks/DashMetricsMock';
+
 const chai = require('chai');
 const spies = require('chai-spies');
 const sinon = require('sinon');
@@ -21,11 +23,7 @@ describe('FragmentModel', function () {
     const completeMediaRequest = voHelper.getCompleteRequest(HTTPRequest.MEDIA_SEGMENT_TYPE);
     const context = {};
     const eventBus = EventBus(context).getInstance();
-    const metricsModel = {
-        addSchedulingInfo: () => {},
-        addRequestsQueue: () => {}
-    };
-    let fragmentModel = FragmentModel(context).create({metricsModel: metricsModel});
+    let fragmentModel = FragmentModel(context).create({dashMetrics: new DashMetricsMock()});
 
     it('should not have any loading, executed, canceled or failed requests', function () {
         const expectedValue = 0;
@@ -71,7 +69,7 @@ describe('FragmentModel', function () {
             let clock;
 
             beforeEach(function () {
-                fragmentModel = FragmentModel(context).create({metricsModel: metricsModel, fragmentLoader: loader});
+                fragmentModel = FragmentModel(context).create({dashMetrics: new DashMetricsMock(), fragmentLoader: loader});
                 clock = sinon.useFakeTimers();
 
                 setTimeout(function () {

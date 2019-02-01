@@ -177,6 +177,17 @@ function DashMetrics() {
     }
 
     /**
+     * @param {string} mediaType
+     * @param {Array} loadingRequests
+     * @param {Array} executedRequests
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addRequestsQueue(mediaType, loadingRequests, executedRequests) {
+        metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
+    }
+
+    /**
      * @param {MetricsList} metrics
      * @param {string} metricName
      * @returns {*}
@@ -224,6 +235,25 @@ function DashMetrics() {
      */
     function getCurrentSchedulingInfo(metrics) {
         return getCurrent(metrics, MetricsConstants.SCHEDULING_INFO);
+    }
+
+    /**
+     * @param {object} request
+     * @param {string} state
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addSchedulingInfo(request, state) {
+        metricsModel.addSchedulingInfo(
+            request.mediaType,
+            new Date(),
+            request.type,
+            request.startTime,
+            request.availabilityStartTime,
+            request.duration,
+            request.quality,
+            request.range,
+            state);
     }
 
     /**
@@ -412,6 +442,8 @@ function DashMetrics() {
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo
         addManifestUpdate: addManifestUpdate,
         addHttpRequest: addHttpRequest,
+        addSchedulingInfo: addSchedulingInfo,
+        addRequestsQueue: addRequestsQueue,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
         addDVBErrors: addDVBErrors,

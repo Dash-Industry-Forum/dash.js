@@ -14,6 +14,14 @@ function DashMetricsMock () {
         return this.bufferState;
     };
 
+    this.addSchedulingInfo = function () {
+
+    };
+
+    this.addRequestsQueue = function () {
+
+    };
+
     this.addBufferState = function (type, bufferState/*, bufferTarget*/) {
         this.bufferState = bufferState;
     };
