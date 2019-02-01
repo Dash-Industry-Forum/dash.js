@@ -34,6 +34,10 @@ import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
 import MetricsModel from '../streaming/models/MetricsModel';
+import {
+    PlayList,
+    PlayListTrace
+} from '../streaming/vo/metrics/PlayList';
 
 /**
  * @module DashMetrics
@@ -44,11 +48,23 @@ function DashMetrics(config) {
     config = config || {};
 
     const context = this.context;
-    let instance;
+    let instance,
+        playListTraceMetricsClosed,
+        playListTraceMetrics,
+        playListMetrics;
+
+    let manifestModel = config.manifestModel;
     let metricsModel = config.metricsModel;
 
     function setup() {
         metricsModel = metricsModel || MetricsModel(context).getInstance();
+        resetInitialSettings();
+    }
+
+    function resetInitialSettings() {
+        playListTraceMetricsClosed = true;
+        playListTraceMetrics = null;
+        playListMetrics = null;
     }
 
     /**
@@ -431,12 +447,51 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {object} vo
      * @memberof module:DashMetrics
      * @instance
      */
-    function addPlayList(vo) {
-        metricsModel.addPlayList(vo);
+    function addPlayList() {
+        metricsModel.addPlayList(playListMetrics);
+        playListMetrics = null;
+    }
+
+    function addPlaylistMetrics(mediaStartTime, startReason) {
+        playListMetrics = new PlayList();
+
+        playListMetrics.start = new Date();
+        playListMetrics.mstart = mediaStartTime;
+        playListMetrics.starttype = startReason;
+    }
+
+    function addPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
+        if (playListTraceMetricsClosed === true ) {
+            playListTraceMetricsClosed = false;
+            playListTraceMetrics = new PlayListTrace();
+
+            playListTraceMetrics.representationid = representationId;
+            playListTraceMetrics.start = new Date();
+            playListTraceMetrics.mstart = mediaStartTime;
+            playListTraceMetrics.playbackspeed = speed;
+        }
+    }
+
+    function updatePlayListTraceMetrics(traceToUpdate) {
+        if (playListTraceMetrics) {
+            for (let field in playListTraceMetrics) {
+                playListTraceMetrics[field] = traceToUpdate[field];
+            }
+        }
+    }
+
+    function pushPlayListTraceMetrics(endTime, reason) {
+        if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics) {
+            const startTime = playListTraceMetrics.start;
+            const duration = endTime.getTime() - startTime.getTime();
+            playListTraceMetrics.duration = duration;
+            playListTraceMetrics.stopreason = reason;
+            playListMetrics.trace.push(playListTraceMetrics);
+            playListTraceMetricsClosed = true;
+        }
     }
 
     /**
@@ -474,6 +529,10 @@ function DashMetrics(config) {
         addDroppedFrames: addDroppedFrames,
         addPlayList: addPlayList,
         addDVBErrors: addDVBErrors,
+        addPlaylistMetrics: addPlaylistMetrics,
+        addPlaylistTraceMetrics: addPlaylistTraceMetrics,
+        updatePlayListTraceMetrics: updatePlayListTraceMetrics,
+        pushPlayListTraceMetrics: pushPlayListTraceMetrics,
         clearAllCurrentMetrics: clearAllCurrentMetrics
     };
 

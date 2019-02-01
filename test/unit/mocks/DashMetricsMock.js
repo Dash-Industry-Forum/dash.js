@@ -34,6 +34,12 @@ function DashMetricsMock () {
 
     this.addDroppedFrames = function () {
     };
+
+    this.addPlayList = function () {
+    };
+
+    this.addPlaylistTraceMetrics = function () {
+    };
 }
 
 export default DashMetricsMock;

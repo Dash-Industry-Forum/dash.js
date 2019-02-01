@@ -88,7 +88,6 @@ function StreamController() {
         mediaPlayerModel,
         isPaused,
         initialPlayback,
-        playListMetrics,
         videoTrackDetected,
         audioTrackDetected,
         isPeriodSwitchInProgress,
@@ -773,30 +772,17 @@ function StreamController() {
     function flushPlaylistMetrics(reason, time) {
         time = time || new Date();
 
-        if (playListMetrics) {
-            getActiveStreamProcessors().forEach(p => {
-                const ctrlr = p.getScheduleController();
-                if (ctrlr) {
-                    ctrlr.finalisePlayList(time, reason);
-                }
-            });
-            dashMetrics.addPlayList(playListMetrics);
-            playListMetrics = null;
-        }
+        getActiveStreamProcessors().forEach(p => {
+            const ctrlr = p.getScheduleController();
+            if (ctrlr) {
+                ctrlr.finalisePlayList(time, reason);
+            }
+        });
+        dashMetrics.addPlayList();
     }
 
     function addPlaylistMetrics(startReason) {
-        playListMetrics = new PlayList();
-        playListMetrics.start = new Date();
-        playListMetrics.mstart = playbackController.getTime() * 1000;
-        playListMetrics.starttype = startReason;
-
-        getActiveStreamProcessors().forEach(p => {
-            let ctrlr = p.getScheduleController();
-            if (ctrlr) {
-                ctrlr.setPlayList(playListMetrics);
-            }
-        });
+        dashMetrics.addPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
     function onPlaybackError(e) {
@@ -948,7 +934,6 @@ function StreamController() {
         initialPlayback = true;
         isPaused = false;
         autoPlay = true;
-        playListMetrics = null;
         playbackEndedTimerId = undefined;
         isPeriodSwitchInProgress = false;
         wallclockTicked = 0;

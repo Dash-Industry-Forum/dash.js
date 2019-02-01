@@ -64,9 +64,6 @@ function ScheduleController(config) {
         currentRepresentationInfo,
         initialRequest,
         isStopped,
-        playListMetrics,
-        playListTraceMetrics,
-        playListTraceMetricsClosed,
         isFragmentProcessingInProgress,
         timeToLoadDelay,
         scheduleTimeout,
@@ -604,9 +601,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackRateChanged(e) {
-        if (playListTraceMetrics) {
-            playListTraceMetrics.playbackspeed = e.playbackRate.toString();
-        }
+        dashMetrics.updatePlayListTraceMetrics({playbackspeed: e.playbackRate.toString()});
     }
 
     function setSeekTarget(value) {
@@ -625,34 +620,18 @@ function ScheduleController(config) {
         return type;
     }
 
-    function setPlayList(playList) {
-        playListMetrics = playList;
-    }
-
     function finalisePlayList(time, reason) {
         clearPlayListTraceMetrics(time, reason);
-        playListMetrics = null;
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
-        if (playListMetrics && playListTraceMetricsClosed === false) {
-            const startTime = playListTraceMetrics.start;
-            const duration = endTime.getTime() - startTime.getTime();
-            playListTraceMetrics.duration = duration;
-            playListTraceMetrics.stopreason = stopreason;
-            playListMetrics.trace.push(playListTraceMetrics);
-            playListTraceMetricsClosed = true;
-        }
+        dashMetrics.pushPlayListTraceMetrics(endTime, stopreason);
     }
 
     function addPlaylistTraceMetrics() {
-        if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
-            playListTraceMetricsClosed = false;
-            playListTraceMetrics = new PlayListTrace();
-            playListTraceMetrics.representationid = currentRepresentationInfo.id;
-            playListTraceMetrics.start = new Date();
-            playListTraceMetrics.mstart = playbackController.getTime() * 1000;
-            playListTraceMetrics.playbackspeed = playbackController.getPlaybackRate().toString();
+        if (currentRepresentationInfo) {
+            const playbackRate = playbackController.getPlaybackRate();
+            dashMetrics.addPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackRate !== null ? playbackRate.toString() : null);
         }
     }
 
@@ -660,9 +639,6 @@ function ScheduleController(config) {
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
-        playListMetrics = null;
-        playListTraceMetrics = null;
-        playListTraceMetricsClosed = true;
         initialRequest = true;
         lastInitQuality = NaN;
         lastFragmentRequest = {
@@ -718,7 +694,7 @@ function ScheduleController(config) {
         start: start,
         stop: stop,
         reset: reset,
-        setPlayList: setPlayList,
+        //setPlayList: setPlayList,
         getBufferTarget: getBufferTarget,
         finalisePlayList: finalisePlayList
     };
