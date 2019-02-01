@@ -17,7 +17,7 @@ define([
             name: NAME,
 
             setup: function () {
-                utils.log(NAME, 'Setup stream: ' + stream.name);
+                utils.info(NAME, 'Setup stream: ' + stream.name);
                 // Check stream availability
                 return this.remote.executeAsync(utils.checkIfFileExits, [stream.url])
                 .then(function (exists) {

@@ -97,6 +97,9 @@ define(function(require) {
         conf.testStream = intern.args.stream;
     }
 
+    // Debug logs
+    conf.debug = intern.args.debug ? true : false;
+
     // console.log(JSON.stringify(conf, null, '  '));
 
     return conf;

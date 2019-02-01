@@ -6,21 +6,25 @@ define([
     
     return {
 
+        info: function (tag, message) {
+            console.info('[' + tag + ']', message);
+        },
+
         log: function (tag, message) {
-            console.log('[' + tag + ']', message);
+            if (intern.config.debug) {
+                console.log('[' + tag + ']', message);
+            }
         },
 
         executeAsync: function (command, script, args, timeout) {
             return new Promise(function (resolve, reject) {
-                // command.setExecuteAsyncTimeout(9000/*timeout ? timeout : defaultTimeout*/).then(function () {
-                    command.executeAsync(script, args)
-                    .then(function (res) {
-                        resolve(res);
-                    })    
-                    .catch(function (err) {
-                        reject(err);
-                    })
-                // })
+                command.executeAsync(script, args)
+                .then(function (res) {
+                    resolve(res);
+                })    
+                .catch(function (err) {
+                    reject(err);
+                })
             });
         },
 
