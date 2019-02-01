@@ -270,6 +270,7 @@ function MetricsModel() {
 
     function addRequestsQueue(mediaType, loadingRequests, executedRequests) {
         let vo = new RequestsQueue();
+
         vo.loadingRequests = loadingRequests;
         vo.executedRequests = executedRequests;
 
@@ -337,8 +338,6 @@ function MetricsModel() {
     }
 
     function addPlayList(vo) {
-        let type = Constants.STREAM;
-
         if (vo.trace && Array.isArray(vo.trace)) {
             vo.trace.forEach(trace => {
                 if (trace.hasOwnProperty('subreplevel') && !trace.subreplevel) {
@@ -349,13 +348,11 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushAndNotify(type, MetricsConstants.PLAY_LIST, vo);
+        pushAndNotify(Constants.STREAM, MetricsConstants.PLAY_LIST, vo);
     }
 
     function addDVBErrors(vo) {
-        let type = Constants.STREAM;
-
-        pushAndNotify(type, MetricsConstants.DVB_ERRORS, vo);
+        pushAndNotify(Constants.STREAM, MetricsConstants.DVB_ERRORS, vo);
     }
 
     instance = {

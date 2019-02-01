@@ -33,13 +33,23 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
+import MetricsModel from '../streaming/models/MetricsModel';
 
 /**
  * @module DashMetrics
  */
-function DashMetrics() {
+
+function DashMetrics(config) {
+
+    config = config || {};
+
+    const context = this.context;
     let instance;
     let metricsModel = config.metricsModel;
+
+    function setup() {
+        metricsModel = metricsModel || MetricsModel(context).getInstance();
+    }
 
     /**
      * @param {string} type
@@ -444,7 +454,7 @@ function DashMetrics() {
         addDVRInfo: addDVRInfo,
         updateManifestUpdateInfo: updateManifestUpdateInfo,
         addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
-        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo
+        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
         addManifestUpdate: addManifestUpdate,
         addHttpRequest: addHttpRequest,
         addSchedulingInfo: addSchedulingInfo,
@@ -456,6 +466,8 @@ function DashMetrics() {
         addDVBErrors: addDVBErrors,
         clearAllCurrentMetrics: clearAllCurrentMetrics
     };
+
+    setup();
 
     return instance;
 }

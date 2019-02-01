@@ -44,7 +44,6 @@ import TextController from './text/TextController';
 import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
-import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
@@ -133,7 +132,6 @@ function MediaPlayer() {
         metricsReportingController,
         mssHandler,
         adapter,
-        metricsModel,
         mediaPlayerModel,
         errHandler,
         capabilities,
@@ -247,8 +245,11 @@ function MediaPlayer() {
 
         adapter = DashAdapter(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
+        
+        dashMetrics = DashMetrics(context).getInstance({
+            manifestModel: manifestModel,
+            dashManifestModel: dashManifestModel
+        });
 
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
@@ -2805,7 +2806,6 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
             timelineConverter: timelineConverter,
@@ -2852,7 +2852,7 @@ function MediaPlayer() {
     function createManifestLoader() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler
@@ -2905,7 +2905,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 adapter: adapter,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 events: Events,
                 constants: Constants,
                 metricsConstants: MetricsConstants

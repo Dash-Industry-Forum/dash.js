@@ -46,7 +46,6 @@ function ScheduleController(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const metricsModel = config.metricsModel;
     const adapter = config.adapter;
     const dashMetrics = config.dashMetrics;
     const timelineConverter = config.timelineConverter;
@@ -94,7 +93,6 @@ function ScheduleController(config) {
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
-            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             textController: textController
         });

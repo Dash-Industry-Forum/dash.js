@@ -57,7 +57,7 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let metricsModel = config.metricsModel;
+    let domStorage = config.domStorage;
     let dashMetrics = config.dashMetrics;
 
     let instance,
@@ -86,7 +86,6 @@ function StreamProcessor(config) {
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
-            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController,
             errHandler: errHandler
@@ -103,7 +102,6 @@ function StreamProcessor(config) {
         scheduleController = ScheduleController(context).create({
             type: type,
             mimeType: mimeType,
-            metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
             timelineConverter: timelineConverter,
@@ -335,7 +333,7 @@ function StreamProcessor(config) {
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
                 type: type,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 errHandler: errHandler,
@@ -351,7 +349,7 @@ function StreamProcessor(config) {
             controller = TextBufferController(context).create({
                 type: type,
                 mimeType: mimeType,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 errHandler: errHandler,
