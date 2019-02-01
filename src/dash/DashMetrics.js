@@ -380,6 +380,10 @@ function DashMetrics() {
         return headers;
     }
 
+    function addDVBErrors(errors) {
+        metricsModel.addDVBErrors(errors);
+    }
+
     instance = {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
         getLatestBufferInfoVO: getLatestBufferInfoVO,
@@ -401,6 +405,7 @@ function DashMetrics() {
         addHttpRequest: addHttpRequest,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
+        addDVBErrors: addDVBErrors,
         clearAllCurrentMetrics: clearAllCurrentMetrics
     };
 
