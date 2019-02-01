@@ -98,6 +98,28 @@ function DashMetrics() {
 
     /**
      * @param {string} mediaType
+     * @param {number} t
+     * @param {number} level
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addBufferLevel(mediaType, t, level) {
+        metricsModel.addBufferLevel(mediaType, t, level);
+    }
+
+    /**
+     * @param {string} mediaType
+     * @param {string} state
+     * @param {number} target
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addBufferState(mediaType, state, target) {
+        metricsModel.addBufferState(mediaType, state, target);
+    }
+
+    /**
+     * @param {string} mediaType
      * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
@@ -332,6 +354,8 @@ function DashMetrics() {
         updateManifestUpdateInfo: updateManifestUpdateInfo,
         addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo
+        addBufferLevel: addBufferLevel,
+        addBufferState: addBufferState,
     };
 
     return instance;

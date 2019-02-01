@@ -14,8 +14,13 @@ function DashMetricsMock () {
         return this.bufferState;
     };
 
-    this.setBufferState = function (state) {
-        this.bufferState = state;
+    this.addBufferState = function (type, bufferState/*, bufferTarget*/) {
+        this.bufferState = bufferState;
+    };
+
+    this.addBufferLevel = function () {
+    };
+
     };
 }
 

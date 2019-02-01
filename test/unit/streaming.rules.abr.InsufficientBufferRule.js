@@ -60,7 +60,7 @@ describe('InsufficientBufferRule', function () {
         const rule = InsufficientBufferRule(context).create({
             dashMetrics: dashMetricsMock
         });
-        dashMetricsMock.setBufferState(bufferState);
+        dashMetricsMock.addBufferState('video', bufferState);
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
     });
@@ -79,7 +79,7 @@ describe('InsufficientBufferRule', function () {
         const rule = InsufficientBufferRule(context).create({
             dashMetrics: dashMetricsMock
         });
-        dashMetricsMock.setBufferState(bufferState);
+        dashMetricsMock.addBufferState('video', bufferState);
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
     });
@@ -97,7 +97,7 @@ describe('InsufficientBufferRule', function () {
             getRepresentationInfo: function () { return representationInfo;}
         };
 
-        dashMetricsMock.setBufferState(bufferState);
+        dashMetricsMock.addBufferState('video', bufferState);
 
         const rule = InsufficientBufferRule(context).create({
             dashMetrics: dashMetricsMock
@@ -106,7 +106,7 @@ describe('InsufficientBufferRule', function () {
         rule.getMaxIndex(rulesContextMock);
 
         bufferState.state = 'bufferStalled';
-        dashMetricsMock.setBufferState(bufferState);
+        dashMetricsMock.addBufferState('video', bufferState);
         representationInfo.fragmentDuration = 4;
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(0);
