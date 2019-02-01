@@ -19,7 +19,7 @@ define([
 ], function(intern, registerSuite, assert, require, player, utils) {
 
     // Suite name
-    var NAME = 'TEST_SEEK';
+    var NAME = 'SEEK';
 
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
@@ -47,12 +47,8 @@ define([
             name: NAME,
 
             load: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                if (stream.dynamic) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
+                if (stream.dynamic) this.skip();
                 utils.log(NAME, 'Setup');
                 command = this.remote.get(require.toUrl(intern.config.testPage));
                 return command.execute(player.loadStream, [stream])
@@ -73,12 +69,8 @@ define([
             name: NAME,
 
             seek: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                if (stream.dynamic) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
+                if (stream.dynamic) this.skip();
                 // Get the stream duration (applies for static and dynamic streams)
                 return command.execute(player.getDuration)
                 .then(function(duration) {
@@ -101,12 +93,8 @@ define([
             },
 
             playing: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                if (stream.dynamic) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
+                if (stream.dynamic) this.skip();
                 utils.log(NAME, 'Check if playing');
                 return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
                 .then(function(progressing) {

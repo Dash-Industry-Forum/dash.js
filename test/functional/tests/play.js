@@ -30,9 +30,7 @@ define([
             name: NAME,
 
             load: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
                 utils.log(NAME, 'Load stream');
                 command = this.remote.get(require.toUrl(intern.config.testPage));
                 return command.execute(player.loadStream, [stream]);
@@ -45,9 +43,7 @@ define([
             name: NAME,
 
             play: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
                 utils.log(NAME, 'Play');
                 return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
                 .then(function (playing) {
@@ -57,9 +53,7 @@ define([
             },
 
             progress: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
                 utils.log(NAME, 'Progress');
                 return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
                 .then(function (progressing) {
@@ -75,9 +69,7 @@ define([
             name: NAME,
 
             isDynamic: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
                 return command.execute(player.isDynamic)
                 .then(function (dynamic) {
                     utils.log(NAME, 'dynamic: ' + dynamic);

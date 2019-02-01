@@ -37,9 +37,7 @@ define([
             name: NAME,
 
             load: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
                 utils.log(NAME, 'Load stream');
                 command = this.remote.get(require.toUrl(intern.config.testPage));
                 return command.execute(player.loadStream, [stream])
@@ -58,9 +56,7 @@ define([
             name: NAME,
 
             pause: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
+                if (!stream.available) this.skip();
                 var pauseTime = 0;
                 // Execute a play in case previous pause test has failed
                 utils.log(NAME, 'Play');
