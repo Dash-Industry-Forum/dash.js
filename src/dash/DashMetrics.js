@@ -430,10 +430,20 @@ function DashMetrics(config) {
         return headers;
     }
 
+    /**
+     * @param {object} vo
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function addPlayList(vo) {
         metricsModel.addPlayList(vo);
     }
 
+    /**
+     * @param {object} errors
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function addDVBErrors(errors) {
         metricsModel.addDVBErrors(errors);
     }
