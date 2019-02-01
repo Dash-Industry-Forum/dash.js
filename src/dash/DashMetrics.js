@@ -242,6 +242,41 @@ function DashMetrics() {
     }
 
     /**
+     * @param {object} request
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addManifestUpdate(request) {
+        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.requestStartDate, request.requestEndDate);
+    }
+
+    /**
+     * @param {object} request
+     * @param {string} responseURL
+     * @param {number} responseStatus
+     * @param {object} responseHeaders
+     * @param {object} traces
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addHttpRequest(request, responseURL, responseStatus, responseHeaders, traces) {
+        metricsModel.addHttpRequest(request.mediaType,
+            null,
+            request.type,
+            request.url,
+            responseURL,
+            request.serviceLocation || null,
+            request.range || null,
+            request.requestStartDate,
+            request.firstByteDate,
+            request.requestEndDate,
+            responseStatus,
+            request.duration,
+            responseHeaders,
+            traces);
+    }
+
+    /**
      * @param {object} representation
      * @param {string} mediaType
      * @memberof module:DashMetrics
@@ -354,6 +389,8 @@ function DashMetrics() {
         updateManifestUpdateInfo: updateManifestUpdateInfo,
         addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo
+        addManifestUpdate: addManifestUpdate,
+        addHttpRequest: addHttpRequest,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
     };

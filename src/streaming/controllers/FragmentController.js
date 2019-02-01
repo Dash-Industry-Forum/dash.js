@@ -66,7 +66,7 @@ function FragmentController( config ) {
             model = FragmentModel(context).create({
                 metricsModel: metricsModel,
                 fragmentLoader: FragmentLoader(context).create({
-                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
                     requestModifier: RequestModifier(context).getInstance()

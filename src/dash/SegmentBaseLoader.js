@@ -51,7 +51,7 @@ function SegmentBaseLoader() {
         errHandler,
         boxParser,
         requestModifier,
-        metricsModel,
+        dashMetrics,
         mediaPlayerModel,
         httpLoader,
         baseURLController;
@@ -65,7 +65,7 @@ function SegmentBaseLoader() {
         requestModifier = RequestModifier(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
@@ -76,8 +76,8 @@ function SegmentBaseLoader() {
             baseURLController = config.baseURLController;
         }
 
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
 
         if (config.mediaPlayerModel) {

@@ -46,7 +46,7 @@ function HTTPLoader(cfg) {
 
     const context = this.context;
     const errHandler = cfg.errHandler;
-    const metricsModel = cfg.metricsModel;
+    const dashMetrics = cfg.dashMetrics;
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
@@ -95,7 +95,7 @@ function HTTPLoader(cfg) {
         let lastTraceReceivedCount = 0;
         let httpRequest;
 
-        if (!requestModifier || !metricsModel || !errHandler) {
+        if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
         }
 
@@ -107,26 +107,14 @@ function HTTPLoader(cfg) {
             request.firstByteDate = request.firstByteDate || requestStartTime;
 
             if (!request.checkExistenceOnly) {
-                metricsModel.addHttpRequest(
-                    request.mediaType,
-                    null,
-                    request.type,
-                    request.url,
-                    httpRequest.response ? httpRequest.response.responseURL : null,
-                    request.serviceLocation || null,
-                    request.range || null,
-                    request.requestStartDate,
-                    request.firstByteDate,
-                    request.requestEndDate,
-                    httpRequest.response ? httpRequest.response.status : null,
-                    request.duration,
-                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                        httpRequest.response ? httpRequest.response.responseHeaders : [],
-                    success ? traces : null
-                );
+                dashMetrics.addHttpRequest(request, httpRequest.response ? httpRequest.response.responseURL : null,
+                                           httpRequest.response ? httpRequest.response.status : null,
+                                           httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                                           httpRequest.response ? httpRequest.response.responseHeaders : [],
+                                           success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
-                    metricsModel.addManifestUpdate('stream', request.type, request.requestStartDate, request.requestEndDate);
+                    dashMetrics.addManifestUpdate(request.type, request.requestStartDate, request.requestEndDate);
                 }
             }
         };
