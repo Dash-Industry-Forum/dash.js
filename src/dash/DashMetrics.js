@@ -358,6 +358,7 @@ function DashMetrics() {
     function addDVRInfo(mediaType, currentTime, mpd, range) {
         metricsModel.addDVRInfo(mediaType, currentTime, mpd, range);
     }
+
     /**
      * @param {string} id
      * @returns {*}
@@ -419,6 +420,10 @@ function DashMetrics() {
         return headers;
     }
 
+    function addPlayList(vo) {
+        metricsModel.addPlayList(vo);
+    }
+
     function addDVBErrors(errors) {
         metricsModel.addDVBErrors(errors);
     }
@@ -446,6 +451,8 @@ function DashMetrics() {
         addRequestsQueue: addRequestsQueue,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
+        addDroppedFrames: addDroppedFrames,
+        addPlayList: addPlayList,
         addDVBErrors: addDVBErrors,
         clearAllCurrentMetrics: clearAllCurrentMetrics
     };

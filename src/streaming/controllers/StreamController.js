@@ -63,7 +63,6 @@ function StreamController() {
         manifestLoader,
         manifestModel,
         adapter,
-        metricsModel,
         dashMetrics,
         mediaSourceController,
         timeSyncController,
@@ -636,7 +635,6 @@ function StreamController() {
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
                         mediaPlayerModel: mediaPlayerModel,
-                        metricsModel: metricsModel,
                         dashMetrics: dashMetrics,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
@@ -782,7 +780,7 @@ function StreamController() {
                     ctrlr.finalisePlayList(time, reason);
                 }
             });
-            metricsModel.addPlayList(playListMetrics);
+            dashMetrics.addPlayList(playListMetrics);
             playListMetrics = null;
         }
     }
@@ -859,7 +857,7 @@ function StreamController() {
     function checkConfig() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
-            !metricsModel || !playbackController) {
+            !dashMetrics || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
     }
@@ -906,9 +904,6 @@ function StreamController() {
         }
         if (config.adapter) {
             adapter = config.adapter;
-        }
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
