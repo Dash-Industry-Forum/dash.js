@@ -101,6 +101,24 @@ define([], function () {
             _timeout = setTimeout(_onTimeout, timeout * 1000);
             player.on('playbackSeeked', _onSeeked);
             player.seek(time);
+        },
+
+        waitForEvent: function(event, timeout, done) {
+            var _timeout = null,
+                _onComplete = function (res) {
+                    clearTimeout(_timeout);
+                    player.off(event, _onEvent);
+                    done(res);
+                },
+                _onTimeout = function() {
+                    _onComplete(false);
+                },
+                _onEvent = function() {
+                    _onComplete(true);
+                };
+
+            _timeout = setTimeout(_onTimeout, timeout * 1000);
+            player.on(event, _onEvent);
         }
     };
 });
