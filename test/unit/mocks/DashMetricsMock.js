@@ -21,6 +21,9 @@ function DashMetricsMock () {
     this.addBufferLevel = function () {
     };
 
+    this.clearAllCurrentMetrics = function () {
+    };
+
     };
 }
 

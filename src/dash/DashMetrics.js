@@ -119,6 +119,14 @@ function DashMetrics() {
     }
 
     /**
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function clearAllCurrentMetrics () {
+        metricsModel.clearAllCurrentMetrics();
+    }
+
+    /**
      * @param {string} mediaType
      * @param {boolean} readOnly
      * @returns {*}
@@ -393,6 +401,7 @@ function DashMetrics() {
         addHttpRequest: addHttpRequest,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
+        clearAllCurrentMetrics: clearAllCurrentMetrics
     };
 
     return instance;

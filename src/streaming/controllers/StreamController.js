@@ -979,7 +979,7 @@ function StreamController() {
 
         baseURLController.reset();
         manifestUpdater.reset();
-        metricsModel.clearAllCurrentMetrics();
+        dashMetrics.clearAllCurrentMetrics();
         manifestModel.setValue(null);
         manifestLoader.reset();
         timelineConverter.reset();
