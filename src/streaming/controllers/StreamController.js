@@ -177,7 +177,7 @@ function StreamController() {
         if (isTrackTypePresent(Constants.VIDEO)) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
-                metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
+                dashMetrics.addDroppedFrames(playbackQuality);
             }
         }
     }

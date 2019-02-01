@@ -208,6 +208,15 @@ function DashMetrics() {
     }
 
     /**
+     * @param {number} quality
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addDroppedFrames(quality) {
+        metricsModel.addDroppedFrames(Constants.VIDEO, quality);
+    }
+
+    /**
      * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics

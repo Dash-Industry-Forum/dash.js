@@ -24,6 +24,7 @@ function DashMetricsMock () {
     this.clearAllCurrentMetrics = function () {
     };
 
+    this.addDroppedFrames = function () {
     };
 }
 
