@@ -34,6 +34,23 @@ describe('DashMetrics', function () {
         });
     });
 
+    describe('getHttpRequests', () => {
+        it('should return an empty array when getHttpRequests is called and metrics is undefined', () => {
+            const httpRequestArray = dashMetrics.getHttpRequests();
+
+            expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(httpRequestArray).to.be.empty;                // jshint ignore:line
+        });
+
+        it('should return an empty array when getHttpRequests is called and metrics.httpList is undefined', () => {
+            const metrics = {};
+            const httpRequestArray = dashMetrics.getHttpRequests(metrics);
+
+            expect(httpRequestArray).to.be.instanceOf(Array);    // jshint ignore:line
+            expect(httpRequestArray).to.be.empty;                // jshint ignore:line
+        });
+    });
+
     it('should return null when getCurrentDroppedFrames is called and metrics[MetricsList.DROPPED_FRAMES] is undefined', () => {
         const metrics = {};
         const httpRequestArray = dashMetrics.getCurrentDroppedFrames(metrics);

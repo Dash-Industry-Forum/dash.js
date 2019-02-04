@@ -248,6 +248,7 @@ function DashMetrics() {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
+        getHttpRequests: getHttpRequests,
         getCurrentDroppedFrames: getCurrentDroppedFrames,
         getCurrentSchedulingInfo: getCurrentSchedulingInfo,
         getCurrentDVRInfo: getCurrentDVRInfo,
