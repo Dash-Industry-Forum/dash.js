@@ -8,7 +8,7 @@
     "build": "grunt",
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha test/unit --require mochahook",
-    "test-functional": "node node_modules/intern/runner.js config=test/functional/config.js browsers=$BROWSER selenium=remote app=remote",
+    "test-functional": "node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote",
     "dev": "grunt dev",
     "prepublish": "grunt githooks",
     "prepublishOnly": "grunt prepublish",
