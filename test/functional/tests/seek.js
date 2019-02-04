@@ -25,14 +25,18 @@ define([
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
     var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
-    var SEEK_TIMEOUT = 5; // Timeout (in sec.) for checking seek to be completed
+    var SEEK_TIMEOUT = 10; // Timeout (in sec.) for checking seek to be completed
     var SEEK_COUNT = 3; // Number of seek tests
 
     // Test variables
     var seekPos;
 
+    var round = function (value) {
+        return Math.round(value * 1000) / 1000;
+    }
+
     var generateSeekPos = function(duration) {
-        var pos = Math.round(Math.random() * duration * 100) / 100;
+        var pos = round(Math.random() * duration);
         if (pos > (duration - PROGRESS_VALUE)) {
             pos -= PROGRESS_VALUE;
         }
@@ -88,7 +92,7 @@ define([
                 })
                 .then(function(time) {
                     utils.log(NAME, 'Playback time: ' + time);
-                    return assert.isAtLeast(time, seekPos);
+                    return assert.isAtLeast(round(time), seekPos);
                 });
             },
 
