@@ -760,6 +760,16 @@ declare namespace dashjs {
         reset(): void;
     }
 
+    export interface IManifestInfo {
+        DVRWindowSize: number;
+        availableFrom: Date;
+        duration: number;
+        isDynamic: boolean;
+        loadedTime: Date;
+        maxFragmentDuration: number;
+        minBufferTime: number;
+    }
+
     export class StreamInfo {
         id: string;
         index: number;
@@ -767,6 +777,16 @@ declare namespace dashjs {
         duration: number;
         manifestInfo: object;
         isLast: boolean;
+    }
+
+    export interface ICurrentRepresentationSwitch {
+        mt: number;
+        t: Date;
+    }
+
+    export interface ILatestBufferLevelVO {
+        level: number;
+        t: Date;
     }
 
     export interface DashMetrics {
@@ -779,15 +799,15 @@ declare namespace dashjs {
          */
         getMaxIndexForBufferType(bufferType: 'video' | 'audio', periodIdx: number): number;
         getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
-        getCurrentRepresentationSwitch(metrics: MetricsList): any[];
-        getLatestBufferLevelVO(metrics: MetricsList): any[];
+        getCurrentRepresentationSwitch(metrics: MetricsList): ICurrentRepresentationSwitch;
+        getLatestBufferLevelVO(metrics: MetricsList): ILatestBufferLevelVO;
         getCurrentBufferLevel(metrics: MetricsList): number;
-        getCurrentHttpRequest(metrics: MetricsList): any;
-        getHttpRequests(metrics: MetricsList): any[];
-        getCurrentDroppedFrames(metrics: MetricsList): any[];
-        getCurrentSchedulingInfo(metrics: MetricsList): any[];
-        getCurrentDVRInfo(metrics: MetricsList): any[];
-        getCurrentManifestUpdate(metrics: MetricsList): any[];
+        getCurrentHttpRequest(metrics: MetricsList): object;
+        getHttpRequests(metrics: MetricsList): object[];
+        getCurrentDroppedFrames(metrics: MetricsList): IDroppedFrames;
+        getCurrentSchedulingInfo(metrics: MetricsList): object;
+        getCurrentDVRInfo(metrics: MetricsList): IDVRInfo[];
+        getCurrentManifestUpdate(metrics: MetricsList): any;
         getLatestFragmentRequestHeaderValueByID(metrics: MetricsList, id: string): string;
         getLatestMPDRequestHeaderValueByID(metrics: MetricsList, id: string): string;
         getRequestsQueue(metrics: MetricsList): RequestsQueue | null;
@@ -833,19 +853,43 @@ declare namespace dashjs {
         sessionId: string | null;
     }
 
+    export interface IBufferLevel {
+        level: number;
+        t: Date;
+    }
+
+    export interface IBufferState {
+        state: string;
+        target: number;
+    }
+
+    export interface IDVRInfo {
+        manifestInfo: IManifestInfo;
+        range: {
+            start: number;
+            end: number;
+        };
+        time: number;
+    }
+
+    export interface IDroppedFrames {
+        droppedFrames: number;
+        time: Date;
+    }
+
     export class MetricsList {
-        TcpList: any[];
-        HttpList: any[];
-        RepSwitchList: any[];
-        BufferLevel: any[];
-        BufferState: any[];
-        PlayList: any[];
-        DroppedFrames: any[];
-        SchedulingInfo: any[];
-        DVRInfo: any[];
-        ManifestUpdate: any[];
-        RequestsQueue: RequestsQueue | null;
+        BufferLevel: IBufferLevel[];
+        BufferState: IBufferState[];
         DVBErrors: any[];
+        DVRInfo: IDVRInfo[];
+        DroppedFrames: IDroppedFrames[];
+        HttpList: any[];
+        ManifestUpdate: any[];
+        PlayList: any[];
+        RepSwitchList: any[];
+        RequestsQueue: RequestsQueue | null;
+        SchedulingInfo: any[];
+        TcpList: any[];
     }
 
     export class RequestsQueue {
