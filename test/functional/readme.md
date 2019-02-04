@@ -4,7 +4,7 @@ This README explains how to run functional tests for dash.js project, based on S
 The tests can be executed using BrowserStack platform, meanwhile it details how to launch the functional tests locally on your desktop, using selenium grid.
 
 ## Intern
-Proposed functional tests are based upon Intern framework (https://theintern.github.io/).
+Proposed functional tests are based upon Intern framework (https://theintern.io/).
 To install Intern, perform a ```npm install``` command in dash.js root folder.
 
 ## Web application for tests
@@ -12,14 +12,14 @@ To run the tests you have to serve a web application that is able to run the das
 This web application must declare the video element and the dash.js MediaPlayer instance, respectively with the ids ```'video'``` and ```'player'```.
 
 ## Tests scripts
-The folder ```tests``` contains the different scripts for testing each functionnality/scenario.
-For example the script ```test/play/play.js``` is testing the scenario for playing a stream.
+The folder ```tests``` contains the different functional tests suites for testing each functionnality/scenario.
+For example the suites in file ```test/play.js``` are used to test the ability to play a stream.
 
 When writing a functional test, instead of executing application code directly, we do use the Leadfoot Command object, provided by the Intern framework, to automate interactions to test the application (see https://theintern.github.io/leadfoot/module-leadfoot_Command.html).
+All the tests can then execute script source code within the test web application and then interact with the MediaPlayer instantiated in the web application.
+The file ```tests/scripts/player.js``` provide a set of script functions to interact with the player.
 
 Also in order to automate and check the tests results we do use the Chai Assertion Library (http://chaijs.com/) which is also bundled with Intern.
-
-All the tests can interact with the video element and the MediaPlayer instance provided by the tested web application with the help of functions declared in ```test/video_functions.js``` and ```test/player_functions.js```
 
 ## Selenium and tests configuration
 In ```config``` folder, you will multiple configurations files that are used by the ```config.js``` script to run tests:
@@ -67,6 +67,10 @@ app=<app_name_from_config_file> or appurl=<app_url>
 - only for a specific suite of tests
 ```sh
 tests=<test_suites_names_separated_by_comma>
+```
+- only for a specific stream or group of streams
+```sh
+stream=<stream name>
 ```
 
 For example:
