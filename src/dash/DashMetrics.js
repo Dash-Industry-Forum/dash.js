@@ -451,8 +451,10 @@ function DashMetrics(config) {
      * @instance
      */
     function addPlayList() {
-        metricsModel.addPlayList(playListMetrics);
-        playListMetrics = null;
+        if (playListMetrics) {
+            metricsModel.addPlayList(playListMetrics);
+            playListMetrics = null;
+        }
     }
 
     function addPlaylistMetrics(mediaStartTime, startReason) {
