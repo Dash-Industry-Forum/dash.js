@@ -694,7 +694,6 @@ function ScheduleController(config) {
         start: start,
         stop: stop,
         reset: reset,
-        //setPlayList: setPlayList,
         getBufferTarget: getBufferTarget,
         finalisePlayList: finalisePlayList
     };
