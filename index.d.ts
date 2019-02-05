@@ -60,6 +60,7 @@ declare namespace dashjs {
         type: 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | null;
         streamInfo: StreamInfo | null;
         representationCount: number;
+        labels: string[];
         lang: string | null;
         viewpoint: any | undefined | null;
         accessibility: any[] | null;
