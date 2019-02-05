@@ -28,25 +28,13 @@ jobs:
       # - run:
       #    name: Build and Test
       #    command: npm run build
-
-    machine:
-      ruby:
-        version: 2.0.0-p0
-      environment:
-        BS_USERNAME: $BS_USERNAME
-        BS_AUTHKEY: $BS_AUTHKEY
-        SELENIUM_HOST: hub.browserstack.com
-        BS_AUTOMATE_PROJECT: "Run on circleCI"
-        BS_AUTOMATE_BUILD: "build No. $CIRCLE_BUILD_NUM for circleCI"
-        SELENIUM_PLATFORM: WINDOWS
-        BS_AUTOMATE_OS_VERSION: 10
-        SELENIUM_BROWSER: CHROME
-        SELENIUM_VERSION: 11
-
+      
       - run:
           name: Run functional tests
           command: npm run test-functional -- browser=chrome stream="VOD (Static MPD)"
-        environment:
+          environment:
+            BS_USERNAME: $BS_USERNAME
+            BS_AUTHKEY: $BS_AUTHKEY
 
       - deploy:
           name: Deploy
