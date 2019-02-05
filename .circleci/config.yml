@@ -25,16 +25,9 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
 
       # run buld and tests!
-      # - run:
-      #    name: Build and Test
-      #    command: npm run build
-      
       - run:
-          name: Run functional tests
-          command: npm run test-functional -- browser=chrome stream="VOD (Static MPD)"
-          environment:
-            BS_USERNAME: $BS_USERNAME
-            BS_AUTHKEY: $BS_AUTHKEY
+          name: Build and Test
+          command: npm run build
 
       - deploy:
           name: Deploy
