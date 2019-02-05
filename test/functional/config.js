@@ -84,12 +84,8 @@ define(function(require) {
     console.log('conf.testPage: ' + conf.testPage);
 
     // tests suites
-    if (intern.args.tests) {
-        var tests = intern.args.tests.split(',');
-        conf.suites = [];
-        tests.forEach(function(test) {
-            conf.suites.push(test);
-        });
+    if (intern.args.testSuites) {
+        conf.testSuites = intern.args.testSuites;
     }
 
     // Test stream

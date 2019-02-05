@@ -64,9 +64,13 @@ browser=<browser_names_separated_by_comma>
 ```sh
 app=<app_name_from_config_file> or appurl=<app_url>
 ```
-- only for a specific suite of tests
+- using http or https protocol for accessing application and streams (https by default),
 ```sh
-tests=<test_suites_names_separated_by_comma>
+protocol=<http or https>
+```
+- only for some specific suite of tests
+```sh
+testSuites=<test_suite_names_separated_by_comma>
 ```
 - only for a specific stream or group of streams
 ```sh
@@ -74,9 +78,19 @@ stream=<stream name>
 ```
 
 For example:
+- run all tests on chrome
 ```sh
-node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome|firefox appurl=http://... tests=play
+node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome
 ```
+- run only play and seek test suites
+```sh
+node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome testSuites=\"play,seek\"
+```
+- run all tests on stream "VOD (Static MPD) / SegmentBase, ondemand profile"
+```sh
+node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome stream=\"VOD (Static MPD) / SegmentBase, ondemand profile\"
+```
+
 
 ## Running tests on Mac OSX
 #### Chrome

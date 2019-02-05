@@ -15,7 +15,7 @@ define([
             ended) {
 
     var registerSuites = function (stream) {
-        var suites = intern.config.suites || ['play', 'pause', 'seek', 'ended'];
+        var suites = intern.config.testSuites || ['play', 'pause', 'seek', 'ended'];
 
         setup.register(stream);
 
