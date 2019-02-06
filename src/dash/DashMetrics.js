@@ -457,7 +457,7 @@ function DashMetrics(config) {
         }
     }
 
-    function addPlaylistMetrics(mediaStartTime, startReason) {
+    function createPlaylistMetrics(mediaStartTime, startReason) {
         playListMetrics = new PlayList();
 
         playListMetrics.start = new Date();
@@ -465,7 +465,7 @@ function DashMetrics(config) {
         playListMetrics.starttype = startReason;
     }
 
-    function addPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
+    function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
         if (playListTraceMetricsClosed === true ) {
             playListTraceMetricsClosed = false;
             playListTraceMetrics = new PlayListTrace();
@@ -531,8 +531,8 @@ function DashMetrics(config) {
         addDroppedFrames: addDroppedFrames,
         addPlayList: addPlayList,
         addDVBErrors: addDVBErrors,
-        addPlaylistMetrics: addPlaylistMetrics,
-        addPlaylistTraceMetrics: addPlaylistTraceMetrics,
+        createPlaylistMetrics: createPlaylistMetrics,
+        createPlaylistTraceMetrics: createPlaylistTraceMetrics,
         updatePlayListTraceMetrics: updatePlayListTraceMetrics,
         pushPlayListTraceMetrics: pushPlayListTraceMetrics,
         clearAllCurrentMetrics: clearAllCurrentMetrics

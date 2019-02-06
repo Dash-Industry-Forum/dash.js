@@ -133,7 +133,7 @@ function ScheduleController(config) {
             return;
         }
         logger.debug('Schedule Controller starts');
-        addPlaylistTraceMetrics();
+        createPlaylistTraceMetrics();
         isStopped = false;
 
         if (initialRequest) {
@@ -328,7 +328,7 @@ function ScheduleController(config) {
         }
 
         clearPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
-        addPlaylistTraceMetrics();
+        createPlaylistTraceMetrics();
     }
 
     function completeQualityChange(trigger) {
@@ -628,10 +628,10 @@ function ScheduleController(config) {
         dashMetrics.pushPlayListTraceMetrics(endTime, stopreason);
     }
 
-    function addPlaylistTraceMetrics() {
+    function createPlaylistTraceMetrics() {
         if (currentRepresentationInfo) {
             const playbackRate = playbackController.getPlaybackRate();
-            dashMetrics.addPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackRate !== null ? playbackRate.toString() : null);
+            dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackRate !== null ? playbackRate.toString() : null);
         }
     }
 

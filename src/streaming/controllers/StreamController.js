@@ -273,18 +273,18 @@ function StreamController() {
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
 
-        addPlaylistMetrics(PlayList.SEEK_START_REASON);
+        createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
     function onPlaybackStarted( /*e*/ ) {
         logger.debug('[onPlaybackStarted]');
         if (initialPlayback) {
             initialPlayback = false;
-            addPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
+            createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
         } else {
             if (isPaused) {
                 isPaused = false;
-                addPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
+                createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
                 toggleEndPeriodTimer();
             }
         }
@@ -781,8 +781,8 @@ function StreamController() {
         dashMetrics.addPlayList();
     }
 
-    function addPlaylistMetrics(startReason) {
-        dashMetrics.addPlaylistMetrics(playbackController.getTime() * 1000, startReason);
+    function createPlaylistMetrics(startReason) {
+        dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
     function onPlaybackError(e) {

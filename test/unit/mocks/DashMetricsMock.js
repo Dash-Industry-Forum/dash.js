@@ -38,7 +38,7 @@ function DashMetricsMock () {
     this.addPlayList = function () {
     };
 
-    this.addPlaylistTraceMetrics = function () {
+    this.createPlaylistTraceMetrics = function () {
     };
 }
 
