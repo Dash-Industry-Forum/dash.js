@@ -592,7 +592,8 @@ function MssParser(config) {
 
         let duration = parseFloat(smoothStreamingMedia.getAttribute('Duration'));
         manifest.mediaPresentationDuration = (duration === 0) ? Infinity : duration / manifest.timescale;
-        manifest.minBufferTime = mediaPlayerModel.getStableBufferTime();
+        // By default, set minBufferTime to 2 sec. (but set below according to video segment duration)
+        manifest.minBufferTime = 2;
         manifest.ttmlTimeIsRelative = true;
 
         // Live manifest with Duration = start-over
@@ -659,6 +660,11 @@ function MssParser(config) {
             if (manifest.ContentProtection !== undefined) {
                 adaptations[i].ContentProtection = manifest.ContentProtection;
                 adaptations[i].ContentProtection_asArray = manifest.ContentProtection_asArray;
+            }
+
+            // Set minBufferTime
+            if (adaptations[i].contentType === 'video') {
+                manifest.minBufferTime = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale * 2;
             }
 
             if (manifest.type === 'dynamic') {
