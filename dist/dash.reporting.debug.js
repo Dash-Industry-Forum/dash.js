@@ -367,12 +367,11 @@ module.exports = exports['default'];
 /**
  * Constants declaration
  * @class
- * @ignore
  */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
-    value: true
+  value: true
 });
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -380,48 +379,57 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var Constants = (function () {
-    _createClass(Constants, [{
-        key: 'init',
-        value: function init() {
-            this.STREAM = 'stream';
-            this.VIDEO = 'video';
-            this.AUDIO = 'audio';
-            this.TEXT = 'text';
-            this.FRAGMENTED_TEXT = 'fragmentedText';
-            this.EMBEDDED_TEXT = 'embeddedText';
-            this.MUXED = 'muxed';
-            this.IMAGE = 'image';
-            this.LOCATION = 'Location';
-            this.INITIALIZE = 'initialize';
-            this.TEXT_SHOWING = 'showing';
-            this.TEXT_HIDDEN = 'hidden';
-            this.CC1 = 'CC1';
-            this.CC3 = 'CC3';
-            this.STPP = 'stpp';
-            this.TTML = 'ttml';
-            this.VTT = 'vtt';
-            this.WVTT = 'wvtt';
-            this.UTF8 = 'utf-8';
-            this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
-            this.SCHEME_ID_URI = 'schemeIdUri';
-            this.START_TIME = 'starttime';
-            this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
-            this.ABR_STRATEGY_BOLA = 'abrBola';
-            this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
-            this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-            this.MOVING_AVERAGE_EWMA = 'ewma';
-            this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
-            this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
-        }
-    }]);
-
-    function Constants() {
-        _classCallCheck(this, Constants);
-
-        this.init();
+  _createClass(Constants, [{
+    key: 'init',
+    value: function init() {
+      this.STREAM = 'stream';
+      this.VIDEO = 'video';
+      this.AUDIO = 'audio';
+      this.TEXT = 'text';
+      this.FRAGMENTED_TEXT = 'fragmentedText';
+      this.EMBEDDED_TEXT = 'embeddedText';
+      this.MUXED = 'muxed';
+      this.IMAGE = 'image';
+      this.LOCATION = 'Location';
+      this.INITIALIZE = 'initialize';
+      this.TEXT_SHOWING = 'showing';
+      this.TEXT_HIDDEN = 'hidden';
+      this.CC1 = 'CC1';
+      this.CC3 = 'CC3';
+      this.STPP = 'stpp';
+      this.TTML = 'ttml';
+      this.VTT = 'vtt';
+      this.WVTT = 'wvtt';
+      this.UTF8 = 'utf-8';
+      this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
+      this.SCHEME_ID_URI = 'schemeIdUri';
+      this.START_TIME = 'starttime';
+      this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+      this.ABR_STRATEGY_BOLA = 'abrBola';
+      this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+      this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+      this.MOVING_AVERAGE_EWMA = 'ewma';
+      /**
+       *  @constant {string} BAD_ARGUMENT_ERROR 'Invalid Arguments' error
+       *  @memberof Constants#
+       *  @static
+       */
+      this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
+      this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
     }
 
-    return Constants;
+    /**
+     * @constructs
+     */
+  }]);
+
+  function Constants() {
+    _classCallCheck(this, Constants);
+
+    this.init();
+  }
+
+  return Constants;
 })();
 
 var constants = new Constants();
@@ -491,9 +499,8 @@ var _reportingReportingFactory2 = _interopRequireDefault(_reportingReportingFact
 function MetricsReporting() {
 
     var context = this.context;
-    var instance = undefined;
-
-    var dvbErrorsTranslator = undefined;
+    var instance = undefined,
+        dvbErrorsTranslator = undefined;
 
     /**
      * Create a MetricsCollectionController, and a DVBErrorsTranslator
@@ -1874,18 +1881,25 @@ function DVBReporting(config) {
     var instance = undefined;
 
     var context = this.context;
-    var metricSerialiser = (0, _utilsMetricSerialiser2['default'])(context).getInstance();
-    var randomNumberGenerator = (0, _utilsRNG2['default'])(context).getInstance();
+    var metricSerialiser = undefined,
+        randomNumberGenerator = undefined,
+        reportingPlayerStatusDecided = undefined,
+        isReportingPlayer = undefined,
+        reportingUrl = undefined,
+        rangeController = undefined;
 
     var USE_DRAFT_DVB_SPEC = true;
-    var isReportingPlayer = false;
-    var reportingPlayerStatusDecided = false;
-    var reportingUrl = null;
-    var rangeController = null;
     var allowPendingRequestsToCompleteOnReset = true;
     var pendingRequests = [];
 
     var metricsConstants = config.metricsConstants;
+
+    function setup() {
+        metricSerialiser = (0, _utilsMetricSerialiser2['default'])(context).getInstance();
+        randomNumberGenerator = (0, _utilsRNG2['default'])(context).getInstance();
+
+        resetInitialSettings();
+    }
 
     function doGetRequest(url, successCB, failureCB) {
         var req = new XMLHttpRequest();
@@ -1994,6 +2008,13 @@ function DVBReporting(config) {
         }
     }
 
+    function resetInitialSettings() {
+        reportingPlayerStatusDecided = false;
+        isReportingPlayer = false;
+        reportingUrl = null;
+        rangeController = null;
+    }
+
     function reset() {
         if (!allowPendingRequestsToCompleteOnReset) {
             pendingRequests.forEach(function (req) {
@@ -2002,10 +2023,7 @@ function DVBReporting(config) {
             pendingRequests = [];
         }
 
-        reportingPlayerStatusDecided = false;
-        isReportingPlayer = false;
-        reportingUrl = null;
-        rangeController = null;
+        resetInitialSettings();
     }
 
     instance = {
@@ -2013,6 +2031,8 @@ function DVBReporting(config) {
         initialize: initialize,
         reset: reset
     };
+
+    setup();
 
     return instance;
 }
@@ -2073,11 +2093,10 @@ var _MetricsReportingEvents2 = _interopRequireDefault(_MetricsReportingEvents);
 function DVBErrorsTranslator(config) {
 
     config = config || {};
-    var instance = undefined;
+    var instance = undefined,
+        mpd = undefined;
     var eventBus = config.eventBus;
     var metricModel = config.metricsModel;
-    var mpd = undefined;
-
     var metricsConstants = config.metricsConstants;
     //MediaPlayerEvents have been added to Events in MediaPlayer class
     var Events = config.events;

@@ -1581,7 +1581,7 @@ function ProtectionController(config) {
             }
         };
 
-        xhr.onerror = function () {
+        xhr.ontimeout = xhr.onerror = function () {
             if (retriesCount <= 0) {
                 onError(this);
             } else {
@@ -2513,7 +2513,13 @@ function KeySystemPlayReady(config) {
         return null;
     }
 
-    function getSessionId() /*cp*/{
+    function getSessionId(cp) {
+        // Get sessionId from protectionData or from manifest
+        if (protData && protData.sessionId) {
+            return protData.sessionId;
+        } else if (cp && cp.sessionId) {
+            return cp.sessionId;
+        }
         return null;
     }
 
@@ -3730,7 +3736,14 @@ function ProtectionModel_21Jan2015(config) {
         (function (i) {
             var keySystem = ksConfigurations[i].ks;
             var configs = ksConfigurations[i].configs;
-            navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function (mediaKeySystemAccess) {
+            var systemString = keySystem.systemString;
+
+            // PATCH to support persistent licenses on Edge browser (see issue #2658)
+            if (systemString === _constantsProtectionConstants2['default'].PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
+                systemString += '.recommendation';
+            }
+
+            navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 var configuration = typeof mediaKeySystemAccess.getConfiguration === 'function' ? mediaKeySystemAccess.getConfiguration() : null;
                 var keySystemAccess = new _voKeySystemAccess2['default'](keySystem, configuration);
