@@ -30,6 +30,7 @@
  */
 
 import Constants from '../streaming/constants/Constants';
+import DashConstants from './constants/DashConstants';
 import RepresentationInfo from '../streaming/vo/RepresentationInfo';
 import MediaInfo from '../streaming/vo/MediaInfo';
 import StreamInfo from '../streaming/vo/StreamInfo';
@@ -43,7 +44,8 @@ function DashAdapter() {
     let instance,
         dashManifestModel,
         voPeriods,
-        voAdaptations;
+        voAdaptations,
+        currentMediaInfo;
 
     function setup() {
         reset();
@@ -106,6 +108,7 @@ function DashAdapter() {
         mediaInfo.type = adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
+        mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;
@@ -195,7 +198,7 @@ function DashAdapter() {
         }
 
         const manifest = voPeriods[0].mpd.manifest;
-        let realAdaptation = dashManifestModel.getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
+        let realAdaptation = getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
         if (!realAdaptation) return null;
 
         let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
@@ -205,6 +208,38 @@ function DashAdapter() {
         voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
         return convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
+    }
+
+    function getIsMain(adaptation) {
+        return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
+            return role.value === DashConstants.MAIN;
+        })[0];
+    }
+
+    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
+        const adaptations = dashManifestModel.getAdaptationsForType(manifest, periodIndex, type);
+
+        if (!adaptations || adaptations.length === 0) return null;
+
+        if (adaptations.length > 1 && streamInfo) {
+            const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
+
+            if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
+                for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                    if (currentMediaInfo[streamInfo.id][type].isMediaInfoEqual(allMediaInfoForType[i])) {
+                        return adaptations[i];
+                    }
+                }
+            }
+
+            for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                if (getIsMain(adaptations[i])) {
+                    return adaptations[i];
+                }
+            }
+        }
+
+        return adaptations[0];
     }
 
     function getAllMediaInfoForType(streamInfo, type, externalManifest) {
@@ -463,9 +498,9 @@ function DashAdapter() {
         const messageData = eventBox.message_data;
         const presentationTime = startTime * timescale + presentationTimeDelta;
 
-        if (!eventStreams[schemeIdUri]) return null;
+        if (!eventStreams[schemeIdUri + '/' + value]) return null;
 
-        event.eventStream = eventStreams[schemeIdUri];
+        event.eventStream = eventStreams[schemeIdUri + '/' + value];
         event.eventStream.value = value;
         event.eventStream.timescale = timescale;
         event.duration = duration;
@@ -497,9 +532,16 @@ function DashAdapter() {
         return events;
     }
 
+    function setCurrentMediaInfo(streamId, type, mediaInfo) {
+        currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
+        currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
+        currentMediaInfo[streamId][type] = mediaInfo;
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
+        currentMediaInfo = {};
     }
 
     instance = {
@@ -509,6 +551,7 @@ function DashAdapter() {
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
         getRepresentationInfo: getRepresentationInfo,
+        getAdaptationForType: getAdaptationForType,
         updateData: updateData,
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,
@@ -519,7 +562,8 @@ function DashAdapter() {
         setConfig: setConfig,
         updatePeriods: updatePeriods,
         reset: reset,
-        resetIndexHandler: resetIndexHandler
+        resetIndexHandler: resetIndexHandler,
+        setCurrentMediaInfo: setCurrentMediaInfo
     };
 
     setup();

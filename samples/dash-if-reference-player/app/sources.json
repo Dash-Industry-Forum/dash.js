@@ -770,28 +770,38 @@
       "submenu": [
         {
           "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0",
-          "url": "http://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
+          "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
           "protData": {
             "com.microsoft.playready": {
-              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx"
+              "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
+            }
+          }
+        },
+        {
+          "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0 (persistent)",
+          "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
+          "protData": {
+            "com.microsoft.playready": {
+              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
+              "sessionType": "persistent-license"
             }
           }
         },
         {
           "name": "Source: XBox One commercial video",
-          "url": "http://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
+          "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
           "protData": {
             "com.microsoft.playready": {
-              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx"
+              "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
             }
           }
         },
         {
           "name": "AZURE MEDIA SERVICES LIVE PLAYREADY 2.0",
-          "url": "http://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
+          "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
           "protData": {
             "com.microsoft.playready": {
-              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx"
+              "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
             }
           }
         }
@@ -826,86 +836,57 @@
         },
         {
           "name": "Widevine Dynamic SegmentTimeline",
-          "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
+          "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
           "protData": {
             "com.widevine.alpha": {
-              "serverURL": "http://widevine-proxy.appspot.com/proxy"
+              "serverURL": "https://widevine-proxy.appspot.com/proxy"
             }
           }
         },
         {
           "name": "Widevine Dynamic SegmentTemplate",
-          "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
+          "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
           "protData": {
             "com.widevine.alpha": {
-              "serverURL": "http://widevine-proxy.appspot.com/proxy"
+              "serverURL": "https://widevine-proxy.appspot.com/proxy"
             }
           }
         },
         {
           "name": "Widevine Dynamic SegmentList",
-          "url": "http://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
+          "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
           "protData": {
             "com.widevine.alpha": {
-              "serverURL": "http://widevine-proxy.appspot.com/proxy"
+              "serverURL": "https://widevine-proxy.appspot.com/proxy"
             }
           }
         },
         {
           "name": "Widevine Static SegmentTimeline",
-          "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
+          "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
           "protData": {
             "com.widevine.alpha": {
-              "serverURL": "http://widevine-proxy.appspot.com/proxy"
+              "serverURL": "https://widevine-proxy.appspot.com/proxy"
             }
           }
         },
         {
           "name": "Widevine Static SegmentTemplate",
-          "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
+          "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
           "protData": {
             "com.widevine.alpha": {
-              "serverURL": "http://widevine-proxy.appspot.com/proxy"
+              "serverURL": "https://widevine-proxy.appspot.com/proxy"
             }
           }
         },
         {
           "name": "Widevine Static SegmentList",
-          "url": "http://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
+          "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
           "protData": {
             "com.widevine.alpha": {
-              "serverURL": "http://widevine-proxy.appspot.com/proxy"
+              "serverURL": "https://widevine-proxy.appspot.com/proxy"
             }
           }
-        }
-      ]
-    },
-    {
-      "name": "D-DASH Test Content",
-      "submenu": [
-        {
-          "name": "D-Dash #1",
-          "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=2&type=full"
-        },
-        {
-          "name": "D-Dash #2",
-          "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=4&type=full"
-        },
-        {
-          "name": "D-Dash #3",
-          "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=6&type=full"
-        },
-        {
-          "name": "D-Dash #4",
-          "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=8&type=full"
-        },
-        {
-          "name": "D-Dash #5",
-          "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=10&type=full"
-        },
-        {
-          "name": "D-Dash #6",
-          "url": "http://www-itec.uni-klu.ac.at/dash/ddash/mpdGenerator.php?segmentlength=15&type=full"
         }
       ]
     },
@@ -915,14 +896,6 @@
         {
           "name": "4K",
           "url": "https://dash.akamaized.net/akamai/streamroot/050714/Spring_4Ktest.mpd"
-        },
-        {
-          "name": "Segment List",
-          "url": "http://www.digitalprimates.net/dash/streams/gpac/mp4-main-multi-mpd-AV-NBS.mpd"
-        },
-        {
-          "name": "Segment Template",
-          "url": "http://www.digitalprimates.net/dash/streams/mp4-live-template/mp4-live-mpd-AV-BS.mpd"
         },
         {
           "name": "Unified Streaming - Timeline",
@@ -978,6 +951,16 @@
         {
           "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
           "name": "Super Speedway + PlayReady DRM"
+        },
+        {
+          "url": "http://test.playready.microsoft.com/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
+          "name": "Super Speedway + PlayReady DRM (persistent)",
+          "protData": {
+            "com.microsoft.playready": {
+                "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",                
+                "sessionType": "persistent-license"
+              }
+          }
         }
       ]
     }

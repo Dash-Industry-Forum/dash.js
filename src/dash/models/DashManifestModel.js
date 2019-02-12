@@ -44,6 +44,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
+import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
 
 function DashManifestModel(config) {
 
@@ -54,10 +55,9 @@ function DashManifestModel(config) {
 
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
-    const mediaController = config.mediaController;
     const timelineConverter = config.timelineConverter;
-    const adapter = config.adapter;
     const errHandler = config.errHandler;
+    const BASE64 = config.BASE64;
 
     const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
@@ -96,12 +96,17 @@ function DashManifestModel(config) {
 
         mimeTypeRegEx = (type !== Constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
-        if ((adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) &&
-            (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS))) {
-            // Just check the start of the codecs string
-            codecs = adaptation.Representation_asArray[0].codecs;
-            if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
-                return type === Constants.FRAGMENTED_TEXT;
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) {
+            let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
+            if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
+                return type === Constants.IMAGE;
+            }
+            if (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS)) {
+                // Just check the start of the codecs string
+                codecs = adaptation.Representation_asArray[0].codecs;
+                if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
+                    return type === Constants.FRAGMENTED_TEXT;
+                }
             }
         }
 
@@ -189,12 +194,6 @@ function DashManifestModel(config) {
         return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
-    function getIsMain(adaptation) {
-        return getRolesForAdaptation(adaptation).filter(function (role) {
-            return role.value === DashConstants.MAIN;
-        })[0];
-    }
-
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
@@ -265,33 +264,6 @@ function DashManifestModel(config) {
         return adaptations;
     }
 
-    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
-        const adaptations = getAdaptationsForType(manifest, periodIndex, type);
-
-        if (!adaptations || adaptations.length === 0) return null;
-
-        if (adaptations.length > 1 && streamInfo) {
-            const currentTrack = mediaController.getCurrentTrackFor(type, streamInfo);
-            const allMediaInfoForType = adapter.getAllMediaInfoForType(streamInfo, type);
-
-            if (currentTrack) {
-                for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (mediaController.isTracksEqual(currentTrack, allMediaInfoForType[i])) {
-                        return adaptations[i];
-                    }
-                }
-            }
-
-            for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                if (getIsMain(adaptations[i])) {
-                    return adaptations[i];
-                }
-            }
-        }
-
-        return adaptations[0];
-    }
-
     function getCodec(adaptation, representationId, addResolutionInfo) {
         let codec = null;
 
@@ -318,6 +290,23 @@ function DashManifestModel(config) {
             return null;
         }
         return adaptation[DashConstants.CENC_DEFAULT_KID];
+    }
+
+    function getLabelsForAdaptation(adaptation) {
+        if (!adaptation.Label_asArray || !adaptation.Label_asArray.length) {
+            return [];
+        }
+
+        const labelArray = [];
+
+        for (let i = 0; i < adaptation.Label_asArray.length; i++) {
+            labelArray.push({
+                lang: adaptation.Label_asArray[i].lang,
+                text: adaptation.Label_asArray[i].__text || adaptation.Label_asArray[i]
+            });
+        }
+
+        return labelArray;
     }
 
     function getContentProtectionData(adaptation) {
@@ -798,7 +787,7 @@ function DashManifestModel(config) {
                 if (eventStreams[i].hasOwnProperty(DashConstants.VALUE)) {
                     eventStream.value = eventStreams[i].value;
                 }
-                for (j = 0; j < eventStreams[i].Event_asArray.length; j++) {
+                for (j = 0; eventStreams[i].Event_asArray && j < eventStreams[i].Event_asArray.length; j++) {
                     const event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
@@ -813,13 +802,17 @@ function DashManifestModel(config) {
                         event.id = eventStreams[i].Event_asArray[j].id;
                     }
 
-                    // From Cor.1: 'NOTE: this attribute is an alternative
-                    // to specifying a complete XML element(s) in the Event.
-                    // It is useful when an event leans itself to a compact
-                    // string representation'.
-                    event.messageData =
-                        eventStreams[i].Event_asArray[j].messageData ||
-                        eventStreams[i].Event_asArray[j].__text;
+                    if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
+                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary);
+                    } else {
+                        // From Cor.1: 'NOTE: this attribute is an alternative
+                        // to specifying a complete XML element(s) in the Event.
+                        // It is useful when an event leans itself to a compact
+                        // string representation'.
+                        event.messageData =
+                            eventStreams[i].Event_asArray[j].messageData ||
+                            eventStreams[i].Event_asArray[j].__text;
+                    }
 
                     events.push(event);
                 }
@@ -1037,10 +1030,10 @@ function DashManifestModel(config) {
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
         getAdaptationsForType: getAdaptationsForType,
-        getAdaptationForType: getAdaptationForType,
         getCodec: getCodec,
         getMimeType: getMimeType,
         getKID: getKID,
+        getLabelsForAdaptation: getLabelsForAdaptation,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
         getIsDVB: getIsDVB,

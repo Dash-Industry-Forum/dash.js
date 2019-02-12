@@ -118,8 +118,8 @@ function PlaybackController() {
 
     function getStreamEndTime() {
         const startTime = getStreamStartTime(true);
-        const offset = isDynamic ? startTime - streamInfo.start : 0;
-        return startTime + (streamInfo.duration - offset);
+        const offset = isDynamic && streamInfo ? startTime - streamInfo.start : 0;
+        return startTime + (streamInfo ? streamInfo.duration - offset : offset);
     }
 
     function play() {
@@ -343,7 +343,7 @@ function PlaybackController() {
             uriParameters = {};
             const r = parseInt(fragData.r, 10);
             if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
-                fragData.t = Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize + r;
+                fragData.t = Math.max(Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize, (streamInfo.manifestInfo.availableFrom.getTime() / 1000) + streamInfo.start) + r;
             }
             uriParameters.fragS = parseFloat(fragData.s);
             uriParameters.fragT = parseFloat(fragData.t);
@@ -369,11 +369,11 @@ function PlaybackController() {
                 startTimeOffset = 0;
             }
         } else {
-            startTimeOffset = streamInfo.start;
+            startTimeOffset = streamInfo ? streamInfo.start : startTimeOffset;
         }
 
         if (isDynamic) {
-            if (!isNaN(startTimeOffset)) {
+            if (!isNaN(startTimeOffset) && streamInfo) {
                 presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime() / 1000);
 
                 if (presentationStartTime > liveStartTime ||
@@ -384,11 +384,13 @@ function PlaybackController() {
             presentationStartTime = presentationStartTime || liveStartTime;
 
         } else {
-            if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
-                presentationStartTime = startTimeOffset;
-            } else {
-                let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio !== undefined ? earliestTime.audio : 0, earliestTime.video !== undefined ? earliestTime.video : 0, streamInfo.start) : streamInfo.start;
+            if (streamInfo) {
+                if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
+                    presentationStartTime = startTimeOffset;
+                } else {
+                    let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
+                    presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio !== undefined ? earliestTime.audio : 0, earliestTime.video !== undefined ? earliestTime.video : 0, streamInfo.start) : streamInfo.start;
+                }
             }
         }
 
@@ -505,10 +507,12 @@ function PlaybackController() {
     }
 
     function onPlaybackTimeUpdated() {
-        eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
-            timeToEnd: getTimeToStreamEnd(),
-            time: getTime()
-        });
+        if (streamInfo) {
+            eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
+                timeToEnd: getTimeToStreamEnd(),
+                time: getTime()
+            });
+        }
     }
 
     function updateLivePlaybackTime() {
@@ -588,7 +592,13 @@ function PlaybackController() {
     }
 
     function onPlaybackProgression() {
-        if (isDynamic && mediaPlayerModel.getLowLatencyEnabled() && !isPaused() && !isSeeking()) {
+        if (
+            isDynamic &&
+            mediaPlayerModel.getLowLatencyEnabled() &&
+            mediaPlayerModel.getCatchUpPlaybackRate() > 0 &&
+            !isPaused() &&
+            !isSeeking()
+        ) {
             if (needToCatchUp()) {
                 startPlaybackCatchUp();
             } else {
@@ -740,15 +750,18 @@ function PlaybackController() {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamInfo.id !== streamInfo.id) return;
 
-        if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
-            if (!playbackStalled) {
-                playbackStalled = true;
-                if (!mediaPlayerModel.getLowLatencyEnabled()) {
+        if (mediaPlayerModel.getLowLatencyEnabled()) {
+            if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
+                if (!playbackStalled) {
+                    playbackStalled = true;
                     stopPlaybackCatchUp();
                 }
             }
+        } else {
+            videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
         }
     }
+
 
     function onPlaybackStalled(e) {
         eventBus.trigger(Events.PLAYBACK_STALLED, {

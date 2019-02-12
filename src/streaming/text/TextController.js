@@ -41,10 +41,10 @@ import { checkParameterType } from '../utils/SupervisorTools';
 function TextController() {
 
     let context = this.context;
-    let instance;
-    let textSourceBuffer;
 
-    let errHandler,
+    let instance,
+        textSourceBuffer,
+        errHandler,
         dashManifestModel,
         manifestModel,
         mediaController,
@@ -240,7 +240,7 @@ function TextController() {
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     let mediaInfo = fragmentedTracks[i];
                     if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                        (mediaInfo.id ? currentTrackInfo.label === mediaInfo.id : currentTrackInfo.label === mediaInfo.index)) {
+                        (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
                         let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();

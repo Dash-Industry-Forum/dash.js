@@ -38,6 +38,7 @@ function MssParser(config) {
     const BASE64 = config.BASE64;
     const debug = config.debug;
     const constants = config.constants;
+    const manifestModel = config.manifestModel;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -333,10 +334,10 @@ function MssParser(config) {
         const segmentTimeline = {};
         const chunks = streamIndex.getElementsByTagName('c');
         const segments = [];
-        let segment;
-        let prevSegment;
-        let tManifest;
-        let i,j,r;
+        let segment,
+            prevSegment,
+            tManifest,
+            i,j,r;
         let duration = 0;
 
         for (i = 0; i < chunks.length; i++) {
@@ -689,7 +690,7 @@ function MssParser(config) {
         if (manifest.type === 'static') {
             // In case of start-over stream and manifest reloading (due to track switch)
             // we consider previous timestampOffset to keep timelines synchronized
-            var prevManifest = null;//manifestModel.getValue();
+            var prevManifest = manifestModel.getValue();
             if (prevManifest && prevManifest.timestampOffset) {
                 timestampOffset = prevManifest.timestampOffset;
             } else {

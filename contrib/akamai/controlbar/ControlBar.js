@@ -271,7 +271,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Get thumbnail information
-            player.getThumbnail(mouseTime, (thumbnail) => {
+            player.getThumbnail(mouseTime, function(thumbnail) {
                 if (!thumbnail) return;
 
                 // Adjust left variable for positioning thumbnail with regards to its viewport
@@ -281,31 +281,29 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 if (!isNaN(ctrlWidth)) {
                     left -= ctrlWidth / 2;
                 }
-    
+
                 var scale = (videoContainerRect.height * maxPercentageThumbnailScreen)/thumbnail.height;
                 if (scale > maximumScale) {
                     scale = maximumScale;
                 }
-    
+
                 // Set thumbnail control position
                 thumbnailContainer.style.left = left + 'px';
                 thumbnailContainer.style.display = '';
                 thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail ) + 'px';
                 thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
-                
+
                 var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
                      'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
                 thumbnailElem.style.background = backgroundStyle;
                 thumbnailElem.style.width = thumbnail.width + 'px';
                 thumbnailElem.style.height = thumbnail.height + 'px';
                 thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
-    
+
                 if (thumbnailTimeLabel) {
                     thumbnailTimeLabel.textContent = displayUTCTimeCodes ? player.formatUTC(mouseTime) : player.convertToTimeCode(mouseTime);
                 }
             });
-            
-
         },
 
         onSeekBarMouseMoveOut = function (e) {
@@ -442,7 +440,16 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
             if (!captionMenu) {
                 var contentFunc = function (element, index) {
-                    return isNaN(index) ? "OFF" : element.lang + " : " + element.kind;
+                    if (isNaN(index)) {
+                      return "OFF";
+                    }
+
+                    var label = getLabelForLocale(element.labels);
+                    if (label) {
+                      return label + " : " + element.kind;
+                    }
+
+                    return element.lang + " : " + element.kind;
                 }
                 captionMenu = createMenu({menuType: 'caption', arr: e.tracks}, contentFunc);
 
@@ -456,7 +463,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         onStreamInitialized = function (e) {
-
             updateDuration();
 
             var contentFunc;
@@ -491,11 +497,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (!trackSwitchMenu && trackSwitchBtn) {
                 var availableTracks = {menuType: "track"};
                 availableTracks.audio = player.getTracksFor("audio");
-                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to cehck for null
+                availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to check for null
 
                 if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                     contentFunc = function (element) {
-                        return 'Language: ' + element.lang + ' - Role: ' + element.roles[0];
+                        return getLabelForLocale(element.labels) || 'Language: ' + element.lang + ' - Role: ' + element.roles[0];
                     }
                     trackSwitchMenu = createMenu(availableTracks, contentFunc);
                     var func = function () {
@@ -515,7 +521,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         createMenu = function (info, contentFunc) {
-
             var menuType = info.menuType;
             var el = document.createElement("div");
             el.id = menuType + "Menu";
@@ -584,7 +589,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         getMenuContent = function (type, arr, contentFunc) {
-
             var content = [];
             arr.forEach(function (element, index) {
                 content.push(contentFunc(element, index));
@@ -595,8 +599,25 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return content;
         },
 
-        createMediaTypeMenu = function (type) {
+        getBrowserLocale = function() {
+          return (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+        },
 
+        getLabelForLocale = function (labels) {
+          var locales = getBrowserLocale();
+
+          for (var i = 0; i < labels.length; i++) {
+            for (var j = 0; j < locales.length; j++) {
+                if (labels[i].lang && locales[j] && locales[j].indexOf(labels[i].lang) > -1) {
+                    return labels[i].text;
+                }
+            }
+          }
+
+          return labels.length === 1 ? labels[0].text : null;
+        },
+
+        createMediaTypeMenu = function (type) {
             var div = document.createElement("div");
             var title = document.createElement("div");
             var content = document.createElement("ul");
@@ -616,9 +637,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         createMenuContent = function (menu, arr, mediaType, name) {
-
             for (var i = 0; i < arr.length; i++) {
-
                 var item = document.createElement("li");
                 item.id = name + "Item_" + i;
                 item.index = i;
@@ -650,9 +669,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return menu;
         },
 
-
         onMenuClick = function (menu, btn) {
-
             if (menu.classList.contains("hide")) {
                 menu.classList.remove("hide");
                 menu.onmouseleave = function (e) {
@@ -665,9 +682,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             positionMenu(menu, btn);
         },
 
-
         setMenuItemsState = function (value, type) {
-
             var self = typeof value === 'number' ? document.getElementById(type + "Item_" + value) : this,
                 nodes = self.parentElement.children;
 
@@ -680,7 +695,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             self.classList.remove("menu-item-over");
             self.classList.remove("menu-item-unselected");
             self.classList.add("menu-item-selected");
-
 
             if (type === undefined) { // User clicked so type is part of item binding.
                 switch (self.name) {
@@ -795,7 +809,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             initControls(suffix);
             video.controls = false;
-            videoContainer = player.getVideoContainer();
+            videoContainer = video.parentNode;
             captionBtn.classList.add("hide");
             if (trackSwitchBtn) {
                 trackSwitchBtn.classList.add("hide");
@@ -877,7 +891,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         destroy: function () {
-
             this.reset();
 
             playPauseBtn.removeEventListener("click", onPlayPauseClick);

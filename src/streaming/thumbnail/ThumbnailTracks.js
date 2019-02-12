@@ -39,26 +39,27 @@ import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 
-const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
+export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
                                    'http://dashif.org/guidelines/thumbnail_tile'];
 
 function ThumbnailTracks(config) {
     const context = this.context;
+
     const dashManifestModel = config.dashManifestModel;
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
-    const urlUtils = URLUtils(context).getInstance();
-
-    let loader, segmentBaseLoader, boxParser;
     const timelineConverter = config.timelineConverter;
     const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
 
+    const urlUtils = URLUtils(context).getInstance();
+
     let instance,
         tracks,
-        currentTrackIndex;
+        currentTrackIndex,
+        loader, segmentBaseLoader, boxParser;
 
     function initialize() {
         reset();

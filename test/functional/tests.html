@@ -19,7 +19,7 @@
         var scriptTagDashjs = document.createElement('script');
         scriptTagDashjs.type = "application/javascript";
         scriptTagDashjs.src = "../../dist/dash.all.debug.js";
-        
+
         document.head.appendChild(scriptTagDashjs);
         scriptTagDashjs.onload = function(){
             if (mssPackage) {
@@ -36,7 +36,6 @@
                 player.initialize(video, null, true);
                 player.setMute(true);
                 player.setAutoPlay(true);
-                player.attachVideoContainer(document.querySelector(".dash-video-player"));
             }
         }
         function initVideo() {

@@ -95,7 +95,7 @@ function TextTracks() {
 
     function createTrackForUserAgent (i) {
         const kind = textTrackQueue[i].kind;
-        const label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+        const label = textTrackQueue[i].id !== undefined ? textTrackQueue[i].id : textTrackQueue[i].lang;
         const lang = textTrackQueue[i].lang;
         const isTTML = textTrackQueue[i].isTTML;
         const isEmbedded = textTrackQueue[i].isEmbedded;
@@ -430,6 +430,7 @@ function TextTracks() {
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
+                            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: this.cueHTMLElement, currentTrackIdx});
                         }
                     }
                 };
@@ -462,6 +463,11 @@ function TextTracks() {
                             cue.size = currentItem.styles.size;
                         }
                     }
+                    cue.onenter = function () {
+                        if (track.mode === Constants.TEXT_SHOWING) {
+                            eventBus.trigger(Events.CAPTION_RENDERED, {currentTrackIdx});
+                        }
+                    };
                 }
             }
             try {
@@ -482,7 +488,7 @@ function TextTracks() {
 
     function getTrackByIdx(idx) {
         return idx >= 0 && textTrackQueue[idx] ?
-            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
+            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].id, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
     }
 
     function getCurrentTrackIdx() {
@@ -492,7 +498,7 @@ function TextTracks() {
     function getTrackIdxForId(trackId) {
         let idx = -1;
         for (let i = 0; i < textTrackQueue.length; i++) {
-            if (textTrackQueue[i].label === trackId) {
+            if (textTrackQueue[i].id === trackId) {
                 idx = i;
                 break;
             }

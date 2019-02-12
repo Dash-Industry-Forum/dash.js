@@ -52,17 +52,17 @@ function HTTPLoader(cfg) {
     const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
 
-    let instance;
-    let requests;
-    let delayedRequests;
-    let retryTimers;
-    let downloadErrorToRequestTypeMap;
-    let newDownloadErrorToRequestTypeMap;
+    let instance,
+        requests,
+        delayedRequests,
+        retryRequests,
+        downloadErrorToRequestTypeMap,
+        newDownloadErrorToRequestTypeMap;
 
     function setup() {
         requests = [];
         delayedRequests = [];
-        retryTimers = [];
+        retryRequests = [];
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST,
@@ -124,6 +124,10 @@ function HTTPLoader(cfg) {
                         httpRequest.response ? httpRequest.response.responseHeaders : [],
                     success ? traces : null
                 );
+
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    metricsModel.addManifestUpdate('stream', request.type, request.requestStartDate, request.requestEndDate);
+                }
             }
         };
 
@@ -139,11 +143,16 @@ function HTTPLoader(cfg) {
 
                 if (remainingAttempts > 0) {
                     remainingAttempts--;
-                    retryTimers.push(
-                        setTimeout(function () {
-                            internalLoad(config, remainingAttempts);
-                        }, mediaPlayerModel.getRetryIntervalForType(request.type))
-                    );
+                    let retryRequest = { config: config };
+                    retryRequests.push(retryRequest);
+                    retryRequest.timeout = setTimeout(function () {
+                        if (retryRequests.indexOf(retryRequest) === -1) {
+                            return;
+                        } else {
+                            retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
+                        }
+                        internalLoad(config, remainingAttempts);
+                    }, mediaPlayerModel.getRetryIntervalForType(request.type));
                 } else {
                     errHandler.downloadError(
                         downloadErrorToRequestTypeMap[request.type],
@@ -217,7 +226,7 @@ function HTTPLoader(cfg) {
         };
 
         let loader;
-        if (useFetch && window.fetch && request.responseType === 'arraybuffer') {
+        if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
                 requestModifier: requestModifier,
                 boxParser: boxParser
@@ -297,8 +306,14 @@ function HTTPLoader(cfg) {
      * @instance
      */
     function abort() {
-        retryTimers.forEach(t => clearTimeout(t));
-        retryTimers = [];
+        retryRequests.forEach(t => {
+            clearTimeout(t.timeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (t.config.request && t.config.abort) {
+                t.config.abort(t.config.request);
+            }
+        });
+        retryRequests = [];
 
         delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
         delayedRequests = [];

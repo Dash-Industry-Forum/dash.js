@@ -76,7 +76,6 @@ function AbrController() {
         elementWidth,
         elementHeight,
         manifestModel,
-        dashManifestModel,
         adapter,
         videoModel,
         mediaPlayerModel,
@@ -185,9 +184,6 @@ function AbrController() {
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
         if (config.adapter) {
             adapter = config.adapter;
         }
@@ -265,7 +261,7 @@ function AbrController() {
         if (!bitrateDict.hasOwnProperty(type)) {
             if (ratioDict.hasOwnProperty(type)) {
                 const manifest = manifestModel.getValue();
-                const representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
+                const representation = adapter.getAdaptationForType(manifest, 0, type).Representation;
 
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
@@ -598,7 +594,7 @@ function AbrController() {
     }
 
     function isPlayingAtTopQuality(streamInfo) {
-        const streamId = streamInfo.id;
+        const streamId = streamInfo ? streamInfo.id : null;
         const audioQuality = getQualityFor(Constants.AUDIO);
         const videoQuality = getQualityFor(Constants.VIDEO);
 
@@ -689,7 +685,7 @@ function AbrController() {
         }
 
         const manifest = manifestModel.getValue();
-        const representation = dashManifestModel.getAdaptationForType(manifest, 0, type).Representation;
+        const representation = adapter.getAdaptationForType(manifest, 0, type).Representation;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {

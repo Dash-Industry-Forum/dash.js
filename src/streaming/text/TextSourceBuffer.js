@@ -293,7 +293,8 @@ function TextSourceBuffer() {
 
         textTrackInfo.captionData = captionData;
         textTrackInfo.lang = mediaInfo.lang;
-        textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
+        textTrackInfo.labels = mediaInfo.labels;
+        textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
         textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
         textTrackInfo.isTTML = checkTTML();
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
@@ -561,7 +562,7 @@ function TextSourceBuffer() {
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === Constants.CC1); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
-            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
+            if (mediaInfo.id && typeof mediaInfo.id === 'string' && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
                 isDefault = true;
             }
         } else if (embeddedTracks.length === 0) {

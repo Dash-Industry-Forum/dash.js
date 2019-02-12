@@ -40,7 +40,6 @@ function VideoModel() {
         logger,
         element,
         TTMLRenderingDiv,
-        videoContainer,
         previousPlaybackRate;
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
@@ -166,14 +165,6 @@ function VideoModel() {
         return element ? element.src : null;
     }
 
-    function getVideoContainer() {
-        return videoContainer;
-    }
-
-    function setVideoContainer(value) {
-        videoContainer = value;
-    }
-
     function getTTMLRenderingDiv() {
         return TTMLRenderingDiv;
     }
@@ -276,7 +267,7 @@ function VideoModel() {
         if (element) {
             element.autoplay = true;
             const p = element.play();
-            if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
+            if (p && p.catch && typeof Promise !== 'undefined') {
                 p.catch((e) => {
                     if (e.name === 'NotAllowedError') {
                         eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
@@ -422,8 +413,6 @@ function VideoModel() {
         setElement: setElement,
         setSource: setSource,
         getSource: getSource,
-        getVideoContainer: getVideoContainer,
-        setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
         getPlaybackQuality: getPlaybackQuality,

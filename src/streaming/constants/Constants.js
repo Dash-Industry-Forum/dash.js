@@ -32,7 +32,6 @@
 /**
  * Constants declaration
  * @class
- * @ignore
  */
 class Constants {
 
@@ -64,10 +63,18 @@ class Constants {
         this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
         this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
         this.MOVING_AVERAGE_EWMA = 'ewma';
+        /**
+         *  @constant {string} BAD_ARGUMENT_ERROR 'Invalid Arguments' error
+         *  @memberof Constants#
+         *  @static
+         */
         this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
         this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
     }
 
+    /**
+     * @constructs
+     */
     constructor () {
         this.init();
     }

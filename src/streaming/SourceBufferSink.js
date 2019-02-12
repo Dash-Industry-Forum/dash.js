@@ -36,6 +36,8 @@ import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
 
+const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
+
 /**
  * @class SourceBufferSink
  * @implements FragmentSink
@@ -68,6 +70,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 throw new Error('not really supported');
             }
             buffer = oldBuffer ? oldBuffer : mediaSource.addSourceBuffer(codec);
+            if (buffer.changeType && oldBuffer) {
+                logger.debug('Doing period transition with changeType');
+                buffer.changeType(codec);
+            }
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
@@ -85,8 +91,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 // use setInterval to periodically check if updating has been completed
                 intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
             }
-
-
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
@@ -133,6 +137,24 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             logger.error('getAllBufferRanges exception: ' + e.message);
             return null;
         }
+    }
+
+    function hasDiscontinuitiesAfter(time) {
+        try {
+            const ranges = getAllBufferRanges();
+            if (ranges && ranges.length > 1) {
+                for (let i = 0, len = ranges.length; i < len; i++) {
+                    if (i > 0) {
+                        if (time < ranges.start(i) && ranges.start(i) > ranges.end(i - 1) + MAX_ALLOWED_DISCONTINUITY) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            logger.error('hasDiscontinuities exception: ' + e.message);
+        }
+        return false;
     }
 
     function append(chunk) {
@@ -275,7 +297,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         } catch (ex) {
             logger.error('SourceBuffer append abort failed: "' + ex + '"');
         }
-
         appendQueue = [];
     }
 
@@ -290,7 +311,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 executeCallback();
             }
         }
-
     }
 
     function checkIsUpdateEnded() {
@@ -325,7 +345,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         remove: remove,
         abort: abort,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter
     };
 
     setup();

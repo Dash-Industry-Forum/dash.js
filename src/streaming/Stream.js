@@ -346,6 +346,8 @@ function Stream(config) {
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
+        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
+
         logger.debug('Stream -  Update stream controller');
         if (manifest.refreshManifestOnSwitchTrack) {
             logger.debug('Stream -  Refreshing manifest for switch track');
@@ -549,7 +551,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
@@ -640,13 +642,12 @@ function Stream(config) {
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
             if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
-                logger.warn('onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
+                logger.warn('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
                 return;
             }
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
             streamInfo: streamInfo
         });
@@ -729,8 +730,39 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isCompatibleWithStream(stream) {
+    function isMediaCodecCompatible(stream) {
         return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
+    }
+
+    function isProtectionCompatible(stream) {
+        return compareProtectionConfig(stream, Constants.VIDEO) && compareProtectionConfig(stream, Constants.AUDIO);
+    }
+
+    function compareProtectionConfig(stream, type) {
+        if (!stream) {
+            return false;
+        }
+        const newStreamInfo = stream.getStreamInfo();
+        const currentStreamInfo = getStreamInfo();
+
+        if (!newStreamInfo || !currentStreamInfo) {
+            return false;
+        }
+
+        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+
+        if (!newAdaptation || !currentAdaptation) {
+            // If there is no adaptation for neither the old or the new stream they're compatible
+            return !newAdaptation && !currentAdaptation;
+        }
+
+        // If any of the periods requires EME, we can't do smooth transition
+        if (newAdaptation.ContentProtection || currentAdaptation.ContentProtection) {
+            return false;
+        }
+
+        return true;
     }
 
     function compareCodecs(stream, type) {
@@ -744,20 +776,13 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible
             return !newAdaptation && !currentAdaptation;
         }
-
-        // If any of the periods requires EME, we can't do smooth transition
-        if ((newAdaptation.ContentProtection && !currentAdaptation.ContentProtection) ||
-            (!newAdaptation.ContentProtection && currentAdaptation.ContentProtection)) {
-            return false;
-        }
-
 
         const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
@@ -779,8 +804,14 @@ function Stream(config) {
     // Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
     function codecRootCompatibleWithCodec(codec1, codec2) {
         const codecRoot = codec1.split('.')[0];
-        const compatTableCodec = codecCompatibilityTable.find((compat) => compat.codec === codecRoot);
         const rootCompatible = codec2.indexOf(codecRoot) === 0;
+        let compatTableCodec;
+        for (let i = 0; i < codecCompatibilityTable.length; i++) {
+            if (codecCompatibilityTable[i].codec === codecRoot) {
+                compatTableCodec = codecCompatibilityTable[i];
+                break;
+            }
+        }
         if (compatTableCodec) {
             return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
         }
@@ -835,7 +866,8 @@ function Stream(config) {
         reset: reset,
         getProcessors: getProcessors,
         setMediaSource: setMediaSource,
-        isCompatibleWithStream: isCompatibleWithStream,
+        isMediaCodecCompatible: isMediaCodecCompatible,
+        isProtectionCompatible: isProtectionCompatible,
         getPreloaded: getPreloaded,
         addInbandEvents: addInbandEvents
     };

@@ -6,7 +6,7 @@ import DashJSError from '../../src/streaming/vo/DashJSError';
 import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
 import Constants from '../../src/streaming/constants/Constants';
 
-import DashManifestModelMock from './mocks/DashManifestModelMock';
+import AdapterMock from './mocks/AdapterMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
@@ -17,7 +17,7 @@ const context = {};
 const eventBus = EventBus(context).getInstance();
 
 describe('Stream', function () {
-    const dashManifestModelMock = new DashManifestModelMock();
+    const adapterMock = new AdapterMock();
     const manifestModelMock = new ManifestModelMock();
     const errHandlerMock = new ErrorHandlerMock();
     const streamInfo = {
@@ -72,7 +72,14 @@ describe('Stream', function () {
 
     it('should return null when isCompatibleWithStream is called but stream attribute is undefined', () => {
         const stream = Stream(context).create({});
-        const isCompatible = stream.isCompatibleWithStream();
+        const isCompatible = stream.isMediaCodecCompatible();
+
+        expect(isCompatible).to.be.false;                // jshint ignore:line
+    });
+
+    it('should return null when isProtectionCompatible is called but stream attribute is undefined', () => {
+        const stream = Stream(context).create({});
+        const isCompatible = stream.isProtectionCompatible();
 
         expect(isCompatible).to.be.false;                // jshint ignore:line
     });
@@ -82,7 +89,7 @@ describe('Stream', function () {
 
         eventBus.on(Events.STREAM_INITIALIZED, spy);
 
-        const stream = Stream(context).create({dashManifestModel: dashManifestModelMock,
+        const stream = Stream(context).create({adapter: adapterMock,
                                                manifestModel: manifestModelMock});
         stream.updateData(streamInfo);
 
