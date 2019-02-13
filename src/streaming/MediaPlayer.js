@@ -78,13 +78,40 @@ import { checkParameterType } from './utils/SupervisorTools';
  * events to build a robust DASH media player.
  */
 function MediaPlayer() {
-
+    /**
+    * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+    * @inner
+    */
     const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
+    /**
+    * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+    * @inner
+    */
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
+    /**
+    * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
+    * @inner
+    */
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
+    /**
+    * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
+    * @inner
+    */
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
+    /**
+    * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
+    * @inner
+    */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
+    /**
+    * @constant {string} PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMinDrift function is called with an invalid value.
+    * @inner
+    */
     const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
+    /**
+    * @constant {string} PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMaxDriftBeforeSeeking function is called with an invalid value.
+    * @inner
+    */
     const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
 
     const context = this.context;
@@ -348,6 +375,7 @@ function MediaPlayer() {
      * @see {@link module:MediaPlayer#attachSource attachSource()}
      * @see {@link module:MediaPlayer#attachView attachView()}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
      * @instance
      */
     function preload() {
@@ -366,6 +394,7 @@ function MediaPlayer() {
      * This method will call play on the native Video Element.
      *
      * @see {@link module:MediaPlayer#attachSource attachSource()}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -381,6 +410,7 @@ function MediaPlayer() {
     /**
      * This method will call pause on the native Video Element.
      *
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -394,6 +424,7 @@ function MediaPlayer() {
     /**
      * Returns a Boolean that indicates whether the Video Element is paused.
      * @return {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -410,6 +441,8 @@ function MediaPlayer() {
      *
      * @param {number} value - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
      * @see {@link module:MediaPlayer#getDVRSeekOffset getDVRSeekOffset()}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type or is NaN.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -431,6 +464,7 @@ function MediaPlayer() {
     /**
      * Returns a Boolean that indicates whether the media is in the process of seeking to a new position.
      * @return {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -444,6 +478,7 @@ function MediaPlayer() {
     /**
      * Returns a Boolean that indicates whether the media is in the process of dynamic.
      * @return {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -487,6 +522,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0.5
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is not between 0 and 0.5.
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
@@ -519,6 +555,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0.05
+     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
      * @instance
      */
     function setLowLatencyMinDrift(value) {
@@ -555,6 +592,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0
+     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
      * @instance
      */
     function setLowLatencyMaxDriftBeforeSeeking(value) {
@@ -579,6 +617,7 @@ function MediaPlayer() {
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
      * @instance
      */
     function setMute(value) {
@@ -600,6 +639,7 @@ function MediaPlayer() {
      * A double indicating the audio volume, from 0.0 (silent) to 1.0 (loudest).
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type, or is NaN or not between 0 and 1.
      * @instance
      */
     function setVolume(value) {
@@ -705,6 +745,7 @@ function MediaPlayer() {
      *
      * @param {string} streamId - The ID of a stream that the returned playhead time must be relative to the start of. If undefined, then playhead time is relative to the first stream.
      * @returns {number} The current playhead time of the media, or null.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -729,6 +770,7 @@ function MediaPlayer() {
      *
      * @returns {number} The current duration of the media.
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function duration() {
@@ -757,6 +799,7 @@ function MediaPlayer() {
      * Note - this property only has meaning for live streams. If called before play() has begun, it will return a value of NaN.
      *
      * @returns {number} The current playhead time as UTC timestamp.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -775,6 +818,7 @@ function MediaPlayer() {
      * Note - this property only has meaning for live streams.
      *
      * @returns {number} The current duration as UTC timestamp.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -850,6 +894,7 @@ function MediaPlayer() {
      * @param {string} type - 'video' or 'audio' are the type options.
      * @memberof module:MediaPlayer
      * @returns {BitrateInfo | null}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getTopBitrateInfoFor(type) {
@@ -911,6 +956,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#setQualityFor setQualityFor()}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getQualityFor(type) {
@@ -940,6 +986,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function setQualityFor(type, value) {
@@ -1029,6 +1076,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {number} A value of the initial bitrate, kbps
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getInitialBitrateFor(type) {
@@ -1122,6 +1170,7 @@ function MediaPlayer() {
      * @default true
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#attachView attachView()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
      * @instance
      *
      */
@@ -1148,6 +1197,7 @@ function MediaPlayer() {
      * @default 4
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      */
     function setLiveDelayFragmentCount(value) {
@@ -1164,6 +1214,7 @@ function MediaPlayer() {
      * @default undefined
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value, if defined, is not number type.
      * @instance
      */
     function setLiveDelay(value) {
@@ -1184,6 +1235,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      * @returns {number|NaN} Current live stream latency in seconds. It is the difference between current time and time position at the playback head.
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      */
     function getCurrentLiveLatency() {
         if (!mediaPlayerInitialized) {
@@ -1203,6 +1255,7 @@ function MediaPlayer() {
      * @default false
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function useSuggestedPresentationDelay(value) {
@@ -1220,6 +1273,7 @@ function MediaPlayer() {
      * @param {number=} ttl - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
      * @default enable = True, ttl = 360000 (1 hour)
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, enable is not boolean type and, if defined, ttl is not a number or is NaN.
      * @instance
      *
      */
@@ -1238,6 +1292,7 @@ function MediaPlayer() {
      * @param {number=} [ttl] - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
      * @default enable = True, ttl = 360000 (1 hour)
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, enable is not boolean type and, if defined, ttl is not a number or is NaN.
      * @instance
      *
      */
@@ -1252,6 +1307,7 @@ function MediaPlayer() {
      * @default true
      * @param {boolean} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function setScheduleWhilePaused(value) {
@@ -1290,6 +1346,7 @@ function MediaPlayer() {
      * @param {boolean} value
      * @default {boolean} false
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
@@ -1297,7 +1354,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Enabled by default. Will return the current state of Fast Switch.
+     * Disabled by default. Will return the current state of Fast Switch.
      * @return {boolean} Returns true if FastSwitch ABR is enabled.
      * @see {@link module:MediaPlayer#setFastSwitchEnabled setFastSwitchEnabled()}
      * @memberof module:MediaPlayer
@@ -1341,6 +1398,7 @@ function MediaPlayer() {
      * @param {boolean} value
      * @default true
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
      * @instance
      */
     function useDefaultABRRules(value) {
@@ -1355,6 +1413,7 @@ function MediaPlayer() {
      * @param {string} rulename - name of rule (used to identify custom rule). If one rule of same name has been added, then existing rule will be updated
      * @param {object} rule - the rule object instance
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
      * @instance
      */
     function addABRCustomRule(type, rulename, rule) {
@@ -1397,6 +1456,7 @@ function MediaPlayer() {
      * @param {string} value
      * @default {string} 'slidingWindow'
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not slidingWindow or ewma.
      * @instance
      */
     function setMovingAverageMethod(value) {
@@ -1430,6 +1490,7 @@ function MediaPlayer() {
      * Browser compatibility (Check row 'ReadableStream response body'): https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
      * @param {boolean} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function setLowLatencyEnabled(value) {
@@ -1476,6 +1537,7 @@ function MediaPlayer() {
      * @param {string} value - see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, schemeIdUri and value are not string type.
      * @instance
      */
     function removeUTCTimingSource(schemeIdUri, value) {
@@ -1523,6 +1585,7 @@ function MediaPlayer() {
      * @default {boolean} True
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function enableManifestDateHeaderTimeSource(value) {
@@ -1537,6 +1600,7 @@ function MediaPlayer() {
      * @default 20 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferToKeep(value) {
@@ -1551,6 +1615,7 @@ function MediaPlayer() {
      * @default 80 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferAheadToKeep(value) {
@@ -1564,6 +1629,7 @@ function MediaPlayer() {
      * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not a number type.
      * @instance
      */
     function setBufferPruningInterval(value) {
@@ -1584,6 +1650,7 @@ function MediaPlayer() {
      * @default 12 seconds.
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setStableBufferTime(value) {
@@ -1614,6 +1681,7 @@ function MediaPlayer() {
      * @default 30 seconds.
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
@@ -1642,6 +1710,7 @@ function MediaPlayer() {
      * @see {@link module:MediaPlayer#setBufferTimeAtTopQuality setBufferTimeAtTopQuality()}
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
@@ -1669,6 +1738,7 @@ function MediaPlayer() {
      * @default 600 seconds (10 minutes).
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
@@ -1689,6 +1759,7 @@ function MediaPlayer() {
      * @default 0.05 seconds.
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
     */
     function setSegmentOverlapToleranceTime(value) {
@@ -1704,6 +1775,7 @@ function MediaPlayer() {
      * @param {string} type 'video' or 'audio' are the type options.
      * @param {number} value Threshold value in milliseconds.
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, type not a string type and its value is not audio or video, value not number type.
      * @instance
      */
     function setCacheLoadThresholdForType(type, value) {
@@ -1718,6 +1790,7 @@ function MediaPlayer() {
      *
      * @param {number} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
@@ -1756,6 +1829,7 @@ function MediaPlayer() {
      * @default 10 seconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
      */
     function setAbandonLoadTimeout(value) {
@@ -1773,6 +1847,7 @@ function MediaPlayer() {
      * @default 3
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
@@ -1785,6 +1860,7 @@ function MediaPlayer() {
      * @default 1000 milliseconds
      * @param {int} value
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
@@ -1848,6 +1924,7 @@ function MediaPlayer() {
      * @param {boolean} value
      * @default false
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      *
      */
@@ -1868,9 +1945,10 @@ function MediaPlayer() {
     /**
      * Time in seconds for a gap to be considered small.
      *
-     * @param {boolean} value
+     * @param {number} value
      * @default 0.8
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      *
      */
@@ -1896,6 +1974,7 @@ function MediaPlayer() {
      * @param {int} value
      * @default 100
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
      * @instance
      * @see {@link module:MediaPlayer#getManifestUpdateRetryInterval getManifestUpdateRetryInterval()}
      *
@@ -2069,6 +2148,7 @@ function MediaPlayer() {
      * set the track mode on the video object to switch a track when using this method.
      * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
      * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -2120,6 +2200,7 @@ function MediaPlayer() {
      * Returns instance of Video Element that was attached by calling attachView()
      * @returns {Object}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
      * @instance
      */
     function getVideoElement() {
@@ -2146,6 +2227,7 @@ function MediaPlayer() {
      *
      * @param {Object} element - An HTMLMediaElement that has already been defined in the DOM (or equivalent stub).
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function attachView(element) {
@@ -2187,6 +2269,7 @@ function MediaPlayer() {
      *
      * @param {HTMLDivElement} div - An unstyled div placed after the video element. It will be styled to match the video size and overlay z-order.
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~ELEMENT_NOT_ATTACHED_ERROR ELEMENT_NOT_ATTACHED_ERROR} if called before attachView function
      * @instance
      */
     function attachTTMLRenderingDiv(div) {
@@ -2207,6 +2290,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {Array}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getBitrateInfoListFor(type) {
@@ -2222,6 +2306,7 @@ function MediaPlayer() {
      * @param {Object} manifest
      * @returns {Array} list of {@link StreamInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getStreamsFromManifest(manifest) {
@@ -2236,6 +2321,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getTracksFor(type) {
@@ -2253,6 +2339,7 @@ function MediaPlayer() {
      * @param {Object} streamInfo
      * @returns {Array}  list of {@link MediaInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getTracksForTypeFromManifest(type, manifest, streamInfo) {
@@ -2270,6 +2357,7 @@ function MediaPlayer() {
      * @returns {Object|null} {@link MediaInfo}
      *
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function getCurrentTrackFor(type) {
@@ -2293,6 +2381,7 @@ function MediaPlayer() {
      * @param {string} type
      * @param {Object} value
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function setInitialMediaSettingsFor(type, value) {
@@ -2313,6 +2402,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {Object}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function getInitialMediaSettingsFor(type) {
@@ -2325,6 +2415,7 @@ function MediaPlayer() {
     /**
      * @param {MediaInfo} track - instance of {@link MediaInfo}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
     function setCurrentTrack(track) {
@@ -2340,6 +2431,7 @@ function MediaPlayer() {
      * @param {string} type
      * @returns {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function getTrackSwitchModeFor(type) {
@@ -2362,6 +2454,7 @@ function MediaPlayer() {
      * @param {string} type
      * @param {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function setTrackSwitchModeFor(type, mode) {
@@ -2383,6 +2476,7 @@ function MediaPlayer() {
      *
      * @param {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function setSelectionModeForInitialTrack(mode) {
@@ -2397,6 +2491,7 @@ function MediaPlayer() {
      *
      * @returns {string} mode
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
     function getSelectionModeForInitialTrack() {
@@ -2503,6 +2598,7 @@ function MediaPlayer() {
      * @param {boolean=} value - True or false flag.
      *
      * @memberof module:MediaPlayer
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
      * @instance
      */
     function keepProtectionMediaKeys(value) {
@@ -2550,6 +2646,7 @@ function MediaPlayer() {
      * Returns the source string or manifest that was attached by calling attachSource()
      * @returns {string | manifest}
      * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
      * @instance
      */
     function getSource() {
@@ -2568,7 +2665,7 @@ function MediaPlayer() {
      * parsed manifest object.
      *
      *
-     * @throws "MediaPlayer not initialized!"
+     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      *
      * @memberof module:MediaPlayer
      * @instance
@@ -2659,6 +2756,13 @@ function MediaPlayer() {
         FactoryMaker.extend(parentNameString, childInstance, override, context);
     }
 
+    /**
+     * This method returns the active stream
+     *
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function getActiveStream() {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
@@ -2833,6 +2937,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
                 metricsModel: metricsModel,
+                manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
                 baseURLController: BaseURLController(context).getInstance(),

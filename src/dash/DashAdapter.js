@@ -101,7 +101,6 @@ function DashAdapter() {
     }
 
     function getMediaInfoForType(streamInfo, type) {
-
         if (voPeriods.length === 0) {
             return null;
         }
@@ -487,6 +486,7 @@ function DashAdapter() {
         mediaInfo.type = adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
+        mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
         viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.viewpoint = viewpoint ? viewpoint.value : undefined;

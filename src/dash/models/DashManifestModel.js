@@ -286,6 +286,23 @@ function DashManifestModel() {
         return adaptation[DashConstants.CENC_DEFAULT_KID];
     }
 
+    function getLabelsForAdaptation(adaptation) {
+        if (!adaptation.Label_asArray || !adaptation.Label_asArray.length) {
+            return [];
+        }
+
+        const labelArray = [];
+
+        for (let i = 0; i < adaptation.Label_asArray.length; i++) {
+            labelArray.push({
+                lang: adaptation.Label_asArray[i].lang,
+                text: adaptation.Label_asArray[i].__text || adaptation.Label_asArray[i]
+            });
+        }
+
+        return labelArray;
+    }
+
     function getContentProtectionData(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.CONTENTPROTECTION_ASARRAY) || adaptation.ContentProtection_asArray.length === 0) {
             return null;
@@ -1042,6 +1059,7 @@ function DashManifestModel() {
         getCodec: getCodec,
         getMimeType: getMimeType,
         getKID: getKID,
+        getLabelsForAdaptation: getLabelsForAdaptation,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
         hasProfile: hasProfile,
