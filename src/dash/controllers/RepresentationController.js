@@ -44,7 +44,6 @@ function RepresentationController() {
 
     let instance,
         realAdaptation,
-        realAdaptationIndex,
         updating,
         voAvailableRepresentations,
         currentVoRepresentation,
@@ -52,9 +51,7 @@ function RepresentationController() {
         indexHandler,
         playbackController,
         metricsModel,
-        domStorage,
         timelineConverter,
-        dashManifestModel,
         dashMetrics,
         streamProcessor,
         manifestModel;
@@ -70,21 +67,14 @@ function RepresentationController() {
     }
 
     function setConfig(config) {
-        // allow the abrController created in setup to be overidden
         if (config.abrController) {
             abrController = config.abrController;
-        }
-        if (config.domStorage) {
-            domStorage = config.domStorage;
         }
         if (config.metricsModel) {
             metricsModel = config.metricsModel;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
-        }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
@@ -112,10 +102,6 @@ function RepresentationController() {
         return realAdaptation;
     }
 
-    function getDataIndex() {
-        return realAdaptationIndex;
-    }
-
     function isUpdating() {
         return updating;
     }
@@ -126,15 +112,12 @@ function RepresentationController() {
 
     function resetInitialSettings() {
         realAdaptation = null;
-        realAdaptationIndex = -1;
         updating = true;
         voAvailableRepresentations = [];
         abrController = null;
         playbackController = null;
         metricsModel = null;
-        domStorage = null;
         timelineConverter = null;
-        dashManifestModel = null;
         dashMetrics = null;
     }
 
@@ -149,7 +132,7 @@ function RepresentationController() {
         resetInitialSettings();
     }
 
-    function updateData(newRealAdaptation, voAdaptation, type) {
+    function updateData(newRealAdaptation, availableRepresentations, type) {
         const streamInfo = streamProcessor.getStreamInfo();
         const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
         const minIdx = abrController.getMinAllowedIndexFor(type);
@@ -161,14 +144,14 @@ function RepresentationController() {
         updating = true;
         eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
 
-        voAvailableRepresentations = updateRepresentations(voAdaptation);
+        voAvailableRepresentations = availableRepresentations;
 
         if ((realAdaptation === null || (realAdaptation.id != newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
             averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
             bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
         } else {
-            quality = abrController.getQualityFor(type, streamInfo);
+            quality = abrController.getQualityFor(type);
         }
 
         if (minIdx !== undefined && quality < minIdx) {
@@ -229,15 +212,6 @@ function RepresentationController() {
         return true;
     }
 
-    function updateRepresentations(voAdaptation) {
-        let voReps;
-
-        realAdaptationIndex = dashManifestModel.getIndexForAdaptation(realAdaptation, voAdaptation.period.mpd.manifest, voAdaptation.period.index);
-        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
-
-        return voReps;
-    }
-
     function updateAvailabilityWindow(isDynamic) {
         let voRepresentation;
 
@@ -277,6 +251,11 @@ function RepresentationController() {
 
     function onRepresentationUpdated(e) {
         if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
+
+        if (e.error) {
+            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, error: e.error});
+            return;
+        }
 
         let r = e.representation;
         let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
@@ -352,14 +331,8 @@ function RepresentationController() {
     function onQualityChanged(e) {
         if (e.mediaType !== streamProcessor.getType() || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        if (e.oldQuality !== e.newQuality) {
-            currentVoRepresentation = getRepresentationForQuality(e.newQuality);
-            const bitrate = abrController.getThroughputHistory().getAverageThroughput(e.mediaType);
-            if (!isNaN(bitrate)) {
-                domStorage.setSavedBitrateSettings(e.mediaType, bitrate);
-            }
-            addRepresentationSwitch();
-        }
+        currentVoRepresentation = getRepresentationForQuality(e.newQuality);
+        addRepresentationSwitch();
     }
 
     function onManifestValidityChanged(e) {
@@ -376,7 +349,6 @@ function RepresentationController() {
         initialize: initialize,
         setConfig: setConfig,
         getData: getData,
-        getDataIndex: getDataIndex,
         isUpdating: isUpdating,
         updateData: updateData,
         getStreamProcessor: getStreamProcessor,

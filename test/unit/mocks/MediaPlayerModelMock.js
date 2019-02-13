@@ -554,6 +554,10 @@ class MediaPlayerModelMock {
         return this.lowLatencyCatchUpPlaybackRate;
     }
 
+    getMovingAverageMethod() {
+        return Constants.MOVING_AVERAGE_SLIDING_WINDOW;
+    }
+
     reset() {
         this.setup();
     }

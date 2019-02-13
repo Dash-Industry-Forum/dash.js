@@ -16,10 +16,6 @@ function DashManifestModelMock () {
         return adaptationsArray;
     };
 
-    this.setRepresentation = function (res) {
-        this.representation = res;
-    };
-
     this.getRepresentationsForAdaptation = function () {
         if (this.representation) {
             return [this.representation];
@@ -42,6 +38,34 @@ function DashManifestModelMock () {
 
     this.getRolesForAdaptation = function () {
         return [];
+    };
+
+    this.getMpd = function (manifest) {
+        let mpd = {};
+        if (manifest) {
+            mpd.manifest = manifest;
+        }
+
+        return mpd;
+    };
+
+    this.getRegularPeriods = function (mpd) {
+        const voPeriods = [];
+        if (mpd && mpd.manifest && mpd.manifest.Period_asArray) {
+            voPeriods.push({mpd: mpd});
+        }
+
+        return voPeriods;
+    };
+
+    this.getAdaptationsForPeriod = function (voPeriod) {
+        let voAdaptations = [];
+
+        if (voPeriod) {
+            voAdaptations.push(voPeriod.mpd.manifest.Period_asArray[0]);
+        }
+
+        return voAdaptations;
     };
 }
 

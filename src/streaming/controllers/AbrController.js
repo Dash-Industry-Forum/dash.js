@@ -75,7 +75,6 @@ function AbrController() {
         windowResizeEventCalled,
         elementWidth,
         elementHeight,
-        manifestModel,
         adapter,
         videoModel,
         mediaPlayerModel,
@@ -95,7 +94,7 @@ function AbrController() {
     }
 
     function registerStreamType(type, streamProcessor) {
-        switchHistoryDict[type] = SwitchRequestHistory(context).create();
+        switchHistoryDict[type] = switchHistoryDict[type] || SwitchRequestHistory(context).create();
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = ALLOW_LOAD;
@@ -103,13 +102,13 @@ function AbrController() {
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         if (type == Constants.VIDEO) {
             eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
-            droppedFramesHistory = DroppedFramesHistory(context).create();
+            droppedFramesHistory = droppedFramesHistory || DroppedFramesHistory(context).create();
             setElementSize();
         }
         eventBus.on(Events.METRIC_ADDED, onMetricAdded, this);
         eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
 
-        throughputHistory = ThroughputHistory(context).create({
+        throughputHistory = throughputHistory || ThroughputHistory(context).create({
             mediaPlayerModel: mediaPlayerModel
         });
     }
@@ -122,8 +121,7 @@ function AbrController() {
         abrRulesCollection = ABRRulesCollection(context).create({
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            adapter: adapter
+            mediaPlayerModel: mediaPlayerModel
         });
 
         abrRulesCollection.initialize();
@@ -186,9 +184,6 @@ function AbrController() {
         }
         if (config.adapter) {
             adapter = config.adapter;
-        }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
         }
         if (config.videoModel) {
             videoModel = config.videoModel;
@@ -260,9 +255,7 @@ function AbrController() {
 
         if (!bitrateDict.hasOwnProperty(type)) {
             if (ratioDict.hasOwnProperty(type)) {
-                const manifest = manifestModel.getValue();
-                const representation = adapter.getAdaptationForType(manifest, 0, type).Representation;
-
+                const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * ratioDict[type]) - 1, 0);
                     bitrateDict[type] = representation[repIdx].bandwidth;
@@ -475,6 +468,10 @@ function AbrController() {
             }
             setQualityFor(type, id, newQuality);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
+            const bitrate = throughputHistory.getAverageThroughput(type);
+            if (!isNaN(bitrate)) {
+                domStorage.setSavedBitrateSettings(type, bitrate);
+            }
         }
     }
 
@@ -684,8 +681,7 @@ function AbrController() {
             setElementSize();
         }
 
-        const manifest = manifestModel.getValue();
-        const representation = adapter.getAdaptationForType(manifest, 0, type).Representation;
+        const representation = adapter.getAdaptationForType(0, type).Representation;
         let newIdx = idx;
 
         if (elementWidth > 0 && elementHeight > 0) {
@@ -728,7 +724,7 @@ function AbrController() {
                     fragmentModel.abortRequests();
                     setAbandonmentStateFor(type, ABANDON_LOAD);
                     switchHistoryDict[type].reset();
-                    switchHistoryDict[type].push({oldValue: getQualityFor(type, streamController.getActiveStreamInfo()), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
+                    switchHistoryDict[type].push({oldValue: getQualityFor(type), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
                     setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.quality, switchRequest.reason);
 
                     clearTimeout(abandonmentTimeout);

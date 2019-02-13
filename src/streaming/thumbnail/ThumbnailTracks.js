@@ -45,7 +45,6 @@ export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
 function ThumbnailTracks(config) {
     const context = this.context;
 
-    const dashManifestModel = config.dashManifestModel;
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
@@ -91,7 +90,7 @@ function ThumbnailTracks(config) {
 
             seg = getTimeBasedSegment(
                 timelineConverter,
-                dashManifestModel.getIsDynamic(),
+                adapter.getIsDynamic(),
                 representation,
                 s.startTime,
                 s.duration,
@@ -109,7 +108,7 @@ function ThumbnailTracks(config) {
     }
 
     function addTracks() {
-        if (!stream || !dashManifestModel || !adapter) {
+        if (!stream || !adapter) {
             return;
         }
 
@@ -124,12 +123,8 @@ function ThumbnailTracks(config) {
             return;
         }
 
-        const voAdaptation = adapter.getDataForMedia(mediaInfo);
-        if (!voAdaptation) {
-            return;
-        }
+        const voReps = adapter.getVoRepresentations(mediaInfo);
 
-        const voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
                 if (rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media)

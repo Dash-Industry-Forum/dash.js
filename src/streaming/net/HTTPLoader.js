@@ -233,8 +233,7 @@ function HTTPLoader(cfg) {
             });
         } else {
             loader = XHRLoader(context).create({
-                requestModifier: requestModifier,
-                boxParser: boxParser
+                requestModifier: requestModifier
             });
         }
 

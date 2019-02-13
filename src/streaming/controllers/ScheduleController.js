@@ -40,7 +40,6 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaController from './MediaController';
-import {replaceTokenForTemplate} from '../../dash/utils/SegmentsUtils';
 
 function ScheduleController(config) {
 
@@ -50,7 +49,6 @@ function ScheduleController(config) {
     const metricsModel = config.metricsModel;
     const adapter = config.adapter;
     const dashMetrics = config.dashMetrics;
-    const dashManifestModel = config.dashManifestModel;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
@@ -102,12 +100,11 @@ function ScheduleController(config) {
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
-            adapter: adapter,
             textController: textController,
             playbackController: playbackController
         });
 
-        if (dashManifestModel.getIsTextTrack(config.mimeType)) {
+        if (adapter.getIsTextTrack(config.mimeType)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -223,7 +220,7 @@ function ScheduleController(config) {
                             setSeekTarget(NaN);
                             if (request && !replacement) {
                                 if (!isNaN(request.startTime + request.duration)) {
-                                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                                    streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
                                 }
                                 request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
                                 setTimeToLoadDelay(0);
@@ -267,7 +264,7 @@ function ScheduleController(config) {
             threshold: 0
         })[0];
 
-        if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
+        if (request && replaceRequestArray.indexOf(request) === -1 && !adapter.getIsTextTrack(type)) {
             const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
@@ -309,10 +306,9 @@ function ScheduleController(config) {
     }
 
     function getInitRequest(quality) {
-        const request = adapter.getInitRequest(streamProcessor, quality);
+        const request = streamProcessor.getInitRequest(quality);
         if (request) {
             setFragmentProcessState(true);
-            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', currentRepresentationInfo ? currentRepresentationInfo.bandwidth : null);
             fragmentModel.executeRequest(request);
         }
     }
@@ -380,7 +376,7 @@ function ScheduleController(config) {
     }
 
     function onStreamInitialized(e) {
-        if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+        if (streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
             return;
         }
 
@@ -407,7 +403,7 @@ function ScheduleController(config) {
             const liveEdge = liveEdgeFinder.getLiveEdge();
             const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
             const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
-            const request = adapter.getFragmentRequest(streamProcessor, currentRepresentationInfo, startTime, {
+            const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
             });
 
@@ -458,7 +454,7 @@ function ScheduleController(config) {
         }
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined',
             ', Range:', e.request.range ? e.request.range : 'undefined');
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(type)) {
             setFragmentProcessState(false);
         }
 
@@ -707,7 +703,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

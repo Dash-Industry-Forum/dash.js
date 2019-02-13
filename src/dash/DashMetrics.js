@@ -35,62 +35,9 @@ import Round10 from './utils/Round10';
 
 /**
  * @module DashMetrics
- * @param {object} config configuration passed to DashMetrics
  */
-function DashMetrics(config) {
-
-    config = config || {};
+function DashMetrics() {
     let instance;
-    let dashManifestModel = config.dashManifestModel;
-    let manifestModel = config.manifestModel;
-
-    function getPeriod(periodId) {
-        const manifest = manifestModel.getValue();
-        if (!manifest) {
-            return -1;
-        }
-        return manifest.Period_asArray[periodId];
-    }
-
-    function getBandwidthForRepresentation(representationId, periodId) {
-        let representation;
-        let period = getPeriod(periodId);
-
-        representation = findRepresentation(period, representationId);
-
-        if (representation === null) {
-            return null;
-        }
-
-        return representation.bandwidth;
-    }
-
-    /**
-     *
-     * @param {string} representationId
-     * @param {number} periodIdx
-     * @returns {*}
-     */
-    function getIndexForRepresentation(representationId, periodIdx) {
-        let period = getPeriod(periodIdx);
-
-        return findRepresentationIndex(period, representationId);
-    }
-
-    /**
-     * This method returns the current max index based on what is defined in the MPD.
-     *
-     * @param {string} bufferType - String 'audio' or 'video',
-     * @param {number} periodIdx - Make sure this is the period index not id
-     * @return {number}
-     * @memberof module:DashMetrics
-     * @instance
-     */
-    function getMaxIndexForBufferType(bufferType, periodIdx) {
-        let period = getPeriod(periodIdx);
-
-        return findMaxBufferIndex(period, bufferType);
-    }
 
     /**
      * @param {MetricsList} metrics
@@ -130,16 +77,6 @@ function DashMetrics(config) {
 
     /**
      * @param {MetricsList} metrics
-     * @returns {null|*|vo}
-     * @memberof module:DashMetrics
-     * @instance
-     */
-    function getRequestsQueue(metrics) {
-        return metrics ? metrics.RequestsQueue : null;
-    }
-
-    /**
-     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -152,15 +89,13 @@ function DashMetrics(config) {
         const httpList = metrics.HttpList;
         let currentHttpList = null;
 
-        let httpListLength,
-            httpListLastIndex;
+        let httpListLastIndex;
 
         if (!httpList || httpList.length <= 0) {
             return null;
         }
 
-        httpListLength = httpList.length;
-        httpListLastIndex = httpListLength - 1;
+        httpListLastIndex = httpList.length - 1;
 
         while (httpListLastIndex >= 0) {
             if (httpList[httpListLastIndex].responsecode) {
@@ -309,75 +244,8 @@ function DashMetrics(config) {
         return headers;
     }
 
-    function findRepresentationIndex(period, representationId) {
-        const index = findRepresentation(period, representationId, true);
-
-        if (index !== null) {
-            return index;
-        }
-
-        return -1;
-    }
-
-    function findRepresentation(period, representationId, returnIndex) {
-        let adaptationSet,
-            adaptationSetArray,
-            representation,
-            representationArray,
-            adaptationSetArrayIndex,
-            representationArrayIndex;
-
-        if (period) {
-            adaptationSetArray = period.AdaptationSet_asArray;
-            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                representationArray = adaptationSet.Representation_asArray;
-                for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
-                    representation = representationArray[representationArrayIndex];
-                    if (representationId === representation.id) {
-                        if (returnIndex) {
-                            return representationArrayIndex;
-                        } else {
-                            return representation;
-                        }
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    function adaptationIsType(adaptation, bufferType) {
-        return dashManifestModel.getIsTypeOf(adaptation, bufferType);
-    }
-
-    function findMaxBufferIndex(period, bufferType) {
-        let adaptationSet,
-            adaptationSetArray,
-            representationArray,
-            adaptationSetArrayIndex;
-
-        if (!period || !bufferType) return -1;
-
-        adaptationSetArray = period.AdaptationSet_asArray;
-        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation_asArray;
-            if (adaptationIsType(adaptationSet, bufferType)) {
-                return representationArray.length;
-            }
-        }
-
-        return -1;
-    }
-
     instance = {
-        getBandwidthForRepresentation: getBandwidthForRepresentation,
-        getIndexForRepresentation: getIndexForRepresentation,
-        getMaxIndexForBufferType: getMaxIndexForBufferType,
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
-        getLatestBufferLevelVO: getLatestBufferLevelVO,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
@@ -386,8 +254,7 @@ function DashMetrics(config) {
         getCurrentDVRInfo: getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
-        getRequestsQueue: getRequestsQueue
+        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID
     };
 
     return instance;

@@ -62,14 +62,12 @@ function StreamController() {
         manifestUpdater,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
         adapter,
         metricsModel,
         dashMetrics,
         mediaSourceController,
         timeSyncController,
         baseURLController,
-        domStorage,
         abrController,
         mediaController,
         textController,
@@ -116,7 +114,7 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
-        checkSetConfigCall();
+        checkConfig();
 
         autoPlay = autoPl;
         protectionData = protData;
@@ -125,7 +123,7 @@ function StreamController() {
         manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             mediaPlayerModel: mediaPlayerModel,
             manifestLoader: manifestLoader,
             errHandler: errHandler
@@ -133,7 +131,7 @@ function StreamController() {
         manifestUpdater.initialize();
 
         baseURLController.setConfig({
-            dashManifestModel: dashManifestModel
+            adapter: adapter
         });
 
         registerEvents();
@@ -379,7 +377,7 @@ function StreamController() {
                 newStream.preload(mediaSource, buffers);
                 preloading = newStream;
                 newStream.getProcessors().forEach(p => {
-                    adapter.setIndexHandlerTime(p, newStream.getStartTime());
+                    p.setIndexHandlerTime(newStream.getStartTime());
                 });
             }
         }
@@ -638,7 +636,6 @@ function StreamController() {
                 if (!stream) {
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
-                        dashManifestModel: dashManifestModel,
                         mediaPlayerModel: mediaPlayerModel,
                         metricsModel: metricsModel,
                         dashMetrics: dashMetrics,
@@ -648,7 +645,6 @@ function StreamController() {
                         capabilities: capabilities,
                         errHandler: errHandler,
                         baseURLController: baseURLController,
-                        domStorage: domStorage,
                         abrController: abrController,
                         playbackController: playbackController,
                         mediaController: mediaController,
@@ -717,15 +713,15 @@ function StreamController() {
 
             let useCalculatedLiveEdgeTime;
             if (mediaInfo) {
-                useCalculatedLiveEdgeTime = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(adapter.getDataForMedia(mediaInfo));
+                useCalculatedLiveEdgeTime = adapter.getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo);
                 if (useCalculatedLiveEdgeTime) {
                     logger.debug('SegmentTimeline detected using calculated Live Edge Time');
                     mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
                 }
             }
 
-            let manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
-            let allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let manifestUTCTimingSources = adapter.getUTCTimingSources();
+            let allUTCTimingSources = (!adapter.getIsDynamic() || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
@@ -862,7 +858,7 @@ function StreamController() {
         })[0];
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
             !metricsModel || !playbackController) {
@@ -870,19 +866,19 @@ function StreamController() {
         }
     }
 
-    function checkInitializeCall() {
+    function checkInitialize() {
         if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
             throw new Error('initialize function has to be called previously');
         }
     }
 
     function load(url) {
-        checkSetConfigCall();
+        checkConfig();
         manifestLoader.load(url);
     }
 
     function loadWithManifest(manifest) {
-        checkInitializeCall();
+        checkInitialize();
         manifestUpdater.setManifest(manifest);
     }
 
@@ -903,9 +899,6 @@ function StreamController() {
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
-        }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
@@ -933,9 +926,6 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
-        }
-        if (config.domStorage) {
-            domStorage = config.domStorage;
         }
         if (config.abrController) {
             abrController = config.abrController;
@@ -972,7 +962,7 @@ function StreamController() {
     }
 
     function reset() {
-        checkSetConfigCall();
+        checkConfig();
 
         timeSyncController.reset();
 

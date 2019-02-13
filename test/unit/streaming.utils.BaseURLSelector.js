@@ -7,11 +7,11 @@ const context = {};
 const baseURLSelector = BaseURLSelector(context).create();
 
 describe('BaseURLSelector', function () {
-    it('should throw an error when chooseSelectorFromManifest is called and config object has not been set properly', function () {
-        expect(baseURLSelector.chooseSelectorFromManifest.bind()).to.be.throw(Constants.MISSING_CONFIG_ERROR);
+    it('should throw an error when chooseSelector is called and parameter is not a boolean', function () {
+        expect(baseURLSelector.chooseSelector.bind()).to.be.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('should throw an error when select is called with no data parameter', function () {
+    it('should return an undefined selector when select is called with no data parameter', function () {
         const selector = baseURLSelector.select();
 
         expect(selector).to.be.undefined; // jshint ignore:line

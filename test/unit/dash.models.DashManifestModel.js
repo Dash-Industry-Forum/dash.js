@@ -2,18 +2,16 @@ import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 import MpdHelper from './helpers/MPDHelper';
-import ObjectsHelper from './helpers/ObjectsHelper';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
-const objectsHelper = new ObjectsHelper();
 const errorHandlerMock = new ErrorHandlerMock();
-const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
-const dashManifestModel = DashManifestModel(context).getInstance({
-    timelineConverter: timelineConverterMock,
+const dashManifestModel = DashManifestModel(context).getInstance();
+
+dashManifestModel.setConfig({
     errHandler: errorHandlerMock
 });
 
@@ -29,10 +27,28 @@ describe('DashManifestModel', function () {
     it('should throw an exception when attempting to call getIsTypeOf with undefined parameters', function () {
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw('adaptation is not defined');
 
-        var adaptation = mpdHelper.composeAdaptation('video');
+        const adaptation = mpdHelper.composeAdaptation('video');
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw('type is not defined');
 
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
+    });
+
+    it('should return null when getSuggestedPresentationDelay is called and mpd is undefined', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay();
+
+        expect(suggestedPresentationDelay).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return null when getAvailabilityStartTime is called and mpd is undefined', () => {
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime();
+
+        expect(availabilityStartTime).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and adaptation is undefined', () => {
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation();
+
+        expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
     });
 
     it('should return false when getIsTextTrack is called and type is undefined', () => {
@@ -519,28 +535,28 @@ describe('DashManifestModel', function () {
         expect(representationArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return false when getIsDVB is called and manifest is undefined', () => {
-        const IsDVB = dashManifestModel.getIsDVB();
+    it('should return false when hasProfile is called and manifest is undefined', () => {
+        const IsDVB = dashManifestModel.hasProfile();
 
         expect(IsDVB).to.be.false;    // jshint ignore:line
     });
 
-    it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
+    it('should return true when hasProfile is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
         };
 
-        const isDVB = dashManifestModel.getIsDVB(manifest);
+        const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
         expect(isDVB).to.be.true; // jshint ignore:line
     });
 
-    it('should return false when getIsDVB is called and manifest does not contain a valid DVB profile', () => {
+    it('should return false when hasProfile is called and manifest does not contain a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:mpeg:dash:profile:isoff-on-demand:2011, http://dashif.org/guildelines/dash264'
         };
 
-        const isDVB = dashManifestModel.getIsDVB(manifest);
+        const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
         expect(isDVB).to.be.false; // jshint ignore:line
     });

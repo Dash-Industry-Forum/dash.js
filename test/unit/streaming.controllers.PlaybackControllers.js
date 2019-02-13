@@ -16,13 +16,13 @@ const eventBus = EventBus(context).getInstance();
 
 describe('PlaybackController', function () {
 
-    let playbackController;
-    let videoModelMock;
-    let metricsModelMock;
-    let dashMetricsMock;
-    let mediaPlayerModelMock;
-    let streamControllerMock;
-    let uriFragmentModelMock;
+    let playbackController,
+        videoModelMock,
+        metricsModelMock,
+        dashMetricsMock,
+        mediaPlayerModelMock,
+        streamControllerMock,
+        uriFragmentModelMock;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();

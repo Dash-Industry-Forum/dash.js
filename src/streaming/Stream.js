@@ -47,7 +47,6 @@ function Stream(config) {
     const eventBus = EventBus(context).getInstance();
 
     const manifestModel = config.manifestModel;
-    const dashManifestModel = config.dashManifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
@@ -361,8 +360,8 @@ function Stream(config) {
                 processor.getFragmentModel().abortRequests();
             } else {
                 processor.getScheduleController().setSeekTarget(NaN);
-                adapter.setIndexHandlerTime(processor, currentTime);
-                adapter.resetIndexHandler(processor);
+                processor.setIndexHandlerTime(currentTime);
+                processor.resetIndexHandler();
             }
         }
     }
@@ -374,14 +373,12 @@ function Stream(config) {
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             stream: instance,
             abrController: abrController,
-            domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
             streamController: config.streamController,
@@ -394,7 +391,7 @@ function Stream(config) {
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
+            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);
@@ -446,7 +443,6 @@ function Stream(config) {
 
         if (type === Constants.IMAGE) {
             thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
                 stream: instance,
@@ -551,7 +547,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
@@ -560,7 +556,7 @@ function Stream(config) {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            const codec = dashManifestModel.getCodec(realAdaptation, i, true);
+            const codec = adapter.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
                 logger.error('[Stream] codec not supported: ' + codec);
                 return false;
@@ -596,10 +592,13 @@ function Stream(config) {
             }
         }
 
-        eventBus.trigger(Events.STREAM_INITIALIZED, {
-            streamInfo: streamInfo,
-            error: error
-        });
+        if (error) {
+            errHandler.error(error);
+        } else {
+            eventBus.trigger(Events.STREAM_INITIALIZED, {
+                streamInfo: streamInfo
+            });
+        }
     }
 
     function getMediaInfo(type) {
@@ -749,8 +748,8 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible
@@ -776,8 +775,8 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible

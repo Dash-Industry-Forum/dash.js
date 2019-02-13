@@ -126,9 +126,25 @@ export function replaceTokenForTemplate(url, token, value) {
     }
 }
 
+function getSegment(representation, duration, presentationStartTime, mediaStartTime, availabilityStartTime,
+    timelineConverter, presentationEndTime, isDynamic, index) {
+    let seg = new Segment();
+
+    seg.representation = representation;
+    seg.duration = duration;
+    seg.presentationStartTime = presentationStartTime;
+    seg.mediaStartTime = mediaStartTime;
+    seg.availabilityStartTime = availabilityStartTime;
+    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation.adaptation.period.mpd, isDynamic);
+    seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
+    seg.replacementNumber = getNumberForSegment(seg, index);
+    seg.availabilityIdx = index;
+
+    return seg;
+}
+
 export function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {
-    let seg,
-        duration,
+    let duration,
         presentationStartTime,
         presentationEndTime;
 
@@ -146,24 +162,10 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
-    seg = new Segment();
-
-    seg.representation = representation;
-    seg.duration = duration;
-    seg.presentationStartTime = presentationStartTime;
-
-    seg.mediaStartTime = timelineConverter.calcMediaTimeFromPresentationTime(seg.presentationStartTime, representation);
-
-    seg.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(seg.presentationStartTime, representation.adaptation.period.mpd, isDynamic);
-    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation.adaptation.period.mpd, isDynamic);
-
-    // at this wall clock time, the video element currentTime should be seg.presentationStartTime
-    seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
-
-    seg.replacementNumber = getNumberForSegment(seg, index);
-    seg.availabilityIdx = index;
-
-    return seg;
+    return getSegment(representation, duration, presentationStartTime,
+                      timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation),
+                      timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic),
+                      timelineConverter, presentationEndTime, isDynamic, index);
 }
 
 export function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index, tManifest) {
@@ -177,30 +179,17 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
     presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
     presentationEndTime = presentationStartTime + scaledDuration;
 
-    seg = new Segment();
-
-    seg.representation = representation;
-    seg.duration = scaledDuration;
-    seg.mediaStartTime = scaledTime;
-
-    seg.presentationStartTime = presentationStartTime;
-
-    // For SegmentTimeline every segment is available at loadedTime
-    seg.availabilityStartTime = representation.adaptation.period.mpd.manifest.loadedTime;
-    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation.adaptation.period.mpd, isDynamic);
-
-    // at this wall clock time, the video element currentTime should be seg.presentationStartTime
-    seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
+    seg = getSegment(representation, scaledDuration, presentationStartTime,
+                     scaledTime,
+                     representation.adaptation.period.mpd.manifest.loadedTime,
+                     timelineConverter, presentationEndTime, isDynamic, index);
 
     seg.replacementTime = tManifest ? tManifest : time;
-
-    seg.replacementNumber = getNumberForSegment(seg, index);
 
     url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
     url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
     seg.media = url;
     seg.mediaRange = range;
-    seg.availabilityIdx = index;
 
     return seg;
 }
@@ -231,6 +220,9 @@ export function getSegmentByIndex(index, representation) {
 }
 
 export function decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, givenAvailabilityUpperLimit) {
+    if (!representation) {
+        return {start: NaN, end: NaN};
+    }
     const duration = representation.segmentDuration;
     const minBufferTime = representation.adaptation.period.mpd.manifest.minBufferTime;
     const availabilityWindow = representation.segmentAvailabilityRange;

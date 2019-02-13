@@ -47,8 +47,6 @@ function PlaybackController() {
         streamController,
         metricsModel,
         dashMetrics,
-        manifestModel,
-        dashManifestModel,
         adapter,
         videoModel,
         timelineConverter,
@@ -224,14 +222,15 @@ function PlaybackController() {
      * @memberof PlaybackController#
      */
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
-        const mpd = dashManifestModel.getMpd(manifestModel.getValue());
-
-        let delay;
-        let ret;
+        let delay,
+            ret,
+            startTime;
         const END_OF_PLAYLIST_PADDING = 10;
 
-        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && mpd.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
-            delay = mpd.suggestedPresentationDelay;
+        let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
+
+        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && suggestedPresentationDelay !== null) {
+            delay = suggestedPresentationDelay;
         } else if (mediaPlayerModel.getLowLatencyEnabled()) {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
@@ -242,8 +241,10 @@ function PlaybackController() {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
 
-        if (mpd.availabilityStartTime) {
-            availabilityStartTime = mpd.availabilityStartTime.getTime();
+        startTime = adapter.getAvailabilityStartTime();
+
+        if (startTime !== null) {
+            availabilityStartTime = startTime;
         }
 
         if (dvrWindowSize > 0) {
@@ -312,12 +313,6 @@ function PlaybackController() {
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
-        }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;

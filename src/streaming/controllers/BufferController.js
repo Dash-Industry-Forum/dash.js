@@ -108,7 +108,7 @@ function BufferController(config) {
     function initialize(Source) {
         setMediaSource(Source);
 
-        requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
+        requiredQuality = abrController.getQualityFor(type);
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -214,8 +214,10 @@ function BufferController(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = streamProcessor.getRepresentationInfo(quality);
-        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
-        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
+        const representationController = streamProcessor.getRepresentationController();
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
+        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -297,7 +299,7 @@ function BufferController(config) {
                 const currentTime = playbackController.getTime();
                 logger.debug('AppendToBuffer seek target should be ' + currentTime);
                 streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                streamProcessor.setIndexHandlerTime(currentTime);
             }
         }
 
@@ -703,7 +705,7 @@ function BufferController(config) {
             maxAppendedIndex = 0;
             if (!bufferResetInProgress) {
                 streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                streamProcessor.setIndexHandlerTime(currentTime);
             }
         }
 
@@ -724,7 +726,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            adapter.setIndexHandlerTime(streamProcessor, e.from);
+            streamProcessor.setIndexHandlerTime(e.from);
         }
 
         if (isPruningInProgress) {

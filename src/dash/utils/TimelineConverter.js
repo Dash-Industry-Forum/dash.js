@@ -175,15 +175,7 @@ function TimelineConverter() {
         if (e.offset !== undefined) {
             setClientTimeOffset(e.offset / 1000);
             isClientServerTimeSyncCompleted = true;
-
         }
-    }
-
-    function calcMSETimeOffset(representation) {
-        // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
-        const presentationOffset = representation.presentationTimeOffset;
-        const periodStart = representation.adaptation.period.start;
-        return (periodStart - presentationOffset);
     }
 
     function resetInitialSettings() {
@@ -213,7 +205,6 @@ function TimelineConverter() {
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
         calcWallTimeForSegment: calcWallTimeForSegment,
-        calcMSETimeOffset: calcMSETimeOffset,
         reset: reset
     };
 

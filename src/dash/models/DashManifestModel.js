@@ -46,20 +46,14 @@ import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
 
-function DashManifestModel(config) {
-
-    config = config || {};
-
+function DashManifestModel() {
     let instance,
-        logger;
+        logger,
+        errHandler,
+        BASE64;
 
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
-    const timelineConverter = config.timelineConverter;
-    const errHandler = config.errHandler;
-    const BASE64 = config.BASE64;
-
-    const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
@@ -334,10 +328,6 @@ function DashManifestModel(config) {
         return has;
     }
 
-    function getIsDVB(manifest) {
-        return hasProfile(manifest, PROFILE_DVB);
-    }
-
     function getDuration(manifest) {
         let mpdDuration;
         //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
@@ -414,17 +404,20 @@ function DashManifestModel(config) {
     }
 
     function getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation) {
-        let realRepresentation = getRealAdaptationFor(voAdaptation).Representation_asArray[0];
+        let realAdaptation = getRealAdaptationFor(voAdaptation);
+        let realRepresentation = realAdaptation ? realAdaptation.Representation_asArray[0] : null;
         let segmentInfo;
-        if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
-            segmentInfo = realRepresentation.SegmentList;
-            return segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ?
-                isLastRepeatAttributeValid(segmentInfo.SegmentTimeline) :
-                true;
-        } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
-            segmentInfo = realRepresentation.SegmentTemplate;
-            if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
-                return isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
+        if (realRepresentation) {
+            if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+                segmentInfo = realRepresentation.SegmentList;
+                return segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ?
+                    isLastRepeatAttributeValid(segmentInfo.SegmentTimeline) :
+                    true;
+            } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
+                segmentInfo = realRepresentation.SegmentTemplate;
+                if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
+                    return isLastRepeatAttributeValid(segmentInfo.SegmentTimeline);
+                }
             }
         }
 
@@ -563,13 +556,20 @@ function DashManifestModel(config) {
                     }
                 }
 
-                voRepresentation.MSETimeOffset = timelineConverter.calcMSETimeOffset(voRepresentation);
+                voRepresentation.MSETimeOffset = calcMSETimeOffset(voRepresentation);
                 voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
                 voRepresentations.push(voRepresentation);
             }
         }
 
         return voRepresentations;
+    }
+
+    function calcMSETimeOffset(representation) {
+        // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
+        const presentationOffset = representation.presentationTimeOffset;
+        const periodStart = representation.adaptation.period.start;
+        return (periodStart - presentationOffset);
     }
 
     function getAdaptationsForPeriod(voPeriod) {
@@ -744,8 +744,14 @@ function DashManifestModel(config) {
         return mpd;
     }
 
+    function checkConfig() {
+        if (!errHandler || !errHandler.hasOwnProperty('error')) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
 
     function getEndTimeForLastPeriod(voPeriod) {
+        checkConfig();
         const isDynamic = getIsDynamic(voPeriod.mpd.manifest);
 
         let periodEnd;
@@ -1018,6 +1024,26 @@ function DashManifestModel(config) {
         return undefined;
     }
 
+    function getSuggestedPresentationDelay(mpd) {
+        return mpd && mpd.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY) ? mpd.suggestedPresentationDelay : null;
+    }
+
+    function getAvailabilityStartTime(mpd) {
+        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) ? mpd.availabilityStartTime.getTime() : null;
+    }
+
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+
+        if (config.BASE64) {
+            BASE64 = config.BASE64;
+        }
+    }
+
     instance = {
         getIsTypeOf: getIsTypeOf,
         getIsTextTrack: getIsTextTrack,
@@ -1036,7 +1062,7 @@ function DashManifestModel(config) {
         getLabelsForAdaptation: getLabelsForAdaptation,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
-        getIsDVB: getIsDVB,
+        hasProfile: hasProfile,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
         getManifestUpdatePeriod: getManifestUpdatePeriod,
@@ -1054,7 +1080,10 @@ function DashManifestModel(config) {
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
         getLocation: getLocation,
-        getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation
+        getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation,
+        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
+        getAvailabilityStartTime: getAvailabilityStartTime,
+        setConfig: setConfig
     };
 
     setup();

@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import cea608parser from '../../externals/cea608-parser';
 import Constants from './constants/Constants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
@@ -60,7 +61,6 @@ from './../core/Version';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
-import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
 import {
@@ -140,7 +140,6 @@ function MediaPlayer() {
         streamController,
         playbackController,
         dashMetrics,
-        dashManifestModel,
         manifestModel,
         videoModel,
         textController,
@@ -247,16 +246,8 @@ function MediaPlayer() {
         }
 
         adapter = DashAdapter(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance({
-            timelineConverter: timelineConverter,
-            errHandler: errHandler,
-            BASE64: BASE64
-        });
         manifestModel = ManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel
-        });
+        dashMetrics = DashMetrics(context).getInstance();
         metricsModel = MetricsModel(context).getInstance();
 
         textController = TextController(context).getInstance();
@@ -265,7 +256,10 @@ function MediaPlayer() {
         });
 
         adapter.setConfig({
-            dashManifestModel: dashManifestModel
+            constants: Constants,
+            cea608parser: cea608parser,
+            errHandler: errHandler,
+            BASE64: BASE64
         });
 
         restoreDefaultUTCTimingSources();
@@ -980,7 +974,7 @@ function MediaPlayer() {
             }
             return thumbnailController.getCurrentTrackIndex();
         }
-        return abrController.getQualityFor(type, streamController.getActiveStreamInfo());
+        return abrController.getQualityFor(type);
     }
 
     /**
@@ -2818,7 +2812,6 @@ function MediaPlayer() {
             capabilities: capabilities,
             manifestLoader: manifestLoader,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
@@ -2828,7 +2821,6 @@ function MediaPlayer() {
             timelineConverter: timelineConverter,
             videoModel: videoModel,
             playbackController: playbackController,
-            domStorage: domStorage,
             abrController: abrController,
             mediaController: mediaController,
             textController: textController
@@ -2838,9 +2830,7 @@ function MediaPlayer() {
             streamController: streamController,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            dashManifestModel: dashManifestModel,
             adapter: adapter,
             videoModel: videoModel,
             timelineConverter: timelineConverter,
@@ -2853,16 +2843,15 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
-            videoModel: videoModel,
-            adapter: adapter
+            adapter: adapter,
+            videoModel: videoModel
         });
         abrController.createAbrRulesCollection();
 
         textController.setConfig({
             errHandler: errHandler,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             mediaController: mediaController,
             streamController: streamController,
             videoModel: videoModel
@@ -2927,7 +2916,7 @@ function MediaPlayer() {
                 debug: debug,
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
-                dashManifestModel: dashManifestModel,
+                adapter: adapter,
                 metricsModel: metricsModel,
                 events: Events,
                 constants: Constants,
@@ -2998,6 +2987,18 @@ function MediaPlayer() {
             playbackInitialized = true;
             logger.info('Playback Initialized');
         }
+    }
+
+    /**
+     * Returns the DashAdapter.js Module.
+     *
+     * @see {@link module:DashAdapter}
+     * @returns {Object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getDashAdapter() {
+        return adapter;
     }
 
     instance = {
@@ -3153,6 +3154,7 @@ function MediaPlayer() {
         setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         getThumbnail: getThumbnail,
         keepProtectionMediaKeys: keepProtectionMediaKeys,
+        getDashAdapter: getDashAdapter,
         reset: reset
     };
 

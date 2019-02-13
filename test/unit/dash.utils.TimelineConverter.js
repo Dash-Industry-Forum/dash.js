@@ -19,12 +19,6 @@ describe('TimelineConverter', function () {
 
     timelineConverter.initialize();
 
-    it('should calculate timestamp offset', function () {
-        const expectedValue = -10;
-
-        expect(timelineConverter.calcMSETimeOffset(representation)).to.be.equal(expectedValue);
-    });
-
     it('should set an expected live edge', function () {
         const expectedValue = 10;
 

@@ -4,7 +4,6 @@ import EventBus from '../../src/core/EventBus';
 import Errors from '../../src/core/errors/Errors';
 
 import ManifestModelMock from './mocks/ManifestModelMock';
-import DashManifestModelMock from './mocks/DashManifestModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
@@ -19,7 +18,6 @@ describe('ManifestUpdater', function () {
 
     // init mock
     const manifestModelMock = new ManifestModelMock();
-    const dashManifestModelMock = new DashManifestModelMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
     const manifestLoaderMock = new ManifestLoaderMock();
     const errHandlerMock = new ErrorHandlerMock();
@@ -28,7 +26,6 @@ describe('ManifestUpdater', function () {
 
     manifestUpdater.setConfig({
         manifestModel: manifestModelMock,
-        dashManifestModel: dashManifestModelMock,
         mediaPlayerModel: mediaPlayerModelMock,
         manifestLoader: manifestLoaderMock,
         errHandler: errHandlerMock

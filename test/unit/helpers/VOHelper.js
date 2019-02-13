@@ -1,5 +1,5 @@
-import StreamInfo from '../../../src/streaming/vo/StreamInfo';
-import MediaInfo from '../../../src/streaming/vo/MediaInfo';
+import StreamInfo from '../../../src/dash/vo/StreamInfo';
+import MediaInfo from '../../../src/dash/vo/MediaInfo';
 import MpdHelper from './MPDHelper';
 import SpecHelper from './SpecHelper';
 import Representation from '../../../src/dash/vo/Representation';
