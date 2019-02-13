@@ -69,7 +69,7 @@ function BaseURLTreeModel() {
     }
 
     function updateChildData(node, index, element) {
-        let baseUrls = adapter.getBaseURLsFromElement(element);
+        const baseUrls = adapter.getBaseURLsFromElement(element);
 
         if (!node[index]) {
             node[index] = new Node(baseUrls);
@@ -83,7 +83,7 @@ function BaseURLTreeModel() {
 
     function getBaseURLCollectionsFromManifest(manifest) {
         checkConfig();
-        let baseUrls = adapter.getBaseURLsFromElement(manifest);
+        const baseUrls = adapter.getBaseURLsFromElement(manifest);
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
@@ -116,7 +116,7 @@ function BaseURLTreeModel() {
     }
 
     function walk(callback, node) {
-        let target = node || root;
+        const target = node || root;
 
         callback(target.data);
 
@@ -145,7 +145,7 @@ function BaseURLTreeModel() {
 
     function getForPath(path) {
         let target = root;
-        let nodes = [target.data];
+        const nodes = [target.data];
 
         if (path) {
             path.forEach(p => {

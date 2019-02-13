@@ -61,7 +61,8 @@ function AdapterMock () {
     };
 
     this.getRepresentationSortFunction = function () {
-        return [];
+        // Return a silly sort function
+        return function () { return 0; };
     };
 }
 
