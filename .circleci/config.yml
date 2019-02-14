@@ -1,0 +1,41 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:7.10
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run:
+          name: Install dependencies
+          command: npm install
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      # run buld and tests!
+      - run:
+          name: Build and Test
+          command: npm run build
+
+      - deploy:
+          name: Deploy
+          command: |
+            if [ "${CIRCLE_BRANCH}" = "development" ]; then
+              sudo npm install -g grunt-cli
+              grunt deploy --git-commit=$CIRCLE_SHA1 --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
+            else
+              echo "Not development branch, dry run only"
+            fi
+

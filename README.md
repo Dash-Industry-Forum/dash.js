@@ -1,7 +1,7 @@
 
 <img src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png" width="400">
 
-Travis CI Status: [![Travis CI Status](http://img.shields.io/travis/Dash-Industry-Forum/dash.js/development.svg?style=flat-square)](https://travis-ci.org/Dash-Industry-Forum/dash.js)
+Build status (CircleCI): [![CircleCI](https://circleci.com/gh/Dash-Industry-Forum/dash.js/tree/development.svg?style=svg)](https://circleci.com/gh/Dash-Industry-Forum/dash.js/tree/development)
 
 Join the discussion: [![Slack Status](https://dashif-slack.azurewebsites.net/badge.svg)](https://dashif-slack.azurewebsites.net)
 

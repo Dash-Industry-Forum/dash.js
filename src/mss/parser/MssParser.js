@@ -38,6 +38,7 @@ function MssParser(config) {
     const BASE64 = config.BASE64;
     const debug = config.debug;
     const constants = config.constants;
+    const manifestModel = config.manifestModel;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -211,7 +212,6 @@ function MssParser(config) {
         // Check if codec is supported
         if (SUPPORTED_CODECS.indexOf(fourCCValue.toUpperCase()) === -1) {
             // Do not send warning
-            //this.errHandler.sendWarning(MediaPlayer.dependencies.ErrorHandler.prototype.MEDIA_ERR_CODEC_UNSUPPORTED, 'Codec not supported', {codec: fourCCValue});
             logger.warn('Codec not supported: ' + fourCCValue);
             return null;
         }
@@ -334,10 +334,10 @@ function MssParser(config) {
         const segmentTimeline = {};
         const chunks = streamIndex.getElementsByTagName('c');
         const segments = [];
-        let segment;
-        let prevSegment;
-        let tManifest;
-        let i,j,r;
+        let segment,
+            prevSegment,
+            tManifest,
+            i,j,r;
         let duration = 0;
 
         for (i = 0; i < chunks.length; i++) {
@@ -368,6 +368,7 @@ function MssParser(config) {
                     } else {
                         prevSegment.d = segment.t - prevSegment.t;
                     }
+                    duration += prevSegment.d;
                 }
                 // Set segment absolute timestamp if not set in manifest
                 if (!segment.t) {
@@ -380,7 +381,9 @@ function MssParser(config) {
                 }
             }
 
-            duration += segment.d;
+            if (segment.d) {
+                duration += segment.d;
+            }
 
             // Create new segment
             segments.push(segment);
@@ -579,17 +582,34 @@ function MssParser(config) {
         manifest.type = smoothStreamingMedia.getAttribute('IsLive') === 'TRUE' ? 'dynamic' : 'static';
         timescale =  smoothStreamingMedia.getAttribute('TimeScale');
         manifest.timescale = timescale ? parseFloat(timescale) : DEFAULT_TIME_SCALE;
-        manifest.timeShiftBufferDepth = parseFloat(smoothStreamingMedia.getAttribute('DVRWindowLength')) / manifest.timescale;
-        manifest.mediaPresentationDuration = (parseFloat(smoothStreamingMedia.getAttribute('Duration')) === 0) ? Infinity : parseFloat(smoothStreamingMedia.getAttribute('Duration')) / manifest.timescale;
-        manifest.minBufferTime = mediaPlayerModel.getStableBufferTime();
+        let dvrWindowLength = parseFloat(smoothStreamingMedia.getAttribute('DVRWindowLength'));
+        if (dvrWindowLength === 0 && smoothStreamingMedia.getAttribute('CanSeek') === 'TRUE') {
+            dvrWindowLength = Infinity;
+        }
+        if (dvrWindowLength > 0) {
+            manifest.timeShiftBufferDepth = dvrWindowLength / manifest.timescale;
+        }
+
+        let duration = parseFloat(smoothStreamingMedia.getAttribute('Duration'));
+        manifest.mediaPresentationDuration = (duration === 0) ? Infinity : duration / manifest.timescale;
+        // By default, set minBufferTime to 2 sec. (but set below according to video segment duration)
+        manifest.minBufferTime = 2;
         manifest.ttmlTimeIsRelative = true;
 
+        // Live manifest with Duration = start-over
+        if (manifest.type === 'dynamic' && duration > 0) {
+            manifest.type = 'static';
+            // We set timeShiftBufferDepth to initial duration, to be used by MssFragmentController to update segment timeline
+            manifest.timeShiftBufferDepth = duration / manifest.timescale;
+            // Duration will be set according to current segment timeline duration (see below)
+        }
+
         // In case of live streams, set availabilityStartTime property according to DVRWindowLength
-        if (manifest.type === 'dynamic') {
+        if (manifest.type === 'dynamic'  && manifest.timeShiftBufferDepth < Infinity) {
             manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (manifest.timeShiftBufferDepth * 1000));
             manifest.refreshManifestOnSwitchTrack = true;
-            manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // done by Mss fragment processor
-            manifest.ignorePostponeTimePeriod = true; // in Mss, manifest is never updated
+            manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
+            manifest.ignorePostponeTimePeriod = true; // Never update manifest
         }
 
         // Map period node to manifest root node
@@ -599,6 +619,13 @@ function MssParser(config) {
         // Initialize period start time
         period = manifest.Period;
         period.start = 0;
+
+        // Uncomment to test live to static manifests
+        // if (manifest.type !== 'static') {
+        //     manifest.type = 'static';
+        //     manifest.mediaPresentationDuration = manifest.timeShiftBufferDepth;
+        //     manifest.timeShiftBufferDepth = null;
+        // }
 
         // ContentProtection node
         if (protection !== undefined) {
@@ -635,9 +662,19 @@ function MssParser(config) {
                 adaptations[i].ContentProtection_asArray = manifest.ContentProtection_asArray;
             }
 
+            // Set minBufferTime
+            if (adaptations[i].contentType === 'video') {
+                manifest.minBufferTime = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale * 2;
+            }
+
             if (manifest.type === 'dynamic') {
+                // Set availabilityStartTime for infinite DVR Window from segment timeline duration
+                if (manifest.timeShiftBufferDepth === Infinity) {
+                    manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (adaptations[i].SegmentTemplate.SegmentTimeline.duration * 1000));
+                }
                 // Match timeShiftBufferDepth to video segment timeline duration
                 if (manifest.timeShiftBufferDepth > 0 &&
+                    manifest.timeShiftBufferDepth !== Infinity &&
                     adaptations[i].contentType === 'video' &&
                     manifest.timeShiftBufferDepth > adaptations[i].SegmentTemplate.SegmentTimeline.duration) {
                     manifest.timeShiftBufferDepth = adaptations[i].SegmentTemplate.SegmentTimeline.duration;
@@ -657,22 +694,29 @@ function MssParser(config) {
         // Then determine timestamp offset according to higher audio/video start time
         // (use case = live stream delinearization)
         if (manifest.type === 'static') {
-            for (i = 0; i < adaptations.length; i++) {
-                if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
-                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
-                    startTime = segments[0].t / adaptations[i].SegmentTemplate.timescale;
-                    if (timestampOffset === undefined) {
-                        timestampOffset = startTime;
+            // In case of start-over stream and manifest reloading (due to track switch)
+            // we consider previous timestampOffset to keep timelines synchronized
+            var prevManifest = manifestModel.getValue();
+            if (prevManifest && prevManifest.timestampOffset) {
+                timestampOffset = prevManifest.timestampOffset;
+            } else {
+                for (i = 0; i < adaptations.length; i++) {
+                    if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
+                        segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
+                        startTime = segments[0].t / adaptations[i].SegmentTemplate.timescale;
+                        if (timestampOffset === undefined) {
+                            timestampOffset = startTime;
+                        }
+                        timestampOffset = Math.min(timestampOffset, startTime);
+                        // Correct content duration according to minimum adaptation's segment timeline duration
+                        // in order to force <video> element sending 'ended' event
+                        manifest.mediaPresentationDuration = Math.min(manifest.mediaPresentationDuration, adaptations[i].SegmentTemplate.SegmentTimeline.duration);
                     }
-                    timestampOffset = Math.min(timestampOffset, startTime);
-                    // Correct content duration according to minimum adaptation's segments duration
-                    // in order to force <video> element sending 'ended' event
-                    manifest.mediaPresentationDuration = Math.min(manifest.mediaPresentationDuration, adaptations[i].SegmentTemplate.SegmentTimeline.duration);
                 }
             }
-
             // Patch segment templates timestamps and determine period start time (since audio/video should not be aligned to 0)
             if (timestampOffset > 0) {
+                manifest.timestampOffset = timestampOffset;
                 for (i = 0; i < adaptations.length; i++) {
                     segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
                     for (j = 0; j < segments.length; j++) {
@@ -690,6 +734,8 @@ function MssParser(config) {
             }
         }
 
+        // Floor the duration to get around precision differences between segments timestamps and MSE buffer timestamps
+        // and the avoid 'ended' event not being raised
         manifest.mediaPresentationDuration = Math.floor(manifest.mediaPresentationDuration * 1000) / 1000;
         period.duration = manifest.mediaPresentationDuration;
 

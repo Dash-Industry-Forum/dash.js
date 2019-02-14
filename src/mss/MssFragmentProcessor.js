@@ -127,18 +127,30 @@ function MssFragmentProcessor(config) {
     const protectionController = config.protectionController;
     const ISOBoxer = config.ISOBoxer;
     const debug = config.debug;
-    let instance;
+    let mssFragmentMoovProcessor,
+        mssFragmentMoofProcessor,
+        instance;
 
     function setup() {
         ISOBoxer.addBoxProcessor('uuid', uuidProcessor);
         ISOBoxer.addBoxProcessor('saio', saioProcessor);
         ISOBoxer.addBoxProcessor('saiz', saizProcessor);
         ISOBoxer.addBoxProcessor('senc', sencProcessor);
+
+        mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController,
+            constants: config.constants, ISOBoxer: ISOBoxer});
+
+        mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
+                metricsModel: metricsModel,
+                playbackController: playbackController,
+                ISOBoxer: ISOBoxer,
+                eventBus: eventBus,
+                debug: debug,
+                errHandler: config.errHandler
+            });
     }
 
     function generateMoov(rep) {
-        let mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController,
-            constants: config.constants, ISOBoxer: config.ISOBoxer});
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
@@ -150,15 +162,7 @@ function MssFragmentProcessor(config) {
         let request = e.request;
 
         if (request.type === 'MediaSegment') {
-
             // it's a MediaSegment, let's convert fragment
-            let mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-                metricsModel: metricsModel,
-                playbackController: playbackController,
-                ISOBoxer: ISOBoxer,
-                debug: debug,
-                errHandler: config.errHandler
-            });
             mssFragmentMoofProcessor.convertFragment(e, sp);
 
         } else if (request.type === 'FragmentInfoSegment') {

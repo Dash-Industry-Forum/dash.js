@@ -42,9 +42,9 @@ function PreBufferSink(onAppendedCallback) {
     const context = this.context;
 
     let instance,
-        logger;
+        logger,
+        outstandingInit;
     let chunks = [];
-    let outstandingInit;
     let onAppended = onAppendedCallback;
 
     function setup() {
@@ -113,6 +113,10 @@ function PreBufferSink(onAppendedCallback) {
         return timeranges;
     }
 
+    function hasDiscontinuitiesAfter() {
+        return false;
+    }
+
     function updateTimestampOffset() {
         // Nothing to do
     }
@@ -149,7 +153,8 @@ function PreBufferSink(onAppendedCallback) {
         abort: abort,
         discharge: discharge,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter
     };
 
     setup();

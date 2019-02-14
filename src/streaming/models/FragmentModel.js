@@ -150,7 +150,7 @@ function FragmentModel(config) {
     }
 
     function getRequestThreshold(req) {
-        return isNaN(req.duration) ? 0.25 : req.duration / 8;
+        return isNaN(req.duration) ? 0.25 : Math.min(req.duration / 8, 0.5);
     }
 
     function removeExecutedRequestsBeforeTime(time) {
@@ -162,7 +162,7 @@ function FragmentModel(config) {
 
     function removeExecutedRequestsAfterTime(time) {
         executedRequests = executedRequests.filter(req => {
-            return isNaN(req.startTime) || (time !== undefined ? req.startTime < time : false);
+            return isNaN(req.startTime) || (time !== undefined ? req.startTime + req.duration < time : false);
         });
     }
 

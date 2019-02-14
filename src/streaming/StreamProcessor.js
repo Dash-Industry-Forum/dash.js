@@ -35,6 +35,7 @@ import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
+import { checkInteger } from './utils/SupervisorTools';
 
 import DashHandler from '../dash/DashHandler';
 
@@ -43,7 +44,6 @@ function StreamProcessor(config) {
     config = config || {};
     let context = this.context;
 
-    let indexHandler;
     let type = config.type;
     let errHandler = config.errHandler;
     let mimeType = config.mimeType;
@@ -57,10 +57,8 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let domStorage = config.domStorage;
     let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
-    let dashManifestModel = config.dashManifestModel;
 
     let instance,
         mediaInfo,
@@ -70,7 +68,8 @@ function StreamProcessor(config) {
         liveEdgeFinder,
         representationController,
         fragmentModel,
-        spExternalControllers;
+        spExternalControllers,
+        indexHandler;
 
     function setup() {
         if (playbackController && playbackController.getIsDynamic()) {
@@ -107,7 +106,6 @@ function StreamProcessor(config) {
             metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
@@ -120,10 +118,8 @@ function StreamProcessor(config) {
         representationController = RepresentationController(context).create();
         representationController.setConfig({
             abrController: abrController,
-            domStorage: domStorage,
             metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
@@ -161,7 +157,6 @@ function StreamProcessor(config) {
     }
 
     function reset(errored, keepBuffers) {
-
         indexHandler.reset();
 
         if (bufferController) {
@@ -239,15 +234,21 @@ function StreamProcessor(config) {
         return stream ? stream.getStreamInfo() : null;
     }
 
-    function getEventController() {
-        return stream ? stream.getEventController() : null;
+    function addInbandEvents(events) {
+        if (stream) {
+            stream.addInbandEvents(events);
+        }
     }
 
     function selectMediaInfo(newMediaInfo) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        adapter.updateData(this);
+        const realAdaptation = adapter.getRealAdaptation(getStreamInfo(), mediaInfo);
+        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+        if (representationController) {
+            representationController.updateData(realAdaptation, voRepresentations, type);
+        }
     }
 
     function addMediaInfo(newMediaInfo, selectNewMediaInfo) {
@@ -284,25 +285,27 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
-    function getCurrentRepresentationInfo() {
-        return adapter.getCurrentRepresentationInfo(representationController);
-    }
+    /**
+     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
+     * Otherwise, this function will return the current voRepresentation used by the representationController.
+     * @param {number} quality - quality index of the voRepresentaion expected.
+     */
+    function getRepresentationInfo(quality) {
+        let voRepresentation;
 
-    function getRepresentationInfoForQuality(quality) {
-        return adapter.getRepresentationInfoForQuality(representationController, quality);
+        if (quality !== undefined) {
+            checkInteger(quality);
+            voRepresentation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+        } else {
+            voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
+        }
+
+        return voRepresentation ? adapter.convertDataToRepresentationInfo(voRepresentation) : null;
     }
 
     function isBufferingCompleted() {
         if (bufferController) {
             return bufferController.getIsBufferingCompleted();
-        }
-
-        return false;
-    }
-
-    function timeIsBuffered(time) {
-        if (bufferController) {
-            return bufferController.getRangeAt(time, 0) !== null;
         }
 
         return false;
@@ -365,8 +368,46 @@ function StreamProcessor(config) {
         return controller;
     }
 
-    function getPlaybackController() {
-        return playbackController;
+    function setIndexHandlerTime(value) {
+        if (indexHandler) {
+            indexHandler.setCurrentTime(value);
+        }
+    }
+
+    function getIndexHandlerTime() {
+        return indexHandler ? indexHandler.getCurrentTime() : NaN;
+    }
+
+    function resetIndexHandler() {
+        if (indexHandler) {
+            indexHandler.resetIndex();
+        }
+    }
+
+    function getInitRequest(quality) {
+        checkInteger(quality);
+
+        let representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+
+        return indexHandler ? indexHandler.getInitRequest(representation) : null;
+    }
+
+    function getFragmentRequest(representationInfo, time, options) {
+        let fragRequest = null;
+
+        let representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+        if (indexHandler) {
+            //if time and options are undefined, it means the next segment is requested
+            //otherwise, the segment at this specific time is requested.
+            if (time !== undefined && options !== undefined) {
+                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
+            } else {
+                fragRequest = indexHandler.getNextSegmentRequest(representation);
+            }
+        }
+
+        return fragRequest;
     }
 
     instance = {
@@ -377,17 +418,13 @@ function StreamProcessor(config) {
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
         getLiveEdgeFinder: getLiveEdgeFinder,
-        getEventController: getEventController,
         getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
-        getPlaybackController: getPlaybackController,
-        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
-        getRepresentationInfoForQuality: getRepresentationInfoForQuality,
+        getRepresentationInfo: getRepresentationInfo,
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
-        timeIsBuffered: timeIsBuffered,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
         selectMediaInfo: selectMediaInfo,
@@ -404,10 +441,17 @@ function StreamProcessor(config) {
         unregisterExternalController: unregisterExternalController,
         getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
+        addInbandEvents: addInbandEvents,
+        setIndexHandlerTime: setIndexHandlerTime,
+        getIndexHandlerTime: getIndexHandlerTime,
+        resetIndexHandler: resetIndexHandler,
+        getInitRequest: getInitRequest,
+        getFragmentRequest: getFragmentRequest,
         reset: reset
     };
 
     setup();
+
     return instance;
 }
 StreamProcessor.__dashjs_factory_name = 'StreamProcessor';

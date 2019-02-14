@@ -1,16 +1,18 @@
-class DomStorageMock {
-    constructor() {
-        this.mediaSettings = {};
-    }
+function DomStorageMock () {
+    this.mediaSettings = {};
 
-    getSavedMediaSettings(type) {
+    this.getSavedMediaSettings = function (type) {
         if (this.mediaSettings[type]) {
             return this.mediaSettings[type];
         }
         return null;
-    }
+    };
 
-    setSavedMediaSettings(type, settings) {
+    this.getSavedBitrateSettings = function (/*type*/) {
+        return 0;
+    };
+
+    this.setSavedMediaSettings = function (type, settings) {
 
         if (!settings) {
             return;
@@ -20,7 +22,7 @@ class DomStorageMock {
         }
 
         this.mediaSettings[type] = settings;
-    }
+    };
 }
 
 export default DomStorageMock;

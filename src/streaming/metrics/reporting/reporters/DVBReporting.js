@@ -37,18 +37,25 @@ function DVBReporting(config) {
     let instance;
 
     let context = this.context;
-    let metricSerialiser = MetricSerialiser(context).getInstance();
-    let randomNumberGenerator = RNG(context).getInstance();
+    let metricSerialiser,
+        randomNumberGenerator,
+        reportingPlayerStatusDecided,
+        isReportingPlayer,
+        reportingUrl,
+        rangeController;
 
     let USE_DRAFT_DVB_SPEC = true;
-    let isReportingPlayer = false;
-    let reportingPlayerStatusDecided = false;
-    let reportingUrl = null;
-    let rangeController = null;
     let allowPendingRequestsToCompleteOnReset = true;
     let pendingRequests = [];
 
     const metricsConstants = config.metricsConstants;
+
+    function setup() {
+        metricSerialiser = MetricSerialiser(context).getInstance();
+        randomNumberGenerator = RNG(context).getInstance();
+
+        resetInitialSettings();
+    }
 
     function doGetRequest(url, successCB, failureCB) {
         let req = new XMLHttpRequest();
@@ -159,16 +166,20 @@ function DVBReporting(config) {
         }
     }
 
+    function resetInitialSettings() {
+        reportingPlayerStatusDecided = false;
+        isReportingPlayer = false;
+        reportingUrl = null;
+        rangeController = null;
+    }
+
     function reset() {
         if (!allowPendingRequestsToCompleteOnReset) {
             pendingRequests.forEach(req => req.abort());
             pendingRequests = [];
         }
 
-        reportingPlayerStatusDecided = false;
-        isReportingPlayer = false;
-        reportingUrl = null;
-        rangeController = null;
+        resetInitialSettings();
     }
 
     instance = {
@@ -176,6 +187,8 @@ function DVBReporting(config) {
         initialize: initialize,
         reset:      reset
     };
+
+    setup();
 
     return instance;
 }

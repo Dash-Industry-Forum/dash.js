@@ -36,31 +36,33 @@ function RulesContext(config) {
     config = config || {};
     let instance;
     const abrController = config.abrController;
-    const streamProcessor = config.streamProcessor;
-    const representationInfo = config.streamProcessor.getCurrentRepresentationInfo();
     const switchHistory = config.switchHistory;
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
     const bufferOccupancyABR = config.useBufferOccupancyABR;
+    const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
+    const representationInfo = config.streamProcessor ? config.streamProcessor.getRepresentationInfo() : null;
 
     function getMediaType() {
-        return representationInfo.mediaInfo.type;
+        const mediaInfo = getMediaInfo();
+        return mediaInfo ? mediaInfo.type : null;
     }
 
     function getStreamInfo() {
-        return representationInfo.mediaInfo.streamInfo;
+        const mediaInfo = getMediaInfo();
+        return mediaInfo ? mediaInfo.streamInfo : null;
     }
 
     function getMediaInfo() {
-        return representationInfo.mediaInfo;
+        return representationInfo ? representationInfo.mediaInfo : null;
     }
 
     function getRepresentationInfo() {
         return representationInfo;
     }
 
-    function getStreamProcessor() {
-        return streamProcessor;
+    function getScheduleController() {
+        return scheduleController;
     }
 
     function getAbrController() {
@@ -90,7 +92,7 @@ function RulesContext(config) {
         getCurrentRequest: getCurrentRequest,
         getSwitchHistory: getSwitchHistory,
         getStreamInfo: getStreamInfo,
-        getStreamProcessor: getStreamProcessor,
+        getScheduleController: getScheduleController,
         getAbrController: getAbrController,
         getRepresentationInfo: getRepresentationInfo,
         useBufferOccupancyABR: useBufferOccupancyABR

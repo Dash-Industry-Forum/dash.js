@@ -10,9 +10,10 @@
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script class="code">
+        var player, targetLatency, minDrift, catchupPlaybackRate;
+
         function init() {
             var video,
-                player,
                 url = "https://vm2.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd";
 
             video = document.querySelector("video");
@@ -20,24 +21,139 @@
             player.initialize(video, url, true);
             player.setLowLatencyEnabled(true);
 
+            applyParameters();
+
+            return player;
+        }
+
+        function applyParameters() {
+            targetLatency = parseFloat(document.getElementById("target-latency").value, 10);
+            player.setLiveDelay(targetLatency);
+
+            minDrift = parseFloat(document.getElementById("min-drift").value, 10);
+            player.setLowLatencyMinDrift(minDrift);
+
+            catchupPlaybackRate = parseFloat(document.getElementById("catchup-playback-rate").value, 10);
+            player.setCatchUpPlaybackRate(catchupPlaybackRate);
         }
     </script>
 
     <style>
+        .video-wrapper {
+            display: flex;
+            flex-flow: row wrap;
+        }
+
+        .video-wrapper > div:nth-child(2) {
+            margin-left: 25px;
+        }
+
         video {
             width: 640px;
             height: 360px;
+        }
+
+        ul {
+            margin: 0;
+        }
+
+        input {
+            width: 3em;
+            border: 1px solid gray;
+            padding: 0 4px 0 8px;
+        }
+
+        .help-container {
+            display: flex;
+            flex-flow: row wrap;
+            margin-top: 1em;
+            align-content: center;
+            background: white;
+            border: solid 1px #ddd;
+            padding: 0.5em;
+        }
+
+        .help-container > div {
+            width: 33.3%;
+            padding: 1em;
+            box-sizing: border-box;
+        }
+
+        .help-container h3 {
+            margin-top: 0;
         }
     </style>
 </head>
 <body>
 <div>
-    <video controls="true">
-    </video>
+    <div class="video-wrapper">
+        <video controls="true"></video>
+        <div>
+            <div>
+                <form action="javascript:applyParameters()">
+                    <fieldset>
+                        <legend>Configurable parameters</legend>
+                        <p>Target Latency (secs): <input type="number" id="target-latency" value="3" min="0"></p>
+                        <p>Min. drift (secs): <input type="number" id="min-drift" value="0.05" min="0.0" max="0.5" step="0.01"></p>
+                        <p>Catch-up playback rate (%): <input type="number" id="catchup-playback-rate" value="0.5" min="0.0" max="0.5" step="0.01"></p>
+                        <button type="submit">Apply</button>
+                    </fieldset>
+                </form>
+            </div>
+            <br>
+            <fieldset>
+                <legend>Current values</legend>
+                <ul>
+                    <li>Latency: <span id="latency-tag"></span></li>
+                    <li>Min. drift: <span id="mindrift-tag"></span></li>
+                    <li>Playback rate: <span id="playbackrate-tag"></span></li>
+                    <li>Buffer: <b><span id="buffer-tag"></span></b></li>
+                </ul>
+            </fieldset>
+        </div>
+    </div>
+
+    <p style="font-family:Arial,sans-serif; font-weight: bold; font-size: 1.1em">Concepts definition</p>
+    <div class="help-container">
+        <div id="latency-help">
+            <h3>Latency</h3>
+            <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
+            <p><a href="http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setLiveDelay__anchor" target="_blank">setLiveDelay() doc</a></p>
+        </div>
+
+        <div id="min-drift-help">
+            <h3>Min. drift</h3>
+            <p>Minimum latency deviation allowed before activating catch-up mechanism.</p>
+            <p><a href="http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setLowLatencyMinDrift__anchor" target="_blank">setLowLatencyMinDrift() doc</a></p>
+        </div>
+
+        <div id="catch-up-playback-rate-help">
+            <h3>Catch-up playback rate</h3>
+            <p>Maximum catch-up rate, as a percentage, for low latency live streams.</p>
+            <p><a href="http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setCatchUpPlaybackRate__anchor" target="_blank">setCatchUpPlaybackRate() doc</a></p>
+        </div>
+    </div>
 </div>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        init();
+        var player = init();
+
+        setInterval(function() {
+            var metrics = player.getMetricsFor("video");
+            var dashMetrics = player.getDashMetrics();
+
+            var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
+            document.getElementById("latency-tag").innerHTML = currentLatency + " secs";
+
+            var currentMinDrift = parseFloat(player.getLowLatencyMinDrift(), 10);
+            document.getElementById("mindrift-tag").innerHTML = currentMinDrift + " secs";
+
+            var currentPlaybackRate = player.getPlaybackRate();
+            document.getElementById("playbackrate-tag").innerHTML = Math.round(currentPlaybackRate * 100) / 100;
+
+            var currentBuffer = dashMetrics.getCurrentBufferLevel(metrics);
+            document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
+        }, 200);
     });
 </script>
 <script src="../highlighter.js"></script>

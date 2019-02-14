@@ -1,6 +1,8 @@
 import MssParser from '../../src/mss/parser/MssParser';
-import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
+
 import DebugMock from './mocks/DebugMock';
+import ManifestModelMock from './mocks/ManifestModelMock';
+import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
 const expect = require('chai').expect;
 const fs = require('fs');
@@ -9,7 +11,6 @@ const jsdom = require('jsdom').JSDOM;
 describe('MssParser', function () {
 
     let mssParser;
-    const mediaPlayerModel = MediaPlayerModel().getInstance();
 
     beforeEach(function () {
         if (typeof window === 'undefined') {
@@ -30,7 +31,8 @@ describe('MssParser', function () {
 
     beforeEach(function () {
         mssParser = MssParser().create({
-            mediaPlayerModel: mediaPlayerModel,
+            mediaPlayerModel: new MediaPlayerModelMock(),
+            manifestModel: new ManifestModelMock(),
             debug: new DebugMock()
         });
 
@@ -70,6 +72,7 @@ describe('MssParser', function () {
         expect(adaptations).to.have.lengthOf(1);
         expect(adaptations[0].contentType).to.equal('audio');
     });
+
     it('should throw an error when parse is called with invalid smooth data', function () {
         expect(mssParser.parse.bind('<SmoothStreamingMedia')).to.be.throw('parsing the manifest failed');
     });

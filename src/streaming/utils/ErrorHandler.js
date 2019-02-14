@@ -32,61 +32,91 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-const CAPABILITY_ERROR_MEDIASOURCE      = 'mediasource';
-const CAPABILITY_ERROR_MEDIAKEYS        = 'mediakeys';
-
-const DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
-const DOWNLOAD_ERROR_ID_SIDX            = 'SIDX';
-const DOWNLOAD_ERROR_ID_CONTENT         = 'content';
-const DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
-const DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
-
-const MANIFEST_ERROR_ID_CODEC           = 'codec';
-const MANIFEST_ERROR_ID_PARSE           = 'parse';
-const MANIFEST_ERROR_ID_NOSTREAMS       = 'nostreams';
-
-const TIMED_TEXT_ERROR_ID_PARSE         = 'parse';
-
+/**
+ * @module ErrorHandler
+ */
 function ErrorHandler() {
 
     let instance;
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
-    // "mediasource"|"mediakeys"
+    /**
+     * @param {number} err  "mediasource"|"mediakeys"
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function capabilityError(err) {
         eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
     }
 
-    // {id: "manifest"|"SIDX"|"content"|"initialization"|"xlink", url: "", request: {XMLHttpRequest instance}}
+    /**
+     * @param {string} id "manifest"|"SIDX"|"content"|"initialization"|"xlink"
+     * @param {string} url ""
+     * @param {object} request {XMLHttpRequest instance}
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function downloadError(id, url, request) {
         eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
     }
 
-    // {message: "", id: "parse"|"nostreams", manifest: {parsed manifest}}
+    /**
+     * @param {string} message ""
+     * @param {string} id "parse"|"nostreams"
+     * @param {obj} manifest {parsed manifest}
+     * @param {obj} err
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function manifestError(message, id, manifest, err) {
         eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest, event: err}});
     }
 
-    // {message: '', id: 'parse', cc: ''}
+    /**
+     * @param {string} message ''
+     * @param {string} id 'parse'
+     * @param {string} ccContent ''
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function timedTextError(message, id, ccContent) {
         eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
     }
 
+    /**
+     * @param {string} err
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function mediaSourceError(err) {
         eventBus.trigger(Events.ERROR, {error: 'mediasource', event: err});
     }
 
+    /**
+     * @param {string} err
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function mediaKeySessionError(err) {
         eventBus.trigger(Events.ERROR, {error: 'key_session', event: err});
     }
 
+    /**
+     * @param {string} err
+     * @memberof module:ErrorHandler
+     * @deprecated
+     */
     function mediaKeyMessageError(err) {
         eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
     }
 
-    function mssError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'mssError', event: err});
+    /**
+     * @param {object} err DashJSError with code, message and data attributes
+     * @memberof module:ErrorHandler
+     */
+    function error(err) {
+        eventBus.trigger(Events.ERROR, {error: err});
     }
 
     instance = {
@@ -97,28 +127,11 @@ function ErrorHandler() {
         mediaSourceError: mediaSourceError,
         mediaKeySessionError: mediaKeySessionError,
         mediaKeyMessageError: mediaKeyMessageError,
-        mssError: mssError
+        error: error
     };
 
     return instance;
 }
 
 ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-
-const factory = FactoryMaker.getSingletonFactory(ErrorHandler);
-
-factory.CAPABILITY_ERROR_MEDIASOURCE        = CAPABILITY_ERROR_MEDIASOURCE;
-factory.CAPABILITY_ERROR_MEDIAKEYS          = CAPABILITY_ERROR_MEDIAKEYS;
-factory.DOWNLOAD_ERROR_ID_MANIFEST          = DOWNLOAD_ERROR_ID_MANIFEST;
-factory.DOWNLOAD_ERROR_ID_SIDX              = DOWNLOAD_ERROR_ID_SIDX;
-factory.DOWNLOAD_ERROR_ID_CONTENT           = DOWNLOAD_ERROR_ID_CONTENT;
-factory.DOWNLOAD_ERROR_ID_INITIALIZATION    = DOWNLOAD_ERROR_ID_INITIALIZATION;
-factory.DOWNLOAD_ERROR_ID_XLINK             = DOWNLOAD_ERROR_ID_XLINK;
-factory.MANIFEST_ERROR_ID_CODEC             = MANIFEST_ERROR_ID_CODEC;
-factory.MANIFEST_ERROR_ID_PARSE             = MANIFEST_ERROR_ID_PARSE;
-factory.MANIFEST_ERROR_ID_NOSTREAMS         = MANIFEST_ERROR_ID_NOSTREAMS;
-factory.TIMED_TEXT_ERROR_ID_PARSE           = TIMED_TEXT_ERROR_ID_PARSE;
-
-FactoryMaker.updateSingletonFactory(ErrorHandler.__dashjs_factory_name, factory);
-
-export default factory;
+export default FactoryMaker.getSingletonFactory(ErrorHandler);

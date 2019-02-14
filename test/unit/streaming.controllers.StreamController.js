@@ -1,10 +1,40 @@
 import StreamController from '../../src/streaming/controllers/StreamController';
+import Events from '../../src/core/events/Events';
+import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
+import EventBus from '../../src/core/EventBus';
+
+import ObjectsHelper from './helpers/ObjectsHelper';
+import AdapterMock from './mocks/AdapterMock';
+import ManifestLoaderMock from './mocks/ManifestLoaderMock';
+import ManifestModelMock from './mocks/ManifestModelMock';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import MetricsModelMock from './mocks/MetricsModelMock';
+import ProtectionControllerMock from './mocks/ProtectionControllerMock';
+import VideoModelMock from './mocks/VideoModelMock';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const chai = require('chai');
+const spies = require('chai-spies');
+
+chai.use(spies);
 const expect = chai.expect;
 
 const context = {};
 const streamController = StreamController(context).getInstance();
+const eventBus = EventBus(context).getInstance();
+
+const adapterMock = new AdapterMock();
+const manifestLoaderMock = new ManifestLoaderMock();
+const objectsHelper = new ObjectsHelper();
+const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
+const manifestModelMock = new ManifestModelMock();
+const errHandlerMock = new ErrorHandlerMock();
+const metricsModelMock = new MetricsModelMock();
+const protectionControllerMock = new ProtectionControllerMock();
+const videoModelMock = new VideoModelMock();
+const playbackControllerMock = new PlaybackControllerMock();
+
+Events.extend(ProtectionEvents);
 
 describe('StreamController', function () {
 
@@ -18,6 +48,12 @@ describe('StreamController', function () {
 
         it('should return undefined if getStreamById is called without parameters', () => {
             const stream = streamController.getStreamById();
+
+            expect(stream).to.be.undefined; // jshint ignore:line
+        });
+
+        it('should return undefined if getStreamById is called but no stream has been composed', () => {
+            const stream = streamController.getStreamById('idx');
 
             expect(stream).to.be.undefined; // jshint ignore:line
         });
@@ -56,16 +92,98 @@ describe('StreamController', function () {
             expect(activeStreamProcessorsArray).to.be.empty;                // jshint ignore:line
         });
 
-        it('should return undefined when attempting to call isAudioTrackPresent while no activeStream has been defined', function () {
-            const isAudioTrackPresent = streamController.isAudioTrackPresent();
+        it('should return undefined when attempting to call isTrackTypePresent with no track type', function () {
+            const isAudioTrackPresent = streamController.isTrackTypePresent();
 
             expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
         });
 
-        it('should return undefined when attempting to call isVideoTrackPresent while no activeStream has been defined', function () {
-            const isVideoTrackPresent = streamController.isVideoTrackPresent();
+        it('should return undefined when attempting to call isTrackTypePresent, for audio type, while no activeStream has been defined', function () {
+            const isAudioTrackPresent = streamController.isTrackTypePresent('audio');
+
+            expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
+        });
+
+        it('should return undefined when attempting to call isTrackTypePresent, for video type, while no activeStream has been defined', function () {
+            const isVideoTrackPresent = streamController.isTrackTypePresent('video');
 
             expect(isVideoTrackPresent).to.be.undefined;    // jshint ignore:line
+        });
+
+        it('should return null when attempting to call getStreamForTime, and no stream has been composed', function () {
+            const stream = streamController.getStreamForTime(10);
+
+            expect(stream).to.be.null;    // jshint ignore:line
+        });
+    });
+
+    describe('error management', () => {
+
+        beforeEach(function () {
+            streamController.setConfig({adapter: adapterMock,
+                                        manifestLoader: manifestLoaderMock,
+                                        timelineConverter: timelineConverterMock,
+                                        manifestModel: manifestModelMock,
+                                        errHandler: errHandlerMock,
+                                        metricsModel: metricsModelMock,
+                                        protectionController: protectionControllerMock,
+                                        videoModel: videoModelMock,
+                                        playbackController: playbackControllerMock});
+
+            streamController.initialize(false);
+        });
+
+        it('should throw an exception when attempting to composeStreams while no manifest has been parsed', function () {
+            let spy = chai.spy();
+            eventBus.on(Events.PROTECTION_CREATED, spy);
+
+            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+            expect(spy).to.have.been.called.exactly(1);
+            expect(errHandlerMock.errorValue).to.include('There are no streams');
+        });
+
+        it('should return the correct error when a playback error occurs : MEDIA_ERR_ABORTED', function () {
+            eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 1}});
+
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_ABORTED');
+        });
+
+        it('should return the correct error when a playback error occurs : MEDIA_ERR_NETWORK', function () {
+            eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 2}});
+
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_NETWORK');
+        });
+
+        it('should return the correct error when a playback error occurs : MEDIA_ERR_DECODE', function () {
+            eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 3}});
+
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_DECODE');
+        });
+
+        it('should return the correct error when a playback error occurs : MEDIA_ERR_SRC_NOT_SUPPORTED', function () {
+            eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 4}});
+
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_SRC_NOT_SUPPORTED');
+        });
+
+        it('should return the correct error when a playback error occurs : MEDIA_ERR_ENCRYPTED', function () {
+            eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 5}});
+
+            expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_ENCRYPTED');
+        });
+
+        it('should return the correct error when a playback error occurs : UNKNOWN', function () {
+            eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 6}});
+
+            expect(errHandlerMock.errorValue).to.include('UNKNOWN');
+        });
+
+        it('should call reset if MANIFEST_UPDATED event is triggered with an error parameter', function () {
+            let spy = chai.spy();
+            eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, spy);
+
+            eventBus.trigger(Events.MANIFEST_UPDATED, {error: {}});
+            expect(spy).to.have.been.called.exactly(1);
         });
     });
 });

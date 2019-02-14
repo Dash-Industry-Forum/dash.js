@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+ import MssErrors from './errors/MssErrors';
+
 /**
  * @module MssFragmentMoovProcessor
  * @param {Object} config object
@@ -304,8 +306,8 @@ function MssFragmentMoovProcessor(config) {
                 return createMP4AudioSampleEntry(stsd, codec);
             default:
                 throw {
-                    name: 'Unsupported codec',
-                    message: 'Unsupported codec',
+                    code: MssErrors.MSS_UNSUPPORTED_CODEC_CODE,
+                    message: MssErrors.MSS_UNSUPPORTED_CODEC_MESSAGE,
                     data: {
                         codec: codec
                     }
@@ -373,7 +375,6 @@ function MssFragmentMoovProcessor(config) {
         let AVCProfileIndication = 0;
         let AVCLevelIndication = 0;
         let profile_compatibility = 0;
-
 
         let nalus = representation.codecPrivateData.split('00000001').slice(1);
         let naluBytes, naluType;
@@ -557,10 +558,10 @@ function MssFragmentMoovProcessor(config) {
     }
 
     function createProtectionSystemSpecificHeaderBox(moov, keySystems) {
-        let pssh_bytes;
-        let pssh;
-        let i;
-        let parsedBuffer;
+        let pssh_bytes,
+            pssh,
+            i,
+            parsedBuffer;
 
         for (i = 0; i < keySystems.length; i += 1) {
             pssh_bytes = keySystems[i].initData;
@@ -585,7 +586,6 @@ function MssFragmentMoovProcessor(config) {
     }
 
     function createTrexBox(moov) {
-
         let trex = ISOBoxer.createFullBox('trex', moov);
 
         trex.track_ID = trackId;

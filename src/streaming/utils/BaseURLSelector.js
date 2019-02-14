@@ -29,21 +29,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Errors from '../../core/errors/Errors';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import BlacklistController from '../controllers/BlacklistController';
 import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
-
-const URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 1;
-const URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
+import DashJSError from '../vo/DashJSError';
+import {checkParameterType} from '../utils/SupervisorTools';
 
 function BaseURLSelector() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    let dashManifestModel;
 
     let instance,
         serviceLocationBlacklistController,
@@ -72,27 +71,17 @@ function BaseURLSelector() {
         if (config.selector) {
             selector = config.selector;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
     }
 
-    function checkConfig() {
-        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getIsDVB')) {
-            throw new Error('Missing config parameter(s)');
-        }
-    }
-
-    function chooseSelectorFromManifest(manifest) {
-        checkConfig();
-        if (dashManifestModel.getIsDVB(manifest)) {
-            selector = dvbSelector;
-        } else {
-            selector = basicSelector;
-        }
+    function chooseSelector(isDVB) {
+        checkParameterType(isDVB, 'boolean');
+        selector = isDVB ? dvbSelector : basicSelector;
     }
 
     function select(data) {
+        if (!data) {
+            return;
+        }
         const baseUrls = data.baseUrls;
         const selectedIdx = data.selectedIdx;
 
@@ -108,9 +97,9 @@ function BaseURLSelector() {
         if (!selectedBaseUrl) {
             eventBus.trigger(
                 Events.URL_RESOLUTION_FAILED, {
-                    error: new Error(
-                        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
-                        URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE
+                    error: new DashJSError(
+                        Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
+                        Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE
                     )
                 }
             );
@@ -130,7 +119,7 @@ function BaseURLSelector() {
     }
 
     instance = {
-        chooseSelectorFromManifest: chooseSelectorFromManifest,
+        chooseSelector: chooseSelector,
         select: select,
         reset: reset,
         setConfig: setConfig
@@ -142,8 +131,4 @@ function BaseURLSelector() {
 }
 
 BaseURLSelector.__dashjs_factory_name = 'BaseURLSelector';
-const factory = FactoryMaker.getClassFactory(BaseURLSelector);
-factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE;
-factory.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE;
-FactoryMaker.updateClassFactory(BaseURLSelector.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(BaseURLSelector);

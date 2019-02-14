@@ -2,14 +2,14 @@ var head = document.head || document.getElementsByTagName('head')[0];
 var body = document.body || document.getElementsByTagName('body')[0];
 var style = document.createElement('link');
 style.setAttribute('rel', 'stylesheet');
-style.setAttribute('href', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/monokai-sublime.min.css');
+style.setAttribute('href', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css');
 var script = document.createElement('script');
 script.setAttribute('src', '//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js');
 
 head.append(style);
 head.append(script);
 
-body.innerHTML += '<div style="margin-top: 30px; display: block; width: 100%;"><span style="font-weight: bold; font-size: 1.5em">Source code: <button id="clipboard-copy" style="float: right; margin: 10px 10px 0 0">Copy to clipboard</button></span><pre><code class="html javascript" id="code"></code></pre></div>';
+body.innerHTML += '<div style="margin-top: 30px; display: block; width: 100%;"><p style="font-family:Arial,sans-serif; font-weight: bold; font-size: 1.1em">Source code<button id="clipboard-copy" style="float: right; margin: 10px 10px 0 0">Copy to clipboard</button></p><pre style="border: solid 1px #ddd"><code class="html javascript" id="code"></code></pre></div>';
 
 /**
  * This helper functions checks how many whitespaces preceed the last tag, which should have 0

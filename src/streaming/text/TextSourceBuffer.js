@@ -31,7 +31,6 @@
 import Constants from '../constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
-import FragmentedTextBoxParser from '../../dash/utils/FragmentedTextBoxParser';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -42,6 +41,8 @@ import ISOBoxer from 'codem-isoboxer';
 import cea608parser from '../../../externals/cea608-parser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer() {
 
@@ -53,23 +54,21 @@ function TextSourceBuffer() {
         logger,
         boxParser,
         errHandler,
-        dashManifestModel,
+        adapter,
         manifestModel,
         mediaController,
         parser,
         vttParser,
         ttmlParser,
-        fragmentedTextBoxParser,
         mediaInfos,
         textTracks,
-        isFragmented,
-        fragmentModel,
+        fragmentedFragmentModel,
         initializationSegmentReceived,
         timescale,
         fragmentedTracks,
         videoModel,
         streamController,
-        firstSubtitleStart,
+        firstFragmentedSubtitleStart,
         currFragmentedTrackIdx,
         embeddedTracks,
         embeddedInitializationSegmentReceived,
@@ -82,62 +81,80 @@ function TextSourceBuffer() {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+
+        resetInitialSettings();
+    }
+
+    function resetFragmented () {
+        fragmentedFragmentModel = null;
+        timescale = NaN;
+        fragmentedTracks = [];
+        firstFragmentedSubtitleStart = null;
+        initializationSegmentReceived = false;
+    }
+
+    function resetInitialSettings() {
+        resetFragmented();
+
+        mediaInfos = [];
+        parser = null;
     }
 
     function initialize(mimeType, streamProcessor) {
-        parser = null;
-        fragmentModel = null;
-        initializationSegmentReceived = false;
-        timescale = NaN;
-        fragmentedTracks = [];
-        firstSubtitleStart = null;
-
         if (!embeddedInitialized) {
             initEmbedded();
         }
 
-        mediaInfos = streamProcessor.getMediaInfoArr();
         textTracks.setConfig({
             videoModel: videoModel
         });
         textTracks.initialize();
-        isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
-        boxParser = BoxParser(context).getInstance();
-        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({
-            boxParser: boxParser
-        });
 
-        if (isFragmented) {
-            fragmentModel = streamProcessor.getFragmentModel();
-            this.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-            for (let i = 0; i < fragmentedTracks.length; i++) {
-                if (fragmentedTracks[i] === currFragTrack) {
-                    currFragmentedTrackIdx = i;
-                    break;
+        if (!boxParser) {
+            boxParser = BoxParser(context).getInstance();
+        }
+
+        addMediaInfos(mimeType, streamProcessor);
+    }
+
+    function addMediaInfos(mimeType, streamProcessor) {
+        const isFragmented = !adapter.getIsTextTrack(mimeType);
+        if (streamProcessor) {
+            mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
+
+            if (isFragmented) {
+                fragmentedFragmentModel = streamProcessor.getFragmentModel();
+                instance.buffered = CustomTimeRanges(context).create();
+                fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+                const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+                for (let i = 0; i < fragmentedTracks.length; i++) {
+                    if (fragmentedTracks[i] === currFragTrack) {
+                        setCurrentFragmentedTrackIdx(i);
+                        break;
+                    }
                 }
+            }
+
+            for (let i = 0; i < mediaInfos.length; i++) {
+                createTextTrackFromMediaInfo(null, mediaInfos[i]);
             }
         }
     }
 
     function abort() {
         textTracks.deleteAllTextTracks();
-        fragmentedTextBoxParser = null;
         boxParser = null;
-        mediaInfos = null;
-        isFragmented = false;
-        fragmentModel = null;
+        mediaInfos = [];
+        fragmentedFragmentModel = null;
         initializationSegmentReceived = false;
         fragmentedTracks = [];
     }
 
     function reset() {
-        parser = null;
+        resetInitialSettings();
+
         streamController = null;
         videoModel = null;
-        timescale = NaN;
         textTracks = null;
     }
 
@@ -151,18 +168,12 @@ function TextSourceBuffer() {
 
     function initEmbedded() {
         embeddedTracks = [];
-        mediaInfos = [];
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
         });
         textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
-        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({
-            boxParser: boxParser
-        });
-        isFragmented = false;
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
@@ -175,7 +186,7 @@ function TextSourceBuffer() {
         const streamProcessors = streamController.getActiveStreamProcessors();
         for (const i in streamProcessors) {
             if (streamProcessors[i].getType() === 'video') {
-                mseTimeOffset = streamProcessors[i].getCurrentRepresentationInfo().MSETimeOffset;
+                mseTimeOffset = streamProcessors[i].getRepresentationInfo().MSETimeOffset;
                 break;
             }
         }
@@ -199,15 +210,17 @@ function TextSourceBuffer() {
         if (!embeddedInitialized) {
             initEmbedded();
         }
-        if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
-            for (let i = 0; i < embeddedTracks.length; i++) {
-                if (embeddedTracks[i].id === mediaInfo.id) {
-                    return;
+        if (mediaInfo) {
+            if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
+                for (let i = 0; i < embeddedTracks.length; i++) {
+                    if (embeddedTracks[i].id === mediaInfo.id) {
+                        return;
+                    }
                 }
+                embeddedTracks.push(mediaInfo);
+            } else {
+                logger.warn('Embedded track ' + mediaInfo.id + ' not supported!');
             }
-            embeddedTracks.push(mediaInfo);
-        } else {
-            logger.warn('Embedded track ' + mediaInfo.id + ' not supported!');
         }
     }
 
@@ -218,8 +231,8 @@ function TextSourceBuffer() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
@@ -246,16 +259,9 @@ function TextSourceBuffer() {
 
     function getConfig() {
         const config = {
-            errHandler: errHandler,
-            dashManifestModel: dashManifestModel,
-            mediaController: mediaController,
-            videoModel: videoModel,
-            fragmentModel: fragmentModel,
-            streamController: streamController,
-            textTracks: textTracks,
-            isFragmented: isFragmented,
-            embeddedTracks: embeddedTracks,
-            fragmentedTracks: fragmentedTracks
+            fragmentModel: fragmentedFragmentModel,
+            fragmentedTracks: fragmentedTracks,
+            videoModel: videoModel
         };
 
         return config;
@@ -263,6 +269,42 @@ function TextSourceBuffer() {
 
     function setCurrentFragmentedTrackIdx(idx) {
         currFragmentedTrackIdx = idx;
+    }
+
+    function createTextTrackFromMediaInfo(captionData, mediaInfo) {
+        const textTrackInfo = new TextTrackInfo();
+        const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+        const getKind = function () {
+            let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+            kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+            return kind;
+        };
+
+        const checkTTML = function () {
+            let ttml = false;
+            if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
+                ttml = true;
+            }
+            if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
+                ttml = true;
+            }
+            return ttml;
+        };
+
+        textTrackInfo.captionData = captionData;
+        textTrackInfo.lang = mediaInfo.lang;
+        textTrackInfo.labels = mediaInfo.labels;
+        textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
+        textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
+        textTrackInfo.isTTML = checkTTML();
+        textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
+        textTrackInfo.isFragmented = !adapter.getIsTextTrack(mediaInfo.mimeType);
+        textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
+        textTrackInfo.kind = getKind();
+        textTrackInfo.roles = mediaInfo.roles;
+        textTrackInfo.accessibility = mediaInfo.accessibility;
+        const totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
+        textTracks.addTextTrack(textTrackInfo, totalNrTracks);
     }
 
     function append(bytes, chunk) {
@@ -280,60 +322,22 @@ function TextSourceBuffer() {
             return;
         }
 
-        function createTextTrackFromMediaInfo(captionData, mediaInfo) {
-            const textTrackInfo = new TextTrackInfo();
-            const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-            const getKind = function () {
-                let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-                kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
-                return kind;
-            };
-
-            const checkTTML = function () {
-                let ttml = false;
-                if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
-                    ttml = true;
-                }
-                if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
-                    ttml = true;
-                }
-                return ttml;
-            };
-
-            textTrackInfo.captionData = captionData;
-            textTrackInfo.lang = mediaInfo.lang;
-            textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
-            textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
-            textTrackInfo.isTTML = checkTTML();
-            textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-            textTrackInfo.isFragmented = isFragmented;
-            textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
-            textTrackInfo.kind = getKind();
-            textTrackInfo.roles = mediaInfo.roles;
-            textTrackInfo.accessibility = mediaInfo.accessibility;
-            const totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
-            textTracks.addTextTrack(textTrackInfo, totalNrTracks);
-        }
-
         if (mediaType === Constants.FRAGMENTED_TEXT) {
             if (!initializationSegmentReceived) {
                 initializationSegmentReceived = true;
-                for (i = 0; i < mediaInfos.length; i++) {
-                    createTextTrackFromMediaInfo(null, mediaInfos[i]);
-                }
-                timescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
+                timescale = boxParser.getMediaTimescaleFromMoov(bytes);
             } else {
-                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
+                samplesInfo = boxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
-                if (!firstSubtitleStart && sampleList.length > 0) {
-                    firstSubtitleStart = sampleList[0].cts - chunk.start * timescale;
+                if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
+                    firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                 }
                 if (codecType.search(Constants.STPP) >= 0) {
                     parser = parser !== null ? parser : getParser(codecType);
                     for (i = 0; i < sampleList.length; i++) {
                         const sample = sampleList[i];
                         const sampleStart = sample.cts;
-                        const sampleRelStart = sampleStart - firstSubtitleStart;
+                        const sampleRelStart = sampleStart - firstFragmentedSubtitleStart;
                         this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
                         const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
                         ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
@@ -350,9 +354,9 @@ function TextSourceBuffer() {
                             const manifest = manifestModel.getValue();
                             const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                             result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
-                            textTracks.addCaptions(currFragmentedTrackIdx, firstSubtitleStart / timescale, result);
+                            textTracks.addCaptions(currFragmentedTrackIdx, firstFragmentedSubtitleStart / timescale, result);
                         } catch (e) {
-                            fragmentModel.removeExecutedRequestsBeforeTime();
+                            fragmentedFragmentModel.removeExecutedRequestsBeforeTime();
                             this.remove();
                             logger.error('TTML parser error: ' + e.message);
                         }
@@ -362,7 +366,7 @@ function TextSourceBuffer() {
                     const captionArray = [];
                     for (i = 0 ; i < sampleList.length; i++) {
                         const sample = sampleList[i];
-                        sample.cts -= firstSubtitleStart;
+                        sample.cts -= firstFragmentedSubtitleStart;
                         this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
                         const sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
                         // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
@@ -407,17 +411,15 @@ function TextSourceBuffer() {
 
             try {
                 result = getParser(codecType).parse(ccContent, 0);
-                for (i = 0; i < mediaInfos.length; i++) {
-                    createTextTrackFromMediaInfo(null, mediaInfos[i]);
-                }
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
+                errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text
             if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
                 if (embeddedTimescale === 0) {
-                    embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
+                    embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
                         createTextTrackFromMediaInfo(null, embeddedTracks[i]);
                     }
@@ -448,7 +450,7 @@ function TextSourceBuffer() {
                     return newCue;
                 };
 
-                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
+                samplesInfo = boxParser.getSamplesInfo(bytes);
 
                 const sequenceNumber = samplesInfo.lastSequenceNumber;
 
@@ -560,7 +562,7 @@ function TextSourceBuffer() {
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === Constants.CC1); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
-            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
+            if (mediaInfo.id && typeof mediaInfo.id === 'string' && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
                 isDefault = true;
             }
         } else if (embeddedTracks.length === 0) {

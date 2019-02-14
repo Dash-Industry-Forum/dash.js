@@ -1,8 +1,9 @@
 import EventBus from '../../src/core/EventBus';
-import VoHelper from './helpers/VOHelper';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import Events from '../../src/core/events/Events';
+
 import SpecHelper from './helpers/SpecHelper';
+import VoHelper from './helpers/VOHelper';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -17,12 +18,6 @@ describe('TimelineConverter', function () {
     const timelineConverter = TimelineConverter(context).getInstance();
 
     timelineConverter.initialize();
-
-    it('should calculate timestamp offset', function () {
-        const expectedValue = -10;
-
-        expect(timelineConverter.calcMSETimeOffset(representation)).to.be.equal(expectedValue);
-    });
 
     it('should set an expected live edge', function () {
         const expectedValue = 10;

@@ -40,6 +40,8 @@ import BoxParser from '../utils/BoxParser';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
@@ -106,7 +108,7 @@ function BufferController(config) {
     function initialize(Source) {
         setMediaSource(Source);
 
-        requiredQuality = abrController.getQualityFor(type, streamProcessor.getStreamInfo());
+        requiredQuality = abrController.getQualityFor(type);
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
@@ -140,11 +142,12 @@ function BufferController(config) {
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
                 errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(requiredQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(requiredQuality).MSETimeOffset);
         return buffer;
     }
 
@@ -189,7 +192,7 @@ function BufferController(config) {
         if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality);
+        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality,  ', data size:', e.chunk.bytes.byteLength);
         appendToBuffer(e.chunk);
     }
 
@@ -197,7 +200,7 @@ function BufferController(config) {
         const chunk = initCache.extract(streamId, representationId);
         bufferResetInProgress = bufferResetEnabled === true ? bufferResetEnabled : false;
         if (chunk) {
-            logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality);
+            logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
             appendToBuffer(chunk);
         } else {
             eventBus.trigger(Events.INIT_REQUESTED, { sender: instance });
@@ -210,9 +213,11 @@ function BufferController(config) {
         const chunk = e.chunk;
         const bytes = chunk.bytes;
         const quality = chunk.quality;
-        const currentRepresentation = streamProcessor.getRepresentationInfoForQuality(quality);
-        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo, streamProcessor);
-        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, streamProcessor);
+        const currentRepresentation = streamProcessor.getRepresentationInfo(quality);
+        const representationController = streamProcessor.getRepresentationController();
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
+        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
             const request = streamProcessor.getFragmentModel().getRequests({
@@ -222,7 +227,7 @@ function BufferController(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            streamProcessor.getEventController().addInbandEvents(events);
+            streamProcessor.addInbandEvents(events);
         }
 
         if (bufferResetInProgress) {
@@ -267,8 +272,8 @@ function BufferController(config) {
                     // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
                     const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
                     const bufferAhead = criticalBufferLevel - bufferToKeep;
-                    mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep).toFixed(5));
-                    mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead).toFixed(5));
+                    mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep.toFixed(5)));
+                    mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead.toFixed(5)));
                 }
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
@@ -294,7 +299,7 @@ function BufferController(config) {
                 const currentTime = playbackController.getTime();
                 logger.debug('AppendToBuffer seek target should be ' + currentTime);
                 streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                streamProcessor.setIndexHandlerTime(currentTime);
             }
         }
 
@@ -315,7 +320,7 @@ function BufferController(config) {
     function onQualityChanged(e) {
         if (requiredQuality === e.newQuality || type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
 
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfoForQuality(e.newQuality).MSETimeOffset);
+        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(e.newQuality).MSETimeOffset);
         requiredQuality = e.newQuality;
     }
 
@@ -430,7 +435,7 @@ function BufferController(config) {
     }
 
     function onPlaybackProgression() {
-        if (!bufferResetInProgress) {
+        if (!bufferResetInProgress || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
             updateBufferLevel();
             addBufferMetrics();
         }
@@ -548,7 +553,7 @@ function BufferController(config) {
         if (((!mediaPlayerModel.getLowLatencyEnabled() && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+            if (isBufferingCompleted || bufferLevel >= streamProcessor.getStreamInfo().manifestInfo.minBufferTime) {
                 notifyBufferStateChanged(BUFFER_LOADED);
             }
         }
@@ -569,7 +574,6 @@ function BufferController(config) {
         logger.debug(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for ' + type);
     }
 
-
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
         const fragmentStartTime = Math.max(!request || isNaN(request.startTime) ? 0 : request.startTime, 0);
         const eventStreams = [];
@@ -578,7 +582,7 @@ function BufferController(config) {
         /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
         const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
         for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
-            eventStreams[inbandEvents[i].schemeIdUri] = inbandEvents[i];
+            eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
         }
 
         const isoFile = BoxParser(context).getInstance().parse(data);
@@ -597,8 +601,10 @@ function BufferController(config) {
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
-        if (!buffer) return;
-        if (type === Constants.FRAGMENTED_TEXT) return;
+        if (!buffer || type === Constants.FRAGMENTED_TEXT) {
+            return;
+        }
+
         if (!isBufferingCompleted) {
             clearBuffers(getClearRanges());
         }
@@ -699,7 +705,7 @@ function BufferController(config) {
             maxAppendedIndex = 0;
             if (!bufferResetInProgress) {
                 streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                adapter.setIndexHandlerTime(streamProcessor, currentTime);
+                streamProcessor.setIndexHandlerTime(currentTime);
             }
         }
 
@@ -720,7 +726,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            adapter.setIndexHandlerTime(streamProcessor, e.from);
+            streamProcessor.setIndexHandlerTime(e.from);
         }
 
         if (isPruningInProgress) {

@@ -1,9 +1,9 @@
 # How to contribute #
-As an open source project, operating under a [meritocratic governance model](governance-model/), we welcome contributions of any kind. Naturally this includes software contributions, but we also welcome help on documentation, testing, project coordination, marketing, [release preparation](Release-Management) and more.
+As an open source project, operating under a [meritocratic governance model](https://github.com/Dash-Industry-Forum/dash.js/wiki/governance-model), we welcome contributions of any kind. Naturally this includes software contributions, but we also welcome help on documentation, testing, project coordination, marketing, [release preparation](https://github.com/Dash-Industry-Forum/dash.js/wiki/Release-Management) and more.
 
 For any kind of contribution your first port of call should be to join our [mailing list]( https://groups.google.com/d/forum/dashjs). We welcome all contributions to the mailing list (including asking questions which demonstrate our documentation needs to be improved).
 
-The dash.js project serves as the reference player for the DASH Industry Forum. Respecting this, if you wish to contribute features or behavior which are non-conforming with the [interop guidelines](http://dashif.org/guidelines/), then that feature must be explicitly enabled behind a compatibility flag. 
+The dash.js project serves as the reference player for the DASH Industry Forum. Respecting this, if you wish to contribute features or behavior which are non-conforming with the [interop guidelines](https://dashif.org/guidelines/), then that feature must be explicitly enabled behind a compatibility flag.
 
 ## Submitting and managing Issues
 
@@ -41,10 +41,10 @@ If you find a low priority issues is affecting your use case then the only way t
 1. Read and understand the wiki sections on [Developer Getting Started Guide](https://github.com/Dash-Industry-Forum/dash.js/wiki/Developer-Getting-Started-Guide) and [JSLint compliance](https://github.com/Dash-Industry-Forum/dash.js/wiki/JSLint-Compliance).
 1. Read and understand the project's [Branching Strategy](http://nvie.com/posts/a-successful-git-branching-model/).
 1. Fork the repository and setup a new branch to work in.
-1. In each of your files, include the required BSD-3 header available [here](http://dashif.org/documents/dash.js.license-header.May2013.txt). Be sure to replace the placeholder text "YOUR_COMPANY_NAME_HERE" with the name of your company before adding it to the header.
+1. In each of your files, include the required BSD-3 header available [here](https://dashif.org/docs/dash.js.license-header.May2013.txt). Be sure to replace the placeholder text "YOUR_COMPANY_NAME_HERE" with the name of your company before adding it to the header.
 1. Add or modify unit tests for any new or modified functionality in your patch.
 1. Run `grunt` before you commit so that you may catch test failures, lint issues, or syntax errors. Pull requests that do not compile or pass linter checks or pass all unit tests will not be accepted.
-1. If you are submitting code as an individual or on behalf of a company who is _not a member_ of the DASH [Industry Forum](http://dashif.org/members), then download, sign, scan and email back to the email list the [Feedback Agreement](http://dashif.org/wp-content/uploads/2015/04/DASH-IF-Feedback-Agreement-3-7-2014.pdf). Your code will not be reviewed and accepted by the Admins until this has been received. DASH IF members do not need to take this step, as the Forum's By-Laws already cover your submission to this open source project.
+1. If you are submitting code as an individual or on behalf of a company who is _not a member_ of the DASH [Industry Forum](http://dashif.org/members), then download, sign, scan and email back to the email list the [Feedback Agreement](https://dashif.org/docs/DASH-IF-Feedback-Agreement-3-7-2014.pdf). Your code will not be reviewed and accepted by the Admins until this has been received. DASH IF members do not need to take this step, as the Forum's By-Laws already cover your submission to this open source project.
 1. Issue a Pull Request.
 1. The Admins will review your code and may optionally request conformance, functional or other changes. Work with them to resolve any issues.
 1. Upon acceptance, your code will be added to the main branch and available for all.

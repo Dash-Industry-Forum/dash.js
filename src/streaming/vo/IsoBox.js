@@ -68,7 +68,7 @@ class IsoBox {
                 this.value = boxData.value;
                 this.timescale = boxData.timescale;
                 this.scheme_id_uri = boxData.scheme_id_uri;
-                this.presentation_time_delta = boxData.presentation_time_delta;
+                this.presentation_time_delta = boxData.version === 1 ? boxData.presentation_time : boxData.presentation_time_delta;
                 this.event_duration = boxData.event_duration;
                 this.message_data = boxData.message_data;
                 break;

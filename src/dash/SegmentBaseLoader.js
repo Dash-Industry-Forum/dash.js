@@ -39,6 +39,7 @@ import Debug from '../core/Debug';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
+import Errors from '../core/errors/Errors';
 
 function SegmentBaseLoader() {
 
@@ -88,16 +89,15 @@ function SegmentBaseLoader() {
         }
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
     function loadInitialization(representation, loadingInfo) {
-        checkSetConfigCall();
+        checkConfig();
         let initRange = null;
-        let isoFile = null;
         const baseUrl = baseURLController.resolve(representation.path);
         const info = loadingInfo || {
             init: true,
@@ -117,8 +117,7 @@ function SegmentBaseLoader() {
 
         const onload = function (response) {
             info.bytesLoaded = info.range.end;
-            isoFile = boxParser.parse(response);
-            initRange = findInitRange(isoFile);
+            initRange = boxParser.findInitRange(response);
 
             if (initRange) {
                 representation.range = initRange;
@@ -129,7 +128,6 @@ function SegmentBaseLoader() {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
                 loadInitialization(representation, info);
             }
-
         };
 
         const onerror = function () {
@@ -142,7 +140,7 @@ function SegmentBaseLoader() {
     }
 
     function loadSegments(representation, type, range, loadingInfo, callback) {
-        checkSetConfigCall();
+        checkConfig();
         if (range && (range.start === undefined || range.end === undefined)) {
             const parts = range ? range.toString().split('-') : null;
             range = parts ? {start: parseFloat(parts[0]), end: parseFloat(parts[1])} : null;
@@ -285,27 +283,6 @@ function SegmentBaseLoader() {
         return segments;
     }
 
-    function findInitRange(isoFile) {
-        const ftyp = isoFile.getBox('ftyp');
-        const moov = isoFile.getBox('moov');
-
-        let initRange = null;
-        let start,
-            end;
-
-        logger.debug('Searching for initialization.');
-
-        if (moov && moov.isComplete) {
-            start = ftyp ? ftyp.offset : moov.offset;
-            end = moov.offset + moov.size - 1;
-            initRange = start + '-' + end;
-
-            logger.debug('Found the initialization.  Range: ' + initRange);
-        }
-
-        return initRange;
-    }
-
     function getFragmentRequest(info) {
         if (!info.url) {
             return;
@@ -323,7 +300,7 @@ function SegmentBaseLoader() {
         if (segments) {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(null, 'error loading segments', null)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
         }
     }
 
