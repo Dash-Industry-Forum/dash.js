@@ -689,7 +689,7 @@ function AbrController() {
                 newIdx > 0 &&
                 representation[newIdx] &&
                 elementWidth < representation[newIdx].width &&
-                elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth
+                Math.abs(elementWidth - representation[newIdx - 1].width) < Math.abs(representation[newIdx].width - elementWidth)
             ) {
                 newIdx = newIdx - 1;
             }
