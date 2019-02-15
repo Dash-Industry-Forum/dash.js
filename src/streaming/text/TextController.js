@@ -36,15 +36,16 @@ import VTTParser from '../utils/VTTParser';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import { checkParameterType } from '../utils/SupervisorTools';
 
 function TextController() {
 
     let context = this.context;
-    let instance;
-    let textSourceBuffer;
 
-    let errHandler,
-        dashManifestModel,
+    let instance,
+        textSourceBuffer,
+        errHandler,
+        adapter,
         manifestModel,
         mediaController,
         videoModel,
@@ -84,8 +85,8 @@ function TextController() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
@@ -112,7 +113,7 @@ function TextController() {
         // create config for source buffer
         textSourceBuffer.setConfig({
             errHandler: errHandler,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             manifestModel: manifestModel,
             mediaController: mediaController,
             videoModel: videoModel,
@@ -136,10 +137,7 @@ function TextController() {
     }
 
     function setTextDefaultLanguage(lang) {
-        if (typeof lang !== 'string') {
-            return;
-        }
-
+        checkParameterType(lang, 'string');
         defaultLanguage = lang;
     }
 
@@ -173,9 +171,7 @@ function TextController() {
     }
 
     function setTextDefaultEnabled(enable) {
-        if (typeof enable !== 'boolean') {
-            return;
-        }
+        checkParameterType(enable,'boolean');
         textDefaultEnabled = enable;
 
         if (!textDefaultEnabled) {
@@ -189,9 +185,7 @@ function TextController() {
     }
 
     function enableText(enable) {
-        if (typeof enable !== 'boolean') {
-            return;
-        }
+        checkParameterType(enable,'boolean');
 
         if (isTextEnabled() !== enable) {
             // change track selection
@@ -218,9 +212,7 @@ function TextController() {
 
     // when set to true NextFragmentRequestRule will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
-        if (typeof enable !== 'boolean') {
-            return;
-        }
+        checkParameterType(enable,'boolean');
         forceTextStreaming = enable;
     }
 
@@ -248,7 +240,7 @@ function TextController() {
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     let mediaInfo = fragmentedTracks[i];
                     if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                        (mediaInfo.id ? currentTrackInfo.label === mediaInfo.id : currentTrackInfo.label === mediaInfo.index)) {
+                        (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
                         let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                         if (mediaInfo !== currentFragTrack) {
                             fragmentModel.abortRequests();
@@ -268,7 +260,7 @@ function TextController() {
                                     break;
                                 }
                             }
-                            streamProcessor.getIndexHandler().setCurrentTime(videoModel.getTime());
+                            streamProcessor.setIndexHandlerTime(videoModel.getTime());
                             streamProcessor.getScheduleController().start();
                         }
                     }

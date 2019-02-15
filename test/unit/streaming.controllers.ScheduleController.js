@@ -5,11 +5,11 @@ import EventBus from '../../src/core/EventBus';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
-import DashManifestModelMock from './mocks/DashManifestModelMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import MetricsModelMock from './mocks/MetricsModelMock';
+import AdapterMock from './mocks/AdapterMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -26,7 +26,7 @@ describe('ScheduleController', function () {
     let scheduleController;
     let mediaPlayerModelMock;
     let streamProcessorMock;
-    let dashManifestModelMock;
+    let adapterMock;
     let playbackControllerMock;
     let abrControllerMock;
     let streamControllerMock;
@@ -36,7 +36,7 @@ describe('ScheduleController', function () {
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
         streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
-        dashManifestModelMock = new DashManifestModelMock();
+        adapterMock = new AdapterMock();
         playbackControllerMock = new PlaybackControllerMock();
         abrControllerMock = new AbrControllerMock();
         streamControllerMock = new StreamControllerMock();
@@ -47,7 +47,7 @@ describe('ScheduleController', function () {
             type: testType,
             mediaPlayerModel: mediaPlayerModelMock,
             streamProcessor: streamProcessorMock,
-            dashManifestModel: dashManifestModelMock,
+            adapter: adapterMock,
             playbackController: playbackControllerMock,
             abrController: abrControllerMock,
             streamController: streamControllerMock,
@@ -77,6 +77,11 @@ describe('ScheduleController', function () {
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo
         });
+    });
+
+    it('should return 12 if streamProcessor is defined and current representation is video and videoTrackPresent is true', function () {
+        const bufferTarget = scheduleController.getBufferTarget();
+        expect(bufferTarget).to.be.equal(12); // jshint ignore:line
     });
 
     it('should stop is controller is started', function (done) {

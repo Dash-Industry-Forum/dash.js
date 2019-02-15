@@ -5,16 +5,16 @@ import {
     decideSegmentListRangeForTemplate
 } from '../../src/dash/utils/SegmentsUtils';
 
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import VoHelper from './helpers/VOHelper';
+import ObjectsHelper from './helpers/ObjectsHelper';
 
 const expect = require('chai').expect;
 
 describe('SegmentUtils', function () {
-    const context = {};
     const testType = 'fragmentedText';
     const voHelper = new VoHelper();
-    const timelineConverter = TimelineConverter(context).getInstance();
+    const objectsHelper = new ObjectsHelper();
+    const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const representation = voHelper.getDummyRepresentation(testType);
 
     describe('unescapeDollarsInTemplate', function () {
@@ -64,6 +64,13 @@ describe('SegmentUtils', function () {
     });
 
     describe('decideSegmentListRangeForTemplate', function () {
+        it('should return a range {start: NaN, end: NaN} if representation object is undefined', function () {
+            representation.availabilityWindow = null;
+            const range = decideSegmentListRangeForTemplate(timelineConverter, true, undefined, null, -1);
+            expect(range.start).to.be.NaN;  // jshint ignore:line
+            expect(range.end).to.be.NaN;  // jshint ignore:line
+        });
+
         it('should return a range {start: NaN, end: NaN} if representation object has no availabilityWindow attribute', function () {
             representation.availabilityWindow = null;
             const range = decideSegmentListRangeForTemplate(timelineConverter, true, representation, null, -1);

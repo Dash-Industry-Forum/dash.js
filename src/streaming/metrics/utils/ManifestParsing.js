@@ -5,26 +5,26 @@ import Reporting from '../vo/Reporting';
 function ManifestParsing (config) {
     config = config || {};
     let instance;
-    let dashManifestModel = config.dashManifestModel;
+    let adapter = config.adapter;
     const constants = config.constants;
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
-        var mpd = dashManifestModel.getMpd(manifest);
-        var voPeriods;
-        var presentationStartTime = 0;
-        var reportingStartTime;
+        let mpd = adapter.getMpd(manifest);
+        let voPeriods,
+            reportingStartTime;
+        let presentationStartTime = 0;
 
         if (dynamic) {
             // For services with MPD@type='dynamic', the start time is
             // indicated in wall clock time by adding the value of this
             // attribute to the value of the MPD@availabilityStartTime
             // attribute.
-            presentationStartTime = mpd.availabilityStartTime.getTime() / 1000;
+            presentationStartTime = adapter.getAvailabilityStartTime(mpd) / 1000;
         } else {
             // For services with MPD@type='static', the start time is indicated
             // in Media Presentation time and is relative to the PeriodStart
             // time of the first Period in this MPD.
-            voPeriods = this.getRegularPeriods(mpd);
+            voPeriods = adapter.getRegularPeriods(mpd);
 
             if (voPeriods.length) {
                 presentationStartTime = voPeriods[0].start;
@@ -44,12 +44,12 @@ function ManifestParsing (config) {
     }
 
     function getMetrics(manifest) {
-        var metrics = [];
+        let metrics = [];
 
-        if (manifest.Metrics_asArray) {
+        if (manifest && manifest.Metrics_asArray) {
             manifest.Metrics_asArray.forEach(metric => {
                 var metricEntry = new Metrics();
-                var isDynamic = dashManifestModel.getIsDynamic(manifest);
+                var isDynamic = adapter.getIsDynamic(manifest);
 
                 if (metric.hasOwnProperty('metrics')) {
                     metricEntry.metrics = metric.metrics;
@@ -69,7 +69,7 @@ function ManifestParsing (config) {
                         } else {
                             // if not present, the value is identical to the
                             // Media Presentation duration.
-                            rangeEntry.duration = dashManifestModel.getDuration(manifest);
+                            rangeEntry.duration = adapter.getDuration(manifest);
                         }
 
                         rangeEntry._useWallClockTime = isDynamic;

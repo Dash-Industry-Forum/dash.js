@@ -57,7 +57,6 @@ function TTMLParser() {
         return id;
     }
 
-
     /**
      * Parse the raw data and process it to return the HTML element representing the cue.
      * Return the region to be processed and controlled (hide/show) by the caption controller.
@@ -68,12 +67,11 @@ function TTMLParser() {
      * @param {Array} images - images array referenced by subs MP4 box
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
-        let i;
-
         let errorMsg = '';
         const captionArray = [];
         let startTime,
-            endTime;
+            endTime,
+            i;
 
         const content = {};
 
@@ -164,5 +162,4 @@ function TTMLParser() {
     return instance;
 }
 TTMLParser.__dashjs_factory_name = 'TTMLParser';
-export
-default FactoryMaker.getSingletonFactory(TTMLParser);
+export default FactoryMaker.getSingletonFactory(TTMLParser);

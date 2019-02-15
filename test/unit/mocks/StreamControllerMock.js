@@ -8,8 +8,16 @@ class StreamControllerMock {
 
     getTimeRelativeToStreamId() {}
 
-    isVideoTrackPresent() {
-        return true;
+    isTrackTypePresent (trackType) {
+        let value;
+
+        switch (trackType) {
+            case 'video' :
+                value = true;
+                break;
+        }
+
+        return value;
     }
 
     switchToVideoElement() {

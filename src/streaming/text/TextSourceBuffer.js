@@ -31,7 +31,6 @@
 import Constants from '../constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
-import FragmentedTextBoxParser from '../../dash/utils/FragmentedTextBoxParser';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -42,6 +41,8 @@ import ISOBoxer from 'codem-isoboxer';
 import cea608parser from '../../../externals/cea608-parser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import DashJSError from '../vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer() {
 
@@ -53,13 +54,12 @@ function TextSourceBuffer() {
         logger,
         boxParser,
         errHandler,
-        dashManifestModel,
+        adapter,
         manifestModel,
         mediaController,
         parser,
         vttParser,
         ttmlParser,
-        fragmentedTextBoxParser,
         mediaInfos,
         textTracks,
         fragmentedFragmentModel,
@@ -112,17 +112,13 @@ function TextSourceBuffer() {
 
         if (!boxParser) {
             boxParser = BoxParser(context).getInstance();
-            fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-            fragmentedTextBoxParser.setConfig({
-                boxParser: boxParser
-            });
         }
 
         addMediaInfos(mimeType, streamProcessor);
     }
 
     function addMediaInfos(mimeType, streamProcessor) {
-        const isFragmented = !dashManifestModel.getIsTextTrack(mimeType);
+        const isFragmented = !adapter.getIsTextTrack(mimeType);
         if (streamProcessor) {
             mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
 
@@ -133,7 +129,7 @@ function TextSourceBuffer() {
                 const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     if (fragmentedTracks[i] === currFragTrack) {
-                        currFragmentedTrackIdx = i;
+                        setCurrentFragmentedTrackIdx(i);
                         break;
                     }
                 }
@@ -147,7 +143,6 @@ function TextSourceBuffer() {
 
     function abort() {
         textTracks.deleteAllTextTracks();
-        fragmentedTextBoxParser = null;
         boxParser = null;
         mediaInfos = [];
         fragmentedFragmentModel = null;
@@ -179,10 +174,6 @@ function TextSourceBuffer() {
         });
         textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
-        fragmentedTextBoxParser = FragmentedTextBoxParser(context).getInstance();
-        fragmentedTextBoxParser.setConfig({
-            boxParser: boxParser
-        });
         currFragmentedTrackIdx = null;
         embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
@@ -240,8 +231,8 @@ function TextSourceBuffer() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
@@ -302,11 +293,12 @@ function TextSourceBuffer() {
 
         textTrackInfo.captionData = captionData;
         textTrackInfo.lang = mediaInfo.lang;
-        textTrackInfo.label = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optionnal parameter, use mediaInfo.index
+        textTrackInfo.labels = mediaInfo.labels;
+        textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
         textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
         textTrackInfo.isTTML = checkTTML();
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = !dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+        textTrackInfo.isFragmented = !adapter.getIsTextTrack(mediaInfo.mimeType);
         textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
         textTrackInfo.kind = getKind();
         textTrackInfo.roles = mediaInfo.roles;
@@ -333,11 +325,11 @@ function TextSourceBuffer() {
         if (mediaType === Constants.FRAGMENTED_TEXT) {
             if (!initializationSegmentReceived) {
                 initializationSegmentReceived = true;
-                timescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
+                timescale = boxParser.getMediaTimescaleFromMoov(bytes);
             } else {
-                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
+                samplesInfo = boxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
-                if (!firstFragmentedSubtitleStart && sampleList.length > 0) {
+                if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
                     firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                 }
                 if (codecType.search(Constants.STPP) >= 0) {
@@ -422,11 +414,12 @@ function TextSourceBuffer() {
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
                 errHandler.timedTextError(e, 'parse', ccContent);
+                errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text
             if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
                 if (embeddedTimescale === 0) {
-                    embeddedTimescale = fragmentedTextBoxParser.getMediaTimescaleFromMoov(bytes);
+                    embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
                     for (i = 0; i < embeddedTracks.length; i++) {
                         createTextTrackFromMediaInfo(null, embeddedTracks[i]);
                     }
@@ -457,7 +450,7 @@ function TextSourceBuffer() {
                     return newCue;
                 };
 
-                samplesInfo = fragmentedTextBoxParser.getSamplesInfo(bytes);
+                samplesInfo = boxParser.getSamplesInfo(bytes);
 
                 const sequenceNumber = samplesInfo.lastSequenceNumber;
 
@@ -569,7 +562,7 @@ function TextSourceBuffer() {
         if (embeddedTracks.length > 1 && mediaInfo.isEmbedded) {
             isDefault = (mediaInfo.id && mediaInfo.id === Constants.CC1); // CC1 if both CC1 and CC3 exist
         } else if (embeddedTracks.length === 1) {
-            if (mediaInfo.id && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
+            if (mediaInfo.id && typeof mediaInfo.id === 'string' && mediaInfo.id.substring(0, 2) === 'CC') { // Either CC1 or CC3
                 isDefault = true;
             }
         } else if (embeddedTracks.length === 0) {

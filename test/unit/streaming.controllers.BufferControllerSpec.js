@@ -1,9 +1,5 @@
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import BufferController from '../../src/streaming/controllers/BufferController';
-import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
-import MediaController from '../../src/streaming/controllers/MediaController';
-import TextController from '../../src/streaming/text/TextController';
-import AbrController from '../../src/streaming/controllers/AbrController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
@@ -16,6 +12,10 @@ import MetricsModelMock from './mocks/MetricsModelMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
+import AbrControllerMock from './mocks/AbrControllerMock';
+import TextControllerMock from './mocks/TextControllerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -39,6 +39,10 @@ describe('BufferController', function () {
     const metricsModelMock = new MetricsModelMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
+    const errorHandlerMock = new ErrorHandlerMock();
+    const mediaControllerMock = new MediaControllerMock();
+    const abrControllerMock = new AbrControllerMock();
+    const textControllerMock = new TextControllerMock();
     let bufferController;
     let mediaSourceMock;
     const mediaInfo = { codec: 'video/webm; codecs="vp8, vorbis"' };
@@ -51,12 +55,12 @@ describe('BufferController', function () {
         mediaSourceMock = new MediaSourceMock();
         bufferController = BufferController(context).create({
             metricsModel: metricsModelMock,
-            errHandler: ErrorHandler(context).getInstance(),
+            errHandler: errorHandlerMock,
             streamController: streamControllerMock,
-            mediaController: MediaController(context).getInstance(),
+            mediaController: mediaControllerMock,
             adapter: adapterMock,
-            textController: TextController(context).getInstance(),
-            abrController: AbrController(context).getInstance(),
+            textController: textControllerMock,
+            abrController: abrControllerMock,
             streamProcessor: streamProcessor,
             type: testType,
             playbackController: playbackControllerMock,

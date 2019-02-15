@@ -30,6 +30,7 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import Constants from '../constants/Constants';
 
 const legacyKeysAndReplacements = [
     { oldKey: 'dashjs_vbitrate',  newKey: 'dashjs_video_bitrate' },
@@ -130,7 +131,7 @@ function DOMStorage(config) {
 
     function checkConfig() {
         if (!mediaPlayerModel || !mediaPlayerModel.hasOwnProperty('getLastMediaSettingsCachingInfo')) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

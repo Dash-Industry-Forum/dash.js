@@ -2,6 +2,9 @@ import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor';
 import MetricsModel from '../../src/streaming/models/MetricsModel';
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
 import EventBus from '../../src/core/EventBus';
+import MssErrors from '../../src/mss/errors/MssErrors';
+import Constants from '../../src/streaming/constants/Constants';
+
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import DebugMock from './mocks/DebugMock';
@@ -16,8 +19,12 @@ const playbackController = PlaybackController(context).getInstance();
 const eventBus = EventBus(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
 const mssFragmentProcessor = MssFragmentProcessor(context).create({metricsModel: metricsModel,
-    playbackController: playbackController, eventBus: eventBus, ISOBoxer: ISOBoxer,
-    errHandler: errorHandlerMock, debug: new DebugMock()});
+    playbackController: playbackController,
+    eventBus: eventBus,
+    ISOBoxer: ISOBoxer,
+    errHandler: errorHandlerMock,
+    debug: new DebugMock(),
+    constants: Constants});
 
 describe('MssFragmentProcessor', function () {
     const testType = 'video';
@@ -43,6 +50,28 @@ describe('MssFragmentProcessor', function () {
         const arrayBuffer = new Uint8Array(file).buffer;
         const e = {request: {type: 'MediaSegment', mediaInfo: {index: 0}}, response: arrayBuffer};
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
-        expect(errorHandlerMock.error).to.equal('MSS_NO_TFRF : Missing tfrf in live media segment');
+        expect(errorHandlerMock.errorValue).to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
+        expect(errorHandlerMock.errorCode).to.equal(MssErrors.MSS_NO_TFRF_CODE);
+    });
+
+    it('should throw an error when attempting to call generateMoov for mp4 initialization segment', () => {
+        const rep = {BaseURL: undefined,
+                    SegmentTemplate: {media: 'QualityLevels($Bandwidth$)/Fragments(audio=$Time$)', timescale: 10000000, SegmentTimeline: {}},
+                    audioChannels: NaN,
+                    audioSamplingRate: NaN,
+                    bandwidth: 64000,
+                    codecPrivateData: '1000',
+                    codecs: 'mp7a.58.2',
+                    height: NaN,
+                    id: 'audio_0',
+                    mimeType: 'audio/mp4',
+                    width: NaN,
+                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
+                    };
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
+                    name: 'Unsupported codec',
+                    message: 'Unsupported codec',
+                    data: {}
+                });
     });
 });

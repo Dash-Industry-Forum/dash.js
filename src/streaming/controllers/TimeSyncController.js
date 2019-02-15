@@ -33,11 +33,11 @@ import DashJSError from './../vo/DashJSError';
 import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
+import Errors from './../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import URLUtils from '../utils/URLUtils';
 
-const TIME_SYNC_FAILED_ERROR_CODE = 1;
 const HTTP_TIMEOUT_MS = 5000;
 
 function TimeSyncController() {
@@ -50,7 +50,6 @@ function TimeSyncController() {
         logger,
         offsetToDeviceTimeMs,
         isSynchronizing,
-        isInitialised,
         useManifestDateHeaderTimeSource,
         handlers,
         metricsModel,
@@ -65,7 +64,6 @@ function TimeSyncController() {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
         offsetToDeviceTimeMs = 0;
         isSynchronizing = false;
-        isInitialised = false;
 
         // a list of known schemeIdUris and a method to call with @value
         handlers = {
@@ -94,7 +92,6 @@ function TimeSyncController() {
 
         if (!getIsSynchronizing()) {
             attemptSync(timingSources);
-            setIsInitialised(true);
         }
     }
 
@@ -124,10 +121,6 @@ function TimeSyncController() {
 
     function getIsSynchronizing() {
         return isSynchronizing;
-    }
-
-    function setIsInitialised(value) {
-        isInitialised = value;
     }
 
     function setOffsetMs(value) {
@@ -296,20 +289,11 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(TIME_SYNC_FAILED_ERROR_CODE) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null });
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {
-        const v = (serverTime - deviceTime) / 1000;
-        let offset;
-        // Math.trunc not implemented by IE11
-        if (Math.trunc) {
-            offset = Math.trunc(v);
-        } else {
-            offset = (v - v % 1) || (!isFinite(v) || v === 0 ? v : v < 0 ? -0 : 0);
-        }
-
-        return offset * 1000;
+        return serverTime - deviceTime;
     }
 
     function attemptSync(sources, sourceIndex) {
@@ -348,8 +332,8 @@ function TimeSyncController() {
 
                         setOffsetMs(offset);
 
-                        logger.debug('Local time: ' + new Date(deviceTime));
-                        logger.debug('Server time: ' + new Date(serverTime));
+                        logger.info('Local time: ' + new Date(deviceTime));
+                        logger.info('Server time: ' + new Date(serverTime));
                         logger.info('Server Time - Local Time (ms): ' + offset);
 
                         onComplete(serverTime, offset);
@@ -374,7 +358,6 @@ function TimeSyncController() {
     }
 
     function reset() {
-        setIsInitialised(false);
         setIsSynchronizing(false);
     }
 
@@ -392,7 +375,6 @@ function TimeSyncController() {
 
 TimeSyncController.__dashjs_factory_name = 'TimeSyncController';
 const factory = FactoryMaker.getSingletonFactory(TimeSyncController);
-factory.TIME_SYNC_FAILED_ERROR_CODE = TIME_SYNC_FAILED_ERROR_CODE;
 factory.HTTP_TIMEOUT_MS = HTTP_TIMEOUT_MS;
 FactoryMaker.updateSingletonFactory(TimeSyncController.__dashjs_factory_name, factory);
 export default factory;

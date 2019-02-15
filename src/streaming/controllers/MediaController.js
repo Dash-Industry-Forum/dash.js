@@ -51,7 +51,6 @@ function MediaController() {
         initialSettings,
         selectionMode,
         switchMode,
-        errHandler,
         domStorage;
 
     const validTrackSwitchModes = [
@@ -189,7 +188,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setTrack(track) {
-        if (!track) return;
+        if (!track || !track.streamInfo) return;
 
         const type = track.type;
         const streamInfo = track.streamInfo;
@@ -330,10 +329,6 @@ function MediaController() {
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
 
         if (config.domStorage) {
             domStorage = config.domStorage;

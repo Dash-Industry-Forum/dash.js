@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Autoplay browser policy example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+
+            // restart playback in muted mode when auto playback was not allowed by the browser
+            player.on(dashjs.MediaPlayer.events.PLAYBACK_NOT_ALLOWED, function (data) {
+                console.log('Playback did not start due to auto play restrictions. Muting audio and reloading');
+                video.muted = true;
+                player.initialize(video, url, true);
+            });
+
+            player.initialize(video, url, true);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="code">
+            <video controls="true">
+            </video>
+        </div>
+        <script class="code">
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
+        <script src="../highlighter.js"></script>
+    </body>
+</html>

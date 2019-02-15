@@ -1,6 +1,7 @@
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
+import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import RequestModifier from '../streaming/utils/RequestModifier';
@@ -10,6 +11,8 @@ import {
 } from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
+import DashJSError from '../streaming/vo/DashJSError';
+import Errors from '../core/errors/Errors';
 
 function WebmSegmentBaseLoader() {
 
@@ -105,7 +108,7 @@ function WebmSegmentBaseLoader() {
 
     function setConfig(config) {
         if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel || !config.errHandler) {
-            throw new Error('Missing config parameter(s)');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
         baseURLController = config.baseURLController;
         metricsModel = config.metricsModel;
@@ -115,11 +118,11 @@ function WebmSegmentBaseLoader() {
 
     function parseCues(ab) {
         let cues = [];
-        let cue;
-        let cueTrack;
         let ebmlParser = EBMLParser(context).create({
             data: ab
         });
+        let cue,
+            cueTrack;
 
         ebmlParser.consumeTagAndSize(WebM.Segment.Cues);
 
@@ -163,14 +166,14 @@ function WebmSegmentBaseLoader() {
     }
 
     function parseSegments(data, segmentStart, segmentEnd, segmentDuration) {
-        let duration;
-        let parsed;
-        let segments;
-        let segment;
-        let i;
-        let len;
-        let start;
-        let end;
+        let duration,
+            parsed,
+            segments,
+            segment,
+            i,
+            len,
+            start,
+            end;
 
         parsed = parseCues(data);
         segments = [];
@@ -214,8 +217,10 @@ function WebmSegmentBaseLoader() {
         let ebmlParser = EBMLParser(context).create({
             data: data
         });
-        let duration;
-        let segments;
+        let duration,
+            segments,
+            segmentEnd,
+            segmentStart;
         let parts = theRange.split('-');
         let request = null;
         let info = {
@@ -226,8 +231,6 @@ function WebmSegmentBaseLoader() {
             },
             request: request
         };
-        let segmentEnd;
-        let segmentStart;
 
         logger.debug('Parse EBML header: ' + info.url);
 
@@ -290,14 +293,14 @@ function WebmSegmentBaseLoader() {
         logger.debug('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
     function loadInitialization(representation, loadingInfo) {
-        checkSetConfigCall();
+        checkConfig();
         let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
@@ -340,7 +343,7 @@ function WebmSegmentBaseLoader() {
     }
 
     function loadSegments(representation, type, theRange, callback) {
-        checkSetConfigCall();
+        checkConfig();
         let request = null;
         let baseUrl = baseURLController.resolve(representation.path);
         let media = baseUrl ? baseUrl.url : undefined;
@@ -394,7 +397,7 @@ function WebmSegmentBaseLoader() {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new Error(null, 'error loading segments', null)
+                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
             });
         }
     }

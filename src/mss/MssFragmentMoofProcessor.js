@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashJSError from '../streaming/vo/DashJSError';
+import MssErrors from './errors/MssErrors';
 
 import Events from '../streaming/MediaPlayerEvents';
 
@@ -69,7 +71,7 @@ function MssFragmentMoofProcessor(config) {
         }
 
         if (!tfrf) {
-            errorHandler.mssError('MSS_NO_TFRF : Missing tfrf in live media segment');
+            errorHandler.error(new DashJSError(MssErrors.MSS_NO_TFRF_CODE, MssErrors.MSS_NO_TFRF_MESSAGE));
             return;
         }
 
@@ -77,11 +79,11 @@ function MssFragmentMoofProcessor(config) {
         const segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         const entries = tfrf.entry;
         let entry,
-            segmentTime;
+            segmentTime,
+            range;
         let segment = null;
         let t = 0;
         let availabilityStartTime = null;
-        let range;
 
         if (entries.length === 0) {
             return;
@@ -195,7 +197,6 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function convertFragment(e, sp) {
-
         let i;
 
         // e.request contains request description object

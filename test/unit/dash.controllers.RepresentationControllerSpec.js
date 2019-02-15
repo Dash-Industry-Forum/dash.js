@@ -3,17 +3,12 @@ import VoHelper from './helpers/VOHelper';
 import MpdHelper from './helpers/MPDHelper';
 import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
-import MediaController from '../../src/streaming/controllers/MediaController';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
-import MediaPlayerModel from '../../src/streaming/models/MediaPlayerModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import DashManifestModel from '../../src/dash/models/DashManifestModel';
-import VideoModel from '../../src/streaming/models/VideoModel';
-import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import SpecHelper from './helpers/SpecHelper';
-import AbrController from '../../src/streaming/controllers/AbrController';
-import DOMStorage from '../../src/streaming/utils/DOMStorage';
+
+import AbrControllerMock from './mocks/AbrControllerMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -32,41 +27,23 @@ describe('RepresentationController', function () {
     const mpdHelper = new MpdHelper();
     const mpd = mpdHelper.getMpd('static');
     const data = mpd.Period_asArray[0].AdaptationSet_asArray[0];
-    const adaptation = voHelper.getDummyRepresentation(testType).adaptation;
+    const voRepresentations = [];
+    voRepresentations.push(voHelper.getDummyRepresentation(testType));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
-    const mediaPlayerModel = MediaPlayerModel(context).getInstance();
-    const mediaController = MediaController(context).getInstance();
-    const timelineConverter = TimelineConverter(context).getInstance();
-    const dashManifestModel = DashManifestModel(context).getInstance({
-        mediaController: mediaController,
-        timelineConverter: timelineConverter
-    });
-    const videoModel = VideoModel(context).getInstance();
-
 
     Events.extend(MediaPlayerEvents);
 
     manifestModel.setValue(mpd);
 
-    const abrController = AbrController(context).getInstance();
-    const domStorage = DOMStorage(context).getInstance({
-        mediaPlayerModel: mediaPlayerModel
-    });
+    const abrControllerMock = new AbrControllerMock();
 
-    abrController.setConfig({
-        domStorage: domStorage,
-        mediaPlayerModel: mediaPlayerModel,
-        videoModel: videoModel
-    });
-    abrController.registerStreamType(testType, streamProcessor);
+    abrControllerMock.registerStreamType();
 
     const representationController = RepresentationController(context).create();
     representationController.setConfig({
-        abrController: abrController,
-        domStorage: domStorage,
-        dashManifestModel: dashManifestModel,
+        abrController: abrControllerMock,
         manifestModel: manifestModel,
         streamProcessor: streamProcessor
     });
@@ -94,7 +71,7 @@ describe('RepresentationController', function () {
 
         it('should fire dataUpdateStarted event when new data is set', function () {
             // Act
-            representationController.updateData(data, adaptation, testType);
+            representationController.updateData(data, voRepresentations, testType);
 
             // Assert
             expect(spy).to.have.been.called.exactly(1);
@@ -103,7 +80,7 @@ describe('RepresentationController', function () {
 
     describe('when data update completed', function () {
         beforeEach(function (done) {
-            representationController.updateData(data, adaptation, testType);
+            representationController.updateData(data, voRepresentations, testType);
             setTimeout(function () {
                 done();
             }, specHelper.getExecutionDelay());
@@ -111,12 +88,6 @@ describe('RepresentationController', function () {
 
         it('should return the data that was set', function () {
             expect(representationController.getData()).to.equal(data);
-        });
-
-        it('should return correct data index', function () {
-            const expectedValue = 0;
-
-            expect(representationController.getDataIndex()).to.equal(expectedValue);
         });
 
         it('should return correct representation for quality', function () {

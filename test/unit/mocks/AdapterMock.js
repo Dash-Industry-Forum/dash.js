@@ -1,34 +1,69 @@
-class AdapterMock {
-    constructor() {
-        this.metricsList = {
-            BUFFER_STATE: 'BUFFER_STATE'
-        };
-    }
+function AdapterMock () {
+    this.metricsList = {
+        BUFFER_STATE: 'BUFFER_STATE'
+    };
 
-    getEventsFor() {
+    this.getEventsFor = function () {
         return null;
-    }
+    };
 
-    getAllMediaInfoForType() {
+    this.getAllMediaInfoForType = function () {
         return [{codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main']},
                 {codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main']}];
-    }
+    };
 
-    getDataForMedia() {
+    this.getDataForMedia = function () {
         return {};
-    }
+    };
 
-    getMediaInfoForType() {
+    this.getMediaInfoForType = function () {
         return {};
-    }
+    };
 
-    getFragmentRequest() {
-        return {startTime: 0,
-                duration: 2};
-    }
+    this.getStreamsInfo = function () {
+        return [];
+    };
 
-    setIndexHandlerTime () {
-    }
+    this.setRepresentation = function (res) {
+        this.representation = res;
+    };
+
+    this.getVoRepresentations = function () {
+        if (this.representation) {
+            return [this.representation];
+        } else {
+            return [];
+        }
+    };
+
+    this.getAdaptationForType = function () {
+        return {
+            Representation: [
+                {
+                    width: 500
+                },
+                {
+                    width: 750
+                },
+                {
+                    width: 900
+                }
+            ]
+        };
+    };
+
+    this.getIsTextTrack = function () {
+        return false;
+    };
+
+    this.getBaseURLsFromElement = function () {
+        return [];
+    };
+
+    this.getRepresentationSortFunction = function () {
+        // Return a silly sort function
+        return function () { return 0; };
+    };
 }
 
 export default AdapterMock;

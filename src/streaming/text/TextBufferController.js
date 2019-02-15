@@ -38,9 +38,8 @@ function TextBufferController(config) {
     config = config || {};
     let context = this.context;
 
-    let _BufferControllerImpl;
-
-    let instance;
+    let _BufferControllerImpl,
+        instance;
 
     function setup() {
 

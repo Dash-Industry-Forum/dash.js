@@ -128,8 +128,8 @@ function MssFragmentProcessor(config) {
     const ISOBoxer = config.ISOBoxer;
     const debug = config.debug;
     let mssFragmentMoovProcessor,
-        mssFragmentMoofProcessor;
-    let instance;
+        mssFragmentMoofProcessor,
+        instance;
 
     function setup() {
         ISOBoxer.addBoxProcessor('uuid', uuidProcessor);

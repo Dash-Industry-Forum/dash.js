@@ -1,6 +1,7 @@
 import DashParser from '../../src/dash/parser/DashParser';
 
 const expect = require('chai').expect;
+const fs = require('fs');
 const jsdom = require('jsdom').JSDOM;
 
 const context = {};
@@ -31,6 +32,7 @@ describe('DashParser', function () {
     });
 
     it('should throw an error when parse is called with invalid data', function () {
-        expect(dashParser.parse.bind('<MPD')).to.be.throw('parsing the manifest failed');
+        let manifest = fs.readFileSync(__dirname + '/data/dash/manifest_error.xml', 'utf8');
+        expect(dashParser.parse.bind(manifest)).to.be.throw('parsing the manifest failed');
     });
 });

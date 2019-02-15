@@ -32,9 +32,15 @@
 import CommonEncryption from '../CommonEncryption';
 import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
+import ProtectionErrors from '../errors/ProtectionErrors';
+import DashJSError from '../../vo/DashJSError';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
+
+const LICENSE_SERVER_REQUEST_RETRIES = 3;
+const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
+const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
 
 /**
  * @module ProtectionController
@@ -168,12 +174,12 @@ function ProtectionController(config) {
             try {
                 protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
             } catch (error) {
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error creating key session! ' + error.message});
+                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + error.message)});
             }
         } else if (initData) {
             protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
         } else {
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!'});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!')});
         }
     }
 
@@ -400,7 +406,7 @@ function ProtectionController(config) {
                         eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                         if (event.error) {
                             if (!fromManifest) {
-                                eventBus.trigger(events.KEY_SYSTEM_SELECTED, {error: 'DRM: KeySystem Access Denied! -- ' + event.error});
+                                eventBus.trigger(events.KEY_SYSTEM_SELECTED, {error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)});
                             }
                         } else {
                             logger.info('DRM: KeySystem Access Granted');
@@ -437,7 +443,7 @@ function ProtectionController(config) {
                     keySystem = undefined;
                     eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                     if (!fromManifest) {
-                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: null, error: 'DRM: KeySystem Access Denied! -- ' + event.error});
+                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)});
                     }
                 } else {
                     keySystemAccess = event.data;
@@ -482,7 +488,7 @@ function ProtectionController(config) {
                 } else {
                     keySystem = undefined;
                     if (!fromManifest) {
-                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: null, error: 'DRM: Error selecting key system! -- ' + event.error});
+                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)});
                     }
                 }
             };
@@ -501,7 +507,7 @@ function ProtectionController(config) {
 
     function onKeyStatusChanged(e) {
         if (e.error) {
-            eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: 'DRM: KeyStatusChange error! -- ' + e.error});
+            eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: e.error});
         } else {
             logger.debug('DRM: key status = ' + e.status);
         }
@@ -509,10 +515,6 @@ function ProtectionController(config) {
 
     function onKeyMessage(e) {
         logger.debug('DRM: onKeyMessage');
-        if (e.error) {
-            logger.error(e.error);
-            return;
-        }
 
         // Dispatch event to applications indicating we received a key message
         const keyMessage = e.data;
@@ -527,7 +529,7 @@ function ProtectionController(config) {
 
         // Ensure message from CDM is not empty
         if (!message || message.byteLength === 0) {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: Empty key message from CDM');
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE));
             return;
         }
 
@@ -550,8 +552,6 @@ function ProtectionController(config) {
         }
 
         // All remaining key system scenarios require a request to a remote license server
-        const xhr = new XMLHttpRequest();
-
         // Determine license server URL
         let url = null;
         if (protData && protData.serverURL) {
@@ -575,48 +575,20 @@ function ProtectionController(config) {
 
         // Ensure valid license server URL
         if (!url) {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: No license server URL specified!');
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE, ProtectionErrors.MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE));
             return;
         }
 
-        const reportError = function (xhr, eventData, keySystemString, messageType) {
-            const errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR complete. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg);
-        };
-
-        xhr.open(licenseServerData.getHTTPMethod(messageType), url, true);
-        xhr.responseType = licenseServerData.getResponseType(keySystemString, messageType);
-        xhr.onload = function () {
-            if (!protectionModel) {
-                return;
-            }
-            if (this.status == 200) {
-                const licenseMessage = licenseServerData.getLicenseMessage(this.response, keySystemString, messageType);
-                if (licenseMessage !== null) {
-                    sendLicenseRequestCompleteEvent(eventData);
-                    protectionModel.updateKeySession(sessionToken, licenseMessage);
-                } else {
-                    reportError(this, eventData, keySystemString, messageType);
-                }
-            } else {
-                reportError(this, eventData, keySystemString, messageType);
-            }
-        };
-        xhr.onabort = function () {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR aborted. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
-        };
-        xhr.onerror = function () {
-            sendLicenseRequestCompleteEvent(eventData, 'DRM: ' + keySystemString + ' update, XHR error. status is "' + this.statusText + '" (' + this.status + '), readyState is ' + this.readyState);
-        };
-
         // Set optional XMLHttpRequest headers from protection data and message
+        const reqHeaders = {};
+        let withCredentials = false;
         const updateHeaders = function (headers) {
             if (headers) {
                 for (const key in headers) {
                     if ('authorization' === key.toLowerCase()) {
-                        xhr.withCredentials = true;
+                        withCredentials = true;
                     }
-                    xhr.setRequestHeader(key, headers[key]);
+                    reqHeaders[key] = headers[key];
                 }
             }
         };
@@ -627,10 +599,101 @@ function ProtectionController(config) {
 
         // Overwrite withCredentials property from protData if present
         if (protData && typeof protData.withCredentials == 'boolean') {
-            xhr.withCredentials = protData.withCredentials;
+            withCredentials = protData.withCredentials;
         }
 
-        xhr.send(keySystem.getLicenseRequestFromMessage(message));
+        const reportError = function (xhr, eventData, keySystemString, messageType) {
+            const errorMsg = ((xhr.response) ? licenseServerData.getErrorResponse(xhr.response, keySystemString, messageType) : 'NONE');
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
+                ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR complete. status is "' +
+                xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState + '.  Response is ' + errorMsg));
+        };
+
+        const onLoad = function (xhr) {
+            if (!protectionModel) {
+                return;
+            }
+
+            if (xhr.status === 200) {
+                const licenseMessage = licenseServerData.getLicenseMessage(xhr.response, keySystemString, messageType);
+                if (licenseMessage !== null) {
+                    sendLicenseRequestCompleteEvent(eventData);
+                    protectionModel.updateKeySession(sessionToken, licenseMessage);
+                } else {
+                    reportError(xhr, eventData, keySystemString, messageType);
+                }
+            } else {
+                reportError(xhr, eventData, keySystemString, messageType);
+            }
+        };
+
+        const onAbort = function (xhr) {
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
+                ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR aborted. status is "' +
+                xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+        };
+
+        const onError = function (xhr) {
+            sendLicenseRequestCompleteEvent(eventData, new DashJSError(ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE,
+                ProtectionErrors.MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' +
+                xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
+        };
+
+        const reqPayload = keySystem.getLicenseRequestFromMessage(message);
+        const reqMethod = licenseServerData.getHTTPMethod(messageType);
+        const responseType = licenseServerData.getResponseType(keySystemString, messageType);
+        const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
+
+        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload,
+            LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+    }
+
+    // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
+    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
+        const xhr = new XMLHttpRequest();
+
+        xhr.open(method, url, true);
+        xhr.responseType = responseType;
+        xhr.withCredentials = withCredentials;
+        if (timeout > 0) {
+            xhr.timeout = timeout;
+        }
+        for (const key in headers) {
+            xhr.setRequestHeader(key, headers[key]);
+        }
+
+        const retryRequest = function () {
+            // fail silently and retry
+            retriesCount--;
+            setTimeout(function () {
+                doLicenseRequest(url, headers, method, responseType, withCredentials, payload,
+                    retriesCount, timeout, onLoad, onAbort, onError);
+            }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
+        };
+
+        xhr.onload = function () {
+            if (this.status === 200 || retriesCount <= 0) {
+                onLoad(this);
+            } else {
+                logger.warn('License request failed (' + this.status + '). Retrying it... Pending retries: ' + retriesCount);
+                retryRequest();
+            }
+        };
+
+        xhr.ontimeout = xhr.onerror = function () {
+            if (retriesCount <= 0) {
+                onError(this);
+            } else {
+                logger.warn('License request network request failed . Retrying it... Pending retries: ' + retriesCount);
+                retryRequest();
+            }
+        };
+
+        xhr.onabort = function () {
+            onAbort(this);
+        };
+
+        xhr.send(payload);
     }
 
     function onNeedKey(event, retry) {

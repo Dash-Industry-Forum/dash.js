@@ -40,7 +40,6 @@ function VideoModel() {
         logger,
         element,
         TTMLRenderingDiv,
-        videoContainer,
         previousPlaybackRate;
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
@@ -166,14 +165,6 @@ function VideoModel() {
         return element ? element.src : null;
     }
 
-    function getVideoContainer() {
-        return videoContainer;
-    }
-
-    function setVideoContainer(value) {
-        videoContainer = value;
-    }
-
     function getTTMLRenderingDiv() {
         return TTMLRenderingDiv;
     }
@@ -198,7 +189,6 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
-
         let event;
 
         if (type === null || element.seeking || stalledStreams.indexOf(type) !== -1) {
@@ -262,8 +252,7 @@ function VideoModel() {
 
         if (hasQuality) {
             result = element.getVideoPlaybackQuality();
-        }
-        else if (hasWebKit) {
+        } else if (hasWebKit) {
             result = {
                 droppedVideoFrames: element.webkitDroppedFrameCount,
                 totalVideoFrames: element.webkitDroppedFrameCount + element.webkitDecodedFrameCount,
@@ -278,7 +267,7 @@ function VideoModel() {
         if (element) {
             element.autoplay = true;
             const p = element.play();
-            if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
+            if (p && p.catch && typeof Promise !== 'undefined') {
                 p.catch((e) => {
                     if (e.name === 'NotAllowedError') {
                         eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
@@ -370,7 +359,7 @@ function VideoModel() {
 
     function getTextTrack(kind, label, lang, isTTML, isEmbedded) {
         if (element) {
-            for (var i = 0; i < element.textTracks.length; i++) {
+            for (let i = 0; i < element.textTracks.length; i++) {
                 //label parameter could be a number (due to adaptationSet), but label, the attribute of textTrack, is a string => to modify...
                 //label could also be undefined (due to adaptationSet)
                 if (element.textTracks[i].kind === kind && (label ? element.textTracks[i].label == label : true) &&
@@ -416,6 +405,7 @@ function VideoModel() {
         isSeeking: isSeeking,
         getTime: getTime,
         getPlaybackRate: getPlaybackRate,
+        setPlaybackRate: setPlaybackRate,
         getPlayedRanges: getPlayedRanges,
         getEnded: getEnded,
         setStallState: setStallState,
@@ -423,8 +413,6 @@ function VideoModel() {
         setElement: setElement,
         setSource: setSource,
         getSource: getSource,
-        getVideoContainer: getVideoContainer,
-        setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
         getPlaybackQuality: getPlaybackQuality,
