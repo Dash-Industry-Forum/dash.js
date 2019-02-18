@@ -60,7 +60,6 @@ function BufferController(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
     const mediaController = config.mediaController;
