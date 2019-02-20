@@ -47,6 +47,12 @@ function AdapterMock () {
                 },
                 {
                     width: 900
+                },
+                {
+                    width: 900
+                },
+                {
+                    width: 900
                 }
             ]
         };
