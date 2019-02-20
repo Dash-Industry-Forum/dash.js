@@ -2908,7 +2908,8 @@ function MediaPlayer() {
                 dashMetrics: dashMetrics,
                 events: Events,
                 constants: Constants,
-                metricsConstants: MetricsConstants
+                metricsConstants: MetricsConstants,
+                adapter: adapter
             });
         }
     }
