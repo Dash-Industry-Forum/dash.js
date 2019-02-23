@@ -688,14 +688,10 @@ function AbrController() {
             while (
                 newIdx > 0 &&
                 representation[newIdx] &&
-                elementWidth < representation[newIdx].width &&
-                Math.abs(elementWidth - representation[newIdx - 1].width) < Math.abs(representation[newIdx].width - elementWidth)
+                representation[newIdx - 1].width >= elementWidth &&
+                representation[newIdx - 1].width < representation[newIdx].width
             ) {
                 newIdx = newIdx - 1;
-            }
-
-            if (representation.length - 2 >= newIdx && representation[newIdx].width === representation[newIdx + 1].width) {
-                newIdx = Math.min(idx, newIdx + 1);
             }
         }
 
