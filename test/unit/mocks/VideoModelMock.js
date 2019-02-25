@@ -78,6 +78,10 @@ class VideoModelMock {
         return this.width;
     }
 
+    setClientWidth(newWidth) {
+        this.width = newWidth;
+    }
+
     getClientHeight() {
         return this.height;
     }

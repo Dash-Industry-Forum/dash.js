@@ -317,4 +317,12 @@ describe('AbrController', function () {
         expect(bitrateInfo.bitrate).to.be.equal(2000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(1);
     });
+
+    it('should return the appropriate top quality index when calling getTopQualityIndexFor', function () {
+        videoModelMock.setClientWidth(899);
+        abrCtrl.setLimitBitrateByPortal(true);
+        abrCtrl.updateTopQualityIndex({type: testType, streamInfo: {id: 'test'}, representationCount: 5});
+        let topQualityIndex = abrCtrl.getTopQualityIndexFor(testType, 'test');
+        expect(topQualityIndex).to.be.equal(4);
+    });
 });
