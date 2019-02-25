@@ -53,7 +53,6 @@ function OfflineDownload(params) {
         manifestLoader,
         manifestModel,
         manifestUpdater,
-        dashManifestModel,
         mediaPlayerModel,
         offlineStoreController,
         XMLManifest,
@@ -89,10 +88,6 @@ function OfflineDownload(params) {
             manifestModel = config.manifestModel;
         }
 
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
@@ -114,12 +109,12 @@ function OfflineDownload(params) {
         }
 
         baseURLController.setConfig({
-            dashManifestModel: dashManifestModel
+            adapter: adapter
         });
 
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             manifestLoader: manifestLoader,
             errHandler: errHandler
         });
@@ -228,7 +223,6 @@ function OfflineDownload(params) {
                     finished: onDownloadingFinished
                 });
                 stream.setConfig({
-                    dashManifestModel: dashManifestModel,
                     adapter: adapter,
                     errHandler: errHandler,
                     baseURLController: baseURLController,

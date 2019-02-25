@@ -63,7 +63,6 @@ function OfflineStreamProcessor(config) {
         mimeType,
         baseURLController,
         fragmentModel,
-        dashManifestModel,
         mediaPlayerModel,
         mediaInfo,
         bitrate,
@@ -107,10 +106,6 @@ function OfflineStreamProcessor(config) {
 
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
-        }
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
         }
 
         if (config.mediaInfo) {
@@ -228,7 +223,7 @@ function OfflineStreamProcessor(config) {
         offlineDownloaderRequestRule = OfflineDownloaderRequestRule(context).create();
         offlineDownloaderRequestRule.initialize(indexHandler, fragmentModel);
 
-        if (dashManifestModel.getIsTextTrack(mimeType)) {
+        if (adapter.getIsTextTrack(mimeType)) {
             getInitRequest();
         }
 
@@ -244,12 +239,7 @@ function OfflineStreamProcessor(config) {
     }
 
     function updateData() {
-        const voAdaptation = adapter.getDataForMedia(mediaInfo);
-        if (voAdaptation) {
-            updateRepresentation(voAdaptation, type);
-        } else {
-            throw new Error('Any Vo Periods for this streamInfo');
-        }
+        updateRepresentation(mediaInfo);
     }
 
     /**
@@ -304,14 +294,13 @@ function OfflineStreamProcessor(config) {
 
     /**
      * Update representation
-     * @param {Object} voAdaptation - adaptation
-     * @param {string} type du média
+     * @param {Object} mediaInfo - mediaInfo
      * @memberof OfflineStreamProcessor#
      */
-    function updateRepresentation(voAdaptation, type) {
+    function updateRepresentation(mediaInfo) {
         updating = true;
 
-        let voRepresentations = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+        let voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
         // get representation VO according to id.
         let rep = voRepresentations.find((representation) => {

@@ -1114,19 +1114,16 @@ function MediaPlayer() {
             schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
         }
         adapter = DashAdapter(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance({
-            mediaController: mediaController,
-            timelineConverter: timelineConverter,
-            adapter: adapter
-        });
         manifestModel = ManifestModel(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel
+            manifestModel: manifestModel
         });
 
         adapter.setConfig({
-            dashManifestModel: dashManifestModel
+            constants: Constants,
+            cea608parser: cea608parser,
+            errHandler: errHandler,
+            BASE64: BASE64
         });
 
         if (!offlineController) {
@@ -1137,7 +1134,6 @@ function MediaPlayer() {
             manifestLoader: manifestLoader,
             mediaPlayerModel: mediaPlayerModel,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             adapter: adapter,
             errHandler: errHandler,
             schemeLoaderFactory: schemeLoaderFactory

@@ -54,7 +54,6 @@ function OfflineController() {
         logger,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
         mediaPlayerModel,
         offlineStoreController,
         offlineUtlUtils,
@@ -80,10 +79,6 @@ function OfflineController() {
 
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
-        }
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
         }
 
         if (config.mediaPlayerModel) {
@@ -137,7 +132,6 @@ function OfflineController() {
                 manifestLoader: manifestLoader,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
-                dashManifestModel: dashManifestModel,
                 adapter: adapter,
                 errHandler: errHandler,
                 schemeLoaderFactory: schemeLoaderFactory,

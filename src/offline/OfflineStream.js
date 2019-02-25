@@ -53,7 +53,6 @@ function OfflineStream(config) {
         finishedCb,
         adapter,
         baseURLController,
-        dashManifestModel,
         mediaPlayerModel,
         offlineStreamProcessor,
         offlineStreamProcessors,
@@ -91,10 +90,6 @@ function OfflineStream(config) {
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
 
         if (config.adapter) {
             adapter = config.adapter;
@@ -257,7 +252,6 @@ function OfflineStream(config) {
             mediaInfo: mediaInfo,
             bitrate: bitrate,
             adapter: adapter,
-            dashManifestModel: dashManifestModel,
             baseURLController: baseURLController,
             errHandler: errHandler,
             stream: instance,
