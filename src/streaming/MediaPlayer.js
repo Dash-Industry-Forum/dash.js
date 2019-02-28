@@ -245,10 +245,9 @@ function MediaPlayer() {
 
         adapter = DashAdapter(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
-        
+
         dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel
+            manifestModel: manifestModel
         });
 
         textController = TextController(context).getInstance();
@@ -2908,8 +2907,7 @@ function MediaPlayer() {
                 dashMetrics: dashMetrics,
                 events: Events,
                 constants: Constants,
-                metricsConstants: MetricsConstants,
-                adapter: adapter
+                metricsConstants: MetricsConstants
             });
         }
     }

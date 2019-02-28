@@ -41,6 +41,7 @@ import {
 
 /**
  * @module DashMetrics
+ * @param {object} config
  */
 
 function DashMetrics(config) {
@@ -53,7 +54,6 @@ function DashMetrics(config) {
         playListTraceMetrics,
         playListMetrics;
 
-    let manifestModel = config.manifestModel;
     let metricsModel = config.metricsModel;
 
     function setup() {
