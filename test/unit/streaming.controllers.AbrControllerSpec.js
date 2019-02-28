@@ -259,7 +259,8 @@ describe('AbrController', function () {
 
     it('should return the appropriate top quality index when calling getTopQualityIndexFor', function () {
         videoModelMock.setClientWidth(899);
-        abrCtrl.setLimitBitrateByPortal(true);
+        const s = { streaming: { abr: { limitBitrateByPortal: true }}};
+        settings.update(s);
         abrCtrl.updateTopQualityIndex({type: testType, streamInfo: {id: 'test'}, representationCount: 5});
         let topQualityIndex = abrCtrl.getTopQualityIndexFor(testType, 'test');
         expect(topQualityIndex).to.be.equal(4);
