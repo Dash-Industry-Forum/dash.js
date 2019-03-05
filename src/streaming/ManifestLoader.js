@@ -64,14 +64,14 @@ function ManifestLoader(config) {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });
 
         xlinkController = XlinkController(context).create({
             errHandler: errHandler,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });

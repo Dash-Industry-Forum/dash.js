@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import DashJSError from '../streaming/vo/DashJSError';
@@ -62,7 +61,6 @@ function DashHandler(config) {
     let segmentBaseLoader;
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
-    const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
@@ -82,7 +80,7 @@ function DashHandler(config) {
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
             baseURLController: baseURLController,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler
         });
@@ -232,10 +230,9 @@ function DashHandler(config) {
             if (isDynamic()) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime;
-                const metrics = metricsModel.getMetricsFor(Constants.STREAM);
                 // the last segment is the Expected, not calculated, live edge.
                 timelineConverter.setExpectedLiveEdge(liveEdge);
-                metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
+                dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
             }
         }
     }

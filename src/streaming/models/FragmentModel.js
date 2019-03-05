@@ -46,7 +46,7 @@ function FragmentModel(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const fragmentLoader = config.fragmentLoader;
 
     let instance,
@@ -276,18 +276,8 @@ function FragmentModel(config) {
     }
 
     function addSchedulingInfoMetrics(request, state) {
-        metricsModel.addSchedulingInfo(
-            request.mediaType,
-            new Date(),
-            request.type,
-            request.startTime,
-            request.availabilityStartTime,
-            request.duration,
-            request.quality,
-            request.range,
-            state);
-
-        metricsModel.addRequestsQueue(request.mediaType, loadingRequests, executedRequests);
+        dashMetrics.addSchedulingInfo(request, state);
+        dashMetrics.addRequestsQueue(request.mediaType, loadingRequests, executedRequests);
     }
 
     function onLoadingCompleted(e) {

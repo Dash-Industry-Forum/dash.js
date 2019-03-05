@@ -139,7 +139,6 @@
         var player = init();
 
         setInterval(function() {
-            var metrics = player.getMetricsFor("video");
             var dashMetrics = player.getDashMetrics();
 
             var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
@@ -151,7 +150,7 @@
             var currentPlaybackRate = player.getPlaybackRate();
             document.getElementById("playbackrate-tag").innerHTML = Math.round(currentPlaybackRate * 100) / 100;
 
-            var currentBuffer = dashMetrics.getCurrentBufferLevel(metrics);
+            var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
             document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
         }, 200);
     });

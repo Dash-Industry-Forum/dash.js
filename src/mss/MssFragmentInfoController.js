@@ -50,7 +50,7 @@ function MssFragmentInfoController(config) {
 
     const streamProcessor = config.streamProcessor;
     const eventBus = config.eventBus;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const ISOBoxer = config.ISOBoxer;
     const baseURLController = config.baseURLController;
@@ -208,7 +208,7 @@ function MssFragmentInfoController(config) {
         try {
             // Process FramgentInfo in order to update segment timeline (DVR window)
             const mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
                 eventBus: eventBus,

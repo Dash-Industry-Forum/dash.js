@@ -156,16 +156,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         getBufferLevel = function () {
-            var videoMetrics = player.getMetricsFor('video');
-            var audioMetrics = player.getMetricsFor('audio');
             var dashMetrics = player.getDashMetrics();
             var bufferLevel = 0;
 
             if (dashMetrics) {
-                if (videoMetrics) {
-                    bufferLevel = dashMetrics.getCurrentBufferLevel(videoMetrics);
-                } else if (audioMetrics) {
-                    bufferLevel = dashMetrics.getCurrentBufferLevel(audioMetrics);
+                bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+                if (!bufferLevel) {
+                    bufferLevel = dashMetrics.getCurrentBufferLevel('audio', true);
                 }
             }
             return bufferLevel;

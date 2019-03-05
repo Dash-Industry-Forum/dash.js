@@ -84,7 +84,6 @@ function AbrController() {
         droppedFramesHistory,
         throughputHistory,
         isUsingBufferOccupancyABRDict,
-        metricsModel,
         dashMetrics,
         useDeadTimeLatency;
 
@@ -119,7 +118,6 @@ function AbrController() {
 
     function createAbrRulesCollection() {
         abrRulesCollection = ABRRulesCollection(context).create({
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel
         });
@@ -175,9 +173,6 @@ function AbrController() {
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
-        }
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
@@ -439,7 +434,7 @@ function AbrController() {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
                 } else if (debug.getLogToBrowserConsole()) {
-                    const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
+                    const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                     logger.debug('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
             }
@@ -463,7 +458,7 @@ function AbrController() {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const id = streamInfo ? streamInfo.id : null;
             if (debug.getLogToBrowserConsole()) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(type));
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                 logger.info('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);

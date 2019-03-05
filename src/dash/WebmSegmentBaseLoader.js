@@ -24,7 +24,7 @@ function WebmSegmentBaseLoader() {
         WebM,
         errHandler,
         requestModifier,
-        metricsModel,
+        dashMetrics,
         mediaPlayerModel,
         httpLoader,
         baseURLController;
@@ -100,18 +100,18 @@ function WebmSegmentBaseLoader() {
         requestModifier = RequestModifier(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
     }
 
     function setConfig(config) {
-        if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel || !config.errHandler) {
+        if (!config.baseURLController || !config.dashMetrics || !config.mediaPlayerModel || !config.errHandler) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
         baseURLController = config.baseURLController;
-        metricsModel = config.metricsModel;
+        dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
     }

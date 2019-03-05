@@ -1,7 +1,7 @@
 import HTTPLoader from '../../src/streaming/net/HTTPLoader';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
-import MetricsModel from '../../src/streaming/models/MetricsModel';
+import DashMetrics from '../../src/dash/DashMetrics';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import {
     HTTPRequest
@@ -15,7 +15,7 @@ const Stream = require('stream');
 const context = {};
 
 let errHandler;
-let metricsModel;
+let dashMetrics;
 let requestModifier;
 let mediaPlayerModelMock;
 let httpLoader;
@@ -25,7 +25,7 @@ describe('HTTPLoader', function () {
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
         errHandler = ErrorHandler(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
+        dashMetrics = DashMetrics(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
     });
 
@@ -106,7 +106,7 @@ describe('HTTPLoader', function () {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             useFetch: true
@@ -127,7 +127,7 @@ describe('HTTPLoader', function () {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock
         });
@@ -150,7 +150,7 @@ describe('HTTPLoader', function () {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock
         });
@@ -173,7 +173,7 @@ describe('HTTPLoader', function () {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             useFetch: true
@@ -194,7 +194,7 @@ describe('HTTPLoader', function () {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             useFetch: true
@@ -222,7 +222,7 @@ describe('HTTPLoader', function () {
 
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             useFetch: true
@@ -256,7 +256,7 @@ describe('HTTPLoader', function () {
         mediaPlayerModelMock.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE ] = 0;
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
             useFetch: true
