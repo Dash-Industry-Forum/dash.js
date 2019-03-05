@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import DashConstants from '../constants/DashConstants';
 
 function ObjectIron(mappers) {
 
@@ -45,11 +46,26 @@ function ObjectIron(mappers) {
             const property = properties[i];
 
             if (parent[property.name]) {
-                if (child[property.name]) {
+                let childPropertyName = null;
+                let childPropertyNames;
+                if (property.name === DashConstants.SEGMENT_BASE) {
+                    childPropertyNames = [DashConstants.SEGMENT_BASE, DashConstants.SEGMENT_TEMPLATE, DashConstants.SEGMENT_LIST];
+                } else {
+                    childPropertyNames = [property.name];
+                }
+                childPropertyNames.some((name) => {
+                    if (child.hasOwnProperty(name)) {
+                        childPropertyName = name;
+                        return true;
+                    }
+                    return false;
+                });
+
+                if (childPropertyName) {
                     // check to see if we should merge
-                    if (property.merge) {
+                    if (property.merge || (childPropertyName !== property.name)) {
                         const parentValue = parent[property.name];
-                        const childValue = child[property.name];
+                        const childValue = child[childPropertyName];
 
                         // complex objects; merge properties
                         if (typeof parentValue === 'object' && typeof childValue === 'object') {
@@ -57,7 +73,7 @@ function ObjectIron(mappers) {
                         }
                         // simple objects; merge them together
                         else {
-                            child[property.name] = parentValue + childValue;
+                            child[childPropertyName] = parentValue + childValue;
                         }
                     }
                 } else {
