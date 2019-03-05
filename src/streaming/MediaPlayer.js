@@ -44,7 +44,6 @@ import TextController from './text/TextController';
 import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
-import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
@@ -133,7 +132,6 @@ function MediaPlayer() {
         metricsReportingController,
         mssHandler,
         adapter,
-        metricsModel,
         mediaPlayerModel,
         errHandler,
         capabilities,
@@ -247,8 +245,10 @@ function MediaPlayer() {
 
         adapter = DashAdapter(context).getInstance();
         manifestModel = ManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance();
-        metricsModel = MetricsModel(context).getInstance();
+
+        dashMetrics = DashMetrics(context).getInstance({
+            manifestModel: manifestModel
+        });
 
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
@@ -678,14 +678,14 @@ function MediaPlayer() {
         const types = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
         if (!type) {
             const buffer = types.map(
-                t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
+                t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(t) : Number.MAX_VALUE
             ).reduce(
                 (p, c) => Math.min(p, c)
             );
             return buffer === Number.MAX_VALUE ? NaN : buffer;
         } else {
             if (types.indexOf(type) !== -1) {
-                const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
+                const buffer = getDashMetrics().getCurrentBufferLevel(type);
                 return buffer ? buffer : NaN;
             } else {
                 logger.warn('getBufferLength requested for invalid type');
@@ -702,7 +702,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRWindowSize() {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         if (!metric) {
             return 0;
         }
@@ -721,7 +721,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRSeekOffset(value) {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         if (!metric) {
             return 0;
         }
@@ -758,7 +758,7 @@ function MediaPlayer() {
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
-            let metric = getDVRInfoMetric();
+            let metric = dashMetrics.getCurrentDVRInfo();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
         }
 
@@ -781,7 +781,7 @@ function MediaPlayer() {
 
         if (playbackController.getIsDynamic()) {
 
-            let metric = getDVRInfoMetric();
+            let metric = dashMetrics.getCurrentDVRInfo();
             let range;
 
             if (!metric) {
@@ -2017,16 +2017,6 @@ function MediaPlayer() {
         return dashMetrics;
     }
 
-    /**
-     *
-     * @param {string} type
-     * @returns {Object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getMetricsFor(type) {
-        return metricsModel.getReadOnlyMetricsFor(type);
-    }
     /*
     ---------------------------------------------------------------------------
 
@@ -2815,7 +2805,6 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
             timelineConverter: timelineConverter,
@@ -2828,7 +2817,6 @@ function MediaPlayer() {
 
         playbackController.setConfig({
             streamController: streamController,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             adapter: adapter,
@@ -2841,7 +2829,6 @@ function MediaPlayer() {
             streamController: streamController,
             domStorage: domStorage,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             adapter: adapter,
             videoModel: videoModel
@@ -2864,7 +2851,7 @@ function MediaPlayer() {
     function createManifestLoader() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler
@@ -2917,7 +2904,7 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
                 adapter: adapter,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 events: Events,
                 constants: Constants,
                 metricsConstants: MetricsConstants
@@ -2936,7 +2923,7 @@ function MediaPlayer() {
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
@@ -2952,13 +2939,8 @@ function MediaPlayer() {
         }
     }
 
-    function getDVRInfoMetric() {
-        let metric = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
-        return dashMetrics.getCurrentDVRInfo(metric);
-    }
-
     function getAsUTC(valToConvert) {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         let availableFrom,
             utcValue;
 
@@ -3057,7 +3039,6 @@ function MediaPlayer() {
         setScheduleWhilePaused: setScheduleWhilePaused,
         getScheduleWhilePaused: getScheduleWhilePaused,
         getDashMetrics: getDashMetrics,
-        getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
         updatePortalSize: updatePortalSize,

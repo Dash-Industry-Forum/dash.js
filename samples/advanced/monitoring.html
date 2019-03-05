@@ -28,11 +28,10 @@
 
             var eventPoller = setInterval(function() {
                 var streamInfo = player.getActiveStream().getStreamInfo();
-                var metrics = player.getMetricsFor('video');
                 var dashMetrics = player.getDashMetrics();
                 var dashAdapter = player.getDashAdapter();
 
-                if (metrics && dashMetrics && streamInfo) {
+                if (dashMetrics && streamInfo) {
                     const periodIdx = streamInfo.index;
                     var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
                     var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);

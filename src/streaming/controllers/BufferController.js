@@ -59,7 +59,7 @@ function BufferController(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
@@ -523,8 +523,8 @@ function BufferController(config) {
 
     function addBufferMetrics() {
         if (!isActive()) return;
-        metricsModel.addBufferState(type, bufferState, streamProcessor.getScheduleController().getBufferTarget());
-        metricsModel.addBufferLevel(type, new Date(), bufferLevel * 1000);
+        dashMetrics.addBufferState(type, bufferState, streamProcessor.getScheduleController().getBufferTarget());
+        dashMetrics.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 
     function checkIfBufferingCompleted() {

@@ -53,7 +53,7 @@ function Stream(config) {
     const capabilities = config.capabilities;
     const errHandler = config.errHandler;
     const timelineConverter = config.timelineConverter;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const mediaController = config.mediaController;
@@ -92,7 +92,7 @@ function Stream(config) {
 
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             errHandler: errHandler
         });
 
@@ -374,7 +374,6 @@ function Stream(config) {
             adapter: adapter,
             manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             stream: instance,

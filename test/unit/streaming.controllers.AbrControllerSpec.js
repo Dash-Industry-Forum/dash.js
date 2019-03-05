@@ -6,7 +6,6 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import VideoModelMock from './mocks/VideoModelMock';
 import DomStorageMock from './mocks/DomStorageMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -27,13 +26,11 @@ describe('AbrController', function () {
     const adapterMock = new AdapterMock();
     const videoModelMock = new VideoModelMock();
     const domStorageMock = new DomStorageMock();
-    const metricsModelMock = new MetricsModelMock();
     const dashMetricsMock = new DashMetricsMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
 
     beforeEach(function () {
         abrCtrl.setConfig({
-            metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
             videoModel: videoModelMock,
             adapter: adapterMock,

@@ -28,45 +28,92 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from '../streaming/constants/Constants';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
+import MetricsModel from '../streaming/models/MetricsModel';
+import {
+    PlayList,
+    PlayListTrace
+} from '../streaming/vo/metrics/PlayList';
 
 /**
  * @module DashMetrics
+ * @param {object} config
  */
-function DashMetrics() {
-    let instance;
+
+function DashMetrics(config) {
+
+    config = config || {};
+
+    const context = this.context;
+    let instance,
+        playListTraceMetricsClosed,
+        playListTraceMetrics,
+        playListMetrics;
+
+    let metricsModel = config.metricsModel;
+
+    function setup() {
+        metricsModel = metricsModel || MetricsModel(context).getInstance();
+        resetInitialSettings();
+    }
+
+    function resetInitialSettings() {
+        playListTraceMetricsClosed = true;
+        playListTraceMetrics = null;
+        playListMetrics = null;
+    }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} type
+     * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentRepresentationSwitch(metrics) {
+    function getCurrentRepresentationSwitch(type, readOnly) {
+        let metrics = metricsModel.getMetricsFor(type, readOnly);
         return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
+     * @param {Date} t time of the switch event
+     * @param {Date} mt media presentation time
+     * @param {string} to id of representation
+     * @param {string} lto if present, subrepresentation reference
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addRepresentationSwitch(mediaType, t, mt, to, lto) {
+        metricsModel.addRepresentationSwitch(mediaType, t, mt, to, lto);
+    }
+
+    /**
+     * @param {string} mediaType
+     * @param {boolean} readOnly
+     * @param {string} infoType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestBufferLevelVO(metrics) {
-        return getCurrent(metrics, MetricsConstants.BUFFER_LEVEL);
+    function getLatestBufferInfoVO(mediaType, readOnly, infoType) {
+        let metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+        return getCurrent(metrics, infoType);
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} type
+     * @param {boolean} readOnly
      * @returns {number}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentBufferLevel(metrics) {
-        const vo = getLatestBufferLevelVO(metrics);
+    function getCurrentBufferLevel(type, readOnly) {
+        const vo = getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_LEVEL);
 
         if (vo) {
             return Round10.round10(vo.level / 1000, -3);
@@ -76,12 +123,45 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
+     * @param {number} t
+     * @param {number} level
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addBufferLevel(mediaType, t, level) {
+        metricsModel.addBufferLevel(mediaType, t, level);
+    }
+
+    /**
+     * @param {string} mediaType
+     * @param {string} state
+     * @param {number} target
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addBufferState(mediaType, state, target) {
+        metricsModel.addBufferState(mediaType, state, target);
+    }
+
+    /**
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function clearAllCurrentMetrics () {
+        metricsModel.clearAllCurrentMetrics();
+    }
+
+    /**
+     * @param {string} mediaType
+     * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentHttpRequest(metrics) {
+    function getCurrentHttpRequest(mediaType, readOnly) {
+        let metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+
         if (!metrics) {
             return null;
         }
@@ -108,17 +188,29 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getHttpRequests(metrics) {
+    function getHttpRequests(mediaType) {
+        let metrics = metricsModel.getMetricsFor(mediaType, true);
         if (!metrics) {
             return [];
         }
 
         return !!metrics.HttpList ? metrics.HttpList : [];
+    }
+
+    /**
+     * @param {string} mediaType
+     * @param {Array} loadingRequests
+     * @param {Array} executedRequests
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addRequestsQueue(mediaType, loadingRequests, executedRequests) {
+        metricsModel.addRequestsQueue(mediaType, loadingRequests, executedRequests);
     }
 
     /**
@@ -143,13 +235,22 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentDroppedFrames(metrics) {
+    function getCurrentDroppedFrames() {
+        let metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
         return getCurrent(metrics, MetricsConstants.DROPPED_FRAMES);
+    }
+
+    /**
+     * @param {number} quality
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addDroppedFrames(quality) {
+        metricsModel.addDroppedFrames(Constants.VIDEO, quality);
     }
 
     /**
@@ -163,39 +264,140 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
-     * @returns {*}
+     * @param {object} request
+     * @param {string} state
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentManifestUpdate(metrics) {
-        return getCurrent(metrics, MetricsConstants.MANIFEST_UPDATE);
+    function addSchedulingInfo(request, state) {
+        metricsModel.addSchedulingInfo(
+            request.mediaType,
+            new Date(),
+            request.type,
+            request.startTime,
+            request.availabilityStartTime,
+            request.duration,
+            request.quality,
+            request.range,
+            state);
     }
 
     /**
-     * @param {MetricsList} metrics
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentDVRInfo(metrics) {
+    function getCurrentManifestUpdate() {
+        let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
+        return getCurrent(streamMetrics, MetricsConstants.MANIFEST_UPDATE);
+    }
+
+    /**
+     * @param {object} updatedFields fields to be updated
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function updateManifestUpdateInfo(updatedFields) {
+        const manifestUpdate = this.getCurrentManifestUpdate();
+        metricsModel.updateManifestUpdateInfo(manifestUpdate, updatedFields);
+    }
+
+    /**
+     * @param {object} streamInfo
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addManifestUpdateStreamInfo(streamInfo) {
+        if (streamInfo) {
+            const manifestUpdate = this.getCurrentManifestUpdate();
+            metricsModel.addManifestUpdateStreamInfo(manifestUpdate, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
+        }
+    }
+
+    /**
+     * @param {object} request
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addManifestUpdate(request) {
+        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.requestStartDate, request.requestEndDate);
+    }
+
+    /**
+     * @param {object} request
+     * @param {string} responseURL
+     * @param {number} responseStatus
+     * @param {object} responseHeaders
+     * @param {object} traces
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addHttpRequest(request, responseURL, responseStatus, responseHeaders, traces) {
+        metricsModel.addHttpRequest(request.mediaType,
+            null,
+            request.type,
+            request.url,
+            responseURL,
+            request.serviceLocation || null,
+            request.range || null,
+            request.requestStartDate,
+            request.firstByteDate,
+            request.requestEndDate,
+            responseStatus,
+            request.duration,
+            responseHeaders,
+            traces);
+    }
+
+    /**
+     * @param {object} representation
+     * @param {string} mediaType
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addManifestUpdateRepresentationInfo(representation, mediaType) {
+        if (representation) {
+            const manifestUpdateInfo = this.getCurrentManifestUpdate();
+            metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, representation.id, representation.index, representation.streamIndex, mediaType, representation.presentationTimeOffset, representation.startNumber, representation.fragmentInfoType);
+        }
+    }
+
+    /**
+     * @param {string} mediaType
+     * @returns {*}
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function getCurrentDVRInfo(mediaType) {
+        const metrics = mediaType ? metricsModel.getMetricsFor(mediaType, true) : metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
         return getCurrent(metrics, MetricsConstants.DVR_INFO);
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
+     * @param {Date} currentTime time of the switch event
+     * @param {object} mpd mpd reference
+     * @param {object} range range of the dvr info
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addDVRInfo(mediaType, currentTime, mpd, range) {
+        metricsModel.addDVRInfo(mediaType, currentTime, mpd, range);
+    }
+
+    /**
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestMPDRequestHeaderValueByID(metrics, id) {
+    function getLatestMPDRequestHeaderValueByID(id) {
         let headers = {};
         let httpRequestList,
             httpRequest,
             i;
 
-        httpRequestList = getHttpRequests(metrics);
+        httpRequestList = getHttpRequests(Constants.STREAM);
 
         for (i = httpRequestList.length - 1; i >= 0; i--) {
             httpRequest = httpRequestList[i];
@@ -210,15 +412,15 @@ function DashMetrics() {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} type
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestFragmentRequestHeaderValueByID(metrics, id) {
+    function getLatestFragmentRequestHeaderValueByID(type, id) {
         let headers = {};
-        let httpRequest = getCurrentHttpRequest(metrics);
+        let httpRequest = getCurrentHttpRequest(type, true);
         if (httpRequest) {
             headers = parseResponseHeaders(httpRequest._responseHeaders);
         }
@@ -244,8 +446,68 @@ function DashMetrics() {
         return headers;
     }
 
+    /**
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addPlayList() {
+        if (playListMetrics) {
+            metricsModel.addPlayList(playListMetrics);
+            playListMetrics = null;
+        }
+    }
+
+    function createPlaylistMetrics(mediaStartTime, startReason) {
+        playListMetrics = new PlayList();
+
+        playListMetrics.start = new Date();
+        playListMetrics.mstart = mediaStartTime;
+        playListMetrics.starttype = startReason;
+    }
+
+    function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
+        if (playListTraceMetricsClosed === true ) {
+            playListTraceMetricsClosed = false;
+            playListTraceMetrics = new PlayListTrace();
+
+            playListTraceMetrics.representationid = representationId;
+            playListTraceMetrics.start = new Date();
+            playListTraceMetrics.mstart = mediaStartTime;
+            playListTraceMetrics.playbackspeed = speed;
+        }
+    }
+
+    function updatePlayListTraceMetrics(traceToUpdate) {
+        if (playListTraceMetrics) {
+            for (let field in playListTraceMetrics) {
+                playListTraceMetrics[field] = traceToUpdate[field];
+            }
+        }
+    }
+
+    function pushPlayListTraceMetrics(endTime, reason) {
+        if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics) {
+            const startTime = playListTraceMetrics.start;
+            const duration = endTime.getTime() - startTime.getTime();
+            playListTraceMetrics.duration = duration;
+            playListTraceMetrics.stopreason = reason;
+            playListMetrics.trace.push(playListTraceMetrics);
+            playListTraceMetricsClosed = true;
+        }
+    }
+
+    /**
+     * @param {object} errors
+     * @memberof module:DashMetrics
+     * @instance
+     */
+    function addDVBErrors(errors) {
+        metricsModel.addDVBErrors(errors);
+    }
+
     instance = {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
+        getLatestBufferInfoVO: getLatestBufferInfoVO,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
@@ -254,8 +516,29 @@ function DashMetrics() {
         getCurrentDVRInfo: getCurrentDVRInfo,
         getCurrentManifestUpdate: getCurrentManifestUpdate,
         getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID
+        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
+        addRepresentationSwitch: addRepresentationSwitch,
+        addDVRInfo: addDVRInfo,
+        updateManifestUpdateInfo: updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
+        addManifestUpdate: addManifestUpdate,
+        addHttpRequest: addHttpRequest,
+        addSchedulingInfo: addSchedulingInfo,
+        addRequestsQueue: addRequestsQueue,
+        addBufferLevel: addBufferLevel,
+        addBufferState: addBufferState,
+        addDroppedFrames: addDroppedFrames,
+        addPlayList: addPlayList,
+        addDVBErrors: addDVBErrors,
+        createPlaylistMetrics: createPlaylistMetrics,
+        createPlaylistTraceMetrics: createPlaylistTraceMetrics,
+        updatePlayListTraceMetrics: updatePlayListTraceMetrics,
+        pushPlayListTraceMetrics: pushPlayListTraceMetrics,
+        clearAllCurrentMetrics: clearAllCurrentMetrics
     };
+
+    setup();
 
     return instance;
 }

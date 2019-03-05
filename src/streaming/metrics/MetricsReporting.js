@@ -49,7 +49,7 @@ function MetricsReporting() {
     function createMetricsReporting(config) {
         dvbErrorsTranslator = DVBErrorsTranslator(context).getInstance({
             eventBus: config.eventBus,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             metricsConstants: config.metricsConstants,
             events: config.events
         });

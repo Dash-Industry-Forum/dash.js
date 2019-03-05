@@ -41,7 +41,6 @@ function AbandonRequestsRule(config) {
 
     const context = this.context;
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
     let instance,
@@ -81,7 +80,7 @@ function AbandonRequestsRule(config) {
             setFragmentRequestDict(mediaType, req.index);
 
             const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
             if ( bufferLevel > stableBufferTime ) {
                 return switchRequest;
             }

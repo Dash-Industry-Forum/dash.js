@@ -2,7 +2,6 @@ import PlaybackController from '../../src/streaming/controllers/PlaybackControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
-import MetricsModelMock from './mocks/MetricsModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
@@ -18,7 +17,6 @@ describe('PlaybackController', function () {
 
     let playbackController,
         videoModelMock,
-        metricsModelMock,
         dashMetricsMock,
         mediaPlayerModelMock,
         streamControllerMock,
@@ -26,7 +24,6 @@ describe('PlaybackController', function () {
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
-        metricsModelMock = new MetricsModelMock();
         dashMetricsMock = new DashMetricsMock();
         mediaPlayerModelMock = new MediaPlayerModelMock();
         streamControllerMock = new StreamControllerMock();
@@ -35,7 +32,6 @@ describe('PlaybackController', function () {
 
         playbackController.setConfig({
             videoModel: videoModelMock,
-            metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
             mediaPlayerModel: mediaPlayerModelMock,
             streamController: streamControllerMock,

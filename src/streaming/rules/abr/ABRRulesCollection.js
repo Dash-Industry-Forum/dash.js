@@ -46,7 +46,6 @@ function ABRRulesCollection(config) {
     const context = this.context;
 
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
 
     let instance,
@@ -62,20 +61,17 @@ function ABRRulesCollection(config) {
             // This is controlled by useBufferOccupancyABR mechanism in AbrController.
             qualitySwitchRules.push(
                 BolaRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel
                 })
             );
             qualitySwitchRules.push(
                 ThroughputRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics
                 })
             );
             qualitySwitchRules.push(
                 InsufficientBufferRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics
                 })
             );
@@ -87,7 +83,6 @@ function ABRRulesCollection(config) {
             );
             abandonFragmentRules.push(
                 AbandonRequestsRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel
                 })

@@ -8,7 +8,7 @@ import AdapterMock from './mocks/AdapterMock';
 import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
 import ProtectionControllerMock from './mocks/ProtectionControllerMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
@@ -29,7 +29,7 @@ const objectsHelper = new ObjectsHelper();
 const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
 const manifestModelMock = new ManifestModelMock();
 const errHandlerMock = new ErrorHandlerMock();
-const metricsModelMock = new MetricsModelMock();
+const dashMetricsMock = new DashMetricsMock();
 const protectionControllerMock = new ProtectionControllerMock();
 const videoModelMock = new VideoModelMock();
 const playbackControllerMock = new PlaybackControllerMock();
@@ -125,7 +125,7 @@ describe('StreamController', function () {
                                         timelineConverter: timelineConverterMock,
                                         manifestModel: manifestModelMock,
                                         errHandler: errHandlerMock,
-                                        metricsModel: metricsModelMock,
+                                        dashMetrics: dashMetricsMock,
                                         protectionController: protectionControllerMock,
                                         videoModel: videoModelMock,
                                         playbackController: playbackControllerMock});

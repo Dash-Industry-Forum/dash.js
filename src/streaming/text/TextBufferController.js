@@ -49,7 +49,7 @@ function TextBufferController(config) {
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 type: config.type,
-                metricsModel: config.metricsModel,
+                dashMetrics: config.dashMetrics,
                 mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
                 errHandler: config.errHandler,
