@@ -57,7 +57,7 @@ function DashMetrics(config) {
     let metricsModel = config.metricsModel;
 
     function setup() {
-        metricsModel = metricsModel || MetricsModel(context).getInstance();
+        metricsModel = metricsModel || MetricsModel(context).getInstance({settings: config.settings});
         resetInitialSettings();
     }
 
