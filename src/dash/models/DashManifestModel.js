@@ -287,7 +287,7 @@ function DashManifestModel() {
     }
 
     function getLabelsForAdaptation(adaptation) {
-        if (!adaptation.Label_asArray || !adaptation.Label_asArray.length) {
+        if (!adaptation || !adaptation.Label_asArray || !Array.isArray(adaptation.Label_asArray)) {
             return [];
         }
 
