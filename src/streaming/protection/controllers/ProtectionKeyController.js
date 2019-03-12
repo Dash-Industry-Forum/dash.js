@@ -107,6 +107,19 @@ function ProtectionKeyController() {
     }
 
     /**
+     * Sets the prioritized list of key systems to be supported
+     * by this player.
+     *
+     * @param {Array.<KeySystem>} newKeySystems the new prioritized
+     * list of key systems
+     * @memberof module:ProtectionKeyController
+     * @instance
+     */
+    function setKeySystems(newKeySystems) {
+        keySystems = newKeySystems;
+    }
+
+    /**
      * Returns the key system associated with the given key system string
      * name (i.e. 'org.w3.clearkey')
      *
@@ -330,6 +343,7 @@ function ProtectionKeyController() {
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,
         getKeySystems: getKeySystems,
+        setKeySystems: setKeySystems,
         getKeySystemBySystemString: getKeySystemBySystemString,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getSupportedKeySystems: getSupportedKeySystems,
