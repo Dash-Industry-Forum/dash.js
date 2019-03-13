@@ -60,7 +60,6 @@ function BufferController(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
     const streamController = config.streamController;
     const mediaController = config.mediaController;
@@ -70,6 +69,7 @@ function BufferController(config) {
     const playbackController = config.playbackController;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -272,8 +272,9 @@ function BufferController(config) {
                     // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
                     const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
                     const bufferAhead = criticalBufferLevel - bufferToKeep;
-                    mediaPlayerModel.setBufferToKeep(parseFloat(bufferToKeep.toFixed(5)));
-                    mediaPlayerModel.setBufferAheadToKeep(parseFloat(bufferAhead.toFixed(5)));
+                    const s = { streaming: { bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
+                                           bufferAheadToKeep: parseFloat(bufferAhead.toFixed(5))}};
+                    settings.update(s);
                 }
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
@@ -550,7 +551,7 @@ function BufferController(config) {
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
-        if (((!mediaPlayerModel.getLowLatencyEnabled() && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
+        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= streamProcessor.getStreamInfo().manifestInfo.minBufferTime) {
@@ -619,8 +620,8 @@ function BufferController(config) {
 
         const currentTime = playbackController.getTime();
         const rangeToKeep = {
-            start: Math.max(0, currentTime - mediaPlayerModel.getBufferToKeep()),
-            end: currentTime + mediaPlayerModel.getBufferAheadToKeep()
+            start: Math.max(0, currentTime - settings.get().streaming.bufferToKeep),
+            end: currentTime + settings.get().streaming.bufferAheadToKeep
         };
 
         const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
@@ -780,8 +781,8 @@ function BufferController(config) {
 
     function onWallclockTimeUpdated() {
         wallclockTicked++;
-        const secondsElapsed = (wallclockTicked * (mediaPlayerModel.getWallclockTimeUpdateInterval() / 1000));
-        if ((secondsElapsed >= mediaPlayerModel.getBufferPruningInterval())) {
+        const secondsElapsed = (wallclockTicked * (settings.get().streaming.wallclockTimeUpdateInterval / 1000));
+        if ((secondsElapsed >= settings.get().streaming.bufferPruningInterval)) {
             wallclockTicked = 0;
             pruneBuffer();
         }

@@ -53,6 +53,7 @@ import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
+import Settings from '../core/Settings';
 import {
     getVersionString
 }
@@ -68,7 +69,7 @@ import {
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
-import { checkParameterType } from './utils/SupervisorTools';
+import { checkParameterType, checkIsVideoOrAudioType, checkRange } from './utils/SupervisorTools';
 
 /**
  * @module MediaPlayer
@@ -102,19 +103,10 @@ function MediaPlayer() {
     * @inner
     */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-    /**
-    * @constant {string} PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMinDrift function is called with an invalid value.
-    * @inner
-    */
-    const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
-    /**
-    * @constant {string} PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMaxDriftBeforeSeeking function is called with an invalid value.
-    * @inner
-    */
-    const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    let settings = Settings(context).getInstance();
     const debug = Debug(context).getInstance();
 
     let instance,
@@ -195,6 +187,9 @@ function MediaPlayer() {
         if (config.mediaController) {
             mediaController = config.mediaController;
         }
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     /**
@@ -244,15 +239,15 @@ function MediaPlayer() {
         }
 
         adapter = DashAdapter(context).getInstance();
+
         manifestModel = ManifestModel(context).getInstance();
 
         dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel
+            settings: settings
         });
-
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
-            mediaPlayerModel: mediaPlayerModel
+            settings: settings
         });
 
         adapter.setConfig({
@@ -297,6 +292,8 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+
+        settings.reset();
     }
 
     /**
@@ -526,7 +523,10 @@ function MediaPlayer() {
      * @instance
      */
     function setCatchUpPlaybackRate(value) {
-        mediaPlayerModel.setCatchUpPlaybackRate(value);
+        checkParameterType(value, 'number');
+        checkRange(value, 0.0, 0.5);
+        const s = { streaming: { liveCatchUpPlaybackRate: value }};
+        settings.update(s);
     }
 
     /**
@@ -537,9 +537,8 @@ function MediaPlayer() {
      * @instance
      */
     function getCatchUpPlaybackRate() {
-        return mediaPlayerModel.getCatchUpPlaybackRate();
+        return settings.get().streaming.liveCatchUpPlaybackRate;
     }
-
 
     /**
      * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
@@ -554,15 +553,18 @@ function MediaPlayer() {
      * @param {number} value Maximum difference between measured latency and the target one before applying playback rate modifications.
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-     * @default {number} 0.05
-     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
+     * @default {number} 0.02
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is NaN, or value is not between 0 and 0.5.
      * @instance
      */
     function setLowLatencyMinDrift(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 0.50) {
-            throw PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR;
+        checkParameterType(value, 'number');
+        if (isNaN(value)) {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
-        mediaPlayerModel.setLowLatencyMinDrift(value);
+        checkRange(value, 0.0, 0.5);
+        const s = { streaming: { liveCatchUpMinDrift: value }};
+        settings.update(s);
     }
 
     /**
@@ -573,7 +575,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLowLatencyMinDrift() {
-        return mediaPlayerModel.getLowLatencyMinDrift();
+        return settings.get().streaming.liveCatchUpMinDrift;
     }
 
     /**
@@ -592,14 +594,16 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
      * @default {number} 0
-     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
+     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is NaN, or value is negative.
      * @instance
      */
     function setLowLatencyMaxDriftBeforeSeeking(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0) {
-            throw PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR;
+        checkParameterType(value, 'number');
+        if (isNaN(value) || value < 0) {
+            throw Constants.BAD_ARGUMENT_ERROR;
         }
-        mediaPlayerModel.setLowLatencyMaxDriftBeforeSeeking(value);
+        const s = { streaming: { liveCatchUpMaxDrift: value }};
+        settings.update(s);
     }
 
     /**
@@ -610,7 +614,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLowLatencyMaxDriftBeforeSeeking() {
-        return mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking();
+        return settings.get().streaming.liveCatchUpMaxDrift;
     }
 
     /**
@@ -843,7 +847,7 @@ function MediaPlayer() {
      * that lowest bitrate.
      *
      * You can set or remove this bitrate cap at anytime before or during playback.  To clear this setting you must use the API
-     * and set the value param to NaN.
+     * and set the value param to -1.
      *
      * This feature is typically used to reserve higher bitrates for playback only when the player is in large or full-screen format.
      *
@@ -853,7 +857,11 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedBitrateFor(type, value) {
-        abrController.setMaxAllowedBitrateFor(type, value);
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { maxBitrate: {}}}};
+        s.streaming.abr.maxBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -863,7 +871,7 @@ function MediaPlayer() {
      * that lowest bitrate.
      *
      * You can set or remove this bitrate limit at anytime before or during playback. To clear this setting you must use the API
-     * and set the value param to NaN.
+     * and set the value param to -1.
      *
      * This feature is used to force higher quality playback.
      *
@@ -873,7 +881,11 @@ function MediaPlayer() {
      * @instance
      */
     function setMinAllowedBitrateFor(type, value) {
-        abrController.setMinAllowedBitrateFor(type, value);
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { minBitrate: {}}}};
+        s.streaming.abr.minBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -883,7 +895,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedBitrateFor(type) {
-        return abrController.getMaxAllowedBitrateFor(type);
+        return settings.get().streaming.abr.maxBitrate[type];
     }
 
     /**
@@ -911,7 +923,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMinAllowedBitrateFor(type) {
-        return abrController.getMinAllowedBitrateFor(type);
+        return settings.get().streaming.abr.minBitrate[type];
     }
 
     /**
@@ -919,7 +931,7 @@ function MediaPlayer() {
      * as a proportion of the size of the representation set.
      *
      * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
-     * and set the value param to NaN.
+     * and set the value param to -1.
      *
      * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
      * i.e. the lowest value from executing these rules is used.
@@ -932,7 +944,11 @@ function MediaPlayer() {
      * @instance
      */
     function setMaxAllowedRepresentationRatioFor(type, value) {
-        abrController.setMaxAllowedRepresentationRatioFor(type, value);
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { maxRepresentationRatio: {}}}};
+        s.streaming.abr.maxRepresentationRatio[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -943,7 +959,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMaxAllowedRepresentationRatioFor(type) {
-        return abrController.getMaxAllowedRepresentationRatioFor(type);
+        return settings.get().streaming.abr.maxRepresentationRatio[type];
     }
 
     /**
@@ -1025,7 +1041,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLimitBitrateByPortal() {
-        return abrController.getLimitBitrateByPortal();
+        return settings.get().streaming.abr.limitBitrateByPortal;
     }
 
     /**
@@ -1036,7 +1052,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLimitBitrateByPortal(value) {
-        abrController.setLimitBitrateByPortal(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { abr: { limitBitrateByPortal: value }}};
+        settings.update(s);
     }
 
     /**
@@ -1044,7 +1062,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUsePixelRatioInLimitBitrateByPortal() {
-        return abrController.getUsePixelRatioInLimitBitrateByPortal();
+        return settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal;
     }
 
     /**
@@ -1057,7 +1075,9 @@ function MediaPlayer() {
      * @default {boolean} false
      */
     function setUsePixelRatioInLimitBitrateByPortal(value) {
-        abrController.setUsePixelRatioInLimitBitrateByPortal(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { abr: { usePixelRatioInLimitBitrateByPortal: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1069,7 +1089,11 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialBitrateFor(type, value) {
-        abrController.setInitialBitrateFor(type, value);
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { initialBitrate: {}}}};
+        s.streaming.abr.initialBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -1093,7 +1117,10 @@ function MediaPlayer() {
      * @instance
      */
     function setInitialRepresentationRatioFor(type, value) {
-        abrController.setInitialRepresentationRatioFor(type, value);
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { initialRepresentationRatio: {}}}};
+        s.streaming.abr.initialRepresentationRatio[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -1103,7 +1130,7 @@ function MediaPlayer() {
      * @instance
      */
     function getInitialRepresentationRatioFor(type) {
-        return abrController.getInitialRepresentationRatioFor(type);
+        return settings.get().streaming.abr.initialRepresentationRatio[type];
     }
 
     /**
@@ -1113,7 +1140,7 @@ function MediaPlayer() {
      * @instance
      */
     function getAutoSwitchQualityFor(type) {
-        return abrController.getAutoSwitchBitrateFor(type);
+        return settings.get().streaming.abr.autoSwitchBitrate[type];
     }
 
     /**
@@ -1126,7 +1153,11 @@ function MediaPlayer() {
      * @instance
      */
     function setAutoSwitchQualityFor(type, value) {
-        abrController.setAutoSwitchBitrateFor(type, value);
+        checkParameterType(value, 'boolean');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { abr: { autoSwitchBitrate: {}}}};
+        s.streaming.abr.autoSwitchBitrate[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -1138,7 +1169,7 @@ function MediaPlayer() {
      * @instance
      */
     function getUseDeadTimeLatencyForAbr() {
-        return abrController.getUseDeadTimeLatency();
+        return settings.get().streaming.abr.useDeadTimeLatency;
     }
 
     /**
@@ -1153,7 +1184,9 @@ function MediaPlayer() {
      * @instance
      */
     function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
-        abrController.setUseDeadTimeLatency(useDeadTimeLatency);
+        checkParameterType(useDeadTimeLatency, 'boolean');
+        const s = { streaming: { abr: { useDeadTimeLatency: useDeadTimeLatency }}};
+        settings.update(s);
     }
 
     /*
@@ -1201,7 +1234,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLiveDelayFragmentCount(value) {
-        mediaPlayerModel.setLiveDelayFragmentCount(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { liveDelayFragmentCount: value }};
+        settings.update(s);
     }
 
     /**
@@ -1211,14 +1246,18 @@ function MediaPlayer() {
      * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
      *
      * @param {number} value - Represents how many seconds to delay the live stream.
-     * @default undefined
+     * @default null
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value, if defined, is not number type.
      * @instance
      */
     function setLiveDelay(value) {
-        mediaPlayerModel.setLiveDelay(value);
+        if (value !== null) { // null is the default value...
+            checkParameterType(value, 'number');
+        }
+        const s = { streaming: { liveDelay: value }};
+        settings.update(s);
     }
 
     /**
@@ -1259,7 +1298,9 @@ function MediaPlayer() {
      * @instance
      */
     function useSuggestedPresentationDelay(value) {
-        mediaPlayerModel.setUseSuggestedPresentationDelay(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { useSuggestedPresentationDelay: value }};
+        settings.update(s);
     }
 
     /**
@@ -1278,7 +1319,14 @@ function MediaPlayer() {
      *
      */
     function enableLastBitrateCaching(enable, ttl) {
-        mediaPlayerModel.setLastBitrateCachingInfo(enable, ttl);
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
+        let s = { streaming: { lastBitrateCachingInfo: {enabled: enable}}};
+        if (ttl !== undefined) {
+            s.streaming.lastBitrateCachingInfo.ttl = ttl;
+        }
+        settings.update(s);
     }
 
     /**
@@ -1297,7 +1345,14 @@ function MediaPlayer() {
      *
      */
     function enableLastMediaSettingsCaching(enable, ttl) {
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(enable, ttl);
+        if (typeof enable !== 'boolean' || (ttl !== undefined && (typeof ttl !== 'number' || isNaN(ttl)))) {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
+        let s = { streaming: { lastMediaSettingsCachingInfo: {enabled: enable}}};
+        if (ttl !== undefined) {
+            s.streaming.lastMediaSettingsCachingInfo.ttl = ttl;
+        }
+        settings.update(s);
     }
 
     /**
@@ -1311,7 +1366,9 @@ function MediaPlayer() {
      * @instance
      */
     function setScheduleWhilePaused(value) {
-        mediaPlayerModel.setScheduleWhilePaused(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { scheduleWhilePaused: value }};
+        settings.update(s);
     }
 
     /**
@@ -1322,7 +1379,7 @@ function MediaPlayer() {
      * @instance
      */
     function getScheduleWhilePaused() {
-        return mediaPlayerModel.getScheduleWhilePaused();
+        return settings.get().streaming.scheduleWhilePaused;
     }
 
     /**
@@ -1350,7 +1407,9 @@ function MediaPlayer() {
      * @instance
      */
     function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
-        mediaPlayerModel.setFastSwitchEnabled(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { fastSwitchEnabled: value } };
+        settings.update(s);
     }
 
     /**
@@ -1361,7 +1420,7 @@ function MediaPlayer() {
      * @instance
      */
     function getFastSwitchEnabled() {
-        return mediaPlayerModel.getFastSwitchEnabled();
+        return settings.get().streaming.fastSwitchEnabled;
     }
 
     /**
@@ -1379,7 +1438,12 @@ function MediaPlayer() {
      * @instance
      */
     function setABRStrategy(value) {
-        mediaPlayerModel.setABRStrategy(value);
+        if (value === Constants.ABR_STRATEGY_DYNAMIC || value === Constants.ABR_STRATEGY_BOLA || value === Constants.ABR_STRATEGY_THROUGHPUT) {
+            const s = { streaming: { abr: { ABRStrategy: value } } };
+            settings.update(s);
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     /**
@@ -1390,7 +1454,7 @@ function MediaPlayer() {
      * @instance
      */
     function getABRStrategy() {
-        return mediaPlayerModel.getABRStrategy();
+        return settings.get().streaming.abr.ABRStrategy;
     }
 
     /**
@@ -1402,7 +1466,9 @@ function MediaPlayer() {
      * @instance
      */
     function useDefaultABRRules(value) {
-        mediaPlayerModel.setUseDefaultABRRules(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { abr: { useDefaultABRRules: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1460,7 +1526,12 @@ function MediaPlayer() {
      * @instance
      */
     function setMovingAverageMethod(value) {
-        mediaPlayerModel.setMovingAverageMethod(value);
+        if (value === Constants.MOVING_AVERAGE_SLIDING_WINDOW || value === Constants.MOVING_AVERAGE_EWMA) {
+            const s = { streaming: { abr: { movingAverageMethod: value } } };
+            settings.update(s);
+        } else {
+            throw Constants.BAD_ARGUMENT_ERROR;
+        }
     }
 
     /**
@@ -1471,7 +1542,7 @@ function MediaPlayer() {
      * @instance
      */
     function getMovingAverageMethod() {
-        return mediaPlayerModel.getMovingAverageMethod();
+        return settings.get().streaming.abr.movingAverageMethod;
     }
 
     /**
@@ -1482,7 +1553,7 @@ function MediaPlayer() {
      * @instance
      */
     function getLowLatencyEnabled() {
-        return mediaPlayerModel.getLowLatencyEnabled();
+        return settings.get().streaming.lowLatencyEnabled;
     }
 
     /**
@@ -1494,7 +1565,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLowLatencyEnabled(value) {
-        mediaPlayerModel.setLowLatencyEnabled(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { lowLatencyEnabled: value }};
+        settings.update(s);
     }
 
     /**
@@ -1589,7 +1662,9 @@ function MediaPlayer() {
      * @instance
      */
     function enableManifestDateHeaderTimeSource(value) {
-        mediaPlayerModel.setUseManifestDateHeaderTimeSource(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { useManifestDateHeaderTimeSource: value } };
+        settings.update(s);
     }
 
     /**
@@ -1604,7 +1679,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferToKeep(value) {
-        mediaPlayerModel.setBufferToKeep(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferToKeep: value } };
+        settings.update(s);
     }
 
     /**
@@ -1619,7 +1696,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferAheadToKeep(value) {
-        mediaPlayerModel.setBufferAheadToKeep(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferAheadToKeep: value } };
+        settings.update(s);
     }
 
     /**
@@ -1633,7 +1712,10 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferPruningInterval(value) {
-        mediaPlayerModel.setBufferPruningInterval(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferPruningInterval: value } };
+        settings.update(s);
+
     }
 
     /**
@@ -1654,7 +1736,9 @@ function MediaPlayer() {
      * @instance
      */
     function setStableBufferTime(value) {
-        mediaPlayerModel.setStableBufferTime(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { stableBufferTime: value } };
+        settings.update(s);
     }
 
     /**
@@ -1685,7 +1769,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQuality(value) {
-        mediaPlayerModel.setBufferTimeAtTopQuality(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferTimeAtTopQuality: value } };
+        settings.update(s);
     }
 
     /**
@@ -1699,7 +1785,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferTimeAtTopQuality() {
-        return mediaPlayerModel.getBufferTimeAtTopQuality();
+        return settings.get().streaming.bufferTimeAtTopQuality;
     }
 
     /**
@@ -1714,7 +1800,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBufferTimeAtTopQualityLongForm(value) {
-        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { bufferTimeAtTopQualityLongForm: value } };
+        settings.update(s);
     }
 
     /**
@@ -1727,7 +1815,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBufferTimeAtTopQualityLongForm() {
-        return mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
+        return settings.get().streaming.bufferTimeAtTopQualityLongForm;
     }
 
     /**
@@ -1742,7 +1830,9 @@ function MediaPlayer() {
      * @instance
      */
     function setLongFormContentDurationThreshold(value) {
-        mediaPlayerModel.setLongFormContentDurationThreshold(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { longFormContentDurationThreshold: value } };
+        settings.update(s);
     }
 
     /**
@@ -1756,14 +1846,16 @@ function MediaPlayer() {
      *                        |-o-|---- segment X+1 -----|-o-|
      *                                                   |-o-|---- segment X+2 -----|-o-|
      * </pre>
-     * @default 0.05 seconds.
+     * @default 0.2 seconds.
      * @param {number} value
      * @memberof module:MediaPlayer
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
      * @instance
     */
     function setSegmentOverlapToleranceTime(value) {
-        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { segmentOverlapToleranceTime: value } };
+        settings.update(s);
     }
 
     /**
@@ -1779,7 +1871,11 @@ function MediaPlayer() {
      * @instance
      */
     function setCacheLoadThresholdForType(type, value) {
-        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
+        checkParameterType(value, 'number');
+        checkIsVideoOrAudioType(type);
+        const s = { streaming: { cacheLoadThresholds: {}}};
+        s.streaming.cacheLoadThresholds[type] = value;
+        settings.update(s);
     }
 
     /**
@@ -1794,7 +1890,9 @@ function MediaPlayer() {
      * @instance
      */
     function setBandwidthSafetyFactor(value) {
-        mediaPlayerModel.setBandwidthSafetyFactor(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { abr: { bandwidthSafetyFactor: value } } };
+        settings.update(s);
     }
 
     /**
@@ -1806,7 +1904,7 @@ function MediaPlayer() {
      * @instance
      */
     function getBandwidthSafetyFactor() {
-        return mediaPlayerModel.getBandwidthSafetyFactor();
+        return settings.get().streaming.abr.bandwidthSafetyFactor;
     }
 
     /**
@@ -1833,7 +1931,9 @@ function MediaPlayer() {
      * @instance
      */
     function setAbandonLoadTimeout(value) {
-        mediaPlayerModel.setAbandonLoadTimeout(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { abandonLoadTimeout: value } };
+        settings.update(s);
     }
 
     /**
@@ -1851,7 +1951,10 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryAttempts(value) {
-        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryAttempts: {}}};
+        s.streaming.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1864,7 +1967,10 @@ function MediaPlayer() {
      * @instance
      */
     function setFragmentLoaderRetryInterval(value) {
-        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryIntervals: {}}};
+        s.streaming.retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1876,7 +1982,10 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryAttempts(value) {
-        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryAttempts: {}}};
+        s.streaming.retryAttempts[HTTPRequest.MPD_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1888,7 +1997,10 @@ function MediaPlayer() {
      * @instance
      */
     function setManifestLoaderRetryInterval(value) {
-        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { retryIntervals: {}}};
+        s.streaming.retryIntervals[HTTPRequest.MPD_TYPE] = value;
+        settings.update(s);
     }
 
     /**
@@ -1929,7 +2041,9 @@ function MediaPlayer() {
      *
      */
     function setJumpGaps(value) {
-        mediaPlayerModel.setJumpGaps(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { jumpGaps: value } };
+        settings.update(s);
     }
 
     /**
@@ -1939,7 +2053,7 @@ function MediaPlayer() {
      * @instance
      */
     function getJumpGaps() {
-        return mediaPlayerModel.getJumpGaps();
+        return settings.get().streaming.jumpGaps;
     }
 
     /**
@@ -1953,7 +2067,9 @@ function MediaPlayer() {
      *
      */
     function setSmallGapLimit(value) {
-        mediaPlayerModel.setSmallGapLimit(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { smallGapLimit: value } };
+        settings.update(s);
     }
 
     /**
@@ -1963,7 +2079,7 @@ function MediaPlayer() {
      * @instance
      */
     function getSmallGapLimit() {
-        return mediaPlayerModel.getSmallGapLimit();
+        return settings.get().streaming.smallGapLimit;
     }
 
     /**
@@ -1980,7 +2096,9 @@ function MediaPlayer() {
      *
      */
     function setManifestUpdateRetryInterval(value) {
-        mediaPlayerModel.setManifestUpdateRetryInterval(value);
+        checkParameterType(value, 'number');
+        const s = { streaming: { manifestUpdateRetryInterval: value } };
+        settings.update(s);
     }
 
     /**
@@ -1994,7 +2112,7 @@ function MediaPlayer() {
      * @see {@link module:MediaPlayer#setManifestUpdateRetryInterval setManifestUpdateRetryInterval()}
      */
     function getManifestUpdateRetryInterval() {
-        return mediaPlayerModel.getManifestUpdateRetryInterval();
+        return settings.get().streaming.manifestUpdateRetryInterval;
     }
 
     /*
@@ -2592,7 +2710,9 @@ function MediaPlayer() {
      * @instance
      */
     function keepProtectionMediaKeys(value) {
-        mediaPlayerModel.setKeepProtectionMediaKeys(value);
+        checkParameterType(value, 'boolean');
+        const s = { streaming: { keepProtectionMediaKeys: value }};
+        settings.update(s);
     }
 
     /*
@@ -2678,6 +2798,50 @@ function MediaPlayer() {
         if (isReady()) {
             initializePlayback();
         }
+    }
+
+    /**
+     * Get the current settings object being used on the player.
+     * @returns {Settings.Schema} The settings object being used.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSettings() {
+        return settings.get();
+    }
+
+    /**
+     * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
+     * @param {module:Settings.Schema} settingsObj - An object corresponding to the settings definition.
+     * @description This function does not update the entire object, only properties in the passed in object are updated.
+     *
+     * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
+     * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.
+     * @example
+     * player.updateSettings({
+     *      streaming: {
+     *          liveDelayFragmentCount: 8
+     *          abr: {
+     *              maxBitrate: { audio: 100, video: 1000 }
+     *          }
+     *      }
+     *  });
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function updateSettings(settingsObj) {
+        settings.update(settingsObj);
+    }
+
+    /**
+     * Resets the settings object back to the default.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function resetSettings() {
+        settings.reset();
     }
 
     /**
@@ -2775,7 +2939,7 @@ function MediaPlayer() {
         mediaController.reset();
         textController.reset();
         if (protectionController) {
-            if (mediaPlayerModel.getKeepProtectionMediaKeys()) {
+            if (settings.get().streaming.keepProtectionMediaKeys) {
                 protectionController.stop();
             } else {
                 protectionController.reset();
@@ -2812,7 +2976,8 @@ function MediaPlayer() {
             playbackController: playbackController,
             abrController: abrController,
             mediaController: mediaController,
-            textController: textController
+            textController: textController,
+            settings: settings
         });
 
         playbackController.setConfig({
@@ -2822,7 +2987,8 @@ function MediaPlayer() {
             adapter: adapter,
             videoModel: videoModel,
             timelineConverter: timelineConverter,
-            uriFragmentModel: uriFragmentModel
+            uriFragmentModel: uriFragmentModel,
+            settings: settings
         });
 
         abrController.setConfig({
@@ -2831,7 +2997,8 @@ function MediaPlayer() {
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             adapter: adapter,
-            videoModel: videoModel
+            videoModel: videoModel,
+            settings: settings
         });
         abrController.createAbrRulesCollection();
 
@@ -2854,7 +3021,8 @@ function MediaPlayer() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
-            mssHandler: mssHandler
+            mssHandler: mssHandler,
+            settings: settings
         });
     }
 
@@ -3136,6 +3304,9 @@ function MediaPlayer() {
         getThumbnail: getThumbnail,
         keepProtectionMediaKeys: keepProtectionMediaKeys,
         getDashAdapter: getDashAdapter,
+        getSettings: getSettings,
+        updateSettings: updateSettings,
+        resetSettings: resetSettings,
         reset: reset
     };
 

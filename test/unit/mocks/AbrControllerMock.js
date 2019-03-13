@@ -19,15 +19,10 @@ class AbrControllerMock{
     }
 
     setup() {
-        this.bitrateDict = {};
-        this.ratioDict = {};
         this.qualityDict = {};
         this.elementWidth = undefined;
         this.elementHeight = undefined;
         this.windowResizeEventCalled = false;
-        this.limitBitrateByPortal = false;
-        this.usePixelRatioInLimitBitrateByPortal = false;
-        this.autoSwitchBitrate = {video: true, audio: true};
         this.throughputHistory = undefined;
         this.currentStreamId = undefined;
     }
@@ -46,95 +41,8 @@ class AbrControllerMock{
 
     getTopBitrateInfoFor() {}
 
-    getInitialBitrateFor(type) {
-        if (!this.bitrateDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return this.bitrateDict[type];
-    }
-
-    /**
-     * @param {string} type
-     * @param {number} value A value of the initial bitrate, kbps
-     * @memberof AbrController#
-     */
-    setInitialBitrateFor(type, value) {
-        this.bitrateDict[type] = value;
-    }
-
-    getInitialRepresentationRatioFor(type) {
-        if (!this.ratioDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return this.ratioDict[type];
-    }
-
-    setInitialRepresentationRatioFor(type, value) {
-        this.ratioDict[type] = value;
-    }
-
-    getMaxAllowedBitrateFor(type) {
-        if (this.bitrateDict.hasOwnProperty('max') && this.bitrateDict.max.hasOwnProperty(type)) {
-            return this.bitrateDict.max[type];
-        }
-        return NaN;
-    }
-
-    getMinAllowedBitrateFor(type) {
-        if (this.bitrateDict.hasOwnProperty('min') && this.bitrateDict.min.hasOwnProperty(type)) {
-            return this.bitrateDict.min[type];
-        }
-        return NaN;
-    }
-
-    //TODO  change this.bitrateDict structure to hold one object for video and audio with initial and max values internal.
-    // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
-    setMaxAllowedBitrateFor(type, value) {
-        this.bitrateDict.max = this.bitrateDict.max || {};
-        this.bitrateDict.max[type] = value;
-    }
-
-    setMinAllowedBitrateFor(type, value) {
-        this.bitrateDict.min = this.bitrateDict.min || {};
-        this.bitrateDict.min[type] = value;
-    }
-
-    getMaxAllowedRepresentationRatioFor(type) {
-        if (this.ratioDict.hasOwnProperty('max') && this.ratioDict.max.hasOwnProperty(type)) {
-            return this.ratioDict.max[type];
-        }
-        return 1;
-    }
-
-    setMaxAllowedRepresentationRatioFor(type, value) {
-        this.ratioDict.max = this.ratioDict.max || {};
-        this.ratioDict.max[type] = value;
-    }
-
-    getAutoSwitchBitrateFor(type) {
-        return this.autoSwitchBitrate[type];
-    }
-
-    setAutoSwitchBitrateFor(type, value) {
-        this.autoSwitchBitrate[type] = value;
-    }
-
-    getLimitBitrateByPortal() {
-        return this.limitBitrateByPortal;
-    }
-
-    setLimitBitrateByPortal(value) {
-        this.limitBitrateByPortal = value;
-    }
-
-    getUsePixelRatioInLimitBitrateByPortal() {
-        return this.usePixelRatioInLimitBitrateByPortal;
-    }
-
-    setUsePixelRatioInLimitBitrateByPortal(value) {
-        this.usePixelRatioInLimitBitrateByPortal = value;
+    getInitialBitrateFor(/*type*/) {
+        return null;
     }
 
     checkPlaybackQuality() {}

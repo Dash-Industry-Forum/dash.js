@@ -49,7 +49,8 @@ function ManifestUpdater() {
         manifestModel,
         adapter,
         errHandler,
-        mediaPlayerModel;
+        mediaPlayerModel,
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -72,6 +73,9 @@ function ManifestUpdater() {
         }
         if (config.errHandler) {
             errHandler = config.errHandler;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -157,11 +161,11 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused()) {
+        if (isPaused && !settings.get().streaming.scheduleWhilePaused) {
             return;
         }
         if (isUpdating) {
-            startManifestRefreshTimer(mediaPlayerModel.getManifestUpdateRetryInterval());
+            startManifestRefreshTimer(settings.get().streaming.manifestUpdateRetryInterval);
             return;
         }
         refreshManifest();

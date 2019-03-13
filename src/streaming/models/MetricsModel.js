@@ -44,9 +44,11 @@ import RequestsQueue from '../vo/metrics/RequestsQueue';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function MetricsModel() {
+function MetricsModel(config) {
 
-    const MAXIMUM_LIST_DEPTH = 1000;
+    config = config || {};
+
+    const settings = config.settings;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -107,7 +109,7 @@ function MetricsModel() {
     function pushMetrics(type, list, value) {
         let metrics = getMetricsFor(type);
         metrics[list].push(value);
-        if ( metrics[list].length > MAXIMUM_LIST_DEPTH ) {
+        if ( metrics[list].length > settings.get().streaming.metricsMaxListDepth ) {
             metrics[list].shift();
         }
     }

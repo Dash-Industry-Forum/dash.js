@@ -64,6 +64,7 @@ function DashHandler(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -299,7 +300,7 @@ function DashHandler(config) {
         if (segments && ln > 0) {
             // In case timeThreshold is not provided, let's use the default value set in MediaPlayerModel
             timeThreshold = (timeThreshold === undefined || timeThreshold === null) ?
-                mediaPlayerModel.getSegmentOverlapToleranceTime() : timeThreshold;
+                settings.get().streaming.segmentOverlapToleranceTime : timeThreshold;
 
             for (i = 0; i < ln; i++) {
                 frag = segments[i];

@@ -57,6 +57,7 @@ function ScheduleController(config) {
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -91,7 +92,8 @@ function ScheduleController(config) {
             abrController: abrController,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            textController: textController
+            textController: textController,
+            settings: settings
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
@@ -168,7 +170,7 @@ function ScheduleController(config) {
     function schedule() {
         const bufferController = streamProcessor.getBufferController();
         if (isStopped || isFragmentProcessingInProgress || !bufferController ||
-            (playbackController.isPaused() && !mediaPlayerModel.getScheduleWhilePaused()) ||
+            (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
             ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled())) {
             logger.debug('Schedule stop!');
             return;
@@ -230,7 +232,7 @@ function ScheduleController(config) {
                             fragmentModel.executeRequest(request);
                         } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                             setFragmentProcessState(false);
-                            startScheduleTimer(mediaPlayerModel.getLowLatencyEnabled() ? 100 : 500);
+                            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
                         }
                     }
                 }
@@ -260,7 +262,7 @@ function ScheduleController(config) {
         })[0];
 
         if (request && replaceRequestArray.indexOf(request) === -1 && !adapter.getIsTextTrack(type)) {
-            const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
+            const fastSwitchModeEnabled = settings.get().streaming.fastSwitchEnabled;
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
@@ -405,7 +407,7 @@ function ScheduleController(config) {
             if (request) {
                 // When low latency mode is selected but browser doesn't support fetch
                 // start at the beginning of the segment to avoid consuming the whole buffer
-                if (mediaPlayerModel.getLowLatencyEnabled()) {
+                if (settings.get().streaming.lowLatencyEnabled) {
                     const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
                     playbackController.setLiveStartTime(liveStartTime);
                 } else {
@@ -573,7 +575,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        if (isStopped || !mediaPlayerModel.getScheduleWhilePaused()) {
+        if (isStopped || !settings.get().streaming.scheduleWhilePaused) {
             start();
         }
     }

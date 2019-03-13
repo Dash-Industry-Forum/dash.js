@@ -4,6 +4,7 @@ import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
 import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
@@ -31,6 +32,7 @@ const initCache = InitCache(context).getInstance();
 
 describe('BufferController', function () {
     // disable log
+    let settings = Settings(context).getInstance();
     const debug = Debug(context).getInstance();
     debug.setLogToBrowserConsole(false);
     const streamProcessor = new StreamProcessorMock(testType, streamInfo);
@@ -64,7 +66,8 @@ describe('BufferController', function () {
             streamProcessor: streamProcessor,
             type: testType,
             playbackController: playbackControllerMock,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            settings: settings
         });
     });
 

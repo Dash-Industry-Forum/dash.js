@@ -1,5 +1,5 @@
 import DashHandler from '../../src/dash/DashHandler';
-
+import Constants from '../../src/streaming/constants/Constants';
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -12,7 +12,7 @@ describe('DashHandler', function () {
 
     // Arrange
     const context = {};
-    const testType = 'video';
+    const testType = Constants.VIDEO;
 
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);

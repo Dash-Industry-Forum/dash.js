@@ -54,7 +54,7 @@ function FragmentLoader(config) {
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
             boxParser: boxParser,
-            useFetch: config.mediaPlayerModel.getLowLatencyEnabled()
+            useFetch: config.settings.get().streaming.lowLatencyEnabled
         });
     }
 

@@ -69,7 +69,8 @@ function FragmentController( config ) {
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
-                    requestModifier: RequestModifier(context).getInstance()
+                    requestModifier: RequestModifier(context).getInstance(),
+                    settings: config.settings
                 })
             });
 

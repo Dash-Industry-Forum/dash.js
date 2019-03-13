@@ -1,6 +1,7 @@
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
+import Settings from '../../src/core/Settings';
 
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -20,7 +21,8 @@ describe('PlaybackController', function () {
         dashMetricsMock,
         mediaPlayerModelMock,
         streamControllerMock,
-        uriFragmentModelMock;
+        uriFragmentModelMock,
+        settings;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
@@ -29,13 +31,15 @@ describe('PlaybackController', function () {
         streamControllerMock = new StreamControllerMock();
         uriFragmentModelMock = new URIFragmentModelMock();
         playbackController = PlaybackController(context).getInstance();
+        settings = Settings(context).getInstance();
 
         playbackController.setConfig({
             videoModel: videoModelMock,
             dashMetrics: dashMetricsMock,
             mediaPlayerModel: mediaPlayerModelMock,
             streamController: streamControllerMock,
-            uriFragmentModel: uriFragmentModelMock
+            uriFragmentModel: uriFragmentModelMock,
+            settings: settings
         });
     });
 

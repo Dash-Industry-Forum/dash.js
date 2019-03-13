@@ -98,7 +98,8 @@ function StreamController() {
         useSmoothPeriodTransition,
         preloading,
         lastPlaybackTime,
-        supportsChangeType;
+        supportsChangeType,
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -124,7 +125,8 @@ function StreamController() {
             adapter: adapter,
             mediaPlayerModel: mediaPlayerModel,
             manifestLoader: manifestLoader,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
         manifestUpdater.initialize();
 
@@ -181,7 +183,7 @@ function StreamController() {
     }
 
     function onWallclockTimeUpdated(/*e*/) {
-        if (!mediaPlayerModel.getJumpGaps() || getActiveStreamProcessors() === 0 ||
+        if (!settings.get().streaming.jumpGaps || getActiveStreamProcessors() === 0 ||
             playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
             hasMediaError || hasInitialisationError) {
             return;
@@ -201,7 +203,7 @@ function StreamController() {
 
     function jumpGap(time) {
         const streamProcessors = getActiveStreamProcessors();
-        const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+        const smallGapLimit = settings.get().streaming.smallGapLimit;
         let seekToPosition;
 
         // Find out what is the right time position to jump to taking
@@ -646,7 +648,8 @@ function StreamController() {
                         mediaController: mediaController,
                         textController: textController,
                         videoModel: videoModel,
-                        streamController: instance
+                        streamController: instance,
+                        settings: settings
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
@@ -712,7 +715,8 @@ function StreamController() {
                 useCalculatedLiveEdgeTime = adapter.getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo);
                 if (useCalculatedLiveEdgeTime) {
                     logger.debug('SegmentTimeline detected using calculated Live Edge Time');
-                    mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
+                    const s = { streaming: { useManifestDateHeaderTimeSource: false } };
+                    settings.update(s);
                 }
             }
 
@@ -734,7 +738,7 @@ function StreamController() {
                 dashMetrics: dashMetrics,
                 baseURLController: baseURLController
             });
-            timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
+            timeSyncController.initialize(allUTCTimingSources, settings.get().streaming.useManifestDateHeaderTimeSource);
         } else {
             hasInitialisationError = true;
             reset();
@@ -914,6 +918,9 @@ function StreamController() {
         }
         if (config.textController) {
             textController = config.textController;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 

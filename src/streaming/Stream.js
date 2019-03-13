@@ -59,6 +59,7 @@ function Stream(config) {
     const mediaController = config.mediaController;
     const textController = config.textController;
     const videoModel = config.videoModel;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -93,7 +94,8 @@ function Stream(config) {
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
 
         registerEvents();
@@ -382,7 +384,8 @@ function Stream(config) {
             mediaController: mediaController,
             streamController: config.streamController,
             textController: textController,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
 
         streamProcessor.initialize(mediaSource);

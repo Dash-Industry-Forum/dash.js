@@ -64,7 +64,8 @@ function PlaybackController() {
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
-        uriFragmentModel;
+        uriFragmentModel,
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -227,14 +228,14 @@ function PlaybackController() {
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
-        if (mediaPlayerModel.getUseSuggestedPresentationDelay() && suggestedPresentationDelay !== null) {
+        if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
             delay = suggestedPresentationDelay;
-        } else if (mediaPlayerModel.getLowLatencyEnabled()) {
+        } else if (settings.get().streaming.lowLatencyEnabled) {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
+            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
@@ -323,6 +324,9 @@ function PlaybackController() {
         }
         if (config.uriFragmentModel) {
             uriFragmentModel = config.uriFragmentModel;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -414,7 +418,7 @@ function PlaybackController() {
             onWallclockTime();
         };
 
-        wallclockTimeIntervalId = setInterval(tick, mediaPlayerModel.getWallclockTimeUpdateInterval());
+        wallclockTimeIntervalId = setInterval(tick, settings.get().streaming.wallclockTimeUpdateInterval);
     }
 
     function stopUpdatingWallclockTime() {
@@ -583,7 +587,7 @@ function PlaybackController() {
     function onPlaybackProgression() {
         if (
             isDynamic &&
-            mediaPlayerModel.getLowLatencyEnabled() &&
+            settings.get().streaming.lowLatencyEnabled &&
             mediaPlayerModel.getCatchUpPlaybackRate() > 0 &&
             !isPaused() &&
             !isSeeking()
@@ -611,13 +615,13 @@ function PlaybackController() {
     }
 
     function needToCatchUp() {
-        return mediaPlayerModel.getCatchUpPlaybackRate() > 0 && getTime() > 0 &&
-            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > mediaPlayerModel.getLowLatencyMinDrift();
+        return settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
+            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > settings.get().streaming.liveCatchUpMinDrift;
     }
 
     function startPlaybackCatchUp() {
         if (videoModel) {
-            const cpr = mediaPlayerModel.getCatchUpPlaybackRate();
+            const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
             const liveDelay = mediaPlayerModel.getLiveDelay();
             const deltaLatency = getCurrentLiveLatency() - liveDelay;
             const d = deltaLatency * 5;
@@ -642,8 +646,8 @@ function PlaybackController() {
                 videoModel.setPlaybackRate(newRate);
             }
 
-            if (mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking() > 0 && !isLowLatencySeekingInProgress &&
-                deltaLatency > mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking()) {
+            if (settings.get().streaming.liveCatchUpMaxDrift > 0 && !isLowLatencySeekingInProgress &&
+                deltaLatency > settings.get().streaming.liveCatchUpMaxDrift) {
                 logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isLowLatencySeekingInProgress = true;
                 seekToLive();
@@ -726,11 +730,12 @@ function PlaybackController() {
 
     function onFragmentLoadProgress(e) {
         // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
-        if (e.stream === false && mediaPlayerModel.getLowLatencyEnabled() && !isNaN(e.request.duration)) {
+        if (e.stream === false && settings.get().streaming.lowLatencyEnabled && !isNaN(e.request.duration)) {
             const minDelay = 1.2 * e.request.duration;
             if (minDelay > mediaPlayerModel.getLiveDelay()) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
-                mediaPlayerModel.setLiveDelay(minDelay);
+                const s = { streaming: { liveDelay: minDelay } };
+                settings.update(s);
             }
         }
     }
@@ -739,7 +744,7 @@ function PlaybackController() {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamInfo.id !== streamInfo.id) return;
 
-        if (mediaPlayerModel.getLowLatencyEnabled()) {
+        if (settings.get().streaming.lowLatencyEnabled) {
             if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
                 if (!playbackStalled) {
                     playbackStalled = true;
