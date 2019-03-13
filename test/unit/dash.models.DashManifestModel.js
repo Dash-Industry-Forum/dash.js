@@ -461,6 +461,13 @@ describe('DashManifestModel', function () {
         expect(mpd.manifest).to.be.null;                // jshint ignore:line
     });
 
+    it('should return mpd.manifest not null when getMpd is called and manifest is defined', () => {
+        const mpd = dashManifestModel.getMpd({});
+
+        expect(mpd.manifest).not.to.be.null;                // jshint ignore:line
+        expect(mpd.manifest.availabilityStartTime).to.be.undefined;                // jshint ignore:line
+    });
+
     it('should return an error when getRegularPeriods and getEndTimeForLastPeriod are called and duration is undefined', () => {
         const manifest = {
             'manifest': {
