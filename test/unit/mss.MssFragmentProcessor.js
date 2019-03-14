@@ -1,5 +1,4 @@
 import MssFragmentProcessor from '../../src/mss/MssFragmentProcessor';
-import MetricsModel from '../../src/streaming/models/MetricsModel';
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
 import EventBus from '../../src/core/EventBus';
 import MssErrors from '../../src/mss/errors/MssErrors';
@@ -14,11 +13,10 @@ const expect = require('chai').expect;
 const fs = require('fs');
 
 const context = {};
-const metricsModel = MetricsModel(context).getInstance();
 const playbackController = PlaybackController(context).getInstance();
 const eventBus = EventBus(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
-const mssFragmentProcessor = MssFragmentProcessor(context).create({metricsModel: metricsModel,
+const mssFragmentProcessor = MssFragmentProcessor(context).create({
     playbackController: playbackController,
     eventBus: eventBus,
     ISOBoxer: ISOBoxer,
