@@ -169,10 +169,6 @@ class MediaPlayerModelMock {
         }
     }
 
-    getStableBufferTime() {
-        return this.stableBufferTime > -1 ? this.stableBufferTime : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
-    }
-
     setRetryAttemptsForType(type, value) {
         this.retryAttempts[type] = value;
     }

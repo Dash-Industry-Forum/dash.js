@@ -247,22 +247,19 @@ function AbrController() {
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
         if (configBitrate === -1) {
-            const s = { streaming: { abr: { initialBitrate: {}}}};
             if (configRatio > -1) {
                 const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
-                    s.streaming.abr.initialBitrate[type] = representation[repIdx].bandwidth;
+                    configBitrate = representation[repIdx].bandwidth;
                 } else {
-                    s.streaming.abr.initialBitrate[type] = 0;
+                    configBitrate = 0;
                 }
             } else if (!isNaN(savedBitrate)) {
-                s.streaming.abr.initialBitrate[type] = savedBitrate;
+                configBitrate = savedBitrate;
             } else {
-                s.streaming.abr.initialBitrate[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                configBitrate = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
-            settings.update(s);
-            configBitrate = settings.get().streaming.abr.initialBitrate[type];
         }
 
         return configBitrate;
@@ -465,7 +462,7 @@ function AbrController() {
         }
         // else ABR_STRATEGY_DYNAMIC
 
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+        const stableBufferTime = settings.get().streaming.stableBufferTime;
         const switchOnThreshold = stableBufferTime;
         const switchOffThreshold = 0.5 * stableBufferTime;
 

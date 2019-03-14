@@ -4,12 +4,15 @@ import MetricsModelMock from './mocks/MetricsModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import RulesContextMock from './mocks/RulesContextMock';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 
 const context = {};
 
 describe('AbandonRequestsRule', function () {
+    const settings = Settings(context).getInstance();
+
     it('should return an empty switchRequest when shouldAbandon function is called with an empty parameter', function () {
         const abandonRequestsRule = AbandonRequestsRule(context).create({});
         const abandonRequest = abandonRequestsRule.shouldAbandon();
@@ -23,10 +26,12 @@ describe('AbandonRequestsRule', function () {
         let metricsModelMock = new MetricsModelMock();
         let mediaPlayerModelMock = new MediaPlayerModelMock();
 
-        const abandonRequestsRule = AbandonRequestsRule(context).create({metricsModel: metricsModelMock,
-                                                                         dashMetrics: dashMetricsMock,
-                                                                         mediaPlayerModel: mediaPlayerModelMock});
-
+        const abandonRequestsRule = AbandonRequestsRule(context).create({
+            metricsModel: metricsModelMock,
+            dashMetrics: dashMetricsMock,
+            mediaPlayerModel: mediaPlayerModelMock,
+            settings: settings
+        });
 
         const abandonRequest = abandonRequestsRule.shouldAbandon(rulesContextMock);
 

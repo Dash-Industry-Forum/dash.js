@@ -18,7 +18,6 @@
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            player.getDebug().setLogToBrowserConsole(false);
             player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
                 clearInterval(eventPoller);
                 clearInterval(bitrateCalculator);
@@ -33,8 +32,8 @@
 
                 if (dashMetrics && streamInfo) {
                     const periodIdx = streamInfo.index;
-                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
-                    var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
                     var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
                     document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
                     document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";

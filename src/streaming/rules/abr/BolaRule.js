@@ -60,8 +60,8 @@ function BolaRule(config) {
     const context = this.context;
 
     const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const eventBus = EventBus(context).getInstance();
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -114,7 +114,7 @@ function BolaRule(config) {
         const bitrates = mediaInfo.bitrateList.map(b => b.bandwidth);
         let utilities = utilitiesFromBitrates(bitrates);
         utilities = utilities.map(u => u - utilities[0] + 1); // normalize
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+        const stableBufferTime = settings.get().streaming.stableBufferTime;
         const params = calculateBolaParameters(stableBufferTime, bitrates, utilities);
 
         if (!params) {
@@ -148,7 +148,7 @@ function BolaRule(config) {
 
     // If the buffer target is changed (can this happen mid-stream?), then adjust BOLA parameters accordingly.
     function checkBolaStateStableBufferTime(bolaState, mediaType) {
-        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+        const stableBufferTime = settings.get().streaming.stableBufferTime;
         if (bolaState.stableBufferTime !== stableBufferTime) {
             const params = calculateBolaParameters(stableBufferTime, bolaState.bitrates, bolaState.utilities);
             if (params.Vp !== bolaState.Vp || params.gp !== bolaState.gp) {

@@ -588,7 +588,7 @@ function PlaybackController() {
         if (
             isDynamic &&
             settings.get().streaming.lowLatencyEnabled &&
-            mediaPlayerModel.getCatchUpPlaybackRate() > 0 &&
+            settings.get().streaming.lowLatencyEnabled > 0 &&
             !isPaused() &&
             !isSeeking()
         ) {

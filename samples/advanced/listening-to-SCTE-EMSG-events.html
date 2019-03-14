@@ -16,7 +16,7 @@
 
         function init() {
             player = dashjs.MediaPlayer().create();
-            player.getDebug().setLogToBrowserConsole(false);
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
             player.on(SCHEMEIDURI, showEvent);
             player.initialize(document.querySelector("video"), URL, true);
         }

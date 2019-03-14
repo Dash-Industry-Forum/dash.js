@@ -40,7 +40,6 @@ function AbandonRequestsRule(config) {
     const MIN_LENGTH_TO_AVERAGE = 5;
 
     const context = this.context;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const dashMetrics = config.dashMetrics;
     const settings = config.settings;
 
@@ -80,7 +79,7 @@ function AbandonRequestsRule(config) {
         if (!isNaN(req.index)) {
             setFragmentRequestDict(mediaType, req.index);
 
-            const stableBufferTime = mediaPlayerModel.getStableBufferTime();
+            const stableBufferTime = settings.get().streaming.stableBufferTime;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
             if ( bufferLevel > stableBufferTime ) {
                 return switchRequest;

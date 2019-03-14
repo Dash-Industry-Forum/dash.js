@@ -79,6 +79,103 @@ declare namespace dashjs {
         contentProtection: any | null;
     }
 
+    export class MediaPlayerSettingClass {
+        debug: {
+            logLevel: LogLevel;
+        };
+        streaming: {
+            metricsMaxListDepth: number;
+            abandonLoadTimeout: number;
+            liveDelayFragmentCount: number;
+            liveDelay: number;
+            scheduleWhilePaused: boolean;
+            fastSwitchEnabled: boolean;
+            bufferPruningInterval: number;
+            bufferToKeep: number;
+            bufferAheadToKeep: number;
+            jumpGaps: boolean;
+            smallGapLimit: number;
+            stableBufferTime: number;
+            bufferTimeAtTopQuality: number;
+            bufferTimeAtTopQualityLongForm: number;
+            longFormContentDurationThreshold: number;
+            wallclockTimeUpdateInterval: number;
+            lowLatencyEnabled: boolean;
+            keepProtectionMediaKeys: boolean;
+            useManifestDateHeaderTimeSource: boolean;
+            segmentOverlapToleranceTime: number;
+            useSuggestedPresentationDelay: boolean;
+            manifestUpdateRetryInterval: number;
+            liveCatchUpMinDrift: number;
+            liveCatchUpMaxDrift: number;
+            liveCatchUpPlaybackRate: number;
+            lastBitrateCachingInfo: {
+                enabled: boolean;
+                ttl: number;
+            };
+            lastMediaSettingsCachingInfo: {
+                enabled: boolean;
+                ttl: number;
+            };
+            cacheLoadThresholds: {
+                video: number;
+                audio: number;
+            };
+            retryIntervals: {
+                'MPD':                       number;
+                'XLinkExpansion':            number;
+                'MediaSegment':              number;
+                'InitializationSegment':     number;
+                'BitstreamSwitchingSegment': number;
+                'IndexSegment':              number;
+                'other':                     number;
+            };
+            retryAttempts: {
+                'MPD':                       number;
+                'XLinkExpansion':            number;
+                'MediaSegment':              number;
+                'InitializationSegment':     number;
+                'BitstreamSwitchingSegment': number;
+                'IndexSegment':              number;
+                'other':                     number;
+            };
+            abr: {
+                movingAverageMethod: 'slidingWindow' | 'ewma';
+                ABRStrategy: 'abrDynamic' | 'abrBola';
+                bandwidthSafetyFactor: number;
+                useDefaultABRRules: boolean;
+                useBufferOccupancyABR: boolean;
+                useDeadTimeLatency: boolean;
+                limitBitrateByPortal: boolean;
+                usePixelRatioInLimitBitrateByPortal: boolean;
+                maxBitrate: {
+                    audio: number;
+                    video: number;
+                };
+                minBitrate: {
+                    audio: number;
+                    video: number;
+                };
+                maxRepresentationRatio: {
+                    audio: number;
+                    video: number;
+                };
+                initialBitrate: {
+                    audio: number;
+                    video: number;
+                };
+                initialRepresentationRatio: {
+                    audio: number;
+                    video: number;
+                };
+                autoSwitchBitrate: {
+                    audio: boolean;
+                    video: boolean;
+                };
+            }
+        }
+    }
+
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
@@ -149,32 +246,14 @@ declare namespace dashjs {
         getTTMLRenderingDiv(): HTMLDivElement | null;
         getVideoElement(): HTMLVideoElement;
         getSource(): string | object;
-        setLiveDelayFragmentCount(value: number): void;
-        setLiveDelay(value: number): void;
-        getLiveDelay(): number | undefined;
-        useSuggestedPresentationDelay(value: boolean): void;
-        enableLastBitrateCaching(enable: boolean, ttl?: number): void;
-        enableLastMediaSettingsCaching(enable: boolean, ttl?: number): void;
-        setMaxAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
-        getMaxAllowedBitrateFor(type: 'video' | 'audio'): number;
         getTopBitrateInfoFor(type: 'video' | 'audio'): BitrateInfo;
-        setMinAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
-        getMinAllowedBitrateFor(type: 'video' | 'audio'): number;
-        setMaxAllowedRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
-        getMaxAllowedRepresentationRatioFor(type: 'video' | 'audio'): number;
         setAutoPlay(value: boolean): void;
         getAutoPlay(): boolean;
-        setScheduleWhilePaused(value: boolean): void;
-        getScheduleWhilePaused(): boolean;
         getDashMetrics(): DashMetrics;
         getMetricsFor(type: 'video' | 'audio' | 'text' | 'stream'): MetricsList | null;
         getQualityFor(type: 'video' | 'audio' | 'image'): number;
         setQualityFor(type: 'video' | 'audio' | 'image', value: number): void;
         updatePortalSize(): void;
-        getLimitBitrateByPortal(): any;
-        setLimitBitrateByPortal(value: boolean): void;
-        getUsePixelRatioInLimitBitrateByPortal(): any;
-        setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
         enableText(enable: boolean): void;
         setTextTrack(idx: number): void;
         getTextDefaultLanguage(): string | undefined;
@@ -183,10 +262,6 @@ declare namespace dashjs {
         setTextDefaultEnabled(enable: boolean): void;
         getThumbnail(time: number): Thumbnail;
         getBitrateInfoListFor(type: 'video' | 'audio' | 'image'): BitrateInfo[];
-        setInitialBitrateFor(type: 'video' | 'audio', value: number): void;
-        getInitialBitrateFor(type: 'video' | 'audio'): number;
-        setInitialRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
-        getInitialRepresentationRatioFor(type: 'video' | 'audio'): number;
         getStreamsFromManifest(manifest: object): StreamInfo[];
         getTracksFor(type: 'video' | 'audio' | 'text' | 'fragmentedText'): MediaInfo[];
         getTracksForTypeFromManifest(type: 'video' | 'audio' | 'text' | 'fragmentedText', manifest: object, streamInfo: StreamInfo): MediaInfo[];
@@ -198,32 +273,13 @@ declare namespace dashjs {
         setTrackSwitchModeFor(type: 'video' | 'audio', mode: TrackSwitchMode): void;
         setSelectionModeForInitialTrack(mode: TrackSelectionMode): void;
         getSelectionModeForInitialTrack(): TrackSelectionMode;
-        getAutoSwitchQuality(): boolean;
-        setAutoSwitchQuality(value: boolean): void;
-        setFastSwitchEnabled(value: boolean): void;
-        getFastSwitchEnabled(): boolean;
-        getAutoSwitchQualityFor(type: 'video' | 'audio'): boolean;
-        setAutoSwitchQualityFor(type: 'video' | 'audio', value: boolean): void;
-        enableBufferOccupancyABR(value: boolean): void;
-        setBandwidthSafetyFactor(value: number): void;
-        getBandwidthSafetyFactor(): number;
-        setAbandonLoadTimeout(value: number): void;
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
         addUTCTimingSource(schemeIdUri: string, value: string): void;
         removeUTCTimingSource(schemeIdUri: string, value: string): void;
         clearDefaultUTCTimingSources(): void;
         restoreDefaultUTCTimingSources(): void;
-        setBufferToKeep(value: number): void;
-        setBufferPruningInterval(value: number): void;
-        setStableBufferTime(value: number): void;
-        setBufferTimeAtTopQuality(value: number): void;
-        setFragmentLoaderRetryAttempts(value: number): void;
-        setFragmentLoaderRetryInterval(value: number): void;
         setXHRWithCredentialsForType(type: string, value: boolean): void;
         getXHRWithCredentialsForType(type: string): boolean;
-        setBufferTimeAtTopQualityLongForm(value: number): void;
-        setLongFormContentDurationThreshold(value: number): void;
-        setCacheLoadThresholdForType(type: 'video' | 'audio', value: number): void;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionData): void;
@@ -231,45 +287,18 @@ declare namespace dashjs {
         displayCaptionsOnTop(value: boolean): void;
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
         getCurrentTextTrackIndex(): number;
-        setJumpGaps(value: boolean): void;
-        getJumpGaps(): boolean;
-        setSmallGapLimit(value: number): void;
-        getSmallGapLimit(): number;
         preload(): void;
         reset(): void;
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
-        getLowLatencyEnabled(): boolean;
-        setLowLatencyEnabled(value: boolean): void;
-        enableLowLatencyCatchUp(value: boolean): void;
-        getLowLatencyMinDrift(): number;
-        setLowLatencyMinDrift(value: number): void;
-        getLowLatencyMaxDriftBeforeSeeking(): number;
-        setLowLatencyMaxDriftBeforeSeeking(value: number): void;
-        getUseDeadTimeLatencyForAbr(): boolean;
-        setUseDeadTimeLatencyForAbr(value: boolean): void;
         getCurrentLiveLatency(): number;
         enableForcedTextStreaming(value: boolean): void;
         isTextEnabled(): boolean;
-        getBufferTimeAtTopQualityLongForm(): number;
-        setMovingAverageMethod(value: string): void;
-        getMovingAverageMethod(): string;
-        setABRStrategy(value: string): void;
-        getABRStrategy(): string;
-        useDefaultABRRules(value: boolean): void;
         getAverageThroughput(value: number): void;
-        setBufferAheadToKeep(value: number): void;
-        getStableBufferTime(): number;
-        getBufferTimeAtTopQuality(): number;
-        setManifestLoaderRetryAttempts(value: number): void;
-        setManifestLoaderRetryInterval(value: number): void;
-        setManifestUpdateRetryInterval(value: number): void;
-        getManifestUpdateRetryInterval(): number;
-        setSegmentOverlapToleranceTime(value: number): void;
         keepProtectionMediaKeys(value: boolean): void;
-        getSettings(): object;
-        updateSettings(settingsObj: object);
+        getSettings(): MediaPlayerSettingClass;
+        updateSettings(settings: MediaPlayerSettingClass);
         resetSettings(): void;
     }
 

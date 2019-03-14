@@ -35,7 +35,6 @@ function BufferLevelRule(config) {
 
     config = config || {};
     const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const textController = config.textController;
     const abrController = config.abrController;
     const settings = config.settings;
@@ -74,7 +73,7 @@ function BufferLevelRule(config) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.longFormContentDurationThreshold;
                 bufferTarget = isLongFormContent ? settings.get().streaming.bufferTimeAtTopQualityLongForm : settings.get().streaming.bufferTimeAtTopQuality;
             } else {
-                bufferTarget = mediaPlayerModel.getStableBufferTime();
+                bufferTarget = settings.get().streaming.stableBufferTime;
             }
         }
         return bufferTarget;
