@@ -49,7 +49,8 @@ function XlinkLoader(config) {
         errHandler: config.errHandler,
         dashMetrics: config.dashMetrics,
         mediaPlayerModel: config.mediaPlayerModel,
-        requestModifier: config.requestModifier
+        requestModifier: config.requestModifier,
+        useFetch: config.settings ? config.settings.get().streaming.lowLatencyEnabled : null
     });
 
     let instance;

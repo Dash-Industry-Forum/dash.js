@@ -35,7 +35,6 @@ import FactoryMaker from './../core/FactoryMaker';
 import DashHandler from './../dash/DashHandler';
 import Constants from './../streaming/constants/Constants';
 import OfflineDownloaderRequestRule from './rules/OfflineDownloaderRequestRule';
-import MetricsModel from './../streaming/models/MetricsModel';
 import FragmentModel from './../streaming/models/FragmentModel';
 import FragmentLoader from './../streaming/FragmentLoader';
 import RequestModifier from './../streaming/utils/RequestModifier';
@@ -74,6 +73,8 @@ function OfflineStreamProcessor(config) {
         isInitialized,
         isStopped,
         stream,
+        settings,
+        dashMetrics,
         qualityIndex;
 
     function setConfig(config) {
@@ -122,6 +123,14 @@ function OfflineStreamProcessor(config) {
 
         if (config.offlineStoreController) {
             offlineStoreController = config.offlineStoreController;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
     }
 
@@ -196,27 +205,29 @@ function OfflineStreamProcessor(config) {
      * @memberof OfflineStreamProcessor#
     */
     function initialize() {
-        let metricsModel = MetricsModel(context).getInstance();
         let requestModifier = RequestModifier(context).getInstance();
 
         indexHandler = DashHandler(context).create({
+            mediaPlayerModel: mediaPlayerModel,
             mimeType: mimeType,
             baseURLController: baseURLController,
-            metricsModel: metricsModel,
             errHandler: errHandler,
-            timelineConverter:  TimelineConverter(context).getInstance()
+            timelineConverter:  TimelineConverter(context).getInstance(),
+            settings: settings,
+            dashMetrics: dashMetrics
         });
         indexHandler.initialize(instance);
 
         let fragmentLoader = FragmentLoader(context).create({
-            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            settings: settings,
+            dashMetrics: dashMetrics
         });
 
         fragmentModel = FragmentModel(context).create({
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             fragmentLoader: fragmentLoader
         });
 

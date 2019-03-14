@@ -803,18 +803,18 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     };
 
     function updateMetrics(type) {
-        var metrics = $scope.player.getMetricsFor(type);
         var dashMetrics = $scope.player.getDashMetrics();
         var dashAdapter = $scope.player.getDashAdapter();
 
-        if (metrics && dashMetrics && $scope.streamInfo) {
+        if (dashMetrics && $scope.streamInfo) {
             var periodIdx = $scope.streamInfo.index;
-            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
-            var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+            var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
+            var bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
             var index = $scope.player.getQualityFor(type);
             var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
-            var droppedFPS = dashMetrics.getCurrentDroppedFrames(metrics) ? dashMetrics.getCurrentDroppedFrames(metrics).droppedFrames : 0;
+            var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
+            var droppedFPS = droppedFramesMetrics ? droppedFramesMetrics.droppedFrames : 0;
             var liveLatency = 0;
             if ($scope.isDynamic) {
                 liveLatency = $scope.player.getCurrentLiveLatency();
@@ -826,7 +826,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             $scope[type + 'DroppedFrames'] = droppedFPS;
             $scope[type + 'LiveLatency'] = liveLatency;
 
-            var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(metrics));
+            var httpMetrics = calculateHTTPMetrics(type, dashMetrics.getHttpRequests(type));
             if (httpMetrics) {
                 $scope[type + 'Download'] = httpMetrics.download[type].low.toFixed(2) + ' | ' + httpMetrics.download[type].average.toFixed(2) + ' | ' + httpMetrics.download[type].high.toFixed(2);
                 $scope[type + 'Latency'] = httpMetrics.latency[type].low.toFixed(2) + ' | ' + httpMetrics.latency[type].average.toFixed(2) + ' | ' + httpMetrics.latency[type].high.toFixed(2);

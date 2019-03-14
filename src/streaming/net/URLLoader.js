@@ -53,10 +53,10 @@ function URLLoader(cfg) {
         let loaderFactory = schemeLoaderFactory.getLoader(config.request.url);
         loader = loaderFactory(context).create({
             errHandler: cfg.errHandler,
-            metricsModel: cfg.metricsModel,
             mediaPlayerModel: cfg.mediaPlayerModel,
             requestModifier: cfg.requestModifier,
-            useFetch: cfg.mediaPlayerModel ? cfg.mediaPlayerModel.getLowLatencyEnabled() : null,
+            useFetch: cfg.useFetch || null,
+            dashMetrics: cfg.dashMetrics,
             boxParser: cfg.boxParser ? cfg.boxParser : null
         });
 

@@ -57,6 +57,8 @@ function OfflineController() {
         mediaPlayerModel,
         offlineStoreController,
         offlineUtlUtils,
+        settings,
+        dashMetrics,
         errHandler;
 
     function setup() {
@@ -97,6 +99,14 @@ function OfflineController() {
             schemeLoaderFactory = config.schemeLoaderFactory;
         }
 
+        if (config.settings) {
+            settings = config.settings;
+        }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
+
         offlineStoreController.setConfig({
             errHandler: errHandler
         });
@@ -135,7 +145,9 @@ function OfflineController() {
                 adapter: adapter,
                 errHandler: errHandler,
                 schemeLoaderFactory: schemeLoaderFactory,
-                offlineStoreController: offlineStoreController
+                offlineStoreController: offlineStoreController,
+                settings: settings,
+                dashMetrics: dashMetrics
             });
             downloads.push(download);
         }

@@ -82,7 +82,8 @@ function DashHandler(config) {
             baseURLController: baseURLController,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);

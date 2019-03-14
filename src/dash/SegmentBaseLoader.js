@@ -51,6 +51,7 @@ function SegmentBaseLoader() {
         boxParser,
         requestModifier,
         dashMetrics,
+        settings,
         mediaPlayerModel,
         urlLoader,
         baseURLController;
@@ -66,7 +67,8 @@ function SegmentBaseLoader() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            useFetch: settings.get().streaming.lowLatencyEnabled
         });
     }
 
@@ -85,6 +87,10 @@ function SegmentBaseLoader() {
 
         if (config.errHandler) {
             errHandler = config.errHandler;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 

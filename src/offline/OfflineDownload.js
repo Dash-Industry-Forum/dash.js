@@ -61,6 +61,8 @@ function OfflineDownload(params) {
         manifest,
         isDownloadingStatus,
         isComposed,
+        settings,
+        dashMetrics,
         logger;
 
     const eventBus = EventBus(context).getInstance();
@@ -106,6 +108,14 @@ function OfflineDownload(params) {
 
         if (config.offlineStoreController) {
             offlineStoreController = config.offlineStoreController;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
 
         baseURLController.setConfig({
@@ -227,7 +237,9 @@ function OfflineDownload(params) {
                     errHandler: errHandler,
                     baseURLController: baseURLController,
                     mediaPlayerModel: mediaPlayerModel,
-                    offlineStoreController: offlineStoreController
+                    offlineStoreController: offlineStoreController,
+                    settings: settings,
+                    dashMetrics: dashMetrics
                 });
                 streams.push(stream);
 

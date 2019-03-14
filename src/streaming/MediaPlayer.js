@@ -1136,7 +1136,9 @@ function MediaPlayer() {
             manifestModel: manifestModel,
             adapter: adapter,
             errHandler: errHandler,
-            schemeLoaderFactory: schemeLoaderFactory
+            schemeLoaderFactory: schemeLoaderFactory,
+            settings: settings,
+            dashMetrics: dashMetrics
         });
 
         offlineControllerInitialized = true;

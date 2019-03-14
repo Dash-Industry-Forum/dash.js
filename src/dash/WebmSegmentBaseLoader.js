@@ -24,6 +24,7 @@ function WebmSegmentBaseLoader() {
         dashMetrics,
         mediaPlayerModel,
         urlLoader,
+        settings,
         baseURLController;
 
     function setup() {
@@ -99,7 +100,8 @@ function WebmSegmentBaseLoader() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            useFetch: settings.get().streaming.lowLatencyEnabled
         });
     }
 
@@ -111,6 +113,7 @@ function WebmSegmentBaseLoader() {
         dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
+        settings = config.settings;
     }
 
     function parseCues(ab) {

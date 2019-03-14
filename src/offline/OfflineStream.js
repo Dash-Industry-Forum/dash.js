@@ -63,6 +63,8 @@ function OfflineStream(config) {
         streamInfo,
         availableSegments,
         allMediasInfosList,
+        settings,
+        dashMetrics,
         logger;
 
     function setup() {
@@ -109,6 +111,14 @@ function OfflineStream(config) {
 
         if (config.offlineStoreController) {
             offlineStoreController = config.offlineStoreController;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
     }
 
@@ -256,7 +266,9 @@ function OfflineStream(config) {
             errHandler: errHandler,
             stream: instance,
             mediaPlayerModel: mediaPlayerModel,
-            offlineStoreController: offlineStoreController
+            offlineStoreController: offlineStoreController,
+            dashMetrics: dashMetrics,
+            settings: settings
         });
         offlineStreamProcessors.push(streamProcessor);
         streamProcessor.initialize();
