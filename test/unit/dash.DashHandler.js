@@ -16,6 +16,7 @@ describe('DashHandler', function () {
     // Arrange
     const context = {};
     const testType = Constants.VIDEO;
+    const settings = Settings(context).getInstance();
 
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
