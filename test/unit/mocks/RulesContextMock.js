@@ -23,7 +23,11 @@ function RulesContextMock () {
         return fragRequest;
     };
     this.getRepresentationInfo = function () {};
-    this.getAbrController = function () {};
+    this.getAbrController = function () {
+        return {
+            getThroughputHistory: function () {}
+        };
+    };
     this.getSwitchHistory = function () {
         return new switchRequestHistoryMock();
     };
@@ -44,6 +48,10 @@ function RulesContextMock () {
     };
 
     this.getDroppedFramesHistory = function () {
+
+    };
+
+    this.getStreamInfo = function () {
 
     };
 }
