@@ -42,6 +42,10 @@ function RulesContextMock () {
     this.useBufferOccupancyABR = function () {
 
     };
+
+    this.getDroppedFramesHistory = function () {
+
+    };
 }
 
 export default RulesContextMock;
