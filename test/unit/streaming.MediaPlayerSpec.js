@@ -49,7 +49,6 @@ describe('MediaPlayer', function () {
         // to avoid unwanted log
         const debug = player.getDebug();
         expect(debug).to.exist; // jshint ignore:line
-        debug.setLogToBrowserConsole(false);
 
         player.setConfig({
             streamController: streamControllerMock,

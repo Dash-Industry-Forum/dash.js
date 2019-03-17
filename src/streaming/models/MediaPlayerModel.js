@@ -36,6 +36,9 @@ import Settings from '../../core/Settings';
 import { checkParameterType} from '../utils/SupervisorTools';
 
 
+const DEFAULT_MIN_BUFFER_TIME = 12;
+const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
+
 const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
@@ -113,6 +116,15 @@ function MediaPlayerModel() {
         }
     }
 
+    function getStableBufferTime() {
+        if (settings.get().streaming.lowLatencyEnabled) {
+            return settings.get().streaming.liveDelay * 0.6;
+        }
+
+        const stableBufferTime = settings.get().streaming.stableBufferTime;
+        return stableBufferTime > -1 ? stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+    }
+
     function getRetryAttemptsForType(type) {
         return settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.retryAttempts[type] * LOW_LATENCY_MULTIPLY_FACTOR : settings.get().streaming.retryAttempts[type];
     }
@@ -187,6 +199,7 @@ function MediaPlayerModel() {
         getABRCustomRules: getABRCustomRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
+        getStableBufferTime: getStableBufferTime,
         getRetryAttemptsForType: getRetryAttemptsForType,
         getRetryIntervalsForType: getRetryIntervalsForType,
         getLiveDelay: getLiveDelay,

@@ -554,7 +554,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         getMenuInitialIndex = function(info, menuType, mediaType) {
             if (menuType === 'track') {
-
                 var mediaInfo = player.getCurrentTrackFor(mediaType);
                 var idx = 0
                 info.some(function(element, index){
@@ -572,9 +571,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 }
                 return 0;
             } else if (menuType === "caption") {
-                var idx = player.getCurrentTextTrackIndex() + 1;
-
-                return idx;
+                return player.getCurrentTextTrackIndex() + 1;
             }
         },
 
@@ -709,12 +706,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                                 }
                             }
                         };
+
                         if (self.index > 0) {
-                            var cfg = player.getSettings();
-                            if (cfg && cfg.streaming && cfg.streaming.abr && cfg.streaming.abr.initialBitrate && cfg.streaming.abr.autoSwitchBitrate[self.mediaType]) {
-                                cfg.streaming.abr.autoSwitchBitrate[self.mediaType] = true;
-                                player.updateSettings(cfg);
-                            }
+                            cfg.streaming.abr.autoSwitchBitrate[self.mediaType] = false;
+                            player.updateSettings(cfg);
                             player.setQualityFor(self.mediaType, self.index - 1);
                         } else {
                             cfg.streaming.abr.autoSwitchBitrate[self.mediaType] = true;

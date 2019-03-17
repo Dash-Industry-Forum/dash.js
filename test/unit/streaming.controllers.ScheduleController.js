@@ -62,6 +62,7 @@ describe('ScheduleController', function () {
     });
 
     afterEach(function () {
+        settings.reset();
         scheduleController.reset();
         scheduleController = null;
     });

@@ -29,6 +29,10 @@ describe('BufferLevelRule', function () {
         id: 'id'
     };
 
+    afterEach(function () {
+        settings.reset();
+    });
+
     it('should return NaN if streamProcessor is undefined', function () {
         const result = bufferLevelRule.getBufferTarget();
 

@@ -345,7 +345,7 @@ function AbrController() {
                     if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
-                } else if (debug.getLogToBrowserConsole()) {
+                } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                     const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                     logger.debug('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
@@ -369,7 +369,7 @@ function AbrController() {
         if (type  && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const id = streamInfo ? streamInfo.id : null;
-            if (debug.getLogToBrowserConsole()) {
+            if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                 logger.info('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
@@ -462,7 +462,7 @@ function AbrController() {
         }
         // else ABR_STRATEGY_DYNAMIC
 
-        const stableBufferTime = settings.get().streaming.stableBufferTime;
+        const stableBufferTime = mediaPlayerModel.getStableBufferTime();
         const switchOnThreshold = stableBufferTime;
         const switchOffThreshold = 0.5 * stableBufferTime;
 

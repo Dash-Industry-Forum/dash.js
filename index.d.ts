@@ -23,10 +23,6 @@ declare namespace dashjs {
         getLogger(): Logger;
         setLogTimestampVisible(flag: boolean): void;
         setCalleeNameVisible(flag: boolean): void;
-        getLogToBrowserConsole(): boolean;
-        setLogToBrowserConsole(flag: boolean): void;
-        setLogLevel(level: LogLevel): void;
-        getLogLevel(): LogLevel;
     }
 
     interface VideoModel { }

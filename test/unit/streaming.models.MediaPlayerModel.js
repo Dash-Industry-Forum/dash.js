@@ -88,4 +88,11 @@ describe('MediaPlayerModel', function () {
         expect(ManifestLoaderRetryInterval).to.equal(50);
     });
 
+    it('should configure StableBufferTime', function () {
+        const s = { streaming: { stableBufferTime: 50 } };
+        settings.update(s);
+
+        let StableBufferTime = mediaPlayerModel.getStableBufferTime();
+        expect(StableBufferTime).to.equal(50);
+    });
 });
