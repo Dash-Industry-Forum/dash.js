@@ -1,4 +1,5 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import DashConstants from '../../src/dash/constants/DashConstants';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 import MpdHelper from './helpers/MPDHelper';
@@ -39,10 +40,35 @@ describe('DashManifestModel', function () {
         expect(suggestedPresentationDelay).to.be.null;  // jshint ignore:line
     });
 
+    it('should return null when getSuggestedPresentationDelay is called and mpd is an empty object', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay({});
+
+        expect(suggestedPresentationDelay).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return 5 when getSuggestedPresentationDelay is called and mpd is an object with suggestedPresentationDelay attribute', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay({suggestedPresentationDelay: 5});
+
+        expect(suggestedPresentationDelay).to.be.equal(5);  // jshint ignore:line
+    });
+
     it('should return null when getAvailabilityStartTime is called and mpd is undefined', () => {
         const availabilityStartTime = dashManifestModel.getAvailabilityStartTime();
 
         expect(availabilityStartTime).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return null when getAvailabilityStartTime is called and mpd is an empty object', () => {
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime({});
+
+        expect(availabilityStartTime).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return correct value when getAvailabilityStartTime is called and mpd is object with the availabilityStartTime attribute', () => {
+        const now = new Date();
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime({availabilityStartTime: now});
+
+        expect(availabilityStartTime).to.be.equal(now.getTime());  // jshint ignore:line
     });
 
     it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and adaptation is undefined', () => {
@@ -224,6 +250,18 @@ describe('DashManifestModel', function () {
         expect(codec).to.be.null;    // jshint ignore:line
     });
 
+    it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is true', () => {
+        const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, true);
+
+        expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D";width="1080";height="960"');    // jshint ignore:line
+    });
+
+    it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
+        const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, false);
+
+        expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
+    });
+
     it('should return null when getMimeType is called and adaptation is undefined', () => {
         const mimeType = dashManifestModel.getMimeType();
 
@@ -248,6 +286,48 @@ describe('DashManifestModel', function () {
         expect(kid).to.be.null;    // jshint ignore:line
     });
 
+    it('should return kid value when getKID is called and adaptation is well defined', () => {
+        const kid = dashManifestModel.getKID({'cenc:default_KID': 'testKid'});
+
+        expect(kid).to.equal('testKid');    // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is undefined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation();
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: true});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label_asArray', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: []});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return correct array when getLabelsForAdaptation is called and adaptation is well defined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: [{lang: 'fre',  __text: 'french'}, {lang: 'eng',  __text: 'english'}]});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels.length).to.equal(2);         // jshint ignore:line
+        expect(labels[0].lang).to.equal('fre');        // jshint ignore:line
+    });
+
     it('should return null when getContentProtectionData is called and adaptation is undefined', () => {
         const contentProtection = dashManifestModel.getContentProtectionData();
 
@@ -266,6 +346,18 @@ describe('DashManifestModel', function () {
         expect(duration).to.equal(Number.MAX_SAFE_INTEGER || Number.MAX_VALUE); // jshint ignore:line
     });
 
+    it('should return duration when getDuration is called and manifest has a defined mediaPresentationDuration', () => {
+        const duration = dashManifestModel.getDuration({mediaPresentationDuration: 50});
+
+        expect(duration).to.equal(50); // jshint ignore:line
+    });
+
+    it('should return infinity when getDuration is called and manifest is a dynamic one', () => {
+        const duration = dashManifestModel.getDuration({type: DashConstants.DYNAMIC});
+
+        expect(duration).to.equal(Infinity); // jshint ignore:line
+    });
+
     it('should return 0 when getRepresentationCount is called and adaptation is undefined', () => {
         const representationCount = dashManifestModel.getRepresentationCount();
 
@@ -276,6 +368,12 @@ describe('DashManifestModel', function () {
         const bdtw = dashManifestModel.getBandwidth();
 
         expect(bdtw).to.be.NaN; // jshint ignore:line
+    });
+
+    it('should return correct value when getBandwidth is called and representation is defined', () => {
+        const bdtw = dashManifestModel.getBandwidth({bandwidth: 9600});
+
+        expect(bdtw).to.equal(9600); // jshint ignore:line
     });
 
     it('should return null when getBitrateListForAdaptation is called and adaptation is undefined', () => {
@@ -317,6 +415,18 @@ describe('DashManifestModel', function () {
         expect(location).to.be.undefined; // jshint ignore:line
     });
 
+    it('should return undefined when getLocation is called and manifest is an empty object', () => {
+        const location = dashManifestModel.getLocation({});
+
+        expect(location).to.be.undefined; // jshint ignore:line
+    });
+
+    it('should return valid location when getLocation is called and manifest is a valid object', () => {
+        const location = dashManifestModel.getLocation({Location: '', Location_asArray: ['location_1']});
+
+        expect(location).to.be.equal('location_1'); // jshint ignore:line
+    });
+
     it('should return an empty Array when getUTCTimingSources is called and manifest is undefined', () => {
         const utcSourceArray = dashManifestModel.getUTCTimingSources();
 
@@ -349,6 +459,13 @@ describe('DashManifestModel', function () {
         const mpd = dashManifestModel.getMpd();
 
         expect(mpd.manifest).to.be.null;                // jshint ignore:line
+    });
+
+    it('should return mpd.manifest not null when getMpd is called and manifest is defined', () => {
+        const mpd = dashManifestModel.getMpd({});
+
+        expect(mpd.manifest).not.to.be.null;                // jshint ignore:line
+        expect(mpd.manifest.availabilityStartTime).to.be.undefined;                // jshint ignore:line
     });
 
     it('should return an error when getRegularPeriods and getEndTimeForLastPeriod are called and duration is undefined', () => {
