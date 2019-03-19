@@ -441,6 +441,37 @@ describe('DashManifestModel', function () {
         expect(eventsStream).to.be.empty;                // jshint ignore:line
     });
 
+    it('should not return an empty Array when getEventStreamForRepresentation is called and manifest and representation are well defined', () => {
+        const manifest = {
+                Period: [
+                    {
+                        'id': '153199',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    }
+                ],
+                Period_asArray: [
+                    {
+                        'id': '153199',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    }
+                ],
+                'type': 'static'
+            };
+        const representation = {adaptation: {index: 0, period: {index: 0}}, index: 0};
+        const eventsStream = dashManifestModel.getEventStreamForRepresentation(manifest, representation);
+
+        expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(eventsStream).to.be.empty;                // jshint ignore:line
+    });
+
     it('should return an empty Array when getEventStreamForAdaptationSet is called and manifest and adaptation are undefined', () => {
         const eventsStream = dashManifestModel.getEventStreamForAdaptationSet();
 
@@ -469,7 +500,7 @@ describe('DashManifestModel', function () {
     });
 
     it('should return an error when getRegularPeriods and getEndTimeForLastPeriod are called and duration is undefined', () => {
-        const manifest = {
+        const mpd = {
             'manifest': {
                 'Period': [
                     {
@@ -492,7 +523,7 @@ describe('DashManifestModel', function () {
             'maxSegmentDuration': 4.5,
             'mediaPresentationDuration': 300.0
         };
-        dashManifestModel.getRegularPeriods(manifest);
+        dashManifestModel.getRegularPeriods(mpd);
 
         expect(errorHandlerMock.errorValue).to.equal('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
     });
