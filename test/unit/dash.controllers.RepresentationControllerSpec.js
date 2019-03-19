@@ -9,6 +9,8 @@ import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import SpecHelper from './helpers/SpecHelper';
 
 import AbrControllerMock from './mocks/AbrControllerMock';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -28,16 +30,19 @@ describe('RepresentationController', function () {
     const mpd = mpdHelper.getMpd('static');
     const data = mpd.Period_asArray[0].AdaptationSet_asArray[0];
     const voRepresentations = [];
-    voRepresentations.push(voHelper.getDummyRepresentation(testType));
+    voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const manifestModel = ManifestModel(context).getInstance();
+    const timelineConverter = objectsHelper.getDummyTimelineConverter();
 
     Events.extend(MediaPlayerEvents);
 
     manifestModel.setValue(mpd);
 
     const abrControllerMock = new AbrControllerMock();
+    const playbackControllerMock = new PlaybackControllerMock();
+    const dashMetricsMock = new DashMetricsMock();
 
     abrControllerMock.registerStreamType();
 
@@ -45,7 +50,10 @@ describe('RepresentationController', function () {
     representationController.setConfig({
         abrController: abrControllerMock,
         manifestModel: manifestModel,
-        streamProcessor: streamProcessor
+        streamProcessor: streamProcessor,
+        timelineConverter: timelineConverter,
+        playbackController: playbackControllerMock,
+        dashMetrics: dashMetricsMock
     });
     representationController.initialize();
 
@@ -103,6 +111,59 @@ describe('RepresentationController', function () {
 
         it('should return null if quality is greater than voAvailableRepresentations.length - 1', function () {
             expect(representationController.getRepresentationForQuality(150)).to.equal(null);
+        });
+
+        it('when a MANIFEST_VALIDITY_CHANGED event occurs, should update current representation', function () {
+            let currentRepresentation = representationController.getCurrentRepresentation();
+            expect(currentRepresentation.adaptation.period.duration).to.equal(100); // jshint ignore:line
+            eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: {}, newDuration: 150 });
+
+            expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
+        });
+
+        it('when a WALLCLOCK_TIME_UPDATED event occurs, should update availability window for dynamic content', function () {
+            const firstRepresentation = representationController.getRepresentationForQuality(0);
+
+            expect(firstRepresentation.segmentAvailabilityRange).to.be.null; // jshint ignore:line
+
+            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {
+                isDynamic: true,
+                time: new Date()
+            });
+
+            expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined); // jshint ignore:line
+            expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined); // jshint ignore:line
+        });
+
+        it('when a QUALITY_CHANGE_REQUESTED event occurs, should update current representation', function () {
+            let currentRepresentation = representationController.getCurrentRepresentation();
+            expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
+
+            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: testType, streamInfo: streamProcessor.getStreamInfo(), oldQuality: 0, newQuality: 1});
+
+            currentRepresentation = representationController.getCurrentRepresentation();
+            expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
+        });
+
+        it('when a BUFFER_LEVEL_UPDATED event occurs, should update dvr info metrics', function () {
+            let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
+            expect(dvrInfo).to.be.null; // jshint ignore:line
+
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: { getStreamProcessor() { return streamProcessor;}}, bufferLevel: 50 });
+
+            dvrInfo = dashMetricsMock.getCurrentDVRInfo();
+            expect(dvrInfo).not.to.be.null; // jshint ignore:line
+            expect(dvrInfo.type).to.equal(testType); // jshint ignore:line
+        });
+
+        it('when a REPRESENTATION_UPDATED event occurs, should notify dat update completed', function () {
+            let spy = chai.spy();
+            eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
+
+            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: { getStreamProcessor() { return streamProcessor;}}, representation: voRepresentations[1]});
+            expect(spy).to.have.been.called.exactly(1);
+
+            eventBus.off(Events.DATA_UPDATE_COMPLETED, spy);
         });
     });
 
