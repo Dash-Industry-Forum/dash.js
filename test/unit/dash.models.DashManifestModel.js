@@ -3,6 +3,7 @@ import DashConstants from '../../src/dash/constants/DashConstants';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 import MpdHelper from './helpers/MPDHelper';
+import VoHelper from './helpers/VOHelper';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
@@ -24,6 +25,7 @@ const EMPTY_STRING = '';
 describe('DashManifestModel', function () {
 
     const mpdHelper = new MpdHelper();
+    const voHelper = new VoHelper();
 
     it('should throw an exception when attempting to call getIsTypeOf with undefined parameters', function () {
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw('adaptation is not defined');
@@ -75,6 +77,22 @@ describe('DashManifestModel', function () {
         const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation();
 
         expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
+    });
+
+    it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and voAdaptation is defined, but without reference to real adaptation', () => {
+        const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{}]}]}}}, index: 0, type: 'video'};
+
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
+
+        expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
+    });
+
+    it('should return true when getUseCalculatedLiveEdgeTimeForAdaptation is called and voAdaptation is defined, with reference to real adaptation', () => {
+        const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
+
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
+
+        expect(useCalculatedLiveEdge).to.be.true;  // jshint ignore:line
     });
 
     it('should return false when getIsTextTrack is called and type is undefined', () => {
@@ -334,6 +352,13 @@ describe('DashManifestModel', function () {
         expect(contentProtection).to.be.null;    // jshint ignore:line
     });
 
+    it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection_asArray is an empty array', () => {
+        const adaptation = {ContentProtection_asArray: []};
+        const contentProtection = dashManifestModel.getContentProtectionData(adaptation);
+
+        expect(contentProtection).to.be.null;    // jshint ignore:line
+    });
+
     it('should return false when getIsDynamic is called and manifest is undefined', () => {
         const isDynamic = dashManifestModel.getIsDynamic();
 
@@ -376,10 +401,20 @@ describe('DashManifestModel', function () {
         expect(bdtw).to.equal(9600); // jshint ignore:line
     });
 
-    it('should return null when getBitrateListForAdaptation is called and adaptation is undefined', () => {
+    it('should return empty array when getBitrateListForAdaptation is called and adaptation is undefined', () => {
         const bitrateList = dashManifestModel.getBitrateListForAdaptation();
 
-        expect(bitrateList).to.be.null; // jshint ignore:line
+        expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
+        expect(bitrateList).to.be.empty; // jshint ignore:line
+    });
+
+    it('should not return empty array when getBitrateListForAdaptation is called and adaptation is defined', () => {
+        const realAdaptation = {Representation_asArray: [{}]};
+
+        const bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
+
+        expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
+        expect(bitrateList).not.to.be.empty; // jshint ignore:line
     });
 
     it('should return null when getRepresentationFor is called and index and adaptation are undefined', () => {
@@ -402,7 +437,7 @@ describe('DashManifestModel', function () {
         expect(representation).to.be.null; // jshint ignore:line
     });
 
-    it('should return representation.id = video25 when getRepresentationFor is called', () => {
+    it('should return representation.id = video20 when getRepresentationFor is called', () => {
         var adaptation = mpdHelper.composeAdaptation('video');
         const representation = dashManifestModel.getRepresentationFor(0, adaptation);
 
@@ -676,11 +711,29 @@ describe('DashManifestModel', function () {
         expect(adaptationArray).to.be.empty;                // jshint ignore:line
     });
 
+    it('should not return an empty array when getAdaptationsForPeriod is called and period is defined', () => {
+        const period = voHelper.getDummyPeriod();
+        const adaptationArray = dashManifestModel.getAdaptationsForPeriod(period);
+
+        expect(adaptationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(adaptationArray).not.to.be.empty;                // jshint ignore:line
+        expect(adaptationArray[0].index).to.equals(0);                // jshint ignore:line
+    });
+
     it('should return an empty array when getRepresentationsForAdaptation is called and adaptation is undefined', () => {
         const representationArray = dashManifestModel.getRepresentationsForAdaptation();
 
         expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line
         expect(representationArray).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
+        const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
+        const representationArray = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+
+        expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(representationArray).not.to.be.empty;                // jshint ignore:line
+        expect(representationArray[0].index).to.equals(0);                // jshint ignore:line
     });
 
     it('should return false when hasProfile is called and manifest is undefined', () => {
