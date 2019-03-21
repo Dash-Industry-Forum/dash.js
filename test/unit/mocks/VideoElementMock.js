@@ -16,6 +16,8 @@ class VideoElementMock {
         this.duration = 0;
         this.textTracks = [];
         this.nodeName = 'VIDEO';
+        this.videoWidth = 800;
+        this.videoHeight = 600;
     }
 
     constructor() {

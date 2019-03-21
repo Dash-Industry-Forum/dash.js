@@ -86,6 +86,22 @@ class VideoModelMock {
         return this.height;
     }
 
+    getVideoWidth() {
+        return this.element.videoWidth;
+    }
+
+    getVideoHeight() {
+        return this.element.videoHeight;
+    }
+
+    getVideoRelativeOffsetTop() {
+        return 0;
+    }
+
+    getVideoRelativeOffsetLeft() {
+        return 0;
+    }
+
     getElement() {
         return 'element';
     }
@@ -135,8 +151,15 @@ class VideoModelMock {
         return this.tracks;
     }
 
-    getTextTrack(idx) {
-        return this.element.textTracks[idx];
+    getTextTrack(kind, label, lang, isTTML, isEmbedded) {
+        for (let i = 0; i < this.element.textTracks.length; i++) {
+
+            if (this.element.textTracks[i].kind === kind && (label ? this.element.textTracks[i].label == label : true) &&
+                this.element.textTracks[i].language === lang && this.element.textTracks[i].isTTML === isTTML && this.element.textTracks[i].isEmbedded === isEmbedded) {
+                return this.element.textTracks[i];
+            }
+        }
+        return null;
     }
 
 
