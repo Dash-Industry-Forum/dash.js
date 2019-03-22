@@ -141,6 +141,7 @@ function ProtectionController(config) {
      * @instance
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
+        checkConfig();
         return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps);
     }
 
@@ -194,6 +195,7 @@ function ProtectionController(config) {
      * @fires ProtectionController#KeySessionCreated
      */
     function loadKeySession(sessionID, initData) {
+        checkConfig();
         protectionModel.loadKeySession(sessionID, initData, getSessionType(keySystem));
     }
 
@@ -210,6 +212,7 @@ function ProtectionController(config) {
      * @fires ProtectionController#KeySessionClosed
      */
     function removeKeySession(sessionToken) {
+        checkConfig();
         protectionModel.removeKeySession(sessionToken);
     }
 
@@ -224,6 +227,7 @@ function ProtectionController(config) {
      * @fires ProtectionController#KeySessionClosed
      */
     function closeKeySession(sessionToken) {
+        checkConfig();
         protectionModel.closeKeySession(sessionToken);
     }
 
@@ -239,6 +243,7 @@ function ProtectionController(config) {
      * @fires ProtectionController#ServerCertificateUpdated
      */
     function setServerCertificate(serverCertificate) {
+        checkConfig();
         protectionModel.setServerCertificate(serverCertificate);
     }
 
@@ -253,6 +258,7 @@ function ProtectionController(config) {
      * @instance
      */
     function setMediaElement(element) {
+        checkConfig();
         if (element) {
             protectionModel.setMediaElement(element);
             eventBus.on(events.NEED_KEY, onNeedKey, this);
@@ -323,6 +329,7 @@ function ProtectionController(config) {
      * @instance
      */
     function reset() {
+        checkConfig();
 
         eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);

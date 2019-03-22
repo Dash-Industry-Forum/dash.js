@@ -1,7 +1,7 @@
 function ProtectionKeyControllerMock () {
 
     this.getSupportedKeySystemsFromContentProtection = function (/*cps*/) {
-        return [];
+        return [{}];
     };
 
     this.getLicenseServer = function () {
