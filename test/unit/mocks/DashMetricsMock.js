@@ -62,6 +62,9 @@ function DashMetricsMock () {
 
     this.getCurrentRepresentationSwitch = function () {
     };
+
+    this.addHttpRequest = function () {
+    };
 }
 
 export default DashMetricsMock;
