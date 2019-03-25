@@ -284,6 +284,10 @@ function HTTPLoader(cfg) {
                     config.request.type
                 )
             );
+        } else {
+            if (config.error) {
+                config.error(config.request, 'error');
+            }
         }
     }
 

@@ -98,7 +98,7 @@ function SegmentBaseLoader() {
     function loadInitialization(representation, loadingInfo) {
         checkConfig();
         let initRange = null;
-        const baseUrl = baseURLController.resolve(representation.path);
+        const baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         const info = loadingInfo || {
             init: true,
             url: baseUrl ? baseUrl.url : undefined,
@@ -109,7 +109,7 @@ function SegmentBaseLoader() {
             searching: false,
             bytesLoaded: 0,
             bytesToLoad: 1500,
-            mediaType: representation.adaptation.type
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         logger.debug('Start searching for initialization.');
@@ -151,7 +151,7 @@ function SegmentBaseLoader() {
         let isoFile = null;
         let sidx = null;
         const hasRange = !!range;
-        const baseUrl = baseURLController.resolve(representation.path);
+        const baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         const info = {
             init: false,
             url: baseUrl ? baseUrl.url : undefined,
@@ -159,7 +159,7 @@ function SegmentBaseLoader() {
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
             bytesToLoad: 1500,
-            mediaType: representation.adaptation.type
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         const request = getFragmentRequest(info);
