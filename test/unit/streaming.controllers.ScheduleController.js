@@ -8,7 +8,6 @@ import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
 import AdapterMock from './mocks/AdapterMock';
 import Settings from '../../src/core/Settings';
 
@@ -43,7 +42,6 @@ describe('ScheduleController', function () {
         abrControllerMock = new AbrControllerMock();
         streamControllerMock = new StreamControllerMock();
         dashMetricsMock = new DashMetricsMock();
-        metricsModelMock = new MetricsModelMock();
 
         scheduleController = ScheduleController(context).create({
             type: testType,

@@ -136,23 +136,24 @@ function DOMStorage(config) {
     }
 
     function getSavedMediaSettings(type) {
+        let mediaSettings = null;
+
         checkConfig();
         //Checks local storage to see if there is valid, non-expired media settings
-        if (!canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) return null;
+        if (canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) {
+            const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
+            try {
+                const obj = JSON.parse(localStorage.getItem(key)) || {};
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastMediaSettingsCachingInfo.ttl || false;
+                mediaSettings = obj.settings;
 
-        let mediaSettings = null;
-        const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
-        try {
-            const obj = JSON.parse(localStorage.getItem(key)) || {};
-            const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastMediaSettingsCachingInfo.ttl || false;
-            mediaSettings = obj.settings;
-
-            if (isExpired) {
-                localStorage.removeItem(key);
-                mediaSettings = null;
+                if (isExpired) {
+                    localStorage.removeItem(key);
+                    mediaSettings = null;
+                }
+            } catch (e) {
+                return null;
             }
-        } catch (e) {
-            return null;
         }
         return mediaSettings;
     }

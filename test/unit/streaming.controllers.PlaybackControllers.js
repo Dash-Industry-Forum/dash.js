@@ -81,7 +81,8 @@ describe('PlaybackController', function () {
         beforeEach(function () {
             let streamInfo = {
                 manifestInfo: {
-                    isDynamic: true
+                    isDynamic: true,
+                    availableFrom: new Date()
                 },
                 start: 10
             };
@@ -285,6 +286,36 @@ describe('PlaybackController', function () {
 
                 eventBus.on(Events.PLAYBACK_ERROR, onError, this);
                 videoModelMock.fireEvent('error', [{target: { error: 'error'}}]);
+            });
+
+            it('should handle stalled event', function (done) {
+                let onStalled = function () {
+                    eventBus.off(Events.PLAYBACK_STALLED, onStalled);
+                    done();
+                };
+
+                eventBus.on(Events.PLAYBACK_STALLED, onStalled, this);
+                videoModelMock.fireEvent('stalled');
+            });
+
+            it('should handle timeupdate event', function (done) {
+                let onTimeUpdated = function () {
+                    eventBus.off(Events.PLAYBACK_TIME_UPDATED, onTimeUpdated);
+                    done();
+                };
+
+                eventBus.on(Events.PLAYBACK_TIME_UPDATED, onTimeUpdated, this);
+                videoModelMock.fireEvent('timeupdate');
+            });
+
+            it('should handle waiting event', function (done) {
+                let onPlaybackWaiting = function () {
+                    eventBus.off(Events.PLAYBACK_WAITING, onPlaybackWaiting);
+                    done();
+                };
+
+                eventBus.on(Events.PLAYBACK_WAITING, onPlaybackWaiting, this);
+                videoModelMock.fireEvent('waiting');
             });
         });
 

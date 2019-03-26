@@ -3,7 +3,6 @@ import BufferLevelRule from '../../src/streaming/rules/scheduling/BufferLevelRul
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import TextControllerMock from './mocks/TextControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import Settings from '../../src/core/Settings';
@@ -16,7 +15,6 @@ const settings = Settings(context).getInstance();
 const bufferLevelRule = BufferLevelRule(context).create({
     textController: textControllerMock,
     dashMetrics: new DashMetricsMock(),
-    metricsModel: new MetricsModelMock(),
     abrController: new AbrControllerMock(),
     mediaPlayerModel: new MediaPlayerModelMock(),
     settings: settings

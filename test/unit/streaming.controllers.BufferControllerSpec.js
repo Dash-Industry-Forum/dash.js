@@ -85,6 +85,9 @@ describe('BufferController', function () {
     });
 
     describe('Method createBuffer/getBuffer', function () {
+        it('should not create a preBufferSink if mediaInfo is undefined', function () {
+            expect(bufferController.createBuffer()).to.be.null;  // jshint ignore:line
+        });
 
         it('should create a preBufferSink if controller is initialized without a mediaSource', function () {
             bufferController.initialize(null);

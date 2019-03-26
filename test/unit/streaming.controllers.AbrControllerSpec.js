@@ -10,6 +10,7 @@ import DomStorageMock from './mocks/DomStorageMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import StreamControllerMock from './mocks/StreamControllerMock';
 
 const expect = require('chai').expect;
 
@@ -30,6 +31,7 @@ describe('AbrController', function () {
     const domStorageMock = new DomStorageMock();
     const dashMetricsMock = new DashMetricsMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
+    const streamControllerMock = new StreamControllerMock();
 
     beforeEach(function () {
         abrCtrl.setConfig({
@@ -38,7 +40,8 @@ describe('AbrController', function () {
             adapter: adapterMock,
             domStorage: domStorageMock,
             mediaPlayerModel: mediaPlayerModelMock,
-            settings: settings
+            settings: settings,
+            streamController: streamControllerMock
         });
         abrCtrl.registerStreamType('video', streamProcessor);
     });
