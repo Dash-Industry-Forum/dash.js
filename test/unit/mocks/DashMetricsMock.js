@@ -65,6 +65,10 @@ function DashMetricsMock () {
 
     this.addHttpRequest = function () {
     };
+
+    this.getLatestMPDRequestHeaderValueByID = function (/*id*/) {
+        return null;
+    };
 }
 
 export default DashMetricsMock;
