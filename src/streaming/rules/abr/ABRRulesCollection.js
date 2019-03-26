@@ -63,7 +63,8 @@ function ABRRulesCollection(config) {
             qualitySwitchRules.push(
                 BolaRule(context).create({
                     dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
                 })
             );
             qualitySwitchRules.push(

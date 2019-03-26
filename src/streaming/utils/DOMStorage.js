@@ -169,7 +169,7 @@ function DOMStorage(config) {
             const key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
                 const obj = JSON.parse(localStorage.getItem(key)) || {};
-                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastMediaSettingsCachingInfo.ttl || false;
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastBitrateCachingInfo.ttl || false;
                 const bitrate = parseFloat(obj.bitrate);
 
                 if (!isNaN(bitrate) && !isExpired) {

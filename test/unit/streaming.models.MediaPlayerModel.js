@@ -88,14 +88,6 @@ describe('MediaPlayerModel', function () {
         expect(ManifestLoaderRetryInterval).to.equal(50);
     });
 
-    it('should configure LiveDelay', function () {
-        const s = { streaming: { liveDelay: 5 }};
-        settings.update(s);
-
-        let livedelay = mediaPlayerModel.getLiveDelay();
-        expect(livedelay).to.equal(5);
-    });
-
     it('should configure StableBufferTime', function () {
         const s = { streaming: { stableBufferTime: 50 } };
         settings.update(s);

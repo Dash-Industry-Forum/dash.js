@@ -194,10 +194,10 @@ function Settings() {
              * to see automatic bitrate switches but will have a larger buffer which
              * will increase stability.
              * @alias streaming.stableBufferTime
-             * @default -1
+             * @default 12
              * @memberof module:Settings.Schema
              */
-            stableBufferTime: -1,
+            stableBufferTime: 12,
             /**
              * The time that the internal buffer target will be set to once playing the top quality.
              * If there are multiple bitrates in your adaptation, and the media is playing at the highest

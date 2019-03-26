@@ -247,22 +247,19 @@ function AbrController() {
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
 
         if (configBitrate === -1) {
-            const s = { streaming: { abr: { initialBitrate: {}}}};
             if (configRatio > -1) {
                 const representation = adapter.getAdaptationForType(0, type).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
-                    s.streaming.abr.initialBitrate[type] = representation[repIdx].bandwidth;
+                    configBitrate = representation[repIdx].bandwidth;
                 } else {
-                    s.streaming.abr.initialBitrate[type] = 0;
+                    configBitrate = 0;
                 }
             } else if (!isNaN(savedBitrate)) {
-                s.streaming.abr.initialBitrate[type] = savedBitrate;
+                configBitrate = savedBitrate;
             } else {
-                s.streaming.abr.initialBitrate[type] = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                configBitrate = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
             }
-            settings.update(s);
-            configBitrate = settings.get().streaming.abr.initialBitrate[type];
         }
 
         return configBitrate;
@@ -348,7 +345,7 @@ function AbrController() {
                     if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
-                } else if (debug.getLogToBrowserConsole()) {
+                } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                     const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                     logger.debug('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
@@ -372,7 +369,7 @@ function AbrController() {
         if (type  && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const id = streamInfo ? streamInfo.id : null;
-            if (debug.getLogToBrowserConsole()) {
+            if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                 logger.info('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
