@@ -172,6 +172,9 @@ function KeySystemPlayReady(config) {
             PSSHData;
 
         checkConfig();
+        if (!cpData) {
+            return null;
+        }
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
