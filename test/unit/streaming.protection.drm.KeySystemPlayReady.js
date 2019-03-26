@@ -1,5 +1,3 @@
-/* jshint expr: true */
-
 import KeySystemPlayReady from '../../src/streaming/protection/drm/KeySystemPlayReady.js';
 import BASE64 from '../../externals/base64';
 
@@ -34,7 +32,7 @@ describe('KeySystemPlayready', function () {
         });
 
         it('should exist', () => {
-            expect(KeySystemPlayReady).to.exist;
+            expect(KeySystemPlayReady).to.exist;   // jshint ignore:line
         });
 
         it('should throw an exception when getting an instance while the config attribute has not been set properly', function () {
@@ -75,27 +73,27 @@ describe('KeySystemPlayready', function () {
 
         it('should return null when getSessionId is called and protData is undefined', function () {
             const sessionId = keySystem.getSessionId();
-            expect(sessionId).to.be.null;
+            expect(sessionId).to.be.null;   // jshint ignore:line
         });
 
         it('should return null when getCDMData is called and protData is undefined', function () {
             const cdmData = keySystem.getCDMData();
-            expect(cdmData).to.be.null;
+            expect(cdmData).to.be.null;   // jshint ignore:line
         });
 
         it('should return null when getInitData is called without parameter', function () {
             const initData = keySystem.getInitData();
-            expect(initData).to.be.null;
+            expect(initData).to.be.null;   // jshint ignore:line
         });
 
         it('should return null when getLicenseServerURLFromInitData is called without parameter', function () {
             const licenseServerUrl = keySystem.getLicenseServerURLFromInitData();
-            expect(licenseServerUrl).to.be.null;
+            expect(licenseServerUrl).to.be.null;   // jshint ignore:line
         });
 
         it('should return null when getLicenseRequestFromMessage is called without parameter', function () {
             const licenseRequest = keySystem.getLicenseRequestFromMessage();
-            expect(licenseRequest).to.be.undefined;
+            expect(licenseRequest).to.be.undefined;   // jshint ignore:line
         });
 
         it('should return null when getRequestHeadersFromMessage is called without parameter', function () {
@@ -106,8 +104,8 @@ describe('KeySystemPlayready', function () {
         it('should return the correct cdmData', function () {
             keySystem.init(protData);
             cdmData = keySystem.getCDMData();
-            expect(keySystem).to.be.defined;
-            expect(cdmData).to.be.not.null;
+            expect(keySystem).to.be.defined;   // jshint ignore:line
+            expect(cdmData).to.be.not.null;   // jshint ignore:line
             expect(cdmData).to.be.instanceOf(ArrayBuffer);
             var cdmDataString = String.fromCharCode.apply(null, new Uint16Array(cdmData));
             expect(cdmDataString).to.equal(expectedCDMData);

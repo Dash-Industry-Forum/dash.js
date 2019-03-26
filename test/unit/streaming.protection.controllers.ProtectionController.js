@@ -110,5 +110,23 @@ describe('ProtectionController', function () {
 
             protectionController.setServerCertificate();
         });
+
+        it('should trigger KEY_SESSION_CREATED event with an error when createKeySession is called without parameter', function (done) {
+            let onSessionCreated = function (data) {
+                eventBus.off(ProtectionEvents.KEY_SESSION_CREATED, onSessionCreated);
+                expect(data.error.code).to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE); // jshint ignore:line
+                done();
+            };
+
+            eventBus.on(ProtectionEvents.KEY_SESSION_CREATED, onSessionCreated, this);
+            protectionController.createKeySession();
+        });
+
+        it('should return the mocked array of ProtectionKeyControllerMock when getSupportedKeySystemsFromContentProtection is called', function () {
+            const keySystems = protectionController.getSupportedKeySystemsFromContentProtection();
+
+            expect(keySystems).to.be.instanceOf(Array); // jshint ignore:line
+            expect(keySystems).not.to.be.empty;         // jshint ignore:line
+        });
     });
 });
