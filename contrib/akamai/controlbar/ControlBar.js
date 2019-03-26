@@ -57,10 +57,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         thumbnailElem,
         thumbnailTimeLabel,
         idSuffix,
+        liveThresholdSecs = 12,
 
-//************************************************************************************
-// THUMBNAIL CONSTANTS
-//************************************************************************************
+        //************************************************************************************
+        // THUMBNAIL CONSTANTS
+        //************************************************************************************
         // Maximum percentage of player height that the thumbnail will fill
         maxPercentageThumbnailScreen = 0.15,
         // Separation between the control bar and the thumbnail (in px)
@@ -92,9 +93,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return id + (idSuffix ? idSuffix : '');
         },
 
-//************************************************************************************
-// PLAYBACK
-//************************************************************************************
+        //************************************************************************************
+        // PLAYBACK
+        //************************************************************************************
 
         togglePlayPauseBtnState = function () {
             if (player.isPaused()) {
@@ -139,11 +140,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             updateDuration();
             if (!seeking) {
                 setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
-
                 if (seekbarPlay) {
-                    seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
+                    if (player.duration() - player.time() < liveThresholdSecs) {
+                        seekbarPlay.style.width = '100%'
+                    } else {
+                        seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
+                    }
                 }
-
                 if (seekbarBuffer) {
                     seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
                 }
@@ -158,7 +161,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         getBufferLevel = function () {
             var dashMetrics = player.getDashMetrics();
             var bufferLevel = 0;
-
             if (dashMetrics) {
                 bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
                 if (!bufferLevel) {
@@ -168,9 +170,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return bufferLevel;
         },
 
-//************************************************************************************
-// VOLUME
-//************************************************************************************
+        //************************************************************************************
+        // VOLUME
+        //************************************************************************************
 
         toggleMuteBtnState = function () {
             var span = document.getElementById(getControlId('iconMute'));
@@ -206,9 +208,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             toggleMuteBtnState();
         },
 
-//************************************************************************************
-// SEEKING
-// ************************************************************************************
+        //************************************************************************************
+        // SEEKING
+        // ************************************************************************************
 
         calculateTimeByEvent = function (event) {
             var seekbarRect = seekbar.getBoundingClientRect();
@@ -268,7 +270,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
 
             // Get thumbnail information
-            player.getThumbnail(mouseTime, function(thumbnail) {
+            player.getThumbnail(mouseTime, function (thumbnail) {
                 if (!thumbnail) return;
 
                 // Adjust left variable for positioning thumbnail with regards to its viewport
@@ -279,7 +281,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     left -= ctrlWidth / 2;
                 }
 
-                var scale = (videoContainerRect.height * maxPercentageThumbnailScreen)/thumbnail.height;
+                var scale = (videoContainerRect.height * maxPercentageThumbnailScreen) / thumbnail.height;
                 if (scale > maximumScale) {
                     scale = maximumScale;
                 }
@@ -287,11 +289,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 // Set thumbnail control position
                 thumbnailContainer.style.left = left + 'px';
                 thumbnailContainer.style.display = '';
-                thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail ) + 'px';
+                thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail) + 'px';
                 thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
 
                 var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
-                     'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
+                    'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
                 thumbnailElem.style.background = backgroundStyle;
                 thumbnailElem.style.width = thumbnail.width + 'px';
                 thumbnailElem.style.height = thumbnail.height + 'px';
@@ -308,7 +310,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             thumbnailContainer.style.display = 'none';
         },
 
-        getScrollOffset = function() {
+        getScrollOffset = function () {
             if (window.pageXOffset) {
                 return {
                     x: window.pageXOffset,
@@ -316,23 +318,52 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 };
             }
             return {
-              x: document.documentElement.scrollLeft,
-              y: document.documentElement.scrollTop
+                x: document.documentElement.scrollLeft,
+                y: document.documentElement.scrollTop
             };
         },
+        seekLive = async function () {
+            await player.seek(player.duration());
+            if (player.isPaused()) {
+                player.play();
+            }
+        },
 
-//************************************************************************************
-// TIME/DURATION
-//************************************************************************************
+        //************************************************************************************
+        // TIME/DURATION
+        //************************************************************************************
 
         setDuration = function (value) {
-            if (!isNaN(value)) {
+            if (player.isDynamic()) {
+                durationDisplay.textContent = '● LIVE';
+                if (!durationDisplay.onclick) {
+                    durationDisplay.onclick = seekLive;
+                    durationDisplay.classList.add('live-icon')
+                }
+            } else if (!isNaN(value)) {
                 durationDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
         },
 
-        setTime = function (value) {
-            if (!isNaN(value)) {
+        setTime = async function (value) {
+            if (value < 0) {
+                return;
+            }
+            if (player.isDynamic() && player.duration()) {
+                let liveDelay = player.duration() - value;
+                if (!startedPlaying) {
+                    await seekLive();
+                    startedPlaying = true;
+                    liveDelay = player.duration() - player.time();
+                }
+                if (liveDelay < liveThresholdSecs) {
+                    durationDisplay.classList.add('live');
+                    liveDelay = 0;
+                } else {
+                    durationDisplay.classList.remove('live');
+                }
+                timeDisplay.textContent = '- ' + player.convertToTimeCode(liveDelay);
+            } else if (!isNaN(value)) {
                 timeDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
         },
@@ -345,9 +376,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
         },
 
-//************************************************************************************
-// FULLSCREEN
-//************************************************************************************
+        //************************************************************************************
+        // FULLSCREEN
+        //************************************************************************************
 
         onFullScreenChange = function (e) {
             if (isFullscreen()) {
@@ -429,26 +460,26 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
         },
 
-//************************************************************************************
-// Audio Video MENU
-//************************************************************************************
+        //************************************************************************************
+        // Audio Video MENU
+        //************************************************************************************
 
         onTracksAdded = function (e) {
             // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
             if (!captionMenu) {
                 var contentFunc = function (element, index) {
                     if (isNaN(index)) {
-                      return "OFF";
+                        return "OFF";
                     }
 
                     var label = getLabelForLocale(element.labels);
                     if (label) {
-                      return label + " : " + element.kind;
+                        return label + " : " + element.kind;
                     }
 
                     return element.lang + " : " + element.kind;
                 }
-                captionMenu = createMenu({menuType: 'caption', arr: e.tracks}, contentFunc);
+                captionMenu = createMenu({ menuType: 'caption', arr: e.tracks }, contentFunc);
 
                 var func = function () {
                     onMenuClick(captionMenu, captionBtn);
@@ -460,14 +491,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         },
 
         onStreamInitialized = function (e) {
+            startedPlaying = false;
             updateDuration();
-
             var contentFunc;
             //Bitrate Menu
             if (bitrateListBtn) {
                 destroyBitrateMenu();
 
-                var availableBitrates = {menuType: 'bitrate'};
+                var availableBitrates = { menuType: 'bitrate' };
                 availableBitrates.audio = player.getBitrateInfoListFor("audio") || [];
                 availableBitrates.video = player.getBitrateInfoListFor("video") || [];
                 if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
@@ -492,7 +523,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
             //Track Switch Menu
             if (!trackSwitchMenu && trackSwitchBtn) {
-                var availableTracks = {menuType: "track"};
+                var availableTracks = { menuType: "track" };
                 availableTracks.audio = player.getTracksFor("audio");
                 availableTracks.video = player.getTracksFor("video"); // these return empty arrays so no need to check for null
 
@@ -528,13 +559,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             videoController.appendChild(el);
 
             switch (menuType) {
-                case 'caption' :
+                case 'caption':
                     el.appendChild(document.createElement("ul"));
                     el = createMenuContent(el, getMenuContent(menuType, info.arr, contentFunc), 'caption', menuType + '-list');
                     setMenuItemsState(getMenuInitialIndex(info, menuType), menuType + '-list');
                     break;
-                case 'track' :
-                case 'bitrate' :
+                case 'track':
+                case 'bitrate':
                     if (info.video.length > 1) {
                         el.appendChild(createMediaTypeMenu("video"));
                         el = createMenuContent(el, getMenuContent(menuType, info.video, contentFunc), 'video', 'video-' + menuType + '-list');
@@ -552,12 +583,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return el;
         },
 
-        getMenuInitialIndex = function(info, menuType, mediaType) {
+        getMenuInitialIndex = function (info, menuType, mediaType) {
             if (menuType === 'track') {
 
                 var mediaInfo = player.getCurrentTrackFor(mediaType);
                 var idx = 0
-                info.some(function(element, index){
+                info.some(function (element, index) {
                     if (isTracksEqual(element, mediaInfo)) {
                         idx = index;
                         return true;
@@ -596,22 +627,22 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return content;
         },
 
-        getBrowserLocale = function() {
-          return (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
+        getBrowserLocale = function () {
+            return (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language];
         },
 
         getLabelForLocale = function (labels) {
-          var locales = getBrowserLocale();
+            var locales = getBrowserLocale();
 
-          for (var i = 0; i < labels.length; i++) {
-            for (var j = 0; j < locales.length; j++) {
-                if (labels[i].lang && locales[j] && locales[j].indexOf(labels[i].lang) > -1) {
-                    return labels[i].text;
+            for (var i = 0; i < labels.length; i++) {
+                for (var j = 0; j < locales.length; j++) {
+                    if (labels[i].lang && locales[j] && locales[j].indexOf(labels[i].lang) > -1) {
+                        return labels[i].text;
+                    }
                 }
             }
-          }
 
-          return labels.length === 1 ? labels[0].text : null;
+            return labels.length === 1 ? labels[0].text : null;
         },
 
         createMediaTypeMenu = function (type) {
@@ -706,11 +737,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                             player.setAutoSwitchQualityFor(self.mediaType, true);
                         }
                         break;
-                    case 'caption-list' :
+                    case 'caption-list':
                         player.setTextTrack(self.index - 1);
                         break
-                    case 'video-track-list' :
-                    case 'audio-track-list' :
+                    case 'video-track-list':
+                    case 'audio-track-list':
                         player.setCurrentTrack(player.getTracksFor(self.mediaType)[self.index]);
                         break;
                 }
@@ -750,9 +781,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
         },
 
-//************************************************************************************
-//IE FIX
-//************************************************************************************
+        //************************************************************************************
+        //IE FIX
+        //************************************************************************************
 
         coerceIEInputAndChangeEvents = function (slider, addChange) {
             var fireChange = function (e) {
@@ -783,9 +814,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         };
 
 
-//************************************************************************************
-// PUBLIC API
-//************************************************************************************
+    //************************************************************************************
+    // PUBLIC API
+    //************************************************************************************
 
     return {
         setVolume: setVolume,
@@ -825,7 +856,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             seekbar.addEventListener("mousedown", onSeeking, true);
             seekbar.addEventListener("mousemove", onSeekBarMouseMove, true);
             // set passive to true for scroll blocking listeners (https://www.chromestatus.com/feature/5745543795965952)
-            seekbar.addEventListener("touchmove", onSeekBarMouseMove, {passive: true});
+            seekbar.addEventListener("touchmove", onSeekBarMouseMove, { passive: true });
             seekbar.addEventListener("mouseout", onSeekBarMouseMoveOut, true);
             seekbar.addEventListener("touchcancel", onSeekBarMouseMoveOut, true);
             seekbar.addEventListener("touchend", onSeekBarMouseMoveOut, true);
