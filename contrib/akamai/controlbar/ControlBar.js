@@ -322,17 +322,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 y: document.documentElement.scrollTop
             };
         },
-        seekLive = async function () {
-            await player.seek(player.duration());
-            if (player.isPaused()) {
-                player.play();
-            }
+        seekLive = function () {
+            player.seek(player.duration());
         },
 
         //************************************************************************************
         // TIME/DURATION
         //************************************************************************************
-
         setDuration = function (value) {
             if (player.isDynamic()) {
                 durationDisplay.textContent = '● LIVE';
@@ -351,11 +347,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             }
             if (player.isDynamic() && player.duration()) {
                 let liveDelay = player.duration() - value;
-                if (!startedPlaying) {
-                    await seekLive();
-                    startedPlaying = true;
-                    liveDelay = player.duration() - player.time();
-                }
                 if (liveDelay < liveThresholdSecs) {
                     durationDisplay.classList.add('live');
                     liveDelay = 0;
@@ -371,6 +362,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         updateDuration = function () {
             var duration = player.duration();
             if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
+                if (!startedPlaying && duration && player.isDynamic()) {
+                    seekLive();
+                    startedPlaying = true;
+                }
                 setDuration(displayUTCTimeCodes ? player.durationAsUTC() : duration);
                 seekbar.max = duration;
             }
