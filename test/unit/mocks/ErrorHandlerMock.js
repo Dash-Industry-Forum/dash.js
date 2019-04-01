@@ -22,6 +22,11 @@ function ErrorHandlerMock () {
     this.timedTextError = function (error, msg) {
         this.errorValue = msg;
     };
+
+    this.reset = function () {
+        this.errorValue = undefined;
+        this.errorCode = undefined;
+    };
 }
 
 export default ErrorHandlerMock;

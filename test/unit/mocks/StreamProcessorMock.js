@@ -76,7 +76,8 @@ function StreamProcessorMock (testType, streamInfo) {
             getInitRequest: () => { return null;},
             getNextSegmentRequest: () => { return null;},
             getCurrentTime: () => {},
-            setCurrentTime: () => {}
+            setCurrentTime: () => {},
+            updateSegmentList: () => {}
         };
     };
 
