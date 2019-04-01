@@ -52,7 +52,7 @@ describe('MssFragmentProcessor', function () {
         expect(errorHandlerMock.errorCode).to.equal(MssErrors.MSS_NO_TFRF_CODE);
     });
 
-    it('should throw an error when attempting to call generateMoov for mp4 initialization segment', () => {
+    it('should throw an error when attempting to call generateMoov for audio mp4 initialization segment', () => {
         const rep = {BaseURL: undefined,
                     SegmentTemplate: {media: 'QualityLevels($Bandwidth$)/Fragments(audio=$Time$)', timescale: 10000000, SegmentTimeline: {}},
                     audioChannels: NaN,
@@ -67,6 +67,69 @@ describe('MssFragmentProcessor', function () {
                     adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
                     };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
+                    name: 'Unsupported codec',
+                    message: 'Unsupported codec',
+                    data: {}
+                });
+    });
+
+    it('should not throw an error when attempting to call generateMoov for audio mp4 initialization segment', () => {
+        const rep = {BaseURL: undefined,
+                    SegmentTemplate: {media: 'QualityLevels($Bandwidth$)/Fragments(audio=$Time$)', timescale: 10000000, SegmentTimeline: {}},
+                    audioChannels: NaN,
+                    audioSamplingRate: NaN,
+                    bandwidth: 64000,
+                    codecPrivateData: '1000',
+                    codecs: 'mp4a.58.2',
+                    height: NaN,
+                    id: 'audio_0',
+                    mimeType: 'audio/mp4',
+                    width: NaN,
+                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
+                    };
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw({
+                    name: 'Unsupported codec',
+                    message: 'Unsupported codec',
+                    data: {}
+                });
+    });
+
+    it('should throw an error when attempting to call generateMoov for video mp4 initialization segment', () => {
+        const rep = {BaseURL: undefined,
+                    SegmentTemplate: {media: 'QualityLevels($Bandwidth$)/Fragments(video=$Time$)', timescale: 10000000, SegmentTimeline: {}},
+                    audioChannels: NaN,
+                    audioSamplingRate: NaN,
+                    bandwidth: 64000,
+                    codecPrivateData: '1000',
+                    codecs: 'avc7.4d401f',
+                    height: NaN,
+                    id: 'video_0',
+                    mimeType: 'video/mp4',
+                    width: NaN,
+                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'video'}
+                    };
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
+                    name: 'Unsupported codec',
+                    message: 'Unsupported codec',
+                    data: {}
+                });
+    });
+
+    it('should not throw an error when attempting to call generateMoov for video mp4 initialization segment', () => {
+        const rep = {BaseURL: undefined,
+                    SegmentTemplate: {media: 'QualityLevels($Bandwidth$)/Fragments(video=$Time$)', timescale: 10000000, SegmentTimeline: {}},
+                    audioChannels: NaN,
+                    audioSamplingRate: NaN,
+                    bandwidth: 64000,
+                    codecPrivateData: '1000',
+                    codecs: 'avc1.4d401f',
+                    height: NaN,
+                    id: 'video_0',
+                    mimeType: 'video/mp4',
+                    width: NaN,
+                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'video'}
+                    };
+        expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw({
                     name: 'Unsupported codec',
                     message: 'Unsupported codec',
                     data: {}
