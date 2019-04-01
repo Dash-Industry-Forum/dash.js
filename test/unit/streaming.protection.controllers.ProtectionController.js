@@ -48,10 +48,6 @@ describe('ProtectionController', function () {
             expect(protectionController.closeKeySession.bind(protectionController)).to.throw('Missing config parameter(s)');
         });
 
-        it('should throw an error when removeKeySession is called and config object has not been set properly', function () {
-            expect(protectionController.removeKeySession.bind(protectionController)).to.throw('Missing config parameter(s)');
-        });
-
         it('should throw an error when setServerCertificate is called and config object has not been set properly', function () {
             expect(protectionController.setServerCertificate.bind(protectionController)).to.throw('Missing config parameter(s)');
         });
@@ -127,6 +123,14 @@ describe('ProtectionController', function () {
 
             expect(keySystems).to.be.instanceOf(Array); // jshint ignore:line
             expect(keySystems).not.to.be.empty;         // jshint ignore:line
+        });
+
+        it('should ????? when setMediaElement is called', function () {
+            protectionController.initializeForMedia({type: 'VIDEO'});
+
+            protectionController.setMediaElement({});
+
+            expect(eventBus.trigger.bind(eventBus, ProtectionEvents.NEED_KEY, {key: {initDataType: 'cenc'}})).not.to.throw();
         });
     });
 });

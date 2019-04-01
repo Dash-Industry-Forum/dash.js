@@ -4,6 +4,10 @@ function ProtectionKeyControllerMock () {
         return [{}];
     };
 
+    this.getSupportedKeySystems = function () {
+        return [];
+    };
+
     this.getLicenseServer = function () {
         return null;
     };
