@@ -53,6 +53,8 @@
 }
 .live-icon.live{
     color:red !important;
+    pointer-events: none;
+    cursor: default;
 }
 
 .btn-play-pause{
