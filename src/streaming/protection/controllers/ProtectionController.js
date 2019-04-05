@@ -761,6 +761,12 @@ function ProtectionController(config) {
         return protectionKeyController ? protectionKeyController.getKeySystems() : [];
     }
 
+    function setKeySystems(keySystems) {
+        if (protectionKeyController) {
+            protectionKeyController.setKeySystems(keySystems);
+        }
+    }
+
     instance = {
         initializeForMedia: initializeForMedia,
         createKeySession: createKeySession,
@@ -774,6 +780,7 @@ function ProtectionController(config) {
         setProtectionData: setProtectionData,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getKeySystems: getKeySystems,
+        setKeySystems: setKeySystems,
         stop: stop,
         reset: reset
     };

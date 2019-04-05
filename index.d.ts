@@ -39,6 +39,7 @@ declare namespace dashjs {
         setProtectionData(protData: ProtectionData): void;
         getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
         getKeySystems(): KeySystem[];
+        setKeySystems(keySystems: KeySystem[]);
         stop(): void;
         reset(): void;
     }
