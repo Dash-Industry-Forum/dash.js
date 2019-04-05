@@ -193,7 +193,7 @@ function DashManifestModel() {
     }
 
     function processAdaptation(realAdaptation) {
-        if (realAdaptation && realAdaptation.Representation_asArray !== undefined && realAdaptation.Representation_asArray !== null) {
+        if (realAdaptation && Array.isArray(realAdaptation.Representation_asArray)) {
             realAdaptation.Representation_asArray.sort(getRepresentationSortFunction());
         }
 
@@ -287,7 +287,7 @@ function DashManifestModel() {
     }
 
     function getLabelsForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.Label_asArray || !Array.isArray(adaptation.Label_asArray)) {
+        if (!adaptation || !Array.isArray(adaptation.Label_asArray)) {
             return [];
         }
 
@@ -356,14 +356,12 @@ function DashManifestModel() {
     }
 
     function getRepresentationCount(adaptation) {
-        return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length ? adaptation.Representation_asArray.length : 0;
+        return adaptation && Array.isArray(adaptation.Representation_asArray) ? adaptation.Representation_asArray.length : 0;
     }
 
     function getBitrateListForAdaptation(realAdaptation) {
-        if (!realAdaptation || !realAdaptation.Representation_asArray || !realAdaptation.Representation_asArray.length) return null;
-
         const processedRealAdaptation = processAdaptation(realAdaptation);
-        const realRepresentations = processedRealAdaptation.Representation_asArray;
+        const realRepresentations = processedRealAdaptation && Array.isArray(processedRealAdaptation.Representation_asArray) ? processedRealAdaptation.Representation_asArray : [];
 
         return realRepresentations.map((realRepresentation) => {
             return {
@@ -407,7 +405,7 @@ function DashManifestModel() {
 
     function getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation) {
         let realAdaptation = getRealAdaptationFor(voAdaptation);
-        let realRepresentation = realAdaptation ? realAdaptation.Representation_asArray[0] : null;
+        let realRepresentation = realAdaptation && Array.isArray(realAdaptation.Representation_asArray) ? realAdaptation.Representation_asArray[0] : null;
         let segmentInfo;
         if (realRepresentation) {
             if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
@@ -432,18 +430,17 @@ function DashManifestModel() {
         let segmentInfo,
             baseUrl;
 
-        // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
-        // that we are processing. Making it works properly will require much further changes and given
-        // parsing base Urls parameters is needed for our ultra low latency examples, we will
-        // keep this "tricky" code until the real (and good) solution comes
-        if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
-            const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
-            if (baseUrls) {
-                baseUrl = baseUrls[0];
-            }
-        }
-
         if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
+            // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
+            // that we are processing. Making it works properly will require much further changes and given
+            // parsing base Urls parameters is needed for our ultra low latency examples, we will
+            // keep this "tricky" code until the real (and good) solution comes
+            if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
+                const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
+                if (baseUrls) {
+                    baseUrl = baseUrls[0];
+                }
+            }
             for (let i = 0, len = processedRealAdaptation.Representation_asArray.length; i < len; ++i) {
                 const realRepresentation = processedRealAdaptation.Representation_asArray[i];
                 const voRepresentation = new Representation();

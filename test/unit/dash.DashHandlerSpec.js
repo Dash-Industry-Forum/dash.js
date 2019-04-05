@@ -52,4 +52,16 @@ describe('DashHandler', function () {
 
         expect(mediaSegment).to.be.null; // jshint ignore:line
     });
+
+    it('should return null when trying to get a media segment with an empty representation parameter', () => {
+        const mediaSegment = dashHandler.getSegmentRequestForTime({});
+
+        expect(mediaSegment).to.be.null; // jshint ignore:line
+    });
+
+    it('should return null when trying to get next a media segment with no representation', () => {
+        const mediaSegment = dashHandler.getNextSegmentRequest();
+
+        expect(mediaSegment).to.be.null; // jshint ignore:line
+    });
 });

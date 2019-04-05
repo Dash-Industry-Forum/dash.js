@@ -214,6 +214,10 @@ function WebmSegmentBaseLoader() {
     }
 
     function parseEbmlHeader(data, media, theRange, callback) {
+        if (!data || data.byteLength === 0) {
+            callback(null);
+            return;
+        }
         let ebmlParser = EBMLParser(context).create({
             data: data
         });
@@ -221,13 +225,13 @@ function WebmSegmentBaseLoader() {
             segments,
             segmentEnd,
             segmentStart;
-        let parts = theRange.split('-');
+        let parts = theRange ? theRange.split('-') : null;
         let request = null;
         let info = {
             url: media,
             range: {
-                start: parseFloat(parts[0]),
-                end: parseFloat(parts[1])
+                start: parts ? parseFloat(parts[0]) : null,
+                end: parts ? parseFloat(parts[1]) : null
             },
             request: request
         };
@@ -302,13 +306,13 @@ function WebmSegmentBaseLoader() {
     function loadInitialization(representation, loadingInfo) {
         checkConfig();
         let request = null;
-        let baseUrl = baseURLController.resolve(representation.path);
+        let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         let media = baseUrl ? baseUrl.url : undefined;
-        let initRange = representation.range.split('-');
+        let initRange = representation ? representation.range.split('-') : null;
         let info = loadingInfo || {
             range: {
-                start: parseFloat(initRange[0]),
-                end: parseFloat(initRange[1])
+                start: initRange ? parseFloat(initRange[0]) : null,
+                end: initRange ? parseFloat(initRange[1]) : null
             },
             request: request,
             url: media,
@@ -345,7 +349,7 @@ function WebmSegmentBaseLoader() {
     function loadSegments(representation, type, theRange, callback) {
         checkConfig();
         let request = null;
-        let baseUrl = baseURLController.resolve(representation.path);
+        let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         let media = baseUrl ? baseUrl.url : undefined;
         let bytesToLoad = 8192;
         let info = {

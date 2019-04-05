@@ -1203,7 +1203,7 @@ function MediaPlayer() {
             videoModel: videoModel
         });
         textTracks.initialize();
-        textTracks.displayCConTop(value);
+        textTracks.setDisplayCConTop(value);
     }
 
     /*

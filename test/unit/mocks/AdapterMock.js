@@ -70,6 +70,29 @@ function AdapterMock () {
         // Return a silly sort function
         return function () { return 0; };
     };
+
+    this.getManifestUpdatePeriod = function () {
+        return 0;
+    };
+
+    this.updatePeriods = function () {
+    };
+
+    this.getUseCalculatedLiveEdgeTimeForMediaInfo = function () {
+        return false;
+    };
+
+    this.getUTCTimingSources = function () {
+        return [];
+    };
+
+    this.getIsDynamic = function () {
+        return false;
+    };
+
+    this.getIsDVB = function () {
+        return false;
+    };
 }
 
 export default AdapterMock;

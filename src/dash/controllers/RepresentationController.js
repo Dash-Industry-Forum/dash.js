@@ -50,7 +50,6 @@ function RepresentationController() {
         abrController,
         indexHandler,
         playbackController,
-        domStorage,
         timelineConverter,
         dashMetrics,
         streamProcessor,
@@ -70,9 +69,6 @@ function RepresentationController() {
         if (config.abrController) {
             abrController = config.abrController;
         }
-        if (config.domStorage) {
-            domStorage = config.domStorage;
-        }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
@@ -87,6 +83,13 @@ function RepresentationController() {
         }
         if (config.streamProcessor) {
             streamProcessor = config.streamProcessor;
+        }
+    }
+
+    function checkConfig() {
+        if (!abrController || !dashMetrics || !playbackController ||
+            !timelineConverter || !manifestModel || !streamProcessor) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
@@ -116,7 +119,6 @@ function RepresentationController() {
         voAvailableRepresentations = [];
         abrController = null;
         playbackController = null;
-        domStorage = null;
         timelineConverter = null;
         dashMetrics = null;
     }
@@ -133,6 +135,7 @@ function RepresentationController() {
     }
 
     function updateData(newRealAdaptation, availableRepresentations, type) {
+        checkConfig();
         const streamInfo = streamProcessor.getStreamInfo();
         const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
         const minIdx = abrController.getMinAllowedIndexFor(type);
@@ -176,14 +179,17 @@ function RepresentationController() {
     }
 
     function addRepresentationSwitch() {
+        checkConfig();
         const now = new Date();
         const currentRepresentation = getCurrentRepresentation();
         const currentVideoTimeMs = playbackController.getTime() * 1000;
-
-        dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
+        if (currentRepresentation) {
+            dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
+        }
     }
 
     function addDVRMetric() {
+        checkConfig();
         const streamInfo = streamProcessor.getStreamInfo();
         const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
         const isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
@@ -214,6 +220,8 @@ function RepresentationController() {
 
     function updateAvailabilityWindow(isDynamic) {
         let voRepresentation;
+
+        checkConfig();
 
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             voRepresentation = voAvailableRepresentations[i];

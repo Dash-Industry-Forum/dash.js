@@ -1,9 +1,10 @@
 function DashMetricsMock () {
 
     this.bufferState = null;
+    this.currentDVRInfo = null;
 
     this.getCurrentDVRInfo = function () {
-        return null;
+        return this.currentDVRInfo;
     };
 
     this.getCurrentBufferLevel = function () {
@@ -39,6 +40,34 @@ function DashMetricsMock () {
     };
 
     this.createPlaylistTraceMetrics = function () {
+    };
+
+    this.addRepresentationSwitch = function () {
+    };
+
+    this.addDVRInfo = function (type, time, manifestInfo, range) {
+        this.currentDVRInfo = {
+            type: type,
+            time: time,
+            manifestInfo: manifestInfo,
+            range: range
+        };
+    };
+
+    this.getCurrentManifestUpdate = function () {
+    };
+
+    this.updateManifestUpdateInfo = function () {
+    };
+
+    this.getCurrentRepresentationSwitch = function () {
+    };
+
+    this.addHttpRequest = function () {
+    };
+
+    this.getLatestMPDRequestHeaderValueByID = function (/*id*/) {
+        return null;
     };
 }
 
