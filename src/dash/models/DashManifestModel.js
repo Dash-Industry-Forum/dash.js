@@ -510,11 +510,13 @@ function DashManifestModel() {
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
-                        let initialization = segmentInfo.Initialization;
+                        const initialization = segmentInfo.Initialization;
 
                         if (initialization.hasOwnProperty(DashConstants.SOURCE_URL)) {
                             voRepresentation.initialization = initialization.sourceURL;
-                        } else if (initialization.hasOwnProperty(DashConstants.RANGE)) {
+                        }
+
+                        if (initialization.hasOwnProperty(DashConstants.RANGE)) {
                             voRepresentation.range = initialization.range;
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
