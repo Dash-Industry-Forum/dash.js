@@ -68,7 +68,7 @@ function SegmentBaseLoader() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier,
-            useFetch: settings.get().streaming.lowLatencyEnabled
+            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null
         });
     }
 

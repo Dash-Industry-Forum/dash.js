@@ -50,7 +50,7 @@ function URLLoader(cfg) {
 
     function load(config) {
 
-        let loaderFactory = schemeLoaderFactory.getLoader(config.request.url);
+        let loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
         loader = loaderFactory(context).create({
             errHandler: cfg.errHandler,
             mediaPlayerModel: cfg.mediaPlayerModel,

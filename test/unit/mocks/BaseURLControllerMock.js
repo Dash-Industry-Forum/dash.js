@@ -1,18 +1,15 @@
 
-class BaseURLControllerMock {
+function BaseURLControllerMock () {
 
-    setConfig() {
-    }
+    this.setConfig = function () {};
 
-    resolve(path) {
+    this.resolve = function (path) {
         return path;
-    }
+    };
 
-    reset() {
-    }
+    this.reset = function () {};
 
-   initialize() {
-    }
+    this.initialize = function () {};
 }
 
 export default BaseURLControllerMock;
