@@ -346,14 +346,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 return;
             }
             if (player.isDynamic() && player.duration()) {
-                let liveDelay = player.duration() - value;
+                var liveDelay = player.duration() - value;
                 if (liveDelay < liveThresholdSecs) {
                     durationDisplay.classList.add('live');
-                    liveDelay = 0;
+                    timeDisplay.textContent = "";
                 } else {
                     durationDisplay.classList.remove('live');
+                    timeDisplay.textContent = '- ' + player.convertToTimeCode(liveDelay);
                 }
-                timeDisplay.textContent = '- ' + player.convertToTimeCode(liveDelay);
             } else if (!isNaN(value)) {
                 timeDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
             }
