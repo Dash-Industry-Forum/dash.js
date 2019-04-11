@@ -128,12 +128,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var onPlayPauseClick = function (e) {
+    var onPlayPauseClick = function (/*e*/) {
         togglePlayPauseBtnState.call(this);
         player.isPaused() ? player.play() : player.pause();
     };
 
-    var onPlaybackPaused = function (e) {
+    var onPlaybackPaused = function (/*e*/) {
         togglePlayPauseBtnState();
     };
 
@@ -312,7 +312,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         });
     };
 
-    var onSeekBarMouseMoveOut = function (e) {
+    var onSeekBarMouseMoveOut = function (/*e*/) {
         if (!thumbnailContainer) return;
         thumbnailContainer.style.display = 'none';
     };
@@ -384,16 +384,16 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     // FULLSCREEN
     //************************************************************************************
 
-    var onFullScreenChange = function (e) {
+    var onFullScreenChange = function (/*e*/) {
         var icon;
         if (isFullscreen()) {
             enterFullscreen();
-            icon = fullscreenBtn.querySelector('.icon-fullscreen-enter')
+            icon = fullscreenBtn.querySelector('.icon-fullscreen-enter');
             icon.classList.remove('icon-fullscreen-enter');
             icon.classList.add('icon-fullscreen-exit');
         } else {
             exitFullscreen();
-            icon = fullscreenBtn.querySelector('.icon-fullscreen-exit')
+            icon = fullscreenBtn.querySelector('.icon-fullscreen-exit');
             icon.classList.remove('icon-fullscreen-exit');
             icon.classList.add('icon-fullscreen-enter');
         }
@@ -483,7 +483,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 }
 
                 return element.lang + ' : ' + element.kind;
-            }
+            };
             captionMenu = createMenu({ menuType: 'caption', arr: e.tracks }, contentFunc);
 
             var func = function () {
@@ -495,7 +495,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var onStreamInitialized = function (e) {
+    var onStreamInitialized = function (/*e*/) {
         startedPlaying = false;
         updateDuration();
         var contentFunc;
@@ -511,7 +511,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate / 1000) + ' kbps';
                     result += element && element.width && element.height ? ' (' + element.width + 'x' + element.height + ')' : '';
                     return result;
-                }
+                };
 
                 bitrateListMenu = createMenu(availableBitrates, contentFunc);
                 var func = function () {
@@ -535,7 +535,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                 contentFunc = function (element) {
                     return getLabelForLocale(element.labels) || 'Language: ' + element.lang + ' - Role: ' + element.roles[0];
-                }
+                };
                 trackSwitchMenu = createMenu(availableTracks, contentFunc);
                 var func = function () {
                     onMenuClick(trackSwitchMenu, trackSwitchBtn);
@@ -548,7 +548,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     };
 
-    var onStreamTeardownComplete = function (e) {
+    var onStreamTeardownComplete = function (/*e*/) {
         setPlayBtn();
         timeDisplay.textContent = '00:00';
     };
@@ -597,7 +597,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     idx = index;
                     return true;
                 }
-            })
+            });
             return idx;
 
         } else if (menuType === 'bitrate') {
@@ -680,12 +680,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             item.selected = false;
             item.textContent = arr[i];
 
-            item.onmouseover = function (e) {
+            item.onmouseover = function (/*e*/) {
                 if (this.selected !== true) {
                     this.classList.add('menu-item-over');
                 }
             };
-            item.onmouseout = function (e) {
+            item.onmouseout = function (/*e*/) {
                 this.classList.remove('menu-item-over');
             };
             item.onclick = setMenuItemsState.bind(item);
@@ -706,7 +706,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var onMenuClick = function (menu, btn) {
         if (menu.classList.contains('hide')) {
             menu.classList.remove('hide');
-            menu.onmouseleave = function (e) {
+            menu.onmouseleave = function (/*e*/) {
                 this.classList.add('hide');
             };
         } else {
@@ -763,7 +763,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var handleMenuPositionOnResize = function (e) {
+    var handleMenuPositionOnResize = function (/*e*/) {
         if (captionMenu) {
             positionMenu(captionMenu, captionBtn);
         }
