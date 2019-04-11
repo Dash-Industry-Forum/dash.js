@@ -30,16 +30,17 @@
  */
 var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
-    var player = dashjsMediaPlayer,
-        video,
+    var player = dashjsMediaPlayer;
+    var captionMenu = null;
+    var bitrateListMenu = null;
+    var trackSwitchMenu = null;
+    var menuHandlersList = [];
+    var lastVolumeLevel = NaN;
+    var seeking = false;
+    var videoControllerVisibleTimeout = 0;
+    var liveThresholdSecs = 12;
+    var video,
         videoContainer,
-        captionMenu = null,
-        bitrateListMenu = null,
-        trackSwitchMenu = null,
-        menuHandlersList = [],
-        lastVolumeLevel = NaN,
-        seeking = false,
-        videoControllerVisibleTimeout = 0,
         videoController,
         playPauseBtn,
         bitrateListBtn,
@@ -56,18 +57,17 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         thumbnailContainer,
         thumbnailElem,
         thumbnailTimeLabel,
-        idSuffix,
-        liveThresholdSecs = 12,
+        idSuffix;
 
-        //************************************************************************************
-        // THUMBNAIL CONSTANTS
-        //************************************************************************************
-        // Maximum percentage of player height that the thumbnail will fill
-        maxPercentageThumbnailScreen = 0.15,
-        // Separation between the control bar and the thumbnail (in px)
-        bottomMarginThumbnail = 10,
-        // Maximum scale so small thumbs are not scaled too high
-        maximumScale = 2,
+    //************************************************************************************
+    // THUMBNAIL CONSTANTS
+    //************************************************************************************
+    // Maximum percentage of player height that the thumbnail will fill
+    var maxPercentageThumbnailScreen = 0.15;
+    // Separation between the control bar and the thumbnail (in px)
+    var bottomMarginThumbnail = 10;
+    // Maximum scale so small thumbs are not scaled too high
+    var maximumScale = 2;
 
         initControls = function (suffix) {
             idSuffix = suffix;
