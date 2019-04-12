@@ -38,7 +38,7 @@ function MetricsHandlerFactory(config) {
 
     config = config || {};
     let instance;
-    const debug = config.debug;
+    const logger = config.debug ? config.debug.getLogger(instance) : {};
 
     // group 1: key, [group 3: n [, group 5: type]]
     let keyRegex = /([a-zA-Z]*)(\(([0-9]*)(\,\s*([a-zA-Z]*))?\))?/;
@@ -75,7 +75,7 @@ function MetricsHandlerFactory(config) {
             );
         } catch (e) {
             handler = null;
-            debug.error(`MetricsHandlerFactory: Could not create handler for type ${matches[1]} with args ${matches[3]}, ${matches[5]} (${e.message})`);
+            logger.error(`MetricsHandlerFactory: Could not create handler for type ${matches[1]} with args ${matches[3]}, ${matches[5]} (${e.message})`);
         }
 
         return handler;
