@@ -486,7 +486,7 @@ function DashMetrics(config) {
     }
 
     function pushPlayListTraceMetrics(endTime, reason) {
-        if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics) {
+        if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics && playListTraceMetrics.start) {
             const startTime = playListTraceMetrics.start;
             const duration = endTime.getTime() - startTime.getTime();
             playListTraceMetrics.duration = duration;
