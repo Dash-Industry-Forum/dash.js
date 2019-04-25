@@ -146,6 +146,10 @@ function PreBufferSink(onAppendedCallback) {
         return chunks.filter( a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)) );
     }
 
+    function waitForUpdateEnd(callback) {
+        callback();
+    }
+
     instance = {
         getAllBufferRanges: getAllBufferRanges,
         append: append,
@@ -154,7 +158,8 @@ function PreBufferSink(onAppendedCallback) {
         discharge: discharge,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
-        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
+        waitForUpdateEnd: waitForUpdateEnd
     };
 
     setup();
