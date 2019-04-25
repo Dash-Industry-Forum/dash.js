@@ -91,8 +91,7 @@ function BufferController(config) {
         seekClearedBufferingCompleted,
         pendingPruningRanges,
         bufferResetInProgress,
-        mediaChunk,
-        seeking;
+        mediaChunk;
 
 
     function setup() {
@@ -305,14 +304,6 @@ function BufferController(config) {
             }
         }
 
-        // Seeking event was received while appending segment, then clear buffer now
-        if (seeking) {
-            seeking = false;
-            if (type !== Constants.FRAGMENTED_TEXT) {
-                pruneAllSafely();
-            }
-        }
-
         const dataEvent = {
             sender: instance,
             quality: appendedBytesInfo.quality,
@@ -345,12 +336,7 @@ function BufferController(config) {
             lastIndex = Number.POSITIVE_INFINITY;
         }
         if (type !== Constants.FRAGMENTED_TEXT) {
-            // remove buffer after seeking operations
-            if (buffer.getBuffer().updating) {
-                seeking = true;
-            } else {
-                pruneAllSafely();
-            }
+            pruneAllSafely();
         } else {
             onPlaybackProgression();
         }
@@ -362,11 +348,13 @@ function BufferController(config) {
 
     // Prune full buffer but what is around current time position
     function pruneAllSafely() {
-        const ranges = getAllRangesWithSafetyFactor();
-        if (!ranges || ranges.length === 0) {
-            onPlaybackProgression();
-        }
-        clearBuffers(ranges);
+        buffer.waitForUpdateEnd(() => {
+            const ranges = getAllRangesWithSafetyFactor();
+            if (!ranges || ranges.length === 0) {
+                onPlaybackProgression();
+            }
+            clearBuffers(ranges);
+        });
     }
 
     // Get all buffer ranges but a range around current time position
@@ -884,7 +872,6 @@ function BufferController(config) {
         bufferLevel = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
-        seeking = false;
 
         if (buffer) {
             if (!errored) {
