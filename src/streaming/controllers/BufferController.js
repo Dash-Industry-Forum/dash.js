@@ -336,6 +336,7 @@ function BufferController(config) {
             lastIndex = Number.POSITIVE_INFINITY;
         }
         if (type !== Constants.FRAGMENTED_TEXT) {
+            // remove buffer after seeking operations
             pruneAllSafely();
         } else {
             onPlaybackProgression();
