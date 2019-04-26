@@ -395,7 +395,7 @@ function TextTracks() {
             return;
         }
 
-        if (!captionData || !Array.isArray(captionData.length)) {
+        if (!Array.isArray(captionData) || captionData.length === 0) {
             return;
         }
 
