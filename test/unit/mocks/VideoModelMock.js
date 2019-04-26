@@ -103,7 +103,7 @@ class VideoModelMock {
     }
 
     getElement() {
-        return 'element';
+        return this.element;
     }
 
     play() {
@@ -151,11 +151,10 @@ class VideoModelMock {
         return this.tracks;
     }
 
-    getTextTrack(kind, label, lang, isTTML, isEmbedded) {
+    getTextTrack(kind, label/*, lang, isTTML, isEmbedded*/) {
         for (let i = 0; i < this.element.textTracks.length; i++) {
 
-            if (this.element.textTracks[i].kind === kind && (label ? this.element.textTracks[i].label == label : true) &&
-                this.element.textTracks[i].language === lang && this.element.textTracks[i].isTTML === isTTML && this.element.textTracks[i].isEmbedded === isEmbedded) {
+            if (this.element.textTracks[i].kind === kind && (label ? this.element.textTracks[i].label == label : true)) {
                 return this.element.textTracks[i];
             }
         }
@@ -165,6 +164,10 @@ class VideoModelMock {
 
     addTextTrack(kind, label, lang) {
         return this.element.addTextTrack(kind, label, lang);
+    }
+
+    getCurrentCue(textTrack) {
+        return this.element.getCurrentCue(textTrack);
     }
 
     getTTMLRenderingDiv() {

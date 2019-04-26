@@ -5,6 +5,7 @@ import Events from '../../src/core/events/Events';
 
 import VideoModelMock from './mocks/VideoModelMock';
 
+const SUBTITLE_DATA = 'subtitle lign 1';
 const chai = require('chai');
 const expect = chai.expect;
 const context = {};
@@ -35,6 +36,11 @@ describe('TextTracks', function () {
 
         if (typeof window === 'undefined') {
             global.window = {};
+            global.window.TextTrackCue = function (start, end, data) {
+                this.start = start;
+                this.end = end;
+                this.data = data;
+            };
         }
 
         if (typeof navigator === 'undefined') {
@@ -58,6 +64,7 @@ describe('TextTracks', function () {
 
     afterEach(function () {
         textTracks.deleteAllTextTracks();
+        videoModelMock.getElement().reset();
     });
 
     describe('Method getTrackIdxForId', function () {
@@ -98,6 +105,23 @@ describe('TextTracks', function () {
 
             eventBus.off(Events.TEXT_TRACK_ADDED, spyTrackAdded);
             eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, spyTracksQueueInit);
+        });
+    });
+
+    describe('Method addCaptions', function () {
+        it('should call addCue function of when a call to addCaptions is made', function () {
+            textTracks.addTextTrack({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+
+            let track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
+
+            expect(videoModelMock.getCurrentCue(track).data).to.equal(SUBTITLE_DATA);
         });
     });
 });
