@@ -158,7 +158,7 @@ declare namespace dashjs {
         setMaxAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
         getMaxAllowedBitrateFor(type: 'video' | 'audio'): number;
         getTopBitrateInfoFor(type: 'video' | 'audio'): BitrateInfo;
-        setMinAllowedBitrateFor(type: 'video' | 'audio', value: number);
+        setMinAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
         getMinAllowedBitrateFor(type: 'video' | 'audio'): number;
         setMaxAllowedRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
         getMaxAllowedRepresentationRatioFor(type: 'video' | 'audio'): number;
