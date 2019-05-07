@@ -445,6 +445,7 @@ function TextTracks() {
                             if (divs[i].id === this.cueID) {
                                 logger.debug('Cue exit id:' + divs[i].id);
                                 captionContainer.removeChild(divs[i]);
+                                --i;
                             }
                         }
                     }
