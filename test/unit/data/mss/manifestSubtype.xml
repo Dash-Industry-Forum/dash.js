@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SmoothStreamingMedia MajorVersion="2" MinorVersion="0" Duration="2300000000" TimeScale="10000000">
+   <CustomAttributes>
+       <Attribute Name = "timeScaleZeroPoint" Value = "..." />
+   </CustomAttributes>
+   <Protection>
+      <ProtectionHeader SystemID="{9A04F079-9840-4286-AB92E65BE0885F95}">
+      Base-64 Encoded Data
+      </ProtectionHeader>
+   </Protection>
+   <StreamIndex Type = "video" Chunks = "115" QualityLevels = "6" MaxWidth = "720" MaxHeight = "480" TimeScale="10000000" Url="QualityLevels({bitrate},{CustomAttributes})/Fragments(video={start_time})" Name = "video">
+     <QualityLevel Index="0" Bitrate="1536000" FourCC="WVC1"
+        MaxWidth="720" MaxHeight="480"
+        CodecPrivateData="270000010FCBEE1670EF8A16783BF180C9089CC4AFA11C0000010E1207F840" > 
+         <CustomAttributes>
+            <Attribute Name="hardwareProfile" Value="10000" />
+         </CustomAttributes>
+      </QualityLevel>
+      <QualityLevel Index="1" Bitrate="1536000" FourCC="WVC1"    
+                    MaxWidth="720" MaxHeight="480" 
+                    CodecPrivateData="270000010FCBEE1670EF8A16783BF180C9089CC4AFA11C0000010E1207F840" > 
+         <CustomAttributes>
+            <Attribute Name="hardwareProfile" Value="1000" />
+         </CustomAttributes>
+      </QualityLevel>
+      <QualityLevel Index="2" Bitrate="1024000" FourCC="WVC1" MaxWidth="720" MaxHeight="480"
+         CodecPrivateData="270000010FCBEE1670EF8A16783BF180C9089CC4AFA11C0000010E1207F840"> 
+         <CustomAttributes>
+            <Attribute Name="hardwareProfile" Value="1000" />
+         </CustomAttributes>
+      </QualityLevel>
+      <QualityLevel Index="5" Bitrate="307200" FourCC="WVC1" MaxWidth="720" MaxHeight="480" 
+         CodecPrivateData="270000010FCBEE1670EF8A16783BF180C9089CC4AFA11C0000010E1207F840"> 
+         <CustomAttributes>
+            <Attribute Name="hardwareProfile" Value="1000" />
+         </CustomAttributes>
+      </QualityLevel>
+       <c n="0" d="19680000"> 
+                   <f i="0" s="1525" q="2122"/> 
+                   <f i="1" s="1406" q="1640"/> 
+                   <f i="2" s="1217" q="875"/> 
+                   <f i="3" s="1107" q="1428"/> 
+                   <f i="4" s="607" q="928"/> 
+                   <f i="5" s="407" q="428"/>
+      </c>
+      <c n="1" d="8980000"> 
+                   <f i="0" s="1525" q="2122"/> 
+                   <f i="1" s="1406" q="1640"/>
+                   <f i="2" s="1217" q="875"/>
+                   <f i="3" s="1107" q="1428"/>
+                   <f i="4" s="607" q="928"/>
+                  <f i="5" s="407" q="428"/>
+      </c>
+      <c n="114" d="50680000"> 
+                   <f i="0" s="1525" q="2122"/> 
+                   <f i="1" s="1406" q="1640"/> 
+                   <f i="2" s="1217" q="875"/> 
+                   <f i="3" s="1107" q="1428"/> 
+                   <f i="4" s="607" q="928"/> 
+                   <f i="5" s="407" q="428"/> 
+                </c>
+</StreamIndex>
+<StreamIndex Type="video" ParentStreamIndex="video" Subtype="ZOET" FourCC="JPEG" MaxWidth="100" MaxHeight="100" Url="QualityLevels({bitrate})/Fragments(zoetrope={start_time})" Name="zoetrope">
+  <QualityLevel Index="0" Bitrate="0"/>
+  <c t="0"/>
+  <c t="100000000" />
+  <c t="200000000" />
+</StreamIndex>
+<StreamIndex Type="audio" Chunks="147" Language="eng" QualityLevels="1" TimeScale="10000000" Url="QualityLevels({bitrate},{CustomAttributes})/Fragments(audio={start_time})">
+   <QualityLevel Index="0" Bitrate="94208" FourCC="WMA2" SamplingRate="48000" Channels="2" BitsPerSample="16" PacketSize="1115" HardwareProfile="1000" CodecPrivateData="6101020044AC0000853E00009D0B10000A00008800000F0000000000"/>
+   <c n="0" d="18770000"><f i="0" s="45"/></c>
+   <c n="1" d="18840000"><f i="0" s="41"/></c>
+   <c n="146" d="9290000"><f i="0" s="41"/></c>
+</StreamIndex>
+<StreamIndex Type="text" Subtype="CAPT" Name="captions ">
+   <QualityLevel Index="0" FourCC="DFXP"/>
+   <c t="0"/>
+   <c t="20000000"/>
+   <c t="40000000"/>
+</StreamIndex>
+<StreamIndex Type="text" Subtype="SCMD" Language="en-us" TimeScale="10000000">
+   <Content>
+      <ScriptCommand Time="REFERENCE_TIME" Type="Some string" Command="some string"/> 
+      <ScriptCommand Time="REFERENCE_TIME2" Type="Some string2" Command="some string2"/> 
+   </Content>
+</StreamIndex>
+<StreamIndex Type="text" Subtype="CHAP" Language="eng" TimeScale="10000000">
+   <Content>
+      <Marker Time="REFERENCE_TIME" Value="some string"/>
+      <Marker Time="REFERENCE_TIME" Value="some string"/>
+   </Content>
+</StreamIndex>
+</SmoothStreamingMedia>
