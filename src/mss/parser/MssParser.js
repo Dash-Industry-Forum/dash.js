@@ -42,10 +42,10 @@ function MssParser(config) {
 
     const DEFAULT_TIME_SCALE = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
-    // MPEG-DASH Role and accessibility mapping according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
+    // MPEG-DASH Role and accessibility mapping for text tracks according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
     const ROLE = {
+        'CAPT': 'main',
         'SUBT': 'alternate',
-        'CAPT': 'alternate', // 'CAPT' is commonly equivalent to 'SUBT'
         'DESC': 'main'
     };
     const ACCESSIBILITY = {
@@ -121,7 +121,7 @@ function MssParser(config) {
         adaptationSet.maxWidth = streamIndex.getAttribute('MaxWidth');
         adaptationSet.maxHeight = streamIndex.getAttribute('MaxHeight');
 
-        // Map subTypes to MPEG-DASH AdaptationSet role and accessibility (see ETSI TS 103 285 v1.1.1, section 7.1.2)
+        // Map text tracks subTypes to MPEG-DASH AdaptationSet role and accessibility (see ETSI TS 103 285 v1.1.1, section 7.1.2)
         if (adaptationSet.subType) {
             if (ROLE[adaptationSet.subType]) {
                 let role = {

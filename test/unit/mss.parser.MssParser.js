@@ -95,7 +95,7 @@ describe('MssParser', function () {
             if (adaptation.subType === 'CAPT') {
                 expect(adaptation.Role).to.exist; // jshint ignore:line
                 expect(adaptation.Role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
-                expect(adaptation.Role.value).to.equal('alternate');
+                expect(adaptation.Role.value).to.equal('main');
             }
         }
     });
