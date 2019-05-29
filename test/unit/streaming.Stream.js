@@ -206,6 +206,12 @@ describe('Stream', function () {
 
             expect(isPreloaded).to.be.true;                // jshint ignore:line
         });
+
+        it('should return undefined when getThumbnailController is called without a call to initializeMediaForType', () => {
+            const thumbnailController = stream.getThumbnailController();
+
+            expect(thumbnailController).to.be.undefined;          // jshint ignore:line
+        });
     });
 
     describe('Not well initialized with no config parameter', function () {
