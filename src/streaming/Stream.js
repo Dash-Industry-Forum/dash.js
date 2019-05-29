@@ -623,7 +623,10 @@ function Stream(config) {
     function createBuffers(previousBuffers) {
         const buffers = {};
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            buffers[streamProcessors[i].getType()] = streamProcessors[i].createBuffer(previousBuffers).getBuffer();
+            const buffer = streamProcessors[i].createBuffer(previousBuffers);
+            if (buffer) {
+                buffers[streamProcessors[i].getType()] = buffer.getBuffer();
+            }
         }
         return buffers;
     }
