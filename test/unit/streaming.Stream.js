@@ -17,6 +17,10 @@ import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import CapabilitiesMock from './mocks/CapabilitiesMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
+import TextControllerMock from './mocks/TextControllerMock';
+
+import ObjectsHelper from './helpers/ObjectsHelper';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -27,6 +31,8 @@ let stream;
 
 describe('Stream', function () {
     let settings = Settings(context).getInstance();
+    const objectsHelper = new ObjectsHelper();
+
     const adapterMock = new AdapterMock();
     const manifestModelMock = new ManifestModelMock();
     const errHandlerMock = new ErrorHandlerMock();
@@ -35,6 +41,9 @@ describe('Stream', function () {
     const playbackControllerMock = new PlaybackControllerMock();
     const capabilitiesMock = new CapabilitiesMock();
     const mediaControllerMock = new MediaControllerMock();
+    const dashMetricsMock = new DashMetricsMock();
+    const textControllerMock = new TextControllerMock();
+    const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamInfo = {
         index: 'id'
     };
@@ -50,6 +59,9 @@ describe('Stream', function () {
                                              playbackController: playbackControllerMock,
                                              capabilities: capabilitiesMock,
                                              mediaController: mediaControllerMock,
+                                             timelineConverter: timelineConverter,
+                                             dashMetrics: dashMetricsMock,
+                                             textController: textControllerMock,
                                              settings: settings});
         });
 
@@ -183,10 +195,16 @@ describe('Stream', function () {
             expect(errHandlerMock.errorValue).to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE); // jshint ignore:line
         });
 
-        it('should *****', () => {
-            const isCompatible = stream.preload();
+        it('should return preloaded to true after a call to preload without parameters', () => {
+            let isPreloaded = stream.getPreloaded();
 
-            expect(isCompatible).to.be.false;                // jshint ignore:line
+            expect(isPreloaded).to.be.false;                // jshint ignore:line
+
+            stream.preload();
+
+            isPreloaded = stream.getPreloaded();
+
+            expect(isPreloaded).to.be.true;                // jshint ignore:line
         });
     });
 
