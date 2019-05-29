@@ -3,8 +3,12 @@ function AdapterMock () {
         BUFFER_STATE: 'BUFFER_STATE'
     };
 
-    this.getEventsFor = function () {
+    this.getRealAdaptation = function () {
         return null;
+    };
+
+    this.getEventsFor = function () {
+        return [];
     };
 
     this.getAllMediaInfoForType = function () {
