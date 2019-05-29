@@ -107,6 +107,10 @@ function AbrControllerMock () {
         this.throughputHistory = new ThroughputHistoryMock();
     };
 
+    this.unRegisterStreamType = function (/*type*/) {
+    };
+
+
     this.getMinAllowedIndexFor = function () {};
 }
 

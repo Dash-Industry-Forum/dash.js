@@ -97,6 +97,10 @@ function AdapterMock () {
     this.getIsDVB = function () {
         return false;
     };
+
+    this.convertDataToRepresentationInfo = function () {
+        return null;
+    };
 }
 
 export default AdapterMock;
