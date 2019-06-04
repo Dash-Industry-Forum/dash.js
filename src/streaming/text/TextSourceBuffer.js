@@ -82,7 +82,20 @@ function TextSourceBuffer() {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
 
+        eventBus.on(Events.BUFFERING_COMPLETED, onTrackBufferingCompleted, instance);
+
         resetInitialSettings();
+    }
+
+    function onTrackBufferingCompleted(e) {
+        if (!e.sender) {
+            return;
+        }
+        if (e.sender.getType() !== Constants.FRAGMENTED_TEXT) {
+            return;
+        }
+
+        resetFragmented();
     }
 
     function resetFragmented () {
