@@ -91,7 +91,7 @@ function DashHandler(config) {
     }
 
     function isWebM (mimeType) {
-        const type = mimeType.split('/')[1];
+        const type = mimeType ? mimeType.split('/')[1] : '';
         return 'webm' === type.toLowerCase();
     }
 

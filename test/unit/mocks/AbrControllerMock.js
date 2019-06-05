@@ -3,72 +3,65 @@ import ThroughputHistoryMock from './ThroughputHistoryMock';
 const ABANDON_LOAD = 'abandonload';
 const QUALITY_DEFAULT = 0;
 
-class AbrControllerMock{
+function AbrControllerMock () {
+    this.qualityDict = {};
+    this.elementWidth = undefined;
+    this.elementHeight = undefined;
+    this.windowResizeEventCalled = false;
+    this.throughputHistory = undefined;
+    this.currentStreamId = undefined;
 
     // Constants
-    static get ABANDON_LOAD() {
+    this.ABANDON_LOAD = function () {
         return ABANDON_LOAD;
-    }
+    };
 
-    static get QUALITY_DEFAULT() {
+    this.QUALITY_DEFAULT = function () {
         return QUALITY_DEFAULT;
-    }
+    };
 
-    constructor() {
-        this.setup();
-    }
+    this.initialize = function () {};
 
-    setup() {
-        this.qualityDict = {};
-        this.elementWidth = undefined;
-        this.elementHeight = undefined;
-        this.windowResizeEventCalled = false;
-        this.throughputHistory = undefined;
-        this.currentStreamId = undefined;
-    }
+    this.createAbrRulesCollection = function () {};
 
-    initialize() {}
+    this.reset = function () {
+    };
 
-    createAbrRulesCollection() {}
+    this.setConfig = function () {};
 
-    reset() {
-        this.setup();
-    }
+    this.getTopQualityIndexFor = function () {};
 
-    setConfig() {}
+    this.getTopBitrateInfoFor = function () {};
 
-    getTopQualityIndexFor() {}
-
-    getTopBitrateInfoFor() {}
-
-    getInitialBitrateFor(/*type*/) {
+    this.getInitialBitrateFor = function (/*type*/) {
         return null;
-    }
+    };
 
-    checkPlaybackQuality() {}
+    this.checkPlaybackQuality = function () {};
 
-    setPlaybackQuality(type, streamInfo, newQuality) {
+    this.setPlaybackQuality = function (type, streamInfo, newQuality) {
         this.setQualityFor(type,streamInfo.id,newQuality);
-    }
+    };
 
-    setAbandonmentStateFor() {}
+    this.setAbandonmentStateFor = function () {};
 
-    getAbandonmentStateFor() {}
+    this.getAbandonmentStateFor = function () {};
 
-    getQualityForBitrate() {}
+    this.getQualityForBitrate = function () {};
 
-    getBitrateList() {}
+    this.getBitrateList = function () {
+        return [];
+    };
 
-    getThroughputHistory() {
+    this.getThroughputHistory = function () {
         return this.throughputHistory;
-    }
+    };
 
-    updateTopQualityIndex() {}
+    this.updateTopQualityIndex = function () {};
 
-    isPlayingAtTopQuality() {}
+    this.isPlayingAtTopQuality = function () {};
 
-    getQualityFor(type) {
-
+    this.getQualityFor = function (type) {
         var quality;
 
         if (!this.currentStreamId || !this.qualityDict.hasOwnProperty(this.currentStreamId)) {
@@ -81,41 +74,44 @@ class AbrControllerMock{
 
         quality = this.qualityDict[this.currentStreamId][type];
         return quality;
-    }
+    };
 
-    setQualityFor(type, id, value) {
+    this.setQualityFor = function (type, id, value) {
         this.currentStreamId = id;
         this.qualityDict[id] = this.qualityDict[id] || {};
         this.qualityDict[id][type] = value;
-    }
+    };
 
-
-    setWindowResizeEventCalled(value) {
+    this.setWindowResizeEventCalled = function (value) {
         this.windowResizeEventCalled = value;
-    }
+    };
 
-    getWindowResizeEventCalled() {
+    this.getWindowResizeEventCalled = function () {
         return this.windowResizeEventCalled;
-    }
+    };
 
-    setElementSize() {
+    this.setElementSize = function () {
         this.elementWidth = 10;
         this.elementHeight = 10;
-    }
+    };
 
-    getElementWidth() {
+    this.getElementWidth = function () {
         return this.elementWidth;
-    }
+    };
 
-    getElementHeight() {
+    this.getElementHeight = function () {
         return this.elementHeight;
-    }
+    };
 
-    registerStreamType() {
+    this.registerStreamType = function () {
         this.throughputHistory = new ThroughputHistoryMock();
-    }
+    };
 
-    getMinAllowedIndexFor() {}
+    this.unRegisterStreamType = function (/*type*/) {
+    };
+
+
+    this.getMinAllowedIndexFor = function () {};
 }
 
 export default AbrControllerMock;

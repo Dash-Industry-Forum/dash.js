@@ -770,10 +770,8 @@ function MediaPlayer() {
                 return -1;
             }
             const thumbnailController = activeStream.getThumbnailController();
-            if (!thumbnailController) {
-                return -1;
-            }
-            return thumbnailController.getCurrentTrackIndex();
+
+            return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
         }
         return abrController.getQualityFor(type);
     }

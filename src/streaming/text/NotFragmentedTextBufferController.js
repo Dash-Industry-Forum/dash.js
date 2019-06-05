@@ -92,7 +92,7 @@ function NotFragmentedTextBufferController(config) {
             }
             return buffer;
         } catch (e) {
-            if ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1)) {
+            if (mediaInfo && ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1))) {
                 try {
                     buffer = textController.getTextSourceBuffer();
                 } catch (e) {
@@ -160,7 +160,10 @@ function NotFragmentedTextBufferController(config) {
             return;
         }
 
-        const chunk = initCache.extract(streamProcessor.getStreamInfo().id, e.sender.getCurrentRepresentation().id);
+        const streamInfo = streamProcessor.getStreamInfo();
+        const currentRepresentation = e.sender.getCurrentRepresentation();
+
+        const chunk = initCache.extract(streamInfo ? streamInfo.id : null, currentRepresentation ? currentRepresentation.id : null);
 
         if (!chunk) {
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {

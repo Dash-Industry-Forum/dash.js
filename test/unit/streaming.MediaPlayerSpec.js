@@ -546,10 +546,10 @@ describe('MediaPlayer', function () {
                 let qualityFor = abrControllerMock.getQualityFor('video', {
                     id: 'dummyId'
                 });
-                expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
+                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
 
                 qualityFor = player.getQualityFor('video');
-                expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
+                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
 
                 player.setQualityFor('video', 10);
 

@@ -6,11 +6,21 @@ import DashJSError from '../../src/streaming/vo/DashJSError';
 import ProtectionErrors from '../../src/streaming/protection/errors/ProtectionErrors';
 import Constants from '../../src/streaming/constants/Constants';
 import Errors from '../../src/core/errors/Errors';
+import Settings from '../../src/core/Settings';
 
 import AdapterMock from './mocks/AdapterMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import AbrControllerMock from './mocks/AbrControllerMock';
+import StreamMock from './mocks/StreamMock';
+import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
+import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import CapabilitiesMock from './mocks/CapabilitiesMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
+import TextControllerMock from './mocks/TextControllerMock';
 
+import ObjectsHelper from './helpers/ObjectsHelper';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -20,9 +30,20 @@ const eventBus = EventBus(context).getInstance();
 let stream;
 
 describe('Stream', function () {
+    let settings = Settings(context).getInstance();
+    const objectsHelper = new ObjectsHelper();
+
     const adapterMock = new AdapterMock();
     const manifestModelMock = new ManifestModelMock();
     const errHandlerMock = new ErrorHandlerMock();
+    const abrControllerMock = new AbrControllerMock();
+    const manifestUpdaterMock = new ManifestUpdaterMock();
+    const playbackControllerMock = new PlaybackControllerMock();
+    const capabilitiesMock = new CapabilitiesMock();
+    const mediaControllerMock = new MediaControllerMock();
+    const dashMetricsMock = new DashMetricsMock();
+    const textControllerMock = new TextControllerMock();
+    const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamInfo = {
         index: 'id'
     };
@@ -32,7 +53,16 @@ describe('Stream', function () {
         beforeEach(function () {
             stream = Stream(context).create({errHandler: errHandlerMock,
                                              manifestModel: manifestModelMock,
-                                             adapter: adapterMock});
+                                             adapter: adapterMock,
+                                             abrController: abrControllerMock,
+                                             manifestUpdater: manifestUpdaterMock,
+                                             playbackController: playbackControllerMock,
+                                             capabilities: capabilitiesMock,
+                                             mediaController: mediaControllerMock,
+                                             timelineConverter: timelineConverter,
+                                             dashMetrics: dashMetricsMock,
+                                             textController: textControllerMock,
+                                             settings: settings});
         });
 
         afterEach(function () {
@@ -48,7 +78,6 @@ describe('Stream', function () {
 
         it('should trigger MANIFEST_ERROR_ID_NOSTREAMS_CODE error when setMediaSource is called but streamProcessors array is empty', () => {
             stream.setMediaSource();
-
             expect(errHandlerMock.errorCode).to.be.equal(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE); // jshint ignore:line
         });
 
@@ -70,8 +99,20 @@ describe('Stream', function () {
             expect(duration).to.be.NaN;                // jshint ignore:line
         });
 
-        it('should return null when isCompatibleWithStream is called but stream attribute is undefined', () => {
+        it('should return null false isMediaCodecCompatible is called but stream attribute is undefined', () => {
             const isCompatible = stream.isMediaCodecCompatible();
+
+            expect(isCompatible).to.be.false;                // jshint ignore:line
+        });
+
+        it('should return false when isMediaCodecCompatible is called but stream attribute is an empty object', () => {
+            const isCompatible = stream.isMediaCodecCompatible({});
+
+            expect(isCompatible).to.be.false;                // jshint ignore:line
+        });
+
+        it('should return false when isMediaCodecCompatible is called with a correct stream attribute', () => {
+            const isCompatible = stream.isMediaCodecCompatible(new StreamMock());
 
             expect(isCompatible).to.be.false;                // jshint ignore:line
         });
@@ -80,6 +121,20 @@ describe('Stream', function () {
             const isCompatible = stream.isProtectionCompatible();
 
             expect(isCompatible).to.be.false;                // jshint ignore:line
+        });
+
+        it('should return an empty array when getBitrateListFor is called but no stream processor is defined', () => {
+            const bitrateList = stream.getBitrateListFor('');
+
+            expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
+            expect(bitrateList).to.be.empty;            // jshint ignore:line
+        });
+
+        it('should return an empty array when getBitrateListFor, for image type, is called but thumbnailController is not defined', () => {
+            const bitrateList = stream.getBitrateListFor(Constants.IMAGE);
+
+            expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
+            expect(bitrateList).to.be.empty;            // jshint ignore:line
         });
 
         it('should not call STREAM_INITIALIZED event if initializeMedia has not been called when updateData is called', () => {
@@ -137,6 +192,24 @@ describe('Stream', function () {
 
             expect(errHandlerMock.errorCode).to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE); // jshint ignore:line
             expect(errHandlerMock.errorValue).to.be.equal(ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE); // jshint ignore:line
+        });
+
+        it('should return preloaded to true after a call to preload without parameters', () => {
+            let isPreloaded = stream.getPreloaded();
+
+            expect(isPreloaded).to.be.false;                // jshint ignore:line
+
+            stream.preload();
+
+            isPreloaded = stream.getPreloaded();
+
+            expect(isPreloaded).to.be.true;                // jshint ignore:line
+        });
+
+        it('should return undefined when getThumbnailController is called without a call to initializeMediaForType', () => {
+            const thumbnailController = stream.getThumbnailController();
+
+            expect(thumbnailController).to.be.undefined;          // jshint ignore:line
         });
     });
 

@@ -137,7 +137,7 @@ function RepresentationController() {
     function updateData(newRealAdaptation, availableRepresentations, type) {
         checkConfig();
         const streamInfo = streamProcessor.getStreamInfo();
-        const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
+        const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo ? streamInfo.id : null);
         const minIdx = abrController.getMinAllowedIndexFor(type);
 
         let quality,
