@@ -71,7 +71,6 @@ function TextSourceBuffer() {
         firstFragmentedSubtitleStart,
         currFragmentedTrackIdx,
         embeddedTracks,
-        embeddedInitializationSegmentReceived,
         embeddedTimescale,
         embeddedLastSequenceNumber,
         embeddedSequenceNumbers,
@@ -188,7 +187,6 @@ function TextSourceBuffer() {
         textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
         currFragmentedTrackIdx = null;
-        embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
         embeddedCea608FieldParsers = [];
         embeddedSequenceNumbers = [];
