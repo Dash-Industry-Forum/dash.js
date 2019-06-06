@@ -81,20 +81,7 @@ function TextSourceBuffer() {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
 
-        eventBus.on(Events.BUFFERING_COMPLETED, onTrackBufferingCompleted, instance);
-
         resetInitialSettings();
-    }
-
-    function onTrackBufferingCompleted(e) {
-        if (!e.sender) {
-            return;
-        }
-        if (e.sender.getType() !== Constants.FRAGMENTED_TEXT) {
-            return;
-        }
-
-        resetFragmented();
     }
 
     function resetFragmented () {
@@ -155,11 +142,9 @@ function TextSourceBuffer() {
 
     function abort() {
         textTracks.deleteAllTextTracks();
+        resetFragmented();
         boxParser = null;
         mediaInfos = [];
-        fragmentedFragmentModel = null;
-        initializationSegmentReceived = false;
-        fragmentedTracks = [];
     }
 
     function reset() {
@@ -334,14 +319,17 @@ function TextSourceBuffer() {
         }
 
         if (mediaType === Constants.FRAGMENTED_TEXT) {
-            if (!initializationSegmentReceived) {
+            if (!initializationSegmentReceived && chunk.segmentType === 'InitializationSegment') {
                 initializationSegmentReceived = true;
                 timescale = boxParser.getMediaTimescaleFromMoov(bytes);
             } else {
+                if (!initializationSegmentReceived) {
+                    return;
+                }
                 samplesInfo = boxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
-                    firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
+                    firstFragmentedSubtitleStart = sampleList[0].cts - this.timestampOffset * timescale;
                 }
                 if (codecType.search(Constants.STPP) >= 0) {
                     parser = parser !== null ? parser : getParser(codecType);
