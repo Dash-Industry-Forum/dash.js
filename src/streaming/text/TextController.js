@@ -58,7 +58,8 @@ function TextController() {
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
-        forceTextStreaming;
+        forceTextStreaming,
+        previousPeriodSelectedTrack;
 
     function setup() {
 
@@ -75,7 +76,20 @@ function TextController() {
         textTracks.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
 
+        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, instance);
+        eventBus.on(Events.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
+
         resetInitialSettings();
+    }
+
+    function onStreamCompleted() {
+        previousPeriodSelectedTrack = this.getCurrentTrackIdx();
+    }
+
+    function onPeriodSwitchCompleted() {
+        if (previousPeriodSelectedTrack !== undefined) {
+            this.setTextTrack(previousPeriodSelectedTrack);
+        }
     }
 
     function setConfig(config) {
