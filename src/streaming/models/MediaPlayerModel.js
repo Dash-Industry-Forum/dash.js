@@ -51,7 +51,8 @@ function MediaPlayerModel() {
     let instance,
         UTCTimingSources,
         xhrWithCredentials,
-        customABRRule;
+        customABRRule,
+        fragmentRequestTimeout;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
         scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -65,6 +66,7 @@ function MediaPlayerModel() {
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
+        fragmentRequestTimeout = 0;
         customABRRule = [];
     }
 
@@ -219,6 +221,14 @@ function MediaPlayerModel() {
         return DEFAULT_UTC_TIMING_SOURCE;
     }
 
+    function setFragmentRequestTimeout(value) {
+        fragmentRequestTimeout = value;
+    }
+
+    function getFragmentRequestTimeout() {
+        return fragmentRequestTimeout;
+    }
+
     function reset() {
         //TODO need to figure out what props to persist across sessions and which to reset if any.
         //setup();
@@ -241,6 +251,8 @@ function MediaPlayerModel() {
         setXHRWithCredentialsForType,
         getXHRWithCredentialsForType,
         getDefaultUtcTimingSource,
+        setFragmentRequestTimeout: setFragmentRequestTimeout,
+        getFragmentRequestTimeout: getFragmentRequestTimeout,
         reset
     };
 

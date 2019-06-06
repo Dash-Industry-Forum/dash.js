@@ -975,11 +975,33 @@ function MediaPlayer() {
 
     /**
      * Remove all custom rules
+     * @param {string} type
+     * @return {number} value
      * @memberof module:MediaPlayer
      * @instance
      */
     function removeAllABRCustomRule() {
         mediaPlayerModel.removeABRCustomRule();
+    }
+
+    /**
+     * Sets the request timeout (in miliseconds) for requests sent via the HTTPLoader
+     * @param {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function setFragmentRequestTimeout(value) {
+        mediaPlayerModel.setFragmentRequestTimeout(value);
+    }
+
+    /**
+     * Gets the request timeout (in miliseconds) for requests sent via the HTTPLoader
+     * @return {number} The active request timeout in miliseconds
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getFragmentRequestTimeout() {
+        return mediaPlayerModel.getFragmentRequestTimeout();
     }
 
     /**
@@ -2291,6 +2313,8 @@ function MediaPlayer() {
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
+        setFragmentRequestTimeout: setFragmentRequestTimeout,
+        getFragmentRequestTimeout: getFragmentRequestTimeout,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
