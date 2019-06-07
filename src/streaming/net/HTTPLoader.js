@@ -205,7 +205,15 @@ function HTTPLoader(cfg) {
             }
         };
 
-        const ontimeout = function () {
+        const ontimeout = function (event) {
+            let timeoutMessage;
+            if (event.lengthComputable) {
+                let percentageComplete = (event.loaded / event.total) * 100;
+                timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
+            } else {
+                timeoutMessage = 'Request timeout: non-computable download size';
+            }
+            logger.warn(timeoutMessage);
         };
 
         let loader;
