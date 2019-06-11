@@ -76,19 +76,37 @@ function TextController() {
         textTracks.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
 
+        /*
+        * register those event callbacks in order to detect switch of periods and set
+        * correctly the selected track index in the new period.
+        * there is different cases :
+        *   - switch occurs after a seek command from the user
+        *   - switch occurs but codecs in streams are different
+        *   - switch occurs and codecs in streams are not different
+        */
+        eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, instance);
         eventBus.on(Events.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
 
         resetInitialSettings();
     }
 
+    function onPeriodSwitchStarted(e) {
+        if (previousPeriodSelectedTrack === undefined && e.fromStreamInfo !== null /* test if this is the first period */) {
+            previousPeriodSelectedTrack = this.getCurrentTrackIdx();
+        }
+    }
+
     function onStreamCompleted() {
-        previousPeriodSelectedTrack = this.getCurrentTrackIdx();
+        if (previousPeriodSelectedTrack === undefined) {
+            previousPeriodSelectedTrack = this.getCurrentTrackIdx();
+        }
     }
 
     function onPeriodSwitchCompleted() {
         if (previousPeriodSelectedTrack !== undefined) {
             this.setTextTrack(previousPeriodSelectedTrack);
+            previousPeriodSelectedTrack = undefined;
         }
     }
 

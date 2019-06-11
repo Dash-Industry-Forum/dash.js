@@ -329,7 +329,7 @@ function TextSourceBuffer() {
                 samplesInfo = boxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
-                    firstFragmentedSubtitleStart = sampleList[0].cts - this.timestampOffset * timescale;
+                    firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
                 }
                 if (codecType.search(Constants.STPP) >= 0) {
                     parser = parser !== null ? parser : getParser(codecType);
