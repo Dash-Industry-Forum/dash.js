@@ -3,12 +3,12 @@ import BufferController from '../../src/streaming/controllers/BufferController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import InitCache from '../../src/streaming/utils/InitCache';
-import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -31,12 +31,11 @@ const initCache = InitCache(context).getInstance();
 
 describe('BufferController', function () {
     // disable log
-    const debug = Debug(context).getInstance();
-    debug.setLogToBrowserConsole(false);
+    let settings = Settings(context).getInstance();
     const streamProcessor = new StreamProcessorMock(testType, streamInfo);
     const streamControllerMock = new StreamControllerMock();
     const adapterMock = new AdapterMock();
-    const metricsModelMock = new MetricsModelMock();
+    const dashMetricsMock = new DashMetricsMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
     const errorHandlerMock = new ErrorHandlerMock();
@@ -54,7 +53,7 @@ describe('BufferController', function () {
 
         mediaSourceMock = new MediaSourceMock();
         bufferController = BufferController(context).create({
-            metricsModel: metricsModelMock,
+            dashMetrics: dashMetricsMock,
             errHandler: errorHandlerMock,
             streamController: streamControllerMock,
             mediaController: mediaControllerMock,
@@ -64,7 +63,8 @@ describe('BufferController', function () {
             streamProcessor: streamProcessor,
             type: testType,
             playbackController: playbackControllerMock,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            settings: settings
         });
     });
 
@@ -85,6 +85,9 @@ describe('BufferController', function () {
     });
 
     describe('Method createBuffer/getBuffer', function () {
+        it('should not create a preBufferSink if mediaInfo is undefined', function () {
+            expect(bufferController.createBuffer()).to.be.null;  // jshint ignore:line
+        });
 
         it('should create a preBufferSink if controller is initialized without a mediaSource', function () {
             bufferController.initialize(null);

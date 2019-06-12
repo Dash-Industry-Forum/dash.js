@@ -121,7 +121,7 @@ function MssFragmentProcessor(config) {
 
     config = config || {};
     const context = this.context;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const eventBus = config.eventBus;
     const protectionController = config.protectionController;
@@ -141,7 +141,7 @@ function MssFragmentProcessor(config) {
             constants: config.constants, ISOBoxer: ISOBoxer});
 
         mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 playbackController: playbackController,
                 ISOBoxer: ISOBoxer,
                 eventBus: eventBus,

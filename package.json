@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "babel": "^5.3.1",
+    "babel-preset-env": "^1.7.0",
     "babelify": "^6.1.0",
     "browserify-derequire": "^0.9.6",
     "bs-html-injector": "^3.0.3",

@@ -1,7 +1,6 @@
 import EventController from '../../src/streaming/controllers/EventController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
-import Debug from '../../src/core/Debug';
 
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
@@ -11,8 +10,6 @@ const context = {};
 const eventBus = EventBus(context).getInstance();
 
 describe('EventController', function () {
-    const debug = Debug(context).getInstance();
-    debug.setLogToBrowserConsole(false);
     let eventController;
 
     let manifestUpdaterMock = new ManifestUpdaterMock();

@@ -34,6 +34,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import { renderHTML } from 'imsc';
+import { checkParameterType } from '../utils/SupervisorTools';
 
 function TextTracks() {
 
@@ -90,7 +91,6 @@ function TextTracks() {
         } else if (document.mozFullScreen) { // Firefox
             fullscreenAttribute = 'mozFullScreen';
         }
-
     }
 
     function createTrackForUserAgent (i) {
@@ -107,7 +107,8 @@ function TextTracks() {
         return track;
     }
 
-    function displayCConTop(value) {
+    function setDisplayCConTop(value) {
+        checkParameterType(value, 'boolean');
         displayCCOnTop = value;
         if (!captionContainer || document[fullscreenAttribute]) {
             return;
@@ -253,12 +254,14 @@ function TextTracks() {
 
             if (captionContainer) {
                 const containerStyle = captionContainer.style;
-                containerStyle.left = actualVideoLeft + 'px';
-                containerStyle.top = actualVideoTop + 'px';
-                containerStyle.width = actualVideoWidth + 'px';
-                containerStyle.height = actualVideoHeight + 'px';
-                containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                if (containerStyle) {
+                    containerStyle.left = actualVideoLeft + 'px';
+                    containerStyle.top = actualVideoTop + 'px';
+                    containerStyle.width = actualVideoWidth + 'px';
+                    containerStyle.height = actualVideoHeight + 'px';
+                    containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                    eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                }
             }
 
             // Video view has changed size, so resize any active cues
@@ -392,7 +395,7 @@ function TextTracks() {
             return;
         }
 
-        if (!captionData || captionData.length === 0) {
+        if (!Array.isArray(captionData) || captionData.length === 0) {
             return;
         }
 
@@ -442,6 +445,7 @@ function TextTracks() {
                             if (divs[i].id === this.cueID) {
                                 logger.debug('Cue exit id:' + divs[i].id);
                                 captionContainer.removeChild(divs[i]);
+                                --i;
                             }
                         }
                     }
@@ -646,7 +650,7 @@ function TextTracks() {
 
     instance = {
         initialize: initialize,
-        displayCConTop: displayCConTop,
+        setDisplayCConTop: setDisplayCConTop,
         addTextTrack: addTextTrack,
         addCaptions: addCaptions,
         getCurrentTrackIdx: getCurrentTrackIdx,

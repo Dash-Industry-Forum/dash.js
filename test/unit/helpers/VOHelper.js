@@ -55,11 +55,11 @@ class VoHelper {
         return adaptation;
     }
 
-    createRepresentation(type) {
+    createRepresentation(type, index) {
         var rep = new Representation();
 
         rep.id = null;
-        rep.index = 0;
+        rep.index = index || 0;
         rep.adaptation = this.createAdaptation(type);
         rep.fragmentInfoType = null;
         rep.initialization = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/Header.m4s';
@@ -103,8 +103,8 @@ class VoHelper {
         return req;
     }
 
-    getDummyRepresentation(type) {
-        return this.voRep || this.createRepresentation(type);
+    getDummyRepresentation(type, index) {
+        return this.voRep || this.createRepresentation(type, index);
     }
 
     getDummyMpd(type) {

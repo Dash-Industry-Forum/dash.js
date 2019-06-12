@@ -3,6 +3,7 @@ import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import FragmentController from '../../src/streaming/controllers/FragmentController';
 import EventBus from '../../src/core/EventBus';
+import Settings from '../../src/core/Settings';
 
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 
@@ -15,8 +16,10 @@ describe('FragmentController', function () {
     const voHelper = new VoHelper();
     const eventBus = EventBus(context).getInstance();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
+    const settings = Settings(context).getInstance();
     const fragmentController = FragmentController(context).create({
-        mediaPlayerModel: mediaPlayerModelMock
+        mediaPlayerModel: mediaPlayerModelMock,
+        settings: settings
     });
 
     Events.extend(MediaPlayerEvents);

@@ -10,6 +10,7 @@ import MediaPlayerModelMock from './mocks//MediaPlayerModelMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import ObjectUtils from './../../src/streaming/utils/ObjectUtils';
 import Constants from '../../src/streaming/constants/Constants';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
@@ -39,6 +40,7 @@ describe('MediaPlayer', function () {
     const mediaPlayerModel = new MediaPlayerModelMock();
     const mediaControllerMock = new MediaControllerMock();
     const objectUtils = ObjectUtils(context).getInstance();
+    const settings = Settings(context).getInstance();
     let player;
 
     beforeEach(function () {
@@ -47,7 +49,6 @@ describe('MediaPlayer', function () {
         // to avoid unwanted log
         const debug = player.getDebug();
         expect(debug).to.exist; // jshint ignore:line
-        debug.setLogToBrowserConsole(false);
 
         player.setConfig({
             streamController: streamControllerMock,
@@ -55,12 +56,14 @@ describe('MediaPlayer', function () {
             playbackController: playbackControllerMock,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrControllerMock,
-            mediaController: mediaControllerMock
+            mediaController: mediaControllerMock,
+            settings: settings
         });
     });
 
     afterEach(function () {
         player = null;
+        settings.reset();
     });
 
     describe('Init Functions', function () {
@@ -357,95 +360,66 @@ describe('MediaPlayer', function () {
                 duration = player.duration();
                 expect(duration).to.equal(4);
             });
-
-            it('Method setCatchUpPlaybackRate should change catchUpPlaybackRate', function () {
-                let rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(0.5);
-
-                player.setCatchUpPlaybackRate(0.2);
-                rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(0.2);
-
-                player.setCatchUpPlaybackRate(0.0);
-                rate = player.getCatchUpPlaybackRate();
-                expect(rate).to.equal(0.0);
-            });
-
-            it('Method setLowLatencyMinDrift should change lowLatencyMinDrift', function () {
-                let rate = player.getLowLatencyMinDrift();
-                expect(rate).to.equal(0.02);
-
-                player.setLowLatencyMinDrift(0.1);
-                rate = player.getLowLatencyMinDrift();
-                expect(rate).to.equal(0.1);
-
-                player.setLowLatencyMinDrift(0.0);
-                rate = player.getLowLatencyMinDrift();
-                expect(rate).to.equal(0.0);
-            });
-
-            it('Method setLowLatencyEnabled should enable/disable low latency mode', function () {
-                let enableLowLatency = mediaPlayerModel.getLowLatencyEnabled();
-                expect(enableLowLatency).to.equal(false);
-
-                player.setLowLatencyEnabled(true);
-
-                enableLowLatency = mediaPlayerModel.getLowLatencyEnabled();
-                expect(enableLowLatency).to.equal(true);
-            });
         });
     });
 
     describe('AbrController Functions', function () {
         afterEach(function () {
             abrControllerMock.reset();
+            settings.reset();
         });
         it('should configure MaxAllowedBitrateFor', function () {
-            let MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
-            expect(isNaN(MaxAllowedBitrateFor)).to.be.true; // jshint ignore:line
+            let maxAllowedBitrateFor = player.getSettings().streaming.abr.maxBitrate.audio;
+            expect(maxAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
 
-            MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
-            expect(isNaN(MaxAllowedBitrateFor)).to.be.true; // jshint ignore:line
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'maxBitrate': {
+                            'audio': 5
+                        }
+                    }
+                }
+            });
 
-            player.setMaxAllowedBitrateFor('audio', 5);
-
-            MaxAllowedBitrateFor = abrControllerMock.getMaxAllowedBitrateFor('audio');
-            expect(MaxAllowedBitrateFor).to.equal(5);
-
-            MaxAllowedBitrateFor = player.getMaxAllowedBitrateFor('audio');
-            expect(MaxAllowedBitrateFor).to.equal(5);
+            maxAllowedBitrateFor = player.getSettings().streaming.abr.maxBitrate.audio;
+            expect(maxAllowedBitrateFor).to.equal(5);
         });
 
         it('should configure MinAllowedBitrateFor', function () {
-            let MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
-            expect(isNaN(MinAllowedBitrateFor)).to.be.true; // jshint ignore:line
+            let minAllowedBitrateFor = player.getSettings().streaming.abr.minBitrate.audio;
+            expect(minAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
 
-            MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
-            expect(isNaN(MinAllowedBitrateFor)).to.be.true; // jshint ignore:line
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'minBitrate': {
+                            'audio': 5
+                        }
+                    }
+                }
+            });
 
-            player.setMinAllowedBitrateFor('audio', 5);
-
-            MinAllowedBitrateFor = abrControllerMock.getMinAllowedBitrateFor('audio');
-            expect(MinAllowedBitrateFor).to.equal(5);
-
-            MinAllowedBitrateFor = player.getMinAllowedBitrateFor('audio');
-            expect(MinAllowedBitrateFor).to.equal(5);
+            minAllowedBitrateFor = player.getSettings().streaming.abr.minBitrate.audio;
+            expect(minAllowedBitrateFor).to.equal(5);
         });
 
         it('should configure MaxAllowedRepresentationRatioFor', function () {
-            let MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
+            let maxAllowedRepresentationRatioFor = player.getSettings().streaming.abr.maxRepresentationRatio.audio;
+            expect(maxAllowedRepresentationRatioFor).to.equal(1);
 
-            MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(1);
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'maxRepresentationRatio': {
+                            'audio': 5
+                        }
+                    }
+                }
+            });
 
-            player.setMaxAllowedRepresentationRatioFor('audio', 5);
-
-            MaxAllowedRepresentationRatioFor = abrControllerMock.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(5);
-
-            MaxAllowedRepresentationRatioFor = player.getMaxAllowedRepresentationRatioFor('audio');
-            expect(MaxAllowedRepresentationRatioFor).to.equal(5);
+            maxAllowedRepresentationRatioFor = player.getSettings().streaming.abr.maxRepresentationRatio.audio;
+            expect(maxAllowedRepresentationRatioFor).to.equal(5);
         });
 
         it('should update portal size', function () {
@@ -469,61 +443,72 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure bitrate according to playback area size', function () {
-            let limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
+            let limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
             expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
 
-            limitBitrateByPortal = player.getLimitBitrateByPortal();
-            expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'limitBitrateByPortal': true
+                    }
+                }
+            });
 
-            player.setLimitBitrateByPortal(true);
-
-            limitBitrateByPortal = abrControllerMock.getLimitBitrateByPortal();
-            expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
-
-            limitBitrateByPortal = player.getLimitBitrateByPortal();
+            limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
             expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
         });
 
         it('should configure usePixelRatioInLimitBitrateByPortal', function () {
-            let UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
+            let UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
 
-            UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'usePixelRatioInLimitBitrateByPortal': true
+                    }
+                }
+            });
 
-            player.setUsePixelRatioInLimitBitrateByPortal(true);
-
-            UsePixelRatioInLimitBitrateByPortal = abrControllerMock.getUsePixelRatioInLimitBitrateByPortal();
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
-
-            UsePixelRatioInLimitBitrateByPortal = player.getUsePixelRatioInLimitBitrateByPortal();
+            UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
             expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
         });
 
         it('should configure initialRepresentationRatioFor', function () {
-            let initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.be.null; // jshint ignore:line
+            let initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
+            expect(initialRepresentationRatioFor).to.equal(-1); // jshint ignore:line
 
-            initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.be.null; // jshint ignore:line
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'initialRepresentationRatio': {
+                            'video': 10
+                        }
+                    }
+                }
+            });
 
-            player.setInitialRepresentationRatioFor('video', 10);
-
-            initialRepresentationRatioFor = abrControllerMock.getInitialRepresentationRatioFor('video');
-            expect(initialRepresentationRatioFor).to.equal(10);
-
-            initialRepresentationRatioFor = player.getInitialRepresentationRatioFor('video');
+            initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
             expect(initialRepresentationRatioFor).to.equal(10);
         });
 
-        it('should configure AutoSwitchBitrateForType', function () {
-            let AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
-            expect(AutoSwitchBitrateFor).to.be.true; // jshint ignore:line
+        it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
+            let autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
+            expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
 
-            player.setAutoSwitchQualityFor('video', false);
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'autoSwitchBitrate': {
+                            'video': false
+                        }
+                    }
+                }
+            });
 
-            AutoSwitchBitrateFor = abrControllerMock.getAutoSwitchBitrateFor('video');
-            expect(AutoSwitchBitrateFor).to.be.false; // jshint ignore:line
+            autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
+
+            expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
         });
 
         it('Method getAverageThroughput should return 0 when throughputHistory is not set up', function () {
@@ -550,10 +535,6 @@ describe('MediaPlayer', function () {
             it('Method setQualityFor should throw an exception', function () {
                 expect(player.setQualityFor).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
-
-            it('Method getInitialBitrateFor should throw an exception', function () {
-                expect(player.getInitialBitrateFor).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
-            });
         });
 
         describe('When it is initialized', function () {
@@ -565,10 +546,10 @@ describe('MediaPlayer', function () {
                 let qualityFor = abrControllerMock.getQualityFor('video', {
                     id: 'dummyId'
                 });
-                expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
+                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
 
                 qualityFor = player.getQualityFor('video');
-                expect(qualityFor).to.equal(AbrControllerMock.QUALITY_DEFAULT);
+                expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
 
                 player.setQualityFor('video', 10);
 
@@ -580,28 +561,13 @@ describe('MediaPlayer', function () {
                 qualityFor = player.getQualityFor('video');
                 expect(qualityFor).to.equal(10);
             });
-
-            it('should configure initial bitrate for type', function () {
-                let initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.be.null; // jshint ignore:line
-
-                initialBitrateFor = player.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.be.null; // jshint ignore:line
-
-                player.setInitialBitrateFor('video', 10);
-
-                initialBitrateFor = abrControllerMock.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.equal(10);
-
-                initialBitrateFor = player.getInitialBitrateFor('video');
-                expect(initialBitrateFor).to.equal(10);
-            });
         });
     });
 
     describe('Media Player Configuration Functions', function () {
         afterEach(function () {
             mediaPlayerModel.reset();
+            settings.reset();
         });
 
         it('should configure autoplay', function () {
@@ -614,104 +580,53 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure LiveDelayFragmentCount', function () {
-            let liveDelayFragmentCount = mediaPlayerModel.getLiveDelayFragmentCount();
+            let liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
             expect(liveDelayFragmentCount).to.equal(4);
 
-            player.setLiveDelayFragmentCount(5);
+            player.updateSettings({'streaming': { 'liveDelayFragmentCount': 5 }});
 
-            liveDelayFragmentCount = mediaPlayerModel.getLiveDelayFragmentCount();
+            liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
             expect(liveDelayFragmentCount).to.equal(5);
         });
 
-        it('should configure LiveDelay', function () {
-            let livedelay = mediaPlayerModel.getLiveDelay();
-            expect(livedelay).to.be.undefined; // jshint ignore:line
-
-            livedelay = player.getLiveDelay();
-            expect(livedelay).to.be.undefined; // jshint ignore:line
-
-            player.setLiveDelay(5);
-
-            livedelay = mediaPlayerModel.getLiveDelay();
-            expect(livedelay).to.equal(5);
-
-            livedelay = player.getLiveDelay();
-            expect(livedelay).to.equal(5);
-        });
-
         it('should configure useSuggestedPresentationDelay', function () {
-            let useSuggestedPresentationDelay = mediaPlayerModel.getUseSuggestedPresentationDelay();
+            let useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
 
-            player.useSuggestedPresentationDelay(true);
+            player.updateSettings({'streaming': { 'useSuggestedPresentationDelay': true }});
 
-            useSuggestedPresentationDelay = mediaPlayerModel.getUseSuggestedPresentationDelay();
+            useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
         });
 
-        it('should configure LastBitrateCachingInfo', function () {
-            let lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-            expect(lastBitrateCachingInfo.enabled).to.be.true; // jshint ignore:line
-            expect(lastBitrateCachingInfo.ttl).to.equal(360000);
-
-            player.enableLastBitrateCaching(false, 10000);
-
-            lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-            expect(lastBitrateCachingInfo.enabled).to.be.false; // jshint ignore:line
-            expect(lastBitrateCachingInfo.ttl).to.equal(10000);
-        });
-
-        it('should configure lastMediaSettingsCaching', function () {
-            let lastMediaSettingsCaching = mediaPlayerModel.getLastMediaSettingsCachingInfo();
-            expect(lastMediaSettingsCaching.enabled).to.be.true; // jshint ignore:line
-            expect(lastMediaSettingsCaching.ttl).to.equal(360000);
-
-            player.enableLastMediaSettingsCaching(false, 10000);
-
-            lastMediaSettingsCaching = mediaPlayerModel.getLastMediaSettingsCachingInfo();
-            expect(lastMediaSettingsCaching.enabled).to.be.false; // jshint ignore:line
-            expect(lastMediaSettingsCaching.ttl).to.equal(10000);
-        });
-
         it('should configure scheduleWhilePaused', function () {
-            let scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
+            let scheduleWhilePaused = player.getSettings().streaming.scheduleWhilePaused;
             expect(scheduleWhilePaused).to.be.true; // jshint ignore:line
 
-            scheduleWhilePaused = player.getScheduleWhilePaused();
-            expect(scheduleWhilePaused).to.be.true; // jshint ignore:line
+            player.updateSettings({'streaming': { 'scheduleWhilePaused': false }});
 
-            player.setScheduleWhilePaused(false);
-
-            scheduleWhilePaused = mediaPlayerModel.getScheduleWhilePaused();
-            expect(scheduleWhilePaused).to.be.false; // jshint ignore:line
-
-            scheduleWhilePaused = player.getScheduleWhilePaused();
+            scheduleWhilePaused = player.getSettings().streaming.scheduleWhilePaused;
             expect(scheduleWhilePaused).to.be.false; // jshint ignore:line
         });
 
         it('should configure fastSwitchEnabled', function () {
-            let fastSwitchEnabled = mediaPlayerModel.getFastSwitchEnabled();
+            let fastSwitchEnabled = player.getSettings().streaming.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
 
-            fastSwitchEnabled = player.getFastSwitchEnabled();
-            expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
+            player.updateSettings({'streaming': { 'fastSwitchEnabled': true }});
 
-            player.setFastSwitchEnabled(true);
-
-            fastSwitchEnabled = mediaPlayerModel.getFastSwitchEnabled();
-            expect(fastSwitchEnabled).to.be.true; // jshint ignore:line
-
-            fastSwitchEnabled = player.getFastSwitchEnabled();
+            fastSwitchEnabled = player.getSettings().streaming.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.true; // jshint ignore:line
         });
 
         it('should configure useDefaultABRRules', function () {
-            let useDefaultABRRules = mediaPlayerModel.getUseDefaultABRRules();
+            let useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
             expect(useDefaultABRRules).to.be.true; // jshint ignore:line
 
-            player.useDefaultABRRules(false);
+            player.updateSettings({'streaming': { 'abr': { 'useDefaultABRRules': false }}});
 
-            useDefaultABRRules = mediaPlayerModel.getUseDefaultABRRules();
+
+            useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
             expect(useDefaultABRRules).to.be.false; // jshint ignore:line
         });
 
@@ -766,197 +681,154 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure useManifestDateHeaderTimeSource', function () {
-            let useManifestDateHeaderTimeSource = mediaPlayerModel.getUseManifestDateHeaderTimeSource();
+            let useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.true; // jshint ignore:line
 
-            player.enableManifestDateHeaderTimeSource(false);
+            player.updateSettings({'streaming': { 'useManifestDateHeaderTimeSource': false }});
 
-            useManifestDateHeaderTimeSource = mediaPlayerModel.getUseManifestDateHeaderTimeSource();
+            useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.false; // jshint ignore:line
         });
 
         it('should configure BufferToKeep', function () {
-            let BufferToKeep = mediaPlayerModel.getBufferToKeep();
+            let BufferToKeep = player.getSettings().streaming.bufferToKeep;
             expect(BufferToKeep).to.equal(20);
 
-            player.setBufferToKeep(50);
+            player.updateSettings({'streaming': { 'bufferToKeep': 50 }});
 
-            BufferToKeep = mediaPlayerModel.getBufferToKeep();
+            BufferToKeep = player.getSettings().streaming.bufferToKeep;
             expect(BufferToKeep).to.equal(50);
         });
 
         it('should configure BufferPruningInterval', function () {
-            let BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
+            let BufferPruningInterval = player.getSettings().streaming.bufferPruningInterval;
             expect(BufferPruningInterval).to.equal(10);
 
-            player.setBufferPruningInterval(50);
+            player.updateSettings({'streaming': { 'bufferPruningInterval': 50 }});
 
-            BufferPruningInterval = mediaPlayerModel.getBufferPruningInterval();
+            BufferPruningInterval = player.getSettings().streaming.bufferPruningInterval;
             expect(BufferPruningInterval).to.equal(50);
         });
 
         it('should configure StableBufferTime', function () {
-            let StableBufferTime = mediaPlayerModel.getStableBufferTime();
-            expect(StableBufferTime).to.equal(12); // fast switch enabled
-
-            player.setStableBufferTime(50);
-
-            StableBufferTime = mediaPlayerModel.getStableBufferTime();
-            expect(StableBufferTime).to.equal(50);
+            let StableBufferTime = player.getSettings().streaming.stableBufferTime;
+            expect(StableBufferTime).to.equal(12);
         });
 
         it('should configure BufferTimeAtTopQuality', function () {
-            let BufferTimeAtTopQuality = mediaPlayerModel.getBufferTimeAtTopQuality();
+            let BufferTimeAtTopQuality = player.getSettings().streaming.bufferTimeAtTopQuality;
             expect(BufferTimeAtTopQuality).to.equal(30);
 
-            player.setBufferTimeAtTopQuality(50);
+            player.updateSettings({'streaming': { 'bufferTimeAtTopQuality': 50 }});
 
-            BufferTimeAtTopQuality = mediaPlayerModel.getBufferTimeAtTopQuality();
+            BufferTimeAtTopQuality = player.getSettings().streaming.bufferTimeAtTopQuality;
             expect(BufferTimeAtTopQuality).to.equal(50);
         });
 
         it('should configure BufferTimeAtTopQualityLongForm', function () {
-            let BufferTimeAtTopQualityLongForm = mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
-            expect(BufferTimeAtTopQualityLongForm).to.equal(60);
+            let bufferTimeAtTopQualityLongForm = player.getSettings().streaming.bufferTimeAtTopQualityLongForm;
+            expect(bufferTimeAtTopQualityLongForm).to.equal(60);
 
-            player.setBufferTimeAtTopQualityLongForm(50);
+            player.updateSettings({'streaming': { 'bufferTimeAtTopQualityLongForm': 50 }});
 
-            BufferTimeAtTopQualityLongForm = mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
-            expect(BufferTimeAtTopQualityLongForm).to.equal(50);
+            bufferTimeAtTopQualityLongForm = player.getSettings().streaming.bufferTimeAtTopQualityLongForm;
+            expect(bufferTimeAtTopQualityLongForm).to.equal(50);
         });
 
         it('should configure LongFormContentDurationThreshold', function () {
-            let LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
+            let LongFormContentDurationThreshold = player.getSettings().streaming.longFormContentDurationThreshold;
             expect(LongFormContentDurationThreshold).to.equal(600);
 
-            player.setLongFormContentDurationThreshold(50);
+            player.updateSettings({'streaming': { 'longFormContentDurationThreshold': 50 }});
 
-            LongFormContentDurationThreshold = mediaPlayerModel.getLongFormContentDurationThreshold();
+            LongFormContentDurationThreshold = player.getSettings().streaming.longFormContentDurationThreshold;
             expect(LongFormContentDurationThreshold).to.equal(50);
         });
 
         it('should configure setSegmentOverlapToleranceTime', function () {
-            let val = mediaPlayerModel.getSegmentOverlapToleranceTime();
-            expect(val).to.equal(0.05);
+            let val = player.getSettings().streaming.segmentOverlapToleranceTime;
+            expect(val).to.equal(0.2);
 
-            player.setSegmentOverlapToleranceTime(1.5);
-            val = mediaPlayerModel.getSegmentOverlapToleranceTime();
+            player.updateSettings({'streaming': { 'segmentOverlapToleranceTime': 1.5 }});
+
+            val = player.getSettings().streaming.segmentOverlapToleranceTime;
             expect(val).to.equal(1.5);
         });
 
         it('should configure cacheLoadThresholds', function () {
-            let cacheLoadThresholdForVideo = mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            let cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(50);
 
-            player.setCacheLoadThresholdForType(Constants.VIDEO, 10);
+            player.updateSettings({'streaming': { 'cacheLoadThresholds': { 'video': 10 } }});
 
-            cacheLoadThresholdForVideo = mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(10);
 
-            let cacheLoadThresholdForAudio = mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            let cacheLoadThresholdForAudio = player.getSettings().streaming.cacheLoadThresholds[Constants.AUDIO];
             expect(cacheLoadThresholdForAudio).to.equal(5);
 
-            player.setCacheLoadThresholdForType(Constants.AUDIO, 2);
+            player.updateSettings({'streaming': { 'cacheLoadThresholds': { 'audio': 2 } }});
 
-            cacheLoadThresholdForAudio = mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            cacheLoadThresholdForAudio = player.getSettings().streaming.cacheLoadThresholds[Constants.AUDIO];
             expect(cacheLoadThresholdForAudio).to.equal(2);
         });
 
         it('should configure jumpGap feature', function () {
-            let jumpGaps = mediaPlayerModel.getJumpGaps();
+            let jumpGaps = player.getSettings().streaming.jumpGaps;
             expect(jumpGaps).to.equal(false);
 
-            player.setJumpGaps(true);
+            player.updateSettings({'streaming': { 'jumpGaps': true }});
 
-            jumpGaps = mediaPlayerModel.getJumpGaps();
+            jumpGaps = player.getSettings().streaming.jumpGaps;
             expect(jumpGaps).to.equal(true);
 
-            let smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            let smallGapLimit = player.getSettings().streaming.smallGapLimit;
             expect(smallGapLimit).to.equal(0.8);
 
-            player.setSmallGapLimit(0.5);
+            player.updateSettings({'streaming': { 'smallGapLimit': 0.5 }});
 
-            smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+            smallGapLimit = player.getSettings().streaming.smallGapLimit;
             expect(smallGapLimit).to.equal(0.5);
         });
 
         it('should configure manifestUpdateRetryInterval', function () {
-            let manifestUpdateRetryInterval = player.getManifestUpdateRetryInterval();
-            expect(manifestUpdateRetryInterval).to.equal(MediaPlayerModelMock.MANIFEST_UPDATE_RETRY_INTERVAL);
+            let manifestUpdateRetryInterval = player.getSettings().streaming.manifestUpdateRetryInterval;
+            expect(manifestUpdateRetryInterval).to.equal(100);
 
-            player.setManifestUpdateRetryInterval(200);
+            player.updateSettings({'streaming': { 'manifestUpdateRetryInterval': 200 }});
 
-            manifestUpdateRetryInterval = mediaPlayerModel.getManifestUpdateRetryInterval();
-            expect(manifestUpdateRetryInterval).to.equal(200);
-
-            manifestUpdateRetryInterval = player.getManifestUpdateRetryInterval();
+            manifestUpdateRetryInterval = player.getSettings().streaming.manifestUpdateRetryInterval;
             expect(manifestUpdateRetryInterval).to.equal(200);
         });
 
         it('should configure BandwidthSafetyFactor', function () {
-            let BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
-            expect(BandwidthSafetyFactor).to.equal(0.9);
+            let bandwidthSafetyFactor = player.getSettings().streaming.abr.bandwidthSafetyFactor;
+            expect(bandwidthSafetyFactor).to.equal(0.9);
 
-            BandwidthSafetyFactor = player.getBandwidthSafetyFactor();
-            expect(BandwidthSafetyFactor).to.equal(0.9);
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'bandwidthSafetyFactor': 0.1
+                    }
+                }
+            });
 
-            player.setBandwidthSafetyFactor(0.1);
-
-            BandwidthSafetyFactor = mediaPlayerModel.getBandwidthSafetyFactor();
-            expect(BandwidthSafetyFactor).to.equal(0.1);
-
-            BandwidthSafetyFactor = player.getBandwidthSafetyFactor();
-            expect(BandwidthSafetyFactor).to.equal(0.1);
+            bandwidthSafetyFactor = player.getSettings().streaming.abr.bandwidthSafetyFactor;
+            expect(bandwidthSafetyFactor).to.equal(0.1);
         });
 
         it('should configure AbandonLoadTimeout', function () {
-            let AbandonLoadTimeout = mediaPlayerModel.getAbandonLoadTimeout();
+            let AbandonLoadTimeout = player.getSettings().streaming.abandonLoadTimeout;
             expect(AbandonLoadTimeout).to.equal(10000);
 
-            player.setAbandonLoadTimeout(50);
+            player.updateSettings({
+                'streaming': {
+                    'abandonLoadTimeout': 50
+                }
+            });
 
-            AbandonLoadTimeout = mediaPlayerModel.getAbandonLoadTimeout();
+            AbandonLoadTimeout = player.getSettings().streaming.abandonLoadTimeout;
             expect(AbandonLoadTimeout).to.equal(50);
-        });
-
-        it('should configure FragmentLoaderRetryAttempts', function () {
-            let FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MediaSegment');
-            expect(FragmentLoaderRetryAttempts).to.equal(3);
-
-            player.setFragmentLoaderRetryAttempts(50);
-
-            FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MediaSegment');
-            expect(FragmentLoaderRetryAttempts).to.equal(50);
-        });
-
-        it('should configure FragmentLoaderRetryInterval', function () {
-            let FragmentLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MediaSegment');
-            expect(FragmentLoaderRetryInterval).to.equal(1000);
-
-            player.setFragmentLoaderRetryInterval(50);
-
-            FragmentLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MediaSegment');
-            expect(FragmentLoaderRetryInterval).to.equal(50);
-        });
-
-        it('should configure ManifestLoaderRetryAttempts', function () {
-            let ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MPD');
-            expect(ManifestLoaderRetryAttempts).to.equal(3);
-
-            player.setManifestLoaderRetryAttempts(50);
-
-            ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType('MPD');
-            expect(ManifestLoaderRetryAttempts).to.equal(50);
-        });
-
-        it('should configure ManifestLoaderRetryInterval', function () {
-            let ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
-            expect(ManifestLoaderRetryInterval).to.equal(500);
-
-            player.setManifestLoaderRetryInterval(50);
-
-            ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalForType('MPD');
-            expect(ManifestLoaderRetryInterval).to.equal(50);
         });
 
         it('should configure XHRWithCredentials', function () {
@@ -1198,14 +1070,6 @@ describe('MediaPlayer', function () {
             it('Method getDashMetrics should return dash metrics', function () {
                 const metricsExt = player.getDashMetrics();
                 expect(metricsExt).to.exist; // jshint ignore:line
-            });
-
-            it('Method getMetricsFor should return no metrics', function () {
-                const audioMetrics = player.getMetricsFor('audio');
-                const videoMetrics = player.getMetricsFor('video');
-
-                expect(audioMetrics).to.be.null; // jshint ignore:line
-                expect(videoMetrics).to.be.null; // jshint ignore:line
             });
         });
     });

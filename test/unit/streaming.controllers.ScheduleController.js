@@ -8,8 +8,8 @@ import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
 import AdapterMock from './mocks/AdapterMock';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 const context = {};
@@ -32,6 +32,7 @@ describe('ScheduleController', function () {
     let streamControllerMock;
     let dashMetricsMock;
     let metricsModelMock;
+    const settings = Settings(context).getInstance();
 
     beforeEach(function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
@@ -41,7 +42,6 @@ describe('ScheduleController', function () {
         abrControllerMock = new AbrControllerMock();
         streamControllerMock = new StreamControllerMock();
         dashMetricsMock = new DashMetricsMock();
-        metricsModelMock = new MetricsModelMock();
 
         scheduleController = ScheduleController(context).create({
             type: testType,
@@ -52,13 +52,15 @@ describe('ScheduleController', function () {
             abrController: abrControllerMock,
             streamController: streamControllerMock,
             dashMetrics: dashMetricsMock,
-            metricsModel: metricsModelMock
+            metricsModel: metricsModelMock,
+            settings: settings
         });
 
         scheduleController.initialize();
     });
 
     afterEach(function () {
+        settings.reset();
         scheduleController.reset();
         scheduleController = null;
     });

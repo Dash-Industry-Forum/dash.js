@@ -35,13 +35,25 @@
             firstLoad = false;
             var url =  document.getElementById("manifest").value;
             player = dashjs.MediaPlayer().create();
-            player.getDebug().setLogToBrowserConsole(false);
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
+
             switch (document.querySelector('input[name="delay"]:checked').value) {
                 case "segments":
-                    player.setLiveDelayFragmentCount(document.querySelector("#delayInFragments").value);
+                    player.updateSettings({
+                        'streaming':
+                        {
+                            'liveDelayFragmentCount': document.querySelector("#delayInFragments").value
+                        }
+                    });
+
                     break;
                 case "time":
-                    player.setLiveDelay(document.querySelector("#delayInSeconds").value);
+                    player.updateSettings({
+                        'streaming':
+                        {
+                            'liveDelay': document.querySelector("#delayInSeconds").value
+                        }
+                    });
                     break;
             }
             player.initialize(document.querySelector("video"), url, true);

@@ -31,6 +31,7 @@
 import EventBus from './EventBus';
 import Events from './events/Events';
 import FactoryMaker from './FactoryMaker';
+import Settings from './Settings';
 
 const LOG_LEVEL_NONE = 0;
 const LOG_LEVEL_FATAL = 1;
@@ -46,19 +47,18 @@ function Debug() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     const logFn = [];
 
     let instance,
         showLogTimestamp,
         showCalleeName,
-        startTime,
-        logLevel;
+        startTime;
 
     function setup() {
         showLogTimestamp = true;
         showCalleeName = true;
-        logLevel = LOG_LEVEL_WARNING;
         startTime = new Date().getTime();
 
         if (typeof window !== 'undefined' && window.console) {
@@ -125,7 +125,8 @@ function Debug() {
      * @instance
      */
     function setLogLevel(value) {
-        logLevel = value;
+        const s = { debug: { logLevel: value }};
+        settings.update(s);
     }
 
     /**
@@ -134,7 +135,7 @@ function Debug() {
      * @instance
      */
     function getLogLevel() {
-        return logLevel;
+        return settings.get().debug.logLevel;
     }
 
     /**
@@ -167,11 +168,13 @@ function Debug() {
      */
     function setLogToBrowserConsole(value) {
         // Replicate functionality previous to log levels feature
+        let s;
         if (value) {
-            logLevel = LOG_LEVEL_DEBUG;
+            s = { debug: { logLevel: LOG_LEVEL_DEBUG }};
         } else {
-            logLevel = LOG_LEVEL_NONE;
+            s = { debug: { logLevel: LOG_LEVEL_NONE }};
         }
+        settings.update(s);
     }
     /**
      * Use this method to get the state of logToBrowserConsole.
@@ -181,7 +184,7 @@ function Debug() {
      * @deprecated
      */
     function getLogToBrowserConsole() {
-        return logLevel !== LOG_LEVEL_NONE;
+        return settings.get().debug.logLevel !== LOG_LEVEL_NONE;
     }
 
     function fatal(...params) {
@@ -229,7 +232,7 @@ function Debug() {
         });
 
         // log to console if the log level is high enough
-        if (logFn[level] && logLevel >= level) {
+        if (logFn[level] && settings.get().debug.logLevel >= level) {
             logFn[level](message);
         }
 

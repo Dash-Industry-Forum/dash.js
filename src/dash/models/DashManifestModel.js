@@ -193,7 +193,7 @@ function DashManifestModel() {
     }
 
     function processAdaptation(realAdaptation) {
-        if (realAdaptation && realAdaptation.Representation_asArray !== undefined && realAdaptation.Representation_asArray !== null) {
+        if (realAdaptation && Array.isArray(realAdaptation.Representation_asArray)) {
             realAdaptation.Representation_asArray.sort(getRepresentationSortFunction());
         }
 
@@ -287,7 +287,7 @@ function DashManifestModel() {
     }
 
     function getLabelsForAdaptation(adaptation) {
-        if (!adaptation.Label_asArray || !adaptation.Label_asArray.length) {
+        if (!adaptation || !Array.isArray(adaptation.Label_asArray)) {
             return [];
         }
 
@@ -334,6 +334,8 @@ function DashManifestModel() {
         //If the attribute is not present, the duration of the Media Presentation is unknown.
         if (manifest && manifest.hasOwnProperty(DashConstants.MEDIA_PRESENTATION_DURATION)) {
             mpdDuration = manifest.mediaPresentationDuration;
+        } else if (manifest && manifest.type == 'dynamic') {
+            mpdDuration = Number.POSITIVE_INFINITY;
         } else {
             mpdDuration = Number.MAX_SAFE_INTEGER || Number.MAX_VALUE;
         }
@@ -354,14 +356,12 @@ function DashManifestModel() {
     }
 
     function getRepresentationCount(adaptation) {
-        return adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length ? adaptation.Representation_asArray.length : 0;
+        return adaptation && Array.isArray(adaptation.Representation_asArray) ? adaptation.Representation_asArray.length : 0;
     }
 
     function getBitrateListForAdaptation(realAdaptation) {
-        if (!realAdaptation || !realAdaptation.Representation_asArray || !realAdaptation.Representation_asArray.length) return null;
-
         const processedRealAdaptation = processAdaptation(realAdaptation);
-        const realRepresentations = processedRealAdaptation.Representation_asArray;
+        const realRepresentations = processedRealAdaptation && Array.isArray(processedRealAdaptation.Representation_asArray) ? processedRealAdaptation.Representation_asArray : [];
 
         return realRepresentations.map((realRepresentation) => {
             return {
@@ -405,7 +405,7 @@ function DashManifestModel() {
 
     function getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation) {
         let realAdaptation = getRealAdaptationFor(voAdaptation);
-        let realRepresentation = realAdaptation ? realAdaptation.Representation_asArray[0] : null;
+        let realRepresentation = realAdaptation && Array.isArray(realAdaptation.Representation_asArray) ? realAdaptation.Representation_asArray[0] : null;
         let segmentInfo;
         if (realRepresentation) {
             if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
@@ -430,18 +430,17 @@ function DashManifestModel() {
         let segmentInfo,
             baseUrl;
 
-        // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
-        // that we are processing. Making it works properly will require much further changes and given
-        // parsing base Urls parameters is needed for our ultra low latency examples, we will
-        // keep this "tricky" code until the real (and good) solution comes
-        if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
-            const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
-            if (baseUrls) {
-                baseUrl = baseUrls[0];
-            }
-        }
-
         if (processedRealAdaptation && processedRealAdaptation.Representation_asArray) {
+            // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
+            // that we are processing. Making it works properly will require much further changes and given
+            // parsing base Urls parameters is needed for our ultra low latency examples, we will
+            // keep this "tricky" code until the real (and good) solution comes
+            if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
+                const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
+                if (baseUrls) {
+                    baseUrl = baseUrls[0];
+                }
+            }
             for (let i = 0, len = processedRealAdaptation.Representation_asArray.length; i < len; ++i) {
                 const realRepresentation = processedRealAdaptation.Representation_asArray[i];
                 const voRepresentation = new Representation();
@@ -508,11 +507,13 @@ function DashManifestModel() {
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
-                        let initialization = segmentInfo.Initialization;
+                        const initialization = segmentInfo.Initialization;
 
                         if (initialization.hasOwnProperty(DashConstants.SOURCE_URL)) {
                             voRepresentation.initialization = initialization.sourceURL;
-                        } else if (initialization.hasOwnProperty(DashConstants.RANGE)) {
+                        }
+
+                        if (initialization.hasOwnProperty(DashConstants.RANGE)) {
                             voRepresentation.range = initialization.range;
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
@@ -713,7 +714,9 @@ function DashManifestModel() {
             if (manifest.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME)) {
                 mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
             } else {
-                mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
+                if (manifest.loadedTime) {
+                    mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
+                }
             }
 
             if (manifest.hasOwnProperty(DashConstants.AVAILABILITY_END_TIME)) {

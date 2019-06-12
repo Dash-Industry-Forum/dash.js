@@ -38,7 +38,7 @@ function DVBErrorsTranslator(config) {
     let instance,
         mpd;
     const eventBus = config.eventBus;
-    const metricModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const metricsConstants = config.metricsConstants;
     //MediaPlayerEvents have been added to Events in MediaPlayer class
     const Events = config.events;
@@ -64,7 +64,7 @@ function DVBErrorsTranslator(config) {
             o.terror = new Date();
         }
 
-        metricModel.addDVBErrors(o);
+        dashMetrics.addDVBErrors(o);
     }
 
     function onManifestUpdate(e) {

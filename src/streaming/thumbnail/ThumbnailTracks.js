@@ -49,7 +49,7 @@ function ThumbnailTracks(config) {
     const baseURLController = config.baseURLController;
     const stream = config.stream;
     const timelineConverter = config.timelineConverter;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
 
@@ -67,7 +67,7 @@ function ThumbnailTracks(config) {
         segmentBaseLoader = SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
             baseURLController: baseURLController,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler
         });

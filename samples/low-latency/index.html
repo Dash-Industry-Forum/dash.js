@@ -19,7 +19,7 @@
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            player.setLowLatencyEnabled(true);
+            player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true }});
 
             applyParameters();
 
@@ -28,13 +28,16 @@
 
         function applyParameters() {
             targetLatency = parseFloat(document.getElementById("target-latency").value, 10);
-            player.setLiveDelay(targetLatency);
-
             minDrift = parseFloat(document.getElementById("min-drift").value, 10);
-            player.setLowLatencyMinDrift(minDrift);
-
             catchupPlaybackRate = parseFloat(document.getElementById("catchup-playback-rate").value, 10);
-            player.setCatchUpPlaybackRate(catchupPlaybackRate);
+
+            player.updateSettings({
+                'streaming': {
+                    'liveDelay': targetLatency,
+                    'liveCatchUpMinDrift': minDrift,
+                    'liveCatchUpPlaybackRate': catchupPlaybackRate
+                }
+            });
         }
     </script>
 
@@ -58,7 +61,7 @@
         }
 
         input {
-            width: 3em;
+            width: 5em;
             border: 1px solid gray;
             padding: 0 4px 0 8px;
         }
@@ -139,19 +142,18 @@
         var player = init();
 
         setInterval(function() {
-            var metrics = player.getMetricsFor("video");
             var dashMetrics = player.getDashMetrics();
+            var settings = player.getSettings();
 
             var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
             document.getElementById("latency-tag").innerHTML = currentLatency + " secs";
 
-            var currentMinDrift = parseFloat(player.getLowLatencyMinDrift(), 10);
-            document.getElementById("mindrift-tag").innerHTML = currentMinDrift + " secs";
+            document.getElementById("mindrift-tag").innerHTML = settings.streaming.liveCatchUpMinDrift + " secs";
 
             var currentPlaybackRate = player.getPlaybackRate();
             document.getElementById("playbackrate-tag").innerHTML = Math.round(currentPlaybackRate * 100) / 100;
 
-            var currentBuffer = dashMetrics.getCurrentBufferLevel(metrics);
+            var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
             document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
         }, 200);
     });

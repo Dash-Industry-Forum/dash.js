@@ -47,7 +47,7 @@ function FragmentController( config ) {
 
     const errHandler = config.errHandler;
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
 
     let instance,
         logger,
@@ -64,12 +64,13 @@ function FragmentController( config ) {
         let model = fragmentModels[type];
         if (!model) {
             model = FragmentModel(context).create({
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 fragmentLoader: FragmentLoader(context).create({
-                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
-                    requestModifier: RequestModifier(context).getInstance()
+                    requestModifier: RequestModifier(context).getInstance(),
+                    settings: config.settings
                 })
             });
 

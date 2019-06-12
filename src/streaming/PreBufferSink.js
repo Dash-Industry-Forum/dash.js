@@ -121,6 +121,10 @@ function PreBufferSink(onAppendedCallback) {
         // Nothing to do
     }
 
+    function getBuffer() {
+        return this;
+    }
+
     /**
      * Return the all chunks in the buffer the lie between times start and end.
      * Because a chunk cannot be split, this returns the full chunk if any part of its time lies in the requested range.
@@ -146,6 +150,10 @@ function PreBufferSink(onAppendedCallback) {
         return chunks.filter( a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)) );
     }
 
+    function waitForUpdateEnd(callback) {
+        callback();
+    }
+
     instance = {
         getAllBufferRanges: getAllBufferRanges,
         append: append,
@@ -154,7 +162,9 @@ function PreBufferSink(onAppendedCallback) {
         discharge: discharge,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
-        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
+        waitForUpdateEnd: waitForUpdateEnd,
+        getBuffer: getBuffer
     };
 
     setup();

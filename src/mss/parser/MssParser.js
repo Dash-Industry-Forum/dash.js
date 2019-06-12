@@ -42,10 +42,10 @@ function MssParser(config) {
 
     const DEFAULT_TIME_SCALE = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
-    // MPEG-DASH Role and accessibility mapping according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
+    // MPEG-DASH Role and accessibility mapping for text tracks according to ETSI TS 103 285 v1.1.1 (section 7.1.2)
     const ROLE = {
+        'CAPT': 'main',
         'SUBT': 'alternate',
-        'CAPT': 'alternate', // 'CAPT' is commonly equivalent to 'SUBT'
         'DESC': 'main'
     };
     const ACCESSIBILITY = {
@@ -121,7 +121,7 @@ function MssParser(config) {
         adaptationSet.maxWidth = streamIndex.getAttribute('MaxWidth');
         adaptationSet.maxHeight = streamIndex.getAttribute('MaxHeight');
 
-        // Map subTypes to MPEG-DASH AdaptationSet role and accessibility (see ETSI TS 103 285 v1.1.1, section 7.1.2)
+        // Map text tracks subTypes to MPEG-DASH AdaptationSet role and accessibility (see ETSI TS 103 285 v1.1.1, section 7.1.2)
         if (adaptationSet.subType) {
             if (ROLE[adaptationSet.subType]) {
                 let role = {
@@ -314,10 +314,12 @@ function MssParser(config) {
     function mapSegmentTemplate(streamIndex, timescale) {
         const segmentTemplate = {};
         let mediaUrl,
-            streamIndexTimeScale;
+            streamIndexTimeScale,
+            url;
 
-        mediaUrl = streamIndex.getAttribute('Url').replace('{bitrate}', '$Bandwidth$');
-        mediaUrl = mediaUrl.replace('{start time}', '$Time$');
+        url = streamIndex.getAttribute('Url');
+        mediaUrl = url ? url.replace('{bitrate}', '$Bandwidth$') : null;
+        mediaUrl = mediaUrl ? mediaUrl.replace('{start time}', '$Time$') : null;
 
         streamIndexTimeScale = streamIndex.getAttribute('TimeScale');
         streamIndexTimeScale = streamIndexTimeScale ? parseFloat(streamIndexTimeScale) : timescale;
@@ -425,21 +427,23 @@ function MssParser(config) {
         // Get Right Management header (WRMHEADER) from PlayReady header
         wrmHeader = getWRMHeaderFromPRHeader(prHeader);
 
-        // Convert from multi-byte to unicode
-        wrmHeader = new Uint16Array(wrmHeader.buffer);
+        if (wrmHeader) {
+            // Convert from multi-byte to unicode
+            wrmHeader = new Uint16Array(wrmHeader.buffer);
 
-        // Convert to string
-        wrmHeader = String.fromCharCode.apply(null, wrmHeader);
+            // Convert to string
+            wrmHeader = String.fromCharCode.apply(null, wrmHeader);
 
-        // Parse <WRMHeader> to get KID field value
-        xmlReader = (new DOMParser()).parseFromString(wrmHeader, 'application/xml');
-        KID = xmlReader.querySelector('KID').textContent;
+            // Parse <WRMHeader> to get KID field value
+            xmlReader = (new DOMParser()).parseFromString(wrmHeader, 'application/xml');
+            KID = xmlReader.querySelector('KID').textContent;
 
-        // Get KID (base64 decoded) as byte array
-        KID = BASE64.decodeArray(KID);
+            // Get KID (base64 decoded) as byte array
+            KID = BASE64.decodeArray(KID);
 
-        // Convert UUID from little-endian to big-endian
-        convertUuidEndianness(KID);
+            // Convert UUID from little-endian to big-endian
+            convertUuidEndianness(KID);
+        }
 
         return KID;
     }
@@ -512,7 +516,13 @@ function MssParser(config) {
         };
     }
 
-    function createWidevineContentProtection(protectionHeader, KID) {
+    function createWidevineContentProtection(KID) {
+        let widevineCP = {
+            schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
+            value: 'com.widevine.alpha'
+        };
+        if (!KID)
+            return widevineCP;
         // Create Widevine CENC header (Protocol Buffer) with KID value
         const wvCencHeader = new Uint8Array(2 + KID.length);
         wvCencHeader[0] = 0x12;
@@ -551,13 +561,9 @@ function MssParser(config) {
         pssh = String.fromCharCode.apply(null, pssh);
         pssh = BASE64.encodeASCII(pssh);
 
-        return {
-            schemeIdUri: 'urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
-            value: 'com.widevine.alpha',
-            pssh: {
-                __text: pssh
-            }
-        };
+        widevineCP.pssh = { __text: pssh };
+
+        return widevineCP;
     }
 
     function processManifest(xmlDoc, manifestLoadedTime) {
@@ -644,7 +650,7 @@ function MssParser(config) {
             contentProtections.push(contentProtection);
 
             // Create ContentProtection for Widevine (as a CENC protection)
-            contentProtection = createWidevineContentProtection(protectionHeader, KID);
+            contentProtection = createWidevineContentProtection(KID);
             contentProtection['cenc:default_KID'] = KID;
             contentProtections.push(contentProtection);
 

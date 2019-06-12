@@ -1,5 +1,5 @@
 import DashHandler from '../../src/dash/DashHandler';
-
+import Constants from '../../src/streaming/constants/Constants';
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -12,7 +12,7 @@ describe('DashHandler', function () {
 
     // Arrange
     const context = {};
-    const testType = 'video';
+    const testType = Constants.VIDEO;
 
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
@@ -49,6 +49,18 @@ describe('DashHandler', function () {
 
     it('should return null when trying to get a media segment with no representation', () => {
         const mediaSegment = dashHandler.getSegmentRequestForTime();
+
+        expect(mediaSegment).to.be.null; // jshint ignore:line
+    });
+
+    it('should return null when trying to get a media segment with an empty representation parameter', () => {
+        const mediaSegment = dashHandler.getSegmentRequestForTime({});
+
+        expect(mediaSegment).to.be.null; // jshint ignore:line
+    });
+
+    it('should return null when trying to get next a media segment with no representation', () => {
+        const mediaSegment = dashHandler.getNextSegmentRequest();
 
         expect(mediaSegment).to.be.null; // jshint ignore:line
     });

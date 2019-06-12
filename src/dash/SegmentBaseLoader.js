@@ -51,7 +51,7 @@ function SegmentBaseLoader() {
         errHandler,
         boxParser,
         requestModifier,
-        metricsModel,
+        dashMetrics,
         mediaPlayerModel,
         httpLoader,
         baseURLController;
@@ -65,7 +65,7 @@ function SegmentBaseLoader() {
         requestModifier = RequestModifier(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
@@ -76,8 +76,8 @@ function SegmentBaseLoader() {
             baseURLController = config.baseURLController;
         }
 
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
         }
 
         if (config.mediaPlayerModel) {
@@ -98,7 +98,7 @@ function SegmentBaseLoader() {
     function loadInitialization(representation, loadingInfo) {
         checkConfig();
         let initRange = null;
-        const baseUrl = baseURLController.resolve(representation.path);
+        const baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         const info = loadingInfo || {
             init: true,
             url: baseUrl ? baseUrl.url : undefined,
@@ -108,7 +108,8 @@ function SegmentBaseLoader() {
             },
             searching: false,
             bytesLoaded: 0,
-            bytesToLoad: 1500
+            bytesToLoad: 1500,
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         logger.debug('Start searching for initialization.');
@@ -150,14 +151,15 @@ function SegmentBaseLoader() {
         let isoFile = null;
         let sidx = null;
         const hasRange = !!range;
-        const baseUrl = baseURLController.resolve(representation.path);
+        const baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         const info = {
             init: false,
             url: baseUrl ? baseUrl.url : undefined,
             range: hasRange ? range : { start: 0, end: 1500 },
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
-            bytesToLoad: 1500
+            bytesToLoad: 1500,
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         const request = getFragmentRequest(info);
@@ -292,6 +294,7 @@ function SegmentBaseLoader() {
         request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.url = info.url;
         request.range = info.range.start + '-' + info.range.end;
+        request.mediaType = info.mediaType;
 
         return request;
     }

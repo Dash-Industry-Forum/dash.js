@@ -48,6 +48,15 @@
     float: right;
 }
 
+.live-icon {
+    cursor: pointer;
+}
+.live-icon.live{
+    color:red !important;
+    pointer-events: none;
+    cursor: default;
+}
+
 .btn-play-pause{
     float: left;
     padding:9px 10px;

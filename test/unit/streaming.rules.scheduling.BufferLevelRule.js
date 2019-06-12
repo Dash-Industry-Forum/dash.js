@@ -3,19 +3,22 @@ import BufferLevelRule from '../../src/streaming/rules/scheduling/BufferLevelRul
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import TextControllerMock from './mocks/TextControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
-import MetricsModelMock from './mocks/MetricsModelMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 
 const context = {};
 const textControllerMock = new TextControllerMock();
-const bufferLevelRule = BufferLevelRule(context).create({textController: textControllerMock,
-                                                         dashMetrics: new DashMetricsMock(),
-                                                         metricsModel: new MetricsModelMock(),
-                                                         abrController: new AbrControllerMock(),
-                                                         mediaPlayerModel: new MediaPlayerModelMock()});
+const settings = Settings(context).getInstance();
+const bufferLevelRule = BufferLevelRule(context).create({
+    textController: textControllerMock,
+    dashMetrics: new DashMetricsMock(),
+    abrController: new AbrControllerMock(),
+    mediaPlayerModel: new MediaPlayerModelMock(),
+    settings: settings
+});
 
 describe('BufferLevelRule', function () {
     const testAudioType = 'audio';
@@ -23,6 +26,11 @@ describe('BufferLevelRule', function () {
     const streamInfo = {
         id: 'id'
     };
+
+    afterEach(function () {
+        settings.reset();
+    });
+
     it('should return NaN if streamProcessor is undefined', function () {
         const result = bufferLevelRule.getBufferTarget();
 

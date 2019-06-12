@@ -57,8 +57,8 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
+    let settings = config.settings;
 
     let instance,
         mediaInfo,
@@ -86,10 +86,10 @@ function StreamProcessor(config) {
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
-            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
 
         // initialize controllers
@@ -103,7 +103,6 @@ function StreamProcessor(config) {
         scheduleController = ScheduleController(context).create({
             type: type,
             mimeType: mimeType,
-            metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
             timelineConverter: timelineConverter,
@@ -113,12 +112,12 @@ function StreamProcessor(config) {
             streamController: streamController,
             textController: textController,
             streamProcessor: instance,
-            mediaController: mediaController
+            mediaController: mediaController,
+            settings: settings
         });
         representationController = RepresentationController(context).create();
         representationController.setConfig({
             abrController: abrController,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             manifestModel: manifestModel,
             playbackController: playbackController,
@@ -335,7 +334,7 @@ function StreamProcessor(config) {
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
                 type: type,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 errHandler: errHandler,
@@ -345,13 +344,14 @@ function StreamProcessor(config) {
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
-                streamProcessor: instance
+                streamProcessor: instance,
+                settings: settings
             });
         } else {
             controller = TextBufferController(context).create({
                 type: type,
                 mimeType: mimeType,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 errHandler: errHandler,
@@ -361,7 +361,8 @@ function StreamProcessor(config) {
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
-                streamProcessor: instance
+                streamProcessor: instance,
+                settings: settings
             });
         }
 

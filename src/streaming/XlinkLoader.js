@@ -47,7 +47,7 @@ function XlinkLoader(config) {
 
     let httpLoader = HTTPLoader(context).create({
         errHandler: config.errHandler,
-        metricsModel: config.metricsModel,
+        dashMetrics: config.dashMetrics,
         mediaPlayerModel: config.mediaPlayerModel,
         requestModifier: config.requestModifier
     });

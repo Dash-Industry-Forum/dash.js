@@ -20,32 +20,32 @@ Debug files are not compressed or obfuscated making the file size much larger co
                 video = document.querySelector("#video1");
                 player1 = dashjs.MediaPlayer().create();
                 player1.initialize(video,MPD_2S_SEGMENTS ,true);
-                player1.setLiveDelay(2);
+                player1.updateSettings({ 'streaming': { 'liveDelay': 2 }});
 
                 video = document.querySelector("#video2");
                 player2 = dashjs.MediaPlayer().create();
                 player2.initialize(video,MPD_2S_SEGMENTS ,true);
-                player2.setLiveDelay(4);
+                player2.updateSettings({ 'streaming': { 'liveDelay': 4 }});
 
                 video = document.querySelector("#video3");
                 player3 = dashjs.MediaPlayer().create();
                 player3.initialize(video,MPD_2S_SEGMENTS ,true);
-                player3.setLiveDelay(8);
+                player3.updateSettings({ 'streaming': { 'liveDelay': 8 }});
 
                 video = document.querySelector("#video4");
                 player4 = dashjs.MediaPlayer().create();
                 player4.initialize(video,MPD_6S_SEGMENTS ,true);
-                player4.setLiveDelay(6);
+                player4.updateSettings({ 'streaming': { 'liveDelay': 6 }});
 
                 video = document.querySelector("#video5");
                 player5 = dashjs.MediaPlayer().create();
                 player5.initialize(video,MPD_6S_SEGMENTS ,true);
-                player5.setLiveDelay(12);
+                player5.updateSettings({ 'streaming': { 'liveDelay': 12 }});
 
                 video = document.querySelector("#video6");
                 player6 = dashjs.MediaPlayer().create();
                 player6.initialize(video,MPD_6S_SEGMENTS ,true);
-                player6.setLiveDelay(24);
+                player6.updateSettings({ 'streaming': { 'liveDelay': 24 }});
 
 
                 setInterval( function() {
