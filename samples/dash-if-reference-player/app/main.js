@@ -595,6 +595,14 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             }
         }
 
+        const maxBitrate = parseInt($scope.maxVideoBitrate);
+        if (!isNaN(maxBitrate)) {
+            config.streaming.abr = {
+                'maxBitrate': {
+                    'video': maxBitrate
+                }
+            }
+        }        
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
