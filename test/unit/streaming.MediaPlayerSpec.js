@@ -745,16 +745,6 @@ describe('MediaPlayer', function () {
             expect(LongFormContentDurationThreshold).to.equal(50);
         });
 
-        it('should configure setSegmentOverlapToleranceTime', function () {
-            let val = player.getSettings().streaming.segmentOverlapToleranceTime;
-            expect(val).to.equal(0.2);
-
-            player.updateSettings({'streaming': { 'segmentOverlapToleranceTime': 1.5 }});
-
-            val = player.getSettings().streaming.segmentOverlapToleranceTime;
-            expect(val).to.equal(1.5);
-        });
-
         it('should configure cacheLoadThresholds', function () {
             let cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(50);

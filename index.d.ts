@@ -100,7 +100,6 @@ declare namespace dashjs {
             lowLatencyEnabled: boolean;
             keepProtectionMediaKeys: boolean;
             useManifestDateHeaderTimeSource: boolean;
-            segmentOverlapToleranceTime: number;
             useSuggestedPresentationDelay: boolean;
             manifestUpdateRetryInterval: number;
             liveCatchUpMinDrift: number;
@@ -247,7 +246,6 @@ declare namespace dashjs {
         setAutoPlay(value: boolean): void;
         getAutoPlay(): boolean;
         getDashMetrics(): DashMetrics;
-        getMetricsFor(type: 'video' | 'audio' | 'text' | 'stream'): MetricsList | null;
         getQualityFor(type: 'video' | 'audio' | 'image'): number;
         setQualityFor(type: 'video' | 'audio' | 'image', value: number): void;
         updatePortalSize(): void;
@@ -293,7 +291,6 @@ declare namespace dashjs {
         enableForcedTextStreaming(value: boolean): void;
         isTextEnabled(): boolean;
         getAverageThroughput(value: number): void;
-        keepProtectionMediaKeys(value: boolean): void;
         getSettings(): MediaPlayerSettingClass;
         updateSettings(settings: MediaPlayerSettingClass);
         resetSettings(): void;
