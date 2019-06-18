@@ -34,7 +34,7 @@ import Constants from '../constants/Constants';
 import Thumbnail from '../vo/Thumbnail';
 import ThumbnailTracks from './ThumbnailTracks';
 import BitrateInfo from '../vo/BitrateInfo';
-import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils';
+import { replaceTokenForTemplate, unescapeDollarsInTemplate } from '../../dash/utils/SegmentsUtils';
 
 function ThumbnailController(config) {
 

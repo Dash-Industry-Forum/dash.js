@@ -12,18 +12,18 @@ describe('TimelineSegmentsGetter', function () {
 
     it('should throw an error if config object is not defined', function () {
         timelineSegmentsGetter = TimelineSegmentsGetter(context).create();
-        expect(timelineSegmentsGetter.getSegments.bind(timelineSegmentsGetter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
+        expect(timelineSegmentsGetter.getSegmentByIndex.bind(timelineSegmentsGetter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should throw an error if config object has not been properly passed', function () {
         timelineSegmentsGetter = TimelineSegmentsGetter(context).create({});
-        expect(timelineSegmentsGetter.getSegments.bind(timelineSegmentsGetter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
+        expect(timelineSegmentsGetter.getSegmentByIndex.bind(timelineSegmentsGetter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
     });
 
     it('should throw an error if representation parameter has not been properly set', function () {
         const timelineConverter = objectsHelper.getDummyTimelineConverter();
         timelineSegmentsGetter = TimelineSegmentsGetter(context).create({timelineConverter: timelineConverter});
 
-        expect(timelineSegmentsGetter.getSegments.bind(timelineSegmentsGetter)).to.be.throw('no representation');
+        expect(timelineSegmentsGetter.getSegmentByIndex.bind(timelineSegmentsGetter)).to.be.throw('no representation');
     });
 });

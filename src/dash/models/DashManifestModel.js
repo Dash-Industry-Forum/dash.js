@@ -530,7 +530,6 @@ function DashManifestModel() {
                         // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
                         // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
                         // exceeds @maxSegmentDuration
-                        //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
                         voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {

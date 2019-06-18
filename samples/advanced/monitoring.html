@@ -23,8 +23,6 @@
                 clearInterval(bitrateCalculator);
             });
 
-            // player.on(dashjs.MediaPlayer.events["BUFFER_LEVEL_STATE_CHANGED"], showEvent);
-
             var eventPoller = setInterval(function() {
                 var streamInfo = player.getActiveStream().getStreamInfo();
                 var dashMetrics = player.getDashMetrics();

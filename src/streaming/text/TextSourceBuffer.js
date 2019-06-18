@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';

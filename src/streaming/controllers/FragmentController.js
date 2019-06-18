@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import DataChunk from '../vo/DataChunk';
 import FragmentModel from '../models/FragmentModel';
 import FragmentLoader from '../FragmentLoader';

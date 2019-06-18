@@ -178,15 +178,15 @@ function Settings() {
              * @default false
              * @memberof module:Settings.Schema
              */
-            jumpGaps: false,
+            jumpGaps: true,
             /**
              * Time in seconds for a gap to be considered small.
              *
              * @param {boolean} value
-             * @default 0.8
+             * @default 1.5
              * @memberof module:Settings.Schema
              */
-            smallGapLimit: 0.8,
+            smallGapLimit: 1.5,
             /**
              * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
              *

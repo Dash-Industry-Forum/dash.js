@@ -33,7 +33,7 @@ import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
-import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils';
+import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
 
 import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';

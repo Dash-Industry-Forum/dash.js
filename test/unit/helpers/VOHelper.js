@@ -4,7 +4,7 @@ import MpdHelper from './MPDHelper';
 import SpecHelper from './SpecHelper';
 import Representation from '../../../src/dash/vo/Representation';
 import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
-import {HTTPRequest} from '../../../src/streaming/vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../../../src/streaming/vo/metrics/HTTPRequest';
 
 class VoHelper {
     constructor() {
@@ -92,7 +92,7 @@ class VoHelper {
             req.startTime = 0;
             req.duration = 4;
             req.index = 0;
-        } 
+        }
 
         if (state === FragmentRequest.ACTION_COMPLETE) {
             req.action = FragmentRequest.ACTION_COMPLETE;
