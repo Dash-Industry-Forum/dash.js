@@ -31,13 +31,13 @@
 import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
 import MetricsList from '../vo/MetricsList';
-import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
+import { HTTPRequest, HTTPRequestTrace } from '../vo/metrics/HTTPRequest';
 import TrackSwitch from '../vo/metrics/RepresentationSwitch';
 import BufferLevel from '../vo/metrics/BufferLevel';
 import BufferState from '../vo/metrics/BufferState';
 import DVRInfo from '../vo/metrics/DVRInfo';
 import DroppedFrames from '../vo/metrics/DroppedFrames';
-import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo} from '../vo/metrics/ManifestUpdate';
+import { ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo } from '../vo/metrics/ManifestUpdate';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo';
 import EventBus from '../../core/EventBus';
 import RequestsQueue from '../vo/metrics/RequestsQueue';

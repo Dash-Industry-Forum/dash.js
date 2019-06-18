@@ -37,7 +37,7 @@ import DVBSelector from './baseUrlResolution/DVBSelector';
 import BasicSelector from './baseUrlResolution/BasicSelector';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
-import {checkParameterType} from '../utils/SupervisorTools';
+import { checkParameterType } from '../utils/SupervisorTools';
 
 function BaseURLSelector() {
 

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../streaming/constants/Constants';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
@@ -68,14 +68,14 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {string} type
+     * @param {string} mediaType
      * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentRepresentationSwitch(type, readOnly) {
-        let metrics = metricsModel.getMetricsFor(type, readOnly);
+    function getCurrentRepresentationSwitch(mediaType, readOnly) {
+        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
         return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
     }
 
@@ -101,7 +101,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getLatestBufferInfoVO(mediaType, readOnly, infoType) {
-        let metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
         return getCurrent(metrics, infoType);
     }
 
@@ -160,7 +160,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentHttpRequest(mediaType, readOnly) {
-        let metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
 
         if (!metrics) {
             return null;
@@ -194,7 +194,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getHttpRequests(mediaType) {
-        let metrics = metricsModel.getMetricsFor(mediaType, true);
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         if (!metrics) {
             return [];
         }
@@ -240,7 +240,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentDroppedFrames() {
-        let metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
+        const metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
         return getCurrent(metrics, MetricsConstants.DROPPED_FRAMES);
     }
 
@@ -288,7 +288,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentManifestUpdate() {
-        let streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
+        const streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
         return getCurrent(streamMetrics, MetricsConstants.MANIFEST_UPDATE);
     }
 
@@ -369,7 +369,8 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentDVRInfo(mediaType) {
-        const metrics = mediaType ? metricsModel.getMetricsFor(mediaType, true) : metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
+        const metrics = mediaType ? metricsModel.getMetricsFor(mediaType, true) :
+            metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
         return getCurrent(metrics, MetricsConstants.DVR_INFO);
     }
 

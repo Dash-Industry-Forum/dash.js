@@ -42,8 +42,8 @@ import SwitchRequest from '../rules/SwitchRequest';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import { checkInteger } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';

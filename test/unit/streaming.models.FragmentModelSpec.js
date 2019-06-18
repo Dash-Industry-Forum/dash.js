@@ -3,7 +3,7 @@ import VoHelper from './helpers/VOHelper';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import FragmentModel from '../../src/streaming/models/FragmentModel';
-import {HTTPRequest} from '../../src/streaming/vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../../src/streaming/vo/metrics/HTTPRequest';
 
 import DashMetricsMock from './mocks/DashMetricsMock';
 

@@ -388,7 +388,7 @@ function StreamProcessor(config) {
     function getInitRequest(quality) {
         checkInteger(quality);
 
-        let representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+        const representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
 
         return indexHandler ? indexHandler.getInitRequest(representation) : null;
     }
@@ -396,11 +396,11 @@ function StreamProcessor(config) {
     function getFragmentRequest(representationInfo, time, options) {
         let fragRequest = null;
 
-        let representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+        const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
         if (indexHandler) {
-            //if time and options are undefined, it means the next segment is requested
-            //otherwise, the segment at this specific time is requested.
+            // if time and options are undefined, it means the next segment is requested
+            // otherwise, the segment at this specific time is requested.
             if (time !== undefined && options !== undefined) {
                 fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
             } else {

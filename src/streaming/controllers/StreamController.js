@@ -52,6 +52,7 @@ import Errors from '../../core/errors/Errors';
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
     const STALL_THRESHOLD_TO_CHECK_GAPS = 40;
+    const PERIOD_PREFETCH_TIME = 2000;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -92,7 +93,7 @@ function StreamController() {
         audioTrackDetected,
         isPeriodSwitchInProgress,
         playbackEndedTimerId,
-        preloadTimerId,
+        prefetchTimerId,
         wallclockTicked,
         buffers,
         useSmoothPeriodTransition,
@@ -258,7 +259,7 @@ function StreamController() {
             isPeriodSwitchInProgress = false;
         }
 
-        if (preloadTimerId) {
+        if (prefetchTimerId) {
             stopPreloadTimer();
         }
 
@@ -309,8 +310,8 @@ function StreamController() {
 
     function stopPreloadTimer() {
         logger.debug('[PreloadTimer] stop period preload timer.');
-        clearTimeout(preloadTimerId);
-        preloadTimerId = undefined;
+        clearTimeout(prefetchTimerId);
+        prefetchTimerId = undefined;
     }
 
     function toggleEndPeriodTimer() {
@@ -322,9 +323,9 @@ function StreamController() {
             } else {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-                const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
-                logger.debug('[toggleEndPeriodTimer] Going to fire preload in', preloadDelay, 'milliseconds');
-                preloadTimerId = setTimeout(onStreamCanLoadNext,  preloadDelay);
+                const prefetchDelay = delayPlaybackEnded < PERIOD_PREFETCH_TIME ? delayPlaybackEnded / 4 : delayPlaybackEnded - PERIOD_PREFETCH_TIME;
+                logger.debug('[toggleEndPeriodTimer] Going to fire preload in', prefetchDelay, 'milliseconds');
+                prefetchTimerId = setTimeout(onStreamCanLoadNext,  prefetchDelay);
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in',delayPlaybackEnded, 'milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
             }
@@ -361,6 +362,7 @@ function StreamController() {
 
     function onStreamCanLoadNext() {
         const isLast = getActiveStreamInfo().isLast;
+
         if (mediaSource && !isLast) {
             const newStream = getNextStream();
 

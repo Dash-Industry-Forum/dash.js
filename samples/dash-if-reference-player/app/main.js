@@ -248,6 +248,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
         //use the new error callback
+        return;
         if (!e.event) {
             $scope.$apply(function () {
                 $scope.error = e.error.message;
@@ -311,7 +312,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         },
         'streaming': {
             'fastSwitchEnabled': $scope.fastSwitchSelected,
-            'jumpGaps': false,
+            'jumpGaps': true,
             'abr': {
                 'autoSwitchBitrate': {
                     'video': $scope.videoAutoSwitchSelected

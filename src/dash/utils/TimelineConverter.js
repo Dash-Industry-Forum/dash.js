@@ -153,9 +153,32 @@ function TimelineConverter() {
 
         const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
             voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
+
         range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
 
         return range;
+    }
+
+    function getPeriodEnd(voRepresentation, isDynamic) {
+        // Static Range Finder
+        const voPeriod = voRepresentation.adaptation.period;
+        if (!isDynamic) {
+            return voPeriod.start + voPeriod.duration;
+        }
+
+        if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
+            return voRepresentation.segmentAvailabilityRange;
+        }
+
+        // Dynamic Range Finder
+        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+        const periodEnd = voPeriod.start + voPeriod.duration;
+
+        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
+            voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
+
+        return Math.min(now - endOffset, periodEnd);
     }
 
     function calcPeriodRelativeTimeFromMpdRelativeTime(representation, mpdRelativeTime) {
@@ -204,6 +227,7 @@ function TimelineConverter() {
         calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
+        getPeriodEnd: getPeriodEnd,
         calcWallTimeForSegment: calcWallTimeForSegment,
         reset: reset
     };

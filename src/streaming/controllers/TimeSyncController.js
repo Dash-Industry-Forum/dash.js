@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashJSError from './../vo/DashJSError';
-import {HTTPRequest} from './../vo/metrics/HTTPRequest';
+import { HTTPRequest } from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import Errors from './../../core/errors/Errors';

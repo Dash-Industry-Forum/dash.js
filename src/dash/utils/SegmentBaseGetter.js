@@ -31,9 +31,8 @@
 
 import FactoryMaker from '../../core/FactoryMaker';
 
-import { getIndexBasedSegment } from './SegmentsUtils';
 
-function ListSegmentsGetter(config, isDynamic) {
+function SegmentBaseGetter(config) {
 
     config = config || {};
     const timelineConverter = config.timelineConverter;
@@ -41,39 +40,60 @@ function ListSegmentsGetter(config, isDynamic) {
     let instance;
 
     function getSegmentByIndex(representation, index) {
-        const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        const len = list.SegmentURL_asArray.length;
-
-        const start = representation.startNumber;
-        let segment = null;
+        const len = representation.segments ? representation.segments.length : 0;
+        let seg;
         if (index < len) {
-            const s = list.SegmentURL_asArray[index];
-
-            segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
-            segment.replacementTime = (start + index - 1) * representation.segmentDuration;
-            segment.media = s.media ? s.media : '';
-            segment.mediaRange = s.mediaRange;
-            segment.index = index;
-            segment.indexRange = s.indexRange;
+            seg = representation.segments[index];
+            if (seg && seg.availabilityIdx === index) {
+                return seg;
+            }
         }
 
-        representation.availableSegmentsNumber = len;
+        for (let i = 0; i < len; i++) {
+            seg = representation.segments[i];
 
-        return segment;
+            if (seg && seg.availabilityIdx === index) {
+                return seg;
+            }
+        }
+
+        return null;
     }
 
     function getSegmentByTime(representation, requestedTime) {
-        const duration = representation.segmentDuration;
-
-        if (isNaN(duration)) {
-            return null;
-        }
-
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const index = Math.floor(periodTime / duration);
+        const index = getIndexByTime(representation, periodTime);
 
         return getSegmentByIndex(representation, index);
+    }
+
+    function getIndexByTime(representation, time) {
+        const segments = representation.segments;
+        const ln = segments ? segments.length : null;
+
+        let idx = -1;
+        let epsilon,
+            frag,
+            ft,
+            fd,
+            i;
+
+        if (segments && ln > 0) {
+            for (i = 0; i < ln; i++) {
+                frag = segments[i];
+                ft = frag.presentationStartTime;
+                fd = frag.duration;
+
+                epsilon = fd / 2;
+                if ((time + epsilon) >= ft &&
+                    (time - epsilon) < (ft + fd)) {
+                    idx = frag.availabilityIdx;
+                    break;
+                }
+            }
+        }
+
+        return idx;
     }
 
     instance = {
@@ -84,6 +104,6 @@ function ListSegmentsGetter(config, isDynamic) {
     return instance;
 }
 
-ListSegmentsGetter.__dashjs_factory_name = 'ListSegmentsGetter';
-const factory = FactoryMaker.getClassFactory(ListSegmentsGetter);
+SegmentBaseGetter.__dashjs_factory_name = 'SegmentBaseGetter';
+const factory = FactoryMaker.getClassFactory(SegmentBaseGetter);
 export default factory;

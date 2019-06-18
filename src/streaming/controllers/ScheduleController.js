@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import {PlayListTrace} from '../vo/metrics/PlayList';
+import { PlayListTrace } from '../vo/metrics/PlayList';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
@@ -207,7 +207,7 @@ function ScheduleController(config) {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
-                        // To be sure the specific init segment had not already been loaded.
+                        // To be sure the specific init segment had not already been loaded
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
                         let request;
@@ -283,6 +283,7 @@ function ScheduleController(config) {
 
     function startScheduleTimer(value) {
         clearTimeout(scheduleTimeout);
+
         scheduleTimeout = setTimeout(schedule, value);
     }
 
@@ -384,9 +385,12 @@ function ScheduleController(config) {
                 timelineConverter.setTimeSyncCompleted(true);
                 setLiveEdgeSeekTarget();
             } else {
-                seekTarget = playbackController.getStreamStartTime(false);
                 streamProcessor.getBufferController().setSeekStartTime(seekTarget);
             }
+        }
+
+        if (!playbackController.getIsDynamic()) {
+            setSeekTarget(playbackController.getStreamStartTime(false));
         }
 
         if (isStopped) {
@@ -416,7 +420,7 @@ function ScheduleController(config) {
             } else {
                 logger.debug('setLiveEdgeSeekTarget : getFragmentRequest returned undefined request object');
             }
-            seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+            setSeekTarget(playbackController.getStreamStartTime(false, liveEdge));
             streamProcessor.getBufferController().setSeekStartTime(seekTarget);
 
             //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
@@ -581,7 +585,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
-        seekTarget = e.seekTime;
+        setSeekTarget(e.seekTime);
         setTimeToLoadDelay(0);
 
         if (isStopped) {

@@ -775,15 +775,15 @@ describe('MediaPlayer', function () {
 
         it('should configure jumpGap feature', function () {
             let jumpGaps = player.getSettings().streaming.jumpGaps;
-            expect(jumpGaps).to.equal(false);
-
-            player.updateSettings({'streaming': { 'jumpGaps': true }});
-
-            jumpGaps = player.getSettings().streaming.jumpGaps;
             expect(jumpGaps).to.equal(true);
 
+            player.updateSettings({'streaming': { 'jumpGaps': false }});
+
+            jumpGaps = player.getSettings().streaming.jumpGaps;
+            expect(jumpGaps).to.equal(false);
+
             let smallGapLimit = player.getSettings().streaming.smallGapLimit;
-            expect(smallGapLimit).to.equal(0.8);
+            expect(smallGapLimit).to.equal(1.5);
 
             player.updateSettings({'streaming': { 'smallGapLimit': 0.5 }});
 
