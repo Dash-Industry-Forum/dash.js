@@ -256,22 +256,6 @@ function Settings() {
              */
             useManifestDateHeaderTimeSource: true,
             /**
-             * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
-             *
-             * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
-             * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
-             *
-             * <pre>
-             * |-o-|--- segment X ----|-o-|
-             *                        |-o-|---- segment X+1 -----|-o-|
-             *                                                   |-o-|---- segment X+2 -----|-o-|
-             * </pre>
-             * @param {number} value
-             * @default 0.2 seconds.
-             * @memberof module:Settings.Schema
-             */
-            segmentOverlapToleranceTime: 0.2,
-            /**
              * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
              * @param {boolean} value
              * @default false
