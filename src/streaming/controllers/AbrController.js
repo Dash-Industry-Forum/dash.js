@@ -332,7 +332,7 @@ function AbrController() {
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 let newQuality = switchRequest.quality;
-                if (minIdx !== undefined && newQuality < minIdx) {
+                if (minIdx !== undefined && ((newQuality > SwitchRequest.NO_CHANGE) ? newQuality : oldQuality) < minIdx) {
                     newQuality = minIdx;
                 }
                 if (newQuality > topQualityIdx) {

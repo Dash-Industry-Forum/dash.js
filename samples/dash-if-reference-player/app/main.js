@@ -579,13 +579,30 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         const initBitrate = parseInt($scope.initialVideoBitrate);
         if (!isNaN(initBitrate)) {
-            config.abr = {
+            config.streaming.abr = {
                 'initialBitrate': {
                     'video': initBitrate
                 }
             }
         }
 
+        const minBitrate = parseInt($scope.minVideoBitrate);
+        if (!isNaN(minBitrate)) {
+            config.streaming.abr = {
+                'minBitrate': {
+                    'video': minBitrate
+                }
+            }
+        }
+
+        const maxBitrate = parseInt($scope.maxVideoBitrate);
+        if (!isNaN(maxBitrate)) {
+            config.streaming.abr = {
+                'maxBitrate': {
+                    'video': maxBitrate
+                }
+            }
+        }        
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
