@@ -385,12 +385,9 @@ function ScheduleController(config) {
                 timelineConverter.setTimeSyncCompleted(true);
                 setLiveEdgeSeekTarget();
             } else {
+                setSeekTarget(playbackController.getStreamStartTime(false));
                 streamProcessor.getBufferController().setSeekStartTime(seekTarget);
             }
-        }
-
-        if (!playbackController.getIsDynamic()) {
-            setSeekTarget(playbackController.getStreamStartTime(false));
         }
 
         if (isStopped) {
