@@ -400,11 +400,14 @@ function DashHandler(config) {
                 s.mediaRange,
                 count);
 
-            segments.push(seg);
-            seg = null;
-            count++;
+            if (seg) {
+                segments.push(seg);
+                seg = null;
+                count++;
+            }
         }
 
+        len = segments.length;
         representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
         representation.availableSegmentsNumber = len;
 
