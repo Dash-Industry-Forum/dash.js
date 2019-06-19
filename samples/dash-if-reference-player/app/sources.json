@@ -166,19 +166,19 @@
       "submenu": [
         {
           "name": "Single adaption set, 7 tiles at 10x1, each thumb 320x180",
-          "url": "//dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
+          "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
         },
         {
           "name": "Single adaption set, 4 tiles at 10x1, each thumb 205x115",
-          "url": "//dash.edgesuite.net/akamai/bbb_30fps/bbb_with_4_tiles_thumbnails.mpd"
+          "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_4_tiles_thumbnails.mpd"
         },
         {
           "name": "Single adaption set, 1 tile at 10x20, each thumb 102x58",
-          "url": "//dash.edgesuite.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails_2.mpd"
+          "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails_2.mpd"
         },
         {
           "name": "Two adaption sets with different thumb resolutions",
-          "url": "//dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
+          "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
         },
         {
           "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
@@ -957,7 +957,7 @@
           "name": "Super Speedway + PlayReady DRM (persistent)",
           "protData": {
             "com.microsoft.playready": {
-                "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",                
+                "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
                 "sessionType": "persistent-license"
               }
           }
