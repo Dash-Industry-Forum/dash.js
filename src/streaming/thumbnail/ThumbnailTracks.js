@@ -99,10 +99,11 @@ function ThumbnailTracks(config) {
                 s.mediaRange,
                 count);
 
-            segments.push(seg);
-
-            seg = null;
-            count++;
+            if (seg) {
+                segments.push(seg);
+                seg = null;
+                count++;
+            }
         }
         return segments;
     }
