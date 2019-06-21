@@ -216,7 +216,6 @@ function MediaPlayer() {
         errHandler = ErrorHandler(context).getInstance();
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError('mediasource');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }

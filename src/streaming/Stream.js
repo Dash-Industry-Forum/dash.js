@@ -203,8 +203,7 @@ function Stream(config) {
         }
 
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            const msg = 'No streams to play.';
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg +  'nostreams', manifestModel.getValue()));
             logger.fatal(msg);
         }
@@ -300,7 +299,6 @@ function Stream(config) {
 
     function onProtectionError(event) {
         if (event.error) {
-            errHandler.mediaKeySessionError(event.error.message);
             errHandler.error(event.error);
             logger.fatal(event.error.message);
             reset();
@@ -315,7 +313,6 @@ function Stream(config) {
         if (type === Constants.MUXED) {
             msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
             logger.fatal(msg);
-            errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
             return false;
         }
@@ -327,7 +324,6 @@ function Stream(config) {
         logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError('encryptedmedia');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
@@ -523,7 +519,6 @@ function Stream(config) {
 
         if (streamProcessors.length === 0) {
             const msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.fatal(msg);
         } else {
@@ -542,8 +537,8 @@ function Stream(config) {
         isMediaInitialized = true;
         isUpdating = false;
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            const msg = 'No streams to play.';
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.debug(msg);
         } else {
             checkIfInitializationCompleted();

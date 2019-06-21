@@ -140,7 +140,6 @@ function BufferController(config) {
                 }
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
-                errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
                 errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         } else {
