@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 /**
 * @module FetchLoader
+* @ignore
 * @description Manages download of resources via HTTP using fetch.
 * @param {Object} cfg - dependencies from parent
 */

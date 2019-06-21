@@ -30,6 +30,7 @@
  */
 /**
  * @classdesc a PlayList from ISO23009-1 Annex D, this Object holds reference to the playback session information
+ * @ignore
  */
 class PlayList {
     /**
@@ -73,6 +74,7 @@ PlayList.METRICS_COLLECTION_START_REASON = 'metrics_collection_start';
 
 /**
  * @classdesc a PlayList.Trace from ISO23009-1 Annex D
+ * @ignore
  */
 class PlayListTrace {
     /**

@@ -5,6 +5,7 @@ import FactoryMaker from '../../core/FactoryMaker';
  * of the functionality required to parse Matroska EBML
  *
  * @param {Object} config object with data member which is the buffer to parse
+ * @ignore
  */
 function EBMLParser(config) {
 

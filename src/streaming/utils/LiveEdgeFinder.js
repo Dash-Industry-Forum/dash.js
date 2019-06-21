@@ -35,6 +35,7 @@ import Constants from '../constants/Constants';
  * @param {Object} config
  * @returns {{initialize: initialize, getLiveEdge: getLiveEdge, reset: reset}|*}
  * @constructor
+ * @ignore
  */
 function LiveEdgeFinder(config) {
 

@@ -34,6 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 /**
  * Model class managing URI fragments.
+ * @ignore
  */
 function URIFragmentModel() {
 

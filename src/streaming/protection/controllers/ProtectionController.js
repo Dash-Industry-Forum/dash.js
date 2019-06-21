@@ -101,6 +101,7 @@ function ProtectionController(config) {
      * @todo This API will change when we have better support for allowing applications
      * to select different adaptation sets for playback.  Right now it is clunky for
      * applications to create {@link StreamInfo} with the right information,
+     * @ignore
      */
     function initializeForMedia(mediaInfo) {
         // Not checking here if a session for similar KS/KID combination is already created
@@ -139,6 +140,7 @@ function ProtectionController(config) {
      * supported key systems were found
      * @memberof module:ProtectionKeyController
      * @instance
+     * @ignore
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
         checkConfig();
@@ -158,6 +160,7 @@ function ProtectionController(config) {
      * initialization data and key sessions.  That is no longer true in the latest APIs.  This
      * API will need to modified (and a new "generateRequest(keySession, initData)" API created)
      * to come up to speed with the latest EME standard
+     * @ignore
      */
     function createKeySession(initData, cdmData) {
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
@@ -193,6 +196,7 @@ function ProtectionController(config) {
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
+     * @ignore
      */
     function loadKeySession(sessionID, initData) {
         checkConfig();
@@ -210,6 +214,7 @@ function ProtectionController(config) {
      * @instance
      * @fires ProtectionController#KeySessionRemoved
      * @fires ProtectionController#KeySessionClosed
+     * @ignore
      */
     function removeKeySession(sessionToken) {
         checkConfig();
@@ -225,6 +230,7 @@ function ProtectionController(config) {
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionClosed
+     * @ignore
      */
     function closeKeySession(sessionToken) {
         checkConfig();
@@ -300,6 +306,7 @@ function ProtectionController(config) {
      * being instances of {@link ProtectionData}
      * @memberof module:ProtectionController
      * @instance
+     * @ignore
      */
     function setProtectionData(data) {
         protDataSet = data;
@@ -327,6 +334,7 @@ function ProtectionController(config) {
      *
      * @memberof module:ProtectionController
      * @instance
+     * @ignore
      */
     function reset() {
         checkConfig();

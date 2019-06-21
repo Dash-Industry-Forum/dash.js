@@ -30,6 +30,7 @@
  */
 /**
  * @module FactoryMaker
+ * @ignore
  */
 const FactoryMaker = (function () {
 

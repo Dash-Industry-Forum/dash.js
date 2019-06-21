@@ -40,6 +40,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
 
 /**
  * @class SourceBufferSink
+ * @ignore
  * @implements FragmentSink
  */
 function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {

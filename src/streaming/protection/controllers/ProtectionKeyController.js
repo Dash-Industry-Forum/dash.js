@@ -41,6 +41,7 @@ import ProtectionConstants from '../../constants/ProtectionConstants';
 
 /**
  * @module ProtectionKeyController
+ * @ignore
  * @description Media protection key system functionality that can be modified/overridden by applications
  */
 function ProtectionKeyController() {

@@ -31,6 +31,7 @@
 
 /**
  * @module MssParser
+ * @ignore
  * @param {Object} config object
  */
 function MssParser(config) {
