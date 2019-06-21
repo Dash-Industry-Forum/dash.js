@@ -34,7 +34,8 @@ import MssErrors from './errors/MssErrors';
 import Events from '../streaming/MediaPlayerEvents';
 
 /**
- * @module MssFragmentMoovProcessor
+ * @module MssFragmentMoofProcessor
+ * @ignore
  * @param {Object} config object
  */
 function MssFragmentMoofProcessor(config) {

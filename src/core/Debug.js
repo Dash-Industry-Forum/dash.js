@@ -42,6 +42,7 @@ const LOG_LEVEL_DEBUG = 5;
 
 /**
  * @module Debug
+ * @ignore
  */
 function Debug() {
 

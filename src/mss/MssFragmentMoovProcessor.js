@@ -32,6 +32,7 @@
 
 /**
  * @module MssFragmentMoovProcessor
+ * @ignore
  * @param {Object} config object
  */
 function MssFragmentMoovProcessor(config) {

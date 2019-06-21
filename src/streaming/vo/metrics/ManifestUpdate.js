@@ -30,6 +30,7 @@
  */
 /**
  * @classdesc This Object holds reference to the manifest update information.
+ * @ignore
  */
 class ManifestUpdate {
     /**
@@ -103,6 +104,7 @@ class ManifestUpdate {
 
 /**
  * @classdesc This Object holds reference to the current period's stream information when the manifest was updated.
+ * @ignore
  */
 class ManifestUpdateStreamInfo {
     /**
@@ -134,6 +136,7 @@ class ManifestUpdateStreamInfo {
 
 /**
  * @classdesc This Object holds reference to the current representation's info when the manifest was updated.
+ * @ignore
  */
 class ManifestUpdateRepresentationInfo {
     /**

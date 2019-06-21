@@ -37,6 +37,7 @@ import DashJSError from '../vo/DashJSError';
 
 /**
  * @module HTTPLoader
+ * @ignore
  * @description Manages download of resources via HTTP.
  * @param {Object} cfg - dependancies from parent
  */

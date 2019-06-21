@@ -34,6 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 /**
  * @module ErrorHandler
+ * @ignore
  */
 function ErrorHandler() {
 

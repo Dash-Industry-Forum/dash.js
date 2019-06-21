@@ -28,11 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 /**
  * @classdesc a base type for matching and converting types in manifest to
  * something more useful
+ * @ignore
  */
-
 class BaseMatcher {
     constructor(test, converter) {
         this._test = test;

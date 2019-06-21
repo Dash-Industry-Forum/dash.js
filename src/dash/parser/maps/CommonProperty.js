@@ -30,6 +30,7 @@
  */
 /**
  * @classdesc a property belonging to a MapNode
+ * @ignore
  */
 
 class CommonProperty {
