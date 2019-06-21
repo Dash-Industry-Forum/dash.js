@@ -676,7 +676,6 @@ function StreamController() {
             eventBus.trigger(Events.STREAMS_COMPOSED);
 
         } catch (e) {
-            errHandler.manifestError(e.message, 'nostreamscomposed', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
@@ -831,7 +830,6 @@ function StreamController() {
         if (e.error) {
             logger.fatal(e.error);
         }
-        errHandler.mediaSourceError(msg);
         errHandler.error(new DashJSError(e.error.code, msg));
         reset();
     }

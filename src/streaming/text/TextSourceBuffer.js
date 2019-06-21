@@ -412,7 +412,6 @@ function TextSourceBuffer() {
                 result = getParser(codecType).parse(ccContent, 0);
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
-                errHandler.timedTextError(e, 'parse', ccContent);
                 errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text

@@ -158,34 +158,6 @@ function Debug() {
     function setCalleeNameVisible(value) {
         showCalleeName = value;
     }
-    /**
-     * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
-     * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
-     * @default true
-     * @memberof module:Debug
-     * @instance
-     * @deprecated
-     */
-    function setLogToBrowserConsole(value) {
-        // Replicate functionality previous to log levels feature
-        let s;
-        if (value) {
-            s = { debug: { logLevel: LOG_LEVEL_DEBUG }};
-        } else {
-            s = { debug: { logLevel: LOG_LEVEL_NONE }};
-        }
-        settings.update(s);
-    }
-    /**
-     * Use this method to get the state of logToBrowserConsole.
-     * @returns {boolean} The current value of logToBrowserConsole
-     * @memberof module:Debug
-     * @instance
-     * @deprecated
-     */
-    function getLogToBrowserConsole() {
-        return settings.get().debug.logLevel !== LOG_LEVEL_NONE;
-    }
 
     function fatal(...params) {
         doLog(LOG_LEVEL_FATAL, this, ...params);
@@ -244,8 +216,6 @@ function Debug() {
         getLogger: getLogger,
         setLogTimestampVisible: setLogTimestampVisible,
         setCalleeNameVisible: setCalleeNameVisible,
-        setLogToBrowserConsole: setLogToBrowserConsole,
-        getLogToBrowserConsole: getLogToBrowserConsole,
         setLogLevel: setLogLevel,
         getLogLevel: getLogLevel
     };

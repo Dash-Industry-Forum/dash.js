@@ -254,12 +254,13 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {MetricsList} metrics
+     * @param {string} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentSchedulingInfo(metrics) {
+    function getCurrentSchedulingInfo(mediaType) {
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         return getCurrent(metrics, MetricsConstants.SCHEDULING_INFO);
     }
 

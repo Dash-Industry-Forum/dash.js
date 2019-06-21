@@ -71,28 +71,13 @@ class Errors extends ErrorsBase {
         this.CAPABILITY_MEDIAKEYS_ERROR_CODE   = 24;
 
         this.DOWNLOAD_ERROR_ID_MANIFEST_CODE   = 25;
-        /*
-         *@deprecated
-         */
-        this.DOWNLOAD_ERROR_ID_MANIFEST        = 'manifest';
+
         this.DOWNLOAD_ERROR_ID_SIDX_CODE            = 26;
         this.DOWNLOAD_ERROR_ID_CONTENT_CODE         = 27;
 
-        /*
-         *@deprecated
-         */
-        this.DOWNLOAD_ERROR_ID_CONTENT         = 'content';
         this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE  = 28;
-        /*
-         *@deprecated
-         */
-        this.DOWNLOAD_ERROR_ID_INITIALIZATION  = 'initialization';
-        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 29;
-        /*
-         *@deprecated
-         */
-        this.DOWNLOAD_ERROR_ID_XLINK           = 'xlink';
 
+        this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 29;
 
         this.MANIFEST_ERROR_ID_CODEC_CODE           = 30;
         this.MANIFEST_ERROR_ID_PARSE_CODE           = 31;
