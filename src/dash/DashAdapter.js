@@ -473,6 +473,7 @@ function DashAdapter() {
             if (streamInfo.id === voPeriod.id) return voPeriod;
         }
 
+        //return voPeriodsArray[voPeriodsArray.length - 1];
         return null;
     }
 

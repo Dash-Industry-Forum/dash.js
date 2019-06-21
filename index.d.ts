@@ -100,7 +100,6 @@ declare namespace dashjs {
             lowLatencyEnabled: boolean;
             keepProtectionMediaKeys: boolean;
             useManifestDateHeaderTimeSource: boolean;
-            segmentOverlapToleranceTime: number;
             useSuggestedPresentationDelay: boolean;
             manifestUpdateRetryInterval: number;
             liveCatchUpMinDrift: number;
@@ -247,7 +246,7 @@ declare namespace dashjs {
         setAutoPlay(value: boolean): void;
         getAutoPlay(): boolean;
         getDashMetrics(): DashMetrics;
-        getMetricsFor(type: 'video' | 'audio' | 'text' | 'stream'): MetricsList | null;
+        getDashAdapter(): DashAdapter;
         getQualityFor(type: 'video' | 'audio' | 'image'): number;
         setQualityFor(type: 'video' | 'audio' | 'image', value: number): void;
         updatePortalSize(): void;
@@ -293,7 +292,6 @@ declare namespace dashjs {
         enableForcedTextStreaming(value: boolean): void;
         isTextEnabled(): boolean;
         getAverageThroughput(value: number): void;
-        keepProtectionMediaKeys(value: boolean): void;
         getSettings(): MediaPlayerSettingClass;
         updateSettings(settings: MediaPlayerSettingClass);
         resetSettings(): void;
@@ -820,7 +818,23 @@ declare namespace dashjs {
     }
 
     export interface DashMetrics {
+        getCurrentRepresentationSwitch(type: 'video' | 'audio' | 'image', readOnly: boolean): ICurrentRepresentationSwitch;
+        getLatestBufferInfoVO()
+        getCurrentBufferLevel(type: 'video' | 'audio' | 'image', readOnly: boolean): number;
+        getCurrentHttpRequest(type: 'video' | 'audio' | 'image', readOnly: boolean): object;
+        getHttpRequests(type: 'video' | 'audio' | 'image'): object[];
+        getCurrentDroppedFrames(): IDroppedFrames;
+        getCurrentSchedulingInfo(type: 'video' | 'audio' | 'image'): object;
+        getCurrentDVRInfo(type: 'video' | 'audio' | 'image'): IDVRInfo[];
+        getCurrentManifestUpdate(): any;
+        getLatestFragmentRequestHeaderValueByID(id: string): string;
+        getLatestMPDRequestHeaderValueByID(type: 'video' | 'audio' | 'image', id: string): string;
+    }
+
+    export interface DashAdapter {
+        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
         getIndexForRepresentation(representationId: string, periodIdx: number): number;
+
         /**
          * This method returns the current max index based on what is defined in the MPD.
          *
@@ -828,19 +842,6 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: 'video' | 'audio', periodIdx: number): number;
-        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
-        getCurrentRepresentationSwitch(metrics: MetricsList): ICurrentRepresentationSwitch;
-        getLatestBufferLevelVO(metrics: MetricsList): ILatestBufferLevelVO;
-        getCurrentBufferLevel(metrics: MetricsList): number;
-        getCurrentHttpRequest(metrics: MetricsList): object;
-        getHttpRequests(metrics: MetricsList): object[];
-        getCurrentDroppedFrames(metrics: MetricsList): IDroppedFrames;
-        getCurrentSchedulingInfo(metrics: MetricsList): object;
-        getCurrentDVRInfo(metrics: MetricsList): IDVRInfo[];
-        getCurrentManifestUpdate(metrics: MetricsList): any;
-        getLatestFragmentRequestHeaderValueByID(metrics: MetricsList, id: string): string;
-        getLatestMPDRequestHeaderValueByID(metrics: MetricsList, id: string): string;
-        getRequestsQueue(metrics: MetricsList): RequestsQueue | null;
     }
 
     export class ProtectionData {

@@ -30,6 +30,7 @@
  */
 /**
  * @class
+ * @ignore
  */
 class RepresentationSwitch {
     /**

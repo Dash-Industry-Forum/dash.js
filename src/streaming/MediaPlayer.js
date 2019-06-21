@@ -216,7 +216,6 @@ function MediaPlayer() {
         errHandler = ErrorHandler(context).getInstance();
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError('mediasource');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }
@@ -1673,7 +1672,7 @@ function MediaPlayer() {
 
     /**
      * Get the current settings object being used on the player.
-     * @returns {Settings.Schema} The settings object being used.
+     * @returns {PlayerSettings} The settings object being used.
      *
      * @memberof module:MediaPlayer
      * @instance
@@ -1684,7 +1683,7 @@ function MediaPlayer() {
 
     /**
      * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
-     * @param {module:Settings.Schema} settingsObj - An object corresponding to the settings definition.
+     * @param {PlayerSettings} settingsObj - An object corresponding to the settings definition.
      * @description This function does not update the entire object, only properties in the passed in object are updated.
      *
      * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to

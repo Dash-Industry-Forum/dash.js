@@ -29,6 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /**
+  * @class
+  * @ignore
+  */
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array

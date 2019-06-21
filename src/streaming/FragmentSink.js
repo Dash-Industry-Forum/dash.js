@@ -30,8 +30,9 @@
  */
 
 /**
- * The an end place to put fragments after they have been fetched.
+ * The end place to put fragments after they have been fetched.
  * @interface FragmentSink
+ * @ignore
  */
 /**
  * Append a chunk to the internal buffer. You should assume that the effects of this are asynchronous.

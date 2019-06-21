@@ -247,15 +247,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     reqConfig.send();
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
-        //use the new error callback
         if (!e.event) {
             $scope.$apply(function () {
                 $scope.error = e.error.message;
                 $scope.errorType = 'Dash.js :' + e.error.code;
                 switch (e.error.code) {
-                    case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_MANIFEST:
-                        $scope.error += '. Please, check your internet connection. Http status code is ' + e.error.data.response.status;
-                        break;
                     case dashjs.MediaPlayer.errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
@@ -272,9 +268,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                     case dashjs.MediaPlayer.errors.CAPABILITY_MEDIASOURCE_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.CAPABILITY_MEDIAKEYS_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_SIDX:
-                    case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_CONTENT:
-                    case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_INITIALIZATION:
-                    case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_XLINK:
                     case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_CODEC:
                     case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_PARSE:
                     case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_NOSTREAMS:
@@ -311,7 +304,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         },
         'streaming': {
             'fastSwitchEnabled': $scope.fastSwitchSelected,
-            'jumpGaps': false,
+            'jumpGaps': true,
             'abr': {
                 'autoSwitchBitrate': {
                     'video': $scope.videoAutoSwitchSelected

@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 function Widevine() {
 
     let instance;

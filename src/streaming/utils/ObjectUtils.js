@@ -34,6 +34,7 @@ import deepEqual from 'fast-deep-equal';
 
 /**
  * @module ObjectUtils
+ * @ignore
  * @description Provides utility functions for objects
  */
 function ObjectUtils() {

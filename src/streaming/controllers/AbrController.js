@@ -42,8 +42,8 @@ import SwitchRequest from '../rules/SwitchRequest';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import { checkInteger } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';
@@ -596,9 +596,14 @@ function AbrController() {
                 newIdx > 0 &&
                 representation[newIdx] &&
                 elementWidth < representation[newIdx].width &&
-                Math.abs(elementWidth - representation[newIdx - 1].width) < Math.abs(representation[newIdx].width - elementWidth)
-            ) {
+                elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth) {
                 newIdx = newIdx - 1;
+            }
+
+            // Make sure that in case of multiple representation elements have same
+            // resolution, every such element is included
+            while (newIdx < representation.length - 1 && representation[newIdx].width === representation[newIdx + 1].width) {
+                newIdx = newIdx + 1;
             }
         }
 
@@ -609,7 +614,7 @@ function AbrController() {
         const type = e.request.mediaType;
         if (getAutoSwitchBitrateFor(type)) {
             const streamProcessor = streamProcessorDict[type];
-            if (!streamProcessor) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
+            if (!streamProcessor) return; // There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             const rulesContext = RulesContext(context).create({
                 abrController: instance,

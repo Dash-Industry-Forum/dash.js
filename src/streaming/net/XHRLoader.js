@@ -32,6 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 /**
  * @module XHRLoader
+ * @ignore
  * @description Manages download of resources via HTTP.
  * @param {Object} cfg - dependencies from parent
  */
