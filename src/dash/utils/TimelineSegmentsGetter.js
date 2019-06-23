@@ -133,7 +133,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             throw new Error('no representation');
         }
 
-        let segment;
+        let segment = null;
         let found = false;
 
         iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
@@ -185,7 +185,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             requestedTime = null;
         }
 
-        let segment;
+        let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
 
         iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {

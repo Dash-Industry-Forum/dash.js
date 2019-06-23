@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../../streaming/constants/Constants';
 
 
 function SegmentBaseGetter(config) {
@@ -39,7 +40,19 @@ function SegmentBaseGetter(config) {
 
     let instance;
 
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
     function getSegmentByIndex(representation, index) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
         const len = representation.segments ? representation.segments.length : 0;
         let seg;
         if (index < len) {
@@ -61,6 +74,12 @@ function SegmentBaseGetter(config) {
     }
 
     function getSegmentByTime(representation, requestedTime) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = getIndexByTime(representation, periodTime);
 
