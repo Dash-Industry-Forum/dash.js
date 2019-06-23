@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../../streaming/constants/Constants';
 
 import { getIndexBasedSegment } from './SegmentsUtils';
 
@@ -40,7 +41,19 @@ function ListSegmentsGetter(config, isDynamic) {
 
     let instance;
 
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
     function getSegmentByIndex(representation, index) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
         const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         const len = list.SegmentURL_asArray.length;
@@ -64,6 +77,12 @@ function ListSegmentsGetter(config, isDynamic) {
     }
 
     function getSegmentByTime(representation, requestedTime) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
         const duration = representation.segmentDuration;
 
         if (isNaN(duration)) {
