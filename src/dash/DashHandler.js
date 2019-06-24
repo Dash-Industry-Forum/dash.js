@@ -72,7 +72,7 @@ function DashHandler(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        segmentsController = SegmentsController(context).create(config, isDynamic());
+        segmentsController = SegmentsController(context).create(config);
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
@@ -81,7 +81,7 @@ function DashHandler(config) {
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
 
-        segmentsController.initialize();
+        segmentsController.initialize(isDynamic());
     }
 
     function getType() {
