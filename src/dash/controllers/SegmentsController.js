@@ -39,7 +39,7 @@ import SegmentBaseLoader from '../SegmentBaseLoader';
 import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader';
 
 
-function SegmentsController(config, isDynamic) {
+function SegmentsController(config) {
     config = config || {};
 
     const context = this.context;
@@ -55,10 +55,6 @@ function SegmentsController(config, isDynamic) {
 
     function setup() {
         getters = {};
-        getters[DashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
 
         segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
@@ -74,8 +70,13 @@ function SegmentsController(config, isDynamic) {
         return 'webm' === type.toLowerCase();
     }
 
-    function initialize() {
+    function initialize(isDynamic) {
         segmentBaseLoader.initialize();
+
+        getters[DashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
+        getters[DashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
+        getters[DashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
+        getters[DashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
     }
 
     function update(voRepresentation, type, hasInitialization, hasSegments) {
