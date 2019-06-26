@@ -611,10 +611,8 @@ function MssParser(config) {
             // Duration will be set according to current segment timeline duration (see below)
         }
 
-        // In case of live streams, set availabilityStartTime property according to DVRWindowLength
         if (manifest.type === 'dynamic'  && manifest.timeShiftBufferDepth < Infinity) {
-            manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (manifest.timeShiftBufferDepth * 1000));
-            manifest.refreshManifestOnSwitchTrack = true;
+            manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
         }
@@ -669,22 +667,22 @@ function MssParser(config) {
                 adaptations[i].ContentProtection_asArray = manifest.ContentProtection_asArray;
             }
 
-            // Set minBufferTime
             if (adaptations[i].contentType === 'video') {
+                // Set minBufferTime
                 manifest.minBufferTime = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale * 2;
-            }
 
-            if (manifest.type === 'dynamic') {
-                // Set availabilityStartTime for infinite DVR Window from segment timeline duration
-                if (manifest.timeShiftBufferDepth === Infinity) {
-                    manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - (adaptations[i].SegmentTemplate.SegmentTimeline.duration * 1000));
-                }
-                // Match timeShiftBufferDepth to video segment timeline duration
-                if (manifest.timeShiftBufferDepth > 0 &&
-                    manifest.timeShiftBufferDepth !== Infinity &&
-                    adaptations[i].contentType === 'video' &&
-                    manifest.timeShiftBufferDepth > adaptations[i].SegmentTemplate.SegmentTimeline.duration) {
-                    manifest.timeShiftBufferDepth = adaptations[i].SegmentTemplate.SegmentTimeline.duration;
+                if (manifest.type === 'dynamic' ) {
+                    // Set availabilityStartTime
+                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
+                    let endTime = (segments[segments.length - 1].t + segments[segments.length - 1].d) / adaptations[i].SegmentTemplate.timescale * 1000;
+                    manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - endTime);
+
+                    // Match timeShiftBufferDepth to video segment timeline duration
+                    if (manifest.timeShiftBufferDepth > 0 &&
+                        manifest.timeShiftBufferDepth !== Infinity &&
+                        manifest.timeShiftBufferDepth > adaptations[i].SegmentTemplate.SegmentTimeline.duration) {
+                        manifest.timeShiftBufferDepth = adaptations[i].SegmentTemplate.SegmentTimeline.duration;
+                    }
                 }
             }
         }
@@ -742,7 +740,7 @@ function MssParser(config) {
         }
 
         // Floor the duration to get around precision differences between segments timestamps and MSE buffer timestamps
-        // and the avoid 'ended' event not being raised
+        // and then avoid 'ended' event not being raised
         manifest.mediaPresentationDuration = Math.floor(manifest.mediaPresentationDuration * 1000) / 1000;
         period.duration = manifest.mediaPresentationDuration;
 
