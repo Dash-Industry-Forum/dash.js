@@ -170,7 +170,7 @@ function MssFragmentMoofProcessor(config) {
             updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
         }
 
-        indexHandler.updateSegmentList(representation);
+        indexHandler.updateRepresentation(representation, true);
     }
 
     function updateDVR(type, range, manifestInfo) {
