@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}(g.dashjs || (g.dashjs = {})).MetricsReporting = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}(g.dashjs || (g.dashjs = {})).MetricsReporting = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -31,6 +31,7 @@
  */
 /**
  * @module FactoryMaker
+ * @ignore
  */
 "use strict";
 
@@ -367,6 +368,8 @@ module.exports = exports['default'];
 /**
  * Constants declaration
  * @class
+ * @ignore
+ * @hideconstructor
  */
 'use strict';
 
@@ -382,45 +385,149 @@ var Constants = (function () {
   _createClass(Constants, [{
     key: 'init',
     value: function init() {
+      /**
+       *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
+       *  @memberof Constants#
+       *  @static
+       */
       this.STREAM = 'stream';
+
+      /**
+       *  @constant {string} VIDEO Video media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.VIDEO = 'video';
+
+      /**
+       *  @constant {string} AUDIO Audio media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.AUDIO = 'audio';
+
+      /**
+       *  @constant {string} TEXT Text media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.TEXT = 'text';
+
+      /**
+       *  @constant {string} FRAGMENTED_TEXT Fragmented text media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.FRAGMENTED_TEXT = 'fragmentedText';
+
+      /**
+       *  @constant {string} EMBEDDED_TEXT Embedded text media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.EMBEDDED_TEXT = 'embeddedText';
+
+      /**
+       *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.MUXED = 'muxed';
+
+      /**
+       *  @constant {string} IMAGE Image media type
+       *  @memberof Constants#
+       *  @static
+       */
       this.IMAGE = 'image';
+
+      /**
+       *  @constant {string} STPP STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.STPP = 'stpp';
+
+      /**
+       *  @constant {string} TTML STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TTML = 'ttml';
+
+      /**
+       *  @constant {string} VTT STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.VTT = 'vtt';
+
+      /**
+       *  @constant {string} WVTT STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.WVTT = 'wvtt';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_BOLA Adaptive bitrate algorithm based on Bola (buffer level)
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_BOLA = 'abrBola';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+
+      /**
+       *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+
+      /**
+       *  @constant {string} EWMA Exponential moving average
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MOVING_AVERAGE_EWMA = 'ewma';
+
+      /**
+       *  @constant {string} BAD_ARGUMENT_ERROR Invalid Arguments type of error
+       *  @memberof Constants#
+       *  @static
+       */
+      this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
+
+      /**
+       *  @constant {string} MISSING_CONFIG_ERROR Missing ocnfiguration parameters type of error
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+
       this.LOCATION = 'Location';
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
       this.TEXT_HIDDEN = 'hidden';
       this.CC1 = 'CC1';
       this.CC3 = 'CC3';
-      this.STPP = 'stpp';
-      this.TTML = 'ttml';
-      this.VTT = 'vtt';
-      this.WVTT = 'wvtt';
       this.UTF8 = 'utf-8';
-      this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
       this.SCHEME_ID_URI = 'schemeIdUri';
       this.START_TIME = 'starttime';
-      this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
-      this.ABR_STRATEGY_BOLA = 'abrBola';
-      this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
-      this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
-      this.MOVING_AVERAGE_EWMA = 'ewma';
-      /**
-       *  @constant {string} BAD_ARGUMENT_ERROR 'Invalid Arguments' error
-       *  @memberof Constants#
-       *  @static
-       */
-      this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
-      this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
     }
-
-    /**
-     * @constructs
-     */
   }]);
 
   function Constants() {
@@ -510,7 +617,7 @@ function MetricsReporting() {
     function createMetricsReporting(config) {
         dvbErrorsTranslator = (0, _utilsDVBErrorsTranslator2['default'])(context).getInstance({
             eventBus: config.eventBus,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             metricsConstants: config.metricsConstants,
             events: config.events
         });
@@ -688,7 +795,7 @@ function MetricsCollectionController(config) {
         var controllersToRemove = Object.keys(metricsControllers);
 
         var metrics = (0, _utilsManifestParsing2['default'])(context).getInstance({
-            dashManifestModel: config.dashManifestModel,
+            adapter: config.adapter,
             constants: config.constants
         }).getMetrics(e.manifest);
 
@@ -1566,6 +1673,9 @@ module.exports = exports['default'];
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2096,7 +2206,7 @@ function DVBErrorsTranslator(config) {
     var instance = undefined,
         mpd = undefined;
     var eventBus = config.eventBus;
-    var metricModel = config.metricsModel;
+    var dashMetrics = config.dashMetrics;
     var metricsConstants = config.metricsConstants;
     //MediaPlayerEvents have been added to Events in MediaPlayer class
     var Events = config.events;
@@ -2122,7 +2232,7 @@ function DVBErrorsTranslator(config) {
             o.terror = new Date();
         }
 
-        metricModel.addDVBErrors(o);
+        dashMetrics.addDVBErrors(o);
     }
 
     function onManifestUpdate(e) {
@@ -2256,6 +2366,9 @@ module.exports = exports['default'];
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2328,26 +2441,26 @@ var _voReporting2 = _interopRequireDefault(_voReporting);
 function ManifestParsing(config) {
     config = config || {};
     var instance = undefined;
-    var dashManifestModel = config.dashManifestModel;
+    var adapter = config.adapter;
     var constants = config.constants;
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
-        var mpd = dashManifestModel.getMpd(manifest);
-        var voPeriods;
+        var mpd = adapter.getMpd(manifest);
+        var voPeriods = undefined,
+            reportingStartTime = undefined;
         var presentationStartTime = 0;
-        var reportingStartTime;
 
         if (dynamic) {
             // For services with MPD@type='dynamic', the start time is
             // indicated in wall clock time by adding the value of this
             // attribute to the value of the MPD@availabilityStartTime
             // attribute.
-            presentationStartTime = mpd.availabilityStartTime.getTime() / 1000;
+            presentationStartTime = adapter.getAvailabilityStartTime(mpd) / 1000;
         } else {
             // For services with MPD@type='static', the start time is indicated
             // in Media Presentation time and is relative to the PeriodStart
             // time of the first Period in this MPD.
-            voPeriods = this.getRegularPeriods(mpd);
+            voPeriods = adapter.getRegularPeriods(mpd);
 
             if (voPeriods.length) {
                 presentationStartTime = voPeriods[0].start;
@@ -2369,10 +2482,10 @@ function ManifestParsing(config) {
     function getMetrics(manifest) {
         var metrics = [];
 
-        if (manifest.Metrics_asArray) {
+        if (manifest && manifest.Metrics_asArray) {
             manifest.Metrics_asArray.forEach(function (metric) {
                 var metricEntry = new _voMetrics2['default']();
-                var isDynamic = dashManifestModel.getIsDynamic(manifest);
+                var isDynamic = adapter.getIsDynamic(manifest);
 
                 if (metric.hasOwnProperty('metrics')) {
                     metricEntry.metrics = metric.metrics;
@@ -2391,7 +2504,7 @@ function ManifestParsing(config) {
                         } else {
                             // if not present, the value is identical to the
                             // Media Presentation duration.
-                            rangeEntry.duration = dashManifestModel.getDuration(manifest);
+                            rangeEntry.duration = adapter.getDuration(manifest);
                         }
 
                         rangeEntry._useWallClockTime = isDynamic;
@@ -2475,6 +2588,9 @@ module.exports = exports['default'];
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2581,6 +2697,9 @@ module.exports = exports['default'];
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
