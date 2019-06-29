@@ -34,7 +34,7 @@
 import MetricsConstants from '../../constants/MetricsConstants';
 import SwitchRequest from '../SwitchRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
-import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
@@ -60,7 +60,6 @@ function BolaRule(config) {
     const context = this.context;
 
     const dashMetrics = config.dashMetrics;
-    const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const eventBus = EventBus(context).getInstance();
 
@@ -157,7 +156,7 @@ function BolaRule(config) {
                 // 1. do not change effective buffer level at effectiveBufferLevel === MINIMUM_BUFFER_S ( === Vp * gp )
                 // 2. scale placeholder buffer by Vp subject to offset indicated in 1.
 
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
                 let effectiveBufferLevel = bufferLevel + bolaState.placeholderBuffer;
 
                 effectiveBufferLevel -= MINIMUM_BUFFER_S;
@@ -335,7 +334,7 @@ function BolaRule(config) {
 
             // Find what maximum buffer corresponding to last segment was, and ensure placeholder is not relatively larger.
             if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
                 const bufferAtLastSegmentRequest = bufferLevel + 0.001 * (bolaState.lastSegmentFinishTimeMs - bolaState.lastSegmentRequestTimeMs); // estimate
                 const maxEffectiveBufferForLastSegment = maxBufferLevelForQuality(bolaState, bolaState.lastQuality);
                 const maxPlaceholderBuffer = Math.max(0, maxEffectiveBufferForLastSegment - bufferAtLastSegmentRequest);
@@ -369,7 +368,7 @@ function BolaRule(config) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 // deflate placeholderBuffer - note that we want to be conservative when abandoning
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(e.mediaType));
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(e.mediaType, true);
                 let wantEffectiveBufferLevel;
                 if (bolaState.abrQuality > 0) {
                     // deflate to point where BOLA just chooses newQuality over newQuality-1
@@ -384,9 +383,15 @@ function BolaRule(config) {
     }
 
     function getMaxIndex(rulesContext) {
+        const switchRequest = SwitchRequest(context).create();
+
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
+            !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') ||
+            !rulesContext.hasOwnProperty('getAbrController') || !rulesContext.hasOwnProperty('useBufferOccupancyABR')) {
+            return switchRequest;
+        }
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
-        const metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
         const scheduleController = rulesContext.getScheduleController();
         const streamInfo = rulesContext.getStreamInfo();
         const abrController = rulesContext.getAbrController();
@@ -394,7 +399,6 @@ function BolaRule(config) {
         const streamId = streamInfo ? streamInfo.id : null;
         const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
         const useBufferOccupancyABR = rulesContext.useBufferOccupancyABR();
-        const switchRequest = SwitchRequest(context).create();
         switchRequest.reason = switchRequest.reason || {};
 
         if (!useBufferOccupancyABR) {
@@ -410,7 +414,7 @@ function BolaRule(config) {
             return switchRequest;
         }
 
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
         const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
         const safeThroughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
         const latency = throughputHistory.getAverageLatency(mediaType);

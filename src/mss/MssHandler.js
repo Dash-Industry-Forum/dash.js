@@ -45,11 +45,11 @@ function MssHandler(config) {
     const events = config.events;
     const constants = config.constants;
     const initSegmentType = config.initSegmentType;
-    let metricsModel = config.metricsModel;
+    let dashMetrics = config.dashMetrics;
     let playbackController = config.playbackController;
     let protectionController = config.protectionController;
     let mssFragmentProcessor = MssFragmentProcessor(context).create({
-        metricsModel: metricsModel,
+        dashMetrics: dashMetrics,
         playbackController: playbackController,
         protectionController: protectionController,
         eventBus: eventBus,
@@ -140,7 +140,7 @@ function MssHandler(config) {
                     let fragmentInfoController = MssFragmentInfoController(context).create({
                         streamProcessor: processor,
                         eventBus: eventBus,
-                        metricsModel: metricsModel,
+                        dashMetrics: dashMetrics,
                         playbackController: playbackController,
                         baseURLController: config.baseURLController,
                         ISOBoxer: config.ISOBoxer,

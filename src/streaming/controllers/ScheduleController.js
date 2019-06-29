@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import {PlayListTrace} from '../vo/metrics/PlayList';
+import { PlayListTrace } from '../vo/metrics/PlayList';
 import AbrController from './AbrController';
 import BufferController from './BufferController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
@@ -40,17 +40,14 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaController from './MediaController';
-import {replaceTokenForTemplate} from '../../dash/utils/SegmentsUtils';
 
 function ScheduleController(config) {
 
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const metricsModel = config.metricsModel;
     const adapter = config.adapter;
     const dashMetrics = config.dashMetrics;
-    const dashManifestModel = config.dashManifestModel;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
@@ -60,6 +57,7 @@ function ScheduleController(config) {
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -67,9 +65,6 @@ function ScheduleController(config) {
         currentRepresentationInfo,
         initialRequest,
         isStopped,
-        playListMetrics,
-        playListTraceMetrics,
-        playListTraceMetricsClosed,
         isFragmentProcessingInProgress,
         timeToLoadDelay,
         scheduleTimeout,
@@ -96,18 +91,17 @@ function ScheduleController(config) {
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
-            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
-            textController: textController
+            textController: textController,
+            settings: settings
         });
 
         nextFragmentRequestRule = NextFragmentRequestRule(context).create({
-            adapter: adapter,
             textController: textController,
             playbackController: playbackController
         });
 
-        if (dashManifestModel.getIsTextTrack(config.mimeType)) {
+        if (adapter.getIsTextTrack(config.mimeType)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -141,7 +135,7 @@ function ScheduleController(config) {
             return;
         }
         logger.debug('Schedule Controller starts');
-        addPlaylistTraceMetrics();
+        createPlaylistTraceMetrics();
         isStopped = false;
 
         if (initialRequest) {
@@ -176,7 +170,7 @@ function ScheduleController(config) {
     function schedule() {
         const bufferController = streamProcessor.getBufferController();
         if (isStopped || isFragmentProcessingInProgress || !bufferController ||
-            (playbackController.isPaused() && !mediaPlayerModel.getScheduleWhilePaused()) ||
+            (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
             ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled())) {
             logger.debug('Schedule stop!');
             return;
@@ -213,7 +207,7 @@ function ScheduleController(config) {
                     const replacement = replaceRequestArray.shift();
 
                     if (fragmentController.isInitializationRequest(replacement)) {
-                        // To be sure the specific init segment had not already been loaded.
+                        // To be sure the specific init segment had not already been loaded
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
                         let request;
@@ -223,7 +217,7 @@ function ScheduleController(config) {
                             setSeekTarget(NaN);
                             if (request && !replacement) {
                                 if (!isNaN(request.startTime + request.duration)) {
-                                    adapter.setIndexHandlerTime(streamProcessor, request.startTime + request.duration);
+                                    streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
                                 }
                                 request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
                                 setTimeToLoadDelay(0);
@@ -238,7 +232,7 @@ function ScheduleController(config) {
                             fragmentModel.executeRequest(request);
                         } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
                             setFragmentProcessState(false);
-                            startScheduleTimer(mediaPlayerModel.getLowLatencyEnabled() ? 100 : 500);
+                            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
                         }
                     }
                 }
@@ -267,8 +261,8 @@ function ScheduleController(config) {
             threshold: 0
         })[0];
 
-        if (request && replaceRequestArray.indexOf(request) === -1 && !dashManifestModel.getIsTextTrack(type)) {
-            const fastSwitchModeEnabled = mediaPlayerModel.getFastSwitchEnabled();
+        if (request && replaceRequestArray.indexOf(request) === -1 && !adapter.getIsTextTrack(type)) {
+            const fastSwitchModeEnabled = settings.get().streaming.fastSwitchEnabled;
             const bufferLevel = streamProcessor.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
@@ -289,6 +283,7 @@ function ScheduleController(config) {
 
     function startScheduleTimer(value) {
         clearTimeout(scheduleTimeout);
+
         scheduleTimeout = setTimeout(schedule, value);
     }
 
@@ -309,10 +304,9 @@ function ScheduleController(config) {
     }
 
     function getInitRequest(quality) {
-        const request = adapter.getInitRequest(streamProcessor, quality);
+        const request = streamProcessor.getInitRequest(quality);
         if (request) {
             setFragmentProcessState(true);
-            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', currentRepresentationInfo ? currentRepresentationInfo.bandwidth : null);
             fragmentModel.executeRequest(request);
         }
     }
@@ -337,7 +331,7 @@ function ScheduleController(config) {
         }
 
         clearPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
-        addPlaylistTraceMetrics();
+        createPlaylistTraceMetrics();
     }
 
     function completeQualityChange(trigger) {
@@ -380,7 +374,7 @@ function ScheduleController(config) {
     }
 
     function onStreamInitialized(e) {
-        if (e.error || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+        if (streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
             return;
         }
 
@@ -391,7 +385,7 @@ function ScheduleController(config) {
                 timelineConverter.setTimeSyncCompleted(true);
                 setLiveEdgeSeekTarget();
             } else {
-                seekTarget = playbackController.getStreamStartTime(false);
+                setSeekTarget(playbackController.getStreamStartTime(false));
                 streamProcessor.getBufferController().setSeekStartTime(seekTarget);
             }
         }
@@ -407,14 +401,14 @@ function ScheduleController(config) {
             const liveEdge = liveEdgeFinder.getLiveEdge();
             const dvrWindowSize = currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize / 2;
             const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, dvrWindowSize);
-            const request = adapter.getFragmentRequest(streamProcessor, currentRepresentationInfo, startTime, {
+            const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
             });
 
             if (request) {
                 // When low latency mode is selected but browser doesn't support fetch
                 // start at the beginning of the segment to avoid consuming the whole buffer
-                if (mediaPlayerModel.getLowLatencyEnabled()) {
+                if (settings.get().streaming.lowLatencyEnabled) {
                     const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
                     playbackController.setLiveStartTime(liveStartTime);
                 } else {
@@ -423,7 +417,7 @@ function ScheduleController(config) {
             } else {
                 logger.debug('setLiveEdgeSeekTarget : getFragmentRequest returned undefined request object');
             }
-            seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+            setSeekTarget(playbackController.getStreamStartTime(false, liveEdge));
             streamProcessor.getBufferController().setSeekStartTime(seekTarget);
 
             //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
@@ -432,8 +426,7 @@ function ScheduleController(config) {
                 playbackController.seek(seekTarget);
             }
 
-            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+            dashMetrics.updateManifestUpdateInfo({
                 currentTime: seekTarget,
                 presentationStartTime: liveEdge,
                 latency: liveEdge - seekTarget,
@@ -458,7 +451,7 @@ function ScheduleController(config) {
         }
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined',
             ', Range:', e.request.range ? e.request.range : 'undefined');
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(type)) {
             setFragmentProcessState(false);
         }
 
@@ -537,8 +530,7 @@ function ScheduleController(config) {
         if (streamInfo) {
             if (e.unintended) {
                 // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-                fragmentModel.removeExecutedRequestsAfterTime(e.from,
-                    streamInfo.duration);
+                fragmentModel.removeExecutedRequestsAfterTime(e.from);
             } else {
                 fragmentModel.syncExecutedRequestsWithBufferedRange(
                     streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
@@ -584,22 +576,21 @@ function ScheduleController(config) {
     }
 
     function onPlaybackStarted() {
-        if (isStopped || !mediaPlayerModel.getScheduleWhilePaused()) {
+        if (isStopped || !settings.get().streaming.scheduleWhilePaused) {
             start();
         }
     }
 
     function onPlaybackSeeking(e) {
-        seekTarget = e.seekTime;
+        setSeekTarget(e.seekTime);
         setTimeToLoadDelay(0);
 
         if (isStopped) {
             start();
         }
 
-        const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
         const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
-        metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+        dashMetrics.updateManifestUpdateInfo({
             latency: latency
         });
 
@@ -613,9 +604,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackRateChanged(e) {
-        if (playListTraceMetrics) {
-            playListTraceMetrics.playbackspeed = e.playbackRate.toString();
-        }
+        dashMetrics.updatePlayListTraceMetrics({playbackspeed: e.playbackRate.toString()});
     }
 
     function setSeekTarget(value) {
@@ -634,34 +623,18 @@ function ScheduleController(config) {
         return type;
     }
 
-    function setPlayList(playList) {
-        playListMetrics = playList;
-    }
-
     function finalisePlayList(time, reason) {
         clearPlayListTraceMetrics(time, reason);
-        playListMetrics = null;
     }
 
     function clearPlayListTraceMetrics(endTime, stopreason) {
-        if (playListMetrics && playListTraceMetricsClosed === false) {
-            const startTime = playListTraceMetrics.start;
-            const duration = endTime.getTime() - startTime.getTime();
-            playListTraceMetrics.duration = duration;
-            playListTraceMetrics.stopreason = stopreason;
-            playListMetrics.trace.push(playListTraceMetrics);
-            playListTraceMetricsClosed = true;
-        }
+        dashMetrics.pushPlayListTraceMetrics(endTime, stopreason);
     }
 
-    function addPlaylistTraceMetrics() {
-        if (playListMetrics && playListTraceMetricsClosed === true && currentRepresentationInfo) {
-            playListTraceMetricsClosed = false;
-            playListTraceMetrics = new PlayListTrace();
-            playListTraceMetrics.representationid = currentRepresentationInfo.id;
-            playListTraceMetrics.start = new Date();
-            playListTraceMetrics.mstart = playbackController.getTime() * 1000;
-            playListTraceMetrics.playbackspeed = playbackController.getPlaybackRate().toString();
+    function createPlaylistTraceMetrics() {
+        if (currentRepresentationInfo) {
+            const playbackRate = playbackController.getPlaybackRate();
+            dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackRate !== null ? playbackRate.toString() : null);
         }
     }
 
@@ -669,9 +642,6 @@ function ScheduleController(config) {
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
-        playListMetrics = null;
-        playListTraceMetrics = null;
-        playListTraceMetricsClosed = true;
         initialRequest = true;
         lastInitQuality = NaN;
         lastFragmentRequest = {
@@ -707,7 +677,7 @@ function ScheduleController(config) {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
-        if (dashManifestModel.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -727,7 +697,6 @@ function ScheduleController(config) {
         start: start,
         stop: stop,
         reset: reset,
-        setPlayList: setPlayList,
         getBufferTarget: getBufferTarget,
         finalisePlayList: finalisePlayList
     };

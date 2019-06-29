@@ -31,6 +31,7 @@
 import EventBus from './EventBus';
 import Events from './events/Events';
 import FactoryMaker from './FactoryMaker';
+import Settings from './Settings';
 
 const LOG_LEVEL_NONE = 0;
 const LOG_LEVEL_FATAL = 1;
@@ -41,24 +42,24 @@ const LOG_LEVEL_DEBUG = 5;
 
 /**
  * @module Debug
+ * @ignore
  */
 function Debug() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     const logFn = [];
 
     let instance,
         showLogTimestamp,
         showCalleeName,
-        startTime,
-        logLevel;
+        startTime;
 
     function setup() {
         showLogTimestamp = true;
         showCalleeName = true;
-        logLevel = LOG_LEVEL_WARNING;
         startTime = new Date().getTime();
 
         if (typeof window !== 'undefined' && window.console) {
@@ -125,7 +126,8 @@ function Debug() {
      * @instance
      */
     function setLogLevel(value) {
-        logLevel = value;
+        const s = { debug: { logLevel: value }};
+        settings.update(s);
     }
 
     /**
@@ -134,7 +136,7 @@ function Debug() {
      * @instance
      */
     function getLogLevel() {
-        return logLevel;
+        return settings.get().debug.logLevel;
     }
 
     /**
@@ -156,32 +158,6 @@ function Debug() {
      */
     function setCalleeNameVisible(value) {
         showCalleeName = value;
-    }
-    /**
-     * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
-     * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
-     * @default true
-     * @memberof module:Debug
-     * @instance
-     * @deprecated
-     */
-    function setLogToBrowserConsole(value) {
-        // Replicate functionality previous to log levels feature
-        if (value) {
-            logLevel = LOG_LEVEL_DEBUG;
-        } else {
-            logLevel = LOG_LEVEL_NONE;
-        }
-    }
-    /**
-     * Use this method to get the state of logToBrowserConsole.
-     * @returns {boolean} The current value of logToBrowserConsole
-     * @memberof module:Debug
-     * @instance
-     * @deprecated
-     */
-    function getLogToBrowserConsole() {
-        return logLevel !== LOG_LEVEL_NONE;
     }
 
     function fatal(...params) {
@@ -229,7 +205,7 @@ function Debug() {
         });
 
         // log to console if the log level is high enough
-        if (logFn[level] && logLevel >= level) {
+        if (logFn[level] && settings.get().debug.logLevel >= level) {
             logFn[level](message);
         }
 
@@ -241,8 +217,6 @@ function Debug() {
         getLogger: getLogger,
         setLogTimestampVisible: setLogTimestampVisible,
         setCalleeNameVisible: setCalleeNameVisible,
-        setLogToBrowserConsole: setLogToBrowserConsole,
-        getLogToBrowserConsole: getLogToBrowserConsole,
         setLogLevel: setLogLevel,
         getLogLevel: getLogLevel
     };

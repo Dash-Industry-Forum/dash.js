@@ -49,7 +49,7 @@ function LowestBitrateRuleClass() {
         // here you can get some informations aboit metrics for example, to implement the rule
         let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
-        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        var metrics = metricsModel.getMetricsFor(mediaType, true);
 
         // A smarter (real) rule could need analyze playback metrics to take
         // bitrate switching decision. Printing metrics here as a reference

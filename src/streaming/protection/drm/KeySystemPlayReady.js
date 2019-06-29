@@ -48,7 +48,7 @@ function KeySystemPlayReady(config) {
 
     config = config || {};
     let instance;
-    let messageFormat = 'utf16';
+    let messageFormat = 'utf-16';
     const BASE64 = config.BASE64;
 
     function checkConfig() {
@@ -62,7 +62,7 @@ function KeySystemPlayReady(config) {
             xmlDoc;
         const headers = {};
         const parser = new DOMParser();
-        const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        const dataview = (messageFormat === 'utf-16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
@@ -89,21 +89,18 @@ function KeySystemPlayReady(config) {
     function getLicenseRequestFromMessage(message) {
         let licenseRequest = null;
         const parser = new DOMParser();
-        const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        const dataview = (messageFormat === 'utf-16') ? new Uint16Array(message) : new Uint8Array(message);
 
         checkConfig();
         const msg = String.fromCharCode.apply(null, dataview);
         const xmlDoc = parser.parseFromString(msg, 'application/xml');
 
-        if (xmlDoc.getElementsByTagName('Challenge')[0]) {
+        if (xmlDoc.getElementsByTagName('PlayReadyKeyMessage')[0]) {
             const Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
-        } else if (xmlDoc.getElementsByTagName('parsererror').length) {
-            // In case it is not an XML doc, return the message itself
-            // There are CDM implementations of some devices (example: some smartTVs) that
-            // return directly the challenge without wrapping it in an xml doc
+        } else {
             return message;
         }
 
@@ -175,6 +172,9 @@ function KeySystemPlayReady(config) {
             PSSHData;
 
         checkConfig();
+        if (!cpData) {
+            return null;
+        }
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
@@ -221,12 +221,12 @@ function KeySystemPlayReady(config) {
      * messages using UTF16, while others return them as UTF8.  Use this function
      * to modify the message format to expect when parsing CDM messages.
      *
-     * @param {string} format the expected message format.  Either "utf8" or "utf16".
+     * @param {string} format the expected message format.  Either "utf-8" or "utf-16".
      * @throws {Error} Specified message format is not one of "utf8" or "utf16"
      */
     function setPlayReadyMessageFormat(format) {
-        if (format !== 'utf8' && format !== 'utf16') {
-            throw new Error('Illegal PlayReady message format! -- ' + format);
+        if (format !== 'utf-8' && format !== 'utf-16') {
+            throw new Error('Specified message format is not one of "utf-8" or "utf-16"');
         }
         messageFormat = format;
     }

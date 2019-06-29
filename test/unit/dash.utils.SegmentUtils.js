@@ -1,21 +1,20 @@
 import {
     unescapeDollarsInTemplate,
     replaceIDForTemplate,
-    replaceTokenForTemplate,
-    decideSegmentListRangeForTemplate
+    replaceTokenForTemplate
 } from '../../src/dash/utils/SegmentsUtils';
 
-import VoHelper from './helpers/VOHelper';
-import ObjectsHelper from './helpers/ObjectsHelper';
+// import VoHelper from './helpers/VOHelper';
+// import ObjectsHelper from './helpers/ObjectsHelper';
 
 const expect = require('chai').expect;
 
 describe('SegmentUtils', function () {
-    const testType = 'fragmentedText';
-    const voHelper = new VoHelper();
-    const objectsHelper = new ObjectsHelper();
-    const timelineConverter = objectsHelper.getDummyTimelineConverter();
-    const representation = voHelper.getDummyRepresentation(testType);
+    // const testType = 'fragmentedText';
+    // const voHelper = new VoHelper();
+    // t objectsHelper = new ObjectsHelper();
+    // const timelineConverter = objectsHelper.getDummyTimelineConverter();
+    // const representation = voHelper.getDummyRepresentation(testType);
 
     describe('unescapeDollarsInTemplate', function () {
         it('should return undefined when unescapeDollarsInTemplate is called with an undefined url', function () {
@@ -61,15 +60,5 @@ describe('SegmentUtils', function () {
             const result = replaceTokenForTemplate('/segment_$Number$.m4v', 'Number', 1);
             expect(result).to.be.equal('/segment_1.m4v');
         });
-    });
-
-    describe('decideSegmentListRangeForTemplate', function () {
-        it('should return a range {start: NaN, end: NaN} if representation object has no availabilityWindow attribute', function () {
-            representation.availabilityWindow = null;
-            const range = decideSegmentListRangeForTemplate(timelineConverter, true, representation, null, -1);
-            expect(range.start).to.be.NaN;  // jshint ignore:line
-            expect(range.end).to.be.NaN;  // jshint ignore:line
-        });
-
     });
 });

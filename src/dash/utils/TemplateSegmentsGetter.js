@@ -30,55 +30,46 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../../streaming/constants/Constants';
 
-import {replaceTokenForTemplate, getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils';
+import { replaceTokenForTemplate, getIndexBasedSegment } from './SegmentsUtils';
 
 function TemplateSegmentsGetter(config, isDynamic) {
-
+    config = config || {};
     const timelineConverter = config.timelineConverter;
 
     let instance;
 
-    function getSegmentsFromTemplate(representation, requestedTime, index, availabilityUpperLimit) {
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
+    function getSegmentByIndex(representation, index) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
         const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
-        const duration = representation.segmentDuration;
-        const availabilityWindow = representation.segmentAvailabilityRange;
 
-        const segments = [];
-        let url = null;
-        let seg = null;
+        index = Math.max(index, 0);
 
-        let segmentRange,
-            periodSegIdx,
-            startIdx,
-            endIdx,
-            start;
+        const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
+        if (seg) {
+            seg.replacementTime = (index - 1) * representation.segmentDuration;
 
-        start = representation.startNumber;
-
-        if (isNaN(duration) && !isDynamic) {
-            segmentRange = {start: start, end: start};
-        }
-        else {
-            segmentRange = decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, availabilityUpperLimit);
-        }
-
-        startIdx = segmentRange.start;
-        endIdx = segmentRange.end;
-
-        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
-            seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, periodSegIdx);
-            seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
-            url = template.media;
+            let url = template.media;
             url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
             url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
             seg.media = url;
-
-            segments.push(seg);
-            seg = null;
         }
 
+        const duration = representation.segmentDuration;
+        const availabilityWindow = representation.segmentAvailabilityRange;
         if (isNaN(duration)) {
             representation.availableSegmentsNumber = 1;
         }
@@ -86,11 +77,31 @@ function TemplateSegmentsGetter(config, isDynamic) {
             representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
         }
 
-        return segments;
+        return seg;
+    }
+
+    function getSegmentByTime(representation, requestedTime) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
+        const duration = representation.segmentDuration;
+
+        if (isNaN(duration)) {
+            return null;
+        }
+
+        const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
+        const index = Math.floor(periodTime / duration) - 1;
+
+        return getSegmentByIndex(representation, index);
     }
 
     instance = {
-        getSegments: getSegmentsFromTemplate
+        getSegmentByIndex: getSegmentByIndex,
+        getSegmentByTime: getSegmentByTime
     };
 
     return instance;

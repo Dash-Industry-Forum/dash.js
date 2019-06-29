@@ -47,19 +47,19 @@ function Stream(config) {
     const eventBus = EventBus(context).getInstance();
 
     const manifestModel = config.manifestModel;
-    const dashManifestModel = config.dashManifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
     const capabilities = config.capabilities;
     const errHandler = config.errHandler;
     const timelineConverter = config.timelineConverter;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const mediaController = config.mediaController;
     const textController = config.textController;
     const videoModel = config.videoModel;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -93,8 +93,9 @@ function Stream(config) {
 
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
-            errHandler: errHandler
+            dashMetrics: dashMetrics,
+            errHandler: errHandler,
+            settings: settings
         });
 
         registerEvents();
@@ -202,8 +203,7 @@ function Stream(config) {
         }
 
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            const msg = 'No streams to play.';
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg +  'nostreams', manifestModel.getValue()));
             logger.fatal(msg);
         }
@@ -217,6 +217,8 @@ function Stream(config) {
     }
 
     function reset() {
+
+        stopEventController();
 
         if (playbackController) {
             playbackController.pause();
@@ -297,7 +299,6 @@ function Stream(config) {
 
     function onProtectionError(event) {
         if (event.error) {
-            errHandler.mediaKeySessionError(event.error.message);
             errHandler.error(event.error);
             logger.fatal(event.error.message);
             reset();
@@ -305,14 +306,13 @@ function Stream(config) {
     }
 
     function isMediaSupported(mediaInfo) {
-        const type = mediaInfo.type;
+        const type = mediaInfo ? mediaInfo.type : null;
         let codec,
             msg;
 
-        if (type === Constants.MUXED && mediaInfo) {
+        if (type === Constants.MUXED) {
             msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
             logger.fatal(msg);
-            errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
             return false;
         }
@@ -324,7 +324,6 @@ function Stream(config) {
         logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError('encryptedmedia');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
@@ -337,16 +336,16 @@ function Stream(config) {
 
     function onCurrentTrackChanged(e) {
         if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+        let mediaInfo = e.newMediaInfo;
+        let manifest = manifestModel.getValue();
+
+        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
         let processor = getProcessorForMediaInfo(e.newMediaInfo);
         if (!processor) return;
 
         let currentTime = playbackController.getTime();
         logger.info('Stream -  Process track changed at current time ' + currentTime);
-        let mediaInfo = e.newMediaInfo;
-        let manifest = manifestModel.getValue();
-
-        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
         logger.debug('Stream -  Update stream controller');
         if (manifest.refreshManifestOnSwitchTrack) {
@@ -361,32 +360,30 @@ function Stream(config) {
                 processor.getFragmentModel().abortRequests();
             } else {
                 processor.getScheduleController().setSeekTarget(NaN);
-                adapter.setIndexHandlerTime(processor, currentTime);
-                adapter.resetIndexHandler(processor);
+                processor.setIndexHandlerTime(currentTime);
+                processor.resetIndexHandler();
             }
         }
     }
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
         let streamProcessor = StreamProcessor(context).create({
-            type: mediaInfo.type,
-            mimeType: mediaInfo.mimeType,
+            type: mediaInfo ? mediaInfo.type : null,
+            mimeType: mediaInfo ? mediaInfo.mimeType : null,
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             stream: instance,
             abrController: abrController,
-            domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
             streamController: config.streamController,
             textController: textController,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
 
         streamProcessor.initialize(mediaSource);
@@ -394,7 +391,7 @@ function Stream(config) {
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
+            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);
@@ -404,7 +401,7 @@ function Stream(config) {
             return;
         }
 
-        if ((mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
+        if (mediaInfo && (mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
             let idx;
             for (let i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === mediaInfo.index) {
@@ -446,7 +443,6 @@ function Stream(config) {
 
         if (type === Constants.IMAGE) {
             thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
                 stream: instance,
@@ -505,7 +501,7 @@ function Stream(config) {
         filterCodecs(Constants.VIDEO);
         filterCodecs(Constants.AUDIO);
 
-        if (element === null || (element && (/^VIDEO$/i).test(element.nodeName))) {
+        if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);
         }
         initializeMediaForType(Constants.AUDIO, mediaSource);
@@ -523,7 +519,6 @@ function Stream(config) {
 
         if (streamProcessors.length === 0) {
             const msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.fatal(msg);
         } else {
@@ -542,8 +537,8 @@ function Stream(config) {
         isMediaInitialized = true;
         isUpdating = false;
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            const msg = 'No streams to play.';
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.debug(msg);
         } else {
             checkIfInitializationCompleted();
@@ -551,7 +546,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
@@ -560,7 +555,7 @@ function Stream(config) {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            const codec = dashManifestModel.getCodec(realAdaptation, i, true);
+            const codec = adapter.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
                 logger.error('[Stream] codec not supported: ' + codec);
                 return false;
@@ -596,10 +591,13 @@ function Stream(config) {
             }
         }
 
-        eventBus.trigger(Events.STREAM_INITIALIZED, {
-            streamInfo: streamInfo,
-            error: error
-        });
+        if (error) {
+            errHandler.error(error);
+        } else {
+            eventBus.trigger(Events.STREAM_INITIALIZED, {
+                streamInfo: streamInfo
+            });
+        }
     }
 
     function getMediaInfo(type) {
@@ -620,7 +618,10 @@ function Stream(config) {
     function createBuffers(previousBuffers) {
         const buffers = {};
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            buffers[streamProcessors[i].getType()] = streamProcessors[i].createBuffer(previousBuffers).getBuffer();
+            const buffer = streamProcessors[i].createBuffer(previousBuffers);
+            if (buffer) {
+                buffers[streamProcessors[i].getType()] = buffer.getBuffer();
+            }
         }
         return buffers;
     }
@@ -730,8 +731,8 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isMediaCodecCompatible(stream) {
-        return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
+    function isMediaCodecCompatible(newStream) {
+        return compareCodecs(newStream, Constants.VIDEO) && compareCodecs(newStream, Constants.AUDIO);
     }
 
     function isProtectionCompatible(stream) {
@@ -749,8 +750,8 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible
@@ -765,19 +766,19 @@ function Stream(config) {
         return true;
     }
 
-    function compareCodecs(stream, type) {
-        if (!stream) {
+    function compareCodecs(newStream, type) {
+        if (!newStream || !newStream.hasOwnProperty('getStreamInfo') ) {
             return false;
         }
-        const newStreamInfo = stream.getStreamInfo();
+        const newStreamInfo = newStream.getStreamInfo();
         const currentStreamInfo = getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
         }
 
-        const newAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = adapter.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible

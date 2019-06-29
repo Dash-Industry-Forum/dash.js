@@ -29,6 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /**
+  * @class
+  * @ignore
+  */
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
@@ -84,7 +88,7 @@ class CommonEncryption {
      */
     static getPSSHForKeySystem(keySystem, initData) {
         let psshList = CommonEncryption.parsePSSHList(initData);
-        if (psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
+        if (keySystem && psshList.hasOwnProperty(keySystem.uuid.toLowerCase())) {
             return psshList[keySystem.uuid.toLowerCase()];
         }
         return null;
@@ -116,7 +120,7 @@ class CommonEncryption {
      */
     static parsePSSHList(data) {
 
-        if (data === null)
+        if (data === null || data === undefined)
             return [];
 
         let dv = new DataView(data.buffer || data); // data.buffer first for Uint8Array support

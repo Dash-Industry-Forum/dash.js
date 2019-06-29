@@ -47,7 +47,7 @@ class Node {
 function BaseURLTreeModel() {
     let instance,
         root,
-        dashManifestModel;
+        adapter;
 
     const context = this.context;
     const objectUtils = ObjectUtils(context).getInstance();
@@ -57,19 +57,19 @@ function BaseURLTreeModel() {
     }
 
     function setConfig(config) {
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
     }
 
-    function checkSetConfigCall() {
-        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getBaseURLsFromElement') || !dashManifestModel.hasOwnProperty('getRepresentationSortFunction')) {
+    function checkConfig() {
+        if (!adapter || !adapter.hasOwnProperty('getBaseURLsFromElement') || !adapter.hasOwnProperty('getRepresentationSortFunction')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
     function updateChildData(node, index, element) {
-        let baseUrls = dashManifestModel.getBaseURLsFromElement(element);
+        const baseUrls = adapter.getBaseURLsFromElement(element);
 
         if (!node[index]) {
             node[index] = new Node(baseUrls);
@@ -82,8 +82,8 @@ function BaseURLTreeModel() {
     }
 
     function getBaseURLCollectionsFromManifest(manifest) {
-        checkSetConfigCall();
-        let baseUrls = dashManifestModel.getBaseURLsFromElement(manifest);
+        checkConfig();
+        const baseUrls = adapter.getBaseURLsFromElement(manifest);
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
@@ -100,7 +100,7 @@ function BaseURLTreeModel() {
 
                         if (a.Representation_asArray) {
                             a.Representation_asArray.sort(
-                                dashManifestModel.getRepresentationSortFunction()
+                                adapter.getRepresentationSortFunction()
                             ).forEach((r, ri) => {
                                 updateChildData(
                                     root.children[pi].children[ai].children,
@@ -116,7 +116,7 @@ function BaseURLTreeModel() {
     }
 
     function walk(callback, node) {
-        let target = node || root;
+        const target = node || root;
 
         callback(target.data);
 
@@ -145,7 +145,7 @@ function BaseURLTreeModel() {
 
     function getForPath(path) {
         let target = root;
-        let nodes = [target.data];
+        const nodes = [target.data];
 
         if (path) {
             path.forEach(p => {

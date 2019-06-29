@@ -40,6 +40,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
 
 /**
  * @class SourceBufferSink
+ * @ignore
  * @implements FragmentSink
  */
 function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
@@ -167,13 +168,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         }
         appendQueue.push(chunk);
         if (!isAppendingInProgress) {
-            waitForUpdateEnd(buffer, appendNextInQueue.bind(this));
+            waitForUpdateEnd(appendNextInQueue.bind(this));
         }
     }
 
     function updateTimestampOffset(MSETimeOffset) {
         if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-            waitForUpdateEnd(buffer, () => {
+            waitForUpdateEnd(() => {
                 buffer.timestampOffset = MSETimeOffset;
             });
         }
@@ -182,13 +183,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function remove(start, end, forceRemoval) {
         const sourceBufferSink = this;
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-        waitForUpdateEnd(buffer, function () {
+        waitForUpdateEnd(function () {
             try {
                 if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function () {
+                waitForUpdateEnd(function () {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                         buffer: sourceBufferSink,
                         from: start,
@@ -243,7 +244,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                         buffer.append(nextChunk.bytes, nextChunk);
                     }
                     // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                    waitForUpdateEnd(buffer, afterSuccess.bind(this));
+                    waitForUpdateEnd(afterSuccess.bind(this));
                 }
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
@@ -304,7 +305,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         if (callbacks.length > 0) {
             const cb = callbacks.shift();
             if (buffer.updating) {
-                waitForUpdateEnd(buffer, cb);
+                waitForUpdateEnd(cb);
             } else {
                 cb();
                 // Try to execute next callback if still not updating
@@ -330,7 +331,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         logger.error('SourceBufferSink error', mediaInfo.type);
     }
 
-    function waitForUpdateEnd(buffer, callback) {
+    function waitForUpdateEnd(callback) {
         callbacks.push(callback);
 
         if (!buffer.updating) {
@@ -346,7 +347,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         abort: abort,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
-        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
+        waitForUpdateEnd: waitForUpdateEnd
     };
 
     setup();

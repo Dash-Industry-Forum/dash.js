@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 /**
  * @module URLUtils
+ * @ignore
  * @description Provides utility functions for operating on URLs.
  * Initially this is simply a method to determine the Base URL of a URL, but
  * should probably include other things provided all over the place such as

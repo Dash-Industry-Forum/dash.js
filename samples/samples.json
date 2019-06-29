@@ -183,15 +183,26 @@
     },
     {
         "section": "Advanced",
-        "samples": [{
+        "samples": [
+            {
                 "title": "Monitoring the stream",
                 "description": "This example shows how to monitor metrics of the streams played by dash.js.",
                 "href": "advanced/monitoring.html"
             },
             {
+                "title": "Dash.js settings",
+                "description": "This example shows how to deal with dash.js settings.",
+                "href": "advanced/settings.html"
+            },
+            {
                 "title": "Listening to SCTE-EMSG Events",
                 "description": "Example showing how to listen to SCTE EMSG events raised by dash.js.",
                 "href": "advanced/listening-to-SCTE-EMSG-events.html"
+            },
+            {
+                "title": "Autoplay Browser policy",
+                "description": "This sample shows how to deal with autoplay browsers policy. It uses an event listener to detect when auto playback is interrupted by the browser and how to recover from this situation muting audio.",
+                "href": "advanced/auto-play-browser-policy.html"
             },
             {
                 "title": "Custom ABR Rules",
@@ -202,11 +213,6 @@
                 "title": "Extending Dash.js",
                 "description": "This sample shows how to use dash.js extend mechanism to add custom HTTP headers and modify URL's of the requests done by the player.",
                 "href": "advanced/extend.html"
-            },
-            {
-                "title": "Autoplay Browser policy",
-                "description": "This sample shows how to deal with autoplay browsers policy. It uses an event listener to detect when auto playback is interrupted by the browser and how to recover from this situation muting audio." ,
-                "href": "advanced/auto-play-browser-policy.html"
             }
         ]
     }

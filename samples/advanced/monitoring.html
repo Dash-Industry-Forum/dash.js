@@ -18,30 +18,26 @@
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            player.getDebug().setLogToBrowserConsole(false);
             player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
                 clearInterval(eventPoller);
                 clearInterval(bitrateCalculator);
             });
 
-            // player.on(dashjs.MediaPlayer.events["BUFFER_LEVEL_STATE_CHANGED"], showEvent);
-
             var eventPoller = setInterval(function() {
                 var streamInfo = player.getActiveStream().getStreamInfo();
-                var metrics = player.getMetricsFor('video');
                 var dashMetrics = player.getDashMetrics();
+                var dashAdapter = player.getDashAdapter();
 
-                if (metrics && dashMetrics && streamInfo) {
+                if (dashMetrics && streamInfo) {
                     const periodIdx = streamInfo.index;
-                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch(metrics);
-                    var bufferLevel = dashMetrics.getCurrentBufferLevel(metrics);
-                    var bitrate = repSwitch ? Math.round(dashMetrics.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+                    var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
                     document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
                     document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
                 }
             }, 1000);
 
-            
             if (video.webkitVideoDecodedByteCount !== undefined) {
                 var lastDecodedByteCount = 0;
                 const bitrateInterval = 5;
@@ -63,7 +59,7 @@
             width: 640px;
             height: 360px;
         }
-        
+
         #container {
             display: inline-block;
         }
@@ -73,7 +69,7 @@
             float: left;
             margin-right: 10px;
         }
-        
+
     </style>
 </head>
 <body>

@@ -1,8 +1,8 @@
 import PlaybackController from '../../src/streaming/controllers/PlaybackController';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
+import Settings from '../../src/core/Settings';
 
-import MetricsModelMock from './mocks/MetricsModelMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
@@ -16,30 +16,30 @@ const eventBus = EventBus(context).getInstance();
 
 describe('PlaybackController', function () {
 
-    let playbackController;
-    let videoModelMock;
-    let metricsModelMock;
-    let dashMetricsMock;
-    let mediaPlayerModelMock;
-    let streamControllerMock;
-    let uriFragmentModelMock;
+    let playbackController,
+        videoModelMock,
+        dashMetricsMock,
+        mediaPlayerModelMock,
+        streamControllerMock,
+        uriFragmentModelMock,
+        settings;
 
     beforeEach(function () {
         videoModelMock = new VideoModelMock();
-        metricsModelMock = new MetricsModelMock();
         dashMetricsMock = new DashMetricsMock();
         mediaPlayerModelMock = new MediaPlayerModelMock();
         streamControllerMock = new StreamControllerMock();
         uriFragmentModelMock = new URIFragmentModelMock();
         playbackController = PlaybackController(context).getInstance();
+        settings = Settings(context).getInstance();
 
         playbackController.setConfig({
             videoModel: videoModelMock,
-            metricsModel: metricsModelMock,
             dashMetrics: dashMetricsMock,
             mediaPlayerModel: mediaPlayerModelMock,
             streamController: streamControllerMock,
-            uriFragmentModel: uriFragmentModelMock
+            uriFragmentModel: uriFragmentModelMock,
+            settings: settings
         });
     });
 
@@ -81,7 +81,8 @@ describe('PlaybackController', function () {
         beforeEach(function () {
             let streamInfo = {
                 manifestInfo: {
-                    isDynamic: true
+                    isDynamic: true,
+                    availableFrom: new Date()
                 },
                 start: 10
             };
@@ -285,6 +286,36 @@ describe('PlaybackController', function () {
 
                 eventBus.on(Events.PLAYBACK_ERROR, onError, this);
                 videoModelMock.fireEvent('error', [{target: { error: 'error'}}]);
+            });
+
+            it('should handle stalled event', function (done) {
+                let onStalled = function () {
+                    eventBus.off(Events.PLAYBACK_STALLED, onStalled);
+                    done();
+                };
+
+                eventBus.on(Events.PLAYBACK_STALLED, onStalled, this);
+                videoModelMock.fireEvent('stalled');
+            });
+
+            it('should handle timeupdate event', function (done) {
+                let onTimeUpdated = function () {
+                    eventBus.off(Events.PLAYBACK_TIME_UPDATED, onTimeUpdated);
+                    done();
+                };
+
+                eventBus.on(Events.PLAYBACK_TIME_UPDATED, onTimeUpdated, this);
+                videoModelMock.fireEvent('timeupdate');
+            });
+
+            it('should handle waiting event', function (done) {
+                let onPlaybackWaiting = function () {
+                    eventBus.off(Events.PLAYBACK_WAITING, onPlaybackWaiting);
+                    done();
+                };
+
+                eventBus.on(Events.PLAYBACK_WAITING, onPlaybackWaiting, this);
+                videoModelMock.fireEvent('waiting');
             });
         });
 

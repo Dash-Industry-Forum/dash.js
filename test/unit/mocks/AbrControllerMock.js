@@ -3,210 +3,115 @@ import ThroughputHistoryMock from './ThroughputHistoryMock';
 const ABANDON_LOAD = 'abandonload';
 const QUALITY_DEFAULT = 0;
 
-class AbrControllerMock{
+function AbrControllerMock () {
+    this.qualityDict = {};
+    this.elementWidth = undefined;
+    this.elementHeight = undefined;
+    this.windowResizeEventCalled = false;
+    this.throughputHistory = undefined;
+    this.currentStreamId = undefined;
 
     // Constants
-    static get ABANDON_LOAD() {
+    this.ABANDON_LOAD = function () {
         return ABANDON_LOAD;
-    }
+    };
 
-    static get QUALITY_DEFAULT() {
+    this.QUALITY_DEFAULT = function () {
         return QUALITY_DEFAULT;
-    }
+    };
 
-    constructor() {
-        this.setup();
-    }
+    this.initialize = function () {};
 
-    setup() {
-        this.bitrateDict = {};
-        this.ratioDict = {};
-        this.qualityDict = {};
-        this.elementWidth = undefined;
-        this.elementHeight = undefined;
-        this.windowResizeEventCalled = false;
-        this.limitBitrateByPortal = false;
-        this.usePixelRatioInLimitBitrateByPortal = false;
-        this.autoSwitchBitrate = {video: true, audio: true};
-        this.throughputHistory = undefined;
-    }
+    this.createAbrRulesCollection = function () {};
 
-    initialize() {}
+    this.reset = function () {
+    };
 
-    createAbrRulesCollection() {}
+    this.setConfig = function () {};
 
-    reset() {
-        this.setup();
-    }
+    this.getTopQualityIndexFor = function () {};
 
-    setConfig() {}
+    this.getTopBitrateInfoFor = function () {};
 
-    getTopQualityIndexFor() {}
+    this.getInitialBitrateFor = function (/*type*/) {
+        return null;
+    };
 
-    getTopBitrateInfoFor() {}
+    this.checkPlaybackQuality = function () {};
 
-    getInitialBitrateFor(type) {
-        if (!this.bitrateDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return this.bitrateDict[type];
-    }
-
-    /**
-     * @param {string} type
-     * @param {number} value A value of the initial bitrate, kbps
-     * @memberof AbrController#
-     */
-    setInitialBitrateFor(type, value) {
-        this.bitrateDict[type] = value;
-    }
-
-    getInitialRepresentationRatioFor(type) {
-        if (!this.ratioDict.hasOwnProperty(type)) {
-            return null;
-        }
-
-        return this.ratioDict[type];
-    }
-
-    setInitialRepresentationRatioFor(type, value) {
-        this.ratioDict[type] = value;
-    }
-
-    getMaxAllowedBitrateFor(type) {
-        if (this.bitrateDict.hasOwnProperty('max') && this.bitrateDict.max.hasOwnProperty(type)) {
-            return this.bitrateDict.max[type];
-        }
-        return NaN;
-    }
-
-    getMinAllowedBitrateFor(type) {
-        if (this.bitrateDict.hasOwnProperty('min') && this.bitrateDict.min.hasOwnProperty(type)) {
-            return this.bitrateDict.min[type];
-        }
-        return NaN;
-    }
-
-    //TODO  change this.bitrateDict structure to hold one object for video and audio with initial and max values internal.
-    // This means you need to update all the logic around initial bitrate DOMStorage, RebController etc...
-    setMaxAllowedBitrateFor(type, value) {
-        this.bitrateDict.max = this.bitrateDict.max || {};
-        this.bitrateDict.max[type] = value;
-    }
-
-    setMinAllowedBitrateFor(type, value) {
-        this.bitrateDict.min = this.bitrateDict.min || {};
-        this.bitrateDict.min[type] = value;
-    }
-
-    getMaxAllowedRepresentationRatioFor(type) {
-        if (this.ratioDict.hasOwnProperty('max') && this.ratioDict.max.hasOwnProperty(type)) {
-            return this.ratioDict.max[type];
-        }
-        return 1;
-    }
-
-    setMaxAllowedRepresentationRatioFor(type, value) {
-        this.ratioDict.max = this.ratioDict.max || {};
-        this.ratioDict.max[type] = value;
-    }
-
-    getAutoSwitchBitrateFor(type) {
-        return this.autoSwitchBitrate[type];
-    }
-
-    setAutoSwitchBitrateFor(type, value) {
-        this.autoSwitchBitrate[type] = value;
-    }
-
-    getLimitBitrateByPortal() {
-        return this.limitBitrateByPortal;
-    }
-
-    setLimitBitrateByPortal(value) {
-        this.limitBitrateByPortal = value;
-    }
-
-    getUsePixelRatioInLimitBitrateByPortal() {
-        return this.usePixelRatioInLimitBitrateByPortal;
-    }
-
-    setUsePixelRatioInLimitBitrateByPortal(value) {
-        this.usePixelRatioInLimitBitrateByPortal = value;
-    }
-
-    checkPlaybackQuality() {}
-
-    setPlaybackQuality(type, streamInfo, newQuality) {
+    this.setPlaybackQuality = function (type, streamInfo, newQuality) {
         this.setQualityFor(type,streamInfo.id,newQuality);
-    }
+    };
 
-    setAbandonmentStateFor() {}
+    this.setAbandonmentStateFor = function () {};
 
-    getAbandonmentStateFor() {}
+    this.getAbandonmentStateFor = function () {};
 
-    getQualityForBitrate() {}
+    this.getQualityForBitrate = function () {};
 
-    getBitrateList() {}
+    this.getBitrateList = function () {
+        return [];
+    };
 
-    getThroughputHistory() {
+    this.getThroughputHistory = function () {
         return this.throughputHistory;
-    }
+    };
 
-    updateTopQualityIndex() {}
+    this.updateTopQualityIndex = function () {};
 
-    isPlayingAtTopQuality() {}
+    this.isPlayingAtTopQuality = function () {};
 
-    getQualityFor(type, streamInfo) {
-
-        var id = streamInfo.id;
+    this.getQualityFor = function (type) {
         var quality;
 
-        if (!this.qualityDict.hasOwnProperty(id)) {
+        if (!this.currentStreamId || !this.qualityDict.hasOwnProperty(this.currentStreamId)) {
             return QUALITY_DEFAULT;
         }
 
-        if (!this.qualityDict[id].hasOwnProperty(type)) {
+        if (!this.qualityDict[this.currentStreamId].hasOwnProperty(type)) {
             return QUALITY_DEFAULT;
         }
 
-        quality = this.qualityDict[id][type];
+        quality = this.qualityDict[this.currentStreamId][type];
         return quality;
-    }
+    };
 
-    setQualityFor(type, id, value) {
+    this.setQualityFor = function (type, id, value) {
+        this.currentStreamId = id;
         this.qualityDict[id] = this.qualityDict[id] || {};
         this.qualityDict[id][type] = value;
-    }
+    };
 
-
-    setWindowResizeEventCalled(value) {
+    this.setWindowResizeEventCalled = function (value) {
         this.windowResizeEventCalled = value;
-    }
+    };
 
-    getWindowResizeEventCalled() {
+    this.getWindowResizeEventCalled = function () {
         return this.windowResizeEventCalled;
-    }
+    };
 
-    setElementSize() {
+    this.setElementSize = function () {
         this.elementWidth = 10;
         this.elementHeight = 10;
-    }
+    };
 
-    getElementWidth() {
+    this.getElementWidth = function () {
         return this.elementWidth;
-    }
+    };
 
-    getElementHeight() {
+    this.getElementHeight = function () {
         return this.elementHeight;
-    }
+    };
 
-    registerStreamType() {
+    this.registerStreamType = function () {
         this.throughputHistory = new ThroughputHistoryMock();
-    }
+    };
 
-    getMinAllowedIndexFor() {}
+    this.unRegisterStreamType = function (/*type*/) {
+    };
+
+
+    this.getMinAllowedIndexFor = function () {};
 }
 
 export default AbrControllerMock;

@@ -52,7 +52,7 @@ function ThroughputHistory(config) {
     const EWMA_LATENCY_SLOW_HALF_LIFE_COUNT = 2;
     const EWMA_LATENCY_FAST_HALF_LIFE_COUNT = 1;
 
-    const mediaPlayerModel = config.mediaPlayerModel;
+    const settings = config.settings;
 
     let throughputDict,
         latencyDict,
@@ -71,9 +71,9 @@ function ThroughputHistory(config) {
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
         if (mediaType === Constants.VIDEO) {
-            return downloadTimeMs < mediaPlayerModel.getCacheLoadThresholdForType(Constants.VIDEO);
+            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
         } else if (mediaType === Constants.AUDIO) {
-            return downloadTimeMs < mediaPlayerModel.getCacheLoadThresholdForType(Constants.AUDIO);
+            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
         }
     }
 
@@ -87,7 +87,7 @@ function ThroughputHistory(config) {
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
         let throughputMeasureTime;
-        if (mediaPlayerModel.getLowLatencyEnabled()) {
+        if (settings.get().streaming.lowLatencyEnabled) {
             throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
         } else {
             throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
@@ -174,7 +174,7 @@ function ThroughputHistory(config) {
 
     function getAverage(isThroughput, mediaType, isDynamic) {
         // only two moving average methods defined at the moment
-        return mediaPlayerModel.getMovingAverageMethod() !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
+        return settings.get().streaming.abr.movingAverageMethod !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
             getAverageEwma(isThroughput, mediaType) : getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
     }
 
@@ -213,7 +213,7 @@ function ThroughputHistory(config) {
     function getSafeAverageThroughput(mediaType, isDynamic) {
         let average = getAverageThroughput(mediaType, isDynamic);
         if (!isNaN(average)) {
-            average *= mediaPlayerModel.getBandwidthSafetyFactor();
+            average *= settings.get().streaming.abr.bandwidthSafetyFactor;
         }
         return average;
     }

@@ -35,6 +35,7 @@ import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
+import { checkInteger } from './utils/SupervisorTools';
 
 import DashHandler from '../dash/DashHandler';
 
@@ -56,10 +57,8 @@ function StreamProcessor(config) {
     let streamController = config.streamController;
     let mediaController = config.mediaController;
     let textController = config.textController;
-    let domStorage = config.domStorage;
-    let metricsModel = config.metricsModel;
     let dashMetrics = config.dashMetrics;
-    let dashManifestModel = config.dashManifestModel;
+    let settings = config.settings;
 
     let instance,
         mediaInfo,
@@ -87,10 +86,10 @@ function StreamProcessor(config) {
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
-            metricsModel: metricsModel,
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
 
         // initialize controllers
@@ -104,10 +103,8 @@ function StreamProcessor(config) {
         scheduleController = ScheduleController(context).create({
             type: type,
             mimeType: mimeType,
-            metricsModel: metricsModel,
             adapter: adapter,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
@@ -115,15 +112,13 @@ function StreamProcessor(config) {
             streamController: streamController,
             textController: textController,
             streamProcessor: instance,
-            mediaController: mediaController
+            mediaController: mediaController,
+            settings: settings
         });
         representationController = RepresentationController(context).create();
         representationController.setConfig({
             abrController: abrController,
-            domStorage: domStorage,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            dashManifestModel: dashManifestModel,
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
@@ -248,7 +243,11 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        adapter.updateData(this);
+        const realAdaptation = adapter.getRealAdaptation(getStreamInfo(), mediaInfo);
+        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+        if (representationController) {
+            representationController.updateData(realAdaptation, voRepresentations, type);
+        }
     }
 
     function addMediaInfo(newMediaInfo, selectNewMediaInfo) {
@@ -285,21 +284,27 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
+    /**
+     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
+     * Otherwise, this function will return the current voRepresentation used by the representationController.
+     * @param {number} quality - quality index of the voRepresentaion expected.
+     */
     function getRepresentationInfo(quality) {
-        return adapter.getRepresentationInfo(representationController, quality);
+        let voRepresentation;
+
+        if (quality !== undefined) {
+            checkInteger(quality);
+            voRepresentation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+        } else {
+            voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
+        }
+
+        return voRepresentation ? adapter.convertDataToRepresentationInfo(voRepresentation) : null;
     }
 
     function isBufferingCompleted() {
         if (bufferController) {
             return bufferController.getIsBufferingCompleted();
-        }
-
-        return false;
-    }
-
-    function timeIsBuffered(time) {
-        if (bufferController) {
-            return bufferController.getRangeAt(time, 0) !== null;
         }
 
         return false;
@@ -329,7 +334,7 @@ function StreamProcessor(config) {
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
                 type: type,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 errHandler: errHandler,
@@ -339,13 +344,14 @@ function StreamProcessor(config) {
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
-                streamProcessor: instance
+                streamProcessor: instance,
+                settings: settings
             });
         } else {
             controller = TextBufferController(context).create({
                 type: type,
                 mimeType: mimeType,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 errHandler: errHandler,
@@ -355,11 +361,54 @@ function StreamProcessor(config) {
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
-                streamProcessor: instance
+                streamProcessor: instance,
+                settings: settings
             });
         }
 
         return controller;
+    }
+
+    function setIndexHandlerTime(value) {
+        if (indexHandler) {
+            indexHandler.setCurrentTime(value);
+        }
+    }
+
+    function getIndexHandlerTime() {
+        return indexHandler ? indexHandler.getCurrentTime() : NaN;
+    }
+
+    function resetIndexHandler() {
+        if (indexHandler) {
+            indexHandler.resetIndex();
+        }
+    }
+
+    function getInitRequest(quality) {
+        checkInteger(quality);
+
+        const representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
+
+        return indexHandler ? indexHandler.getInitRequest(representation) : null;
+    }
+
+    function getFragmentRequest(representationInfo, time, options) {
+        let fragRequest = null;
+
+        const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+        if (indexHandler) {
+            // if time and options are undefined, it means the next segment is requested
+            // otherwise, the segment at this specific time is requested.
+            if (time !== undefined && options !== undefined) {
+                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
+            } else {
+                fragRequest = indexHandler.getNextSegmentRequest(representation);
+            }
+        }
+
+        return fragRequest;
     }
 
     instance = {
@@ -377,7 +426,6 @@ function StreamProcessor(config) {
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
-        timeIsBuffered: timeIsBuffered,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
         selectMediaInfo: selectMediaInfo,
@@ -395,6 +443,11 @@ function StreamProcessor(config) {
         getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
         addInbandEvents: addInbandEvents,
+        setIndexHandlerTime: setIndexHandlerTime,
+        getIndexHandlerTime: getIndexHandlerTime,
+        resetIndexHandler: resetIndexHandler,
+        getInitRequest: getInitRequest,
+        getFragmentRequest: getFragmentRequest,
         reset: reset
     };
 

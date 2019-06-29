@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../../streaming/constants/Constants';
 
-import {getTimeBasedSegment} from './SegmentsUtils';
+import { getTimeBasedSegment } from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
@@ -48,38 +48,17 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getSegmentsFromTimeline(representation, requestedTime, index, availabilityUpperLimit) {
-        checkConfig();
-
-        if (!representation) {
-            throw new Error('no representation');
-        }
-
-        if (requestedTime === undefined) {
-            requestedTime = null;
-        }
-
+    function iterateSegments(representation, iterFunc) {
         const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
         const list = base.SegmentURL_asArray;
-        const isAvailableSegmentNumberCalculated = representation.availableSegmentsNumber > 0;
-
-        let maxSegmentsAhead;
-
-        if (availabilityUpperLimit) {
-            maxSegmentsAhead = availabilityUpperLimit;
-        } else {
-            maxSegmentsAhead = (index > -1 || requestedTime !== null) ? 10 : Infinity;
-        }
 
         let time = 0;
         let scaledTime = 0;
         let availabilityIdx = -1;
-        const segments = [];
-        let requiredMediaTime = null;
 
         let fragments,
             frag,
@@ -89,43 +68,14 @@ function TimelineSegmentsGetter(config, isDynamic) {
             repeat,
             repeatEndTime,
             nextFrag,
-            hasEnoughSegments,
-            startIdx,
             fTimescale;
 
-        let createSegment = function (s, i) {
-            let media = base.media;
-            let mediaRange = s.mediaRange;
-
-            if (list) {
-                media = list[i].media || '';
-                mediaRange = list[i].mediaRange;
-            }
-
-            return getTimeBasedSegment(
-                timelineConverter,
-                isDynamic,
-                representation,
-                time,
-                s.d,
-                fTimescale,
-                media,
-                mediaRange,
-                availabilityIdx,
-                s.tManifest);
-        };
-
         fTimescale = representation.timescale;
-
         fragments = timeline.S_asArray;
 
-        startIdx = index;
+        let breakIterator = false;
 
-        if (requestedTime !== null) {
-            requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
-        }
-
-        for (i = 0, len = fragments.length; i < len; i++) {
+        for (i = 0, len = fragments.length; i < len && !breakIterator; i++) {
             frag = fragments[i];
             repeat = 0;
             if (frag.hasOwnProperty('r')) {
@@ -154,34 +104,18 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
             }
 
-            // if we have enough segments in the list, but we have not calculated the total number of the segments yet we
-            // should continue the loop and calc the number. Once it is calculated, we can break the loop.
-            if (hasEnoughSegments) {
-                if (isAvailableSegmentNumberCalculated) break;
-                availabilityIdx += repeat + 1;
-                continue;
-            }
-
-            for (j = 0; j <= repeat; j++) {
+            for (j = 0; j <= repeat && !breakIterator; j++) {
                 availabilityIdx++;
 
-                if (segments.length > maxSegmentsAhead) {
-                    hasEnoughSegments = true;
-                    if (isAvailableSegmentNumberCalculated) break;
-                    continue;
-                }
+                breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i);
 
-                if (requiredMediaTime !== null) {
-                    // In some cases when requiredMediaTime = actual end time of the last segment
-                    // it is possible that this time a bit exceeds the declared end time of the last segment.
-                    // in this case we still need to include the last segment in the segment list. to do this we
-                    // use a correction factor = 1.5. This number is used because the largest possible deviation is
-                    // is 50% of segment duration.
-                    if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
-                        segments.push(createSegment(frag, availabilityIdx));
+                if (breakIterator) {
+                    representation.segmentDuration = frag.d / fTimescale;
+
+                    // check if there is at least one more segment
+                    if (j < repeat - 1 || i < len - 1) {
+                        availabilityIdx++;
                     }
-                } else if (availabilityIdx >= startIdx) {
-                    segments.push(createSegment(frag, availabilityIdx));
                 }
 
                 time += frag.d;
@@ -189,15 +123,111 @@ function TimelineSegmentsGetter(config, isDynamic) {
             }
         }
 
-        if (!isAvailableSegmentNumberCalculated) {
-            representation.availableSegmentsNumber = availabilityIdx + 1;
-        }
-
-        return segments;
+        representation.availableSegmentsNumber = availabilityIdx;
     }
 
+    function getSegmentByIndex(representation, index, lastSegmentTime) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
+        let segment = null;
+        let found = false;
+
+        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+            // In some cases when requiredMediaTime = actual end time of the last segment
+            // it is possible that this time a bit exceeds the declared end time of the last segment.
+            // in this case we still need to include the last segment in the segment list. to do this we
+            // use a correction factor = 1.5. This number is used because the largest possible deviation is
+            // is 50% of segment duration.
+            if (found || lastSegmentTime < 0) {
+                let media = base.media;
+                let mediaRange = frag.mediaRange;
+
+                if (list) {
+                    media = list[i].media || '';
+                    mediaRange = list[i].mediaRange;
+                }
+
+                segment = getTimeBasedSegment(
+                    timelineConverter,
+                    isDynamic,
+                    representation,
+                    time,
+                    frag.d,
+                    fTimescale,
+                    media,
+                    mediaRange,
+                    availabilityIdx,
+                    frag.tManifest);
+
+                return true;
+            } else if (scaledTime >= lastSegmentTime - 0.5) {
+                found = true;
+            }
+
+            return false;
+        });
+
+        return segment;
+    }
+
+    function getSegmentByTime(representation, requestedTime) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
+        if (requestedTime === undefined) {
+            requestedTime = null;
+        }
+
+        let segment = null;
+        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
+
+        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+            // In some cases when requiredMediaTime = actual end time of the last segment
+            // it is possible that this time a bit exceeds the declared end time of the last segment.
+            // in this case we still need to include the last segment in the segment list. to do this we
+            // use a correction factor = 1.5. This number is used because the largest possible deviation is
+            // is 50% of segment duration.
+            if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
+                let media = base.media;
+                let mediaRange = frag.mediaRange;
+
+                if (list) {
+                    media = list[i].media || '';
+                    mediaRange = list[i].mediaRange;
+                }
+
+                segment = getTimeBasedSegment(
+                    timelineConverter,
+                    isDynamic,
+                    representation,
+                    time,
+                    frag.d,
+                    fTimescale,
+                    media,
+                    mediaRange,
+                    availabilityIdx,
+                    frag.tManifest);
+
+                return true;
+            }
+
+            return false;
+        });
+
+        return segment;
+    }
+
+
     instance = {
-        getSegments: getSegmentsFromTimeline
+        getSegmentByIndex: getSegmentByIndex,
+        getSegmentByTime: getSegmentByTime
     };
 
     return instance;

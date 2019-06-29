@@ -39,8 +39,8 @@ import Events from '../../core/events/Events';
 
 function BaseURLController() {
 
-    let instance;
-    let dashManifestModel;
+    let instance,
+        adapter;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -69,14 +69,14 @@ function BaseURLController() {
             baseURLSelector = config.baseURLSelector;
         }
 
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
     }
 
     function update(manifest) {
         baseURLTreeModel.update(manifest);
-        baseURLSelector.chooseSelectorFromManifest(manifest);
+        baseURLSelector.chooseSelector(adapter.getIsDVB(manifest));
     }
 
     function resolve(path) {
@@ -115,10 +115,7 @@ function BaseURLController() {
 
         // report config to baseURLTreeModel and baseURLSelector
         baseURLTreeModel.setConfig({
-            dashManifestModel: dashManifestModel
-        });
-        baseURLSelector.setConfig({
-            dashManifestModel: dashManifestModel
+            adapter: adapter
         });
 
         update(data);

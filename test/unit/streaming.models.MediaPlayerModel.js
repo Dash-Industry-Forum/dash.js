@@ -4,6 +4,7 @@ import {
     HTTPRequest
 } from '../../src/streaming/vo/metrics/HTTPRequest';
 import ABRRulesCollection from '../../src/streaming/rules/abr/ABRRulesCollection';
+import Settings from '../../src/core/Settings';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -11,35 +12,7 @@ const expect = chai.expect;
 describe('MediaPlayerModel', function () {
     const context = {};
     const mediaPlayerModel = MediaPlayerModel(context).getInstance();
-
-    it('should not set a value to lowLatencyEnabled attribute that is not a boolean type', function () {
-        expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(false);
-        expect(mediaPlayerModel.setLowLatencyEnabled.bind(mediaPlayerModel, undefined)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(false);
-        expect(mediaPlayerModel.setLowLatencyEnabled.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(false);
-        mediaPlayerModel.setLowLatencyEnabled(true);
-        expect(mediaPlayerModel.getLowLatencyEnabled()).to.be.equal(true);
-    });
-
-    it('setCatchUpPlaybackRate should throw an exception if input argument is not a number or out of 0-0.5 range', function () {
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.9);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(13);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(0.1);}).to.not.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate('string');}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(true);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(() => {mediaPlayerModel.setCatchUpPlaybackRate(false);}).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('should not set a value to fastSwitchEnabled attribute that is not a boolean type', function () {
-        expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
-        expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, undefined)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
-        expect(mediaPlayerModel.setFastSwitchEnabled.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(false);
-        mediaPlayerModel.setFastSwitchEnabled(true);
-        expect(mediaPlayerModel.getFastSwitchEnabled()).to.be.equal(true);
-    });
+    const settings = Settings(context).getInstance();
 
     it('Method removeUTCTimingSource should throw an exception', function () {
         expect(mediaPlayerModel.removeUTCTimingSource.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
@@ -59,132 +32,6 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.addUTCTimingSource.bind(mediaPlayerModel, 1, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setKeepProtectionMediaKeys should throw an exception', function () {
-        expect(mediaPlayerModel.setKeepProtectionMediaKeys.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setKeepProtectionMediaKeys.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setJumpGaps should throw an exception', function () {
-        expect(mediaPlayerModel.setJumpGaps.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setJumpGaps.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setRetryIntervalForType should throw an exception', function () {
-        expect(mediaPlayerModel.setRetryIntervalForType.bind(mediaPlayerModel, HTTPRequest.MPD_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setRetryIntervalForType.bind(mediaPlayerModel, HTTPRequest.MPD_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setBufferAheadToKeep should throw an exception', function () {
-        expect(mediaPlayerModel.setBufferAheadToKeep.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBufferAheadToKeep.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setUseManifestDateHeaderTimeSource should throw an exception', function () {
-        expect(mediaPlayerModel.setUseManifestDateHeaderTimeSource.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setUseManifestDateHeaderTimeSource.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setBufferToKeep should throw an exception', function () {
-        expect(mediaPlayerModel.setBufferToKeep.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBufferToKeep.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setBufferPruningInterval should throw an exception', function () {
-        expect(mediaPlayerModel.setBufferPruningInterval.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBufferPruningInterval.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setRetryAttemptsForType should throw an exception', function () {
-        expect(mediaPlayerModel.setRetryAttemptsForType.bind(mediaPlayerModel, HTTPRequest.MPD_TYPE, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setRetryAttemptsForType.bind(mediaPlayerModel, HTTPRequest.MEDIA_SEGMENT_TYPE, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setRetryAttemptsForType.bind(mediaPlayerModel, 'text', 10)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setRetryAttemptsForType.bind(mediaPlayerModel, 1, 10)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setRetryAttemptsForType.bind(mediaPlayerModel, true, 10)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setBandwidthSafetyFactor should throw an exception', function () {
-        expect(mediaPlayerModel.setBandwidthSafetyFactor.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBandwidthSafetyFactor.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setSegmentOverlapToleranceTime should throw an exception', function () {
-        expect(mediaPlayerModel.setSegmentOverlapToleranceTime.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setSegmentOverlapToleranceTime.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setCacheLoadThresholdForType should throw an exception', function () {
-        expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, Constants.AUDIO, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, Constants.AUDIO, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, true, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, 1, 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setCacheLoadThresholdForType.bind(mediaPlayerModel, 'text', 5)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setStableBufferTime should throw an exception', function () {
-        expect(mediaPlayerModel.setStableBufferTime.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setStableBufferTime.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setBufferTimeAtTopQuality should throw an exception', function () {
-        expect(mediaPlayerModel.setBufferTimeAtTopQuality.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBufferTimeAtTopQuality.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setSmallGapLimit should throw an exception', function () {
-        expect(mediaPlayerModel.setSmallGapLimit.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setSmallGapLimit.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setBufferTimeAtTopQualityLongForm should throw an exception', function () {
-        expect(mediaPlayerModel.setBufferTimeAtTopQualityLongForm.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setBufferTimeAtTopQualityLongForm.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setLongFormContentDurationThreshold should throw an exception', function () {
-        expect(mediaPlayerModel.setLongFormContentDurationThreshold.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLongFormContentDurationThreshold.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setManifestUpdateRetryInterval should throw an exception', function () {
-        expect(mediaPlayerModel.setManifestUpdateRetryInterval.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setManifestUpdateRetryInterval.bind(mediaPlayerModel, 'true')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setAbandonLoadTimeout should throw an exception', function () {
-        expect(mediaPlayerModel.setAbandonLoadTimeout.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setAbandonLoadTimeout.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setUseDefaultABRRules should throw an exception', function () {
-        expect(mediaPlayerModel.setUseDefaultABRRules.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setUseDefaultABRRules.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setUseSuggestedPresentationDelay should throw an exception', function () {
-        expect(mediaPlayerModel.setUseSuggestedPresentationDelay.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setUseSuggestedPresentationDelay.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setWallclockTimeUpdateInterval should throw an exception', function () {
-        expect(mediaPlayerModel.setWallclockTimeUpdateInterval.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setWallclockTimeUpdateInterval.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setScheduleWhilePaused should throw an exception', function () {
-        expect(mediaPlayerModel.setScheduleWhilePaused.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setScheduleWhilePaused.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setLiveDelayFragmentCount should throw an exception', function () {
-        expect(mediaPlayerModel.setLiveDelayFragmentCount.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLiveDelayFragmentCount.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
-    it('Method setLiveDelay should throw an exception', function () {
-        expect(mediaPlayerModel.setLiveDelay.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLiveDelay.bind(mediaPlayerModel, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-    });
-
     it('Method addABRCustomRule should throw an exception', function () {
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, 'unknownRuleType', 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, true, 'newRuleName')).to.throw(Constants.BAD_ARGUMENT_ERROR);
@@ -193,53 +40,59 @@ describe('MediaPlayerModel', function () {
         expect(mediaPlayerModel.addABRCustomRule.bind(mediaPlayerModel, ABRRulesCollection.ABANDON_FRAGMENT_RULES, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
     });
 
-    it('Method setLastBitrateCachingInfo should throw an exception if needed', function () {
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, true, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastBitrateCachingInfo.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    it('should configure FragmentLoaderRetryAttempts', function () {
+        let FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+        expect(FragmentLoaderRetryAttempts).to.equal(3);
 
-        let lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
+        const s = { streaming: { retryAttempts: {}}};
+        s.streaming.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] = 50;
+        settings.update(s);
 
-        expect(lastBitrateCachingInfo.enabled).to.be.equal(true);
-        expect(lastBitrateCachingInfo.ttl).to.be.equal(360000);
-
-        mediaPlayerModel.setLastBitrateCachingInfo(false, 40);
-
-        lastBitrateCachingInfo = mediaPlayerModel.getLastBitrateCachingInfo();
-
-        expect(lastBitrateCachingInfo.enabled).to.be.equal(false);
-        expect(lastBitrateCachingInfo.ttl).to.be.equal(40);
-
-        mediaPlayerModel.setLastBitrateCachingInfo(true);
-
-        expect(lastBitrateCachingInfo.enabled).to.be.equal(true);
-        expect(lastBitrateCachingInfo.ttl).to.be.equal(40);
+        FragmentLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+        expect(FragmentLoaderRetryAttempts).to.equal(50);
     });
 
-    it('Method setLastMediaSettingsCachingInfo should throw an exception if needed', function () {
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, true, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, true, true)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-        expect(mediaPlayerModel.setLastMediaSettingsCachingInfo.bind(mediaPlayerModel, true, 'string')).to.throw(Constants.BAD_ARGUMENT_ERROR);
+    it('should configure FragmentLoaderRetryInterval', function () {
+        let FragmentLoaderRetryInterval =  mediaPlayerModel.getRetryIntervalsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+        expect(FragmentLoaderRetryInterval).to.equal(1000);
 
-        let lastMediaSettingsCachingInfo = mediaPlayerModel.getLastMediaSettingsCachingInfo();
+        const s = { streaming: { retryIntervals: {}}};
+        s.streaming.retryIntervals[HTTPRequest.MEDIA_SEGMENT_TYPE] = 50;
+        settings.update(s);
 
-        expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(true);
-        expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(360000);
+        FragmentLoaderRetryInterval =  mediaPlayerModel.getRetryIntervalsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+        expect(FragmentLoaderRetryInterval).to.equal(50);
+    });
 
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(false, 40);
+    it('should configure ManifestLoaderRetryAttempts', function () {
+        let ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MPD_TYPE);
+        expect(ManifestLoaderRetryAttempts).to.equal(3);
 
-        lastMediaSettingsCachingInfo = mediaPlayerModel.getLastMediaSettingsCachingInfo();
+        const s = { streaming: { retryAttempts: {}}};
+        s.streaming.retryAttempts[HTTPRequest.MPD_TYPE] = 50;
+        settings.update(s);
 
-        expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(false);
-        expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
+        ManifestLoaderRetryAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MPD_TYPE);
+        expect(ManifestLoaderRetryAttempts).to.equal(50);
+    });
 
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(true);
+    it('should configure ManifestLoaderRetryInterval', function () {
+        let ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalsForType(HTTPRequest.MPD_TYPE);
+        expect(ManifestLoaderRetryInterval).to.equal(500);
 
-        expect(lastMediaSettingsCachingInfo.enabled).to.be.equal(true);
-        expect(lastMediaSettingsCachingInfo.ttl).to.be.equal(40);
+        const s = { streaming: { retryIntervals: {}}};
+        s.streaming.retryIntervals[HTTPRequest.MPD_TYPE] = 50;
+        settings.update(s);
+
+        ManifestLoaderRetryInterval = mediaPlayerModel.getRetryIntervalsForType(HTTPRequest.MPD_TYPE);
+        expect(ManifestLoaderRetryInterval).to.equal(50);
+    });
+
+    it('should configure StableBufferTime', function () {
+        const s = { streaming: { stableBufferTime: 50 } };
+        settings.update(s);
+
+        let StableBufferTime = mediaPlayerModel.getStableBufferTime();
+        expect(StableBufferTime).to.equal(50);
     });
 });

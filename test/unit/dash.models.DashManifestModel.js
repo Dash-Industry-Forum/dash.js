@@ -1,19 +1,19 @@
 import DashManifestModel from '../../src/dash/models/DashManifestModel';
+import DashConstants from '../../src/dash/constants/DashConstants';
 import BaseURL from '../../src/dash/vo/BaseURL';
 
 import MpdHelper from './helpers/MPDHelper';
-import ObjectsHelper from './helpers/ObjectsHelper';
+import VoHelper from './helpers/VOHelper';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
-const objectsHelper = new ObjectsHelper();
 const errorHandlerMock = new ErrorHandlerMock();
-const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
-const dashManifestModel = DashManifestModel(context).getInstance({
-    timelineConverter: timelineConverterMock,
+const dashManifestModel = DashManifestModel(context).getInstance();
+
+dashManifestModel.setConfig({
     errHandler: errorHandlerMock
 });
 
@@ -25,14 +25,74 @@ const EMPTY_STRING = '';
 describe('DashManifestModel', function () {
 
     const mpdHelper = new MpdHelper();
+    const voHelper = new VoHelper();
 
     it('should throw an exception when attempting to call getIsTypeOf with undefined parameters', function () {
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel)).to.throw('adaptation is not defined');
 
-        var adaptation = mpdHelper.composeAdaptation('video');
+        const adaptation = mpdHelper.composeAdaptation('video');
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation)).to.throw('type is not defined');
 
         expect(dashManifestModel.getIsTypeOf.bind(dashManifestModel, adaptation, EMPTY_STRING)).to.throw('type is not defined');
+    });
+
+    it('should return null when getSuggestedPresentationDelay is called and mpd is undefined', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay();
+
+        expect(suggestedPresentationDelay).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return null when getSuggestedPresentationDelay is called and mpd is an empty object', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay({});
+
+        expect(suggestedPresentationDelay).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return 5 when getSuggestedPresentationDelay is called and mpd is an object with suggestedPresentationDelay attribute', () => {
+        const suggestedPresentationDelay = dashManifestModel.getSuggestedPresentationDelay({suggestedPresentationDelay: 5});
+
+        expect(suggestedPresentationDelay).to.be.equal(5);  // jshint ignore:line
+    });
+
+    it('should return null when getAvailabilityStartTime is called and mpd is undefined', () => {
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime();
+
+        expect(availabilityStartTime).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return null when getAvailabilityStartTime is called and mpd is an empty object', () => {
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime({});
+
+        expect(availabilityStartTime).to.be.null;  // jshint ignore:line
+    });
+
+    it('should return correct value when getAvailabilityStartTime is called and mpd is object with the availabilityStartTime attribute', () => {
+        const now = new Date();
+        const availabilityStartTime = dashManifestModel.getAvailabilityStartTime({availabilityStartTime: now});
+
+        expect(availabilityStartTime).to.be.equal(now.getTime());  // jshint ignore:line
+    });
+
+    it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and adaptation is undefined', () => {
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation();
+
+        expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
+    });
+
+    it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and voAdaptation is defined, but without reference to real adaptation', () => {
+        const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{}]}]}}}, index: 0, type: 'video'};
+
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
+
+        expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
+    });
+
+    it('should return true when getUseCalculatedLiveEdgeTimeForAdaptation is called and voAdaptation is defined, with reference to real adaptation', () => {
+        const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
+
+        const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
+
+        expect(useCalculatedLiveEdge).to.be.true;  // jshint ignore:line
     });
 
     it('should return false when getIsTextTrack is called and type is undefined', () => {
@@ -208,6 +268,18 @@ describe('DashManifestModel', function () {
         expect(codec).to.be.null;    // jshint ignore:line
     });
 
+    it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is true', () => {
+        const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, true);
+
+        expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D";width="1080";height="960"');    // jshint ignore:line
+    });
+
+    it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
+        const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, false);
+
+        expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
+    });
+
     it('should return null when getMimeType is called and adaptation is undefined', () => {
         const mimeType = dashManifestModel.getMimeType();
 
@@ -232,8 +304,57 @@ describe('DashManifestModel', function () {
         expect(kid).to.be.null;    // jshint ignore:line
     });
 
+    it('should return kid value when getKID is called and adaptation is well defined', () => {
+        const kid = dashManifestModel.getKID({'cenc:default_KID': 'testKid'});
+
+        expect(kid).to.equal('testKid');    // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is undefined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation();
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: true});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label_asArray', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: []});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should return correct array when getLabelsForAdaptation is called and adaptation is well defined', () => {
+        const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: [{lang: 'fre',  __text: 'french'}, {lang: 'eng',  __text: 'english'}]});
+
+        expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(labels.length).to.equal(2);         // jshint ignore:line
+        expect(labels[0].lang).to.equal('fre');        // jshint ignore:line
+    });
+
     it('should return null when getContentProtectionData is called and adaptation is undefined', () => {
         const contentProtection = dashManifestModel.getContentProtectionData();
+
+        expect(contentProtection).to.be.null;    // jshint ignore:line
+    });
+
+    it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection_asArray is an empty array', () => {
+        const adaptation = {ContentProtection_asArray: []};
+        const contentProtection = dashManifestModel.getContentProtectionData(adaptation);
 
         expect(contentProtection).to.be.null;    // jshint ignore:line
     });
@@ -250,6 +371,18 @@ describe('DashManifestModel', function () {
         expect(duration).to.equal(Number.MAX_SAFE_INTEGER || Number.MAX_VALUE); // jshint ignore:line
     });
 
+    it('should return duration when getDuration is called and manifest has a defined mediaPresentationDuration', () => {
+        const duration = dashManifestModel.getDuration({mediaPresentationDuration: 50});
+
+        expect(duration).to.equal(50); // jshint ignore:line
+    });
+
+    it('should return infinity when getDuration is called and manifest is a dynamic one', () => {
+        const duration = dashManifestModel.getDuration({type: DashConstants.DYNAMIC});
+
+        expect(duration).to.equal(Infinity); // jshint ignore:line
+    });
+
     it('should return 0 when getRepresentationCount is called and adaptation is undefined', () => {
         const representationCount = dashManifestModel.getRepresentationCount();
 
@@ -262,10 +395,26 @@ describe('DashManifestModel', function () {
         expect(bdtw).to.be.NaN; // jshint ignore:line
     });
 
-    it('should return null when getBitrateListForAdaptation is called and adaptation is undefined', () => {
+    it('should return correct value when getBandwidth is called and representation is defined', () => {
+        const bdtw = dashManifestModel.getBandwidth({bandwidth: 9600});
+
+        expect(bdtw).to.equal(9600); // jshint ignore:line
+    });
+
+    it('should return empty array when getBitrateListForAdaptation is called and adaptation is undefined', () => {
         const bitrateList = dashManifestModel.getBitrateListForAdaptation();
 
-        expect(bitrateList).to.be.null; // jshint ignore:line
+        expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
+        expect(bitrateList).to.be.empty; // jshint ignore:line
+    });
+
+    it('should not return empty array when getBitrateListForAdaptation is called and adaptation is defined', () => {
+        const realAdaptation = {Representation_asArray: [{}]};
+
+        const bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
+
+        expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
+        expect(bitrateList).not.to.be.empty; // jshint ignore:line
     });
 
     it('should return null when getRepresentationFor is called and index and adaptation are undefined', () => {
@@ -288,7 +437,7 @@ describe('DashManifestModel', function () {
         expect(representation).to.be.null; // jshint ignore:line
     });
 
-    it('should return representation.id = video25 when getRepresentationFor is called', () => {
+    it('should return representation.id = video20 when getRepresentationFor is called', () => {
         var adaptation = mpdHelper.composeAdaptation('video');
         const representation = dashManifestModel.getRepresentationFor(0, adaptation);
 
@@ -301,6 +450,18 @@ describe('DashManifestModel', function () {
         expect(location).to.be.undefined; // jshint ignore:line
     });
 
+    it('should return undefined when getLocation is called and manifest is an empty object', () => {
+        const location = dashManifestModel.getLocation({});
+
+        expect(location).to.be.undefined; // jshint ignore:line
+    });
+
+    it('should return valid location when getLocation is called and manifest is a valid object', () => {
+        const location = dashManifestModel.getLocation({Location: '', Location_asArray: ['location_1']});
+
+        expect(location).to.be.equal('location_1'); // jshint ignore:line
+    });
+
     it('should return an empty Array when getUTCTimingSources is called and manifest is undefined', () => {
         const utcSourceArray = dashManifestModel.getUTCTimingSources();
 
@@ -310,6 +471,37 @@ describe('DashManifestModel', function () {
 
     it('should return an empty Array when getEventStreamForRepresentation is called and manifest and representation are undefined', () => {
         const eventsStream = dashManifestModel.getEventStreamForRepresentation();
+
+        expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(eventsStream).to.be.empty;                // jshint ignore:line
+    });
+
+    it('should not return an empty Array when getEventStreamForRepresentation is called and manifest and representation are well defined', () => {
+        const manifest = {
+                Period: [
+                    {
+                        'id': '153199',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    }
+                ],
+                Period_asArray: [
+                    {
+                        'id': '153199',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    }
+                ],
+                'type': 'static'
+            };
+        const representation = {adaptation: {index: 0, period: {index: 0}}, index: 0};
+        const eventsStream = dashManifestModel.getEventStreamForRepresentation(manifest, representation);
 
         expect(eventsStream).to.be.instanceOf(Array);    // jshint ignore:line
         expect(eventsStream).to.be.empty;                // jshint ignore:line
@@ -335,8 +527,15 @@ describe('DashManifestModel', function () {
         expect(mpd.manifest).to.be.null;                // jshint ignore:line
     });
 
+    it('should return mpd.manifest not null when getMpd is called and manifest is defined', () => {
+        const mpd = dashManifestModel.getMpd({});
+
+        expect(mpd.manifest).not.to.be.null;                // jshint ignore:line
+        expect(mpd.manifest.availabilityStartTime).to.be.undefined;                // jshint ignore:line
+    });
+
     it('should return an error when getRegularPeriods and getEndTimeForLastPeriod are called and duration is undefined', () => {
-        const manifest = {
+        const mpd = {
             'manifest': {
                 'Period': [
                     {
@@ -359,7 +558,7 @@ describe('DashManifestModel', function () {
             'maxSegmentDuration': 4.5,
             'mediaPresentationDuration': 300.0
         };
-        dashManifestModel.getRegularPeriods(manifest);
+        dashManifestModel.getRegularPeriods(mpd);
 
         expect(errorHandlerMock.errorValue).to.equal('Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.');
     });
@@ -512,6 +711,15 @@ describe('DashManifestModel', function () {
         expect(adaptationArray).to.be.empty;                // jshint ignore:line
     });
 
+    it('should not return an empty array when getAdaptationsForPeriod is called and period is defined', () => {
+        const period = voHelper.getDummyPeriod();
+        const adaptationArray = dashManifestModel.getAdaptationsForPeriod(period);
+
+        expect(adaptationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(adaptationArray).not.to.be.empty;                // jshint ignore:line
+        expect(adaptationArray[0].index).to.equals(0);                // jshint ignore:line
+    });
+
     it('should return an empty array when getRepresentationsForAdaptation is called and adaptation is undefined', () => {
         const representationArray = dashManifestModel.getRepresentationsForAdaptation();
 
@@ -519,28 +727,37 @@ describe('DashManifestModel', function () {
         expect(representationArray).to.be.empty;                // jshint ignore:line
     });
 
-    it('should return false when getIsDVB is called and manifest is undefined', () => {
-        const IsDVB = dashManifestModel.getIsDVB();
+    it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
+        const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
+        const representationArray = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+
+        expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line
+        expect(representationArray).not.to.be.empty;                // jshint ignore:line
+        expect(representationArray[0].index).to.equals(0);                // jshint ignore:line
+    });
+
+    it('should return false when hasProfile is called and manifest is undefined', () => {
+        const IsDVB = dashManifestModel.hasProfile();
 
         expect(IsDVB).to.be.false;    // jshint ignore:line
     });
 
-    it('should return true when getIsDVB is called and manifest contains a valid DVB profile', () => {
+    it('should return true when hasProfile is called and manifest contains a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:dvb:dash:profile:dvb-dash:2014,urn:dvb:dash:profile:dvb-dash:isoff-ext-live:2014'
         };
 
-        const isDVB = dashManifestModel.getIsDVB(manifest);
+        const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
         expect(isDVB).to.be.true; // jshint ignore:line
     });
 
-    it('should return false when getIsDVB is called and manifest does not contain a valid DVB profile', () => {
+    it('should return false when hasProfile is called and manifest does not contain a valid DVB profile', () => {
         const manifest = {
             profiles: 'urn:mpeg:dash:profile:isoff-on-demand:2011, http://dashif.org/guildelines/dash264'
         };
 
-        const isDVB = dashManifestModel.getIsDVB(manifest);
+        const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
         expect(isDVB).to.be.false; // jshint ignore:line
     });

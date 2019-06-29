@@ -17,6 +17,11 @@ function DroppedFramesRule() {
     }
 
     function getMaxIndex(rulesContext) {
+        const switchRequest = SwitchRequest(context).create();
+
+        if (!rulesContext || !rulesContext.hasOwnProperty('getDroppedFramesHistory')) {
+            return switchRequest;
+        }
         const droppedFramesHistory = rulesContext.getDroppedFramesHistory();
         if (droppedFramesHistory) {
             const dfh = droppedFramesHistory.getFrameHistory();
@@ -38,7 +43,7 @@ function DroppedFramesRule() {
             return SwitchRequest(context).create(maxIndex, {droppedFrames: droppedFrames});
         }
 
-        return SwitchRequest(context).create();
+        return switchRequest;
     }
 
     instance = {

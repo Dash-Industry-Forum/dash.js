@@ -23,10 +23,6 @@ declare namespace dashjs {
         getLogger(): Logger;
         setLogTimestampVisible(flag: boolean): void;
         setCalleeNameVisible(flag: boolean): void;
-        getLogToBrowserConsole(): boolean;
-        setLogToBrowserConsole(flag: boolean): void;
-        setLogLevel(level: LogLevel): void;
-        getLogLevel(): LogLevel;
     }
 
     interface VideoModel { }
@@ -43,6 +39,7 @@ declare namespace dashjs {
         setProtectionData(protData: ProtectionData): void;
         getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
         getKeySystems(): KeySystem[];
+        setKeySystems(keySystems: KeySystem[]);
         stop(): void;
         reset(): void;
     }
@@ -77,6 +74,102 @@ declare namespace dashjs {
     export class ProtectionMediaInfo {
         codec: string | null;
         contentProtection: any | null;
+    }
+
+    export class MediaPlayerSettingClass {
+        debug: {
+            logLevel: LogLevel;
+        };
+        streaming: {
+            metricsMaxListDepth: number;
+            abandonLoadTimeout: number;
+            liveDelayFragmentCount: number;
+            liveDelay: number;
+            scheduleWhilePaused: boolean;
+            fastSwitchEnabled: boolean;
+            bufferPruningInterval: number;
+            bufferToKeep: number;
+            bufferAheadToKeep: number;
+            jumpGaps: boolean;
+            smallGapLimit: number;
+            stableBufferTime: number;
+            bufferTimeAtTopQuality: number;
+            bufferTimeAtTopQualityLongForm: number;
+            longFormContentDurationThreshold: number;
+            wallclockTimeUpdateInterval: number;
+            lowLatencyEnabled: boolean;
+            keepProtectionMediaKeys: boolean;
+            useManifestDateHeaderTimeSource: boolean;
+            useSuggestedPresentationDelay: boolean;
+            manifestUpdateRetryInterval: number;
+            liveCatchUpMinDrift: number;
+            liveCatchUpMaxDrift: number;
+            liveCatchUpPlaybackRate: number;
+            lastBitrateCachingInfo: {
+                enabled: boolean;
+                ttl: number;
+            };
+            lastMediaSettingsCachingInfo: {
+                enabled: boolean;
+                ttl: number;
+            };
+            cacheLoadThresholds: {
+                video: number;
+                audio: number;
+            };
+            retryIntervals: {
+                'MPD':                       number;
+                'XLinkExpansion':            number;
+                'MediaSegment':              number;
+                'InitializationSegment':     number;
+                'BitstreamSwitchingSegment': number;
+                'IndexSegment':              number;
+                'other':                     number;
+            };
+            retryAttempts: {
+                'MPD':                       number;
+                'XLinkExpansion':            number;
+                'MediaSegment':              number;
+                'InitializationSegment':     number;
+                'BitstreamSwitchingSegment': number;
+                'IndexSegment':              number;
+                'other':                     number;
+            };
+            abr: {
+                movingAverageMethod: 'slidingWindow' | 'ewma';
+                ABRStrategy: 'abrDynamic' | 'abrBola';
+                bandwidthSafetyFactor: number;
+                useDefaultABRRules: boolean;
+                useBufferOccupancyABR: boolean;
+                useDeadTimeLatency: boolean;
+                limitBitrateByPortal: boolean;
+                usePixelRatioInLimitBitrateByPortal: boolean;
+                maxBitrate: {
+                    audio: number;
+                    video: number;
+                };
+                minBitrate: {
+                    audio: number;
+                    video: number;
+                };
+                maxRepresentationRatio: {
+                    audio: number;
+                    video: number;
+                };
+                initialBitrate: {
+                    audio: number;
+                    video: number;
+                };
+                initialRepresentationRatio: {
+                    audio: number;
+                    video: number;
+                };
+                autoSwitchBitrate: {
+                    audio: boolean;
+                    video: boolean;
+                };
+            }
+        }
     }
 
     export interface MediaPlayerClass {
@@ -149,32 +242,14 @@ declare namespace dashjs {
         getTTMLRenderingDiv(): HTMLDivElement | null;
         getVideoElement(): HTMLVideoElement;
         getSource(): string | object;
-        setLiveDelayFragmentCount(value: number): void;
-        setLiveDelay(value: number): void;
-        getLiveDelay(): number | undefined;
-        useSuggestedPresentationDelay(value: boolean): void;
-        enableLastBitrateCaching(enable: boolean, ttl?: number): void;
-        enableLastMediaSettingsCaching(enable: boolean, ttl?: number): void;
-        setMaxAllowedBitrateFor(type: 'video' | 'audio', value: number): void;
-        getMaxAllowedBitrateFor(type: 'video' | 'audio'): number;
         getTopBitrateInfoFor(type: 'video' | 'audio'): BitrateInfo;
-        setMinAllowedBitrateFor(type: 'video' | 'audio', value: number);
-        getMinAllowedBitrateFor(type: 'video' | 'audio'): number;
-        setMaxAllowedRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
-        getMaxAllowedRepresentationRatioFor(type: 'video' | 'audio'): number;
         setAutoPlay(value: boolean): void;
         getAutoPlay(): boolean;
-        setScheduleWhilePaused(value: boolean): void;
-        getScheduleWhilePaused(): boolean;
         getDashMetrics(): DashMetrics;
-        getMetricsFor(type: 'video' | 'audio' | 'text' | 'stream'): MetricsList | null;
+        getDashAdapter(): DashAdapter;
         getQualityFor(type: 'video' | 'audio' | 'image'): number;
         setQualityFor(type: 'video' | 'audio' | 'image', value: number): void;
         updatePortalSize(): void;
-        getLimitBitrateByPortal(): any;
-        setLimitBitrateByPortal(value: boolean): void;
-        getUsePixelRatioInLimitBitrateByPortal(): any;
-        setUsePixelRatioInLimitBitrateByPortal(value: boolean): void;
         enableText(enable: boolean): void;
         setTextTrack(idx: number): void;
         getTextDefaultLanguage(): string | undefined;
@@ -183,10 +258,6 @@ declare namespace dashjs {
         setTextDefaultEnabled(enable: boolean): void;
         getThumbnail(time: number): Thumbnail;
         getBitrateInfoListFor(type: 'video' | 'audio' | 'image'): BitrateInfo[];
-        setInitialBitrateFor(type: 'video' | 'audio', value: number): void;
-        getInitialBitrateFor(type: 'video' | 'audio'): number;
-        setInitialRepresentationRatioFor(type: 'video' | 'audio', value: number): void;
-        getInitialRepresentationRatioFor(type: 'video' | 'audio'): number;
         getStreamsFromManifest(manifest: object): StreamInfo[];
         getTracksFor(type: 'video' | 'audio' | 'text' | 'fragmentedText'): MediaInfo[];
         getTracksForTypeFromManifest(type: 'video' | 'audio' | 'text' | 'fragmentedText', manifest: object, streamInfo: StreamInfo): MediaInfo[];
@@ -198,32 +269,13 @@ declare namespace dashjs {
         setTrackSwitchModeFor(type: 'video' | 'audio', mode: TrackSwitchMode): void;
         setSelectionModeForInitialTrack(mode: TrackSelectionMode): void;
         getSelectionModeForInitialTrack(): TrackSelectionMode;
-        getAutoSwitchQuality(): boolean;
-        setAutoSwitchQuality(value: boolean): void;
-        setFastSwitchEnabled(value: boolean): void;
-        getFastSwitchEnabled(): boolean;
-        getAutoSwitchQualityFor(type: 'video' | 'audio'): boolean;
-        setAutoSwitchQualityFor(type: 'video' | 'audio', value: boolean): void;
-        enableBufferOccupancyABR(value: boolean): void;
-        setBandwidthSafetyFactor(value: number): void;
-        getBandwidthSafetyFactor(): number;
-        setAbandonLoadTimeout(value: number): void;
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
         addUTCTimingSource(schemeIdUri: string, value: string): void;
         removeUTCTimingSource(schemeIdUri: string, value: string): void;
         clearDefaultUTCTimingSources(): void;
         restoreDefaultUTCTimingSources(): void;
-        setBufferToKeep(value: number): void;
-        setBufferPruningInterval(value: number): void;
-        setStableBufferTime(value: number): void;
-        setBufferTimeAtTopQuality(value: number): void;
-        setFragmentLoaderRetryAttempts(value: number): void;
-        setFragmentLoaderRetryInterval(value: number): void;
         setXHRWithCredentialsForType(type: string, value: boolean): void;
         getXHRWithCredentialsForType(type: string): boolean;
-        setBufferTimeAtTopQualityLongForm(value: number): void;
-        setLongFormContentDurationThreshold(value: number): void;
-        setCacheLoadThresholdForType(type: 'video' | 'audio', value: number): void;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionData): void;
@@ -231,43 +283,18 @@ declare namespace dashjs {
         displayCaptionsOnTop(value: boolean): void;
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
         getCurrentTextTrackIndex(): number;
-        setJumpGaps(value: boolean): void;
-        getJumpGaps(): boolean;
-        setSmallGapLimit(value: number): void;
-        getSmallGapLimit(): number;
         preload(): void;
         reset(): void;
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
-        getLowLatencyEnabled(): boolean;
-        setLowLatencyEnabled(value: boolean): void;
-        enableLowLatencyCatchUp(value: boolean): void;
-        getLowLatencyMinDrift(): number;
-        setLowLatencyMinDrift(value: number): void;
-        getLowLatencyMaxDriftBeforeSeeking(): number;
-        setLowLatencyMaxDriftBeforeSeeking(value: number): void;
-        getUseDeadTimeLatencyForAbr(): boolean;
-        setUseDeadTimeLatencyForAbr(value: boolean): void;
         getCurrentLiveLatency(): number;
         enableForcedTextStreaming(value: boolean): void;
         isTextEnabled(): boolean;
-        getBufferTimeAtTopQualityLongForm(): number;
-        setMovingAverageMethod(value: string): void;
-        getMovingAverageMethod(): string;
-        setABRStrategy(value: string): void;
-        getABRStrategy(): string;
-        useDefaultABRRules(value: boolean): void;
         getAverageThroughput(value: number): void;
-        setBufferAheadToKeep(value: number): void;
-        getStableBufferTime(): number;
-        getBufferTimeAtTopQuality(): number;
-        setManifestLoaderRetryAttempts(value: number): void;
-        setManifestLoaderRetryInterval(value: number): void;
-        setManifestUpdateRetryInterval(value: number): void;
-        getManifestUpdateRetryInterval(): number;
-        setSegmentOverlapToleranceTime(value: number): void;
-        keepProtectionMediaKeys(value: boolean): void;
+        getSettings(): MediaPlayerSettingClass;
+        updateSettings(settings: MediaPlayerSettingClass);
+        resetSettings(): void;
     }
 
     export interface MediaPlayerFactory {
@@ -791,7 +818,23 @@ declare namespace dashjs {
     }
 
     export interface DashMetrics {
+        getCurrentRepresentationSwitch(type: 'video' | 'audio' | 'image', readOnly: boolean): ICurrentRepresentationSwitch;
+        getLatestBufferInfoVO()
+        getCurrentBufferLevel(type: 'video' | 'audio' | 'image', readOnly: boolean): number;
+        getCurrentHttpRequest(type: 'video' | 'audio' | 'image', readOnly: boolean): object;
+        getHttpRequests(type: 'video' | 'audio' | 'image'): object[];
+        getCurrentDroppedFrames(): IDroppedFrames;
+        getCurrentSchedulingInfo(type: 'video' | 'audio' | 'image'): object;
+        getCurrentDVRInfo(type: 'video' | 'audio' | 'image'): IDVRInfo[];
+        getCurrentManifestUpdate(): any;
+        getLatestFragmentRequestHeaderValueByID(id: string): string;
+        getLatestMPDRequestHeaderValueByID(type: 'video' | 'audio' | 'image', id: string): string;
+    }
+
+    export interface DashAdapter {
+        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
         getIndexForRepresentation(representationId: string, periodIdx: number): number;
+
         /**
          * This method returns the current max index based on what is defined in the MPD.
          *
@@ -799,19 +842,6 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: 'video' | 'audio', periodIdx: number): number;
-        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
-        getCurrentRepresentationSwitch(metrics: MetricsList): ICurrentRepresentationSwitch;
-        getLatestBufferLevelVO(metrics: MetricsList): ILatestBufferLevelVO;
-        getCurrentBufferLevel(metrics: MetricsList): number;
-        getCurrentHttpRequest(metrics: MetricsList): object;
-        getHttpRequests(metrics: MetricsList): object[];
-        getCurrentDroppedFrames(metrics: MetricsList): IDroppedFrames;
-        getCurrentSchedulingInfo(metrics: MetricsList): object;
-        getCurrentDVRInfo(metrics: MetricsList): IDVRInfo[];
-        getCurrentManifestUpdate(metrics: MetricsList): any;
-        getLatestFragmentRequestHeaderValueByID(metrics: MetricsList, id: string): string;
-        getLatestMPDRequestHeaderValueByID(metrics: MetricsList, id: string): string;
-        getRequestsQueue(metrics: MetricsList): RequestsQueue | null;
     }
 
     export class ProtectionData {

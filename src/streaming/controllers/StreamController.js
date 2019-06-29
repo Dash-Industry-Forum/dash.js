@@ -52,6 +52,7 @@ import Errors from '../../core/errors/Errors';
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
     const STALL_THRESHOLD_TO_CHECK_GAPS = 40;
+    const PERIOD_PREFETCH_TIME = 2000;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -62,14 +63,11 @@ function StreamController() {
         manifestUpdater,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
         adapter,
-        metricsModel,
         dashMetrics,
         mediaSourceController,
         timeSyncController,
         baseURLController,
-        domStorage,
         abrController,
         mediaController,
         textController,
@@ -91,18 +89,18 @@ function StreamController() {
         mediaPlayerModel,
         isPaused,
         initialPlayback,
-        playListMetrics,
         videoTrackDetected,
         audioTrackDetected,
         isPeriodSwitchInProgress,
         playbackEndedTimerId,
-        preloadTimerId,
+        prefetchTimerId,
         wallclockTicked,
         buffers,
         useSmoothPeriodTransition,
         preloading,
         lastPlaybackTime,
-        supportsChangeType;
+        supportsChangeType,
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -116,7 +114,7 @@ function StreamController() {
     }
 
     function initialize(autoPl, protData) {
-        checkSetConfigCall();
+        checkConfig();
 
         autoPlay = autoPl;
         protectionData = protData;
@@ -125,15 +123,16 @@ function StreamController() {
         manifestUpdater = ManifestUpdater(context).create();
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             mediaPlayerModel: mediaPlayerModel,
             manifestLoader: manifestLoader,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings
         });
         manifestUpdater.initialize();
 
         baseURLController.setConfig({
-            dashManifestModel: dashManifestModel
+            adapter: adapter
         });
 
         registerEvents();
@@ -179,13 +178,13 @@ function StreamController() {
         if (isTrackTypePresent(Constants.VIDEO)) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
-                metricsModel.addDroppedFrames(Constants.VIDEO, playbackQuality);
+                dashMetrics.addDroppedFrames(playbackQuality);
             }
         }
     }
 
     function onWallclockTimeUpdated(/*e*/) {
-        if (!mediaPlayerModel.getJumpGaps() || getActiveStreamProcessors() === 0 ||
+        if (!settings.get().streaming.jumpGaps || getActiveStreamProcessors() === 0 ||
             playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
             hasMediaError || hasInitialisationError) {
             return;
@@ -205,7 +204,7 @@ function StreamController() {
 
     function jumpGap(time) {
         const streamProcessors = getActiveStreamProcessors();
-        const smallGapLimit = mediaPlayerModel.getSmallGapLimit();
+        const smallGapLimit = settings.get().streaming.smallGapLimit;
         let seekToPosition;
 
         // Find out what is the right time position to jump to taking
@@ -260,7 +259,7 @@ function StreamController() {
             isPeriodSwitchInProgress = false;
         }
 
-        if (preloadTimerId) {
+        if (prefetchTimerId) {
             stopPreloadTimer();
         }
 
@@ -277,18 +276,18 @@ function StreamController() {
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
 
-        addPlaylistMetrics(PlayList.SEEK_START_REASON);
+        createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
     function onPlaybackStarted( /*e*/ ) {
         logger.debug('[onPlaybackStarted]');
         if (initialPlayback) {
             initialPlayback = false;
-            addPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
+            createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
         } else {
             if (isPaused) {
                 isPaused = false;
-                addPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
+                createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
                 toggleEndPeriodTimer();
             }
         }
@@ -311,8 +310,8 @@ function StreamController() {
 
     function stopPreloadTimer() {
         logger.debug('[PreloadTimer] stop period preload timer.');
-        clearTimeout(preloadTimerId);
-        preloadTimerId = undefined;
+        clearTimeout(prefetchTimerId);
+        prefetchTimerId = undefined;
     }
 
     function toggleEndPeriodTimer() {
@@ -324,9 +323,9 @@ function StreamController() {
             } else {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-                const preloadDelay = delayPlaybackEnded < 2000 ? delayPlaybackEnded / 4 : delayPlaybackEnded - 2000;
-                logger.debug('[toggleEndPeriodTimer] Going to fire preload in', preloadDelay, 'milliseconds');
-                preloadTimerId = setTimeout(onStreamCanLoadNext,  preloadDelay);
+                const prefetchDelay = delayPlaybackEnded < PERIOD_PREFETCH_TIME ? delayPlaybackEnded / 4 : delayPlaybackEnded - PERIOD_PREFETCH_TIME;
+                logger.debug('[toggleEndPeriodTimer] Going to fire preload in', prefetchDelay, 'milliseconds');
+                prefetchTimerId = setTimeout(onStreamCanLoadNext,  prefetchDelay);
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in',delayPlaybackEnded, 'milliseconds');
                 playbackEndedTimerId = setTimeout(function () {eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});}, delayPlaybackEnded);
             }
@@ -363,6 +362,7 @@ function StreamController() {
 
     function onStreamCanLoadNext() {
         const isLast = getActiveStreamInfo().isLast;
+
         if (mediaSource && !isLast) {
             const newStream = getNextStream();
 
@@ -379,7 +379,7 @@ function StreamController() {
                 newStream.preload(mediaSource, buffers);
                 preloading = newStream;
                 newStream.getProcessors().forEach(p => {
-                    adapter.setIndexHandlerTime(p, newStream.getStartTime());
+                    p.setIndexHandlerTime(newStream.getStartTime());
                 });
             }
         }
@@ -621,8 +621,7 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            const manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate(metricsModel.getMetricsFor(Constants.STREAM));
-            metricsModel.updateManifestUpdateInfo(manifestUpdateInfo, {
+            dashMetrics.updateManifestUpdateInfo({
                 currentTime: playbackController.getTime(),
                 buffered: videoModel.getBufferRange(),
                 presentationStartTime: streamsInfo[0].start,
@@ -638,9 +637,7 @@ function StreamController() {
                 if (!stream) {
                     stream = Stream(context).create({
                         manifestModel: manifestModel,
-                        dashManifestModel: dashManifestModel,
                         mediaPlayerModel: mediaPlayerModel,
-                        metricsModel: metricsModel,
                         dashMetrics: dashMetrics,
                         manifestUpdater: manifestUpdater,
                         adapter: adapter,
@@ -648,13 +645,13 @@ function StreamController() {
                         capabilities: capabilities,
                         errHandler: errHandler,
                         baseURLController: baseURLController,
-                        domStorage: domStorage,
                         abrController: abrController,
                         playbackController: playbackController,
                         mediaController: mediaController,
                         textController: textController,
                         videoModel: videoModel,
-                        streamController: instance
+                        streamController: instance,
+                        settings: settings
                     });
                     streams.push(stream);
                     stream.initialize(streamInfo, protectionController);
@@ -662,7 +659,7 @@ function StreamController() {
                     stream.updateData(streamInfo);
                 }
 
-                metricsModel.addManifestUpdateStreamInfo(manifestUpdateInfo, streamInfo.id, streamInfo.index, streamInfo.start, streamInfo.duration);
+                dashMetrics.addManifestUpdateStreamInfo(streamInfo);
             }
 
             if (!activeStream) {
@@ -679,7 +676,6 @@ function StreamController() {
             eventBus.trigger(Events.STREAMS_COMPOSED);
 
         } catch (e) {
-            errHandler.manifestError(e.message, 'nostreamscomposed', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
@@ -717,15 +713,16 @@ function StreamController() {
 
             let useCalculatedLiveEdgeTime;
             if (mediaInfo) {
-                useCalculatedLiveEdgeTime = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(adapter.getDataForMedia(mediaInfo));
+                useCalculatedLiveEdgeTime = adapter.getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo);
                 if (useCalculatedLiveEdgeTime) {
                     logger.debug('SegmentTimeline detected using calculated Live Edge Time');
-                    mediaPlayerModel.setUseManifestDateHeaderTimeSource(false);
+                    const s = { streaming: { useManifestDateHeaderTimeSource: false } };
+                    settings.update(s);
                 }
             }
 
-            let manifestUTCTimingSources = dashManifestModel.getUTCTimingSources(e.manifest);
-            let allUTCTimingSources = (!dashManifestModel.getIsDynamic(manifest) || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let manifestUTCTimingSources = adapter.getUTCTimingSources();
+            let allUTCTimingSources = (!adapter.getIsDynamic() || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.
@@ -739,11 +736,10 @@ function StreamController() {
             baseURLController.initialize(manifest);
 
             timeSyncController.setConfig({
-                metricsModel: metricsModel,
                 dashMetrics: dashMetrics,
                 baseURLController: baseURLController
             });
-            timeSyncController.initialize(allUTCTimingSources, mediaPlayerModel.getUseManifestDateHeaderTimeSource());
+            timeSyncController.initialize(allUTCTimingSources, settings.get().streaming.useManifestDateHeaderTimeSource);
         } else {
             hasInitialisationError = true;
             reset();
@@ -781,30 +777,17 @@ function StreamController() {
     function flushPlaylistMetrics(reason, time) {
         time = time || new Date();
 
-        if (playListMetrics) {
-            getActiveStreamProcessors().forEach(p => {
-                const ctrlr = p.getScheduleController();
-                if (ctrlr) {
-                    ctrlr.finalisePlayList(time, reason);
-                }
-            });
-            metricsModel.addPlayList(playListMetrics);
-            playListMetrics = null;
-        }
-    }
-
-    function addPlaylistMetrics(startReason) {
-        playListMetrics = new PlayList();
-        playListMetrics.start = new Date();
-        playListMetrics.mstart = playbackController.getTime() * 1000;
-        playListMetrics.starttype = startReason;
-
         getActiveStreamProcessors().forEach(p => {
-            let ctrlr = p.getScheduleController();
+            const ctrlr = p.getScheduleController();
             if (ctrlr) {
-                ctrlr.setPlayList(playListMetrics);
+                ctrlr.finalisePlayList(time, reason);
             }
         });
+        dashMetrics.addPlayList();
+    }
+
+    function createPlaylistMetrics(startReason) {
+        dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
     function onPlaybackError(e) {
@@ -847,7 +830,6 @@ function StreamController() {
         if (e.error) {
             logger.fatal(e.error);
         }
-        errHandler.mediaSourceError(msg);
         errHandler.error(new DashJSError(e.error.code, msg));
         reset();
     }
@@ -862,27 +844,27 @@ function StreamController() {
         })[0];
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
-            !metricsModel || !playbackController) {
+            !dashMetrics || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
-    function checkInitializeCall() {
+    function checkInitialize() {
         if (!manifestUpdater || !manifestUpdater.hasOwnProperty('setManifest')) {
             throw new Error('initialize function has to be called previously');
         }
     }
 
     function load(url) {
-        checkSetConfigCall();
+        checkConfig();
         manifestLoader.load(url);
     }
 
     function loadWithManifest(manifest) {
-        checkInitializeCall();
+        checkInitialize();
         manifestUpdater.setManifest(manifest);
     }
 
@@ -904,9 +886,6 @@ function StreamController() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
@@ -915,9 +894,6 @@ function StreamController() {
         }
         if (config.adapter) {
             adapter = config.adapter;
-        }
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
         }
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
@@ -934,9 +910,6 @@ function StreamController() {
         if (config.playbackController) {
             playbackController = config.playbackController;
         }
-        if (config.domStorage) {
-            domStorage = config.domStorage;
-        }
         if (config.abrController) {
             abrController = config.abrController;
         }
@@ -945,6 +918,9 @@ function StreamController() {
         }
         if (config.textController) {
             textController = config.textController;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -965,14 +941,13 @@ function StreamController() {
         initialPlayback = true;
         isPaused = false;
         autoPlay = true;
-        playListMetrics = null;
         playbackEndedTimerId = undefined;
         isPeriodSwitchInProgress = false;
         wallclockTicked = 0;
     }
 
     function reset() {
-        checkSetConfigCall();
+        checkConfig();
 
         timeSyncController.reset();
 
@@ -991,7 +966,7 @@ function StreamController() {
 
         baseURLController.reset();
         manifestUpdater.reset();
-        metricsModel.clearAllCurrentMetrics();
+        dashMetrics.clearAllCurrentMetrics();
         manifestModel.setValue(null);
         manifestLoader.reset();
         timelineConverter.reset();

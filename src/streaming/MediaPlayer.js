@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import cea608parser from '../../externals/cea608-parser';
 import Constants from './constants/Constants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
@@ -43,7 +44,6 @@ import TextController from './text/TextController';
 import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
-import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
@@ -53,6 +53,7 @@ import EventBus from './../core/EventBus';
 import Events from './../core/events/Events';
 import MediaPlayerEvents from './MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
+import Settings from '../core/Settings';
 import {
     getVersionString
 }
@@ -60,7 +61,6 @@ from './../core/Version';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
-import DashManifestModel from '../dash/models/DashManifestModel';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
 import {
@@ -103,19 +103,10 @@ function MediaPlayer() {
     * @inner
     */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
-    /**
-    * @constant {string} PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMinDrift function is called with an invalid value.
-    * @inner
-    */
-    const PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR = 'Playback minimum drift has an invalid value! Use a number from 0 to 0.5';
-    /**
-    * @constant {string} PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR error string thrown when setLowLatencyMaxDriftBeforeSeeking function is called with an invalid value.
-    * @inner
-    */
-    const PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR = 'Playback maximum drift has an invalid value! Use a number greater or equal to 0';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    let settings = Settings(context).getInstance();
     const debug = Debug(context).getInstance();
 
     let instance,
@@ -133,14 +124,12 @@ function MediaPlayer() {
         metricsReportingController,
         mssHandler,
         adapter,
-        metricsModel,
         mediaPlayerModel,
         errHandler,
         capabilities,
         streamController,
         playbackController,
         dashMetrics,
-        dashManifestModel,
         manifestModel,
         videoModel,
         textController,
@@ -198,6 +187,9 @@ function MediaPlayer() {
         if (config.mediaController) {
             mediaController = config.mediaController;
         }
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     /**
@@ -224,7 +216,6 @@ function MediaPlayer() {
         errHandler = ErrorHandler(context).getInstance();
 
         if (!capabilities.supportsMediaSource()) {
-            errHandler.capabilityError('mediasource');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }
@@ -247,25 +238,22 @@ function MediaPlayer() {
         }
 
         adapter = DashAdapter(context).getInstance();
-        dashManifestModel = DashManifestModel(context).getInstance({
-            timelineConverter: timelineConverter,
-            errHandler: errHandler,
-            BASE64: BASE64
-        });
-        manifestModel = ManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel
-        });
-        metricsModel = MetricsModel(context).getInstance();
 
+        manifestModel = ManifestModel(context).getInstance();
+
+        dashMetrics = DashMetrics(context).getInstance({
+            settings: settings
+        });
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
-            mediaPlayerModel: mediaPlayerModel
+            settings: settings
         });
 
         adapter.setConfig({
-            dashManifestModel: dashManifestModel
+            constants: Constants,
+            cea608parser: cea608parser,
+            errHandler: errHandler,
+            BASE64: BASE64
         });
 
         restoreDefaultUTCTimingSources();
@@ -303,6 +291,8 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+
+        settings.reset();
     }
 
     /**
@@ -516,110 +506,6 @@ function MediaPlayer() {
     }
 
     /**
-     * Use this method to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
-     * when measured latency is higher/lower than the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
-     * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
-     *
-     * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
-     *
-     * Note: Catch-up mechanism is only applied when playing low latency live streams.
-     *
-     * @param {number} value Percentage in which playback rate is increased/decreased when live catch up mechanism is activated.
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-     * @default {number} 0.5
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type, or value is not between 0 and 0.5.
-     * @instance
-     */
-    function setCatchUpPlaybackRate(value) {
-        mediaPlayerModel.setCatchUpPlaybackRate(value);
-    }
-
-    /**
-     * Returns the current catchup playback rate.
-     * @returns {number}
-     * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getCatchUpPlaybackRate() {
-        return mediaPlayerModel.getCatchUpPlaybackRate();
-    }
-
-
-    /**
-     * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
-     * when the difference between the measured latency and the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
-     * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
-     * playback rate until target latency is reached.
-     *
-     * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
-     *
-     * Note: Catch-up mechanism is only applied when playing low latency live streams.
-     *
-     * @param {number} value Maximum difference between measured latency and the target one before applying playback rate modifications.
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-     * @default {number} 0.05
-     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
-     * @instance
-     */
-    function setLowLatencyMinDrift(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 0.50) {
-            throw PLAYBACK_LOW_LATENCY_MIN_DRIFT_BAD_ARGUMENT_ERROR;
-        }
-        mediaPlayerModel.setLowLatencyMinDrift(value);
-    }
-
-    /**
-     * Returns the current latency minimum allowed drift.
-     * @returns {number}
-     * @see {@link module:MediaPlayer#setLowLatencyMinDrift setLowLatencyMinDrift()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getLowLatencyMinDrift() {
-        return mediaPlayerModel.getLowLatencyMinDrift();
-    }
-
-    /**
-     * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
-     * when the difference between the measured latency and the target one ({@link module:MediaPlayer#setLiveDelay setLiveDelay()}),
-     * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
-     * the target live delay.
-     *
-     * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
-     * fixing latency deviations.
-     *
-     * Note: Catch-up mechanism is only applied when playing low latency live streams.
-     *
-     * @param {number} value Maximum difference between measured latency and the target one before using seek to
-     * fix drastically live latency deviations.
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-     * @default {number} 0
-     * @throws {@link module:MediaPlayer~PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR} if called with an invalid argument
-     * @instance
-     */
-    function setLowLatencyMaxDriftBeforeSeeking(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0) {
-            throw PLAYBACK_LOW_LATENCY_MAX_DRIFT_BAD_ARGUMENT_ERROR;
-        }
-        mediaPlayerModel.setLowLatencyMaxDriftBeforeSeeking(value);
-    }
-
-    /**
-     * Returns the maximum latency drift before applying a seek operation to reduce the latency.
-     * @returns {number}
-     * @see {@link module:MediaPlayer#setLowLatencyMaxDriftBeforeSeeking setLowLatencyMaxDriftBeforeSeeking()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getLowLatencyMaxDriftBeforeSeeking() {
-        return mediaPlayerModel.getLowLatencyMaxDriftBeforeSeeking();
-    }
-
-    /**
      * Use this method to set the native Video Element's muted state. Takes a Boolean that determines whether audio is muted. true if the audio is muted and false otherwise.
      * @param {boolean} value
      * @memberof module:MediaPlayer
@@ -684,14 +570,14 @@ function MediaPlayer() {
         const types = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
         if (!type) {
             const buffer = types.map(
-                t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(getMetricsFor(t)) : Number.MAX_VALUE
+                t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(t) : Number.MAX_VALUE
             ).reduce(
                 (p, c) => Math.min(p, c)
             );
             return buffer === Number.MAX_VALUE ? NaN : buffer;
         } else {
             if (types.indexOf(type) !== -1) {
-                const buffer = getDashMetrics().getCurrentBufferLevel(getMetricsFor(type));
+                const buffer = getDashMetrics().getCurrentBufferLevel(type);
                 return buffer ? buffer : NaN;
             } else {
                 logger.warn('getBufferLength requested for invalid type');
@@ -708,7 +594,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRWindowSize() {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         if (!metric) {
             return 0;
         }
@@ -727,7 +613,7 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRSeekOffset(value) {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         if (!metric) {
             return 0;
         }
@@ -764,7 +650,7 @@ function MediaPlayer() {
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
-            let metric = getDVRInfoMetric();
+            let metric = dashMetrics.getCurrentDVRInfo();
             t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
         }
 
@@ -787,7 +673,7 @@ function MediaPlayer() {
 
         if (playbackController.getIsDynamic()) {
 
-            let metric = getDVRInfoMetric();
+            let metric = dashMetrics.getCurrentDVRInfo();
             let range;
 
             if (!metric) {
@@ -843,56 +729,6 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     /**
-     * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum bitrate allowed.
-     * If you set this property to a value lower than that currently playing, the switching engine will switch down to
-     * satisfy this requirement. If you set it to a value that is lower than the lowest bitrate, it will still play
-     * that lowest bitrate.
-     *
-     * You can set or remove this bitrate cap at anytime before or during playback.  To clear this setting you must use the API
-     * and set the value param to NaN.
-     *
-     * This feature is typically used to reserve higher bitrates for playback only when the player is in large or full-screen format.
-     *
-     * @param {string} type - 'video' or 'audio' are the type options.
-     * @param {number} value - Value in kbps representing the maximum bitrate allowed.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setMaxAllowedBitrateFor(type, value) {
-        abrController.setMaxAllowedBitrateFor(type, value);
-    }
-
-    /**
-     * When switching multi-bitrate content (auto or manual mode) this property specifies the minimum bitrate allowed.
-     * If you set this property to a value higher than that currently playing, the switching engine will switch up to
-     * satisfy this requirement. If you set it to a value that is lower than the lowest bitrate, it will still play
-     * that lowest bitrate.
-     *
-     * You can set or remove this bitrate limit at anytime before or during playback. To clear this setting you must use the API
-     * and set the value param to NaN.
-     *
-     * This feature is used to force higher quality playback.
-     *
-     * @param {string} type - 'video' or 'audio' are the type options.
-     * @param {number} value - Value in kbps representing the minimum bitrate allowed.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setMinAllowedBitrateFor(type, value) {
-        abrController.setMinAllowedBitrateFor(type, value);
-    }
-
-    /**
-     * @param {string} type - 'video' or 'audio' are the type options.
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setMaxAllowedBitrateFor setMaxAllowedBitrateFor()}
-     * @instance
-     */
-    function getMaxAllowedBitrateFor(type) {
-        return abrController.getMaxAllowedBitrateFor(type);
-    }
-
-    /**
      * Gets the top quality BitrateInfo checking portal limit and max allowed.
      *
      * It calls getTopQualityIndexFor internally
@@ -908,48 +744,6 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         return abrController.getTopBitrateInfoFor(type);
-    }
-
-    /**
-     * @param {string} type - 'video' or 'audio' are the type options.
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setMinAllowedBitrateFor setMinAllowedBitrateFor()}
-     * @instance
-     */
-    function getMinAllowedBitrateFor(type) {
-        return abrController.getMinAllowedBitrateFor(type);
-    }
-
-    /**
-     * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
-     * as a proportion of the size of the representation set.
-     *
-     * You can set or remove this cap at anytime before or during playback. To clear this setting you must use the API
-     * and set the value param to NaN.
-     *
-     * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
-     * i.e. the lowest value from executing these rules is used.
-     *
-     * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
-     *
-     * @param {string} type - 'video' or 'audio' are the type options.
-     * @param {number} value - number between 0 and 1, where 1 is allow all representations, and 0 is allow only the lowest.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setMaxAllowedRepresentationRatioFor(type, value) {
-        abrController.setMaxAllowedRepresentationRatioFor(type, value);
-    }
-
-    /**
-     * @param {string} type - 'video' or 'audio' are the type options.
-     * @returns {number} The current representation ratio cap.
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setMaxAllowedRepresentationRatioFor setMaxAllowedRepresentationRatioFor()}
-     * @instance
-     */
-    function getMaxAllowedRepresentationRatioFor(type) {
-        return abrController.getMaxAllowedRepresentationRatioFor(type);
     }
 
     /**
@@ -975,12 +769,10 @@ function MediaPlayer() {
                 return -1;
             }
             const thumbnailController = activeStream.getThumbnailController();
-            if (!thumbnailController) {
-                return -1;
-            }
-            return thumbnailController.getCurrentTrackIndex();
+
+            return !thumbnailController ? -1 : thumbnailController.getCurrentTrackIndex();
         }
-        return abrController.getQualityFor(type, streamController.getActiveStreamInfo());
+        return abrController.getQualityFor(type);
     }
 
     /**
@@ -1026,142 +818,6 @@ function MediaPlayer() {
         abrController.setWindowResizeEventCalled(true);
     }
 
-    /**
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getLimitBitrateByPortal() {
-        return abrController.getLimitBitrateByPortal();
-    }
-
-    /**
-     * Sets whether to limit the representation used based on the size of the playback area
-     *
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setLimitBitrateByPortal(value) {
-        abrController.setLimitBitrateByPortal(value);
-    }
-
-    /**
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getUsePixelRatioInLimitBitrateByPortal() {
-        return abrController.getUsePixelRatioInLimitBitrateByPortal();
-    }
-
-    /**
-     * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
-     * Useful on, for example, retina displays.
-     *
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     * @default {boolean} false
-     */
-    function setUsePixelRatioInLimitBitrateByPortal(value) {
-        abrController.setUsePixelRatioInLimitBitrateByPortal(value);
-    }
-
-    /**
-     * Use this method to explicitly set the starting bitrate for audio | video
-     *
-     * @param {string} type
-     * @param {number} value - A value of the initial bitrate, kbps
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setInitialBitrateFor(type, value) {
-        abrController.setInitialBitrateFor(type, value);
-    }
-
-    /**
-     * @param {string} type
-     * @returns {number} A value of the initial bitrate, kbps
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
-     * @instance
-     */
-    function getInitialBitrateFor(type) {
-        if (!streamingInitialized) {
-            throw STREAMING_NOT_INITIALIZED_ERROR; //abrController.getInitialBitrateFor is overloaded with ratioDict logic that needs manifest force it to not be callable pre play.
-        }
-        return abrController.getInitialBitrateFor(type);
-    }
-
-    /**
-     * @param {string} type
-     * @param {number} value - A value of the initial Representation Ratio
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setInitialRepresentationRatioFor(type, value) {
-        abrController.setInitialRepresentationRatioFor(type, value);
-    }
-
-    /**
-     * @param {string} type
-     * @returns {number} A value of the initial Representation Ratio
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getInitialRepresentationRatioFor(type) {
-        return abrController.getInitialRepresentationRatioFor(type);
-    }
-
-    /**
-     * @param {string} type - 'audio' | 'video'
-     * @returns {boolean} Current state of adaptive bitrate switching
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getAutoSwitchQualityFor(type) {
-        return abrController.getAutoSwitchBitrateFor(type);
-    }
-
-    /**
-     * Set to false to switch off adaptive bitrate switching.
-     *
-     * @param {string} type - 'audio' | 'video'
-     * @param {boolean} value
-     * @default true
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setAutoSwitchQualityFor(type, value) {
-        abrController.setAutoSwitchBitrateFor(type, value);
-    }
-
-    /**
-     * Get the value of useDeadTimeLatency in AbrController. @see setUseDeadTimeLatencyForAbr
-     *
-     * @returns {boolean}
-     *
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getUseDeadTimeLatencyForAbr() {
-        return abrController.getUseDeadTimeLatency();
-    }
-
-    /**
-     * Set the value of useDeadTimeLatency in AbrController. If true, only the download
-     * portion will be considered part of the download bitrate and latency will be
-     * regarded as static. If false, the reciprocal of the whole transfer time will be used.
-     * Defaults to true.
-     *
-     * @param {boolean=} useDeadTimeLatency - True or false flag.
-     *
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setUseDeadTimeLatencyForAbr(useDeadTimeLatency) {
-        abrController.setUseDeadTimeLatency(useDeadTimeLatency);
-    }
-
     /*
     ---------------------------------------------------------------------------
 
@@ -1195,49 +851,6 @@ function MediaPlayer() {
     }
 
     /**
-     * <p>Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
-     * to define a time in seconds to delay a live stream from the live edge.</p>
-     * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
-     *
-     * @param {number} value - Represents how many segment durations to delay the live stream.
-     * @default 4
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
-     * @instance
-     */
-    function setLiveDelayFragmentCount(value) {
-        mediaPlayerModel.setLiveDelayFragmentCount(value);
-    }
-
-    /**
-     * <p>Equivalent in seconds of setLiveDelayFragmentCount</p>
-     * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
-     * <p>This value should be less than the manifest duration by a couple of segment durations to avoid playback issues</p>
-     * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
-     *
-     * @param {number} value - Represents how many seconds to delay the live stream.
-     * @default undefined
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#useSuggestedPresentationDelay useSuggestedPresentationDelay()}
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value, if defined, is not number type.
-     * @instance
-     */
-    function setLiveDelay(value) {
-        mediaPlayerModel.setLiveDelay(value);
-    }
-
-    /**
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-     * @instance
-     * @returns {number|undefined} Current live stream delay in seconds when previously set, or `undefined`
-     */
-    function getLiveDelay() {
-        return mediaPlayerModel.getLiveDelay();
-    }
-
-    /**
      * @memberof module:MediaPlayer
      * @instance
      * @returns {number|NaN} Current live stream latency in seconds. It is the difference between current time and time position at the playback head.
@@ -1253,162 +866,6 @@ function MediaPlayer() {
         }
 
         return playbackController.getCurrentLiveLatency();
-    }
-
-    /**
-     * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
-     * @param {boolean} value
-     * @default false
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#setLiveDelayFragmentCount setLiveDelayFragmentCount()}
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     */
-    function useSuggestedPresentationDelay(value) {
-        mediaPlayerModel.setUseSuggestedPresentationDelay(value);
-    }
-
-    /**
-     * Set to false if you would like to disable the last known bit rate from being stored during playback and used
-     * to set the initial bit rate for subsequent playback within the expiration window.
-     *
-     * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kbps) will be used
-     * for that session and a new bit rate will be stored during that session.
-     *
-     * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
-     * @param {number=} ttl - (Optional) A value defined in milliseconds representing how long to cache the bit rate for. Time to live.
-     * @default enable = True, ttl = 360000 (1 hour)
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, enable is not boolean type and, if defined, ttl is not a number or is NaN.
-     * @instance
-     *
-     */
-    function enableLastBitrateCaching(enable, ttl) {
-        mediaPlayerModel.setLastBitrateCachingInfo(enable, ttl);
-    }
-
-    /**
-     * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used
-     * to set the initial settings for subsequent playback within the expiration window.
-     *
-     * The default expiration is one hour, defined in milliseconds. If expired, the default settings will be used
-     * for that session and a new settings will be stored during that session.
-     *
-     * @param {boolean} enable - Will toggle if feature is enabled. True to enable, False to disable.
-     * @param {number=} [ttl] - (Optional) A value defined in milliseconds representing how long to cache the settings for. Time to live.
-     * @default enable = True, ttl = 360000 (1 hour)
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, enable is not boolean type and, if defined, ttl is not a number or is NaN.
-     * @instance
-     *
-     */
-    function enableLastMediaSettingsCaching(enable, ttl) {
-        mediaPlayerModel.setLastMediaSettingsCachingInfo(enable, ttl);
-    }
-
-    /**
-     * Set to true if you would like dash.js to keep downloading fragments in the background
-     * when the video element is paused.
-     *
-     * @default true
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     */
-    function setScheduleWhilePaused(value) {
-        mediaPlayerModel.setScheduleWhilePaused(value);
-    }
-
-    /**
-     * Returns a boolean of the current state of ScheduleWhilePaused.
-     * @returns {boolean}
-     * @see {@link module:MediaPlayer#setScheduleWhilePaused setScheduleWhilePaused()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getScheduleWhilePaused() {
-        return mediaPlayerModel.getScheduleWhilePaused();
-    }
-
-    /**
-     * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment
-     * at the end of the current buffer range it is requested and appended closer to the current time
-     * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
-     *
-     * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
-     * higher quality media for as long as possible.
-     *
-     * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather
-     * just append at the end.  1. When the buffer level is less than one fragment duration 2.  The client
-     * is in an Abandonment State due to recent fragment abandonment event.
-     *
-     * Known issues:
-     * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the
-     * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
-     * or stall in playback.
-     *
-     *
-     * @param {boolean} value
-     * @default {boolean} false
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     */
-    function setFastSwitchEnabled(value) { //TODO we need to look at track switches for adaptation sets.  If always replace it works much like this but clears buffer. Maybe too many ways to do same thing.
-        mediaPlayerModel.setFastSwitchEnabled(value);
-    }
-
-    /**
-     * Disabled by default. Will return the current state of Fast Switch.
-     * @return {boolean} Returns true if FastSwitch ABR is enabled.
-     * @see {@link module:MediaPlayer#setFastSwitchEnabled setFastSwitchEnabled()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getFastSwitchEnabled() {
-        return mediaPlayerModel.getFastSwitchEnabled();
-    }
-
-    /**
-     * Sets the ABR strategy. Valid strategies are "abrDynamic", "abrBola" and "abrThroughput".
-     * The ABR strategy can also be changed during a streaming session.
-     * The call has no effect if an invalid method is passed.
-     *
-     * The BOLA strategy chooses bitrate based on current buffer level, with higher bitrates for higher buffer levels.
-     * The Throughput strategy chooses bitrate based on the recent throughput history.
-     * The Dynamic strategy switches smoothly between BOLA and Throughput in real time, playing to the strengths of both.
-     *
-     * @param {string} value
-     * @default "abrDynamic"
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setABRStrategy(value) {
-        mediaPlayerModel.setABRStrategy(value);
-    }
-
-    /**
-     * Returns the current ABR strategy being used.
-     * @return {string} "abrDynamic", "abrBola" or "abrThroughput"
-     * @see {@link module:MediaPlayer#setABRStrategy setABRStrategy()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getABRStrategy() {
-        return mediaPlayerModel.getABRStrategy();
-    }
-
-    /**
-     * Enable/disable builtin dashjs ABR rules
-     * @param {boolean} value
-     * @default true
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not boolean type.
-     * @instance
-     */
-    function useDefaultABRRules(value) {
-        mediaPlayerModel.setUseDefaultABRRules(value);
     }
 
     /**
@@ -1444,63 +901,6 @@ function MediaPlayer() {
      */
     function removeAllABRCustomRule() {
         mediaPlayerModel.removeABRCustomRule();
-    }
-
-    /**
-     * Sets the moving average method used for smoothing throughput estimates. Valid methods are
-     * "slidingWindow" and "ewma". The call has no effect if an invalid method is passed.
-     *
-     * The sliding window moving average method computes the average throughput using the last four segments downloaded.
-     * If the stream is live (as opposed to VOD), then only the last three segments are used.
-     * If wide variations in throughput are detected, the number of segments can be dynamically increased to avoid oscillations.
-     *
-     * The exponentially weighted moving average (EWMA) method computes the average using exponential smoothing.
-     * Two separate estimates are maintained, a fast one with a three-second half life and a slow one with an eight-second half life.
-     * The throughput estimate at any time is the minimum of the fast and slow estimates.
-     * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
-     *
-     * @param {string} value
-     * @default {string} 'slidingWindow'
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not slidingWindow or ewma.
-     * @instance
-     */
-    function setMovingAverageMethod(value) {
-        mediaPlayerModel.setMovingAverageMethod(value);
-    }
-
-    /**
-     * Return the current moving average method used for smoothing throughput estimates.
-     * @return {string} Returns "slidingWindow" or "ewma".
-     * @see {@link module:MediaPlayer#setMovingAverageMethod setMovingAverageMethod()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getMovingAverageMethod() {
-        return mediaPlayerModel.getMovingAverageMethod();
-    }
-
-    /**
-     * Returns if low latency mode is enabled. Disabled by default.
-     * @return {boolean} true - if enabled
-     * @see {@link module:MediaPlayer#setLowLatencyEnabled setLowLatencyEnabled()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getLowLatencyEnabled() {
-        return mediaPlayerModel.getLowLatencyEnabled();
-    }
-
-    /**
-     * Enables low latency mode for dynamic streams. If not specified, liveDelay is set to 3s of buffer.
-     * Browser compatibility (Check row 'ReadableStream response body'): https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     */
-    function setLowLatencyEnabled(value) {
-        mediaPlayerModel.setLowLatencyEnabled(value);
     }
 
     /**
@@ -1583,239 +983,6 @@ function MediaPlayer() {
     }
 
     /**
-     * <p>Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection. The
-     * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
-     * {@link module:MediaPlayer#clearDefaultUTCTimingSources clearDefaultUTCTimingSources()} </p>
-     *
-     * @param {boolean} value - true to enable
-     * @default {boolean} True
-     * @memberof module:MediaPlayer
-     * @see {@link module:MediaPlayer#addUTCTimingSource addUTCTimingSource()}
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     */
-    function enableManifestDateHeaderTimeSource(value) {
-        mediaPlayerModel.setUseManifestDateHeaderTimeSource(value);
-    }
-
-    /**
-     * This value influences the buffer pruning logic.
-     * Allows you to modify the buffer that is kept in source buffer in seconds.
-     * <pre>0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|</pre>
-     *
-     * @default 20 seconds
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setBufferToKeep(value) {
-        mediaPlayerModel.setBufferToKeep(value);
-    }
-
-    /**
-     * This value influences the buffer pruning logic.
-     * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
-     * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
-     *
-     * @default 80 seconds
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setBufferAheadToKeep(value) {
-        mediaPlayerModel.setBufferAheadToKeep(value);
-    }
-
-    /**
-     * This value influences the buffer pruning logic.
-     * Allows you to modify the interval of pruning buffer in seconds.
-     *
-     * @default 10 seconds
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not a number type.
-     * @instance
-     */
-    function setBufferPruningInterval(value) {
-        mediaPlayerModel.setBufferPruningInterval(value);
-    }
-
-    /**
-     * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
-     *
-     * When the time is set higher than the default you will have to wait longer
-     * to see automatic bitrate switches but will have a larger buffer which
-     * will increase stability.
-     *
-     * Note: The value set for Stable Buffer Time is not considered when Low Latency Mode is enabled.
-     * When in Low Latency mode dash.js takes ownership of Stable Buffer Time value to minimize latency
-     * that comes from buffer filling process.
-     *
-     * @default 12 seconds.
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setStableBufferTime(value) {
-        mediaPlayerModel.setStableBufferTime(value);
-    }
-
-    /**
-     * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
-     *
-     * When the time is set higher than the default you will have to wait longer
-     * to see automatic bitrate switches but will have a larger buffer which
-     * will increase stability.
-     *
-     * @default 12 seconds.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getStableBufferTime() {
-        return mediaPlayerModel.getStableBufferTime();
-    }
-
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality.
-     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
-     * bitrate, then we try to build a larger buffer at the top quality to increase stability
-     * and to maintain media quality.
-     *
-     * @default 30 seconds.
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setBufferTimeAtTopQuality(value) {
-        mediaPlayerModel.setBufferTimeAtTopQuality(value);
-    }
-
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality.
-     * If there are multiple bitrates in your adaptation, and the media is playing at the highest
-     * bitrate, then we try to build a larger buffer at the top quality to increase stability
-     * and to maintain media quality.
-     *
-     * @default 30 seconds.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getBufferTimeAtTopQuality() {
-        return mediaPlayerModel.getBufferTimeAtTopQuality();
-    }
-
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality for long form content.
-     *
-     * @default 60 seconds.
-     * @see {@link module:MediaPlayer#setLongFormContentDurationThreshold setLongFormContentDurationThreshold()}
-     * @see {@link module:MediaPlayer#setBufferTimeAtTopQuality setBufferTimeAtTopQuality()}
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setBufferTimeAtTopQualityLongForm(value) {
-        mediaPlayerModel.setBufferTimeAtTopQualityLongForm(value);
-    }
-
-    /**
-     * The time that the internal buffer target will be set to once playing the top quality for long form content.
-     *
-     * @default 60 seconds.
-     * @see {@link module:MediaPlayer#setLongFormContentDurationThreshold setLongFormContentDurationThreshold()}
-     * @see {@link module:MediaPlayer#setBufferTimeAtTopQuality setBufferTimeAtTopQuality()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getBufferTimeAtTopQualityLongForm() {
-        return mediaPlayerModel.getBufferTimeAtTopQualityLongForm();
-    }
-
-    /**
-     * The threshold which defines if the media is considered long form content.
-     * This will directly affect the buffer targets when playing back at the top quality.
-     *
-     * @see {@link module:MediaPlayer#setBufferTimeAtTopQualityLongForm setBufferTimeAtTopQualityLongForm()}
-     * @default 600 seconds (10 minutes).
-     * @param {number} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setLongFormContentDurationThreshold(value) {
-        mediaPlayerModel.setLongFormContentDurationThreshold(value);
-    }
-
-    /**
-     * The overlap tolerance time, at both the head and the tail of segments, considered when doing time to segment conversions.
-     *
-     * This is used when calculating which of the loaded segments of a representation corresponds with a given time position.
-     * Its value is never used for calculating the segment index in seeking operations in which it assumes overlap time threshold is zero.
-     *
-     * <pre>
-     * |-o-|--- segment X ----|-o-|
-     *                        |-o-|---- segment X+1 -----|-o-|
-     *                                                   |-o-|---- segment X+2 -----|-o-|
-     * </pre>
-     * @default 0.05 seconds.
-     * @param {number} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-    */
-    function setSegmentOverlapToleranceTime(value) {
-        mediaPlayerModel.setSegmentOverlapToleranceTime(value);
-    }
-
-    /**
-     * For a given media type, the threshold which defines if the response to a fragment
-     * request is coming from browser cache or not.
-     * Valid media types are "video", "audio"
-     *
-     * @default 50 milliseconds for video fragment requests; 5 milliseconds for audio fragment requests.
-     * @param {string} type 'video' or 'audio' are the type options.
-     * @param {number} value Threshold value in milliseconds.
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments, type not a string type and its value is not audio or video, value not number type.
-     * @instance
-     */
-    function setCacheLoadThresholdForType(type, value) {
-        mediaPlayerModel.setCacheLoadThresholdForType(type, value);
-    }
-
-    /**
-     * A percentage between 0.0 and 1 to reduce the measured throughput calculations.
-     * The default is 0.9. The lower the value the more conservative and restricted the
-     * measured throughput calculations will be. please use carefully. This will directly
-     * affect the ABR logic in dash.js
-     *
-     * @param {number} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setBandwidthSafetyFactor(value) {
-        mediaPlayerModel.setBandwidthSafetyFactor(value);
-    }
-
-    /**
-     * Returns the number of the current BandwidthSafetyFactor
-     *
-     * @return {number} value
-     * @see {@link module:MediaPlayer#setBandwidthSafetyFactor setBandwidthSafetyFactor()}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getBandwidthSafetyFactor() {
-        return mediaPlayerModel.getBandwidthSafetyFactor();
-    }
-
-    /**
      * Returns the average throughput computed in the ABR logic
      *
      * @param {string} type
@@ -1826,75 +993,6 @@ function MediaPlayer() {
     function getAverageThroughput(type) {
         const throughputHistory = abrController.getThroughputHistory();
         return throughputHistory ? throughputHistory.getAverageThroughput(type) : 0;
-    }
-
-    /**
-     * A timeout value in seconds, which during the ABRController will block switch-up events.
-     * This will only take effect after an abandoned fragment event occurs.
-     *
-     * @default 10 seconds
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, not number type.
-     * @instance
-     */
-    function setAbandonLoadTimeout(value) {
-        mediaPlayerModel.setAbandonLoadTimeout(value);
-    }
-
-    /**
-     * Total number of retry attempts that will occur on a fragment load before it fails.
-     * Increase this value to a maximum in order to achieve an automatic playback resume
-     * in case of completely lost internet connection.
-     *
-     * Note: This parameter is not taken into account when Low Latency Mode is enabled. For Low Latency
-     * Playback dash.js takes control and sets a number of retry attempts that ensures playback stability.
-     *
-     * @default 3
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
-     * @instance
-     */
-    function setFragmentLoaderRetryAttempts(value) {
-        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
-    }
-
-    /**
-     * Time in milliseconds of which to reload a failed fragment load attempt.
-     *
-     * @default 1000 milliseconds
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
-     * @instance
-     */
-    function setFragmentLoaderRetryInterval(value) {
-        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MEDIA_SEGMENT_TYPE, value);
-    }
-
-    /**
-     * Total number of retry attempts that will occur on a manifest load before it fails.
-     *
-     * @default 4
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setManifestLoaderRetryAttempts(value) {
-        mediaPlayerModel.setRetryAttemptsForType(HTTPRequest.MPD_TYPE, value);
-    }
-
-    /**
-     * Time in milliseconds of which to reload a failed manifest load attempt.
-     *
-     * @default 1000 milliseconds
-     * @param {int} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function setManifestLoaderRetryInterval(value) {
-        mediaPlayerModel.setRetryIntervalForType(HTTPRequest.MPD_TYPE, value);
     }
 
     /**
@@ -1924,85 +1022,6 @@ function MediaPlayer() {
         return mediaPlayerModel.getXHRWithCredentialsForType(type);
     }
 
-    /**
-     * Sets whether player should jump small gaps (discontinuities) in the buffer.
-     *
-     * @param {boolean} value
-     * @default false
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     *
-     */
-    function setJumpGaps(value) {
-        mediaPlayerModel.setJumpGaps(value);
-    }
-
-    /**
-     * Gets current status of jump gaps feature.
-     * @returns {boolean} The current jump gaps state.
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getJumpGaps() {
-        return mediaPlayerModel.getJumpGaps();
-    }
-
-    /**
-     * Time in seconds for a gap to be considered small.
-     *
-     * @param {number} value
-     * @default 0.8
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
-     * @instance
-     *
-     */
-    function setSmallGapLimit(value) {
-        mediaPlayerModel.setSmallGapLimit(value);
-    }
-
-    /**
-     * Time in seconds for a gap to be considered small.
-     * @returns {boolean} Current small gap limit
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getSmallGapLimit() {
-        return mediaPlayerModel.getSmallGapLimit();
-    }
-
-    /**
-     * For live streams, set the interval-frequency in milliseconds at which
-     * dash.js will check if the current manifest is still processed before
-     * downloading the next manifest once the minimumUpdatePeriod time has
-     * expired.
-     * @param {int} value
-     * @default 100
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not number type.
-     * @instance
-     * @see {@link module:MediaPlayer#getManifestUpdateRetryInterval getManifestUpdateRetryInterval()}
-     *
-     */
-    function setManifestUpdateRetryInterval(value) {
-        mediaPlayerModel.setManifestUpdateRetryInterval(value);
-    }
-
-    /**
-     * For live streams, get the interval-frequency in milliseconds at which
-     * dash.js will check if the current manifest is still processed before
-     * downloading the next manifest once the minimumUpdatePeriod time has
-     * expired.
-     * @returns {int} Current retry delay for manifest update
-     * @memberof module:MediaPlayer
-     * @instance
-     * @see {@link module:MediaPlayer#setManifestUpdateRetryInterval setManifestUpdateRetryInterval()}
-     */
-    function getManifestUpdateRetryInterval() {
-        return mediaPlayerModel.getManifestUpdateRetryInterval();
-    }
-
     /*
     ---------------------------------------------------------------------------
 
@@ -2023,16 +1042,6 @@ function MediaPlayer() {
         return dashMetrics;
     }
 
-    /**
-     *
-     * @param {string} type
-     * @returns {Object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getMetricsFor(type) {
-        return metricsModel.getReadOnlyMetricsFor(type);
-    }
     /*
     ---------------------------------------------------------------------------
 
@@ -2191,7 +1200,7 @@ function MediaPlayer() {
             videoModel: videoModel
         });
         textTracks.initialize();
-        textTracks.displayCConTop(value);
+        textTracks.setDisplayCConTop(value);
     }
 
     /*
@@ -2214,18 +1223,6 @@ function MediaPlayer() {
             throw ELEMENT_NOT_ATTACHED_ERROR;
         }
         return videoModel.getElement();
-    }
-
-    /**
-     * Use this method to attach an HTML5 element that wraps the video element.
-     *
-     * @param {HTMLElement} container - The HTML5 element containing the video element.
-     * @memberof module:MediaPlayer
-     * @instance
-     * @deprecated
-     */
-    function attachVideoContainer(container) { /* jshint ignore:line */
-        logger.warn('attachVideoContainer method has been deprecated and will be removed in dash.js v3.0.0');
     }
 
     /**
@@ -2390,7 +1387,7 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
-    function setInitialMediaSettingsFor(type, value) {
+    function setQualityForSettingsFor(type, value) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
@@ -2591,29 +1588,6 @@ function MediaPlayer() {
     /*
     ---------------------------------------------------------------------------
 
-        PROTECTION CONTROLLER MANAGEMENT
-
-    ---------------------------------------------------------------------------
-    */
-
-    /**
-     * Set the value for the ProtectionController and MediaKeys life cycle. If true, the
-     * ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during
-     * the MediaPlayer lifetime.
-     *
-     * @param {boolean=} value - True or false flag.
-     *
-     * @memberof module:MediaPlayer
-     * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with an invalid argument, value is not boolean type.
-     * @instance
-     */
-    function keepProtectionMediaKeys(value) {
-        mediaPlayerModel.setKeepProtectionMediaKeys(value);
-    }
-
-    /*
-    ---------------------------------------------------------------------------
-
         TOOLS AND OTHERS FUNCTIONS
 
     ---------------------------------------------------------------------------
@@ -2694,6 +1668,50 @@ function MediaPlayer() {
         if (isReady()) {
             initializePlayback();
         }
+    }
+
+    /**
+     * Get the current settings object being used on the player.
+     * @returns {PlayerSettings} The settings object being used.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSettings() {
+        return settings.get();
+    }
+
+    /**
+     * @summary Update the current settings object being used on the player. Anything left unspecified is not modified.
+     * @param {PlayerSettings} settingsObj - An object corresponding to the settings definition.
+     * @description This function does not update the entire object, only properties in the passed in object are updated.
+     *
+     * This means that updateSettings({a: x}) and updateSettings({b: y}) are functionally equivalent to
+     * updateSettings({a: x, b: y}). If the default values are required again, @see{@link resetSettings}.
+     * @example
+     * player.updateSettings({
+     *      streaming: {
+     *          liveDelayFragmentCount: 8
+     *          abr: {
+     *              maxBitrate: { audio: 100, video: 1000 }
+     *          }
+     *      }
+     *  });
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function updateSettings(settingsObj) {
+        settings.update(settingsObj);
+    }
+
+    /**
+     * Resets the settings object back to the default.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function resetSettings() {
+        settings.reset();
     }
 
     /**
@@ -2791,7 +1809,7 @@ function MediaPlayer() {
         mediaController.reset();
         textController.reset();
         if (protectionController) {
-            if (mediaPlayerModel.getKeepProtectionMediaKeys()) {
+            if (settings.get().streaming.keepProtectionMediaKeys) {
                 protectionController.stop();
             } else {
                 protectionController.reset();
@@ -2818,51 +1836,46 @@ function MediaPlayer() {
             capabilities: capabilities,
             manifestLoader: manifestLoader,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
             protectionController: protectionController,
             adapter: adapter,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
             timelineConverter: timelineConverter,
             videoModel: videoModel,
             playbackController: playbackController,
-            domStorage: domStorage,
             abrController: abrController,
             mediaController: mediaController,
-            textController: textController
+            textController: textController,
+            settings: settings
         });
 
         playbackController.setConfig({
             streamController: streamController,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            dashManifestModel: dashManifestModel,
             adapter: adapter,
             videoModel: videoModel,
             timelineConverter: timelineConverter,
-            uriFragmentModel: uriFragmentModel
+            uriFragmentModel: uriFragmentModel,
+            settings: settings
         });
 
         abrController.setConfig({
             streamController: streamController,
             domStorage: domStorage,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
+            adapter: adapter,
             videoModel: videoModel,
-            adapter: adapter
+            settings: settings
         });
         abrController.createAbrRulesCollection();
 
         textController.setConfig({
             errHandler: errHandler,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
+            adapter: adapter,
             mediaController: mediaController,
             streamController: streamController,
             videoModel: videoModel
@@ -2875,10 +1888,11 @@ function MediaPlayer() {
     function createManifestLoader() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
-            mssHandler: mssHandler
+            mssHandler: mssHandler,
+            settings: settings
         });
     }
 
@@ -2927,8 +1941,8 @@ function MediaPlayer() {
                 debug: debug,
                 eventBus: eventBus,
                 mediaElement: getVideoElement(),
-                dashManifestModel: dashManifestModel,
-                metricsModel: metricsModel,
+                adapter: adapter,
+                dashMetrics: dashMetrics,
                 events: Events,
                 constants: Constants,
                 metricsConstants: MetricsConstants
@@ -2947,7 +1961,7 @@ function MediaPlayer() {
             mssHandler = MssHandler(context).create({
                 eventBus: eventBus,
                 mediaPlayerModel: mediaPlayerModel,
-                metricsModel: metricsModel,
+                dashMetrics: dashMetrics,
                 manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
@@ -2963,13 +1977,8 @@ function MediaPlayer() {
         }
     }
 
-    function getDVRInfoMetric() {
-        let metric = metricsModel.getReadOnlyMetricsFor(Constants.VIDEO) || metricsModel.getReadOnlyMetricsFor(Constants.AUDIO);
-        return dashMetrics.getCurrentDVRInfo(metric);
-    }
-
     function getAsUTC(valToConvert) {
-        let metric = getDVRInfoMetric();
+        let metric = dashMetrics.getCurrentDVRInfo();
         let availableFrom,
             utcValue;
 
@@ -2998,6 +2007,18 @@ function MediaPlayer() {
             playbackInitialized = true;
             logger.info('Playback Initialized');
         }
+    }
+
+    /**
+     * Returns the DashAdapter.js Module.
+     *
+     * @see {@link module:DashAdapter}
+     * @returns {Object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getDashAdapter() {
+        return adapter;
     }
 
     instance = {
@@ -3037,33 +2058,14 @@ function MediaPlayer() {
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         getVideoElement: getVideoElement,
         getSource: getSource,
-        setLiveDelayFragmentCount: setLiveDelayFragmentCount,
-        setLiveDelay: setLiveDelay,
-        getLiveDelay: getLiveDelay,
         getCurrentLiveLatency: getCurrentLiveLatency,
-        useSuggestedPresentationDelay: useSuggestedPresentationDelay,
-        enableLastBitrateCaching: enableLastBitrateCaching,
-        enableLastMediaSettingsCaching: enableLastMediaSettingsCaching,
-        setMaxAllowedBitrateFor: setMaxAllowedBitrateFor,
-        getMaxAllowedBitrateFor: getMaxAllowedBitrateFor,
         getTopBitrateInfoFor: getTopBitrateInfoFor,
-        setMinAllowedBitrateFor: setMinAllowedBitrateFor,
-        getMinAllowedBitrateFor: getMinAllowedBitrateFor,
-        setMaxAllowedRepresentationRatioFor: setMaxAllowedRepresentationRatioFor,
-        getMaxAllowedRepresentationRatioFor: getMaxAllowedRepresentationRatioFor,
         setAutoPlay: setAutoPlay,
         getAutoPlay: getAutoPlay,
-        setScheduleWhilePaused: setScheduleWhilePaused,
-        getScheduleWhilePaused: getScheduleWhilePaused,
         getDashMetrics: getDashMetrics,
-        getMetricsFor: getMetricsFor,
         getQualityFor: getQualityFor,
         setQualityFor: setQualityFor,
         updatePortalSize: updatePortalSize,
-        getLimitBitrateByPortal: getLimitBitrateByPortal,
-        setLimitBitrateByPortal: setLimitBitrateByPortal,
-        getUsePixelRatioInLimitBitrateByPortal: getUsePixelRatioInLimitBitrateByPortal,
-        setUsePixelRatioInLimitBitrateByPortal: setUsePixelRatioInLimitBitrateByPortal,
         setTextDefaultLanguage: setTextDefaultLanguage,
         getTextDefaultLanguage: getTextDefaultLanguage,
         setTextDefaultEnabled: setTextDefaultEnabled,
@@ -3073,86 +2075,39 @@ function MediaPlayer() {
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
-        setInitialBitrateFor: setInitialBitrateFor,
-        getInitialBitrateFor: getInitialBitrateFor,
-        setInitialRepresentationRatioFor: setInitialRepresentationRatioFor,
-        getInitialRepresentationRatioFor: getInitialRepresentationRatioFor,
         getStreamsFromManifest: getStreamsFromManifest,
         getTracksFor: getTracksFor,
         getTracksForTypeFromManifest: getTracksForTypeFromManifest,
         getCurrentTrackFor: getCurrentTrackFor,
-        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
+        setInitialMediaSettingsFor: setQualityForSettingsFor,
         getInitialMediaSettingsFor: getInitialMediaSettingsFor,
         setCurrentTrack: setCurrentTrack,
         getTrackSwitchModeFor: getTrackSwitchModeFor,
         setTrackSwitchModeFor: setTrackSwitchModeFor,
         setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        setFastSwitchEnabled: setFastSwitchEnabled,
-        getFastSwitchEnabled: getFastSwitchEnabled,
-        setMovingAverageMethod: setMovingAverageMethod,
-        getMovingAverageMethod: getMovingAverageMethod,
-        getAutoSwitchQualityFor: getAutoSwitchQualityFor,
-        setAutoSwitchQualityFor: setAutoSwitchQualityFor,
-        setABRStrategy: setABRStrategy,
-        getABRStrategy: getABRStrategy,
-        useDefaultABRRules: useDefaultABRRules,
         addABRCustomRule: addABRCustomRule,
         removeABRCustomRule: removeABRCustomRule,
         removeAllABRCustomRule: removeAllABRCustomRule,
-        setBandwidthSafetyFactor: setBandwidthSafetyFactor,
-        getBandwidthSafetyFactor: getBandwidthSafetyFactor,
         getAverageThroughput: getAverageThroughput,
-        setAbandonLoadTimeout: setAbandonLoadTimeout,
         retrieveManifest: retrieveManifest,
         addUTCTimingSource: addUTCTimingSource,
         removeUTCTimingSource: removeUTCTimingSource,
         clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
         restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
-        setBufferToKeep: setBufferToKeep,
-        setBufferAheadToKeep: setBufferAheadToKeep,
-        setBufferPruningInterval: setBufferPruningInterval,
-        setStableBufferTime: setStableBufferTime,
-        getStableBufferTime: getStableBufferTime,
-        setBufferTimeAtTopQuality: setBufferTimeAtTopQuality,
-        getBufferTimeAtTopQuality: getBufferTimeAtTopQuality,
-        setBufferTimeAtTopQualityLongForm: setBufferTimeAtTopQualityLongForm,
-        getBufferTimeAtTopQualityLongForm: getBufferTimeAtTopQualityLongForm,
-        setFragmentLoaderRetryAttempts: setFragmentLoaderRetryAttempts,
-        setFragmentLoaderRetryInterval: setFragmentLoaderRetryInterval,
-        setManifestLoaderRetryAttempts: setManifestLoaderRetryAttempts,
-        setManifestLoaderRetryInterval: setManifestLoaderRetryInterval,
         setXHRWithCredentialsForType: setXHRWithCredentialsForType,
         getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        setJumpGaps: setJumpGaps,
-        getJumpGaps: getJumpGaps,
-        setSmallGapLimit: setSmallGapLimit,
-        getSmallGapLimit: getSmallGapLimit,
-        setLowLatencyEnabled: setLowLatencyEnabled,
-        getLowLatencyEnabled: getLowLatencyEnabled,
-        setCatchUpPlaybackRate: setCatchUpPlaybackRate,
-        getCatchUpPlaybackRate: getCatchUpPlaybackRate,
-        setLowLatencyMinDrift: setLowLatencyMinDrift,
-        getLowLatencyMinDrift: getLowLatencyMinDrift,
-        setLowLatencyMaxDriftBeforeSeeking: setLowLatencyMaxDriftBeforeSeeking,
-        getLowLatencyMaxDriftBeforeSeeking: getLowLatencyMaxDriftBeforeSeeking,
-        setManifestUpdateRetryInterval: setManifestUpdateRetryInterval,
-        getManifestUpdateRetryInterval: getManifestUpdateRetryInterval,
-        setLongFormContentDurationThreshold: setLongFormContentDurationThreshold,
-        setSegmentOverlapToleranceTime: setSegmentOverlapToleranceTime,
-        setCacheLoadThresholdForType: setCacheLoadThresholdForType,
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
-        enableManifestDateHeaderTimeSource: enableManifestDateHeaderTimeSource,
         displayCaptionsOnTop: displayCaptionsOnTop,
-        attachVideoContainer: attachVideoContainer,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
-        getUseDeadTimeLatencyForAbr: getUseDeadTimeLatencyForAbr,
-        setUseDeadTimeLatencyForAbr: setUseDeadTimeLatencyForAbr,
         getThumbnail: getThumbnail,
-        keepProtectionMediaKeys: keepProtectionMediaKeys,
+        getDashAdapter: getDashAdapter,
+        getSettings: getSettings,
+        updateSettings: updateSettings,
+        resetSettings: resetSettings,
         reset: reset
     };
 

@@ -41,6 +41,7 @@ import ProtectionConstants from '../../constants/ProtectionConstants';
 
 /**
  * @module ProtectionKeyController
+ * @ignore
  * @description Media protection key system functionality that can be modified/overridden by applications
  */
 function ProtectionKeyController() {
@@ -104,6 +105,19 @@ function ProtectionKeyController() {
      */
     function getKeySystems() {
         return keySystems;
+    }
+
+    /**
+     * Sets the prioritized list of key systems to be supported
+     * by this player.
+     *
+     * @param {Array.<KeySystem>} newKeySystems the new prioritized
+     * list of key systems
+     * @memberof module:ProtectionKeyController
+     * @instance
+     */
+    function setKeySystems(newKeySystems) {
+        keySystems = newKeySystems;
     }
 
     /**
@@ -195,19 +209,13 @@ function ProtectionKeyController() {
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
                         // Look for DRM-specific ContentProtection
                         let initData = ks.getInitData(cp);
-                        if (!!initData) {
-                            supportedKS.push({
-                                ks: keySystems[ksIdx],
-                                initData: initData,
-                                cdmData: ks.getCDMData(),
-                                sessionId: ks.getSessionId(cp)
-                            });
-                        } else if (this.isClearKey(ks)) {
-                            supportedKS.push({
-                                ks: ks,
-                                initData: null
-                            });
-                        }
+
+                        supportedKS.push({
+                            ks: keySystems[ksIdx],
+                            initData: initData,
+                            cdmData: ks.getCDMData(),
+                            sessionId: ks.getSessionId(cp)
+                        });
                     }
                 }
             }
@@ -336,6 +344,7 @@ function ProtectionKeyController() {
         isClearKey: isClearKey,
         initDataEquals: initDataEquals,
         getKeySystems: getKeySystems,
+        setKeySystems: setKeySystems,
         getKeySystemBySystemString: getKeySystemBySystemString,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getSupportedKeySystems: getSupportedKeySystems,

@@ -73,7 +73,7 @@ function EventController() {
         lastEventTimerCall = Date.now() / 1000;
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!manifestUpdater || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
@@ -88,7 +88,7 @@ function EventController() {
     }
 
     function start() {
-        checkSetConfigCall();
+        checkConfig();
         logger.debug('Start Event Controller');
         if (!isStarted && !isNaN(refreshDelay)) {
             isStarted = true;
@@ -101,7 +101,7 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInlineEvents(values) {
-        checkSetConfigCall();
+        checkConfig();
 
         inlineEvents = {};
 
@@ -120,7 +120,7 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
-        checkSetConfigCall();
+        checkConfig();
 
         for (let i = 0; i < values.length; i++) {
             let event = values[i];
@@ -190,7 +190,7 @@ function EventController() {
     }
 
     function refreshManifest() {
-        checkSetConfigCall();
+        checkConfig();
         manifestUpdater.refreshManifest();
     }
 

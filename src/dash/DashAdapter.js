@@ -29,56 +29,58 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../streaming/constants/Constants';
 import DashConstants from './constants/DashConstants';
-import RepresentationInfo from '../streaming/vo/RepresentationInfo';
-import MediaInfo from '../streaming/vo/MediaInfo';
-import StreamInfo from '../streaming/vo/StreamInfo';
-import ManifestInfo from '../streaming/vo/ManifestInfo';
+import RepresentationInfo from './vo/RepresentationInfo';
+import MediaInfo from './vo/MediaInfo';
+import StreamInfo from './vo/StreamInfo';
+import ManifestInfo from './vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
-import cea608parser from '../../externals/cea608-parser';
-import { checkInteger } from '../streaming/utils/SupervisorTools';
+import DashManifestModel from './models/DashManifestModel';
 
 function DashAdapter() {
     let instance,
         dashManifestModel,
         voPeriods,
         voAdaptations,
-        currentMediaInfo;
+        currentMediaInfo,
+        constants,
+        cea608parser;
+
+    const context = this.context;
+
+    const PROFILE_DVB = 'urn:dvb:dash:profile:dvb-dash:2014';
 
     function setup() {
+        dashManifestModel = DashManifestModel(context).getInstance();
         reset();
     }
 
+    // #region PUBLIC FUNCTIONS
+    // --------------------------------------------------
     function setConfig(config) {
         if (!config) return;
 
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.constants) {
+            constants = config.constants;
         }
-    }
 
-    function getRepresentationForRepresentationInfo(representationInfo, representationController) {
-        return representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+        if (config.cea608parser) {
+            cea608parser = config.cea608parser;
+        }
+
+        if (config.errHandler) {
+            dashManifestModel.setConfig({errHandler: config.errHandler});
+        }
+
+        if (config.BASE64) {
+            dashManifestModel.setConfig({BASE64: config.BASE64});
+        }
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-
         if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations[mediaInfo.streamInfo.id]) return null;
         return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
-    }
-
-    function getPeriodForStreamInfo(streamInfo, voPeriodsArray) {
-        const ln = voPeriodsArray.length;
-
-        for (let i = 0; i < ln; i++) {
-            let voPeriod = voPeriodsArray[i];
-
-            if (streamInfo.id === voPeriod.id) return voPeriod;
-        }
-
-        return null;
     }
 
     function convertRepresentationToRepresentationInfo(voRepresentation) {
@@ -96,6 +98,383 @@ function DashAdapter() {
         representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);
 
         return representationInfo;
+    }
+
+    function getMediaInfoForType(streamInfo, type) {
+        if (voPeriods.length === 0) {
+            return null;
+        }
+
+        const manifest = voPeriods[0].mpd.manifest;
+        let realAdaptation = getAdaptationForType(streamInfo.index, type, streamInfo);
+        if (!realAdaptation) return null;
+
+        let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
+        let periodId = selectedVoPeriod.id;
+        let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, manifest, streamInfo.index);
+
+        voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
+
+        return convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
+    }
+
+    function getIsMain(adaptation) {
+        return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
+            return role.value === DashConstants.MAIN;
+        })[0];
+    }
+
+    function getAdaptationForType(periodIndex, type, streamInfo) {
+        const manifest = voPeriods[0].mpd.manifest;
+        const adaptations = dashManifestModel.getAdaptationsForType(manifest, periodIndex, type);
+
+        if (!adaptations || adaptations.length === 0) return null;
+
+        if (adaptations.length > 1 && streamInfo) {
+            const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
+
+            if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
+                for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                    if (currentMediaInfo[streamInfo.id][type].isMediaInfoEqual(allMediaInfoForType[i])) {
+                        return adaptations[i];
+                    }
+                }
+            }
+
+            for (let i = 0, ln = adaptations.length; i < ln; i++) {
+                if (getIsMain(adaptations[i])) {
+                    return adaptations[i];
+                }
+            }
+        }
+
+        return adaptations[0];
+    }
+
+    function getAllMediaInfoForType(streamInfo, type, externalManifest) {
+        let voLocalPeriods = voPeriods;
+        let manifest = externalManifest;
+        let mediaArr = [];
+        let data,
+            media,
+            idx,
+            i,
+            j,
+            ln,
+            periodId;
+
+        if (manifest) {
+            checkConfig();
+
+            voLocalPeriods = getPeriodsFromManifest(manifest);
+        } else {
+            if (voPeriods.length > 0) {
+                manifest = voPeriods[0].mpd.manifest;
+            } else {
+                return mediaArr;
+            }
+        }
+
+        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
+        if (selectedVoPeriod) {
+            periodId = selectedVoPeriod.id;
+        }
+        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== constants.EMBEDDED_TEXT ? type : constants.VIDEO);
+
+        if (!adaptationsForType || adaptationsForType.length === 0) return mediaArr;
+
+        voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
+
+        for (i = 0, ln = adaptationsForType.length; i < ln; i++) {
+            data = adaptationsForType[i];
+            idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
+            media = convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
+
+            if (type === constants.EMBEDDED_TEXT) {
+                let accessibilityLength = media.accessibility.length;
+                for (j = 0; j < accessibilityLength; j++) {
+                    if (!media) {
+                        continue;
+                    }
+                    let accessibility = media.accessibility[j];
+                    if (accessibility.indexOf('cea-608:') === 0) {
+                        let value = accessibility.substring(8);
+                        let parts = value.split(';');
+                        if (parts[0].substring(0, 2) === 'CC') {
+                            for (j = 0; j < parts.length; j++) {
+                                if (!media) {
+                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[periodId][idx]);
+                                }
+                                convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
+                                mediaArr.push(media);
+                                media = null;
+                            }
+                        } else {
+                            for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
+                                if (!media) {
+                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[periodId][idx]);
+                                }
+                                convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
+                                mediaArr.push(media);
+                                media = null;
+                            }
+                        }
+                    } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
+                        convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
+                        mediaArr.push(media);
+                        media = null;
+                    }
+                }
+            } else if (type === constants.IMAGE) {
+                convertVideoInfoToThumbnailInfo(media);
+                mediaArr.push(media);
+                media = null;
+            } else if (media) {
+                mediaArr.push(media);
+            }
+        }
+
+        return mediaArr;
+    }
+
+    function updatePeriods(newManifest) {
+        if (!newManifest) return null;
+
+        checkConfig();
+
+        voPeriods = getPeriodsFromManifest(newManifest);
+
+        voAdaptations = {};
+    }
+
+    function getPeriodsFromManifest(manifest) {
+        const mpd = getMpd(manifest);
+
+        return getRegularPeriods(mpd);
+    }
+
+    function getStreamsInfo(externalManifest, maxStreamsInfo) {
+        const streams = [];
+        let voLocalPeriods = voPeriods;
+
+        //if manifest is defined, getStreamsInfo is for an outside manifest, not the current one
+        if (externalManifest) {
+            checkConfig();
+            voLocalPeriods = getPeriodsFromManifest(externalManifest);
+        }
+
+        if (!maxStreamsInfo) {
+            maxStreamsInfo = voLocalPeriods.length;
+        }
+        for (let i = 0; i < maxStreamsInfo; i++) {
+            streams.push(convertPeriodToStreamInfo(voLocalPeriods[i]));
+        }
+
+        return streams;
+    }
+
+    function getRealAdaptation(streamInfo, mediaInfo) {
+        let id,
+            realAdaptation;
+
+        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
+
+        id = mediaInfo ? mediaInfo.id : null;
+
+        if (voPeriods.length > 0) {
+            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
+        }
+
+        return realAdaptation;
+    }
+
+    function getVoRepresentations(mediaInfo) {
+        let voReps;
+
+        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
+        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+
+        return voReps;
+    }
+
+    function getEvent(eventBox, eventStreams, startTime) {
+        if (!eventBox || !eventStreams) {
+            return null;
+        }
+        const event = new Event();
+        const schemeIdUri = eventBox.scheme_id_uri;
+        const value = eventBox.value;
+        const timescale = eventBox.timescale;
+        const presentationTimeDelta = eventBox.presentation_time_delta;
+        const duration = eventBox.event_duration;
+        const id = eventBox.id;
+        const messageData = eventBox.message_data;
+        const presentationTime = startTime * timescale + presentationTimeDelta;
+
+        if (!eventStreams[schemeIdUri + '/' + value]) return null;
+
+        event.eventStream = eventStreams[schemeIdUri + '/' + value];
+        event.eventStream.value = value;
+        event.eventStream.timescale = timescale;
+        event.duration = duration;
+        event.id = id;
+        event.presentationTime = presentationTime;
+        event.messageData = messageData;
+        event.presentationTimeDelta = presentationTimeDelta;
+
+        return event;
+    }
+
+    function getEventsFor(info, voRepresentation) {
+        let events = [];
+
+        if (voPeriods.length === 0) {
+            return events;
+        }
+
+        const manifest = voPeriods[0].mpd.manifest;
+
+        if (info instanceof StreamInfo) {
+            events = dashManifestModel.getEventsForPeriod(getPeriodForStreamInfo(info, voPeriods));
+        } else if (info instanceof MediaInfo) {
+            events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
+        } else if (info instanceof RepresentationInfo) {
+            events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation);
+        }
+
+        return events;
+    }
+
+    function setCurrentMediaInfo(streamId, type, mediaInfo) {
+        currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
+        currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
+        currentMediaInfo[streamId][type] = mediaInfo;
+    }
+
+    function getIsTextTrack(type) {
+        return dashManifestModel.getIsTextTrack(type);
+    }
+
+    function getUTCTimingSources() {
+        const manifest = voPeriods[0].mpd.manifest;
+        return dashManifestModel.getUTCTimingSources(manifest);
+    }
+
+    function getSuggestedPresentationDelay() {
+        const mpd = voPeriods[0].mpd;
+        return dashManifestModel.getSuggestedPresentationDelay(mpd);
+    }
+
+    function getAvailabilityStartTime(externalMpd) {
+        const mpd = externalMpd ? externalMpd : voPeriods[0].mpd;
+        return dashManifestModel.getAvailabilityStartTime(mpd);
+    }
+
+    function getIsDynamic(externalManifest) {
+        const manifest = externalManifest ? externalManifest : voPeriods[0].mpd.manifest;
+        return dashManifestModel.getIsDynamic(manifest);
+    }
+
+    function getDuration(externalManifest) {
+        const manifest = externalManifest ? externalManifest : voPeriods[0].mpd.manifest;
+        return dashManifestModel.getDuration(manifest);
+    }
+
+    function getRegularPeriods(externalMpd) {
+        const mpd = externalMpd ? externalMpd : voPeriods[0].mpd;
+        return dashManifestModel.getRegularPeriods(mpd);
+    }
+
+    function getMpd(externalManifest) {
+        const manifest = externalManifest ? externalManifest : voPeriods[0].mpd.manifest;
+        return dashManifestModel.getMpd(manifest);
+    }
+
+    function getLocation(manifest) {
+        return dashManifestModel.getLocation(manifest);
+    }
+
+    function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
+        return dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
+    }
+
+    function getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo) {
+        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
+        return dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
+    }
+
+    function getIsDVB(manifest) {
+        return dashManifestModel.hasProfile(manifest, PROFILE_DVB);
+    }
+
+    function getBaseURLsFromElement(node) {
+        return dashManifestModel.getBaseURLsFromElement(node);
+    }
+
+    function getRepresentationSortFunction() {
+        return dashManifestModel.getRepresentationSortFunction();
+    }
+
+    function getCodec(adaptation, representationId, addResolutionInfo) {
+        return dashManifestModel.getCodec(adaptation, representationId, addResolutionInfo);
+    }
+
+    function getBandwidthForRepresentation(representationId, periodId) {
+        let representation;
+        let period = getPeriod(periodId);
+
+        representation = findRepresentation(period, representationId);
+
+        return representation ? representation.bandwidth : null;
+    }
+
+    /**
+     *
+     * @param {string} representationId
+     * @param {number} periodIdx
+     * @returns {*}
+     */
+    function getIndexForRepresentation(representationId, periodIdx) {
+        let period = getPeriod(periodIdx);
+
+        return findRepresentationIndex(period, representationId);
+    }
+
+    /**
+     * This method returns the current max index based on what is defined in the MPD.
+     *
+     * @param {string} bufferType - String 'audio' or 'video',
+     * @param {number} periodIdx - Make sure this is the period index not id
+     * @return {number}
+     * @memberof module:DashAdapter
+     * @instance
+     */
+    function getMaxIndexForBufferType(bufferType, periodIdx) {
+        let period = getPeriod(periodIdx);
+
+        return findMaxBufferIndex(period, bufferType);
+    }
+
+    function reset() {
+        voPeriods = [];
+        voAdaptations = {};
+        currentMediaInfo = {};
+    }
+    // #endregion PUBLIC FUNCTIONS
+
+    // #region PRIVATE FUNCTIONS
+    // --------------------------------------------------
+    function getPeriodForStreamInfo(streamInfo, voPeriodsArray) {
+        const ln = voPeriodsArray.length;
+
+        for (let i = 0; i < ln; i++) {
+            let voPeriod = voPeriodsArray[i];
+
+            if (streamInfo.id === voPeriod.id) return voPeriod;
+        }
+
+        //return voPeriodsArray[voPeriodsArray.length - 1];
+        return null;
     }
 
     function convertAdaptationToMediaInfo(adaptation) {
@@ -151,7 +530,7 @@ function DashAdapter() {
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
         mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
         mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
-        mediaInfo.type = Constants.EMBEDDED_TEXT;
+        mediaInfo.type = constants.EMBEDDED_TEXT;
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
@@ -160,7 +539,7 @@ function DashAdapter() {
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {
-        mediaInfo.type = Constants.IMAGE;
+        mediaInfo.type = constants.IMAGE;
     }
 
     function convertPeriodToStreamInfo(period) {
@@ -191,379 +570,109 @@ function DashAdapter() {
         return manifestInfo;
     }
 
-    function getMediaInfoForType(streamInfo, type) {
-
-        if (voPeriods.length === 0) {
-            return null;
-        }
-
-        const manifest = voPeriods[0].mpd.manifest;
-        let realAdaptation = getAdaptationForType(manifest, streamInfo.index, type, streamInfo);
-        if (!realAdaptation) return null;
-
-        let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
-        let periodId = selectedVoPeriod.id;
-        let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, manifest, streamInfo.index);
-
-        voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
-
-        return convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
-    }
-
-    function getIsMain(adaptation) {
-        return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
-            return role.value === DashConstants.MAIN;
-        })[0];
-    }
-
-    function getAdaptationForType(manifest, periodIndex, type, streamInfo) {
-        const adaptations = dashManifestModel.getAdaptationsForType(manifest, periodIndex, type);
-
-        if (!adaptations || adaptations.length === 0) return null;
-
-        if (adaptations.length > 1 && streamInfo) {
-            const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
-
-            if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
-                for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (currentMediaInfo[streamInfo.id][type].isMediaInfoEqual(allMediaInfoForType[i])) {
-                        return adaptations[i];
-                    }
-                }
-            }
-
-            for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                if (getIsMain(adaptations[i])) {
-                    return adaptations[i];
-                }
-            }
-        }
-
-        return adaptations[0];
-    }
-
-    function getAllMediaInfoForType(streamInfo, type, externalManifest) {
-        let voLocalPeriods = voPeriods;
-        let manifest = externalManifest;
-        let mediaArr = [];
-        let data,
-            media,
-            idx,
-            i,
-            j,
-            ln;
-
-        if (manifest) {
-            checkSetConfigCall();
-            const mpd = dashManifestModel.getMpd(manifest);
-
-            voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
-        } else {
-            if (voPeriods.length > 0) {
-                manifest = voPeriods[0].mpd.manifest;
-            } else {
-                return mediaArr;
-            }
-        }
-
-        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
-        const periodId = selectedVoPeriod.id;
-        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== Constants.EMBEDDED_TEXT ? type : Constants.VIDEO);
-
-        if (!adaptationsForType) return mediaArr;
-
-        voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
-
-        for (i = 0, ln = adaptationsForType.length; i < ln; i++) {
-            data = adaptationsForType[i];
-            idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
-            media = convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
-
-            if (type === Constants.EMBEDDED_TEXT) {
-                let accessibilityLength = media.accessibility.length;
-                for (j = 0; j < accessibilityLength; j++) {
-                    if (!media) {
-                        continue;
-                    }
-                    let accessibility = media.accessibility[j];
-                    if (accessibility.indexOf('cea-608:') === 0) {
-                        let value = accessibility.substring(8);
-                        let parts = value.split(';');
-                        if (parts[0].substring(0, 2) === 'CC') {
-                            for (j = 0; j < parts.length; j++) {
-                                if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[periodId][idx]);
-                                }
-                                convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
-                                mediaArr.push(media);
-                                media = null;
-                            }
-                        } else {
-                            for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
-                                if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[periodId][idx]);
-                                }
-                                convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
-                                mediaArr.push(media);
-                                media = null;
-                            }
-                        }
-                    } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
-                        convertVideoInfoToEmbeddedTextInfo(media, Constants.CC1, 'eng');
-                        mediaArr.push(media);
-                        media = null;
-                    }
-                }
-            } else if (type === Constants.IMAGE) {
-                convertVideoInfoToThumbnailInfo(media);
-                mediaArr.push(media);
-                media = null;
-            } else if (media) {
-                mediaArr.push(media);
-            }
-        }
-
-        return mediaArr;
-    }
-
-    function checkSetConfigCall() {
-        if (!dashManifestModel || !dashManifestModel.hasOwnProperty('getMpd') || !dashManifestModel.hasOwnProperty('getRegularPeriods')) {
+    function checkConfig() {
+        if (!constants) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
-    function updatePeriods(newManifest) {
-        if (!newManifest) return null;
-
-        checkSetConfigCall();
-
-        const mpd = dashManifestModel.getMpd(newManifest);
-
-        voPeriods = dashManifestModel.getRegularPeriods(mpd);
-        voAdaptations = {};
+    function getPeriod(periodId) {
+        if (voPeriods.length === 0) {
+            return null;
+        }
+        const manifest = voPeriods[0].mpd.manifest;
+        return manifest.Period_asArray[periodId];
     }
 
-    function getStreamsInfo(externalManifest, maxStreamsInfo) {
-        const streams = [];
-        let voLocalPeriods = voPeriods;
+    function findRepresentationIndex(period, representationId) {
+        const index = findRepresentation(period, representationId, true);
 
-        //if manifest is defined, getStreamsInfo is for an outside manifest, not the current one
-        if (externalManifest) {
-            checkSetConfigCall();
-            const mpd = dashManifestModel.getMpd(externalManifest);
-
-            voLocalPeriods = dashManifestModel.getRegularPeriods(mpd);
-        }
-
-        if (!maxStreamsInfo) {
-            maxStreamsInfo = voLocalPeriods.length;
-        }
-        for (let i = 0; i < maxStreamsInfo; i++) {
-            streams.push(convertPeriodToStreamInfo(voLocalPeriods[i]));
-        }
-
-        return streams;
+        return index !== null ? index : -1;
     }
 
-    function checkStreamProcessor(streamProcessor) {
-        if (!streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationController') || !streamProcessor.hasOwnProperty('getIndexHandler') ||
-            !streamProcessor.hasOwnProperty('getMediaInfo') || !streamProcessor.hasOwnProperty('getType') || !streamProcessor.hasOwnProperty('getStreamInfo')) {
-            throw new Error('streamProcessor parameter is missing or malformed!');
-        }
-    }
-
-    function checkRepresentationController(representationController) {
-        if (!representationController || !representationController.hasOwnProperty('getRepresentationForQuality') || !representationController.hasOwnProperty('getCurrentRepresentation')) {
-            throw new Error('representationController parameter is missing or malformed!');
-        }
-    }
-
-    function getInitRequest(streamProcessor, quality) {
-        let representationController,
+    function findRepresentation(period, representationId, returnIndex) {
+        let adaptationSet,
+            adaptationSetArray,
             representation,
-            indexHandler;
+            representationArray,
+            adaptationSetArrayIndex,
+            representationArrayIndex;
 
-        checkStreamProcessor(streamProcessor);
-        checkInteger(quality);
-
-        representationController = streamProcessor.getRepresentationController();
-        indexHandler = streamProcessor.getIndexHandler();
-
-        representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
-
-        return indexHandler ? indexHandler.getInitRequest(representation) : null;
-    }
-
-    function getFragmentRequest(streamProcessor, representationInfo, time, options) {
-        let representationController,
-            representation,
-            indexHandler;
-
-        let fragRequest = null;
-
-        checkStreamProcessor(streamProcessor);
-
-        representationController = streamProcessor.getRepresentationController();
-        representation = getRepresentationForRepresentationInfo(representationInfo, representationController);
-        indexHandler = streamProcessor.getIndexHandler();
-
-        if (indexHandler) {
-            //if time and options are undefined, it means the next segment is requested
-            //otherwise, the segment at this specific time is requested.
-            if (time !== undefined && options !== undefined) {
-                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
-            } else {
-                fragRequest = indexHandler.getNextSegmentRequest(representation);
+        if (period) {
+            adaptationSetArray = period.AdaptationSet_asArray;
+            for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+                adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+                representationArray = adaptationSet.Representation_asArray;
+                for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
+                    representation = representationArray[representationArrayIndex];
+                    if (representationId === representation.id) {
+                        if (returnIndex) {
+                            return representationArrayIndex;
+                        } else {
+                            return representation;
+                        }
+                    }
+                }
             }
         }
 
-        return fragRequest;
+        return null;
     }
 
-    function getIndexHandlerTime(streamProcessor) {
-        checkStreamProcessor(streamProcessor);
+    function findMaxBufferIndex(period, bufferType) {
+        let adaptationSet,
+            adaptationSetArray,
+            representationArray,
+            adaptationSetArrayIndex;
 
-        const indexHandler = streamProcessor.getIndexHandler();
+        if (!period || !bufferType) return -1;
 
-        return indexHandler ? indexHandler.getCurrentTime() : NaN;
-    }
-
-    function setIndexHandlerTime(streamProcessor, value) {
-        checkStreamProcessor(streamProcessor);
-
-        const indexHandler = streamProcessor.getIndexHandler();
-        if (indexHandler) {
-            indexHandler.setCurrentTime(value);
-        }
-    }
-
-    function resetIndexHandler(streamProcessor) {
-        checkStreamProcessor(streamProcessor);
-
-        const indexHandler = streamProcessor.getIndexHandler();
-        if (indexHandler) {
-            indexHandler.resetIndex();
-        }
-    }
-
-    function updateData(streamProcessor) {
-        checkStreamProcessor(streamProcessor);
-
-        const selectedVoPeriod = getPeriodForStreamInfo(streamProcessor.getStreamInfo(), voPeriods);
-        const mediaInfo = streamProcessor.getMediaInfo();
-        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
-        const type = streamProcessor.getType();
-
-        let id,
-            realAdaptation;
-
-        id = mediaInfo ? mediaInfo.id : null;
-        if (voPeriods.length > 0) {
-            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
-            streamProcessor.getRepresentationController().updateData(realAdaptation, voAdaptation, type);
-        }
-    }
-
-    /**
-     * Get a specific voRepresentation. If quality parameter is defined, this function will return the voRepresentation for this quality.
-     * Otherwise, this function will return the current voRepresentation used by the representationController.
-     * @param {RepresentationController} representationController - RepresentationController reference
-     * @param {number} quality - quality index of the voRepresentaion expected.
-     */
-    function getRepresentationInfo(representationController, quality) {
-        checkRepresentationController(representationController);
-        let voRepresentation;
-
-        if (quality !== undefined) {
-            checkInteger(quality);
-            voRepresentation = representationController.getRepresentationForQuality(quality);
-        } else {
-            voRepresentation = representationController.getCurrentRepresentation();
+        adaptationSetArray = period.AdaptationSet_asArray;
+        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
+            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
+            representationArray = adaptationSet.Representation_asArray;
+            if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
+                return representationArray.length;
+            }
         }
 
-        return voRepresentation ? convertRepresentationToRepresentationInfo(voRepresentation) : null;
+        return -1;
     }
-
-    function getEvent(eventBox, eventStreams, startTime) {
-        if (!eventBox || !eventStreams) {
-            return null;
-        }
-        const event = new Event();
-        const schemeIdUri = eventBox.scheme_id_uri;
-        const value = eventBox.value;
-        const timescale = eventBox.timescale;
-        const presentationTimeDelta = eventBox.presentation_time_delta;
-        const duration = eventBox.event_duration;
-        const id = eventBox.id;
-        const messageData = eventBox.message_data;
-        const presentationTime = startTime * timescale + presentationTimeDelta;
-
-        if (!eventStreams[schemeIdUri + '/' + value]) return null;
-
-        event.eventStream = eventStreams[schemeIdUri + '/' + value];
-        event.eventStream.value = value;
-        event.eventStream.timescale = timescale;
-        event.duration = duration;
-        event.id = id;
-        event.presentationTime = presentationTime;
-        event.messageData = messageData;
-        event.presentationTimeDelta = presentationTimeDelta;
-
-        return event;
-    }
-
-    function getEventsFor(info, streamProcessor) {
-        let events = [];
-
-        if (voPeriods.length === 0) {
-            return events;
-        }
-
-        const manifest = voPeriods[0].mpd.manifest;
-
-        if (info instanceof StreamInfo) {
-            events = dashManifestModel.getEventsForPeriod(getPeriodForStreamInfo(info, voPeriods));
-        } else if (info instanceof MediaInfo) {
-            events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info));
-        } else if (info instanceof RepresentationInfo) {
-            events = dashManifestModel.getEventStreamForRepresentation(manifest, getRepresentationForRepresentationInfo(info, streamProcessor.getRepresentationController()));
-        }
-
-        return events;
-    }
-
-    function setCurrentMediaInfo(streamId, type, mediaInfo) {
-        currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
-        currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
-        currentMediaInfo[streamId][type] = mediaInfo;
-    }
-
-    function reset() {
-        voPeriods = [];
-        voAdaptations = {};
-        currentMediaInfo = {};
-    }
+    // #endregion PRIVATE FUNCTIONS
 
     instance = {
+        getBandwidthForRepresentation: getBandwidthForRepresentation,
+        getIndexForRepresentation: getIndexForRepresentation,
+        getMaxIndexForBufferType: getMaxIndexForBufferType,
         convertDataToRepresentationInfo: convertRepresentationToRepresentationInfo,
         getDataForMedia: getAdaptationForMediaInfo,
         getStreamsInfo: getStreamsInfo,
         getMediaInfoForType: getMediaInfoForType,
         getAllMediaInfoForType: getAllMediaInfoForType,
-        getRepresentationInfo: getRepresentationInfo,
         getAdaptationForType: getAdaptationForType,
-        updateData: updateData,
-        getInitRequest: getInitRequest,
-        getFragmentRequest: getFragmentRequest,
-        getIndexHandlerTime: getIndexHandlerTime,
-        setIndexHandlerTime: setIndexHandlerTime,
+        getRealAdaptation: getRealAdaptation,
+        getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        reset: reset,
-        resetIndexHandler: resetIndexHandler,
-        setCurrentMediaInfo: setCurrentMediaInfo
+        setCurrentMediaInfo: setCurrentMediaInfo,
+        getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
+        getIsTextTrack: getIsTextTrack,
+        getUTCTimingSources: getUTCTimingSources,
+        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
+        getAvailabilityStartTime: getAvailabilityStartTime,
+        getIsDynamic: getIsDynamic,
+        getDuration: getDuration,
+        getRegularPeriods: getRegularPeriods,
+        getMpd: getMpd,
+        getLocation: getLocation,
+        getManifestUpdatePeriod: getManifestUpdatePeriod,
+        getIsDVB: getIsDVB,
+        getBaseURLsFromElement: getBaseURLsFromElement,
+        getRepresentationSortFunction: getRepresentationSortFunction,
+        getCodec: getCodec,
+        reset: reset
     };
 
     setup();

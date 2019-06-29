@@ -101,6 +101,7 @@ function ProtectionController(config) {
      * @todo This API will change when we have better support for allowing applications
      * to select different adaptation sets for playback.  Right now it is clunky for
      * applications to create {@link StreamInfo} with the right information,
+     * @ignore
      */
     function initializeForMedia(mediaInfo) {
         // Not checking here if a session for similar KS/KID combination is already created
@@ -139,8 +140,10 @@ function ProtectionController(config) {
      * supported key systems were found
      * @memberof module:ProtectionKeyController
      * @instance
+     * @ignore
      */
     function getSupportedKeySystemsFromContentProtection(cps) {
+        checkConfig();
         return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps);
     }
 
@@ -157,6 +160,7 @@ function ProtectionController(config) {
      * initialization data and key sessions.  That is no longer true in the latest APIs.  This
      * API will need to modified (and a new "generateRequest(keySession, initData)" API created)
      * to come up to speed with the latest EME standard
+     * @ignore
      */
     function createKeySession(initData, cdmData) {
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(keySystem, initData);
@@ -179,7 +183,7 @@ function ProtectionController(config) {
         } else if (initData) {
             protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
         } else {
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + keySystem.systemString + '.  needkey/encrypted event contains no initData corresponding to that key system!')});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (keySystem ? keySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')});
         }
     }
 
@@ -192,8 +196,10 @@ function ProtectionController(config) {
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionCreated
+     * @ignore
      */
     function loadKeySession(sessionID, initData) {
+        checkConfig();
         protectionModel.loadKeySession(sessionID, initData, getSessionType(keySystem));
     }
 
@@ -208,8 +214,10 @@ function ProtectionController(config) {
      * @instance
      * @fires ProtectionController#KeySessionRemoved
      * @fires ProtectionController#KeySessionClosed
+     * @ignore
      */
     function removeKeySession(sessionToken) {
+        checkConfig();
         protectionModel.removeKeySession(sessionToken);
     }
 
@@ -222,8 +230,10 @@ function ProtectionController(config) {
      * @memberof module:ProtectionController
      * @instance
      * @fires ProtectionController#KeySessionClosed
+     * @ignore
      */
     function closeKeySession(sessionToken) {
+        checkConfig();
         protectionModel.closeKeySession(sessionToken);
     }
 
@@ -239,6 +249,7 @@ function ProtectionController(config) {
      * @fires ProtectionController#ServerCertificateUpdated
      */
     function setServerCertificate(serverCertificate) {
+        checkConfig();
         protectionModel.setServerCertificate(serverCertificate);
     }
 
@@ -253,6 +264,7 @@ function ProtectionController(config) {
      * @instance
      */
     function setMediaElement(element) {
+        checkConfig();
         if (element) {
             protectionModel.setMediaElement(element);
             eventBus.on(events.NEED_KEY, onNeedKey, this);
@@ -294,6 +306,7 @@ function ProtectionController(config) {
      * being instances of {@link ProtectionData}
      * @memberof module:ProtectionController
      * @instance
+     * @ignore
      */
     function setProtectionData(data) {
         protDataSet = data;
@@ -321,8 +334,10 @@ function ProtectionController(config) {
      *
      * @memberof module:ProtectionController
      * @instance
+     * @ignore
      */
     function reset() {
+        checkConfig();
 
         eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
@@ -754,6 +769,12 @@ function ProtectionController(config) {
         return protectionKeyController ? protectionKeyController.getKeySystems() : [];
     }
 
+    function setKeySystems(keySystems) {
+        if (protectionKeyController) {
+            protectionKeyController.setKeySystems(keySystems);
+        }
+    }
+
     instance = {
         initializeForMedia: initializeForMedia,
         createKeySession: createKeySession,
@@ -767,6 +788,7 @@ function ProtectionController(config) {
         setProtectionData: setProtectionData,
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getKeySystems: getKeySystems,
+        setKeySystems: setKeySystems,
         stop: stop,
         reset: reset
     };

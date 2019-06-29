@@ -33,7 +33,7 @@ import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
-import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils';
+import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
 
 import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
@@ -45,12 +45,11 @@ export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
 function ThumbnailTracks(config) {
     const context = this.context;
 
-    const dashManifestModel = config.dashManifestModel;
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
     const timelineConverter = config.timelineConverter;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
 
@@ -68,7 +67,7 @@ function ThumbnailTracks(config) {
         segmentBaseLoader = SegmentBaseLoader(context).getInstance();
         segmentBaseLoader.setConfig({
             baseURLController: baseURLController,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler
         });
@@ -91,7 +90,7 @@ function ThumbnailTracks(config) {
 
             seg = getTimeBasedSegment(
                 timelineConverter,
-                dashManifestModel.getIsDynamic(),
+                adapter.getIsDynamic(),
                 representation,
                 s.startTime,
                 s.duration,
@@ -100,16 +99,17 @@ function ThumbnailTracks(config) {
                 s.mediaRange,
                 count);
 
-            segments.push(seg);
-
-            seg = null;
-            count++;
+            if (seg) {
+                segments.push(seg);
+                seg = null;
+                count++;
+            }
         }
         return segments;
     }
 
     function addTracks() {
-        if (!stream || !dashManifestModel || !adapter) {
+        if (!stream || !adapter) {
             return;
         }
 
@@ -124,12 +124,8 @@ function ThumbnailTracks(config) {
             return;
         }
 
-        const voAdaptation = adapter.getDataForMedia(mediaInfo);
-        if (!voAdaptation) {
-            return;
-        }
+        const voReps = adapter.getVoRepresentations(mediaInfo);
 
-        const voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
                 if (rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media)

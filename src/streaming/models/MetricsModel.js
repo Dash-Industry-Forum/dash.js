@@ -31,22 +31,24 @@
 import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
 import MetricsList from '../vo/MetricsList';
-import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
+import { HTTPRequest, HTTPRequestTrace } from '../vo/metrics/HTTPRequest';
 import TrackSwitch from '../vo/metrics/RepresentationSwitch';
 import BufferLevel from '../vo/metrics/BufferLevel';
 import BufferState from '../vo/metrics/BufferState';
 import DVRInfo from '../vo/metrics/DVRInfo';
 import DroppedFrames from '../vo/metrics/DroppedFrames';
-import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo} from '../vo/metrics/ManifestUpdate';
+import { ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo } from '../vo/metrics/ManifestUpdate';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo';
 import EventBus from '../../core/EventBus';
 import RequestsQueue from '../vo/metrics/RequestsQueue';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function MetricsModel() {
+function MetricsModel(config) {
 
-    const MAXIMUM_LIST_DEPTH = 1000;
+    config = config || {};
+
+    const settings = config.settings;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -87,20 +89,16 @@ function MetricsModel() {
         metricsChanged();
     }
 
-    function getReadOnlyMetricsFor(type) {
-        if (streamMetrics.hasOwnProperty(type)) {
-            return streamMetrics[type];
+    function getMetricsFor(type, readOnly) {
+        let metrics = null;
+
+        if (!type) {
+            return metrics;
         }
-
-        return null;
-    }
-
-    function getMetricsFor(type) {
-        let metrics;
 
         if (streamMetrics.hasOwnProperty(type)) {
             metrics = streamMetrics[type];
-        } else {
+        } else if (!readOnly) {
             metrics = new MetricsList();
             streamMetrics[type] = metrics;
         }
@@ -111,7 +109,7 @@ function MetricsModel() {
     function pushMetrics(type, list, value) {
         let metrics = getMetricsFor(type);
         metrics[list].push(value);
-        if ( metrics[list].length > MAXIMUM_LIST_DEPTH ) {
+        if ( metrics[list].length > settings.get().streaming.metricsMaxListDepth ) {
             metrics[list].shift();
         }
     }
@@ -274,6 +272,7 @@ function MetricsModel() {
 
     function addRequestsQueue(mediaType, loadingRequests, executedRequests) {
         let vo = new RequestsQueue();
+
         vo.loadingRequests = loadingRequests;
         vo.executedRequests = executedRequests;
 
@@ -341,8 +340,6 @@ function MetricsModel() {
     }
 
     function addPlayList(vo) {
-        let type = Constants.STREAM;
-
         if (vo.trace && Array.isArray(vo.trace)) {
             vo.trace.forEach(trace => {
                 if (trace.hasOwnProperty('subreplevel') && !trace.subreplevel) {
@@ -353,19 +350,16 @@ function MetricsModel() {
             delete vo.trace;
         }
 
-        pushAndNotify(type, MetricsConstants.PLAY_LIST, vo);
+        pushAndNotify(Constants.STREAM, MetricsConstants.PLAY_LIST, vo);
     }
 
     function addDVBErrors(vo) {
-        let type = Constants.STREAM;
-
-        pushAndNotify(type, MetricsConstants.DVB_ERRORS, vo);
+        pushAndNotify(Constants.STREAM, MetricsConstants.DVB_ERRORS, vo);
     }
 
     instance = {
         clearCurrentMetricsForType: clearCurrentMetricsForType,
         clearAllCurrentMetrics: clearAllCurrentMetrics,
-        getReadOnlyMetricsFor: getReadOnlyMetricsFor,
         getMetricsFor: getMetricsFor,
         addHttpRequest: addHttpRequest,
         addRepresentationSwitch: addRepresentationSwitch,

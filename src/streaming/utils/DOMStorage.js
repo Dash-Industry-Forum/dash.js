@@ -44,14 +44,14 @@ const LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE = 'dashjs_?_settings';
 
 const STORAGE_TYPE_LOCAL = 'localStorage';
 const STORAGE_TYPE_SESSION = 'sessionStorage';
-const LAST_BITRATE = 'LastBitrate';
-const LAST_MEDIA_SETTINGS = 'LastMediaSettings';
+const LAST_BITRATE = 'lastBitrate';
+const LAST_MEDIA_SETTINGS = 'lastMediaSettings';
 
 function DOMStorage(config) {
 
     config = config || {};
     const context = this.context;
-    const mediaPlayerModel = config.mediaPlayerModel;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -126,35 +126,36 @@ function DOMStorage(config) {
     }
 
     function canStore(storageType, key) {
-        return isSupported(storageType) && mediaPlayerModel['get' + key + 'CachingInfo']().enabled;
+        return isSupported(storageType) && settings.get().streaming[key + 'CachingInfo'].enabled;
     }
 
     function checkConfig() {
-        if (!mediaPlayerModel || !mediaPlayerModel.hasOwnProperty('getLastMediaSettingsCachingInfo')) {
+        if (!settings) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
     function getSavedMediaSettings(type) {
+        let mediaSettings = null;
+
         checkConfig();
         //Checks local storage to see if there is valid, non-expired media settings
-        if (!canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) return null;
+        if (canStore(STORAGE_TYPE_LOCAL, LAST_MEDIA_SETTINGS)) {
+            const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
+            try {
+                const obj = JSON.parse(localStorage.getItem(key)) || {};
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastMediaSettingsCachingInfo.ttl || false;
+                mediaSettings = obj.settings;
 
-        let settings = null;
-        const key = LOCAL_STORAGE_SETTINGS_KEY_TEMPLATE.replace(/\?/, type);
-        try {
-            const obj = JSON.parse(localStorage.getItem(key)) || {};
-            const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
-            settings = obj.settings;
-
-            if (isExpired) {
-                localStorage.removeItem(key);
-                settings = null;
+                if (isExpired) {
+                    localStorage.removeItem(key);
+                    mediaSettings = null;
+                }
+            } catch (e) {
+                return null;
             }
-        } catch (e) {
-            return null;
         }
-        return settings;
+        return mediaSettings;
     }
 
     function getSavedBitrateSettings(type) {
@@ -168,7 +169,7 @@ function DOMStorage(config) {
             const key = LOCAL_STORAGE_BITRATE_KEY_TEMPLATE.replace(/\?/, type);
             try {
                 const obj = JSON.parse(localStorage.getItem(key)) || {};
-                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= mediaPlayerModel.getLastMediaSettingsCachingInfo().ttl || false;
+                const isExpired = (new Date().getTime() - parseInt(obj.timestamp, 10)) >= settings.get().streaming.lastBitrateCachingInfo.ttl || false;
                 const bitrate = parseFloat(obj.bitrate);
 
                 if (!isNaN(bitrate) && !isExpired) {

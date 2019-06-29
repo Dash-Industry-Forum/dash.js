@@ -24,7 +24,7 @@ function WebmSegmentBaseLoader() {
         WebM,
         errHandler,
         requestModifier,
-        metricsModel,
+        dashMetrics,
         mediaPlayerModel,
         httpLoader,
         baseURLController;
@@ -100,29 +100,29 @@ function WebmSegmentBaseLoader() {
         requestModifier = RequestModifier(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
-            metricsModel: metricsModel,
+            dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier
         });
     }
 
     function setConfig(config) {
-        if (!config.baseURLController || !config.metricsModel || !config.mediaPlayerModel || !config.errHandler) {
+        if (!config.baseURLController || !config.dashMetrics || !config.mediaPlayerModel || !config.errHandler) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
         baseURLController = config.baseURLController;
-        metricsModel = config.metricsModel;
+        dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
     }
 
     function parseCues(ab) {
         let cues = [];
-        let cue;
-        let cueTrack;
         let ebmlParser = EBMLParser(context).create({
             data: ab
         });
+        let cue,
+            cueTrack;
 
         ebmlParser.consumeTagAndSize(WebM.Segment.Cues);
 
@@ -166,14 +166,14 @@ function WebmSegmentBaseLoader() {
     }
 
     function parseSegments(data, segmentStart, segmentEnd, segmentDuration) {
-        let duration;
-        let parsed;
-        let segments;
-        let segment;
-        let i;
-        let len;
-        let start;
-        let end;
+        let duration,
+            parsed,
+            segments,
+            segment,
+            i,
+            len,
+            start,
+            end;
 
         parsed = parseCues(data);
         segments = [];
@@ -214,23 +214,27 @@ function WebmSegmentBaseLoader() {
     }
 
     function parseEbmlHeader(data, media, theRange, callback) {
+        if (!data || data.byteLength === 0) {
+            callback(null);
+            return;
+        }
         let ebmlParser = EBMLParser(context).create({
             data: data
         });
-        let duration;
-        let segments;
-        let parts = theRange.split('-');
+        let duration,
+            segments,
+            segmentEnd,
+            segmentStart;
+        let parts = theRange ? theRange.split('-') : null;
         let request = null;
         let info = {
             url: media,
             range: {
-                start: parseFloat(parts[0]),
-                end: parseFloat(parts[1])
+                start: parts ? parseFloat(parts[0]) : null,
+                end: parts ? parseFloat(parts[1]) : null
             },
             request: request
         };
-        let segmentEnd;
-        let segmentStart;
 
         logger.debug('Parse EBML header: ' + info.url);
 
@@ -293,22 +297,22 @@ function WebmSegmentBaseLoader() {
         logger.debug('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
-    function checkSetConfigCall() {
+    function checkConfig() {
         if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
             throw new Error('setConfig function has to be called previously');
         }
     }
 
     function loadInitialization(representation, loadingInfo) {
-        checkSetConfigCall();
+        checkConfig();
         let request = null;
-        let baseUrl = baseURLController.resolve(representation.path);
+        let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         let media = baseUrl ? baseUrl.url : undefined;
-        let initRange = representation.range.split('-');
+        let initRange = representation ? representation.range.split('-') : null;
         let info = loadingInfo || {
             range: {
-                start: parseFloat(initRange[0]),
-                end: parseFloat(initRange[1])
+                start: initRange ? parseFloat(initRange[0]) : null,
+                end: initRange ? parseFloat(initRange[1]) : null
             },
             request: request,
             url: media,
@@ -343,9 +347,9 @@ function WebmSegmentBaseLoader() {
     }
 
     function loadSegments(representation, type, theRange, callback) {
-        checkSetConfigCall();
+        checkConfig();
         let request = null;
-        let baseUrl = baseURLController.resolve(representation.path);
+        let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
         let media = baseUrl ? baseUrl.url : undefined;
         let bytesToLoad = 8192;
         let info = {

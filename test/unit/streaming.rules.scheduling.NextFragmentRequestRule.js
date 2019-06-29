@@ -2,14 +2,12 @@ import NextFragmentRequestRule from '../../src/streaming/rules/scheduling/NextFr
 
 import TextControllerMock from './mocks/TextControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
-import AdapterMock from './mocks/AdapterMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 
 const expect = require('chai').expect;
 
 const context = {};
-const nextFragmentRequestRule = NextFragmentRequestRule(context).create({adapter: new AdapterMock(),
-                                                                         textController: new TextControllerMock(),
+const nextFragmentRequestRule = NextFragmentRequestRule(context).create({textController: new TextControllerMock(),
                                                                          playbackController: new PlaybackControllerMock()});
 
 describe('NextFragmentRequestRule', function () {

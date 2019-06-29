@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
  import MssErrors from './errors/MssErrors';
 
 /**
  * @module MssFragmentMoovProcessor
+ * @ignore
  * @param {Object} config object
  */
 function MssFragmentMoovProcessor(config) {
@@ -565,10 +565,12 @@ function MssFragmentMoovProcessor(config) {
 
         for (i = 0; i < keySystems.length; i += 1) {
             pssh_bytes = keySystems[i].initData;
-            parsedBuffer = ISOBoxer.parseBuffer(pssh_bytes);
-            pssh = parsedBuffer.fetch('pssh');
-            if (pssh) {
-                ISOBoxer.Utils.appendBox(moov, pssh);
+            if (pssh_bytes) {
+                parsedBuffer = ISOBoxer.parseBuffer(pssh_bytes);
+                pssh = parsedBuffer.fetch('pssh');
+                if (pssh) {
+                    ISOBoxer.Utils.appendBox(moov, pssh);
+                }
             }
         }
     }

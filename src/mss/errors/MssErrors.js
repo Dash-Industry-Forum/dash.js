@@ -40,10 +40,12 @@ class MssErrors extends ErrorsBase {
          * Error code returned when no tfrf box is detected in MSS live stream
          */
         this.MSS_NO_TFRF_CODE = 200;
-        this.MSS_UNSUPPORTED_CODEC_CODE = 201;
+
         /**
-         * Error message returned when no tfrf box is detected in MSS live stream
+         * Error code returned when one of the codecs defined in the manifest is not supported
          */
+        this.MSS_UNSUPPORTED_CODEC_CODE = 201;
+
         this.MSS_NO_TFRF_MESSAGE = 'Missing tfrf in live media segment';
         this.MSS_UNSUPPORTED_CODEC_MESSAGE = 'Unsupported codec';
     }
