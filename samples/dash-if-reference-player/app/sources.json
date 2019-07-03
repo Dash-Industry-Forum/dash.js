@@ -567,6 +567,19 @@
         {
           "name": "Multi-period audio with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_AudioOnly_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "CHJ4bvnnRl-jok5bDvj6RQ": "wyYRebq2Hu7JedLUBpURzw",
+                "wU8HCfK5RCeRa2G1JYZQag": "7fsXeXJHs8enQ0SEfkhTBQ",
+                "LW6Th2DKQUWuwsQIN7SwJg": "QtC_8bYPe-SfF9YDSE0MuQ",
+                "3gLwf6CYTuC1VpB8DRf7vA": "GQnGyyKBez4x8aNTD6cNzw",
+                "kU5p9AqzRTSen5hTYV4m9g": "0DBllUYESc5WdSJMebqlBA",
+                "KfBej6GuRuSA6SLc1EzXoQ": "BxGxfISpDLtBCXJkyQG3Mg",
+                "af5wd9rdS1WWzcPts5kYUw": "7TqCUJKmSlCbdIeJ0xbAgQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
