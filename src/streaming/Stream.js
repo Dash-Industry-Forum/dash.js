@@ -359,7 +359,7 @@ function Stream(config) {
                 processor.switchTrackAsked();
                 processor.getFragmentModel().abortRequests();
             } else {
-                processor.getScheduleController().setSeekTarget(NaN);
+                processor.getScheduleController().setSeekTarget(currentTime);
                 processor.setIndexHandlerTime(currentTime);
                 processor.resetIndexHandler();
             }
