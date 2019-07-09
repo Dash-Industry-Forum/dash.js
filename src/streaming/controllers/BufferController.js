@@ -572,7 +572,7 @@ function BufferController(config) {
 
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
         eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
-        logger.debug(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for ' + type);
+        logger.debug(state === BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
