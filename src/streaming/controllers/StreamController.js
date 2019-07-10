@@ -582,7 +582,7 @@ function StreamController() {
                 let startTime = playbackController.getStreamStartTime(true);
                 if (!keepBuffers) {
                     getActiveStreamProcessors().forEach(p => {
-                        adapter.setIndexHandlerTime(p, startTime);
+                        p.setIndexHandlerTime(startTime);
                     });
                 }
             }
