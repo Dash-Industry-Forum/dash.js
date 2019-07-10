@@ -430,7 +430,7 @@ function DashHandler(config) {
 
     instance = {
         initialize: initialize,
-        getType: getType,
+        getType: getType, //need to be public in order to be used by logger
         getStreamProcessor: getStreamProcessor,
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
