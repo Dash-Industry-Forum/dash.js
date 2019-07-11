@@ -582,7 +582,7 @@ function StreamController() {
                 let startTime = playbackController.getStreamStartTime(true);
                 if (!keepBuffers) {
                     getActiveStreamProcessors().forEach(p => {
-                        adapter.setIndexHandlerTime(p, startTime);
+                        p.setIndexHandlerTime(startTime);
                     });
                 }
             }
@@ -848,7 +848,7 @@ function StreamController() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
             !dashMetrics || !playbackController) {
-            throw new Error('setConfig function has to be called previously');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

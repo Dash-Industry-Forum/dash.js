@@ -287,14 +287,14 @@ function DashHandler(config) {
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
-            logger.debug('Getting the request for ' + type + ' time : ' + time);
+            logger.debug('Getting the request for time : ' + time);
         }
 
         const segment = segmentsController.getSegmentByTime(representation, time);
         if (segment) {
             segmentIndex = segment.availabilityIdx;
             lastSegment = segment;
-            logger.debug('Index for ' + type + ' time ' + time + ' is ' + segmentIndex);
+            logger.debug('Index for time ' + time + ' is ' + segmentIndex);
             request = getRequestForSegment(segment);
         } else {
             const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
@@ -304,7 +304,7 @@ function DashHandler(config) {
                 request.index = segmentIndex - 1;
                 request.mediaType = type;
                 request.mediaInfo = getMediaInfo();
-                logger.debug('Signal complete in getSegmentRequestForTime -', type);
+                logger.debug('Signal complete in getSegmentRequestForTime');
             }
         }
 
@@ -328,7 +328,7 @@ function DashHandler(config) {
         requestedTime = null;
 
         const indexToRequest = segmentIndex + 1;
-        logger.debug('Getting the next request at index: ' + indexToRequest + ', type: ' + type);
+        logger.debug('Getting the next request at index: ' + indexToRequest);
 
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, mediaStartTime);
@@ -355,7 +355,7 @@ function DashHandler(config) {
                 request.index = segmentIndex - 1;
                 request.mediaType = type;
                 request.mediaInfo = getMediaInfo();
-                logger.debug('Signal complete -', type);
+                logger.debug('Signal complete');
             }
         }
 
@@ -430,6 +430,7 @@ function DashHandler(config) {
 
     instance = {
         initialize: initialize,
+        getType: getType, //need to be public in order to be used by logger
         getStreamProcessor: getStreamProcessor,
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
