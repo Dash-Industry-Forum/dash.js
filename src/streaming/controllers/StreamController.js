@@ -520,7 +520,7 @@ function StreamController() {
 
         function onMediaSourceOpen() {
             // Manage situations in which a call to reset happens while MediaSource is being opened
-            if (!mediaSource) return;
+            if (!mediaSource || mediaSource.readyState != 'open') return;
 
             logger.debug('MediaSource is open!');
             window.URL.revokeObjectURL(sourceUrl);
