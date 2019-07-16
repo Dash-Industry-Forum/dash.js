@@ -5,6 +5,8 @@ define(function () {
         platform: 'WINDOWS',
         os: 'WINDOWS',
         os_version: '10'
+        os_version: '10',
+        'goog:chromeOptions': { w3c: false }
     };
 
     var EDGE_CONFIG = {
