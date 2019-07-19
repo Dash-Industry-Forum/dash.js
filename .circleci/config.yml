@@ -76,7 +76,7 @@ jobs:
       - run:
           # Run functional tests
           name: Run functional tests
-          command: node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote
+          command: node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome
 
 workflows:
   version: 2
