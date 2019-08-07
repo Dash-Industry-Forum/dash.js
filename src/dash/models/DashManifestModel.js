@@ -188,6 +188,10 @@ function DashManifestModel() {
         return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
+    function getAudioChannelConfigurationForRepresentation(representation) {
+        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+    }
+
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
@@ -1054,6 +1058,7 @@ function DashManifestModel() {
         getRolesForAdaptation: getRolesForAdaptation,
         getAccessibilityForAdaptation: getAccessibilityForAdaptation,
         getAudioChannelConfigurationForAdaptation: getAudioChannelConfigurationForAdaptation,
+        getAudioChannelConfigurationForRepresentation: getAudioChannelConfigurationForRepresentation,
         getAdaptationForIndex: getAdaptationForIndex,
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
