@@ -244,6 +244,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         // seeking
         var mouseTime = calculateTimeByEvent(event);
         if (!isNaN(mouseTime)) {
+            mouseTime = mouseTime < 0 ? 0 : mouseTime;
             player.seek(mouseTime);
         }
 

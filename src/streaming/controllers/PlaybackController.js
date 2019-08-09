@@ -154,6 +154,10 @@ function PlaybackController() {
                 }
             } else {
                 eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+                let initialStartTime = getStreamStartTime(false);
+                if (!isDynamic && time < initialStartTime) {
+                    time = initialStartTime;
+                }
                 logger.info('Requesting seek to time: ' + time);
                 videoModel.setCurrentTime(time, stickToBuffered);
             }
