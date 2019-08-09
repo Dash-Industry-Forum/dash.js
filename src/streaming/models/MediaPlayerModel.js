@@ -118,7 +118,7 @@ function MediaPlayerModel() {
 
     function getStableBufferTime() {
         if (settings.get().streaming.lowLatencyEnabled) {
-            return settings.get().streaming.liveDelay * 0.6;
+            return getLiveDelay() * 0.6;
         }
 
         const stableBufferTime = settings.get().streaming.stableBufferTime;
