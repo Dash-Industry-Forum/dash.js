@@ -40,6 +40,7 @@ function MssParser(config) {
     const debug = config.debug;
     const constants = config.constants;
     const manifestModel = config.manifestModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -74,13 +75,11 @@ function MssParser(config) {
     };
 
     let instance,
-        logger,
-        mediaPlayerModel;
+        logger;
 
 
     function setup() {
         logger = debug.getLogger(instance);
-        mediaPlayerModel = config.mediaPlayerModel;
     }
 
     function mapPeriod(smoothStreamingMedia, timescale) {
@@ -581,6 +580,7 @@ function MssParser(config) {
             startTime,
             segments,
             timescale,
+            segmentDuration,
             i, j;
 
         // Set manifest node properties
@@ -668,8 +668,10 @@ function MssParser(config) {
             }
 
             if (adaptations[i].contentType === 'video') {
+                // Get video segment duration
+                segmentDuration = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale;
                 // Set minBufferTime
-                manifest.minBufferTime = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale * 2;
+                manifest.minBufferTime = segmentDuration * 2;
 
                 if (manifest.type === 'dynamic' ) {
                     // Set availabilityStartTime
@@ -687,8 +689,25 @@ function MssParser(config) {
             }
         }
 
-        if (manifest.timeShiftBufferDepth < manifest.minBufferTime) {
-            manifest.minBufferTime = manifest.timeShiftBufferDepth;
+        // Cap minBufferTime to timeShiftBufferDepth
+        manifest.minBufferTime = Math.min(manifest.minBufferTime, manifest.timeShiftBufferDepth);
+
+        // In case of live streams:
+        // 1- configure player buffering properties according to target live delay
+        // 2- adapt live delay and then buffers length in case timeShiftBufferDepth is too small compared to target live delay (see PlaybackController.computeLiveDelay())
+        if (manifest.type === 'dynamic') {
+            let targetLiveDelay = mediaPlayerModel.getLiveDelay();
+            if (!targetLiveDelay) {
+                targetLiveDelay = segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
+            }
+            let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
+            let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
+            mediaPlayerModel.setLiveDelay(liveDelay);
+            // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
+            let bufferTime = liveDelay - segmentDuration;
+            mediaPlayerModel.setStableBufferTime(bufferTime);
+            mediaPlayerModel.setBufferTimeAtTopQuality(bufferTime);
+            mediaPlayerModel.setBufferTimeAtTopQualityLongForm(bufferTime);
         }
 
         // Delete Content Protection under root manifest node
