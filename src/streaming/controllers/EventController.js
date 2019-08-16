@@ -232,6 +232,9 @@ function EventController() {
                         }
                         delete events[eventId];
                     }
+                    else if (presentationTime <= currentVideoTime - presentationTimeThreshold) {
+                        delete events[eventId];
+                    }
                 }
             }
         }
