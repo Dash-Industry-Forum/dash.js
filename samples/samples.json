@@ -155,7 +155,7 @@
                 "href": "captioning/multi-track-captions.html"
             },
             {
-                "title": "TTML EBU timeted text tracks",
+                "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html"
             }
