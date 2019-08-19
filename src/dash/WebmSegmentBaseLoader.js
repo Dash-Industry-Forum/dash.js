@@ -316,7 +316,8 @@ function WebmSegmentBaseLoader() {
             },
             request: request,
             url: media,
-            init: true
+            init: true,
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         logger.info('Start loading initialization.');
@@ -361,7 +362,8 @@ function WebmSegmentBaseLoader() {
             },
             request: request,
             url: media,
-            init: false
+            init: false,
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         callback = !callback ? onLoaded : callback;
@@ -412,6 +414,7 @@ function WebmSegmentBaseLoader() {
         request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.url = info.url;
         request.range = info.range.start + '-' + info.range.end;
+        request.mediaType = info.mediaType;
 
         return request;
     }
