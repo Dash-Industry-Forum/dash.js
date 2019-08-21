@@ -690,7 +690,7 @@ function MssParser(config) {
         }
 
         // Cap minBufferTime to timeShiftBufferDepth
-        manifest.minBufferTime = Math.min(manifest.minBufferTime, manifest.timeShiftBufferDepth);
+        manifest.minBufferTime = Math.min(manifest.minBufferTime, (manifest.timeShiftBufferDepth ? manifest.timeShiftBufferDepth : Infinity));
 
         // In case of live streams:
         // 1- configure player buffering properties according to target live delay
