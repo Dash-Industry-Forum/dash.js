@@ -137,11 +137,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let found = false;
 
         iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
-            // In some cases when requiredMediaTime = actual end time of the last segment
-            // it is possible that this time a bit exceeds the declared end time of the last segment.
-            // in this case we still need to include the last segment in the segment list. to do this we
-            // use a correction factor = 1.5. This number is used because the largest possible deviation is
-            // is 50% of segment duration.
             if (found || lastSegmentTime < 0) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
@@ -164,7 +159,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     frag.tManifest);
 
                 return true;
-            } else if (scaledTime >= lastSegmentTime - 0.5) {
+            } else if (scaledTime >= lastSegmentTime - frag.d * 0.5 / fTimescale) { // same logic, if deviation is
+                // 50% of segment duration, segment is found if scaledTime is greater than or equal to (startTime of previous segment - half of the previous segment duration)
                 found = true;
             }
 
@@ -193,7 +189,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list. to do this we
             // use a correction factor = 1.5. This number is used because the largest possible deviation is
-            // is 50% of segment duration.
+            // 50% of segment duration.
             if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale) * 1.5)) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
