@@ -375,14 +375,6 @@ function WebmSegmentBaseLoader() {
         logger.debug('Parsing ebml header');
 
         const onload = function (response) {
-            var uint8View = new Uint8Array(response);
-
-            function isFullZeroArray(currentValue) {
-                return currentValue === 0;
-            }
-            if (uint8View.every(isFullZeroArray)) {
-                logger.debug('Full 0 array detected');
-            }
             parseEbmlHeader(response, media, theRange, function (segments) {
                 callback(segments, representation, type);
             });
