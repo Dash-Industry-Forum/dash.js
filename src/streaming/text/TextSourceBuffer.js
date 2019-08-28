@@ -73,7 +73,6 @@ function TextSourceBuffer() {
         embeddedTracks,
         embeddedTimescale,
         embeddedLastSequenceNumber,
-        embeddedSequenceNumbers,
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender,
         mseTimeOffset;
@@ -174,7 +173,6 @@ function TextSourceBuffer() {
         currFragmentedTrackIdx = null;
         embeddedTimescale = 0;
         embeddedCea608FieldParsers = [];
-        embeddedSequenceNumbers = [];
         embeddedLastSequenceNumber = null;
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
@@ -188,17 +186,18 @@ function TextSourceBuffer() {
         }
 
         eventBus.on(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
+        eventBus.on(Events.BUFFER_CLEARED, onVideoBufferCleared, this);
     }
 
     function resetEmbedded() {
         eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
+        eventBus.off(Events.BUFFER_CLEARED, onVideoBufferCleared, this);
         if (textTracks) {
             textTracks.deleteAllTextTracks();
         }
         embeddedInitialized = false;
         embeddedTracks = [];
         embeddedCea608FieldParsers = [null, null];
-        embeddedSequenceNumbers = [];
         embeddedLastSequenceNumber = null;
     }
 
@@ -474,7 +473,7 @@ function TextSourceBuffer() {
                     }
                 }
 
-                if (embeddedTimescale && embeddedSequenceNumbers.indexOf(sequenceNumber) == -1) {
+                if (embeddedTimescale) {
                     if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + samplesInfo.numSequences) {
                         for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
                             if (embeddedCea608FieldParsers[i]) {
@@ -495,7 +494,6 @@ function TextSourceBuffer() {
                         }
                     }
                     embeddedLastSequenceNumber = sequenceNumber;
-                    embeddedSequenceNumbers.push(sequenceNumber);
                 }
             }
         }
@@ -586,6 +584,10 @@ function TextSourceBuffer() {
             end = this.buffered.end(this.buffered.length - 1);
         }
         this.buffered.remove(start, end);
+    }
+
+    function onVideoBufferCleared(e) {
+        textTracks.deleteCuesFromTrackIdx(textTracks.getCurrentTrackIdx(), e.from, e.to);
     }
 
     instance = {
