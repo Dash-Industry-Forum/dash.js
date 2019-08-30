@@ -587,7 +587,12 @@ function TextSourceBuffer() {
     }
 
     function onVideoBufferCleared(e) {
-        textTracks.deleteCuesFromTrackIdx(textTracks.getCurrentTrackIdx(), e.from, e.to);
+        [Constants.CC1, Constants.CC3].forEach(function (id) {
+            const trackIdx = textTracks.getTrackIdxForId(id);
+            if (trackIdx >= 0) {
+                textTracks.deleteCuesFromTrackIdx(trackIdx, e.from, e.to);
+            }
+        });
     }
 
     instance = {
