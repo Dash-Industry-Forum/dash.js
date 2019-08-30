@@ -1036,7 +1036,7 @@ function DashManifestModel() {
     }
 
     function getAvailabilityStartTime(mpd) {
-        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) ? mpd.availabilityStartTime.getTime() : null;
+        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null ? mpd.availabilityStartTime.getTime() : null;
     }
 
     function setConfig(config) {

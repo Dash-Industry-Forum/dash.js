@@ -299,7 +299,7 @@ function StreamProcessor(config) {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
 
-        return voRepresentation ? adapter.convertDataToRepresentationInfo(voRepresentation) : null;
+        return adapter.convertDataToRepresentationInfo(voRepresentation);
     }
 
     function isBufferingCompleted() {
