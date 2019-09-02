@@ -544,7 +544,7 @@ function TextTracks() {
     }
 
     function cueInRange(cue, start, end) {
-        return (cue.startTime >= start || isNaN(start)) && (cue.endTime <= end || isNaN(end));
+        return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
     }
 
     function deleteTrackCues(track, start, end) {
