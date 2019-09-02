@@ -1,6 +1,7 @@
 import DashAdapter from '../../src/dash/DashAdapter';
 import MediaInfo from '../../src/dash/vo/MediaInfo';
 import Constants from '../../src/streaming/constants/Constants';
+import cea608parser from '../../externals/cea608-parser';
 
 import VoHelper from './helpers/VOHelper';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
@@ -11,7 +12,8 @@ const context = {};
 const voHelper = new VoHelper();
 const dashAdapter = DashAdapter(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
-const manifest_with_audio = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
+const manifest_with_audio = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: Constants.AUDIO, lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
+const manifest_with_video_with_embedded_subtitles = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, Accessibility: {schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}, Accessibility_asArray: [{schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}]}, { id: 1, mimeType: Constants.VIDEO}] }] };
 
 describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
@@ -92,7 +94,7 @@ describe('DashAdapter', function () {
         });
 
         it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
-            const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo('video'));
+            const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo(Constants.VIDEO));
 
             expect(realAdaptation).to.be.undefined; // jshint ignore:line
         });
@@ -146,7 +148,8 @@ describe('DashAdapter', function () {
         beforeEach(function () {
             dashAdapter.setConfig({
                 constants: Constants,
-                errHandler: errorHandlerMock
+                errHandler: errorHandlerMock,
+                cea608parser: cea608parser
             });
         });
 
@@ -157,7 +160,7 @@ describe('DashAdapter', function () {
         });
 
         it('should return correct representationInfo when convertDataToRepresentationInfo is called and voRepresentation parameter is well defined', function () {
-            const voRepresentation = voHelper.getDummyRepresentation('video', 0);
+            const voRepresentation = voHelper.getDummyRepresentation(Constants.VIDEO, 0);
             const representationInfo = dashAdapter.convertDataToRepresentationInfo(voRepresentation);
 
             expect(representationInfo).not.to.be.null;            // jshint ignore:line
@@ -172,9 +175,9 @@ describe('DashAdapter', function () {
         });
 
         it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
-            const manifest_with_video = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: 'video' }, { id: 1, mimeType: 'video' }] }] };
+            const manifest_with_video = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO}, { id: 1, mimeType: Constants.VIDEO}] }] };
             dashAdapter.updatePeriods(manifest_with_video);
-            const adaptation = dashAdapter.getAdaptationForType(0, 'video');
+            const adaptation = dashAdapter.getAdaptationForType(0, Constants.VIDEO);
 
             expect(adaptation.id).to.equal(0); // jshint ignore:line
         });
@@ -212,7 +215,7 @@ describe('DashAdapter', function () {
                 const streamInfo = voHelper.getDummyStreamInfo();
 
                 streamInfo.index = 0;
-                const mediaInfo = dashAdapter.getMediaInfoForType(streamInfo, 'audio');
+                const mediaInfo = dashAdapter.getMediaInfoForType(streamInfo, Constants.AUDIO);
 
                 expect(mediaInfo).to.be.null;  // jshint ignore:line
             });
@@ -222,7 +225,7 @@ describe('DashAdapter', function () {
 
                 streamInfo.id = 'defaultId_0';
                 streamInfo.index = 0;
-                const mediaInfo = dashAdapter.getMediaInfoForType(streamInfo, 'audio');
+                const mediaInfo = dashAdapter.getMediaInfoForType(streamInfo, Constants.AUDIO);
 
                 expect(mediaInfo).not.to.be.null;  // jshint ignore:line
             });
@@ -246,7 +249,7 @@ describe('DashAdapter', function () {
             });
 
             it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
-                const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo('video'));
+                const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo(Constants.VIDEO));
 
                 expect(realAdaptation).to.be.undefined; // jshint ignore:line
             });
@@ -267,8 +270,8 @@ describe('DashAdapter', function () {
                 track.codec = 'audio/mp4;codecs="mp4a.40.2"';
                 track.mimeType = 'audio/mp4';
 
-                dashAdapter.setCurrentMediaInfo(streamInfo.id, 'audio', track);
-                const adaptation = dashAdapter.getAdaptationForType(0, 'audio', streamInfo);
+                dashAdapter.setCurrentMediaInfo(streamInfo.id, Constants.AUDIO, track);
+                const adaptation = dashAdapter.getAdaptationForType(0, Constants.AUDIO, streamInfo);
 
                 expect(adaptation.lang).to.equal('eng'); // jshint ignore:line
             });
@@ -288,7 +291,7 @@ describe('DashAdapter', function () {
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and voPeriods is not an empty array, and streamInfo parameter is set', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, 'audio');
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.AUDIO);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray).to.not.be.empty;                // jshint ignore:line
@@ -299,6 +302,13 @@ describe('DashAdapter', function () {
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
+            });
+
+            it('should return an empty array when getAllMediaInfoForType is called and, embeddedText type and externalManifest are set', function () {
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.EMBEDDED_TEXT, manifest_with_video_with_embedded_subtitles);
+
+                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
             });
         });
     });
