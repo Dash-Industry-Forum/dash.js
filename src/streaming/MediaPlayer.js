@@ -1972,7 +1972,8 @@ function MediaPlayer() {
                 debug: debug,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
                 BASE64: BASE64,
-                ISOBoxer: ISOBoxer
+                ISOBoxer: ISOBoxer,
+                settings: settings
             });
         }
     }
