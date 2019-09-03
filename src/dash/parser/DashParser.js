@@ -64,7 +64,7 @@ function DashParser() {
             arrayAccessForm:    'property',
             emptyNodeForm:      'object',
             stripWhitespaces:   false,
-            enableToStringFunc: false,
+            enableToStringFunc: true,
             ignoreRoot:         true,
             matchers:           matchers
         });

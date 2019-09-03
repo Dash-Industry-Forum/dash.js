@@ -815,7 +815,8 @@ function DashManifestModel() {
                     }
 
                     if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
-                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary);
+                        // toString is used to manage both regular and namespaced tags
+                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary.toString());
                     } else {
                         // From Cor.1: 'NOTE: this attribute is an alternative
                         // to specifying a complete XML element(s) in the Event.
