@@ -543,21 +543,27 @@ function TextTracks() {
         }
     }
 
-    function deleteTrackCues(track) {
+    function cueInRange(cue, start, end) {
+        return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
+    }
+
+    function deleteTrackCues(track, start, end) {
         if (track.cues) {
             const cues = track.cues;
             const lastIdx = cues.length - 1;
 
             for (let r = lastIdx; r >= 0 ; r--) {
-                track.removeCue(cues[r]);
+                if (cueInRange(cues[r], start, end)) {
+                    track.removeCue(cues[r]);
+                }
             }
         }
     }
 
-    function deleteCuesFromTrackIdx(trackIdx) {
+    function deleteCuesFromTrackIdx(trackIdx, start, end) {
         const track = getTrackByIdx(trackIdx);
         if (track) {
-            deleteTrackCues(track);
+            deleteTrackCues(track, start, end);
         }
     }
 
