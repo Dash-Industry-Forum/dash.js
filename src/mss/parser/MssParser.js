@@ -41,6 +41,7 @@ function MssParser(config) {
     const constants = config.constants;
     const manifestModel = config.manifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const settings = config.settings;
 
     const DEFAULT_TIME_SCALE = 10000000.0;
     const SUPPORTED_CODECS = ['AAC', 'AACL', 'AVC1', 'H264', 'TTML', 'DFXP'];
@@ -698,16 +699,20 @@ function MssParser(config) {
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
-                targetLiveDelay = segmentDuration * mediaPlayerModel.getLiveDelayFragmentCount();
+                targetLiveDelay = segmentDuration * settings.get().streaming.liveDelayFragmentCount;
             }
             let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
-            mediaPlayerModel.setLiveDelay(liveDelay);
             // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
             let bufferTime = liveDelay - segmentDuration;
-            mediaPlayerModel.setStableBufferTime(bufferTime);
-            mediaPlayerModel.setBufferTimeAtTopQuality(bufferTime);
-            mediaPlayerModel.setBufferTimeAtTopQualityLongForm(bufferTime);
+            settings.update({
+                'streaming': {
+                    'liveDelay': liveDelay,
+                    'stableBufferTime': bufferTime,
+                    'bufferTimeAtTopQuality': bufferTime,
+                    'bufferTimeAtTopQualityLongForm': bufferTime
+                }
+            });
         }
 
         // Delete Content Protection under root manifest node
