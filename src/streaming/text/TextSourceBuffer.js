@@ -587,8 +587,8 @@ function TextSourceBuffer() {
     }
 
     function onVideoBufferCleared(e) {
-        [Constants.CC1, Constants.CC3].forEach(function (id) {
-            const trackIdx = textTracks.getTrackIdxForId(id);
+        embeddedTracks.forEach(function (track) {
+            const trackIdx = textTracks.getTrackIdxForId(track.id);
             if (trackIdx >= 0) {
                 textTracks.deleteCuesFromTrackIdx(trackIdx, e.from, e.to);
             }
