@@ -192,26 +192,28 @@ function DashHandler(config) {
         const hasSegments = Representation.hasSegments(voRepresentation);
         let error;
 
-        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
+        if (voRepresentation) {
+            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
 
-        if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
-            return;
-        }
+            if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
+                error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
+                return;
+            }
 
-        if (isDynamic()) {
-            setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
-        }
+            if (isDynamic()) {
+                setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
+            }
 
-        if (!keepIdx) {
-            resetIndex();
-        }
+            if (!keepIdx) {
+                resetIndex();
+            }
 
-        segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
+            segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
 
-        if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
+            if (hasInitialization && hasSegments) {
+                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
+            }
         }
     }
 

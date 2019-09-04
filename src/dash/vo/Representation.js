@@ -64,13 +64,13 @@ class Representation {
     }
 
     static hasInitialization(r) {
-        return (r.initialization !== null || r.range !== null);
+        return (r && (r.initialization !== null || r.range !== null));
     }
 
     static hasSegments(r) {
-        return r.segmentInfoType !== DashConstants.BASE_URL &&
+        return (r && r.segmentInfoType !== DashConstants.BASE_URL &&
             r.segmentInfoType !== DashConstants.SEGMENT_BASE &&
-            !r.indexRange;
+            !r.indexRange);
     }
 }
 
