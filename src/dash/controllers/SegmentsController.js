@@ -98,10 +98,7 @@ function SegmentsController(config) {
     }
 
     function getSegmentsGetter(representation) {
-        if (representation.segments) {
-            return getters[DashConstants.SEGMENT_BASE];
-        }
-        return getters[representation.segmentInfoType];
+        return representation ? representation.segments ? getters[DashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
     }
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {

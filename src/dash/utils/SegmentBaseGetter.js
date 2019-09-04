@@ -50,10 +50,10 @@ function SegmentBaseGetter(config) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
-        const len = representation.segments ? representation.segments.length : 0;
+        const len = representation.segments ? representation.segments.length : -1;
         let seg;
         if (index < len) {
             seg = representation.segments[index];
@@ -76,10 +76,6 @@ function SegmentBaseGetter(config) {
     function getSegmentByTime(representation, requestedTime) {
         checkConfig();
 
-        if (!representation) {
-            throw new Error('no representation');
-        }
-
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = getIndexByTime(representation, periodTime);
 
@@ -87,6 +83,10 @@ function SegmentBaseGetter(config) {
     }
 
     function getIndexByTime(representation, time) {
+        if (!representation) {
+            return -1;
+        }
+
         const segments = representation.segments;
         const ln = segments ? segments.length : null;
 

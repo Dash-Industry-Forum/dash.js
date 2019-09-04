@@ -130,7 +130,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
         let segment = null;
@@ -174,7 +174,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
         if (requestedTime === undefined) {

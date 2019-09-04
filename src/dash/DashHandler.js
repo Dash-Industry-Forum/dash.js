@@ -256,6 +256,9 @@ function DashHandler(config) {
 
     function isMediaFinished(representation) {
         let isFinished = false;
+
+        if (!representation) return isFinished;
+
         const isDynamicMedia = isDynamic();
 
         if (!isDynamicMedia) {
@@ -276,10 +279,10 @@ function DashHandler(config) {
     }
 
     function getSegmentRequestForTime(representation, time, options) {
-        let request;
+        let request = null;
 
         if (!representation || !representation.segmentInfoType) {
-            return null;
+            return request;
         }
 
         const type = getType();
@@ -318,11 +321,7 @@ function DashHandler(config) {
     }
 
     function getNextSegmentRequest(representation) {
-        let request;
-
-        if (!representation || !representation.segmentInfoType) {
-            return null;
-        }
+        let request = null;
 
         const mediaStartTime = lastSegment ? lastSegment.mediaStartTime : -1;
         const type = getType();
@@ -365,7 +364,7 @@ function DashHandler(config) {
     }
 
     function isEndlessMedia(representation) {
-        return !isDynamic() || (isDynamic() && isFinite(representation.adaptation.period.duration));
+        return !isDynamic() || (isDynamic() && isFinite(representation ? representation.adaptation.period.duration : undefined));
     }
 
     function onInitializationLoaded(e) {
@@ -388,7 +387,7 @@ function DashHandler(config) {
             s,
             seg;
 
-        for (i = 0, len = fragments.length; i < len; i++) {
+        for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
             s = fragments[i];
 
             seg = getTimeBasedSegment(
@@ -409,12 +408,11 @@ function DashHandler(config) {
             }
         }
 
-        len = segments.length;
-        representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
-        representation.availableSegmentsNumber = len;
+        if (segments.length > 0) {
+            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
+            representation.availableSegmentsNumber = segments.length;
+            representation.segments = segments;
 
-        representation.segments = segments;
-        if (segments && segments.length > 0) {
             if (isDynamic()) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime - 8;
