@@ -420,9 +420,7 @@ function StreamController() {
         let streamStart = 0;
         let streamDur = null;
 
-        const ln = streams.length;
-
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streams.length; i++) {
             stream = streams[i];
             streamStart = stream.getStartTime();
             streamDur = stream.getDuration();
