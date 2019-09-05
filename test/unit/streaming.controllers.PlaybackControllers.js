@@ -8,6 +8,7 @@ import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
+import AdapterMock from './mocks/AdapterMock';
 
 const expect = require('chai').expect;
 const context = {};
@@ -22,6 +23,7 @@ describe('PlaybackController', function () {
         mediaPlayerModelMock,
         streamControllerMock,
         uriFragmentModelMock,
+        adapterMock,
         settings;
 
     beforeEach(function () {
@@ -30,6 +32,7 @@ describe('PlaybackController', function () {
         mediaPlayerModelMock = new MediaPlayerModelMock();
         streamControllerMock = new StreamControllerMock();
         uriFragmentModelMock = new URIFragmentModelMock();
+        adapterMock = new AdapterMock();
         playbackController = PlaybackController(context).getInstance();
         settings = Settings(context).getInstance();
 
@@ -39,6 +42,7 @@ describe('PlaybackController', function () {
             mediaPlayerModel: mediaPlayerModelMock,
             streamController: streamControllerMock,
             uriFragmentModel: uriFragmentModelMock,
+            adapter: adapterMock,
             settings: settings
         });
     });
@@ -88,6 +92,11 @@ describe('PlaybackController', function () {
             };
 
             playbackController.initialize(streamInfo);
+        });
+
+        it('should return NaN when getLiveDelay is called after a call to computeLiveDelay with no parameter', function () {
+            expect(playbackController.computeLiveDelay.bind(playbackController)).not.to.throw();
+            expect(playbackController.getLiveDelay()).to.be.NaN; // jshint ignore:line
         });
 
         describe('video management', function () {
