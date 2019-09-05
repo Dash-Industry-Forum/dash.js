@@ -3,6 +3,14 @@ function AdapterMock () {
         BUFFER_STATE: 'BUFFER_STATE'
     };
 
+    this.getSuggestedPresentationDelay = function () {
+        return null;
+    };
+
+    this.getAvailabilityStartTime = function () {
+        return null;
+    };
+
     this.getRealAdaptation = function () {
         return null;
     };
