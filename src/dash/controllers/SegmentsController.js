@@ -94,7 +94,7 @@ function SegmentsController(config) {
     }
 
     function updateSegments(voRepresentation, type) {
-        segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation.indexRange);
+        segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation ? voRepresentation.indexRange : null);
     }
 
     function getSegmentsGetter(representation) {
@@ -103,18 +103,12 @@ function SegmentsController(config) {
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {
         const getter = getSegmentsGetter(representation);
-        if (getter) {
-            return getter.getSegmentByIndex(representation, index, lastSegmentTime);
-        }
-        return null;
+        return getter ? getter.getSegmentByIndex(representation, index, lastSegmentTime) : null;
     }
 
     function getSegmentByTime(representation, time) {
         const getter = getSegmentsGetter(representation);
-        if (getter) {
-            return getter.getSegmentByTime(representation, time);
-        }
-        return null;
+        return getter ? getter.getSegmentByTime(representation, time) : null;
     }
 
     instance = {
