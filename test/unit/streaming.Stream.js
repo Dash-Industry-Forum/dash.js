@@ -69,6 +69,12 @@ describe('Stream', function () {
             stream.reset();
         });
 
+        it('should return false when isActive is called', () => {
+            const isActive = stream.isActive();
+
+            expect(isActive).to.be.false;            // jshint ignore:line
+        });
+
         it('should return an empty array when getProcessors is called but streamProcessors attribute is an empty array', () => {
             const processors = stream.getProcessors();
 

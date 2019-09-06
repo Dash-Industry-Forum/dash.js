@@ -188,6 +188,16 @@ describe('MediaPlayer', function () {
                 player.initialize(videoElementMock, dummyUrl, false);
             });
 
+            it('Method getDVRWindowSize should return 0', function () {
+                let dvrWindowSize = player.getDVRWindowSize();
+                expect(dvrWindowSize).equal(0); // jshint ignore:line
+            });
+
+            it('Method getDVRSeekOffset should return 0', function () {
+                let dvrSeekOffset = player.getDVRSeekOffset();
+                expect(dvrSeekOffset).equal(0); // jshint ignore:line
+            });
+
             it('Method play should start playing', function () {
                 let isPlaying = playbackControllerMock.isPlaying();
                 expect(isPlaying).to.be.false; // jshint ignore:line
@@ -197,6 +207,7 @@ describe('MediaPlayer', function () {
                 isPlaying = playbackControllerMock.isPlaying();
                 expect(isPlaying).to.be.true; // jshint ignore:line
             });
+
             it('Method pause should pause playback', function () {
                 let paused = playbackControllerMock.isPaused();
                 expect(paused).to.be.false; // jshint ignore:line
