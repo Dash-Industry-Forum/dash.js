@@ -14,6 +14,7 @@ const objectUtils = ObjectUtils(context).getInstance();
 describe('MediaController', function () {
     let mediaController;
     let domStorageMock;
+    const trackType = Constants.AUDIO;
 
     beforeEach(function () {
 
@@ -251,8 +252,6 @@ describe('MediaController', function () {
         });
 
         it('should add and retrieve track', function () {
-
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };
@@ -272,7 +271,6 @@ describe('MediaController', function () {
 
         it('should not set uncorrect track', function () {
             let track = {};
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };
@@ -283,8 +281,6 @@ describe('MediaController', function () {
         });
 
         it('should add and set current track', function () {
-
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };
@@ -302,8 +298,6 @@ describe('MediaController', function () {
         });
 
         it('should check current track', function () {
-
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };
@@ -326,8 +320,6 @@ describe('MediaController', function () {
         });
 
         it('should check current track', function () {
-
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };
@@ -350,8 +342,6 @@ describe('MediaController', function () {
         });
 
         it('should emit Events.CURRENT_TRACK_CHANGED when track has changed', function (done) {
-
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };
@@ -411,8 +401,6 @@ describe('MediaController', function () {
     describe('Initial Track Management', function () {
 
         it('should check initial media settings to choose initial track', function () {
-
-            let trackType = 'audio';
             let streamInfo = {
                 id: 'id'
             };

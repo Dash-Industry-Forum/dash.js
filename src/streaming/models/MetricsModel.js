@@ -329,7 +329,7 @@ function MetricsModel(config) {
     }
 
     function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
-        if (manifestUpdate) {
+        if (manifestUpdate && manifestUpdate.representationInfo) {
 
             const vo = new ManifestUpdateRepresentationInfo();
             vo.id = id;

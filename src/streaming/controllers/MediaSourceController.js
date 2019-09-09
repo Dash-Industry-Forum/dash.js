@@ -86,15 +86,13 @@ function MediaSourceController() {
     }
 
     function signalEndOfStream(source) {
-
-        let buffers = source.sourceBuffers;
-        const ln = buffers.length;
-
-        if (source.readyState !== 'open') {
+        if (!source || source.readyState !== 'open') {
             return;
         }
 
-        for (let i = 0; i < ln; i++) {
+        let buffers = source.sourceBuffers;
+
+        for (let i = 0; i < buffers.length; i++) {
             if (buffers[i].updating) {
                 return;
             }
