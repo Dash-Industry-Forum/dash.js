@@ -31,7 +31,9 @@ function AbrControllerMock () {
 
     this.getTopQualityIndexFor = function () {};
 
-    this.getTopBitrateInfoFor = function () {};
+    this.getTopBitrateInfoFor = function () {
+        return null;
+    };
 
     this.getInitialBitrateFor = function (/*type*/) {
         return null;
