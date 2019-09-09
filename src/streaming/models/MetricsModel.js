@@ -244,6 +244,10 @@ function MetricsModel(config) {
         let vo = new DroppedFrames();
         let list = getMetricsFor(mediaType).DroppedFrames;
 
+        if (!quality) {
+            return;
+        }
+
         vo.time = quality.creationTime;
         vo.droppedFrames = quality.droppedVideoFrames;
 
