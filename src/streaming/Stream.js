@@ -263,7 +263,7 @@ function Stream(config) {
     }
 
     function checkConfig() {
-        if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
+        if (!videoModel || !abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -335,7 +335,7 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
@@ -546,7 +546,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(streamInfo ? streamInfo.index : null, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
