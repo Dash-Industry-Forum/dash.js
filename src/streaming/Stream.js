@@ -341,7 +341,7 @@ function Stream(config) {
 
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
-        let processor = getProcessorForMediaInfo(e.newMediaInfo);
+        let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
 
         let currentTime = playbackController.getTime();
@@ -601,10 +601,9 @@ function Stream(config) {
     }
 
     function getMediaInfo(type) {
-        const ln = streamProcessors.length;
         let streamProcessor = null;
 
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streamProcessors.length; i++) {
             streamProcessor = streamProcessors[i];
 
             if (streamProcessor.getType() === type) {
@@ -678,13 +677,12 @@ function Stream(config) {
     }
 
     function getProcessors() {
-        const ln = streamProcessors.length;
         let arr = [];
 
         let type,
             streamProcessor;
 
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streamProcessors.length; i++) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
@@ -719,7 +717,7 @@ function Stream(config) {
 
         if (trackChangedEvent) {
             let mediaInfo = trackChangedEvent.newMediaInfo;
-            if (mediaInfo.type !== 'fragmentedText') {
+            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                 if (!processor) return;
                 processor.switchTrackAsked();
