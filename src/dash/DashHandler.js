@@ -156,6 +156,8 @@ function DashHandler(config) {
     }
 
     function generateInitRequest(representation, mediaType) {
+        if (!representation) return null;
+
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
@@ -177,9 +179,7 @@ function DashHandler(config) {
     }
 
     function getInitRequest(representation) {
-        if (!representation) return null;
-        const request = generateInitRequest(representation, getType());
-        return request;
+        return generateInitRequest(representation, getType());
     }
 
     function setExpectedLiveEdge(liveEdge) {
@@ -259,9 +259,7 @@ function DashHandler(config) {
 
         if (!representation) return isFinished;
 
-        const isDynamicMedia = isDynamic();
-
-        if (!isDynamicMedia) {
+        if (!isDynamic()) {
             if (segmentIndex >= representation.availableSegmentsNumber) {
                 isFinished = true;
             }
@@ -285,7 +283,6 @@ function DashHandler(config) {
             return request;
         }
 
-        const type = getType();
         const idx = segmentIndex;
         const keepIdx = options ? options.keepIdx : false;
         const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
@@ -307,7 +304,7 @@ function DashHandler(config) {
                 request = new FragmentRequest();
                 request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
-                request.mediaType = type;
+                request.mediaType = getType();
                 request.mediaInfo = getMediaInfo();
                 logger.debug('Signal complete in getSegmentRequestForTime');
             }
@@ -323,16 +320,13 @@ function DashHandler(config) {
     function getNextSegmentRequest(representation) {
         let request = null;
 
-        const mediaStartTime = lastSegment ? lastSegment.mediaStartTime : -1;
-        const type = getType();
-
         requestedTime = null;
 
         const indexToRequest = segmentIndex + 1;
         logger.debug('Getting the next request at index: ' + indexToRequest);
 
         // check that there is a segment in this index
-        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, mediaStartTime);
+        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
         if (!segment && !isEndlessMedia(representation)) {
             logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
@@ -354,7 +348,7 @@ function DashHandler(config) {
                 request = new FragmentRequest();
                 request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
-                request.mediaType = type;
+                request.mediaType = getType();
                 request.mediaInfo = getMediaInfo();
                 logger.debug('Signal complete');
             }

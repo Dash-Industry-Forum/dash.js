@@ -110,10 +110,9 @@ function DashAdapter() {
         let periodId = selectedVoPeriod.id;
         voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
-        const manifest = voPeriods[0].mpd.manifest;
         let realAdaptation = getAdaptationForType(streamInfo.index, type, streamInfo);
         if (!realAdaptation) return null;
-        let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, manifest, streamInfo.index);
+        let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, voPeriods[0].mpd.manifest, streamInfo.index);
 
         return convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
     }
@@ -125,8 +124,7 @@ function DashAdapter() {
     }
 
     function getAdaptationForType(periodIndex, type, streamInfo) {
-        const manifest = voPeriods[0].mpd.manifest;
-        const adaptations = dashManifestModel.getAdaptationsForType(manifest, periodIndex, type);
+        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[0].mpd.manifest, periodIndex, type);
 
         if (!adaptations || adaptations.length === 0) return null;
 
