@@ -39,7 +39,7 @@ declare namespace dashjs {
         setProtectionData(protData: ProtectionData): void;
         getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
         getKeySystems(): KeySystem[];
-        setKeySystems(keySystems: KeySystem[]);
+        setKeySystems(keySystems: KeySystem[]): void;
         stop(): void;
         reset(): void;
     }
@@ -293,7 +293,7 @@ declare namespace dashjs {
         isTextEnabled(): boolean;
         getAverageThroughput(value: number): void;
         getSettings(): MediaPlayerSettingClass;
-        updateSettings(settings: MediaPlayerSettingClass);
+        updateSettings(settings: MediaPlayerSettingClass): void;
         resetSettings(): void;
     }
 
@@ -819,7 +819,7 @@ declare namespace dashjs {
 
     export interface DashMetrics {
         getCurrentRepresentationSwitch(type: 'video' | 'audio' | 'image', readOnly: boolean): ICurrentRepresentationSwitch;
-        getLatestBufferInfoVO()
+        getLatestBufferInfoVO(): ILatestBufferLevelVO;
         getCurrentBufferLevel(type: 'video' | 'audio' | 'image', readOnly: boolean): number;
         getCurrentHttpRequest(type: 'video' | 'audio' | 'image', readOnly: boolean): object;
         getHttpRequests(type: 'video' | 'audio' | 'image'): object[];
