@@ -124,7 +124,6 @@ function StreamController() {
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
             adapter: adapter,
-            mediaPlayerModel: mediaPlayerModel,
             manifestLoader: manifestLoader,
             errHandler: errHandler,
             settings: settings
