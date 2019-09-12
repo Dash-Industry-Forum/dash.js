@@ -34,6 +34,9 @@
  * @ignore
  * @param {Object} config object
  */
+
+import BigInt from '../../../externals/BigInteger';
+
 function MssParser(config) {
     config = config || {};
     const BASE64 = config.BASE64;
@@ -351,7 +354,9 @@ function MssParser(config) {
 
             // => segment.tManifest = original timestamp value as a string (for constructing the fragment request url, see DashHandler)
             // => segment.t = number value of timestamp (maybe rounded value, but only for 0.1 microsecond)
-            segment.tManifest = parseFloat(tManifest);
+            if (tManifest && BigInt(tManifest).greater(BigInt(Number.MAX_SAFE_INTEGER))) {
+                segment.tManifest = tManifest;
+            }
             segment.t = parseFloat(tManifest);
 
             // Get duration 'd' attribute value
@@ -367,7 +372,7 @@ function MssParser(config) {
                 // Update previous segment duration if not defined
                 if (!prevSegment.d) {
                     if (prevSegment.tManifest) {
-                        prevSegment.d = parseFloat(tManifest) - parseFloat(prevSegment.tManifest);
+                        prevSegment.d = BigInt(tManifest).subtract(BigInt(prevSegment.tManifest)).toJSNumber();
                     } else {
                         prevSegment.d = segment.t - prevSegment.t;
                     }
@@ -376,7 +381,7 @@ function MssParser(config) {
                 // Set segment absolute timestamp if not set in manifest
                 if (!segment.t) {
                     if (prevSegment.tManifest) {
-                        segment.tManifest = parseFloat(prevSegment.tManifest) + prevSegment.d;
+                        segment.tManifest = BigInt(prevSegment.tManifest).add(BigInt(prevSegment.d)).toString();
                         segment.t = parseFloat(segment.tManifest);
                     } else {
                         segment.t = prevSegment.t + prevSegment.d;
@@ -401,7 +406,7 @@ function MssParser(config) {
                     segment.t = prevSegment.t + prevSegment.d;
                     segment.d = prevSegment.d;
                     if (prevSegment.tManifest) {
-                        segment.tManifest  = parseFloat(prevSegment.tManifest) + prevSegment.d;
+                        segment.tManifest  = BigInt(prevSegment.tManifest).add(BigInt(prevSegment.d)).toString();
                     }
                     duration += segment.d;
                     segments.push(segment);
