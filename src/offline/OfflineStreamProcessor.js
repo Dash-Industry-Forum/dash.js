@@ -318,7 +318,7 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        indexHandler.updateRepresentation(rep, true, true);
+        indexHandler.updateRepresentation(rep, true);
     }
 
     function onRepresentationUpdated(e) {
