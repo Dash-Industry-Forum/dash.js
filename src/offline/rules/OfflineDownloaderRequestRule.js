@@ -36,10 +36,7 @@ import FragmentRequest from './../../streaming/vo/FragmentRequest';
  * @description Manages HTTP segments request.
  */
 function OfflineDownloaderRequestRule() {
-
-
     let instance;
-    let currentSegmentId = -1;
     let _indexHandler;
     let _fragmentModel;
 
@@ -49,18 +46,7 @@ function OfflineDownloaderRequestRule() {
 
     }
     function getNextSegmentRequest(representation) {
-        currentSegmentId ++;
-        if (currentSegmentId < representation.segments.length ) {
-            let currentSegment = representation.segments[currentSegmentId];
-            let request = _indexHandler.getRequestForSegment(currentSegment);
-
-            if (currentSegmentId === (representation.segments.length - 1) ) {
-                // last request
-                request.action = FragmentRequest.ACTION_COMPLETE;
-            }
-            return request;
-        }
-        return null;
+        return _indexHandler.getNextSegmentRequest(representation);
     }
 
     function execute(representation) {

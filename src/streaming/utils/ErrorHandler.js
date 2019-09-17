@@ -54,10 +54,6 @@ function ErrorHandler() {
         eventBus.trigger(Events.ERROR, {error: 'indexedDBError', event: err});
     }
 
-    function initOfflineDownloadError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'initOfflineDownloadError', event: err});
-    }
-
     instance = {
         error: error,
         indexedDBError: indexedDBError

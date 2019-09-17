@@ -74,8 +74,7 @@ function OfflineStreamProcessor(config) {
         isStopped,
         stream,
         settings,
-        dashMetrics,
-        qualityIndex;
+        dashMetrics;
 
     function setConfig(config) {
 
@@ -95,10 +94,6 @@ function OfflineStreamProcessor(config) {
 
         if (config.mimeType) {
             mimeType = config.mimeType;
-        }
-
-        if (config.qualityIndex) {
-            qualityIndex = config.qualityIndex;
         }
 
         if (config.adapter) {
@@ -367,7 +362,6 @@ function OfflineStreamProcessor(config) {
 
     function resetInitialSettings() {
         isInitialized = false;
-        qualityIndex = null;
         downloadedSegments = 0;
         mimeType = null;
         mediaInfo = null;

@@ -82,7 +82,7 @@ function OfflineStream(config) {
      */
     function resetInitialSettings() {
         offlineStreamProcessors = [];
-        availableSegments = 0;
+        availableSegments = NaN;
         streamInfo = null;
         offlineStreamProcessors = [];
         startedOfflineStreamProcessors = 0;
@@ -204,7 +204,6 @@ function OfflineStream(config) {
     function initializeAllMediasInfoList(mediasInfoList) {
         allMediasInfosList = mediasInfoList;
         initializeMedia(streamInfo);
-        setAvailableSegments();
     }
 
     /**
@@ -336,6 +335,10 @@ function OfflineStream(config) {
     function getDownloadProgression() {
         let getDownloadedSegments = 0;
 
+        if (isNaN(availableSegments)) {
+            setAvailableSegments();
+        }
+
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             getDownloadedSegments = getDownloadedSegments + offlineStreamProcessors[i].getDownloadedSegments();
         }
@@ -346,6 +349,7 @@ function OfflineStream(config) {
      * Initialize total numbers of segments
      */
     function setAvailableSegments() {
+        availableSegments = 0;
         //TODO compter par taille de segments et non par le nombre
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             if (offlineStreamProcessors[i].getAvailableSegmentsNumber()) {
@@ -386,7 +390,6 @@ function OfflineStream(config) {
         stopOfflineStreamProcessors: stopOfflineStreamProcessors,
         resumeOfflineStreamProcessors: resumeOfflineStreamProcessors,
         getDownloadProgression: getDownloadProgression,
-        setAvailableSegments: setAvailableSegments,
         reset: reset
     };
 

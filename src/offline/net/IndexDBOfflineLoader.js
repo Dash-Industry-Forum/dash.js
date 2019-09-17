@@ -32,6 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import IndexDBStore from '../storage/IndexDBStore';
 import URLUtils from './../../streaming/utils/URLUtils';
 import Constants from './../../streaming/constants/Constants';
+import DashConstants from '../../dash/constants/DashConstants';
 
 /**
  * @module
@@ -80,7 +81,7 @@ function IndexDBOfflineLoader() {
                     }).catch(function (err) {
                         config.error(err);
                     });
-                } else if (config.request.type === Constants.MPD) {
+                } else if (config.request.type === DashConstants.MPD) {
                     indexDBStore.getManifestById(manifestId).then(function (item) {
                         indexDBStore.createFragmentStore(item.fragmentStore);
                         config.success(item.manifest, null, config.request.url, Constants.XML);
