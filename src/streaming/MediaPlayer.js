@@ -30,6 +30,7 @@
  */
 import cea608parser from '../../externals/cea608-parser';
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -46,7 +47,6 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import AbrController from './controllers/AbrController';
 import SchemeLoaderFactory from './net/SchemeLoaderFactory';
-import OfflineController from '../offline/controllers/OfflineController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
@@ -72,6 +72,8 @@ import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
+import ManifestUpdater from './ManifestUpdater';
+import URLUtils from '../streaming/utils/URLUtils';
 
 /**
  * @module MediaPlayer
@@ -1062,11 +1064,11 @@ function MediaPlayer() {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
         }
-        return offlineController.createDownload(manifestURL);
+        return offlineController ? offlineController.createDownload(manifestURL) : Promise.reject();
     }
 
     function startDownload(id, selectedRepresentations) {
-        if (selectedRepresentations) {
+        if (selectedRepresentations && offlineController) {
             offlineController.startDownload(id, selectedRepresentations);
         }
     }
@@ -1075,17 +1077,17 @@ function MediaPlayer() {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
         }
-        return offlineController.deleteDownload(id);
+        return offlineController ? offlineController.deleteDownload(id) : Promise.reject();
     }
 
     function stopDownload(id) {
-        if (offlineControllerInitialized) {
+        if (offlineControllerInitialized && offlineController) {
             offlineController.stopDownload(id);
         }
     }
 
     function resumeDownload(id) {
-        if (offlineControllerInitialized) {
+        if (offlineControllerInitialized && offlineController) {
             offlineController.resumeDownload(id);
         }
     }
@@ -1094,54 +1096,68 @@ function MediaPlayer() {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
         }
-        return offlineController.getAllDownloads();
+        return offlineController ? offlineController.getAllDownloads() : Promise.reject();
     }
 
     function getDownloadProgression(id) {
         if (offlineControllerInitialized) {
-            return offlineController.getDownloadProgression(id);
+            return offlineController ? offlineController.getDownloadProgression(id) : 0;
         }
     }
 
     function createOfflineControllers() {
-        errHandler = ErrorHandler(context).getInstance();
-
-        const manifestLoader = createManifestLoader();
-
-        // init some controllers and models
-
-        if (!schemeLoaderFactory) {
-            schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
-        adapter = DashAdapter(context).getInstance();
-        manifestModel = ManifestModel(context).getInstance();
-        dashMetrics = DashMetrics(context).getInstance({
-            manifestModel: manifestModel
-        });
 
-        adapter.setConfig({
-            constants: Constants,
-            cea608parser: cea608parser,
-            errHandler: errHandler,
-            BASE64: BASE64
-        });
+        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
 
-        if (!offlineController) {
+        if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
             offlineController = OfflineController(context).create();
+
+            Events.extend(OfflineController.events);
+            Events.extend(OfflineController.domExceptionEvents);
+
+            const manifestLoader = createManifestLoader();
+            const manifestUpdater = ManifestUpdater(context).create();
+            const baseURLController = BaseURLController(context).create();
+
+            baseURLController.setConfig({
+                adapter: adapter
+            });
+
+            manifestUpdater.setConfig({
+                manifestModel: manifestModel,
+                adapter: adapter,
+                manifestLoader: manifestLoader,
+                errHandler: errHandler
+            });
+
+            let requestModifier = RequestModifier(context).getInstance();
+
+            offlineController.setConfig({
+                debug: debug,
+                manifestUpdater: manifestUpdater,
+                baseURLController: baseURLController,
+                manifestLoader: manifestLoader,
+                mediaPlayerModel: mediaPlayerModel,
+                manifestModel: manifestModel,
+                adapter: adapter,
+                errHandler: errHandler,
+                schemeLoaderFactory: schemeLoaderFactory,
+                settings: settings,
+                dashMetrics: dashMetrics,
+                eventBus: eventBus,
+                events: Events,
+                constants: Constants,
+                dashConstants: DashConstants,
+                urlUtils: URLUtils(context).getInstance(),
+                timelineConverter: timelineConverter,
+                requestModifier: requestModifier
+            });
+
+            offlineControllerInitialized = true;
         }
-
-        offlineController.setConfig({
-            manifestLoader: manifestLoader,
-            mediaPlayerModel: mediaPlayerModel,
-            manifestModel: manifestModel,
-            adapter: adapter,
-            errHandler: errHandler,
-            schemeLoaderFactory: schemeLoaderFactory,
-            settings: settings,
-            dashMetrics: dashMetrics
-        });
-
-        offlineControllerInitialized = true;
     }
 
     /*

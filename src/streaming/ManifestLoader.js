@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import XlinkController from './controllers/XlinkController';
 import URLLoader from './net/URLLoader';
 import URLUtils from './utils/URLUtils';
@@ -67,7 +68,10 @@ function ManifestLoader(config) {
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
-            useFetch: config.settings.get().streaming.lowLatencyEnabled
+            useFetch: config.settings.get().streaming.lowLatencyEnabled,
+            urlUtils: urlUtils,
+            constants: Constants,
+            dashConstants: DashConstants
         });
 
         xlinkController = XlinkController(context).create({

@@ -52,6 +52,8 @@ service('DownloadService', function ($q) {
                 downloads.push(element);
             });
             deferred.resolve(downloads);
+        }, function (err) {
+            deferred.reject(err);
         });
 
         return deferred.promise;

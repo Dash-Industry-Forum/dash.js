@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
 import OfflineConstants from '../constants/OfflineConstants';
 import DefaultURLUtils from './../../streaming/utils/DefaultURLUtils';
 
@@ -125,4 +124,4 @@ function OfflineUrlUtils() {
 }
 
 OfflineUrlUtils.__dashjs_factory_name = 'OfflineUrlUtils';
-export default FactoryMaker.getSingletonFactory(OfflineUrlUtils);
+export default dashjs.FactoryMaker.getSingletonFactory(OfflineUrlUtils); /* jshint ignore:line */

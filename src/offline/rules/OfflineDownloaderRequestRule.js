@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from './../../core/FactoryMaker';
 import FragmentRequest from './../../streaming/vo/FragmentRequest';
 
 /**
@@ -70,4 +69,4 @@ function OfflineDownloaderRequestRule() {
 }
 
 OfflineDownloaderRequestRule.__dashjs_factory_name = 'OfflineDownloaderRequestRule';
-export default FactoryMaker.getClassFactory(OfflineDownloaderRequestRule);
+export default dashjs.FactoryMaker.getClassFactory(OfflineDownloaderRequestRule); /* jshint ignore:line */

@@ -28,17 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './../core/EventBus';
-import Debug from './../core/Debug';
-import Events from './../core/events/Events';
-import FactoryMaker from './../core/FactoryMaker';
 import DashHandler from './../dash/DashHandler';
-import Constants from './../streaming/constants/Constants';
 import OfflineDownloaderRequestRule from './rules/OfflineDownloaderRequestRule';
 import FragmentModel from './../streaming/models/FragmentModel';
 import FragmentLoader from './../streaming/FragmentLoader';
-import RequestModifier from './../streaming/utils/RequestModifier';
-import TimelineConverter from './../dash/utils/TimelineConverter';
 
 /**
  * @module  OfflineStreamProcessor
@@ -46,9 +39,15 @@ import TimelineConverter from './../dash/utils/TimelineConverter';
  * @description Arrange downloading for each type
  */
 function OfflineStreamProcessor(config) {
+    const context = this.context;
 
     config = config || {};
-    let context = this.context;
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const debug = config.debug;
+    const timelineConverter = config.timelineConverter;
+    const constants = config.constants;
+    const requestModifier = config.requestModifier;
 
     let instance,
         manifestId,
@@ -58,7 +57,6 @@ function OfflineStreamProcessor(config) {
         indexHandler,
         type,
         errHandler,
-        eventBus,
         mimeType,
         baseURLController,
         fragmentModel,
@@ -134,14 +132,11 @@ function OfflineStreamProcessor(config) {
         completedCb = config.completed;
 
         resetInitialSettings();
-        logger = Debug(context).getInstance().getLogger(instance);
-        eventBus = EventBus(context).getInstance();
-        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
-        eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
-
+        logger = debug.getLogger(instance);
+        eventBus.on(events.STREAM_COMPLETED, onStreamCompleted, instance);
+        eventBus.on(events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
-
 
     function onFragmentLoadingCompleted(e) {
         if (e.sender !== fragmentModel) {
@@ -200,31 +195,34 @@ function OfflineStreamProcessor(config) {
      * @memberof OfflineStreamProcessor#
     */
     function initialize() {
-        let requestModifier = RequestModifier(context).getInstance();
-
         indexHandler = DashHandler(context).create({
             mediaPlayerModel: mediaPlayerModel,
             mimeType: mimeType,
             baseURLController: baseURLController,
             errHandler: errHandler,
-            timelineConverter:  TimelineConverter(context).getInstance(),
+            timelineConverter: timelineConverter,
             settings: settings,
-            dashMetrics: dashMetrics
+            dashMetrics: dashMetrics,
+            eventBus: eventBus
         });
-        indexHandler.initialize(instance);
 
         let fragmentLoader = FragmentLoader(context).create({
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler,
             requestModifier: requestModifier,
             settings: settings,
-            dashMetrics: dashMetrics
+            dashMetrics: dashMetrics,
+            eventBus: eventBus
         });
 
         fragmentModel = FragmentModel(context).create({
             dashMetrics: dashMetrics,
-            fragmentLoader: fragmentLoader
+            fragmentLoader: fragmentLoader,
+            eventBus: eventBus,
+            events: events
         });
+
+        indexHandler.initialize(instance);
 
         offlineDownloaderRequestRule = OfflineDownloaderRequestRule(context).create();
         offlineDownloaderRequestRule.initialize(indexHandler, fragmentModel);
@@ -313,7 +311,7 @@ function OfflineStreamProcessor(config) {
             return representation.id === bitrate.id;
         });
 
-        if (type !== Constants.VIDEO && type !== Constants.AUDIO  && type !== Constants.TEXT && type !== Constants.FRAGMENTED_TEXT) {
+        if (type !== constants.VIDEO && type !== constants.AUDIO  && type !== constants.TEXT && type !== constants.FRAGMENTED_TEXT) {
             updating = false;
             return;
         }
@@ -325,7 +323,7 @@ function OfflineStreamProcessor(config) {
         if (e.sender.getStreamProcessor() !== instance || !isUpdating()) return;
 
         currentVoRepresentation = e.representation;
-        eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: instance, currentRepresentation: currentVoRepresentation});
+        eventBus.trigger(events.DATA_UPDATE_COMPLETED, {sender: instance, currentRepresentation: currentVoRepresentation});
     }
 
     function getRepresentation() {
@@ -381,9 +379,9 @@ function OfflineStreamProcessor(config) {
         resetInitialSettings();
         indexHandler.reset();
 
-        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
-        eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
+        eventBus.off(events.STREAM_COMPLETED, onStreamCompleted, instance);
+        eventBus.off(events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
     instance = {
@@ -411,5 +409,5 @@ function OfflineStreamProcessor(config) {
     return instance;
 }
 OfflineStreamProcessor.__dashjs_factory_name = 'OfflineStreamProcessor';
-const factory = FactoryMaker.getClassFactory(OfflineStreamProcessor);
+const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); /* jshint ignore:line */
 export default factory;

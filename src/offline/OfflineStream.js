@@ -28,13 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './../core/EventBus';
-import Events from './../core/events/Events';
-import OfflineEvents from './events/OfflineEvents';
-import FactoryMaker from './../core/FactoryMaker';
-import Debug from './../core/Debug';
 import OfflineStreamProcessor from './OfflineStreamProcessor';
-import Constants from './../streaming/constants/Constants';
 
 /**
  * @module  OfflineStream
@@ -45,7 +39,12 @@ function OfflineStream(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const constants = config.constants;
+    const debug = config.debug;
+    const timelineConverter = config.timelineConverter;
+    const requestModifier = config.requestModifier;
 
     let instance,
         manifestId,
@@ -64,13 +63,10 @@ function OfflineStream(config) {
         availableSegments,
         allMediasInfosList,
         settings,
-        dashMetrics,
-        logger;
+        dashMetrics;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
-        Events.extend(OfflineEvents);
 
         manifestId = config.id;
         startedCb = config.started;
@@ -128,7 +124,7 @@ function OfflineStream(config) {
      */
     function initialize(initStreamInfo) {
         streamInfo = initStreamInfo;
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
     }
 
     /**
@@ -139,7 +135,7 @@ function OfflineStream(config) {
             video: [],
             audio: []
         };
-        let mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.VIDEO);
+        let mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
         if (mediaInfo.length > 0) {
             mediaInfo.forEach((item) => {
                 item.bitrateList.forEach((bitrate) => {
@@ -152,7 +148,7 @@ function OfflineStream(config) {
                 });
             });
         }
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.AUDIO);
+        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.AUDIO);
         if (mediaInfo.length > 0) {
             mediaInfo.forEach((item) => {
                 item.bitrateList.forEach((bitrate) => {
@@ -187,7 +183,7 @@ function OfflineStream(config) {
         }
         */
 
-        eventBus.trigger(Events.DOWNLOADABLE_REPRESENTATIONS_LOADED, {
+        eventBus.trigger(events.DOWNLOADABLE_REPRESENTATIONS_LOADED, {
             data: {
                 id: manifestId,
                 downloadableRepresentations: downloadableRepresentations
@@ -211,8 +207,8 @@ function OfflineStream(config) {
      * @param {Object} streamInfo
      */
     function initializeMedia(streamInfo) {
-        createOfflineStreamProcessorFor(Constants.VIDEO,streamInfo);
-        createOfflineStreamProcessorFor(Constants.AUDIO,streamInfo);
+        createOfflineStreamProcessorFor(constants.VIDEO,streamInfo);
+        createOfflineStreamProcessorFor(constants.AUDIO,streamInfo);
         /* 1st, we download audio and video.
         createOfflineStreamProcessorFor(Constants.TEXT,streamInfo);
         createOfflineStreamProcessorFor(Constants.FRAGMENTED_TEXT,streamInfo);
@@ -253,7 +249,13 @@ function OfflineStream(config) {
 
         let streamProcessor = OfflineStreamProcessor(context).create({
             id: manifestId,
-            completed: onStreamCompleted
+            completed: onStreamCompleted,
+            debug: debug,
+            events: events,
+            eventBus: eventBus,
+            constants: constants,
+            timelineConverter: timelineConverter,
+            requestModifier: requestModifier
         });
         streamProcessor.setConfig({
             type: mediaInfo.type,
@@ -325,7 +327,7 @@ function OfflineStream(config) {
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             offlineStreamProcessors[i].resume();
         }
-        eventBus.trigger(Events.DOWNLOADING_STARTED, {sender: this, id: manifestId, message: 'Downloading started for this stream !'});
+        eventBus.trigger(events.DOWNLOADING_STARTED, {sender: this, id: manifestId, message: 'Downloading started for this stream !'});
     }
 
     /**
@@ -377,7 +379,7 @@ function OfflineStream(config) {
         deactivate();
         resetInitialSettings();
 
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
     }
 
     instance = {
@@ -398,4 +400,4 @@ function OfflineStream(config) {
 }
 
 OfflineStream.__dashjs_factory_name = 'OfflineStream';
-export default FactoryMaker.getClassFactory(OfflineStream);
+export default dashjs.FactoryMaker.getClassFactory(OfflineStream); /* jshint ignore:line */

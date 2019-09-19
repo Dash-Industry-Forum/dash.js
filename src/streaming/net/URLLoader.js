@@ -40,7 +40,6 @@ function URLLoader(cfg) {
 
     cfg = cfg || {};
     const context = this.context;
-    // const urlUtils = URLUtils(context).getInstance();
 
     let instance,
         schemeLoaderFactory,
@@ -57,7 +56,10 @@ function URLLoader(cfg) {
             requestModifier: cfg.requestModifier,
             useFetch: cfg.useFetch || null,
             dashMetrics: cfg.dashMetrics,
-            boxParser: cfg.boxParser ? cfg.boxParser : null
+            boxParser: cfg.boxParser ? cfg.boxParser : null,
+            constants: cfg.constants ? cfg.constants : null,
+            dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
+            urlUtils: cfg.urlUtils ? cfg.urlUtils : null
         });
 
         loader.load(config);

@@ -28,9 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from './../../core/FactoryMaker';
-import Debug from './../../core/Debug';
-import URLUtils from './../../streaming/utils/URLUtils';
 
 const Entities = require('html-entities').XmlEntities;
 const ELEMENT_TYPE_MPD = 'MPD';
@@ -48,19 +45,19 @@ const OFFLINE_BASE_URL = 'offline_indexdb://';
  * @param {Object} config - dependances
 */
 function OfflineIndexDBManifestParser(config) {
-    const context = this.context;
+
     const manifestId = config.manifestId;
     const allMediaInfos = config.allMediaInfos;
+    const urlUtils = config.urlUtils;
+    const debug = config.debug;
 
     let instance,
         DOM,
-        urlUtils,
         logger;
 
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
-        urlUtils = URLUtils(context).getInstance();
+        logger = debug.getLogger(instance);
     }
 
     /**
@@ -333,4 +330,4 @@ function OfflineIndexDBManifestParser(config) {
     return instance;
 }
 OfflineIndexDBManifestParser.__dashjs_factory_name = 'OfflineIndexDBManifestParser';
-export default FactoryMaker.getClassFactory(OfflineIndexDBManifestParser);
+export default dashjs.FactoryMaker.getClassFactory(OfflineIndexDBManifestParser); /* jshint ignore:line */

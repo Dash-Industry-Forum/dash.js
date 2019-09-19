@@ -28,17 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Events from '../../core/events/Events';
-import Debug from '../../core/Debug';
-import OfflineEvents from '../events/OfflineEvents';
+
 import OfflineConstants from '../constants/OfflineConstants';
-import DOMExceptionsEvents from '../events/DOMExceptionsEvents';
-import FactoryMaker from '../../core/FactoryMaker';
 import OfflineStoreController from './OfflineStoreController';
 import OfflineDownload from '../OfflineDownload';
 import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader';
 import OfflineUrlUtils from '../utils/OfflineUrlUtils';
-import URLUtils from '../../streaming/utils/URLUtils';
+import OfflineEvents from '../events/OfflineEvents';
+import DOMExceptionsEvents from '../events/DOMExceptionsEvents';
 
 /**
  * @class OfflineController
@@ -51,29 +48,43 @@ function OfflineController() {
         downloads,
         adapter,
         schemeLoaderFactory,
+        debug,
         logger,
         manifestLoader,
         manifestModel,
+        manifestUpdater,
+        baseURLController,
         mediaPlayerModel,
         offlineStoreController,
         offlineUtlUtils,
         settings,
         dashMetrics,
+        events,
+        eventBus,
+        constants,
+        timelineConverter,
+        requestModifier,
         errHandler;
 
     function setup() {
-        offlineStoreController = OfflineStoreController(context).create();
         offlineUtlUtils = OfflineUrlUtils(context).getInstance();
-        URLUtils(context).getInstance().registerUrlRegex(offlineUtlUtils.getRegex(), offlineUtlUtils);
-        Events.extend(OfflineEvents);
-        Events.extend(DOMExceptionsEvents);
-        logger = Debug(context).getInstance().getLogger(instance);
 
         downloads = [];
     }
 
     function setConfig(config) {
         if (!config) return;
+
+        if (config.events && config.eventBus) {
+            events = config.events;
+            eventBus = config.eventBus;
+            offlineStoreController = OfflineStoreController(context).create({events: config.events, eventBus: config.eventBus, errHandler: errHandler});
+        }
+
+        if (config.debug) {
+            debug = config.debug;
+            logger = debug.getLogger(instance);
+        }
 
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;
@@ -89,6 +100,14 @@ function OfflineController() {
 
         if (config.adapter) {
             adapter = config.adapter;
+        }
+
+        if (config.manifestUpdater) {
+            manifestUpdater = config.manifestUpdater;
+        }
+
+        if (config.baseURLController) {
+            baseURLController = config.baseURLController;
         }
 
         if (config.errHandler) {
@@ -107,9 +126,21 @@ function OfflineController() {
             dashMetrics = config.dashMetrics;
         }
 
-        offlineStoreController.setConfig({
-            errHandler: errHandler
-        });
+        if (config.constants) {
+            constants = config.constants;
+        }
+
+        if (config.timelineConverter) {
+            timelineConverter = config.timelineConverter;
+        }
+
+        if (config.urlUtils) {
+            config.urlUtils.registerUrlRegex(offlineUtlUtils.getRegex(), offlineUtlUtils);
+        }
+
+        if (config.requestModifier) {
+            requestModifier = config.requestModifier;
+        }
 
         schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
     }
@@ -135,20 +166,25 @@ function OfflineController() {
         if (!download) {
             // create download controller
             download = OfflineDownload(context).create({
-                id: id
-            });
-
-            download.setConfig({
+                id: id,
+                eventBus: eventBus,
+                events: events,
                 manifestLoader: manifestLoader,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
+                manifestUpdater: manifestUpdater,
+                baseURLController: baseURLController,
                 adapter: adapter,
                 errHandler: errHandler,
-                schemeLoaderFactory: schemeLoaderFactory,
                 offlineStoreController: offlineStoreController,
                 settings: settings,
-                dashMetrics: dashMetrics
+                debug: debug,
+                dashMetrics: dashMetrics,
+                constants: constants,
+                timelineConverter: timelineConverter,
+                requestModifier: requestModifier
             });
+
             downloads.push(download);
         }
 
@@ -272,4 +308,8 @@ function OfflineController() {
 }
 
 OfflineController.__dashjs_factory_name = 'OfflineController';
-export default FactoryMaker.getClassFactory(OfflineController);
+const factory = dashjs.FactoryMaker.getClassFactory(OfflineController); /* jshint ignore:line */
+factory.events = OfflineEvents;
+factory.domExceptionEvents = DOMExceptionsEvents;
+dashjs.FactoryMaker.updateClassFactory(OfflineController.__dashjs_factory_name, factory); /* jshint ignore:line */
+export default factory;

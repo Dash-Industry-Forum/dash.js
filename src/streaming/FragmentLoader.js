@@ -28,6 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import URLLoader from './net/URLLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
@@ -36,12 +38,14 @@ import BoxParser from '../streaming/utils/BoxParser';
 import Events from './../core/events/Events';
 import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
+import URLUtils from './utils/URLUtils';
 
 function FragmentLoader(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    const eventBus = config.eventBus || EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
 
     let instance,
         urlLoader;
@@ -54,7 +58,10 @@ function FragmentLoader(config) {
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
             boxParser: boxParser,
-            useFetch: config.settings.get().streaming.lowLatencyEnabled
+            useFetch: config.settings.get().streaming.lowLatencyEnabled,
+            urlUtils: urlUtils,
+            constants: Constants,
+            dashConstants: DashConstants
         });
     }
 

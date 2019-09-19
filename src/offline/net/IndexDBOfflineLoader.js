@@ -28,21 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
 import IndexDBStore from '../storage/IndexDBStore';
-import URLUtils from './../../streaming/utils/URLUtils';
-import Constants from './../../streaming/constants/Constants';
-import DashConstants from '../../dash/constants/DashConstants';
 
 /**
  * @module
  * @description Load Offline resources
-
+ * @param {Object} config - dependences
  */
-function IndexDBOfflineLoader() {
-
+function IndexDBOfflineLoader(config) {
+    config = config || {};
     const context = this.context;
-    const urlUtils = URLUtils(context).getInstance();
+    const urlUtils = config.urlUtils;
+    const constants = config.constants;
+    const dashConstants = config.dashConstants;
 
     let instance,
         indexDBStore;
@@ -67,24 +65,24 @@ function IndexDBOfflineLoader() {
             let manifestId = getManifestId(config.request.url);
             if (manifestId % 1 === 0) {
                 if (
-                    config.request.mediaType === Constants.AUDIO ||
-                    config.request.mediaType === Constants.VIDEO ||
-                    config.request.mediaType === Constants.TEXT ||
-                    config.request.mediaType === Constants.MUXED ||
-                    config.request.mediaType === Constants.IMAGE ||
-                    config.request.mediaType === Constants.FRAGMENTED_TEXT ||
-                    config.request.mediaType === Constants.EMBEDDED_TEXT
+                    config.request.mediaType === constants.AUDIO ||
+                    config.request.mediaType === constants.VIDEO ||
+                    config.request.mediaType === constants.TEXT ||
+                    config.request.mediaType === constants.MUXED ||
+                    config.request.mediaType === constants.IMAGE ||
+                    config.request.mediaType === constants.FRAGMENTED_TEXT ||
+                    config.request.mediaType === constants.EMBEDDED_TEXT
                 ) {
                     let key = config.request.representationId + '_' + config.request.index;
                     indexDBStore.getFragmentByKey(manifestId, key).then(function (fragment) {
-                        config.success(fragment, null, config.request.url, Constants.ARRAY_BUFFER);
+                        config.success(fragment, null, config.request.url, constants.ARRAY_BUFFER);
                     }).catch(function (err) {
                         config.error(err);
                     });
-                } else if (config.request.type === DashConstants.MPD) {
+                } else if (config.request.type === dashConstants.MPD) {
                     indexDBStore.getManifestById(manifestId).then(function (item) {
                         indexDBStore.createFragmentStore(item.fragmentStore);
-                        config.success(item.manifest, null, config.request.url, Constants.XML);
+                        config.success(item.manifest, null, config.request.url, constants.XML);
                     }).catch(function (err) {
                         config.error(config.request.url, 404, err);
                     });
@@ -110,5 +108,5 @@ function IndexDBOfflineLoader() {
 }
 
 IndexDBOfflineLoader.__dashjs_factory_name = 'IndexDBOfflineLoader';
-const factory = FactoryMaker.getClassFactory(IndexDBOfflineLoader);
+const factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); /* jshint ignore:line */
 export default factory;

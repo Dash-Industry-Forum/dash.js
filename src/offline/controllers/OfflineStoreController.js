@@ -28,35 +28,26 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
 import IndexDBStore from '../storage/IndexDBStore';
-import DOMExceptionsEvents from '../events/DOMExceptionsEvents';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
 
 /**
  * @class OfflineStoreController
  * This class manages database store
  * @description Offline Storage Controller
  */
-function OfflineStoreController() {
+function OfflineStoreController(config) {
 
+    config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    const errHandler = config.errHandler;
+    const events = config.events;
+    const eventBus = config.eventBus;
 
     let instance,
-        errHandler,
         indexDBStore;
 
     function setup() {
         indexDBStore = IndexDBStore(context).getInstance();
-        Events.extend(DOMExceptionsEvents);
-    }
-
-    function setConfig(config) {
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
     }
 
     function createFragmentStore(manifestId, storeName) {
@@ -113,16 +104,16 @@ function OfflineStoreController() {
         if (err) {
             switch (err.name) {
                 case 'QuotaExceededError':
-                    eventBus.trigger(Events.INDEXEDDB_QUOTA_EXCEED_ERROR);
+                    eventBus.trigger(events.INDEXEDDB_QUOTA_EXCEED_ERROR);
                     break;
                 case 'InvalidStateError':
-                    eventBus.trigger(Events.INDEXEDDB_INVALID_STATE_ERROR);
+                    eventBus.trigger(events.INDEXEDDB_INVALID_STATE_ERROR);
                     break;
                 case 'NotFoundError':
-                    eventBus.trigger(Events.INDEXEDDB_NOT_FOUND_ERROR);
+                    eventBus.trigger(events.INDEXEDDB_NOT_FOUND_ERROR);
                     break;
                 case 'VersionError':
-                    eventBus.trigger(Events.INDEXEDDB_VERSION_ERROR);
+                    eventBus.trigger(events.INDEXEDDB_VERSION_ERROR);
                     break;
                 // TODO : Manage all DOM cases
             }
@@ -131,7 +122,6 @@ function OfflineStoreController() {
     }
 
     instance = {
-        setConfig: setConfig,
         storeFragment: storeFragment,
         createOfflineManifest: createOfflineManifest,
         updateOfflineManifest: updateOfflineManifest,
@@ -148,4 +138,4 @@ function OfflineStoreController() {
 }
 
 OfflineStoreController.__dashjs_factory_name = 'OfflineStoreController';
-export default FactoryMaker.getClassFactory(OfflineStoreController);
+export default dashjs.FactoryMaker.getClassFactory(OfflineStoreController); /* jshint ignore:line */

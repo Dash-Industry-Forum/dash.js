@@ -28,108 +28,50 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus';
-import Events from '../core/events/Events';
-import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import OfflineConstants from './constants/OfflineConstants';
-import ManifestUpdater from '../streaming/ManifestUpdater';
-import BaseURLController from '../streaming/controllers/BaseURLController';
 import OfflineStream from './OfflineStream';
 import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser';
 
 /**
  * @class OfflineDownload
  */
-function OfflineDownload(params) {
+function OfflineDownload(config) {
+    config = config || {};
+
+    const manifestLoader = config.manifestLoader;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const adapter = config.adapter;
+    const errHandler = config.errHandler;
+    const offlineStoreController = config.offlineStoreController;
+    const settings = config.settings;
+    const dashMetrics = config.dashMetrics;
+    const manifestId = config.id;
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const debug = config.debug;
+    const manifestUpdater = config.manifestUpdater;
+    const baseURLController = config.baseURLController;
+    const constants = config.constants;
+    const timelineConverter = config.timelineConverter;
+    const requestModifier = config.requestModifier;
 
     const context = this.context;
 
     let instance,
-        adapter,
-        schemeLoaderFactory,
-        baseURLController,
-        manifestId,
-        manifestLoader,
-        manifestModel,
-        manifestUpdater,
-        mediaPlayerModel,
-        offlineStoreController,
         XMLManifest,
-        errHandler,
         streams,
         manifest,
         isDownloadingStatus,
-        isComposed,
-        settings,
-        dashMetrics,
-        logger;
+        logger,
+        isComposed;
 
-    const eventBus = EventBus(context).getInstance();
 
     function setup() {
-        manifestId = params.id;
-
-        manifestUpdater = ManifestUpdater(context).create();
-        baseURLController = BaseURLController(context).create();
-        logger = Debug(context).getInstance().getLogger(instance);
-
+        logger = debug.getLogger(instance);
+        manifestUpdater.initialize();
         streams = [];
         isDownloadingStatus = false;
         isComposed = false;
-    }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.manifestLoader) {
-            manifestLoader = config.manifestLoader;
-        }
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
-        }
-
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
-
-        if (config.schemeLoaderFactory) {
-            schemeLoaderFactory = config.schemeLoaderFactory;
-        }
-
-        if (config.offlineStoreController) {
-            offlineStoreController = config.offlineStoreController;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
-        }
-
-        if (config.dashMetrics) {
-            dashMetrics = config.dashMetrics;
-        }
-
-        baseURLController.setConfig({
-            adapter: adapter
-        });
-
-        manifestUpdater.setConfig({
-            manifestModel: manifestModel,
-            adapter: adapter,
-            manifestLoader: manifestLoader,
-            errHandler: errHandler
-        });
-
-        manifestUpdater.initialize();
     }
 
     function getId() {
@@ -157,14 +99,14 @@ function OfflineDownload(params) {
     }
 
     function setupOfflineEvents() {
-        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
-        eventBus.on(Events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
+        eventBus.on(events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.on(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
         setupIndexedDBEvents();
     }
 
     function setupIndexedDBEvents() {
-        eventBus.on(Events.INDEXEDDB_QUOTA_EXCEED_ERROR, stopDownload, instance);
-        eventBus.on(Events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
+        eventBus.on(events.INDEXEDDB_QUOTA_EXCEED_ERROR, stopDownload, instance);
+        eventBus.on(events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
     }
 
     function isDownloading() {
@@ -185,7 +127,7 @@ function OfflineDownload(params) {
                 // get downloadable representations
                 getDownloadableRepresentations();
 
-                eventBus.trigger(Events.STREAMS_COMPOSED);
+                eventBus.trigger(events.STREAMS_COMPOSED);
             } catch (err) {
                 throw new Error(err);
             }
@@ -198,7 +140,7 @@ function OfflineDownload(params) {
         }
         if (!e.error && manifestId !== null) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STARTED);
-            eventBus.trigger(Events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
+            eventBus.trigger(events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
         } else {
             throw e.error;
         }
@@ -210,7 +152,7 @@ function OfflineDownload(params) {
         }
         if (!e.error && manifestId !== null) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED);
-            eventBus.trigger(Events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+            eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
         } else {
             throw e.error;
         }
@@ -230,7 +172,13 @@ function OfflineDownload(params) {
                 let stream = OfflineStream(context).create({
                     id: manifestId,
                     started: onDownloadingStarted,
-                    finished: onDownloadingFinished
+                    finished: onDownloadingFinished,
+                    constants: constants,
+                    eventBus: eventBus,
+                    events: events,
+                    debug: debug,
+                    timelineConverter: timelineConverter,
+                    requestModifier: requestModifier
                 });
                 stream.setConfig({
                     adapter: adapter,
@@ -322,7 +270,8 @@ function OfflineDownload(params) {
     function generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId) {
         let parser = OfflineIndexDBManifestParser(context).create({
             manifestId: manifestId,
-            allMediaInfos: selectedRepresentations
+            allMediaInfos: selectedRepresentations,
+            debug: debug
         });
 
         return parser.parse(XMLManifest).then(function (parsedManifest) {
@@ -354,7 +303,7 @@ function OfflineDownload(params) {
                 streams[i].stopOfflineStreamProcessors();
             }
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STOPPED);
-            eventBus.trigger(Events.DOWNLOADING_STOPPED, {
+            eventBus.trigger(events.DOWNLOADING_STOPPED, {
                 sender: this,
                 id: manifestId,
                 status: OfflineConstants.OFFLINE_STATUS_STOPPED,
@@ -408,9 +357,8 @@ function OfflineDownload(params) {
         }
         isDownloadingStatus = false;
         streams = [];
-        manifestId = null;
-        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
-        eventBus.off(Events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
+        eventBus.off(events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
         resetOfflineEvents();
     }
 
@@ -419,8 +367,8 @@ function OfflineDownload(params) {
     }
 
     function resetIndexedDBEvents() {
-        eventBus.off(Events.INDEXEDDB_QUOTA_EXCEED_ERROR, stopDownload, instance);
-        eventBus.off(Events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
+        eventBus.off(events.INDEXEDDB_QUOTA_EXCEED_ERROR, stopDownload, instance);
+        eventBus.off(events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
     }
 
     /**
@@ -433,13 +381,11 @@ function OfflineDownload(params) {
         }
         baseURLController.reset();
         manifestUpdater.reset();
-        offlineStoreController = null;
     }
 
     instance = {
         reset: reset,
         getId: getId,
-        setConfig: setConfig,
         downloadFromUrl: downloadFromUrl,
         startDownload: startDownload,
         stopDownload: stopDownload,
@@ -456,4 +402,4 @@ function OfflineDownload(params) {
 }
 
 OfflineDownload.__dashjs_factory_name = 'OfflineDownload';
-export default FactoryMaker.getClassFactory(OfflineDownload);
+export default dashjs.FactoryMaker.getClassFactory(OfflineDownload); /* jshint ignore:line */

@@ -49,7 +49,7 @@ function DashHandler(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    const eventBus = config.eventBus || EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
     const type = config.type;
     const streamInfo = config.streamInfo;
