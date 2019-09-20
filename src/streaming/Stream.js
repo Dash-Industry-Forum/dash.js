@@ -39,6 +39,7 @@ import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
+import BoxParser from './utils/BoxParser';
 
 function Stream(config) {
 
@@ -74,6 +75,7 @@ function Stream(config) {
         thumbnailController,
         eventController,
         preloaded,
+        boxParser,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -91,11 +93,14 @@ function Stream(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
+        boxParser = BoxParser(context).getInstance();
+
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
-            settings: settings
+            settings: settings,
+            boxParser: boxParser
         });
 
         registerEvents();

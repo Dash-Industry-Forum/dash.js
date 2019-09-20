@@ -33,7 +33,6 @@ import Segment from './vo/Segment';
 import DashJSError from '../streaming/vo/DashJSError';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
-import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
@@ -61,14 +60,14 @@ function SegmentBaseLoader() {
     }
 
     function initialize() {
-        boxParser = BoxParser(context).getInstance();
         requestModifier = RequestModifier(context).getInstance();
         urlLoader = URLLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier,
-            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null
+            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
+            boxParser: boxParser
         });
     }
 
@@ -91,6 +90,10 @@ function SegmentBaseLoader() {
 
         if (config.settings) {
             settings = config.settings;
+        }
+
+        if (config.boxParser) {
+            boxParser = config.boxParser;
         }
     }
 

@@ -34,7 +34,6 @@ import URLLoader from './net/URLLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
-import BoxParser from '../streaming/utils/BoxParser';
 import Events from './../core/events/Events';
 import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
@@ -51,16 +50,15 @@ function FragmentLoader(config) {
         urlLoader;
 
     function setup() {
-        const boxParser = BoxParser(context).getInstance();
         urlLoader = URLLoader(context).create({
             errHandler: config.errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
-            boxParser: boxParser,
             useFetch: config.settings.get().streaming.lowLatencyEnabled,
             urlUtils: urlUtils,
             constants: Constants,
+            boxParser: config.boxParser,
             dashConstants: DashConstants
         });
     }

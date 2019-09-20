@@ -69,7 +69,8 @@ function FragmentController( config ) {
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
                     requestModifier: RequestModifier(context).getInstance(),
-                    settings: config.settings
+                    settings: config.settings,
+                    boxParser: config.boxParser
                 })
             });
 

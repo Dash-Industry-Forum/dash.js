@@ -61,6 +61,7 @@ function StreamProcessor(config) {
     let textController = config.textController;
     let dashMetrics = config.dashMetrics;
     let settings = config.settings;
+    let boxParser = config.boxParser;
 
     let instance,
         mediaInfo,
@@ -89,7 +90,8 @@ function StreamProcessor(config) {
             baseURLController: config.baseURLController,
             errHandler: errHandler,
             settings: settings,
-            streamInfo: getStreamInfo()
+            streamInfo: getStreamInfo(),
+            boxParser: boxParser
         });
 
         // initialize controllers

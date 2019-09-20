@@ -48,6 +48,7 @@ function SegmentsController(config) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
+    const boxParser = config.boxParser;
 
     let instance,
         getters,
@@ -61,7 +62,8 @@ function SegmentsController(config) {
             baseURLController: baseURLController,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
+            errHandler: errHandler,
+            boxParser: boxParser
         });
     }
 

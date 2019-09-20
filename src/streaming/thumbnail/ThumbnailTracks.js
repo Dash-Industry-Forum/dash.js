@@ -72,7 +72,8 @@ function ThumbnailTracks(config) {
             baseURLController: baseURLController,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
+            errHandler: errHandler,
+            boxParser: boxParser
         });
 
         indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
