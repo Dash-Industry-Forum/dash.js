@@ -178,9 +178,7 @@ function OfflineDownload(config) {
                     events: events,
                     debug: debug,
                     timelineConverter: timelineConverter,
-                    requestModifier: requestModifier
-                });
-                stream.setConfig({
+                    requestModifier: requestModifier,
                     adapter: adapter,
                     errHandler: errHandler,
                     baseURLController: baseURLController,

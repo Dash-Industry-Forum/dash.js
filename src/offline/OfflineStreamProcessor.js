@@ -48,10 +48,10 @@ function OfflineStreamProcessor(config) {
     const timelineConverter = config.timelineConverter;
     const constants = config.constants;
     const requestModifier = config.requestModifier;
+    const manifestId = config.id;
+    const completedCb = config.completed;
 
     let instance,
-        manifestId,
-        completedCb,
         adapter,
         logger,
         indexHandler,
@@ -128,9 +128,6 @@ function OfflineStreamProcessor(config) {
     }
 
     function setup() {
-        manifestId = config.id;
-        completedCb = config.completed;
-
         resetInitialSettings();
         logger = debug.getLogger(instance);
         eventBus.on(events.STREAM_COMPLETED, onStreamCompleted, instance);

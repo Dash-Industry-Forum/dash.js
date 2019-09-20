@@ -35,9 +35,9 @@ import FragmentRequest from './../../streaming/vo/FragmentRequest';
  * @description Manages HTTP segments request.
  */
 function OfflineDownloaderRequestRule() {
-    let instance;
-    let _indexHandler;
-    let _fragmentModel;
+    let instance,
+        _indexHandler,
+        _fragmentModel;
 
     function initialize(indexHandler, fragmentModel) {
         _indexHandler = indexHandler;

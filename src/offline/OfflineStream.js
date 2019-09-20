@@ -45,32 +45,27 @@ function OfflineStream(config) {
     const debug = config.debug;
     const timelineConverter = config.timelineConverter;
     const requestModifier = config.requestModifier;
+    const adapter = config.adapter;
+    const errHandler = config.errHandler;
+    const baseURLController = config.baseURLController;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const offlineStoreController = config.offlineStoreController;
+    const settings = config.settings;
+    const dashMetrics = config.dashMetrics;
+    const manifestId = config.id;
+    const startedCb = config.started;
+    const finishedCb = config.finished;
 
     let instance,
-        manifestId,
-        startedCb,
-        finishedCb,
-        adapter,
-        baseURLController,
-        mediaPlayerModel,
-        offlineStreamProcessor,
         offlineStreamProcessors,
-        offlineStoreController,
         startedOfflineStreamProcessors,
         finishedOfflineStreamProcessors,
-        errHandler,
         streamInfo,
         availableSegments,
-        allMediasInfosList,
-        settings,
-        dashMetrics;
+        allMediasInfosList;
 
     function setup() {
         resetInitialSettings();
-
-        manifestId = config.id;
-        startedCb = config.started;
-        finishedCb = config.finished;
     }
 
     /**
@@ -84,38 +79,6 @@ function OfflineStream(config) {
         startedOfflineStreamProcessors = 0;
         finishedOfflineStreamProcessors = 0;
         allMediasInfosList = [];
-    }
-
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
-
-        if (config.baseURLController) {
-            baseURLController = config.baseURLController;
-        }
-
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
-        }
-
-        if (config.offlineStoreController) {
-            offlineStoreController = config.offlineStoreController;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
-        }
-
-        if (config.dashMetrics) {
-            dashMetrics = config.dashMetrics;
-        }
     }
 
     /**
@@ -384,10 +347,8 @@ function OfflineStream(config) {
 
     instance = {
         initialize: initialize,
-        setConfig: setConfig,
         getDownloadableRepresentations: getDownloadableRepresentations,
         initializeAllMediasInfoList: initializeAllMediasInfoList,
-        offlineStreamProcessor: offlineStreamProcessor,
         getStreamInfo: getStreamInfo,
         stopOfflineStreamProcessors: stopOfflineStreamProcessors,
         resumeOfflineStreamProcessors: resumeOfflineStreamProcessors,
