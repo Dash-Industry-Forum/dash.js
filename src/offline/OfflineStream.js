@@ -42,6 +42,7 @@ function OfflineStream(config) {
     const eventBus = config.eventBus;
     const events = config.events;
     const constants = config.constants;
+    const dashConstants = config.dashConstants;
     const debug = config.debug;
     const timelineConverter = config.timelineConverter;
     const requestModifier = config.requestModifier;
@@ -55,6 +56,7 @@ function OfflineStream(config) {
     const manifestId = config.id;
     const startedCb = config.started;
     const finishedCb = config.finished;
+    const urlUtils = config.urlUtils;
 
     let instance,
         offlineStreamProcessors,
@@ -72,7 +74,6 @@ function OfflineStream(config) {
      * Reset
      */
     function resetInitialSettings() {
-        offlineStreamProcessors = [];
         availableSegments = NaN;
         streamInfo = null;
         offlineStreamProcessors = [];
@@ -217,8 +218,10 @@ function OfflineStream(config) {
             events: events,
             eventBus: eventBus,
             constants: constants,
+            dashConstants: dashConstants,
             timelineConverter: timelineConverter,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            urlUtils: urlUtils
         });
         streamProcessor.setConfig({
             type: mediaInfo.type,
@@ -246,7 +249,7 @@ function OfflineStream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        let sp = e.sender.getStreamProcessor();
+        let sp = e.sender;
         if (sp.getStreamInfo() !== streamInfo) {
             return;
         }
@@ -298,16 +301,16 @@ function OfflineStream(config) {
      * @returns {number} Download progression
      */
     function getDownloadProgression() {
-        let getDownloadedSegments = 0;
+        let downloadedSegments = 0;
 
         if (isNaN(availableSegments)) {
             setAvailableSegments();
         }
 
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
-            getDownloadedSegments = getDownloadedSegments + offlineStreamProcessors[i].getDownloadedSegments();
+            downloadedSegments += offlineStreamProcessors[i].getDownloadedSegments();
         }
-        return getDownloadedSegments / availableSegments;
+        return downloadedSegments / availableSegments;
     }
 
     /**
@@ -318,7 +321,7 @@ function OfflineStream(config) {
         //TODO compter par taille de segments et non par le nombre
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             if (offlineStreamProcessors[i].getAvailableSegmentsNumber()) {
-                availableSegments = availableSegments +  offlineStreamProcessors[i].getAvailableSegmentsNumber();
+                availableSegments += offlineStreamProcessors[i].getAvailableSegmentsNumber();
             } else {    //format différent
                 availableSegments = 0;
             }

@@ -47,9 +47,11 @@ function OfflineStreamProcessor(config) {
     const debug = config.debug;
     const timelineConverter = config.timelineConverter;
     const constants = config.constants;
+    const dashConstants = config.dashConstants;
     const requestModifier = config.requestModifier;
     const manifestId = config.id;
     const completedCb = config.completed;
+    const urlUtils = config.urlUtils;
 
     let instance,
         adapter,
@@ -154,10 +156,6 @@ function OfflineStreamProcessor(config) {
         download();
     }
 
-    function getStreamProcessor() {
-        return instance;
-    }
-
     function onStreamCompleted(e) {
         if (e.fragmentModel !== fragmentModel) {
             return;
@@ -200,7 +198,11 @@ function OfflineStreamProcessor(config) {
             timelineConverter: timelineConverter,
             settings: settings,
             dashMetrics: dashMetrics,
-            eventBus: eventBus
+            eventBus: eventBus,
+            events: events,
+            debug: debug,
+            dashConstants: dashConstants,
+            urlUtils: urlUtils
         });
 
         let fragmentLoader = FragmentLoader(context).create({
@@ -209,14 +211,18 @@ function OfflineStreamProcessor(config) {
             requestModifier: requestModifier,
             settings: settings,
             dashMetrics: dashMetrics,
-            eventBus: eventBus
+            eventBus: eventBus,
+            events: events,
+            dashConstants: dashConstants,
+            urlUtils: urlUtils
         });
 
         fragmentModel = FragmentModel(context).create({
             dashMetrics: dashMetrics,
             fragmentLoader: fragmentLoader,
             eventBus: eventBus,
-            events: events
+            events: events,
+            debug: debug
         });
 
         indexHandler.initialize(instance);
@@ -228,19 +234,11 @@ function OfflineStreamProcessor(config) {
             getInitRequest();
         }
 
-        updateData();
-    }
-
-    function getIndexHandler() {
-        return indexHandler;
+        updateRepresentation(mediaInfo);
     }
 
     function getFragmentModel() {
         return fragmentModel;
-    }
-
-    function updateData() {
-        updateRepresentation(mediaInfo);
     }
 
     /**
@@ -255,7 +253,6 @@ function OfflineStreamProcessor(config) {
         let initRequest = indexHandler.getInitRequest(currentVoRepresentation);
         return fragmentModel.executeRequest(initRequest);
     }
-
 
     /**
      * Start download
@@ -323,14 +320,6 @@ function OfflineStreamProcessor(config) {
         eventBus.trigger(events.DATA_UPDATE_COMPLETED, {sender: instance, currentRepresentation: currentVoRepresentation});
     }
 
-    function getRepresentation() {
-        return currentVoRepresentation;
-    }
-
-    function getCurrentRepresentationInfo() {
-        return currentVoRepresentation ? adapter.convertDataToRepresentationInfo(currentVoRepresentation) : null;
-    }
-
     function getStreamInfo() {
         return stream ? stream.getStreamInfo() : null;
     }
@@ -348,7 +337,7 @@ function OfflineStreamProcessor(config) {
     }
 
     function getAvailableSegmentsNumber() {
-        return getRepresentation().availableSegmentsNumber;
+        return currentVoRepresentation.availableSegmentsNumber;
     }
 
     function getDownloadedSegments() {
@@ -363,7 +352,6 @@ function OfflineStreamProcessor(config) {
         bitrate = null;
         updating = false;
         currentVoRepresentation = NaN;
-        downloadedSegments = null;
         type = null;
         stream = null;
     }
@@ -384,15 +372,11 @@ function OfflineStreamProcessor(config) {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
-        getIndexHandler: getIndexHandler,
-        getCurrentRepresentationInfo: getCurrentRepresentationInfo,
         getFragmentModel: getFragmentModel,
         getStreamInfo: getStreamInfo,
         getMediaInfo: getMediaInfo,
         getType: getType,
         isUpdating: isUpdating,
-        getRepresentation: getRepresentation,
-        getStreamProcessor: getStreamProcessor,
         start: start,
         stop: stop,
         resume: resume,

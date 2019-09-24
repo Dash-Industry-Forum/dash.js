@@ -29,22 +29,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
-import DashConstants from '../dash/constants/DashConstants';
 import URLLoader from './net/URLLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
-import EventBus from './../core/EventBus';
-import Events from './../core/events/Events';
 import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
-import URLUtils from './utils/URLUtils';
 
 function FragmentLoader(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = config.eventBus || EventBus(context).getInstance();
-    const urlUtils = URLUtils(context).getInstance();
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const urlUtils = config.urlUtils;
 
     let instance,
         urlLoader;
@@ -59,14 +56,14 @@ function FragmentLoader(config) {
             urlUtils: urlUtils,
             constants: Constants,
             boxParser: config.boxParser,
-            dashConstants: DashConstants
+            dashConstants: config.dashConstants
         });
     }
 
     function checkForExistence(request) {
         const report = function (success) {
             eventBus.trigger(
-                Events.CHECK_FOR_EXISTENCE_COMPLETED, {
+                events.CHECK_FOR_EXISTENCE_COMPLETED, {
                     request: request,
                     exists: success
                 }
@@ -91,7 +88,7 @@ function FragmentLoader(config) {
 
     function load(request) {
         const report = function (data, error) {
-            eventBus.trigger(Events.LOADING_COMPLETED, {
+            eventBus.trigger(events.LOADING_COMPLETED, {
                 request: request,
                 response: data || null,
                 error: error || null,
@@ -103,12 +100,12 @@ function FragmentLoader(config) {
             urlLoader.load({
                 request: request,
                 progress: function (event) {
-                    eventBus.trigger(Events.LOADING_PROGRESS, {
+                    eventBus.trigger(events.LOADING_PROGRESS, {
                         request: request,
                         stream: event.stream
                     });
                     if (event.data) {
-                        eventBus.trigger(Events.LOADING_DATA_PROGRESS, {
+                        eventBus.trigger(events.LOADING_DATA_PROGRESS, {
                             request: request,
                             response: event.data || null,
                             error: null,
@@ -131,7 +128,7 @@ function FragmentLoader(config) {
                 },
                 abort: function (request) {
                     if (request) {
-                        eventBus.trigger(Events.LOADING_ABANDONED, {request: request, mediaType: request.mediaType, sender: instance});
+                        eventBus.trigger(events.LOADING_ABANDONED, {request: request, mediaType: request.mediaType, sender: instance});
                     }
                 }
             });

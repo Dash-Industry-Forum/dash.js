@@ -1,4 +1,6 @@
 import SegmentsController from '../../src/dash/controllers/SegmentsController';
+import DashConstants from '../../src/dash/constants/DashConstants';
+
 import ObjectsHelper from './helpers/ObjectsHelper';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -22,7 +24,8 @@ describe('SegmentsController', function () {
         dashMetrics: dashMetricsMock,
         mediaPlayerModel: mediaPlayerModel,
         errHandler: errHandler,
-        baseURLController: baseURLController
+        baseURLController: baseURLController,
+        dashConstants: DashConstants
     }, false);
 
     segmentsController.initialize();

@@ -52,8 +52,10 @@ function OfflineDownload(config) {
     const manifestUpdater = config.manifestUpdater;
     const baseURLController = config.baseURLController;
     const constants = config.constants;
+    const dashConstants = config.dashConstants;
     const timelineConverter = config.timelineConverter;
     const requestModifier = config.requestModifier;
+    const urlUtils = config.urlUtils;
 
     const context = this.context;
 
@@ -174,6 +176,7 @@ function OfflineDownload(config) {
                     started: onDownloadingStarted,
                     finished: onDownloadingFinished,
                     constants: constants,
+                    dashConstants: dashConstants,
                     eventBus: eventBus,
                     events: events,
                     debug: debug,
@@ -185,7 +188,8 @@ function OfflineDownload(config) {
                     mediaPlayerModel: mediaPlayerModel,
                     offlineStoreController: offlineStoreController,
                     settings: settings,
-                    dashMetrics: dashMetrics
+                    dashMetrics: dashMetrics,
+                    urlUtils: urlUtils
                 });
                 streams.push(stream);
 

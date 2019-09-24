@@ -28,13 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
 import DashJSError from '../streaming/vo/DashJSError';
-import Events from '../core/events/Events';
-import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import URLLoader from '../streaming/net/URLLoader';
 import Errors from '../core/errors/Errors';
@@ -42,7 +38,6 @@ import Errors from '../core/errors/Errors';
 function SegmentBaseLoader() {
 
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
 
     let instance,
         logger,
@@ -53,14 +48,14 @@ function SegmentBaseLoader() {
         settings,
         mediaPlayerModel,
         urlLoader,
+        events,
+        eventBus,
         baseURLController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function initialize() {
-        requestModifier = RequestModifier(context).getInstance();
         urlLoader = URLLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
@@ -94,6 +89,22 @@ function SegmentBaseLoader() {
 
         if (config.boxParser) {
             boxParser = config.boxParser;
+        }
+
+        if (config.events) {
+            events = config.events;
+        }
+
+        if (config.eventBus) {
+            eventBus = config.eventBus;
+        }
+
+        if (config.debug) {
+            logger = config.debug.getLogger(instance);
+        }
+
+        if (config.requestModifier) {
+            requestModifier = config.requestModifier;
         }
     }
 
@@ -132,7 +143,7 @@ function SegmentBaseLoader() {
                 representation.range = initRange;
                 // note that we don't explicitly set rep.initialization as this
                 // will be computed when all BaseURLs are resolved later
-                eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+                eventBus.trigger(events.INITIALIZATION_LOADED, {representation: representation});
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
                 loadInitialization(representation, info);
@@ -140,7 +151,7 @@ function SegmentBaseLoader() {
         };
 
         const onerror = function () {
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {representation: representation});
+            eventBus.trigger(events.INITIALIZATION_LOADED, {representation: representation});
         };
 
         urlLoader.load({request: request, success: onload, error: onerror});
@@ -308,9 +319,9 @@ function SegmentBaseLoader() {
 
     function onLoaded(segments, representation, type) {
         if (segments) {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
+            eventBus.trigger(events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
+            eventBus.trigger(events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
         }
     }
 

@@ -73,6 +73,11 @@ function URLUtils() {
         regexUtils.push({regex: regex, utils: utils});
     }
 
+    function internalCall(functionName, url, baseUrl) {
+        let utils = getUtils(baseUrl || url);
+        return utils && typeof (utils[functionName]) === 'function' ? utils[functionName](url, baseUrl) : defaultURLUtils[functionName](url, baseUrl);
+    }
+
     /**
      * Returns a string that contains the Base URL of a URL, if determinable.
      * @param {string} url - full url
@@ -81,7 +86,7 @@ function URLUtils() {
      * @instance
      */
     function parseBaseUrl(url) {
-        return getUtils(url).parseBaseUrl(url);
+        return internalCall('parseBaseUrl', url);
     }
 
     /**
@@ -93,7 +98,7 @@ function URLUtils() {
      * @instance
      */
     function parseOrigin(url) {
-        return getUtils(url).parseOrigin(url);
+        return internalCall('parseOrigin', url);
     }
 
     /**
@@ -105,7 +110,7 @@ function URLUtils() {
      * @instance
      */
     function removeHostname(url) {
-        return getUtils(url).removeHostname(url);
+        return internalCall('removeHostname', url);
     }
 
     /**
@@ -116,7 +121,7 @@ function URLUtils() {
      * @instance
      */
     function parseScheme(url) {
-        return getUtils(url).parseScheme(url);
+        return internalCall('parseScheme', url);
     }
 
     /**
@@ -127,7 +132,7 @@ function URLUtils() {
      * @instance
      */
     function isRelative(url) {
-        return getUtils(url).isRelative(url);
+        return internalCall('isRelative', url);
     }
 
     /**
@@ -138,7 +143,7 @@ function URLUtils() {
      * @instance
      */
     function isPathAbsolute(url) {
-        return getUtils(url).isPathAbsolute(url);
+        return internalCall('isPathAbsolute', url);
     }
 
     /**
@@ -149,7 +154,7 @@ function URLUtils() {
      * @instance
      */
     function isSchemeRelative(url) {
-        return getUtils(url).isSchemeRelative(url);
+        return internalCall('isSchemeRelative', url);
     }
 
     /**
@@ -161,7 +166,7 @@ function URLUtils() {
      * @instance
      */
     function isHTTPURL(url) {
-        return getUtils(url).isHTTPURL(url);
+        return internalCall('isHTTPURL', url);
     }
 
     /**
@@ -172,7 +177,7 @@ function URLUtils() {
      * @instance
      */
     function isHTTPS(url) {
-        return getUtils(url).isHTTPS(url);
+        return internalCall('isHTTPS', url);
     }
 
     /**
@@ -184,7 +189,7 @@ function URLUtils() {
      * @instance
      */
     function resolve(url, baseUrl) {
-        return getUtils(baseUrl).resolve(url, baseUrl);
+        return internalCall('resolve', url, baseUrl);
     }
 
     setup();

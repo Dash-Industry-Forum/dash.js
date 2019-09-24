@@ -56,18 +56,20 @@ function OfflineController() {
         baseURLController,
         mediaPlayerModel,
         offlineStoreController,
-        offlineUtlUtils,
+        urlUtils,
+        offlineUrlUtils,
         settings,
         dashMetrics,
         events,
         eventBus,
         constants,
+        dashConstants,
         timelineConverter,
         requestModifier,
         errHandler;
 
     function setup() {
-        offlineUtlUtils = OfflineUrlUtils(context).getInstance();
+        offlineUrlUtils = OfflineUrlUtils(context).getInstance();
 
         downloads = [];
     }
@@ -130,12 +132,17 @@ function OfflineController() {
             constants = config.constants;
         }
 
+        if (config.dashConstants) {
+            dashConstants = config.dashConstants;
+        }
+
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
 
         if (config.urlUtils) {
-            config.urlUtils.registerUrlRegex(offlineUtlUtils.getRegex(), offlineUtlUtils);
+            urlUtils = config.urlUtils;
+            urlUtils.registerUrlRegex(offlineUrlUtils.getRegex(), offlineUrlUtils);
         }
 
         if (config.requestModifier) {
@@ -181,8 +188,10 @@ function OfflineController() {
                 debug: debug,
                 dashMetrics: dashMetrics,
                 constants: constants,
+                dashConstants: dashConstants,
                 timelineConverter: timelineConverter,
-                requestModifier: requestModifier
+                requestModifier: requestModifier,
+                urlUtils: urlUtils
             });
 
             downloads.push(download);

@@ -30,7 +30,6 @@
  */
 
 import OfflineConstants from '../constants/OfflineConstants';
-import DefaultURLUtils from './../../streaming/utils/DefaultURLUtils';
 
 /**
  * @module OfflineUrlUtils
@@ -41,48 +40,11 @@ import DefaultURLUtils from './../../streaming/utils/DefaultURLUtils';
  */
 function OfflineUrlUtils() {
 
-    let defaultURLUtils;
-    const context = this.context;
-
     function setup() {
-        defaultURLUtils = DefaultURLUtils(context).getInstance();
     }
 
     function getRegex() {
         return OfflineConstants.OFFLINE_URL_REGEX;
-    }
-
-    /*
-     * -------------------
-     * DEFAULT BEHAVIOUR
-     * -------------------
-     */
-    function parseBaseUrl(url) {
-        return defaultURLUtils.parseBaseUrl(url);
-    }
-
-    function parseOrigin(url) {
-        return defaultURLUtils.parseOrigin(url);
-    }
-
-    function parseScheme(url) {
-        return defaultURLUtils.parseScheme(url);
-    }
-
-    function isSchemeRelative(url) {
-        return defaultURLUtils.isSchemeRelative(url);
-    }
-
-    function isHTTPURL(url) {
-        return defaultURLUtils.isHTTPURL(url);
-    }
-
-    function isHTTPS(url) {
-        return defaultURLUtils.isHTTPS(url);
-    }
-
-    function isPathAbsolute(url) {
-        return defaultURLUtils.isPathAbsolute(url);
     }
 
     /*
@@ -109,14 +71,7 @@ function OfflineUrlUtils() {
     setup();
     const instance = {
         getRegex:           getRegex,
-        parseBaseUrl:       parseBaseUrl,
-        parseOrigin:        parseOrigin,
-        parseScheme:        parseScheme,
         isRelative:         isRelative,
-        isPathAbsolute:     isPathAbsolute,
-        isSchemeRelative:   isSchemeRelative,
-        isHTTPURL:          isHTTPURL,
-        isHTTPS:            isHTTPS,
         removeHostname:     removeHostname,
         resolve:            resolve
     };

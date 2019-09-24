@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashConstants from '../constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import TimelineSegmentsGetter from '../utils/TimelineSegmentsGetter';
 import TemplateSegmentsGetter from '../utils/TemplateSegmentsGetter';
@@ -37,7 +36,6 @@ import SegmentBaseGetter from '../utils/SegmentBaseGetter';
 
 import SegmentBaseLoader from '../SegmentBaseLoader';
 import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader';
-
 
 function SegmentsController(config) {
     config = config || {};
@@ -49,6 +47,11 @@ function SegmentsController(config) {
     const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
     const boxParser = config.boxParser;
+    const events = config.events;
+    const eventBus = config.eventBus;
+    const debug = config.debug;
+    const requestModifier = config.requestModifier;
+    const dashConstants = config.dashConstants;
 
     let instance,
         getters,
@@ -63,7 +66,11 @@ function SegmentsController(config) {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler,
-            boxParser: boxParser
+            boxParser: boxParser,
+            eventBus: eventBus,
+            events: events,
+            debug: debug,
+            requestModifier: requestModifier
         });
     }
 
@@ -75,10 +82,10 @@ function SegmentsController(config) {
     function initialize(isDynamic) {
         segmentBaseLoader.initialize();
 
-        getters[DashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
     }
 
     function update(voRepresentation, type, hasInitialization, hasSegments) {
@@ -100,7 +107,7 @@ function SegmentsController(config) {
     }
 
     function getSegmentsGetter(representation) {
-        return representation ? representation.segments ? getters[DashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
+        return representation ? representation.segments ? getters[dashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
     }
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {

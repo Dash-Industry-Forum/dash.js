@@ -1,6 +1,11 @@
 import DashHandler from '../../src/dash/DashHandler';
 import Constants from '../../src/streaming/constants/Constants';
 import DashConstants from '../../src/dash/constants/DashConstants';
+import Settings from '../../src/core/Settings';
+import Events from '../../src/core/events/Events';
+import EventBus from '../../src/core/EventBus';
+import Debug from '../../src/core/Debug';
+import URLUtils from '../../src/streaming/utils/URLUtils';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
@@ -17,6 +22,8 @@ describe('DashHandler', function () {
     const context = {};
     const testType = Constants.VIDEO;
     const settings = Settings(context).getInstance();
+    const eventBus = EventBus(context).getInstance();
+    const debug = Debug(context).getInstance();
 
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
@@ -29,7 +36,13 @@ describe('DashHandler', function () {
         timelineConverter: timelineConverter,
         baseURLController: baseURLController,
         mediaPlayerModel: mediaPlayerModel,
-        dashMetrics: dashMetricsMock
+        dashMetrics: dashMetricsMock,
+        settings: settings,
+        eventBus: eventBus,
+        events: Events,
+        debug: debug,
+        dashConstants: DashConstants,
+        urlUtils: URLUtils(context).getInstance()
     };
 
     const dashHandler = DashHandler(context).create(config);

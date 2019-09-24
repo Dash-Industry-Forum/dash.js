@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
@@ -39,6 +40,9 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
+import Debug from '../core/Debug';
+import RequestModifier from './utils/RequestModifier';
+import URLUtils from '../streaming/utils/URLUtils';
 
 function StreamProcessor(config) {
 
@@ -91,7 +95,13 @@ function StreamProcessor(config) {
             errHandler: errHandler,
             settings: settings,
             streamInfo: getStreamInfo(),
-            boxParser: boxParser
+            boxParser: boxParser,
+            events: Events,
+            eventBus: eventBus,
+            debug: Debug(context).getInstance(),
+            requestModifier: RequestModifier(context).getInstance(),
+            dashConstants: DashConstants,
+            urlUtils: URLUtils(context).getInstance()
         });
 
         // initialize controllers

@@ -47,13 +47,14 @@ function FragmentController( config ) {
     const errHandler = config.errHandler;
     const mediaPlayerModel = config.mediaPlayerModel;
     const dashMetrics = config.dashMetrics;
+    const debug = Debug(context).getInstance();
 
     let instance,
         logger,
         fragmentModels;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = debug.getLogger(instance);
         resetInitialSettings();
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
         eventBus.on(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, instance);
@@ -70,8 +71,15 @@ function FragmentController( config ) {
                     errHandler: errHandler,
                     requestModifier: RequestModifier(context).getInstance(),
                     settings: config.settings,
-                    boxParser: config.boxParser
-                })
+                    boxParser: config.boxParser,
+                    eventBus: eventBus,
+                    events: Events,
+                    dashConstants: config.dashConstants,
+                    urlUtils: config.urlUtils
+                }),
+                debug: debug,
+                eventBus: eventBus,
+                events: Events
             });
 
             fragmentModels[type] = model;

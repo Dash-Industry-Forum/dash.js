@@ -29,12 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import FragmentRequest from '../vo/FragmentRequest';
-import Debug from '../../core/Debug';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
 const FRAGMENT_MODEL_EXECUTED = 'executed';
@@ -44,11 +40,11 @@ const FRAGMENT_MODEL_FAILED = 'failed';
 function FragmentModel(config) {
 
     config = config || {};
-    const context = this.context;
-    const eventBus = config.eventBus || EventBus(context).getInstance();
-    const events = config.events || Events;
+    const eventBus = config.eventBus;
+    const events = config.events;
     const dashMetrics = config.dashMetrics;
     const fragmentLoader = config.fragmentLoader;
+    const debug = config.debug;
 
     let instance,
         logger,
@@ -57,7 +53,7 @@ function FragmentModel(config) {
         loadingRequests;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = debug.getLogger(instance);
         resetInitialSettings();
         eventBus.on(events.LOADING_COMPLETED, onLoadingCompleted, instance);
         eventBus.on(events.LOADING_DATA_PROGRESS, onLoadingInProgress, instance);
@@ -207,7 +203,7 @@ function FragmentModel(config) {
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
                 logger.debug('executeRequest trigger STREAM_COMPLETED');
-                eventBus.trigger(Events.STREAM_COMPLETED, {
+                eventBus.trigger(events.STREAM_COMPLETED, {
                     request: request,
                     fragmentModel: this
                 });
