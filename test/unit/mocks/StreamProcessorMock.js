@@ -124,10 +124,6 @@ function StreamProcessorMock (testType, streamInfo) {
         return this.bufferController.getIsBufferingCompleted();
     };
 
-    this.getFragmentController = function () {
-        return null;
-    };
-
     this.switchInitData = function () {};
 
     this.reset = function () {};

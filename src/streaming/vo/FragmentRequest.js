@@ -28,6 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+
 /**
  * @class
  * @ignore
@@ -57,6 +60,10 @@ class FragmentRequest {
         this.delayLoadingTime = NaN;
         this.responseType = 'arraybuffer';
         this.representationId = null;
+    }
+
+    isInitializationRequest() {
+        return (this.type && this.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 }
 

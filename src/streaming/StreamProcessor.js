@@ -205,10 +205,6 @@ function StreamProcessor(config) {
         return indexHandler;
     }
 
-    function getFragmentController() {
-        return stream ? stream.getFragmentController() : null;
-    }
-
     function getBuffer() {
         return bufferController.getBuffer();
     }
@@ -416,7 +412,6 @@ function StreamProcessor(config) {
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
         getLiveEdgeFinder: getLiveEdgeFinder,
-        getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
         getIndexHandler: getIndexHandler,
         getRepresentationInfo: getRepresentationInfo,

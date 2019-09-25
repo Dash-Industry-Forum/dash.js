@@ -191,7 +191,6 @@ function ScheduleController(config) {
             bufferLevelRule.execute(streamProcessor, streamController.isTrackTypePresent(Constants.VIDEO))) {
 
             const getNextFragment = function () {
-                const fragmentController = streamProcessor.getFragmentController();
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!bufferResetInProgress)) {
                     logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     if (switchTrack) {
@@ -207,7 +206,7 @@ function ScheduleController(config) {
                 } else {
                     const replacement = replaceRequestArray.shift();
 
-                    if (fragmentController.isInitializationRequest(replacement)) {
+                    if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
                         streamProcessor.switchInitData(replacement.representationId);
                     } else {
