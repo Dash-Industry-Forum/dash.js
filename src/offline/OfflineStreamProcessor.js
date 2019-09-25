@@ -191,12 +191,8 @@ function OfflineStreamProcessor(config) {
     */
     function initialize() {
         indexHandler = DashHandler(context).create({
-            mediaPlayerModel: mediaPlayerModel,
-            mimeType: mimeType,
             baseURLController: baseURLController,
-            errHandler: errHandler,
             timelineConverter: timelineConverter,
-            settings: settings,
             dashMetrics: dashMetrics,
             eventBus: eventBus,
             events: events,
