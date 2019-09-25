@@ -54,6 +54,7 @@ function DashHandler(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
+    const type = config.type;
 
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
@@ -65,7 +66,7 @@ function DashHandler(config) {
         lastSegment,
         requestedTime,
         currentTime,
-        streamProcessor,
+        isDynamicManifest,
         segmentsController;
 
     function setup() {
@@ -78,27 +79,13 @@ function DashHandler(config) {
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
 
-    function initialize(StreamProcessor) {
-        streamProcessor = StreamProcessor;
-
-        segmentsController.initialize(isDynamic());
+    function initialize(isDynamic) {
+        isDynamicManifest = isDynamic;
+        segmentsController.initialize(isDynamic);
     }
 
     function getType() {
-        return streamProcessor ? streamProcessor.getType() : null;
-    }
-
-    function isDynamic() {
-        const streamInfo = streamProcessor ? streamProcessor.getStreamInfo() : null;
-        return streamInfo ? streamInfo.manifestInfo.isDynamic : null;
-    }
-
-    function getMediaInfo() {
-        return streamProcessor ? streamProcessor.getMediaInfo() : null;
-    }
-
-    function getStreamProcessor() {
-        return streamProcessor;
+        return type;
     }
 
     function setCurrentTime(value) {
@@ -118,7 +105,6 @@ function DashHandler(config) {
         resetIndex();
         currentTime = 0;
         requestedTime = null;
-        streamProcessor = null;
         segmentsController = null;
     }
 
@@ -155,21 +141,18 @@ function DashHandler(config) {
         return true;
     }
 
-    function generateInitRequest(representation, mediaType) {
-        if (!representation) return null;
-
+    function generateInitRequest(mediaInfo, representation, mediaType) {
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
-        const isDynamicStream = isDynamic();
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
         request.range = representation.range;
-        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamicStream);
-        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamicStream);
+        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamicManifest);
+        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamicManifest);
         request.quality = representation.index;
-        request.mediaInfo = getMediaInfo();
+        request.mediaInfo = mediaInfo;
         request.representationId = representation.id;
 
         if (setRequestUrl(request, representation.initialization, representation)) {
@@ -178,8 +161,10 @@ function DashHandler(config) {
         }
     }
 
-    function getInitRequest(representation) {
-        return generateInitRequest(representation, getType());
+    function getInitRequest(mediaInfo, representation) {
+        if (!representation) return null;
+        const request = generateInitRequest(mediaInfo, representation, getType());
+        return request;
     }
 
     function setExpectedLiveEdge(liveEdge) {
@@ -193,7 +178,7 @@ function DashHandler(config) {
         let error;
 
         if (voRepresentation) {
-            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
+            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamicManifest);
 
             if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
                 error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
@@ -201,9 +186,9 @@ function DashHandler(config) {
                 return;
             }
 
-            if (isDynamic()) {
-                setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
-            }
+        if (isDynamicManifest) {
+            setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
+        }
 
             if (!keepIdx) {
                 resetIndex();
@@ -217,7 +202,7 @@ function DashHandler(config) {
         }
     }
 
-    function getRequestForSegment(segment) {
+    function getRequestForSegment(mediaInfo, segment) {
         if (segment === null || segment === undefined) {
             return null;
         }
@@ -245,7 +230,7 @@ function DashHandler(config) {
         request.wallStartTime = segment.wallStartTime;
         request.quality = representation.index;
         request.index = segment.availabilityIdx;
-        request.mediaInfo = getMediaInfo();
+        request.mediaInfo = mediaInfo;
         request.adaptationIndex = representation.adaptation.index;
         request.representationId = representation.id;
 
@@ -259,7 +244,7 @@ function DashHandler(config) {
 
         if (!representation) return isFinished;
 
-        if (!isDynamic()) {
+        if (!isDynamicManifest) {
             if (segmentIndex >= representation.availableSegmentsNumber) {
                 isFinished = true;
             }
@@ -276,7 +261,7 @@ function DashHandler(config) {
         return isFinished;
     }
 
-    function getSegmentRequestForTime(representation, time, options) {
+    function getSegmentRequestForTime(mediaInfo, representation, time, options) {
         let request = null;
 
         if (!representation || !representation.segmentInfoType) {
@@ -297,28 +282,32 @@ function DashHandler(config) {
             segmentIndex = segment.availabilityIdx;
             lastSegment = segment;
             logger.debug('Index for time ' + time + ' is ' + segmentIndex);
-            request = getRequestForSegment(segment);
+            request = getRequestForSegment(mediaInfo, segment);
         } else {
             const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
             if (finished) {
                 request = new FragmentRequest();
                 request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
-                request.mediaType = getType();
-                request.mediaInfo = getMediaInfo();
+                request.mediaType = type;
+                request.mediaInfo = mediaInfo;
                 logger.debug('Signal complete in getSegmentRequestForTime');
             }
         }
 
         if (keepIdx && idx >= 0) {
-            segmentIndex = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic() ? segmentIndex : idx;
+            segmentIndex = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamicManifest ? segmentIndex : idx;
         }
 
         return request;
     }
 
-    function getNextSegmentRequest(representation) {
+    function getNextSegmentRequest(mediaInfo, representation) {
         let request = null;
+
+        if (!representation || !representation.segmentInfoType) {
+            return null;
+        }
 
         requestedTime = null;
 
@@ -332,7 +321,7 @@ function DashHandler(config) {
             return null;
         } else {
             if (segment) {
-                request = getRequestForSegment(segment);
+                request = getRequestForSegment(mediaInfo, segment);
                 segmentIndex = segment.availabilityIdx;
             } else {
                 segmentIndex = indexToRequest;
@@ -341,7 +330,7 @@ function DashHandler(config) {
 
         if (segment) {
             lastSegment = segment;
-            request = getRequestForSegment(segment);
+            request = getRequestForSegment(mediaInfo, segment);
         } else {
             const finished = isMediaFinished(representation, segment);
             if (finished) {
@@ -349,7 +338,7 @@ function DashHandler(config) {
                 request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
                 request.mediaType = getType();
-                request.mediaInfo = getMediaInfo();
+                request.mediaInfo = mediaInfo;
                 logger.debug('Signal complete');
             }
         }
@@ -358,7 +347,7 @@ function DashHandler(config) {
     }
 
     function isEndlessMedia(representation) {
-        return !isDynamic() || (isDynamic() && isFinite(representation ? representation.adaptation.period.duration : undefined));
+        return !isDynamicManifest || (isDynamicManifest && isFinite(representation.adaptation.period.duration));
     }
 
     function onInitializationLoaded(e) {
@@ -386,7 +375,7 @@ function DashHandler(config) {
 
             seg = getTimeBasedSegment(
                 timelineConverter,
-                isDynamic(),
+                isDynamicManifest,
                 representation,
                 s.startTime,
                 s.duration,
@@ -407,7 +396,7 @@ function DashHandler(config) {
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
 
-            if (isDynamic()) {
+            if (isDynamicManifest) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime - 8;
                 // the last segment is the Expected, not calculated, live edge.
@@ -425,7 +414,6 @@ function DashHandler(config) {
     instance = {
         initialize: initialize,
         getType: getType, //need to be public in order to be used by logger
-        getStreamProcessor: getStreamProcessor,
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,

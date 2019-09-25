@@ -176,7 +176,7 @@ describe('RepresentationController', function () {
                 let spy = chai.spy();
                 eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
 
-                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: { getStreamProcessor() { return streamProcessor;}}, representation: voRepresentations[1]});
+                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: { getType() { return testType;}}, representation: voRepresentations[1]});
                 expect(spy).to.have.been.called.exactly(1);
 
                 eventBus.off(Events.DATA_UPDATE_COMPLETED, spy);

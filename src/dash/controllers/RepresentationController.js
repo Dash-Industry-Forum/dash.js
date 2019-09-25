@@ -260,7 +260,7 @@ function RepresentationController() {
     }
 
     function onRepresentationUpdated(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor || !isUpdating()) return;
+        if (e.sender.getType() !== streamProcessor.getType() || !isUpdating()) return;
 
         if (e.error) {
             eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, error: e.error});

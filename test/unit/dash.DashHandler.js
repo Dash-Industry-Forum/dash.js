@@ -42,7 +42,7 @@ describe('DashHandler', function () {
         const representation = voHelper.getDummyRepresentation(testType);
 
         // Act
-        const initRequest = dashHandler.getInitRequest(representation);
+        const initRequest = dashHandler.getInitRequest(streamProcessor.getMediaInfo(), representation);
 
         // Assert
         expect(initRequest).to.exist; // jshint ignore:line

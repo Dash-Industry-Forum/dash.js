@@ -83,6 +83,7 @@ function StreamProcessor(config) {
 
     function initialize(mediaSource) {
         indexHandler = DashHandler(context).create({
+            type: type,
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
@@ -93,7 +94,7 @@ function StreamProcessor(config) {
         });
 
         // initialize controllers
-        indexHandler.initialize(instance);
+        indexHandler.initialize(playbackController.getIsDynamic());
         abrController.registerStreamType(type, instance);
 
         fragmentModel = stream.getFragmentController().getModel(type);
@@ -383,7 +384,7 @@ function StreamProcessor(config) {
 
         const representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
 
-        return indexHandler ? indexHandler.getInitRequest(representation) : null;
+        return indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representation) : null;
     }
 
     function getFragmentRequest(representationInfo, time, options) {
@@ -395,9 +396,9 @@ function StreamProcessor(config) {
             // if time and options are undefined, it means the next segment is requested
             // otherwise, the segment at this specific time is requested.
             if (time !== undefined && options !== undefined) {
-                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
+                fragRequest = indexHandler.getSegmentRequestForTime(getMediaInfo(), representation, time, options);
             } else {
-                fragRequest = indexHandler.getNextSegmentRequest(representation);
+                fragRequest = indexHandler.getNextSegmentRequest(getMediaInfo(), representation);
             }
         }
 
