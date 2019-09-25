@@ -65,6 +65,7 @@ function StreamProcessor(config) {
     let textController = config.textController;
     let dashMetrics = config.dashMetrics;
     let settings = config.settings;
+    let boxParser = config.boxParser;
 
     let instance,
         mediaInfo,
@@ -89,6 +90,7 @@ function StreamProcessor(config) {
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController,
             errHandler: errHandler,
             settings: settings,
@@ -97,6 +99,7 @@ function StreamProcessor(config) {
             events: Events,
             eventBus: eventBus,
             debug: Debug(context).getInstance(),
+            requestModifier: RequestModifier(context).getInstance(),
             dashConstants: DashConstants,
             urlUtils: URLUtils(context).getInstance()
         });

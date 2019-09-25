@@ -393,7 +393,8 @@ function Stream(config) {
             streamController: config.streamController,
             textController: textController,
             errHandler: errHandler,
-            settings: settings
+            settings: settings,
+            boxParser: boxParser
         });
 
         streamProcessor.initialize(mediaSource);
