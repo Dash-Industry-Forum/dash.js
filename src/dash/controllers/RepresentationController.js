@@ -153,7 +153,7 @@ function RepresentationController() {
 
         if ((realAdaptation === null || (realAdaptation.id != newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
             averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
-            bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo);
+            bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
             quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
         } else {
             quality = abrController.getQualityFor(type);
