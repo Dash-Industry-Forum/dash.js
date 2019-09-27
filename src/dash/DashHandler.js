@@ -38,7 +38,6 @@ import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
-import Representation from './vo/Representation';
 import {
     replaceIDForTemplate,
     unescapeDollarsInTemplate,
@@ -173,8 +172,8 @@ function DashHandler(config) {
     }
 
     function updateRepresentation(voRepresentation, keepIdx) {
-        const hasInitialization = Representation.hasInitialization(voRepresentation);
-        const hasSegments = Representation.hasSegments(voRepresentation);
+        const hasInitialization = voRepresentation.hasInitialization();
+        const hasSegments = voRepresentation.hasSegments(voRepresentation);
         let error;
 
         if (voRepresentation) {
@@ -404,7 +403,7 @@ function DashHandler(config) {
             }
         }
 
-        if (!Representation.hasInitialization(representation)) {
+        if (!representation.hasInitialization()) {
             return;
         }
 
