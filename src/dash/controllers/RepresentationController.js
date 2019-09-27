@@ -175,7 +175,7 @@ function RepresentationController() {
         }
 
         for (let i = 0; i < voAvailableRepresentations.length; i++) {
-            indexHandler.updateRepresentation(voAvailableRepresentations[i], true);
+            indexHandler.updateRepresentation(voAvailableRepresentations[i]);
         }
     }
 
@@ -249,7 +249,7 @@ function RepresentationController() {
             resetAvailabilityWindow();
 
             for (let i = 0; i < voAvailableRepresentations.length; i++) {
-                indexHandler.updateRepresentation(voAvailableRepresentations[i], true);
+                indexHandler.updateRepresentation(voAvailableRepresentations[i]);
             }
         };
 

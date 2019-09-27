@@ -171,7 +171,7 @@ function DashHandler(config) {
         dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
     }
 
-    function updateRepresentation(voRepresentation, keepIdx) {
+    function updateRepresentation(voRepresentation) {
         const hasInitialization = voRepresentation.hasInitialization();
         const hasSegments = voRepresentation.hasSegments(voRepresentation);
         let error;
@@ -185,12 +185,8 @@ function DashHandler(config) {
                 return;
             }
 
-        if (isDynamicManifest) {
-            setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
-        }
-
-            if (!keepIdx) {
-                resetIndex();
+            if (isDynamicManifest) {
+                setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
             }
 
             segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
