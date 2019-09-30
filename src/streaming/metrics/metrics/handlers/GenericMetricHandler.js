@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+ /**
+  * @ignore
+  */
 function GenericMetricHandler() {
 
     let instance,

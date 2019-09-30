@@ -31,7 +31,7 @@
 import EventsBase from '../core/events/EventsBase';
 /**
  * @class
- *
+ * @implements EventsBase
  */
 class MediaPlayerEvents extends EventsBase {
 
@@ -44,6 +44,7 @@ class MediaPlayerEvents extends EventsBase {
          * Triggered when playback will not start yet
          * as the MPD's availabilityStartTime is in the future.
          * Check delay property in payload to determine time before playback will start.
+         * @event MediaPlayerEvents#AST_IN_FUTURE
          */
         this.AST_IN_FUTURE = 'astInFuture';
 

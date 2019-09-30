@@ -36,6 +36,7 @@
  * applications to access.
  *
  * @interface SessionToken
+ * @ignore
  */
 
 class SessionToken {}

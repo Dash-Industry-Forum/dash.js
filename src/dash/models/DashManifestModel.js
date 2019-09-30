@@ -188,6 +188,10 @@ function DashManifestModel() {
         return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
+    function getAudioChannelConfigurationForRepresentation(representation) {
+        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+    }
+
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
@@ -530,7 +534,6 @@ function DashManifestModel() {
                         // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
                         // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
                         // exceeds @maxSegmentDuration
-                        //representation.segmentDuration = Math.min(segmentInfo.duration / representation.timescale, adaptation.period.mpd.maxSegmentDuration);
                         voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
@@ -749,7 +752,7 @@ function DashManifestModel() {
 
     function checkConfig() {
         if (!errHandler || !errHandler.hasOwnProperty('error')) {
-            throw new Error('setConfig function has to be called previously');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
@@ -812,7 +815,8 @@ function DashManifestModel() {
                     }
 
                     if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
-                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary);
+                        // toString is used to manage both regular and namespaced tags
+                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary.toString());
                     } else {
                         // From Cor.1: 'NOTE: this attribute is an alternative
                         // to specifying a complete XML element(s) in the Event.
@@ -1055,6 +1059,7 @@ function DashManifestModel() {
         getRolesForAdaptation: getRolesForAdaptation,
         getAccessibilityForAdaptation: getAccessibilityForAdaptation,
         getAudioChannelConfigurationForAdaptation: getAudioChannelConfigurationForAdaptation,
+        getAudioChannelConfigurationForRepresentation: getAudioChannelConfigurationForRepresentation,
         getAdaptationForIndex: getAdaptationForIndex,
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,

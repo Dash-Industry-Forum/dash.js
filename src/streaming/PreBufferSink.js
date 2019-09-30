@@ -36,6 +36,7 @@ import FactoryMaker from '../core/FactoryMaker';
  * The discharge() function is used to get the chunks out of the PreBuffer for adding to a real SourceBuffer.
  *
  * @class PreBufferSink
+ * @ignore
  * @implements FragmentSink
  */
 function PreBufferSink(onAppendedCallback) {

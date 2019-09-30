@@ -34,82 +34,13 @@ import FactoryMaker from '../../core/FactoryMaker';
 
 /**
  * @module ErrorHandler
+ * @ignore
  */
 function ErrorHandler() {
 
     let instance;
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
-
-    /**
-     * @param {number} err  "mediasource"|"mediakeys"
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function capabilityError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'capability', event: err});
-    }
-
-    /**
-     * @param {string} id "manifest"|"SIDX"|"content"|"initialization"|"xlink"
-     * @param {string} url ""
-     * @param {object} request {XMLHttpRequest instance}
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function downloadError(id, url, request) {
-        eventBus.trigger(Events.ERROR, {error: 'download', event: {id: id, url: url, request: request}});
-    }
-
-    /**
-     * @param {string} message ""
-     * @param {string} id "parse"|"nostreams"
-     * @param {obj} manifest {parsed manifest}
-     * @param {obj} err
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function manifestError(message, id, manifest, err) {
-        eventBus.trigger(Events.ERROR, {error: 'manifestError', event: {message: message, id: id, manifest: manifest, event: err}});
-    }
-
-    /**
-     * @param {string} message ''
-     * @param {string} id 'parse'
-     * @param {string} ccContent ''
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function timedTextError(message, id, ccContent) {
-        eventBus.trigger(Events.ERROR, {error: 'cc', event: {message: message, id: id, cc: ccContent}});
-    }
-
-    /**
-     * @param {string} err
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function mediaSourceError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'mediasource', event: err});
-    }
-
-    /**
-     * @param {string} err
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function mediaKeySessionError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'key_session', event: err});
-    }
-
-    /**
-     * @param {string} err
-     * @memberof module:ErrorHandler
-     * @deprecated
-     */
-    function mediaKeyMessageError(err) {
-        eventBus.trigger(Events.ERROR, {error: 'key_message', event: err});
-    }
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     /**
      * @param {object} err DashJSError with code, message and data attributes
@@ -120,13 +51,6 @@ function ErrorHandler() {
     }
 
     instance = {
-        capabilityError: capabilityError,
-        downloadError: downloadError,
-        manifestError: manifestError,
-        timedTextError: timedTextError,
-        mediaSourceError: mediaSourceError,
-        mediaKeySessionError: mediaKeySessionError,
-        mediaKeyMessageError: mediaKeyMessageError,
         error: error
     };
 

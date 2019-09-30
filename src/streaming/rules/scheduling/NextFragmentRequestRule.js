@@ -78,10 +78,6 @@ function NextFragmentRequestRule(config) {
                     }
                     range = playingRange;
                 }
-                if (time !== range.end) {
-                    logger.debug('Prior to making a request for time, NextFragmentRequestRule is aligning index handler\'s currentTime with bufferedRange.end for', mediaType, '.', time, 'was changed to', range.end);
-                    time = range.end;
-                }
             }
         }
 
@@ -92,7 +88,9 @@ function NextFragmentRequestRule(config) {
                 ignoreIsFinished: true
             });
         } else {
-            request = streamProcessor.getFragmentRequest(representationInfo, time, {
+            // Use time just whenever is strictly needed
+            request = streamProcessor.getFragmentRequest(representationInfo,
+                hasSeekTarget || bufferIsDivided ? time : undefined, {
                 keepIdx: !hasSeekTarget && !bufferIsDivided
             });
 

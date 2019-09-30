@@ -36,7 +36,7 @@ import EventBus from '../core/EventBus';
 import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import Errors from '../core/errors/Errors';

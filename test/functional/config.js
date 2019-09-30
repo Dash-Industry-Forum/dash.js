@@ -54,7 +54,7 @@ define(function(require) {
     conf.functionalSuites = ['test/functional/tests'];
 
     conf = Object.assign(conf, seleniumConfig);
-    // console.log("Selenium configuration:\n", conf);
+    // console.log("Selenium configuration:\n", JSON.stringify(conf, null, '  '));
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Tests configuration parameters

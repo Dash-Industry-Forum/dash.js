@@ -42,8 +42,7 @@ import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
-
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 
 const BUFFER_LOADED = 'bufferLoaded';
 const BUFFER_EMPTY = 'bufferStalled';
@@ -141,7 +140,6 @@ function BufferController(config) {
                 }
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
-                errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
                 errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         } else {
@@ -257,7 +255,7 @@ function BufferController(config) {
     function showBufferRanges(ranges) {
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
-                logger.debug('Buffered Range for type:', type, ':', ranges.start(i), ' - ', ranges.end(i), ' currentTime = ', playbackController.getTime());
+                logger.debug('Buffered Range', ranges.start(i), ' - ', ranges.end(i), ' currentTime = ', playbackController.getTime());
             }
         }
     }
@@ -266,7 +264,7 @@ function BufferController(config) {
         if (e.error) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
                 criticalBufferLevel = getTotalBufferedTime() * 0.8;
-                logger.warn('Quota exceeded for type: ' + type + ', Critical Buffer: ' + criticalBufferLevel);
+                logger.warn('Quota exceeded, Critical Buffer: ' + criticalBufferLevel);
 
                 if (criticalBufferLevel > 0) {
                     // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
@@ -278,7 +276,7 @@ function BufferController(config) {
                 }
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
-                logger.warn('Clearing playback buffer to overcome quota exceed situation for type: ' + type);
+                logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 eventBus.trigger(Events.QUOTA_EXCEEDED, { sender: instance, criticalBufferLevel: criticalBufferLevel }); //Tells ScheduleController to stop scheduling.
                 pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
             }
@@ -328,7 +326,7 @@ function BufferController(config) {
     //**********************************************************************
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
-    function onPlaybackSeeking() {
+    function onPlaybackSeeking(/*e*/) {
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
             isBufferingCompleted = false;
@@ -377,7 +375,7 @@ function BufferController(config) {
 
         // There is no request in current time position yet. Let's remove everything
         if (!currentTimeRequest) {
-            logger.debug('getAllRangesWithSafetyFactor for', type, '- No request found in current time position, removing full buffer 0 -', endOfBuffer);
+            logger.debug('getAllRangesWithSafetyFactor - No request found in current time position, removing full buffer 0 -', endOfBuffer);
             clearRanges.push({
                 start: 0,
                 end: endOfBuffer
@@ -574,7 +572,7 @@ function BufferController(config) {
 
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
         eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
-        logger.debug(state === BUFFER_LOADED ? 'Got enough buffer to start for ' + type : 'Waiting for more buffer before starting playback for ' + type);
+        logger.debug(state === BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
@@ -698,7 +696,7 @@ function BufferController(config) {
         }
 
         const range = pendingPruningRanges.shift();
-        logger.debug('Removing', type, 'buffer from:', range.start, 'to', range.end);
+        logger.debug('Removing buffer from:', range.start, 'to', range.end);
         isPruningInProgress = true;
 
         // If removing buffer ahead current playback position, update maxAppendedIndex

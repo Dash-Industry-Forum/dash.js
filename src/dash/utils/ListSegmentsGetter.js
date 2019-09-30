@@ -30,8 +30,9 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../../streaming/constants/Constants';
 
-import {getIndexBasedSegment, decideSegmentListRangeForTemplate} from './SegmentsUtils';
+import { getIndexBasedSegment } from './SegmentsUtils';
 
 function ListSegmentsGetter(config, isDynamic) {
 
@@ -40,48 +41,63 @@ function ListSegmentsGetter(config, isDynamic) {
 
     let instance;
 
-    function getSegmentsFromList(representation, requestedTime, index, availabilityUpperLimit) {
+    function checkConfig() {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
+        }
+    }
+
+    function getSegmentByIndex(representation, index) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
         const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         const len = list.SegmentURL_asArray.length;
 
-        const segments = [];
+        const start = representation.startNumber;
+        let segment = null;
+        if (index < len) {
+            const s = list.SegmentURL_asArray[index];
 
-        let periodSegIdx,
-            seg,
-            s,
-            range,
-            startIdx,
-            endIdx,
-            start;
-
-        start = representation.startNumber;
-
-        range = decideSegmentListRangeForTemplate(timelineConverter, isDynamic, representation, requestedTime, index, availabilityUpperLimit);
-        startIdx = Math.max(range.start, 0);
-        endIdx = Math.min(range.end, list.SegmentURL_asArray.length - 1);
-
-        for (periodSegIdx = startIdx; periodSegIdx <= endIdx; periodSegIdx++) {
-            s = list.SegmentURL_asArray[periodSegIdx];
-
-            seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, periodSegIdx);
-            seg.replacementTime = (start + periodSegIdx - 1) * representation.segmentDuration;
-            seg.media = s.media ? s.media : '';
-            seg.mediaRange = s.mediaRange;
-            seg.index = s.index;
-            seg.indexRange = s.indexRange;
-
-            segments.push(seg);
-            seg = null;
+            segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
+            segment.replacementTime = (start + index - 1) * representation.segmentDuration;
+            segment.media = s.media ? s.media : '';
+            segment.mediaRange = s.mediaRange;
+            segment.index = index;
+            segment.indexRange = s.indexRange;
         }
 
         representation.availableSegmentsNumber = len;
 
-        return segments;
+        return segment;
+    }
+
+    function getSegmentByTime(representation, requestedTime) {
+        checkConfig();
+
+        if (!representation) {
+            throw new Error('no representation');
+        }
+
+        const duration = representation.segmentDuration;
+
+        if (isNaN(duration)) {
+            return null;
+        }
+
+        const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
+        const index = Math.floor(periodTime / duration);
+
+        return getSegmentByIndex(representation, index);
     }
 
     instance = {
-        getSegments: getSegmentsFromList
+        getSegmentByIndex: getSegmentByIndex,
+        getSegmentByTime: getSegmentByTime
     };
 
     return instance;

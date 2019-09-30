@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 function MetricSerialiser() {
 
     // For each entry in the top level list within the metric (in the case

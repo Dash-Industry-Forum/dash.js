@@ -21,5 +21,5 @@ Describe what the player is doing that is unexpected or undesired behaviour.
 ##### Console output
 ```
 Paste the contents of the browser console here.
-You may need to enable debug logging in dash.js by calling player.getDebug().setLogToBrowserConsole(true) if you are using your own page.
+You may need to enable debug logging in dash.js by calling player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }}) if you are using your own page.
 ```

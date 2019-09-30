@@ -42,8 +42,8 @@ import SwitchRequest from '../rules/SwitchRequest';
 import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import Debug from '../../core/Debug';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import { checkInteger } from '../utils/SupervisorTools';
 
 const ABANDON_LOAD = 'abandonload';
@@ -332,7 +332,7 @@ function AbrController() {
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 let newQuality = switchRequest.quality;
-                if (minIdx !== undefined && newQuality < minIdx) {
+                if (minIdx !== undefined && ((newQuality > SwitchRequest.NO_CHANGE) ? newQuality : oldQuality) < minIdx) {
                     newQuality = minIdx;
                 }
                 if (newQuality > topQualityIdx) {
@@ -347,7 +347,7 @@ function AbrController() {
                     }
                 } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                     const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-                    logger.debug('AbrController (' + type + ') stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
+                    logger.debug('[' + type + '] stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
             }
         }
@@ -371,7 +371,7 @@ function AbrController() {
             const id = streamInfo ? streamInfo.id : null;
             if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-                logger.info('AbrController (' + type + ') switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+                logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: type, streamInfo: streamInfo, oldQuality: oldQuality, newQuality: newQuality, reason: reason});
@@ -472,9 +472,9 @@ function AbrController() {
 
         if (newUseBufferABR !== useBufferABR) {
             if (newUseBufferABR) {
-                logger.info('AbrController (' + mediaType + ') switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+                logger.info('[' + mediaType + '] switching from throughput to buffer occupancy ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
             } else {
-                logger.info('AbrController (' + mediaType + ') switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
+                logger.info('[' + mediaType + '] switching from buffer occupancy to throughput ABR rule (buffer: ' + bufferLevel.toFixed(3) + ').');
             }
         }
     }
@@ -596,9 +596,14 @@ function AbrController() {
                 newIdx > 0 &&
                 representation[newIdx] &&
                 elementWidth < representation[newIdx].width &&
-                Math.abs(elementWidth - representation[newIdx - 1].width) < Math.abs(representation[newIdx].width - elementWidth)
-            ) {
+                elementWidth - representation[newIdx - 1].width < representation[newIdx].width - elementWidth) {
                 newIdx = newIdx - 1;
+            }
+
+            // Make sure that in case of multiple representation elements have same
+            // resolution, every such element is included
+            while (newIdx < representation.length - 1 && representation[newIdx].width === representation[newIdx + 1].width) {
+                newIdx = newIdx + 1;
             }
         }
 
@@ -609,7 +614,7 @@ function AbrController() {
         const type = e.request.mediaType;
         if (getAutoSwitchBitrateFor(type)) {
             const streamProcessor = streamProcessorDict[type];
-            if (!streamProcessor) return;// There may be a fragment load in progress when we switch periods and recreated some controllers.
+            if (!streamProcessor) return; // There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             const rulesContext = RulesContext(context).create({
                 abrController: instance,

@@ -745,16 +745,6 @@ describe('MediaPlayer', function () {
             expect(LongFormContentDurationThreshold).to.equal(50);
         });
 
-        it('should configure setSegmentOverlapToleranceTime', function () {
-            let val = player.getSettings().streaming.segmentOverlapToleranceTime;
-            expect(val).to.equal(0.2);
-
-            player.updateSettings({'streaming': { 'segmentOverlapToleranceTime': 1.5 }});
-
-            val = player.getSettings().streaming.segmentOverlapToleranceTime;
-            expect(val).to.equal(1.5);
-        });
-
         it('should configure cacheLoadThresholds', function () {
             let cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(50);
@@ -775,15 +765,15 @@ describe('MediaPlayer', function () {
 
         it('should configure jumpGap feature', function () {
             let jumpGaps = player.getSettings().streaming.jumpGaps;
-            expect(jumpGaps).to.equal(false);
-
-            player.updateSettings({'streaming': { 'jumpGaps': true }});
-
-            jumpGaps = player.getSettings().streaming.jumpGaps;
             expect(jumpGaps).to.equal(true);
 
+            player.updateSettings({'streaming': { 'jumpGaps': false }});
+
+            jumpGaps = player.getSettings().streaming.jumpGaps;
+            expect(jumpGaps).to.equal(false);
+
             let smallGapLimit = player.getSettings().streaming.smallGapLimit;
-            expect(smallGapLimit).to.equal(0.8);
+            expect(smallGapLimit).to.equal(1.5);
 
             player.updateSettings({'streaming': { 'smallGapLimit': 0.5 }});
 

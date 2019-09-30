@@ -181,7 +181,7 @@ function DashAdapter() {
         }
         const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo.index, type !== constants.EMBEDDED_TEXT ? type : constants.VIDEO);
 
-        if (!adaptationsForType) return mediaArr;
+        if (!adaptationsForType || adaptationsForType.length === 0) return mediaArr;
 
         voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
@@ -473,6 +473,7 @@ function DashAdapter() {
             if (streamInfo.id === voPeriod.id) return voPeriod;
         }
 
+        //return voPeriodsArray[voPeriodsArray.length - 1];
         return null;
     }
 
@@ -507,6 +508,12 @@ function DashAdapter() {
         mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation).map(function (audioChannelConfiguration) {
             return audioChannelConfiguration.value;
         });
+
+        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0 ) {
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
+                return audioChannelConfiguration.value;
+            });
+        }
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation).map(function (role) {
             return role.value;
         });

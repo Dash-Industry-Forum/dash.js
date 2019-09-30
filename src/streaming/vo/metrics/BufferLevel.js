@@ -31,6 +31,7 @@
 
 /**
  * @class
+ * @ignore
  */
 class BufferLevel {
     /**

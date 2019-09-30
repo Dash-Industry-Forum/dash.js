@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import TextTrackInfo from '../vo/TextTrackInfo';
 import BoxParser from '../utils/BoxParser';
 import CustomTimeRanges from '../utils/CustomTimeRanges';
@@ -71,10 +71,8 @@ function TextSourceBuffer() {
         firstFragmentedSubtitleStart,
         currFragmentedTrackIdx,
         embeddedTracks,
-        embeddedInitializationSegmentReceived,
         embeddedTimescale,
         embeddedLastSequenceNumber,
-        embeddedSequenceNumbers,
         embeddedCea608FieldParsers,
         embeddedTextHtmlRender,
         mseTimeOffset;
@@ -125,8 +123,8 @@ function TextSourceBuffer() {
             if (isFragmented) {
                 fragmentedFragmentModel = streamProcessor.getFragmentModel();
                 instance.buffered = CustomTimeRanges(context).create();
-                fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-                const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
+                fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamProcessor.getStreamInfo());
+                const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamProcessor.getStreamInfo());
                 for (let i = 0; i < fragmentedTracks.length; i++) {
                     if (fragmentedTracks[i] === currFragTrack) {
                         setCurrentFragmentedTrackIdx(i);
@@ -143,11 +141,9 @@ function TextSourceBuffer() {
 
     function abort() {
         textTracks.deleteAllTextTracks();
+        resetFragmented();
         boxParser = null;
         mediaInfos = [];
-        fragmentedFragmentModel = null;
-        initializationSegmentReceived = false;
-        fragmentedTracks = [];
     }
 
     function reset() {
@@ -175,10 +171,8 @@ function TextSourceBuffer() {
         textTracks.initialize();
         boxParser = BoxParser(context).getInstance();
         currFragmentedTrackIdx = null;
-        embeddedInitializationSegmentReceived = false;
         embeddedTimescale = 0;
         embeddedCea608FieldParsers = [];
-        embeddedSequenceNumbers = [];
         embeddedLastSequenceNumber = null;
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
@@ -192,17 +186,18 @@ function TextSourceBuffer() {
         }
 
         eventBus.on(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
+        eventBus.on(Events.BUFFER_CLEARED, onVideoBufferCleared, this);
     }
 
     function resetEmbedded() {
         eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
+        eventBus.off(Events.BUFFER_CLEARED, onVideoBufferCleared, this);
         if (textTracks) {
             textTracks.deleteAllTextTracks();
         }
         embeddedInitialized = false;
         embeddedTracks = [];
         embeddedCea608FieldParsers = [null, null];
-        embeddedSequenceNumbers = [];
         embeddedLastSequenceNumber = null;
     }
 
@@ -323,10 +318,13 @@ function TextSourceBuffer() {
         }
 
         if (mediaType === Constants.FRAGMENTED_TEXT) {
-            if (!initializationSegmentReceived) {
+            if (!initializationSegmentReceived && chunk.segmentType === 'InitializationSegment') {
                 initializationSegmentReceived = true;
                 timescale = boxParser.getMediaTimescaleFromMoov(bytes);
             } else {
+                if (!initializationSegmentReceived) {
+                    return;
+                }
                 samplesInfo = boxParser.getSamplesInfo(bytes);
                 sampleList = samplesInfo.sampleList;
                 if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
@@ -413,7 +411,6 @@ function TextSourceBuffer() {
                 result = getParser(codecType).parse(ccContent, 0);
                 textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
             } catch (e) {
-                errHandler.timedTextError(e, 'parse', ccContent);
                 errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
             }
         } else if (mediaType === Constants.VIDEO) { //embedded text
@@ -476,7 +473,7 @@ function TextSourceBuffer() {
                     }
                 }
 
-                if (embeddedTimescale && embeddedSequenceNumbers.indexOf(sequenceNumber) == -1) {
+                if (embeddedTimescale) {
                     if (embeddedLastSequenceNumber !== null && sequenceNumber !== embeddedLastSequenceNumber + samplesInfo.numSequences) {
                         for (i = 0; i < embeddedCea608FieldParsers.length; i++) {
                             if (embeddedCea608FieldParsers[i]) {
@@ -497,7 +494,6 @@ function TextSourceBuffer() {
                         }
                     }
                     embeddedLastSequenceNumber = sequenceNumber;
-                    embeddedSequenceNumbers.push(sequenceNumber);
                 }
             }
         }
@@ -588,6 +584,15 @@ function TextSourceBuffer() {
             end = this.buffered.end(this.buffered.length - 1);
         }
         this.buffered.remove(start, end);
+    }
+
+    function onVideoBufferCleared(e) {
+        embeddedTracks.forEach(function (track) {
+            const trackIdx = textTracks.getTrackIdxForId(track.id);
+            if (trackIdx >= 0) {
+                textTracks.deleteCuesFromTrackIdx(trackIdx, e.from, e.to);
+            }
+        });
     }
 
     instance = {

@@ -30,6 +30,7 @@
  */
 import Constants from '../../constants/Constants';
 import FactoryMaker from '../../../core/FactoryMaker';
+import MetricsConstants from '../../constants/MetricsConstants';
 
 function BufferLevelRule(config) {
 
@@ -60,7 +61,18 @@ function BufferLevelRule(config) {
         const type = streamProcessor.getType();
         const representationInfo = streamProcessor.getRepresentationInfo();
         if (type === Constants.FRAGMENTED_TEXT) {
-            bufferTarget = textController.isTextEnabled() ? representationInfo.fragmentDuration : 0;
+            if (textController.isTextEnabled()) {
+                if (isNaN(representationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
+                    // call metrics function to have data in the latest scheduling info...
+                    // if no metric, returns 0. In this case, rule will return false.
+                    const bufferInfo = dashMetrics.getLatestBufferInfoVO(Constants.FRAGMENTED_TEXT, true, MetricsConstants.SCHEDULING_INFO);
+                    bufferTarget = bufferInfo ? bufferInfo.duration : 0;
+                } else {
+                    bufferTarget = representationInfo.fragmentDuration;
+                }
+            } else { // text is disabled, rule will return false
+                bufferTarget = 0;
+            }
         } else if (type === Constants.AUDIO && videoTrackPresent) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO, true);
             if (isNaN(representationInfo.fragmentDuration)) {
