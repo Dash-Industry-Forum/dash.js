@@ -220,13 +220,10 @@ function RepresentationController() {
     }
 
     function updateAvailabilityWindow(isDynamic) {
-        let voRepresentation;
-
         checkConfig();
 
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            voRepresentation = voAvailableRepresentations[i];
-            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
+            voAvailableRepresentations[i].segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voAvailableRepresentations[i], isDynamic);
         }
     }
 
