@@ -41,6 +41,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaController from './MediaController';
 import MetricsConstants from '../constants/MetricsConstants';
+import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 
 function ScheduleController(config) {
 
@@ -79,10 +80,16 @@ function ScheduleController(config) {
         switchTrack,
         bufferResetInProgress,
         mediaRequest,
+        liveEdgeFinder,
         isReplacementRequest;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        if (playbackController && playbackController.getIsDynamic()) {
+            liveEdgeFinder = LiveEdgeFinder(context).create({
+                timelineConverter: timelineConverter
+            });
+        }
         resetInitialSettings();
     }
 
@@ -403,9 +410,8 @@ function ScheduleController(config) {
     }
 
     function setLiveEdgeSeekTarget() {
-        const liveEdgeFinder = streamProcessor.getLiveEdgeFinder();
         if (liveEdgeFinder) {
-            const liveEdge = liveEdgeFinder.getLiveEdge();
+            const liveEdge = liveEdgeFinder.getLiveEdge(streamProcessor.getRepresentationInfo());
             const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
             const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
                 ignoreIsFinished: true
@@ -690,6 +696,10 @@ function ScheduleController(config) {
         stop();
         completeQualityChange(false);
         resetInitialSettings();
+        if (liveEdgeFinder) {
+            liveEdgeFinder.reset();
+            liveEdgeFinder = null;
+        }
     }
 
     instance = {
