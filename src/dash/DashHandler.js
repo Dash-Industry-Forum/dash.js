@@ -173,7 +173,7 @@ function DashHandler(config) {
 
     function updateRepresentation(voRepresentation) {
         const hasInitialization = voRepresentation.hasInitialization();
-        const hasSegments = voRepresentation.hasSegments(voRepresentation);
+        const hasSegments = voRepresentation.hasSegments();
         let error;
 
         if (voRepresentation) {
