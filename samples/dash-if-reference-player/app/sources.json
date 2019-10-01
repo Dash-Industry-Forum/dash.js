@@ -1,48 +1,6 @@
 {
   "items": [
     {
-      "name": "Kevs",
-      "submenu": [
-        {
-          "url": "https://vod.switchmedia.asia/vodfs/_definst_/fs/261_0/1542383_DYNAMIC_SMIL.smil/manifest.mpd",
-          "name": "Switch Media AssetID: 261_0/1542383",
-          "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
-        },
-        {
-          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_1.mpd",
-          "name": "(switch_player) manifests/dash_kevs_test_1.mpd"
-        },
-        {
-          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_2.mpd",
-          "name": "(switch_player) manifests/dash_kevs_test_2.mpd"
-        },
-        {
-          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_3.mpd",
-          "name": "(switch_player) manifests/dash_kevs_test_3.mpd"
-        },
-        {
-          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_4.mpd",
-          "name": "(switch_player) manifests/dash_kevs_test_4.mpd"
-        },
-        {
-          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_5.mpd",
-          "name": "(switch_player) manifests/dash_kevs_test_5.mpd"
-        },
-        {
-          "url": "/switch_player/v3/chromecast/unittest/manifests/dash_kevs_test_6.mpd",
-          "name": "(switch_player) manifests/dash_kevs_test_6.mpd"
-        },
-        {
-          "url": "http://localhost/streams/kevs_dash/output/stream.mpd",
-          "name": "(kevs localhost) Bento4 test"
-        },
-        {
-          "url": "http://localhost/streams/kevs_gpac/output/stream.mpd",
-          "name": "(kevs localhost) GPAC DASHcast test"
-        }
-      ]
-    },
-    {
       "name": "VOD (Static MPD)",
       "submenu": [
         {
@@ -1004,6 +962,41 @@
                 "sessionType": "persistent-license"
               }
           }
+        }
+      ]
+    },
+    {
+      "name": "SwitchMedia Pty Australia",
+      "submenu": [
+        {
+          "url": "https://streams.switchmedia.asia/streama/DL001/.mpd",
+          "name": "Switch Media DL001: Live",
+          "moreInfo": "https://switch.tv"
+        },
+        {
+          "url": "https://streams.switchmedia.asia/streama/DL004/.mpd",
+          "name": "Switch Media DL004: Live with DVR window",
+          "moreInfo": "https://switch.tv"
+        },
+        {
+          "url": "https://streams.switchmedia.asia/streama/DL020/.mpd",
+          "name": "Switch Media DL020: Live with SCTE ad triggers",
+          "moreInfo": "https://switch.tv"
+        },
+        {
+          "url": "http://streams.switchmedia.asia/streama/DV001/.mpd",
+          "name": "Switch Media DL001: VOD",
+          "moreInfo": "https://switch.tv"
+        },
+        {
+          "url": "https://streams.switchmedia.asia/streama/DV051/.m3u8",
+          "name": "Switch Media DV051: Multi-period VOD",
+          "moreInfo": "https://switch.tv"
+        },
+        {
+          "url": "https://streams.switchmedia.asia/streama/DV052/.m3u8",
+          "name": "Switch Media DV052: Multi-period VOD example 2",
+          "moreInfo": "https://switch.tv"
         }
       ]
     }
