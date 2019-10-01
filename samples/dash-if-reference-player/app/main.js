@@ -595,7 +595,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                     'video': maxBitrate
                 }
             }
-        }        
+        }
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
@@ -966,6 +966,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         }
 
         if (item.url) {
+            // Detect if the URL contains escaped characters, if so unescape the URL
+            if (item.url.indexOf("%")) {
+                item.url = unescape(item.url);
+            }
+
             var startPlayback = false;
 
             $scope.selectedItem = item;
