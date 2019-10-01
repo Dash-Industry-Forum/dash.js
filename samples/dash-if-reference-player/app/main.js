@@ -946,6 +946,24 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             item.url = vars.source;
         }
 
+        // If supply widevine= parameter in the query string then set up the DRM protection to playback Widevine
+        if (vars && vars.hasOwnProperty('widevine')) {
+            $scope.drmLicenseURL = vars.widevine;
+            if ($scope.drmLicenseURL.indexOf("%")) {
+                $scope.drmLicenseURL = unescape($scope.drmLicenseURL);
+            }
+            $scope.drmKeySystem = $scope.drmKeySystems[0];
+        }
+
+        // If supply playready= parameter in the query string then set up the DRM protection to playback PlayReady
+        if (vars && vars.hasOwnProperty('playready')) {
+            $scope.drmLicenseURL = vars.playready;
+            if ($scope.drmLicenseURL.indexOf("%")) {
+                $scope.drmLicenseURL = unescape($scope.drmLicenseURL);
+            }
+            $scope.drmKeySystem = $scope.drmKeySystems[1];
+        }
+
         if (vars && vars.hasOwnProperty('stream')) {
             try {
                 item = JSON.parse(atob(vars.stream));
