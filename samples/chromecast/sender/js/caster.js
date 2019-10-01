@@ -1,9 +1,9 @@
 Caster = (function () {
     "use strict";
 
-    var APP_ID = "75215b49-c8b8-45ae-b0fb-afb39599204e", // "ChromeCast",
-        NAMESPACE = "org.dashif.dashjs",
-        CHANNEL = "org.dashif.dashjs.channel",
+    var APP_ID = "C8F362A5", // "ChromeCast",
+        NAMESPACE = "tv.switch.daskjs",
+        CHANNEL = "tv.switch.dashjs.channel",
         delegate,
         cast_api,
         cv_activity,
