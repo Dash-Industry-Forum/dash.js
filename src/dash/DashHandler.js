@@ -189,10 +189,12 @@ function DashHandler(config) {
                 setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
             }
 
-            segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
-
+            //if representation has initialization and segments information, REPRESENTATION_UPDATED can be triggered immediately
+            //otherwise, it means that a request has to be made to get initialization and/or segments informations
             if (hasInitialization && hasSegments) {
                 eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
+            } else {
+                segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
             }
         }
     }
