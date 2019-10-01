@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Custom ABR Rules</title>
+
+    <script src="../../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script src="LowestBitrateRule.js" class="code"></script>
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+
+            // don't use dash.js default rules
+            player.updateSettings({
+                'streaming': {
+                    'abr': {
+                        'useDefaultABRRules': false
+                    }
+                }
+            });
+
+            // add my custom quality switch rule. Look at LowestBitrateRule.js to know more
+            // about the structure of a custom rule
+            player.addABRCustomRule('qualitySwitchRules', 'LowestBitrateRule', LowestBitrateRule);
+
+            player.initialize(video, url, true);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <video></video>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+<script src="../../highlighter.js"></script>
+</body>
+</html>
+
+

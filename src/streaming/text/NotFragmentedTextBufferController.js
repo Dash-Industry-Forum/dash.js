@@ -35,6 +35,8 @@ import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 import SourceBufferSink from '../SourceBufferSink';
 import TextController from '../../streaming/text/TextController';
+import DashJSError from '../../streaming/vo/DashJSError';
+import Errors from '../../core/errors/Errors';
 
 const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
@@ -54,13 +56,11 @@ function NotFragmentedTextBufferController(config) {
         initialized,
         mediaSource,
         buffer,
-        representationController,
         initCache;
 
     function setup() {
         initialized = false;
         mediaSource = null;
-        representationController = null;
         isBufferingCompleted = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -73,7 +73,6 @@ function NotFragmentedTextBufferController(config) {
 
     function initialize(source) {
         setMediaSource(source);
-        representationController = streamProcessor.getRepresentationController();
         initCache = InitCache(context).getInstance();
     }
 
@@ -93,14 +92,14 @@ function NotFragmentedTextBufferController(config) {
             }
             return buffer;
         } catch (e) {
-            if ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1)) {
+            if (mediaInfo && ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1))) {
                 try {
                     buffer = textController.getTextSourceBuffer();
                 } catch (e) {
-                    errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                    errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type + ' : ' + e.message));
                 }
             } else {
-                errHandler.mediaSourceError('Error creating ' + type + ' source buffer.');
+                errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         }
     }
@@ -155,11 +154,14 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.sender.getStreamProcessor() !== streamProcessor || e.error) {
             return;
         }
 
-        const chunk = initCache.extract(streamProcessor.getStreamInfo().id, e.sender.getCurrentRepresentation().id);
+        const streamInfo = streamProcessor.getStreamInfo();
+        const currentRepresentation = e.sender.getCurrentRepresentation();
+
+        const chunk = initCache.extract(streamInfo ? streamInfo.id : null, currentRepresentation ? currentRepresentation.id : null);
 
         if (!chunk) {
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {

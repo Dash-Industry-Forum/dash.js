@@ -4,6 +4,9 @@ function ManifestLoaderMock() {
     this.load = function () {
         this.loadManifest = true;
     };
+
+    this.reset = function () {
+    };
 }
 
 export default ManifestLoaderMock;

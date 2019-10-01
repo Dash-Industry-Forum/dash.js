@@ -1,6 +1,10 @@
 function ProtectionKeyControllerMock () {
 
     this.getSupportedKeySystemsFromContentProtection = function (/*cps*/) {
+        return [{}];
+    };
+
+    this.getSupportedKeySystems = function () {
         return [];
     };
 

@@ -1,7 +1,7 @@
 
 <img src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png" width="400">
 
-Travis CI Status: [![Travis CI Status](http://img.shields.io/travis/Dash-Industry-Forum/dash.js/development.svg?style=flat-square)](https://travis-ci.org/Dash-Industry-Forum/dash.js)
+Build status (CircleCI): [![CircleCI](https://circleci.com/gh/Dash-Industry-Forum/dash.js/tree/development.svg?style=svg)](https://circleci.com/gh/Dash-Industry-Forum/dash.js/tree/development)
 
 Join the discussion: [![Slack Status](https://dashif-slack.azurewebsites.net/badge.svg)](https://dashif-slack.azurewebsites.net)
 
@@ -15,7 +15,7 @@ If your goal is to improve or extend the code and contribute back to this projec
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
 ## Documentation
-Before you get started, please read the Dash.js v2.0 Migration Document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-2.0)
+Before you get started, please read the Dash.js v3.0 Migration Document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-3.0)
 
 Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html) is available describing all public methods, interfaces, properties, and events.
 

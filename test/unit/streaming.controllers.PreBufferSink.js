@@ -1,14 +1,9 @@
 import PreBufferSink from '../../src/streaming/PreBufferSink';
-import Debug from '../../src/core/Debug';
 
 const expect = require('chai').expect;
 const context = {};
 
 describe('PreBufferSink', function () {
-    // disable log
-    const debug = Debug(context).getInstance();
-    debug.setLogToBrowserConsole(false);
-
     function makeChunk(start, end, data) {
         const chunk = {
             start: start || 0,

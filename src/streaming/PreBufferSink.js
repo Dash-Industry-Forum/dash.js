@@ -36,15 +36,16 @@ import FactoryMaker from '../core/FactoryMaker';
  * The discharge() function is used to get the chunks out of the PreBuffer for adding to a real SourceBuffer.
  *
  * @class PreBufferSink
+ * @ignore
  * @implements FragmentSink
  */
 function PreBufferSink(onAppendedCallback) {
     const context = this.context;
 
     let instance,
-        logger;
+        logger,
+        outstandingInit;
     let chunks = [];
-    let outstandingInit;
     let onAppended = onAppendedCallback;
 
     function setup() {
@@ -113,8 +114,16 @@ function PreBufferSink(onAppendedCallback) {
         return timeranges;
     }
 
+    function hasDiscontinuitiesAfter() {
+        return false;
+    }
+
     function updateTimestampOffset() {
         // Nothing to do
+    }
+
+    function getBuffer() {
+        return this;
     }
 
     /**
@@ -142,6 +151,10 @@ function PreBufferSink(onAppendedCallback) {
         return chunks.filter( a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)) );
     }
 
+    function waitForUpdateEnd(callback) {
+        callback();
+    }
+
     instance = {
         getAllBufferRanges: getAllBufferRanges,
         append: append,
@@ -149,7 +162,10 @@ function PreBufferSink(onAppendedCallback) {
         abort: abort,
         discharge: discharge,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
+        waitForUpdateEnd: waitForUpdateEnd,
+        getBuffer: getBuffer
     };
 
     setup();

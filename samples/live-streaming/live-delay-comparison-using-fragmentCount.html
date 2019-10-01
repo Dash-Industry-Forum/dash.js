@@ -20,32 +20,32 @@ Debug files are not compressed or obfuscated making the file size much larger co
                 video = document.querySelector("#video1");
                 player1 = dashjs.MediaPlayer().create();
                 player1.initialize(video,MPD_2S_SEGMENTS ,true);
-                player1.setLiveDelayFragmentCount(0);
+                player1.updateSettings({'streaming': { 'liveDelayFragmentCount': 0 }});
 
                 video = document.querySelector("#video2");
                 player2 = dashjs.MediaPlayer().create();
                 player2.initialize(video,MPD_2S_SEGMENTS ,true);
-                player2.setLiveDelayFragmentCount(2);
+                player2.updateSettings({'streaming': { 'liveDelayFragmentCount': 2 }});
 
                 video = document.querySelector("#video3");
                 player3 = dashjs.MediaPlayer().create();
                 player3.initialize(video,MPD_2S_SEGMENTS ,true);
-                player3.setLiveDelayFragmentCount(4);
+                player3.updateSettings({'streaming': { 'liveDelayFragmentCount': 4 }});
 
                 video = document.querySelector("#video4");
                 player4 = dashjs.MediaPlayer().create();
                 player4.initialize(video,MPD_6S_SEGMENTS ,true);
-                player4.setLiveDelayFragmentCount(0);
+                player4.updateSettings({'streaming': { 'liveDelayFragmentCount': 0 }});
 
                 video = document.querySelector("#video5");
                 player5 = dashjs.MediaPlayer().create();
                 player5.initialize(video,MPD_6S_SEGMENTS ,true);
-                player5.setLiveDelayFragmentCount(2);
+                player5.updateSettings({'streaming': { 'liveDelayFragmentCount': 2 }});
 
                 video = document.querySelector("#video6");
                 player6 = dashjs.MediaPlayer().create();
                 player6.initialize(video,MPD_6S_SEGMENTS ,true);
-                player6.setLiveDelayFragmentCount(4);
+                player6.updateSettings({'streaming': { 'liveDelayFragmentCount': 4 }});
 
 
                 setInterval( function() {

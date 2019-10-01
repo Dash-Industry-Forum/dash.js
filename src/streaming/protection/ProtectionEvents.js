@@ -31,8 +31,7 @@
 import EventsBase from '../../core/events/EventsBase';
 /**
  * @class
- *
- */
+  */
 class ProtectionEvents extends EventsBase {
     /**
      * @description Public facing external events to be used when including protection package.

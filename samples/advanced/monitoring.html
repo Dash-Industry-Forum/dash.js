@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Monitoring stream example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, url, true);
+            player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
+                clearInterval(eventPoller);
+                clearInterval(bitrateCalculator);
+            });
+
+            var eventPoller = setInterval(function() {
+                var streamInfo = player.getActiveStream().getStreamInfo();
+                var dashMetrics = player.getDashMetrics();
+                var dashAdapter = player.getDashAdapter();
+
+                if (dashMetrics && streamInfo) {
+                    const periodIdx = streamInfo.index;
+                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+                    var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                    document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
+                    document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
+                }
+            }, 1000);
+
+            if (video.webkitVideoDecodedByteCount !== undefined) {
+                var lastDecodedByteCount = 0;
+                const bitrateInterval = 5;
+                var bitrateCalculator = setInterval(function() {
+                    var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
+                    document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
+                    lastDecodedByteCount = video.webkitVideoDecodedByteCount;
+                }, bitrateInterval * 1000);
+            } else {
+                document.getElementById('chrome-only').style.display = "none";
+            }
+
+
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #container {
+            display: inline-block;
+        }
+
+        #container > div {
+            display: inline-block;
+            float: left;
+            margin-right: 10px;
+        }
+
+    </style>
+</head>
+<body>
+<div id="container">
+    <div class="video-container">
+        <video  data-dashjs-player autoplay controls="true">
+        </video>
+    </div>
+    <div>
+            <strong>Reported bitrate:</strong>
+            <span id="reportedBitrate"></span>
+            <br />
+            <strong>Buffer level:</strong>
+            <span id="bufferLevel"></span>
+            <div id="chrome-only">
+                <strong>Calculated bitrate:</strong>
+                <span id="calculatedBitrate"></span>
+            </div>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>
+
+

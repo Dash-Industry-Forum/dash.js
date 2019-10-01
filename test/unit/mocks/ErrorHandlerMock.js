@@ -1,16 +1,15 @@
 function ErrorHandlerMock () {
-    this.error = undefined;
+    this.errorValue = undefined;
+    this.errorCode = undefined;
 
-    this.manifestError = function (error) {
-        this.error = error;
+    this.error = function (errorObj) {
+        this.errorCode = errorObj.code;
+        this.errorValue = errorObj.message;
     };
 
-    this.mediaSourceError = function (error) {
-        this.error = error;
-    };
-
-    this.mssError = function (error) {
-        this.error = error;
+    this.reset = function () {
+        this.errorValue = undefined;
+        this.errorCode = undefined;
     };
 }
 

@@ -78,12 +78,32 @@ class VideoModelMock {
         return this.width;
     }
 
+    setClientWidth(newWidth) {
+        this.width = newWidth;
+    }
+
     getClientHeight() {
         return this.height;
     }
 
+    getVideoWidth() {
+        return this.element.videoWidth;
+    }
+
+    getVideoHeight() {
+        return this.element.videoHeight;
+    }
+
+    getVideoRelativeOffsetTop() {
+        return 0;
+    }
+
+    getVideoRelativeOffsetLeft() {
+        return 0;
+    }
+
     getElement() {
-        return 'element';
+        return this.element;
     }
 
     play() {
@@ -131,13 +151,23 @@ class VideoModelMock {
         return this.tracks;
     }
 
-    getTextTrack(idx) {
-        return this.element.textTracks[idx];
+    getTextTrack(kind, label/*, lang, isTTML, isEmbedded*/) {
+        for (let i = 0; i < this.element.textTracks.length; i++) {
+
+            if (this.element.textTracks[i].kind === kind && (label ? this.element.textTracks[i].label == label : true)) {
+                return this.element.textTracks[i];
+            }
+        }
+        return null;
     }
 
 
     addTextTrack(kind, label, lang) {
         return this.element.addTextTrack(kind, label, lang);
+    }
+
+    getCurrentCue(textTrack) {
+        return this.element.getCurrentCue(textTrack);
     }
 
     getTTMLRenderingDiv() {

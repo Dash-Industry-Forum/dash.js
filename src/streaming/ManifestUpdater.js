@@ -32,6 +32,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
+import Errors from '../core/errors/Errors';
 
 function ManifestUpdater() {
 
@@ -46,9 +47,10 @@ function ManifestUpdater() {
         isUpdating,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
+        adapter,
+        errHandler,
         mediaPlayerModel,
-        errHandler;
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -60,8 +62,8 @@ function ManifestUpdater() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
@@ -71,6 +73,9 @@ function ManifestUpdater() {
         }
         if (config.errHandler) {
             errHandler = config.errHandler;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -128,7 +133,7 @@ function ManifestUpdater() {
         isUpdating = true;
         const manifest = manifestModel.getValue();
         let url = manifest.url;
-        const location = dashManifestModel.getLocation(manifest);
+        const location = adapter.getLocation(manifest);
         if (location) {
             url = location;
         }
@@ -141,7 +146,7 @@ function ManifestUpdater() {
 
         const date = new Date();
         const latencyOfLastUpdate = (date.getTime() - manifest.loadedTime.getTime()) / 1000;
-        refreshDelay = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
+        refreshDelay = adapter.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
         // setTimeout uses a 32 bit number to store the delay. Any number greater than it
         // will cause event associated with setTimeout to trigger immediately
         if (refreshDelay * 1000 > 0x7FFFFFFF) {
@@ -156,11 +161,11 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused()) {
+        if (isPaused && !settings.get().streaming.scheduleWhilePaused) {
             return;
         }
         if (isUpdating) {
-            startManifestRefreshTimer(mediaPlayerModel.getManifestUpdateRetryInterval());
+            startManifestRefreshTimer(settings.get().streaming.manifestUpdateRetryInterval);
             return;
         }
         refreshManifest();
@@ -169,8 +174,8 @@ function ManifestUpdater() {
     function onManifestLoaded(e) {
         if (!e.error) {
             update(e.manifest);
-        } else {
-            errHandler.manifestError(e.error.message, e.error.code);
+        } else if (e.error.code === Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) {
+            errHandler.error(e.error);
         }
     }
 

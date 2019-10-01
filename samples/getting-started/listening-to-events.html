@@ -14,7 +14,7 @@
 
         function init() {
             player = dashjs.MediaPlayer().create();
-            player.getDebug().setLogToBrowserConsole(false);
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
         }
 
         function showEvent(e)

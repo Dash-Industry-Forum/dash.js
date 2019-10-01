@@ -34,6 +34,7 @@
  * by the player.
  *
  * @interface KeySystem
+ * @ignore
  */
 
 /**

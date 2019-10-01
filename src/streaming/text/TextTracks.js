@@ -34,6 +34,7 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import { renderHTML } from 'imsc';
+import { checkParameterType } from '../utils/SupervisorTools';
 
 function TextTracks() {
 
@@ -53,7 +54,6 @@ function TextTracks() {
         actualVideoHeight,
         captionContainer,
         videoSizeCheckInterval,
-        isChrome,
         fullscreenAttribute,
         displayCCOnTop,
         previousISDState,
@@ -82,13 +82,6 @@ function TextTracks() {
         topZIndex = 2147483647;
         previousISDState = null;
 
-        //TODO Check if IE has resolved issues: Then revert to not using the addTextTrack API for all browsers.
-        // https://connect.microsoft.com/IE/feedbackdetail/view/1660701/text-tracks-do-not-fire-change-addtrack-or-removetrack-events
-        // https://connect.microsoft.com/IE/feedback/details/1573380/htmltrackelement-track-addcue-throws-invalidstateerror-when-adding-new-cue
-        // Same issue with Firefox.
-        //isIE11orEdge = !!navigator.userAgent.match(/Trident.*rv[ :]*11\./) || navigator.userAgent.match(/Edge/);
-        //isFirefox = !!navigator.userAgent.match(/Firefox/);
-        isChrome = !!navigator.userAgent.match(/Chrome/) && !navigator.userAgent.match(/Edge/);
         if (document.fullscreenElement !== undefined) {
             fullscreenAttribute = 'fullscreenElement'; // Standard and Edge
         } else if (document.webkitIsFullScreen !== undefined) {
@@ -98,12 +91,11 @@ function TextTracks() {
         } else if (document.mozFullScreen) { // Firefox
             fullscreenAttribute = 'mozFullScreen';
         }
-
     }
 
     function createTrackForUserAgent (i) {
         const kind = textTrackQueue[i].kind;
-        const label = textTrackQueue[i].label !== undefined ? textTrackQueue[i].label : textTrackQueue[i].lang;
+        const label = textTrackQueue[i].id !== undefined ? textTrackQueue[i].id : textTrackQueue[i].lang;
         const lang = textTrackQueue[i].lang;
         const isTTML = textTrackQueue[i].isTTML;
         const isEmbedded = textTrackQueue[i].isEmbedded;
@@ -115,7 +107,8 @@ function TextTracks() {
         return track;
     }
 
-    function displayCConTop(value) {
+    function setDisplayCConTop(value) {
+        checkParameterType(value, 'boolean');
         displayCCOnTop = value;
         if (!captionContainer || document[fullscreenAttribute]) {
             return;
@@ -261,12 +254,14 @@ function TextTracks() {
 
             if (captionContainer) {
                 const containerStyle = captionContainer.style;
-                containerStyle.left = actualVideoLeft + 'px';
-                containerStyle.top = actualVideoTop + 'px';
-                containerStyle.width = actualVideoWidth + 'px';
-                containerStyle.height = actualVideoHeight + 'px';
-                containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                if (containerStyle) {
+                    containerStyle.left = actualVideoLeft + 'px';
+                    containerStyle.top = actualVideoTop + 'px';
+                    containerStyle.width = actualVideoWidth + 'px';
+                    containerStyle.height = actualVideoHeight + 'px';
+                    containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                    eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                }
             }
 
             // Video view has changed size, so resize any active cues
@@ -400,7 +395,7 @@ function TextTracks() {
             return;
         }
 
-        if (!captionData || captionData.length === 0) {
+        if (!Array.isArray(captionData) || captionData.length === 0) {
             return;
         }
 
@@ -438,6 +433,7 @@ function TextTracks() {
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
+                            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: this.cueHTMLElement, currentTrackIdx});
                         }
                     }
                 };
@@ -449,6 +445,7 @@ function TextTracks() {
                             if (divs[i].id === this.cueID) {
                                 logger.debug('Cue exit id:' + divs[i].id);
                                 captionContainer.removeChild(divs[i]);
+                                --i;
                             }
                         }
                     }
@@ -470,6 +467,11 @@ function TextTracks() {
                             cue.size = currentItem.styles.size;
                         }
                     }
+                    cue.onenter = function () {
+                        if (track.mode === Constants.TEXT_SHOWING) {
+                            eventBus.trigger(Events.CAPTION_RENDERED, {currentTrackIdx});
+                        }
+                    };
                 }
             }
             try {
@@ -490,7 +492,7 @@ function TextTracks() {
 
     function getTrackByIdx(idx) {
         return idx >= 0 && textTrackQueue[idx] ?
-            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].label, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
+            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].id, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
     }
 
     function getCurrentTrackIdx() {
@@ -500,7 +502,7 @@ function TextTracks() {
     function getTrackIdxForId(trackId) {
         let idx = -1;
         for (let i = 0; i < textTrackQueue.length; i++) {
-            if (textTrackQueue[i].label === trackId) {
+            if (textTrackQueue[i].id === trackId) {
                 idx = i;
                 break;
             }
@@ -541,21 +543,27 @@ function TextTracks() {
         }
     }
 
-    function deleteTrackCues(track) {
+    function cueInRange(cue, start, end) {
+        return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
+    }
+
+    function deleteTrackCues(track, start, end) {
         if (track.cues) {
             const cues = track.cues;
             const lastIdx = cues.length - 1;
 
             for (let r = lastIdx; r >= 0 ; r--) {
-                track.removeCue(cues[r]);
+                if (cueInRange(cues[r], start, end)) {
+                    track.removeCue(cues[r]);
+                }
             }
         }
     }
 
-    function deleteCuesFromTrackIdx(trackIdx) {
+    function deleteCuesFromTrackIdx(trackIdx, start, end) {
         const track = getTrackByIdx(trackIdx);
         if (track) {
-            deleteTrackCues(track);
+            deleteTrackCues(track, start, end);
         }
     }
 
@@ -585,9 +593,6 @@ function TextTracks() {
 
     /* Set native cue style to transparent background to avoid it being displayed. */
     function setNativeCueStyle() {
-        if (!isChrome) {
-            return;
-        }
         let styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             return; //Already set
@@ -598,22 +603,23 @@ function TextTracks() {
         document.head.appendChild(styleElement);
         const stylesheet = styleElement.sheet;
         const video = videoModel.getElement();
-        if (video) {
-            if (video.id) {
-                stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
-            } else if (video.classList.length !== 0) {
-                stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
-            } else {
-                stylesheet.insertRule('video::cue {background: transparent}', 0);
+        try {
+            if (video) {
+                if (video.id) {
+                    stylesheet.insertRule('#' + video.id + '::cue {background: transparent}', 0);
+                } else if (video.classList.length !== 0) {
+                    stylesheet.insertRule('.' + video.className + '::cue {background: transparent}', 0);
+                } else {
+                    stylesheet.insertRule('video::cue {background: transparent}', 0);
+                }
             }
+        } catch (e) {
+            logger.info('' + e.message);
         }
     }
 
     /* Remove the extra cue style with transparent background for native cues. */
     function removeNativeCueStyle() {
-        if (!isChrome) {
-            return;
-        }
         const styleElement = document.getElementById('native-cue-style');
         if (styleElement) {
             document.head.removeChild(styleElement);
@@ -650,7 +656,7 @@ function TextTracks() {
 
     instance = {
         initialize: initialize,
-        displayCConTop: displayCConTop,
+        setDisplayCConTop: setDisplayCConTop,
         addTextTrack: addTextTrack,
         addCaptions: addCaptions,
         getCurrentTrackIdx: getCurrentTrackIdx,

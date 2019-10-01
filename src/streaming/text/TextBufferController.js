@@ -38,9 +38,8 @@ function TextBufferController(config) {
     config = config || {};
     let context = this.context;
 
-    let _BufferControllerImpl;
-
-    let instance;
+    let _BufferControllerImpl,
+        instance;
 
     function setup() {
 
@@ -50,7 +49,7 @@ function TextBufferController(config) {
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 type: config.type,
-                metricsModel: config.metricsModel,
+                dashMetrics: config.dashMetrics,
                 mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
                 errHandler: config.errHandler,
@@ -60,7 +59,8 @@ function TextBufferController(config) {
                 textController: config.textController,
                 abrController: config.abrController,
                 playbackController: config.playbackController,
-                streamProcessor: config.streamProcessor
+                streamProcessor: config.streamProcessor,
+                settings: config.settings
             });
         } else {
 

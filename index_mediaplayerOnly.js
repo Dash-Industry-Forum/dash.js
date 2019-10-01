@@ -32,7 +32,7 @@
 import MediaPlayer from './src/streaming/MediaPlayer';
 import FactoryMaker from './src/core/FactoryMaker';
 import Debug from './src/core/Debug';
-import {getVersionString} from './src/core/Version';
+import { getVersionString } from './src/core/Version';
 
 // Shove both of these into the global scope
 var context = (typeof window !== 'undefined' && window) || global;

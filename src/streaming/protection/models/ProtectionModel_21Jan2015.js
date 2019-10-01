@@ -39,7 +39,8 @@
  */
 import ProtectionKeyController from '../controllers/ProtectionKeyController';
 import NeedKey from '../vo/NeedKey';
-import KeyError from '../vo/KeyError';
+import ProtectionErrors from '../errors/ProtectionErrors';
+import DashJSError from '../../vo/DashJSError';
 import KeyMessage from '../vo/KeyMessage';
 import KeySystemAccess from '../vo/KeySystemAccess';
 import ProtectionConstants from '../../constants/ProtectionConstants';
@@ -110,6 +111,19 @@ function ProtectionModel_21Jan2015(config) {
         }
     }
 
+    function stop() {
+        // Close and remove not usable sessions
+        let session;
+        for (let i = 0; i < sessions.length; i++) {
+            session = sessions[i];
+            if (!session.getUsable()) {
+                closeKeySessionInternal(session).catch(function () {
+                    removeSession(session);
+                });
+            }
+        }
+    }
+
     function getKeySystem() {
         return keySystem;
     }
@@ -176,7 +190,7 @@ function ProtectionModel_21Jan2015(config) {
             logger.info('DRM: License server certificate successfully updated.');
             eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function (error) {
-            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {error: 'Error updating server certificate -- ' + error.name});
+            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name)});
         });
     }
 
@@ -198,7 +212,7 @@ function ProtectionModel_21Jan2015(config) {
         }).catch(function (error) {
             // TODO: Better error string
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Error generating key request -- ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)});
         });
     }
 
@@ -210,7 +224,7 @@ function ProtectionModel_21Jan2015(config) {
             message = message.toJWK();
         }
         session.update(message).catch(function (error) {
-            eventBus.trigger(events.KEY_ERROR, {data: new KeyError(sessionToken, 'Error sending update() message! ' + error.name)});
+            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
         });
     }
 
@@ -237,11 +251,11 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
             } else {
                 removeSession(sessionToken);
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Could not load session! Invalid Session ID (' + sessionID + ')'});
+                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')});
             }
         }).catch(function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: 'Could not load session (' + sessionID + ')! ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)});
         });
     }
 
@@ -276,7 +290,14 @@ function ProtectionModel_21Jan2015(config) {
         (function (i) {
             const keySystem = ksConfigurations[i].ks;
             const configs = ksConfigurations[i].configs;
-            navigator.requestMediaKeySystemAccess(keySystem.systemString, configs).then(function (mediaKeySystemAccess) {
+            let systemString = keySystem.systemString;
+
+            // PATCH to support persistent licenses on Edge browser (see issue #2658)
+            if (systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING && configs[0].persistentState === 'required') {
+                systemString += '.recommendation';
+            }
+
+            navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
                         mediaKeySystemAccess.getConfiguration() : null;
@@ -333,6 +354,32 @@ function ProtectionModel_21Jan2015(config) {
         }
     }
 
+    function parseKeyStatus(args) {
+        // Edge and Chrome implement different version of keystatues, param are not on same order
+        let status, keyId;
+        if (args && args.length > 0) {
+            if (args[0]) {
+                if (typeof args[0] === 'string') {
+                    status = args[0];
+                } else {
+                    keyId = args[0];
+                }
+            }
+
+            if (args[1]) {
+                if (typeof args[1] === 'string') {
+                    status = args[1];
+                } else {
+                    keyId = args[1];
+                }
+            }
+        }
+        return {
+            status: status,
+            keyId: keyId
+        };
+    }
+
     // Function to create our session token objects which manage the EME
     // MediaKeySession and session-specific event handler
     function createSessionToken(session, initData, sessionType, sessionID) {
@@ -349,31 +396,13 @@ function ProtectionModel_21Jan2015(config) {
                     case 'keystatuseschange':
                         eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
                         event.target.keyStatuses.forEach(function () {
-                            // Edge and Chrome implement different version of keystatues, param are not on same order
-                            let status, keyId;
-                            if (arguments && arguments.length > 0) {
-                                if (arguments[0]) {
-                                    if (typeof arguments[0] === 'string') {
-                                        status = arguments[0];
-                                    } else {
-                                        keyId = arguments[0];
-                                    }
-                                }
-
-                                if (arguments[1]) {
-                                    if (typeof arguments[1] === 'string') {
-                                        status = arguments[1];
-                                    } else {
-                                        keyId = arguments[1];
-                                    }
-                                }
-                            }
-                            switch (status) {
+                            let keyStatus = parseKeyStatus(arguments);
+                            switch (keyStatus.status) {
                                 case 'expired':
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: 'License has expired'});
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE)});
                                     break;
                                 default:
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {status: status, keyId: keyId});
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
                                     break;
                             }
                         });
@@ -396,6 +425,17 @@ function ProtectionModel_21Jan2015(config) {
 
             getKeyStatuses: function () {
                 return session.keyStatuses;
+            },
+
+            getUsable: function () {
+                let usable  = false;
+                session.keyStatuses.forEach(function () {
+                    let keyStatus = parseKeyStatus(arguments);
+                    if (keyStatus.status === 'usable') {
+                        usable = true;
+                    }
+                });
+                return usable;
             },
 
             getSessionType: function () {
@@ -432,6 +472,7 @@ function ProtectionModel_21Jan2015(config) {
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
         closeKeySession: closeKeySession,
+        stop: stop,
         reset: reset
     };
 

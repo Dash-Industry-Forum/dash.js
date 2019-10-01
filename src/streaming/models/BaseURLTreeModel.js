@@ -45,10 +45,9 @@ class Node {
 }
 
 function BaseURLTreeModel() {
-
-    let instance;
-    let root;
-    let dashManifestModel;
+    let instance,
+        root,
+        adapter;
 
     const context = this.context;
     const objectUtils = ObjectUtils(context).getInstance();
@@ -58,13 +57,19 @@ function BaseURLTreeModel() {
     }
 
     function setConfig(config) {
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
+        if (config.adapter) {
+            adapter = config.adapter;
+        }
+    }
+
+    function checkConfig() {
+        if (!adapter || !adapter.hasOwnProperty('getBaseURLsFromElement') || !adapter.hasOwnProperty('getRepresentationSortFunction')) {
+            throw new Error('setConfig function has to be called previously');
         }
     }
 
     function updateChildData(node, index, element) {
-        let baseUrls = dashManifestModel.getBaseURLsFromElement(element);
+        const baseUrls = adapter.getBaseURLsFromElement(element);
 
         if (!node[index]) {
             node[index] = new Node(baseUrls);
@@ -77,14 +82,15 @@ function BaseURLTreeModel() {
     }
 
     function getBaseURLCollectionsFromManifest(manifest) {
-        let baseUrls = dashManifestModel.getBaseURLsFromElement(manifest);
+        checkConfig();
+        const baseUrls = adapter.getBaseURLsFromElement(manifest);
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
             root.data.selectedIdx = DEFAULT_INDEX;
         }
 
-        if (manifest.Period_asArray) {
+        if (manifest && manifest.Period_asArray) {
             manifest.Period_asArray.forEach((p, pi) => {
                 updateChildData(root.children, pi, p);
 
@@ -94,7 +100,7 @@ function BaseURLTreeModel() {
 
                         if (a.Representation_asArray) {
                             a.Representation_asArray.sort(
-                                dashManifestModel.getRepresentationSortFunction()
+                                adapter.getRepresentationSortFunction()
                             ).forEach((r, ri) => {
                                 updateChildData(
                                     root.children[pi].children[ai].children,
@@ -110,7 +116,7 @@ function BaseURLTreeModel() {
     }
 
     function walk(callback, node) {
-        let target = node || root;
+        const target = node || root;
 
         callback(target.data);
 
@@ -139,7 +145,7 @@ function BaseURLTreeModel() {
 
     function getForPath(path) {
         let target = root;
-        let nodes = [target.data];
+        const nodes = [target.data];
 
         if (path) {
             path.forEach(p => {

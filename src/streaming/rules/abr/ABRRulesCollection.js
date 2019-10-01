@@ -46,8 +46,8 @@ function ABRRulesCollection(config) {
     const context = this.context;
 
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
+    const settings = config.settings;
 
     let instance,
         qualitySwitchRules,
@@ -57,25 +57,23 @@ function ABRRulesCollection(config) {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
 
-        if (mediaPlayerModel.getUseDefaultABRRules()) {
+        if (settings.get().streaming.abr.useDefaultABRRules) {
             // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
             // This is controlled by useBufferOccupancyABR mechanism in AbrController.
             qualitySwitchRules.push(
                 BolaRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
                 })
             );
             qualitySwitchRules.push(
                 ThroughputRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics
                 })
             );
             qualitySwitchRules.push(
                 InsufficientBufferRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics
                 })
             );
@@ -87,9 +85,9 @@ function ABRRulesCollection(config) {
             );
             abandonFragmentRules.push(
                 AbandonRequestsRule(context).create({
-                    metricsModel: metricsModel,
                     dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
                 })
             );
         }

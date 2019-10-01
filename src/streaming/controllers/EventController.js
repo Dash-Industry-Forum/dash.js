@@ -33,11 +33,15 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import XHRLoader from '../net/XHRLoader';
 
 function EventController() {
 
     const MPD_RELOAD_SCHEME = 'urn:mpeg:dash:event:2012';
     const MPD_RELOAD_VALUE = 1;
+
+    const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
+    const MPD_CALLBACK_VALUE = 1;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -49,8 +53,7 @@ function EventController() {
         activeEvents, // Holds all Events currently running
         eventInterval, // variable holding the setInterval
         refreshDelay, // refreshTime for the setInterval
-        presentationTimeThreshold,
-        manifestModel,
+        lastEventTimerCall,
         manifestUpdater,
         playbackController,
         isStarted;
@@ -67,11 +70,11 @@ function EventController() {
         activeEvents = {};
         eventInterval = null;
         refreshDelay = 100;
-        presentationTimeThreshold = refreshDelay / 1000;
+        lastEventTimerCall = Date.now() / 1000;
     }
 
-    function checkSetConfigCall() {
-        if (!manifestModel || !manifestUpdater || !playbackController) {
+    function checkConfig() {
+        if (!manifestUpdater || !playbackController) {
             throw new Error('setConfig function has to be called previously');
         }
     }
@@ -85,7 +88,7 @@ function EventController() {
     }
 
     function start() {
-        checkSetConfigCall();
+        checkConfig();
         logger.debug('Start Event Controller');
         if (!isStarted && !isNaN(refreshDelay)) {
             isStarted = true;
@@ -98,13 +101,13 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInlineEvents(values) {
-        checkSetConfigCall();
+        checkConfig();
 
         inlineEvents = {};
 
         if (values) {
-            for (var i = 0; i < values.length; i++) {
-                var event = values[i];
+            for (let i = 0; i < values.length; i++) {
+                let event = values[i];
                 inlineEvents[event.id] = event;
                 logger.debug('Add inline event with id ' + event.id);
             }
@@ -117,10 +120,10 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
-        checkSetConfigCall();
+        checkConfig();
 
-        for (var i = 0; i < values.length; i++) {
-            var event = values[i];
+        for (let i = 0; i < values.length; i++) {
+            let event = values[i];
             if (!(event.id in inbandEvents)) {
                 if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
                     handleManifestReloadEvent(event);
@@ -158,12 +161,12 @@ function EventController() {
      */
     function removeEvents() {
         if (activeEvents) {
-            var currentVideoTime = playbackController.getTime();
-            var eventIds = Object.keys(activeEvents);
+            let currentVideoTime = playbackController.getTime();
+            let eventIds = Object.keys(activeEvents);
 
-            for (var i = 0; i < eventIds.length; i++) {
-                var eventId = eventIds[i];
-                var curr = activeEvents[eventId];
+            for (let i = 0; i < eventIds.length; i++) {
+                let eventId = eventIds[i];
+                let curr = activeEvents[eventId];
                 if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
                     logger.debug('Remove Event ' + eventId + ' at time ' + currentVideoTime);
                     curr = null;
@@ -177,26 +180,39 @@ function EventController() {
      * Iterate through the eventList and trigger/remove the events
      */
     function onEventTimer() {
-        triggerEvents(inbandEvents);
-        triggerEvents(inlineEvents);
+        var currentVideoTime = playbackController.getTime();
+        var presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
+        lastEventTimerCall = currentVideoTime;
+
+        triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
+        triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
         removeEvents();
     }
 
     function refreshManifest() {
-        checkSetConfigCall();
+        checkConfig();
         manifestUpdater.refreshManifest();
     }
 
-    function triggerEvents(events) {
-        var currentVideoTime = playbackController.getTime();
+    function sendCallbackRequest(url) {
+        let loader = XHRLoader(context).create({});
+        loader.load({
+            method: 'get',
+            url: url,
+            request: {
+                responseType: 'arraybuffer'
+            }});
+    }
+
+    function triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
         var presentationTime;
 
         /* == Trigger events that are ready == */
         if (events) {
-            var eventIds = Object.keys(events);
-            for (var i = 0; i < eventIds.length; i++) {
-                var eventId = eventIds[i];
-                var curr = events[eventId];
+            let eventIds = Object.keys(events);
+            for (let i = 0; i < eventIds.length; i++) {
+                let eventId = eventIds[i];
+                let curr = events[eventId];
 
                 if (curr !== undefined) {
                     presentationTime = curr.presentationTime / curr.eventStream.timescale;
@@ -209,9 +225,14 @@ function EventController() {
                             if (curr.duration !== 0 || curr.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                                 refreshManifest();
                             }
+                        } else if (curr.eventStream.schemeIdUri == MPD_CALLBACK_SCHEME && curr.eventStream.value == MPD_CALLBACK_VALUE) {
+                            sendCallbackRequest(curr.messageData);
                         } else {
                             eventBus.trigger(curr.eventStream.schemeIdUri, {event: curr});
                         }
+                        delete events[eventId];
+                    }
+                    else if (presentationTime <= currentVideoTime - presentationTimeThreshold) {
                         delete events[eventId];
                     }
                 }
@@ -221,10 +242,6 @@ function EventController() {
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
 
         if (config.manifestUpdater) {
             manifestUpdater = config.manifestUpdater;

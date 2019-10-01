@@ -51,7 +51,7 @@ function CustomThroughputRuleClass() {
         // here you can get some informations aboit metrics for example, to implement the rule
         let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
-        var metrics = metricsModel.getReadOnlyMetricsFor(mediaType);
+        var metrics = metricsModel.getMetricsFor(mediaType, true);
 
         // this sample only display metrics in console
         console.log(metrics);

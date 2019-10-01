@@ -1,10 +1,8 @@
 import EventController from '../../src/streaming/controllers/EventController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
-import Debug from '../../src/core/Debug';
 
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import ManifestModelMock from './mocks/ManifestModelMock';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
 
 const expect = require('chai').expect;
@@ -12,13 +10,10 @@ const context = {};
 const eventBus = EventBus(context).getInstance();
 
 describe('EventController', function () {
-    const debug = Debug(context).getInstance();
-    debug.setLogToBrowserConsole(false);
     let eventController;
 
     let manifestUpdaterMock = new ManifestUpdaterMock();
     let playbackControllerMock = new PlaybackControllerMock();
-    let manifestModelMock = new ManifestModelMock();
 
     const manifestExpiredEventStub = {
         'duration': 0,
@@ -62,7 +57,6 @@ describe('EventController', function () {
     describe('if configured', function () {
         beforeEach(function () {
             eventController.setConfig({
-                manifestModel: manifestModelMock,
                 manifestUpdater: manifestUpdaterMock,
                 playbackController: playbackControllerMock
             });

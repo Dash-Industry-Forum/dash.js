@@ -29,8 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import BufferController from '../../controllers/BufferController';
+
 /**
  * @class
+ * @ignore
  */
 class BufferState {
     /**

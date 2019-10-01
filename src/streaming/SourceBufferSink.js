@@ -34,8 +34,13 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
+import Errors from '../core/errors/Errors';
+
+const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
+
 /**
  * @class SourceBufferSink
+ * @ignore
  * @implements FragmentSink
  */
 function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
@@ -45,13 +50,12 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     let instance,
         logger,
         buffer,
-        isAppendingInProgress;
+        isAppendingInProgress,
+        intervalId;
 
     let callbacks = [];
-
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let intervalId;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -67,6 +71,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 throw new Error('not really supported');
             }
             buffer = oldBuffer ? oldBuffer : mediaSource.addSourceBuffer(codec);
+            if (buffer.changeType && oldBuffer) {
+                logger.debug('Doing period transition with changeType');
+                buffer.changeType(codec);
+            }
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
@@ -84,8 +92,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 // use setInterval to periodically check if updating has been completed
                 intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
             }
-
-
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
@@ -134,16 +140,41 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         }
     }
 
+    function hasDiscontinuitiesAfter(time) {
+        try {
+            const ranges = getAllBufferRanges();
+            if (ranges && ranges.length > 1) {
+                for (let i = 0, len = ranges.length; i < len; i++) {
+                    if (i > 0) {
+                        if (time < ranges.start(i) && ranges.start(i) > ranges.end(i - 1) + MAX_ALLOWED_DISCONTINUITY) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            logger.error('hasDiscontinuities exception: ' + e.message);
+        }
+        return false;
+    }
+
     function append(chunk) {
+        if (!chunk) {
+            onAppended({
+                chunk: chunk,
+                error: new DashJSError(Errors.APPEND_ERROR_CODE, Errors.APPEND_ERROR_MESSAGE)
+            });
+            return;
+        }
         appendQueue.push(chunk);
         if (!isAppendingInProgress) {
-            waitForUpdateEnd(buffer, appendNextInQueue.bind(this));
+            waitForUpdateEnd(appendNextInQueue.bind(this));
         }
     }
 
     function updateTimestampOffset(MSETimeOffset) {
         if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-            waitForUpdateEnd(buffer, () => {
+            waitForUpdateEnd(() => {
                 buffer.timestampOffset = MSETimeOffset;
             });
         }
@@ -152,13 +183,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function remove(start, end, forceRemoval) {
         const sourceBufferSink = this;
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-        waitForUpdateEnd(buffer, function () {
+        waitForUpdateEnd(function () {
             try {
                 if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                waitForUpdateEnd(buffer, function () {
+                waitForUpdateEnd(function () {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                         buffer: sourceBufferSink,
                         from: start,
@@ -172,7 +203,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                     from: start,
                     to: end,
                     unintended: false,
-                    error: new DashJSError(err.code, err.message, null)
+                    error: new DashJSError(err.code, err.message)
                 });
             }
         });
@@ -213,7 +244,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                         buffer.append(nextChunk.bytes, nextChunk);
                     }
                     // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                    waitForUpdateEnd(buffer, afterSuccess.bind(this));
+                    waitForUpdateEnd(afterSuccess.bind(this));
                 }
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
@@ -226,7 +257,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 if (onAppended) {
                     onAppended({
                         chunk: nextChunk,
-                        error: new DashJSError(err.code, err.message, null)
+                        error: new DashJSError(err.code, err.message)
                     });
                 }
             }
@@ -267,7 +298,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         } catch (ex) {
             logger.error('SourceBuffer append abort failed: "' + ex + '"');
         }
-
         appendQueue = [];
     }
 
@@ -275,14 +305,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         if (callbacks.length > 0) {
             const cb = callbacks.shift();
             if (buffer.updating) {
-                waitForUpdateEnd(buffer, cb);
+                waitForUpdateEnd(cb);
             } else {
                 cb();
                 // Try to execute next callback if still not updating
                 executeCallback();
             }
         }
-
     }
 
     function checkIsUpdateEnded() {
@@ -291,7 +320,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         // updating is completed, now we can stop checking and resolve the promise
         executeCallback();
     }
-
 
     function updateEndHandler() {
         if (buffer.updating) return;
@@ -303,8 +331,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         logger.error('SourceBufferSink error', mediaInfo.type);
     }
 
-
-    function waitForUpdateEnd(buffer, callback) {
+    function waitForUpdateEnd(callback) {
         callbacks.push(callback);
 
         if (!buffer.updating) {
@@ -319,10 +346,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         remove: remove,
         abort: abort,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
+        waitForUpdateEnd: waitForUpdateEnd
     };
 
     setup();
+
     return instance;
 }
 

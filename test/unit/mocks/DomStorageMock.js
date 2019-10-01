@@ -1,16 +1,23 @@
-class DomStorageMock {
-    constructor() {
-        this.mediaSettings = {};
-    }
+function DomStorageMock () {
+    this.mediaSettings = {};
+    this.bitrateSettings = {audio: NaN, video: NaN};
 
-    getSavedMediaSettings(type) {
+    this.getSavedMediaSettings = function (type) {
         if (this.mediaSettings[type]) {
             return this.mediaSettings[type];
         }
         return null;
-    }
+    };
 
-    setSavedMediaSettings(type, settings) {
+    this.setSavedBitrateSettings = function (type, bitrate) {
+        this.bitrateSettings[type] = bitrate;
+    };
+
+    this.getSavedBitrateSettings = function (type) {
+        return this.bitrateSettings[type];
+    };
+
+    this.setSavedMediaSettings = function (type, settings) {
 
         if (!settings) {
             return;
@@ -20,7 +27,7 @@ class DomStorageMock {
         }
 
         this.mediaSettings[type] = settings;
-    }
+    };
 }
 
 export default DomStorageMock;

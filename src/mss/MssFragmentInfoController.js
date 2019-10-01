@@ -31,30 +31,29 @@
 
 import MssEvents from './MssEvents';
 import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
+import FragmentRequest from '../streaming/vo/FragmentRequest';
 
 function MssFragmentInfoController(config) {
 
     config = config || {};
     const context = this.context;
 
-    let instance;
-    let logger;
-    let fragmentModel;
-    let indexHandler;
-    let started;
-    let type;
-    let bufferTimeout;
-    let _fragmentInfoTime;
-    let startFragmentInfoDate;
-    let startTimeStampValue;
-    let deltaTime;
-    let segmentDuration;
+    let instance,
+        logger,
+        fragmentModel,
+        started,
+        type,
+        bufferTimeout,
+        startTime,
+        startFragmentTime,
+        index;
 
     const streamProcessor = config.streamProcessor;
     const eventBus = config.eventBus;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const ISOBoxer = config.ISOBoxer;
+    const baseURLController = config.baseURLController;
     const debug = config.debug;
     const controllerType = 'MssFragmentInfoController';
 
@@ -65,175 +64,29 @@ function MssFragmentInfoController(config) {
     function initialize() {
         started = false;
 
-        startFragmentInfoDate = null;
-        startTimeStampValue = null;
-        deltaTime = 0;
-        segmentDuration = NaN;
+        startTime = null;
+        startFragmentTime = null;
 
-        // register to stream processor as external controller
+        // Register to StreamProcessor as external controller
         streamProcessor.registerExternalController(instance);
         type = streamProcessor.getType();
         fragmentModel = streamProcessor.getFragmentModel();
-        indexHandler = streamProcessor.getIndexHandler();
-    }
-
-    function getCurrentRepresentation() {
-        const representationController = streamProcessor.getRepresentationController();
-        const representation = representationController.getCurrentRepresentation();
-
-        return representation;
-    }
-
-    function sendRequest(request) {
-        fragmentModel.executeRequest(request);
-    }
-
-    function asFragmentInfoRequest(request) {
-        if (request && request.url) {
-            request.url = request.url.replace('Fragments', 'FragmentInfo');
-            request.type = 'FragmentInfoSegment';
-        }
-
-        return request;
-    }
-
-    function onFragmentRequest(request) {
-        // Check if current request signals end of stream
-        if ((request !== null) && (request.action === request.ACTION_COMPLETE)) {
-            doStop();
-            return;
-        }
-
-        if (request !== null) {
-            _fragmentInfoTime = request.startTime + request.duration;
-            request = asFragmentInfoRequest(request);
-
-            if (streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
-                request = indexHandler.getNextSegmentRequest(getCurrentRepresentation());
-                onFragmentRequest(request);
-                return;
-            }
-
-            logger.debug('onFragmentRequest ' + request.url);
-
-            // Download the fragment info segment
-            sendRequest(request);
-        } else {
-            // No more fragment in current list
-            logger.debug('bufferFragmentInfo failed');
-        }
-    }
-
-    function bufferFragmentInfo() {
-        let segmentTime;
-
-        // Check if running state
-        if (!started) {
-            return;
-        }
-
-        logger.debug('Start buffering process...');
-
-        // Get next segment time
-        segmentTime = _fragmentInfoTime;
-
-        logger.debug('LoadNextFragment for time: ' + segmentTime);
-
-        const representation = getCurrentRepresentation();
-        const request = indexHandler.getSegmentRequestForTime(representation, segmentTime);
-        onFragmentRequest(request);
-    }
-
-    function delayLoadNextFragmentInfo(delay) {
-        const delayMs = Math.round(Math.min((delay * 1000), 2000));
-
-        logger.debug('Check buffer delta = ' + delayMs + ' ms');
-
-        clearTimeout(bufferTimeout);
-        bufferTimeout = setTimeout(function () {
-            bufferTimeout = null;
-            bufferFragmentInfo();
-        }, delayMs);
-    }
-
-    function onFragmentInfoLoadedCompleted(e) {
-        if (e.streamProcessor !== streamProcessor) {
-            return;
-        }
-
-        const request = e.fragmentInfo.request;
-        let deltaDate,
-            deltaTimeStamp;
-
-
-        if (!e.fragmentInfo.response) {
-            logger.error('Load error', request.url);
-            return;
-        }
-
-        segmentDuration = request.duration;
-        logger.debug('FragmentInfo loaded ', request.url);
-        try {
-            // update segment list
-            const mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-                metricsModel: metricsModel,
-                playbackController: playbackController,
-                ISOBoxer: ISOBoxer,
-                debug: debug
-            });
-            mssFragmentMoofProcessor.updateSegmentList(e.fragmentInfo, streamProcessor);
-
-            deltaDate = (new Date().getTime() - startFragmentInfoDate) / 1000;
-            deltaTimeStamp = (_fragmentInfoTime + segmentDuration) - startTimeStampValue;
-            deltaTime = (deltaTimeStamp - deltaDate) > 0 ? (deltaTimeStamp - deltaDate) : 0;
-            delayLoadNextFragmentInfo(deltaTime);
-        } catch (e) {
-            logger.fatal('Internal error while processing fragment info segment ');
-        }
-    }
-
-    function startPlayback() {
-        if (!started) {
-            return;
-        }
-
-        startFragmentInfoDate = new Date().getTime();
-        startTimeStampValue = _fragmentInfoTime;
-
-        logger.debug('startPlayback');
-
-        // Start buffering process
-        bufferFragmentInfo.call(this);
     }
 
     function doStart() {
-        let segments;
-
         if (started === true) {
             return;
         }
 
+        logger.debug('Do start');
+
         eventBus.on(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, onFragmentInfoLoadedCompleted, instance);
 
         started = true;
-        logger.debug('Do start');
+        startTime = new Date().getTime();
+        index = 0;
 
-        let representation = getCurrentRepresentation();
-        segments = representation.segments;
-
-        if (segments && segments.length > 0) {
-            _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
-
-            startPlayback();
-        } else {
-            indexHandler.updateSegmentList(representation);
-            segments = representation.segments;
-            if (segments && segments.length > 0) {
-                _fragmentInfoTime = segments[segments.length - 1].presentationStartTime - segments[segments.length - 1].duration;
-            }
-
-            startPlayback();
-        }
+        loadNextFragmentInfo();
     }
 
     function doStop() {
@@ -248,17 +101,131 @@ function MssFragmentInfoController(config) {
         clearTimeout(bufferTimeout);
         started = false;
 
-        startFragmentInfoDate = null;
-        startTimeStampValue = null;
-    }
-
-    function getType() {
-        return type;
+        startTime = null;
+        startFragmentTime = null;
     }
 
     function reset() {
         doStop();
         streamProcessor.unregisterExternalController(instance);
+    }
+
+    function loadNextFragmentInfo() {
+        // Check if running state
+        if (!started) {
+            return;
+        }
+
+        // Get last segment from SegmentTimeline
+        const representation = getCurrentRepresentation();
+        const manifest = representation.adaptation.period.mpd.manifest;
+        const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
+        const segments = adaptation.SegmentTemplate.SegmentTimeline.S_asArray;
+        const segment = segments[segments.length - 1];
+
+        logger.debug('Last fragment time: ' + (segment.t / adaptation.SegmentTemplate.timescale));
+
+        // Generate segment request
+        const request = getRequestForSegment(adaptation, representation, segment);
+
+        // Send segment request
+        requestFragment.call(this, request);
+    }
+
+    function delayLoadNextFragmentInfo(delay) {
+        clearTimeout(bufferTimeout);
+        bufferTimeout = setTimeout(function () {
+            bufferTimeout = null;
+            loadNextFragmentInfo();
+        }, delay * 1000);
+    }
+
+    function getRequestForSegment(adaptation, representation, segment) {
+        let timescale = adaptation.SegmentTemplate.timescale;
+        let request = new FragmentRequest();
+
+        request.mediaType = type;
+        request.type = 'FragmentInfoSegment';
+        // request.range = segment.mediaRange;
+        request.startTime = segment.t / timescale;
+        request.duration = segment.d / timescale;
+        request.timescale = timescale;
+        // request.availabilityStartTime = segment.availabilityStartTime;
+        // request.availabilityEndTime = segment.availabilityEndTime;
+        // request.wallStartTime = segment.wallStartTime;
+        request.quality = representation.index;
+        request.index = index++;
+        request.mediaInfo = streamProcessor.getMediaInfo();
+        request.adaptationIndex = representation.adaptation.index;
+        request.representationId = representation.id;
+        request.url = baseURLController.resolve(representation.path).url + adaptation.SegmentTemplate.media;
+        request.url = request.url.replace('$Bandwidth$', representation.bandwidth);
+        request.url = request.url.replace('$Time$', segment.tManifest ? segment.tManifest : segment.t);
+        request.url = request.url.replace('/Fragments(', '/FragmentInfo(');
+
+        return request;
+    }
+
+    function getCurrentRepresentation() {
+        const representationController = streamProcessor.getRepresentationController();
+        const representation = representationController.getCurrentRepresentation();
+
+        return representation;
+    }
+
+    function requestFragment(request) {
+
+        logger.debug('Load fragment for time: ' + request.startTime);
+        if (streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
+            // We may have reached end of timeline in case of start-over streams
+            logger.debug('No more fragments');
+            return;
+        }
+
+        fragmentModel.executeRequest(request);
+    }
+
+    function onFragmentInfoLoadedCompleted(e) {
+        if (e.streamProcessor !== streamProcessor) {
+            return;
+        }
+
+        const request = e.fragmentInfo.request;
+        if (!e.fragmentInfo.response) {
+            logger.error('Load error', request.url);
+            return;
+        }
+
+        let deltaFragmentTime,
+            deltaTime;
+
+        logger.debug('FragmentInfo loaded: ', request.url);
+
+        if (!startFragmentTime) {
+            startFragmentTime = request.startTime;
+        }
+
+        try {
+            // Process FramgentInfo in order to update segment timeline (DVR window)
+            const mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
+                dashMetrics: dashMetrics,
+                playbackController: playbackController,
+                ISOBoxer: ISOBoxer,
+                eventBus: eventBus,
+                debug: debug
+            });
+            mssFragmentMoofProcessor.updateSegmentList(e.fragmentInfo, streamProcessor);
+
+            deltaTime = (new Date().getTime() - startTime) / 1000;
+            deltaFragmentTime = (request.startTime + request.duration) - startFragmentTime;
+            delayLoadNextFragmentInfo(Math.max(0, (deltaFragmentTime - deltaTime)));
+        } catch (e) {
+            logger.fatal('Internal error while processing fragment info segment ');
+        }
+    }
+
+    function getType() {
+        return type;
     }
 
     instance = {

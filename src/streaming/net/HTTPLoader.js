@@ -32,10 +32,12 @@ import XHRLoader from './XHRLoader';
 import FetchLoader from './FetchLoader';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
-import ErrorHandler from '../utils/ErrorHandler';
+import Errors from '../../core/errors/Errors';
+import DashJSError from '../vo/DashJSError';
 
 /**
  * @module HTTPLoader
+ * @ignore
  * @description Manages download of resources via HTTP.
  * @param {Object} cfg - dependancies from parent
  */
@@ -45,30 +47,31 @@ function HTTPLoader(cfg) {
 
     const context = this.context;
     const errHandler = cfg.errHandler;
-    const metricsModel = cfg.metricsModel;
+    const dashMetrics = cfg.dashMetrics;
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
+    const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
 
-    let instance;
-    let requests;
-    let delayedRequests;
-    let retryTimers;
-    let downloadErrorToRequestTypeMap;
+    let instance,
+        requests,
+        delayedRequests,
+        retryRequests,
+        downloadErrorToRequestTypeMap;
 
     function setup() {
         requests = [];
         delayedRequests = [];
-        retryTimers = [];
+        retryRequests = [];
 
         downloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_MANIFEST,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_XLINK,
-            [HTTPRequest.INIT_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_INITIALIZATION,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.OTHER_TYPE]: ErrorHandler.DOWNLOAD_ERROR_ID_CONTENT
+            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
         };
     }
 
@@ -82,7 +85,7 @@ function HTTPLoader(cfg) {
         let lastTraceReceivedCount = 0;
         let httpRequest;
 
-        if (!requestModifier || !metricsModel || !errHandler) {
+        if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
         }
 
@@ -94,23 +97,15 @@ function HTTPLoader(cfg) {
             request.firstByteDate = request.firstByteDate || requestStartTime;
 
             if (!request.checkExistenceOnly) {
-                metricsModel.addHttpRequest(
-                    request.mediaType,
-                    null,
-                    request.type,
-                    request.url,
-                    httpRequest.response ? httpRequest.response.responseURL : null,
-                    request.serviceLocation || null,
-                    request.range || null,
-                    request.requestStartDate,
-                    request.firstByteDate,
-                    request.requestEndDate,
-                    httpRequest.response ? httpRequest.response.status : null,
-                    request.duration,
-                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                        httpRequest.response ? httpRequest.response.responseHeaders : [],
-                    success ? traces : null
-                );
+                dashMetrics.addHttpRequest(request, httpRequest.response ? httpRequest.response.responseURL : null,
+                                           httpRequest.response ? httpRequest.response.status : null,
+                                           httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                                           httpRequest.response ? httpRequest.response.responseHeaders : [],
+                                           success ? traces : null);
+
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    dashMetrics.addManifestUpdate(request.type, request.requestStartDate, request.requestEndDate);
+                }
             }
         };
 
@@ -126,17 +121,18 @@ function HTTPLoader(cfg) {
 
                 if (remainingAttempts > 0) {
                     remainingAttempts--;
-                    retryTimers.push(
-                        setTimeout(function () {
-                            internalLoad(config, remainingAttempts);
-                        }, mediaPlayerModel.getRetryIntervalForType(request.type))
-                    );
+                    let retryRequest = { config: config };
+                    retryRequests.push(retryRequest);
+                    retryRequest.timeout = setTimeout(function () {
+                        if (retryRequests.indexOf(retryRequest) === -1) {
+                            return;
+                        } else {
+                            retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
+                        }
+                        internalLoad(config, remainingAttempts);
+                    }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
-                    errHandler.downloadError(
-                        downloadErrorToRequestTypeMap[request.type],
-                        request.url,
-                        request
-                    );
+                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);
@@ -202,9 +198,10 @@ function HTTPLoader(cfg) {
         };
 
         let loader;
-        if (useFetch && window.fetch && request.responseType === 'arraybuffer') {
+        if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
-                requestModifier: requestModifier
+                requestModifier: requestModifier,
+                boxParser: boxParser
             });
         } else {
             loader = XHRLoader(context).create({
@@ -271,6 +268,10 @@ function HTTPLoader(cfg) {
                     config.request.type
                 )
             );
+        } else {
+            if (config.error) {
+                config.error(config.request, 'error');
+            }
         }
     }
 
@@ -280,8 +281,14 @@ function HTTPLoader(cfg) {
      * @instance
      */
     function abort() {
-        retryTimers.forEach(t => clearTimeout(t));
-        retryTimers = [];
+        retryRequests.forEach(t => {
+            clearTimeout(t.timeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (t.config.request && t.config.abort) {
+                t.config.abort(t.config.request);
+            }
+        });
+        retryRequests = [];
 
         delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
         delayedRequests = [];

@@ -29,11 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import Constants from '../constants/Constants';
 
 /**
  * @param {Object} config
  * @returns {{initialize: initialize, getLiveEdge: getLiveEdge, reset: reset}|*}
  * @constructor
+ * @ignore
  */
 function LiveEdgeFinder(config) {
 
@@ -43,18 +45,19 @@ function LiveEdgeFinder(config) {
     let streamProcessor = config.streamProcessor;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getCurrentRepresentationInfo')) {
-            throw new Error('Missing config parameter(s)');
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationInfo')) {
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
     function getLiveEdge() {
         checkConfig();
-        const representationInfo = streamProcessor.getCurrentRepresentationInfo();
-        let liveEdge = representationInfo.DVRWindow.end;
+        const representationInfo = streamProcessor.getRepresentationInfo();
+        const dvrEnd = representationInfo.DVRWindow ? representationInfo.DVRWindow.end : 0;
+        let liveEdge = dvrEnd;
         if (representationInfo.useCalculatedLiveEdgeTime) {
             liveEdge = timelineConverter.getExpectedLiveEdge();
-            timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
+            timelineConverter.setClientTimeOffset(liveEdge - dvrEnd);
         }
         return liveEdge;
     }

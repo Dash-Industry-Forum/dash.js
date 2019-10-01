@@ -32,12 +32,10 @@ import HTTPLoader from './net/HTTPLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
 import EventBus from './../core/EventBus';
+import BoxParser from '../streaming/utils/BoxParser';
 import Events from './../core/events/Events';
+import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
-
-const FRAGMENT_LOADER_ERROR_LOADING_FAILURE = 1;
-const FRAGMENT_LOADER_ERROR_NULL_REQUEST = 2;
-const FRAGMENT_LOADER_MESSAGE_NULL_REQUEST = 'request is null';
 
 function FragmentLoader(config) {
 
@@ -49,12 +47,14 @@ function FragmentLoader(config) {
         httpLoader;
 
     function setup() {
+        const boxParser = BoxParser(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: config.errHandler,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
-            useFetch: config.mediaPlayerModel.getLowLatencyEnabled()
+            boxParser: boxParser,
+            useFetch: config.settings.get().streaming.lowLatencyEnabled
         });
     }
 
@@ -100,7 +100,8 @@ function FragmentLoader(config) {
                 request: request,
                 progress: function (event) {
                     eventBus.trigger(Events.LOADING_PROGRESS, {
-                        request: request
+                        request: request,
+                        stream: event.stream
                     });
                     if (event.data) {
                         eventBus.trigger(Events.LOADING_DATA_PROGRESS, {
@@ -118,7 +119,7 @@ function FragmentLoader(config) {
                     report(
                         undefined,
                         new DashJSError(
-                            FRAGMENT_LOADER_ERROR_LOADING_FAILURE,
+                            Errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
                             errorText,
                             statusText
                         )
@@ -134,8 +135,8 @@ function FragmentLoader(config) {
             report(
                 undefined,
                 new DashJSError(
-                    FRAGMENT_LOADER_ERROR_NULL_REQUEST,
-                    FRAGMENT_LOADER_MESSAGE_NULL_REQUEST
+                    Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE,
+                    Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE
                 )
             );
         }
@@ -167,9 +168,4 @@ function FragmentLoader(config) {
 }
 
 FragmentLoader.__dashjs_factory_name = 'FragmentLoader';
-
-const factory = FactoryMaker.getClassFactory(FragmentLoader);
-factory.FRAGMENT_LOADER_ERROR_LOADING_FAILURE = FRAGMENT_LOADER_ERROR_LOADING_FAILURE;
-factory.FRAGMENT_LOADER_ERROR_NULL_REQUEST = FRAGMENT_LOADER_ERROR_NULL_REQUEST;
-FactoryMaker.updateClassFactory(FragmentLoader.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(FragmentLoader);

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Events example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        var player;
+        const URL = "https://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
+        const SCHEMEIDURI = "urn:scte:scte35:2013:xml";
+
+        function init() {
+            player = dashjs.MediaPlayer().create();
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
+            player.on(SCHEMEIDURI, showEvent);
+            player.initialize(document.querySelector("video"), URL, true);
+        }
+
+        function showEvent(e) {
+            log("EVENT RECEIVED: " + e.type);
+            // We double process in order to pretty-print. Only two levels of object properties are exposed.
+            for (var name in e) {
+                if (typeof e[name] != 'object') {
+                    log("    " + name + ": " + e[name]);
+                }
+            }
+            for (name in e) {
+                if (typeof e[name] == 'object' ) {
+                    log("    " + name + ":");
+                    for (name2 in e[name]) {
+                        log("        " + name2 + ": " + JSON.stringify(e[name][name2]));
+                    }
+                }
+            }
+        }
+
+        function log(msg) {
+            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; // to avoid repeated wrapping with large objects
+            var tracePanel = document.getElementById("trace");
+            tracePanel.innerHTML += msg + "\n";
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+        textarea {
+            width: 500px;
+            height:360px;
+            font-size: 10px;
+        }
+    </style>
+    </head>
+    <body>
+        <div>
+        This sample catches and displays SCTE-35 events embedded inside EMSG boxes. The live sample stream being used contains embedded events at 10s and 40s in to each minute of media time.
+        <p/>
+        </div>
+        <div>
+            <video controls="true">
+            </video>
+            <textarea id="trace" placeholder="Trapped events will be displayed here"></textarea>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
+        <script src="../highlighter.js"></script>
+    </body>
+</html>

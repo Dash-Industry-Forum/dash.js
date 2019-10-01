@@ -30,29 +30,26 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import BoxParser from '../utils/BoxParser';
 
 /**
 * @module FetchLoader
+* @ignore
 * @description Manages download of resources via HTTP using fetch.
 * @param {Object} cfg - dependencies from parent
 */
 function FetchLoader(cfg) {
+
     cfg = cfg || {};
     const requestModifier = cfg.requestModifier;
+    const boxParser = cfg.boxParser;
 
     let instance;
 
     function load(httpRequest) {
 
         // Variables will be used in the callback functions
-        let firstProgress = true; /*jshint ignore:line*/
-        let needFailureReport = true; /*jshint ignore:line*/
-        let requestStartTime = new Date();
-        let lastTraceTime = requestStartTime; /*jshint ignore:line*/
-        let lastTraceReceivedCount = 0; /*jshint ignore:line*/
-
-        let request = httpRequest.request;
+        const requestStartTime = new Date();
+        const request = httpRequest.request;
 
         const headers = new Headers(); /*jshint ignore:line*/
         if (request.range) {
@@ -114,7 +111,8 @@ function FetchLoader(cfg) {
                     httpRequest.response.response = buffer;
                     const event = {
                         loaded: buffer.byteLength,
-                        total: buffer.byteLength
+                        total: buffer.byteLength,
+                        stream: false
                     };
                     httpRequest.progress(event);
                     httpRequest.onload();
@@ -142,7 +140,8 @@ function FetchLoader(cfg) {
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(downLoadedData, bytesReceived)
+                            time: calculateDownloadedTime(downLoadedData, bytesReceived),
+                            stream: true
                         });
 
                         httpRequest.response.response = remaining.buffer;
@@ -160,7 +159,7 @@ function FetchLoader(cfg) {
                         bytes: value.length
                     });
 
-                    const boxesInfo = BoxParser().getInstance().findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
+                    const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
                     if (boxesInfo.found) {
                         const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
 

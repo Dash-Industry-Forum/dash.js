@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import DashJSError from '../streaming/vo/DashJSError';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
+import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
@@ -43,15 +43,10 @@ import {
     replaceIDForTemplate,
     unescapeDollarsInTemplate,
     replaceTokenForTemplate,
-    getTimeBasedSegment,
-    getSegmentByIndex
+    getTimeBasedSegment
 } from './utils/SegmentsUtils';
-import SegmentsGetter from './utils/SegmentsGetter';
 
-import SegmentBaseLoader from './SegmentBaseLoader';
-import WebmSegmentBaseLoader from './WebmSegmentBaseLoader';
-
-const SEGMENTS_UNAVAILABLE_ERROR_CODE = 1;
+import SegmentsController from './controllers/SegmentsController';
 
 function DashHandler(config) {
 
@@ -60,52 +55,46 @@ function DashHandler(config) {
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
-    let segmentBaseLoader;
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
-    const metricsModel = config.metricsModel;
-    const mediaPlayerModel = config.mediaPlayerModel;
-    const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
 
     let instance,
         logger,
-        index,
+        segmentIndex,
+        lastSegment,
         requestedTime,
         currentTime,
-        earliestTime,
         streamProcessor,
-        segmentsGetter;
+        segmentsController;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
-        segmentBaseLoader.setConfig({
-            baseURLController: baseURLController,
-            metricsModel: metricsModel,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
-        });
+        segmentsController = SegmentsController(context).create(config);
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
     }
 
-    function isWebM (mimeType) {
-        const type = mimeType.split('/')[1];
-        return 'webm' === type.toLowerCase();
-    }
-
     function initialize(StreamProcessor) {
         streamProcessor = StreamProcessor;
 
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        segmentsController.initialize(isDynamic());
+    }
 
-        segmentBaseLoader.initialize();
+    function getType() {
+        return streamProcessor ? streamProcessor.getType() : null;
+    }
 
-        segmentsGetter = SegmentsGetter(context).create(config, isDynamic);
+    function isDynamic() {
+        const streamInfo = streamProcessor ? streamProcessor.getStreamInfo() : null;
+        return streamInfo ? streamInfo.manifestInfo.isDynamic : null;
+    }
+
+    function getMediaInfo() {
+        return streamProcessor ? streamProcessor.getMediaInfo() : null;
     }
 
     function getStreamProcessor() {
@@ -120,17 +109,17 @@ function DashHandler(config) {
         return currentTime;
     }
 
-    function getEarliestTime() {
-        return earliestTime;
+    function resetIndex() {
+        segmentIndex = -1;
+        lastSegment = null;
     }
 
     function resetInitialSettings() {
-        index = -1;
+        resetIndex();
         currentTime = 0;
-        earliestTime = NaN;
         requestedTime = null;
         streamProcessor = null;
-        segmentsGetter = null;
+        segmentsController = null;
     }
 
     function reset() {
@@ -170,149 +159,60 @@ function DashHandler(config) {
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
+        const isDynamicStream = isDynamic();
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
         request.range = representation.range;
-        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamic);
-        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamic);
+        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, period.mpd, isDynamicStream);
+        request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, period.mpd, isDynamicStream);
         request.quality = representation.index;
-        request.mediaInfo = streamProcessor ? streamProcessor.getMediaInfo() : null;
+        request.mediaInfo = getMediaInfo();
         request.representationId = representation.id;
 
         if (setRequestUrl(request, representation.initialization, representation)) {
+            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
             return request;
         }
     }
 
     function getInitRequest(representation) {
-        const type = streamProcessor ? streamProcessor.getType() : null;
         if (!representation) return null;
-        const request = generateInitRequest(representation, type);
+        const request = generateInitRequest(representation, getType());
         return request;
     }
 
-    function isMediaFinished(representation) {
-        let isFinished = false;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-
-        if (!isDynamic && index === representation.availableSegmentsNumber) {
-            isFinished = true;
-        } else {
-            const seg = getSegmentByIndex(index, representation);
-            if (seg) {
-                const time = parseFloat((seg.presentationStartTime - representation.adaptation.period.start).toFixed(5));
-                const duration = representation.adaptation.period.duration;
-                logger.debug(representation.segmentInfoType + ': ' + time + ' / ' + duration);
-                isFinished = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? false : time >= duration;
-            } else {
-                logger.debug('isMediaFinished - no segment found');
-            }
-        }
-
-        return isFinished;
-    }
-
-    function updateSegments(voRepresentation) {
-        segmentsGetter.getSegments(voRepresentation, requestedTime, index, onSegmentListUpdated);
-    }
-
-    function onSegmentListUpdated(voRepresentation, segments) {
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        voRepresentation.segments = segments;
-        if (segments && segments.length > 0) {
-            earliestTime = isNaN(earliestTime) ? segments[0].presentationStartTime : Math.min(segments[0].presentationStartTime,  earliestTime);
-            if (isDynamic && isNaN(timelineConverter.getExpectedLiveEdge())) {
-                const lastSegment = segments[segments.length - 1];
-                const liveEdge = lastSegment.presentationStartTime;
-                const metrics = metricsModel.getMetricsFor(Constants.STREAM);
-                // the last segment is the Expected, not calculated, live edge.
-                timelineConverter.setExpectedLiveEdge(liveEdge);
-                metricsModel.updateManifestUpdateInfo(dashMetrics.getCurrentManifestUpdate(metrics), {presentationStartTime: liveEdge});
-            }
-        }
-    }
-
-    function updateSegmentList(voRepresentation) {
-        if (!voRepresentation) {
-            throw new Error('no representation');
-        }
-
-        voRepresentation.segments = null;
-
-        updateSegments(voRepresentation);
+    function setExpectedLiveEdge(liveEdge) {
+        timelineConverter.setExpectedLiveEdge(liveEdge);
+        dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
     }
 
     function updateRepresentation(voRepresentation, keepIdx) {
         const hasInitialization = Representation.hasInitialization(voRepresentation);
         const hasSegments = Representation.hasSegments(voRepresentation);
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
         let error;
 
-        if (!voRepresentation.segmentDuration && !voRepresentation.segments) {
-            updateSegmentList(voRepresentation);
-        }
-
-        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic);
+        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
 
         if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(SEGMENTS_UNAVAILABLE_ERROR_CODE, 'no segments are available yet', {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+            error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
             return;
         }
 
-        if (!keepIdx) index = -1;
-
-        if (voRepresentation.segmentDuration) {
-            updateSegmentList(voRepresentation);
+        if (isDynamic()) {
+            setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
         }
 
-        if (!hasInitialization) {
-            segmentBaseLoader.loadInitialization(voRepresentation);
+        if (!keepIdx) {
+            resetIndex();
         }
 
-        if (!hasSegments) {
-            segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation.indexRange);
-        }
+        segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
 
         if (hasInitialization && hasSegments) {
             eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
         }
-    }
-
-    function getIndexForSegments(time, representation, timeThreshold) {
-        const segments = representation.segments;
-        const ln = segments ? segments.length : null;
-
-        let idx = -1;
-        let epsilon,
-            frag,
-            ft,
-            fd,
-            i;
-
-        if (segments && ln > 0) {
-            // In case timeThreshold is not provided, let's use the default value set in MediaPlayerModel
-            timeThreshold = (timeThreshold === undefined || timeThreshold === null) ?
-                mediaPlayerModel.getSegmentOverlapToleranceTime() : timeThreshold;
-
-            for (i = 0; i < ln; i++) {
-                frag = segments[i];
-                ft = frag.presentationStartTime;
-                fd = frag.duration;
-                // In case timeThreshold is null, set epsilon to half the fragment duration
-                epsilon = (timeThreshold === undefined || timeThreshold === null) ? fd / 2 : timeThreshold;
-                if ((time + epsilon) >= ft &&
-                    (time - epsilon) < (ft + fd)) {
-                    idx = frag.availabilityIdx;
-                    break;
-                }
-            }
-        }
-
-        return idx;
     }
 
     function getRequestForSegment(segment) {
@@ -325,7 +225,6 @@ function DashHandler(config) {
         const bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
             AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
         let url = segment.media;
-        const type = streamProcessor ? streamProcessor.getType() : null;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
         url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
@@ -333,7 +232,7 @@ function DashHandler(config) {
         url = replaceIDForTemplate(url, representation.id);
         url = unescapeDollarsInTemplate(url);
 
-        request.mediaType = type;
+        request.mediaType = getType();
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
@@ -344,7 +243,7 @@ function DashHandler(config) {
         request.wallStartTime = segment.wallStartTime;
         request.quality = representation.index;
         request.index = segment.availabilityIdx;
-        request.mediaInfo = streamProcessor.getMediaInfo();
+        request.mediaInfo = getMediaInfo();
         request.adaptationIndex = representation.adaptation.index;
         request.representationId = representation.id;
 
@@ -353,118 +252,118 @@ function DashHandler(config) {
         }
     }
 
+    function isMediaFinished(representation) {
+        let isFinished = false;
+        const isDynamicMedia = isDynamic();
+
+        if (!isDynamicMedia) {
+            if (segmentIndex >= representation.availableSegmentsNumber) {
+                isFinished = true;
+            }
+        } else {
+            if (lastSegment) {
+                const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
+                const endTime = lastSegment.duration > 0 ? time + 1.5 * lastSegment.duration : time;
+                const duration = representation.adaptation.period.duration;
+
+                isFinished = endTime >= duration;
+            }
+        }
+
+        return isFinished;
+    }
+
     function getSegmentRequestForTime(representation, time, options) {
-        let request,
-            segment,
-            finished;
+        let request;
 
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        const idx = index;
-        const keepIdx = options ? options.keepIdx : false;
-        const timeThreshold = options ? options.timeThreshold : null;
-        const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
-
-        if (!representation) {
+        if (!representation || !representation.segmentInfoType) {
             return null;
         }
 
+        const type = getType();
+        const idx = segmentIndex;
+        const keepIdx = options ? options.keepIdx : false;
+        const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
+
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
-            logger.debug('Getting the request for ' + type + ' time : ' + time);
+            logger.debug('Getting the request for time : ' + time);
         }
 
-        updateSegments(representation);
-        index = getIndexForSegments(time, representation, timeThreshold);
-
-        //Index may be -1 if getSegments needs to update again.  So after getSegments is called and updated then try to get index again.
-        if (index < 0) {
-            updateSegments(representation);
-            index = getIndexForSegments(time, representation, timeThreshold);
-        }
-
-        if (index > 0) {
-            logger.debug('Index for ' + type + ' time ' + time + ' is ' + index );
-        }
-
-        finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
-        if (finished) {
-            request = new FragmentRequest();
-            request.action = FragmentRequest.ACTION_COMPLETE;
-            request.index = index;
-            request.mediaType = type;
-            request.mediaInfo = streamProcessor.getMediaInfo();
-            logger.debug('Signal complete in getSegmentRequestForTime -', type);
-        } else {
-            segment = getSegmentByIndex(index, representation);
+        const segment = segmentsController.getSegmentByTime(representation, time);
+        if (segment) {
+            segmentIndex = segment.availabilityIdx;
+            lastSegment = segment;
+            logger.debug('Index for time ' + time + ' is ' + segmentIndex);
             request = getRequestForSegment(segment);
+        } else {
+            const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
+            if (finished) {
+                request = new FragmentRequest();
+                request.action = FragmentRequest.ACTION_COMPLETE;
+                request.index = segmentIndex - 1;
+                request.mediaType = type;
+                request.mediaInfo = getMediaInfo();
+                logger.debug('Signal complete in getSegmentRequestForTime');
+            }
         }
 
         if (keepIdx && idx >= 0) {
-            index = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic ? index : idx;
+            segmentIndex = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamic() ? segmentIndex : idx;
         }
 
         return request;
     }
 
-    function generateSegmentRequestForTime(representation, time) {
-        const step = (representation.segmentAvailabilityRange.end - representation.segmentAvailabilityRange.start) / 2;
-
-        representation.segments = null;
-        representation.segmentAvailabilityRange = {start: time - step, end: time + step};
-        return getSegmentRequestForTime(representation, time, {keepIdx: false, ignoreIsFinished: true});
-    }
-
     function getNextSegmentRequest(representation) {
-        let request,
-            segment,
-            finished;
+        let request;
 
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-
-        if (!representation || index === -1) {
+        if (!representation || !representation.segmentInfoType) {
             return null;
         }
+
+        const mediaStartTime = lastSegment ? lastSegment.mediaStartTime : -1;
+        const type = getType();
 
         requestedTime = null;
-        index++;
 
-        logger.debug('Getting the next request at index: ' + index + ', type: ' + type);
+        const indexToRequest = segmentIndex + 1;
+        logger.debug('Getting the next request at index: ' + indexToRequest);
 
-        // check that there is a segment in this index. If none, update segments and wait for next time loop is called
-        const seg = getSegmentByIndex(index, representation);
-        if (!seg && isDynamic) {
-            logger.debug('No segment found at index: ' + index + '. Wait for next loop');
-            updateSegments(representation);
-            index--;
+        // check that there is a segment in this index
+        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, mediaStartTime);
+        if (!segment && !isEndlessMedia(representation)) {
+            logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
+        } else {
+            if (segment) {
+                request = getRequestForSegment(segment);
+                segmentIndex = segment.availabilityIdx;
+            } else {
+                segmentIndex = indexToRequest;
+            }
         }
 
-        finished = isMediaFinished(representation);
-        if (finished) {
-            request = new FragmentRequest();
-            request.action = FragmentRequest.ACTION_COMPLETE;
-            request.index = index;
-            request.mediaType = type;
-            request.mediaInfo = streamProcessor.getMediaInfo();
-            logger.debug('Signal complete -', type);
-        } else {
-            updateSegments(representation);
-            segment = getSegmentByIndex(index, representation);
+        if (segment) {
+            lastSegment = segment;
             request = getRequestForSegment(segment);
-            if (!segment && isDynamic) {
-                /*
-                 Sometimes when playing dynamic streams with 0 fragment delay at live edge we ask for
-                 an index before it is available so we decrement index back and send null request
-                 which triggers the validate loop to rerun and the next time the segment should be
-                 available.
-                 */
-                index-- ;
+        } else {
+            const finished = isMediaFinished(representation, segment);
+            if (finished) {
+                request = new FragmentRequest();
+                request.action = FragmentRequest.ACTION_COMPLETE;
+                request.index = segmentIndex - 1;
+                request.mediaType = type;
+                request.mediaInfo = getMediaInfo();
+                logger.debug('Signal complete');
             }
         }
 
         return request;
+    }
+
+    function isEndlessMedia(representation) {
+        return !isDynamic() || (isDynamic() && isFinite(representation.adaptation.period.duration));
     }
 
     function onInitializationLoaded(e) {
@@ -475,9 +374,7 @@ function DashHandler(config) {
     }
 
     function onSegmentsLoaded(e) {
-        const type = streamProcessor ? streamProcessor.getType() : null;
-        const isDynamic = streamProcessor ? streamProcessor.getStreamInfo().manifestInfo.isDynamic : null;
-        if (e.error || (type !== e.mediaType)) return;
+        if (e.error || (getType() !== e.mediaType)) return;
 
         const fragments = e.segments;
         const representation = e.representation;
@@ -494,7 +391,7 @@ function DashHandler(config) {
 
             seg = getTimeBasedSegment(
                 timelineConverter,
-                isDynamic,
+                isDynamic(),
                 representation,
                 s.startTime,
                 s.duration,
@@ -503,34 +400,46 @@ function DashHandler(config) {
                 s.mediaRange,
                 count);
 
-            segments.push(seg);
-            seg = null;
-            count++;
+            if (seg) {
+                segments.push(seg);
+                seg = null;
+                count++;
+            }
         }
 
+        len = segments.length;
         representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
         representation.availableSegmentsNumber = len;
 
-        onSegmentListUpdated(representation, segments);
+        representation.segments = segments;
+        if (segments && segments.length > 0) {
+            if (isDynamic()) {
+                const lastSegment = segments[segments.length - 1];
+                const liveEdge = lastSegment.presentationStartTime - 8;
+                // the last segment is the Expected, not calculated, live edge.
+                setExpectedLiveEdge(liveEdge);
+            }
+        }
 
-        if (!Representation.hasInitialization(representation)) return;
+        if (!Representation.hasInitialization(representation)) {
+            return;
+        }
 
         eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
     }
 
     instance = {
         initialize: initialize,
+        getType: getType, //need to be public in order to be used by logger
         getStreamProcessor: getStreamProcessor,
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        generateSegmentRequestForTime: generateSegmentRequestForTime,
         updateRepresentation: updateRepresentation,
-        updateSegmentList: updateSegmentList,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
-        getEarliestTime: getEarliestTime,
-        reset: reset
+        reset: reset,
+        resetIndex: resetIndex
     };
 
     setup();
@@ -539,7 +448,4 @@ function DashHandler(config) {
 }
 
 DashHandler.__dashjs_factory_name = 'DashHandler';
-const factory = FactoryMaker.getClassFactory(DashHandler);
-factory.SEGMENTS_UNAVAILABLE_ERROR_CODE = SEGMENTS_UNAVAILABLE_ERROR_CODE;
-FactoryMaker.updateClassFactory(DashHandler.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(DashHandler);

@@ -1,4 +1,4 @@
-import {MediaPlayer} from 'dashjs';
+import { MediaPlayer } from 'dashjs';
 
 let url = "https://dash.akamaized.net/envivio/Envivio-dash2/manifest.mpd";
 let player = MediaPlayer().create();

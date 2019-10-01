@@ -91,5 +91,6 @@ describe('DashConstants', function () {
         expect(DashConstants.CENC_DEFAULT_KID).to.equal('cenc:default_KID');
         expect(DashConstants.DVB_PRIORITY).to.equal('dvb:priority');
         expect(DashConstants.DVB_WEIGHT).to.equal('dvb:weight');
+        expect(DashConstants.SUGGESTED_PRESENTATION_DELAY).to.equal('suggestedPresentationDelay');
     });
 });

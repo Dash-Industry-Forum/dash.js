@@ -1,0 +1,96 @@
+version: 2
+
+_defaults: &defaults
+    working_directory: ~/repo
+    docker:
+      - image: circleci/node:7.10
+
+_steps:
+  restore_cache: &restore_cache
+    keys:
+      - v1-dependencies-{{ checksum "package.json" }}
+      # fallback to using the latest cache if no exact match is found
+      - v1-dependencies-
+
+  install_dependencies: &install_dependencies
+    name: Install dependencies
+    command: npm install
+
+  save_cache: &save_cache
+    paths:
+      - node_modules
+    key: v1-dependencies-{{ checksum "package.json" }}
+
+jobs:
+  build:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - restore_cache: *restore_cache
+      - run: *install_dependencies
+      - save_cache: *save_cache
+
+      # run build and tests
+      - run:
+          name: Build and Test
+          command: npm run build
+
+      # deploy
+      - deploy:
+          name: Deploy
+          command: |
+            if [ "${CIRCLE_BRANCH}" = "development" ]; then
+              sudo npm install -g grunt-cli
+              grunt deploy --git-commit=$CIRCLE_SHA1 --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
+            else
+              echo "Not development branch, dry run only"
+            fi
+
+  functional-tests:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - restore_cache: *restore_cache
+      - run: *install_dependencies
+      - save_cache: *save_cache
+
+      # run functional tests
+      - run:
+          # Download the browserstack binary file to create a tunnel
+          name: Download Browserstack
+          command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
+
+      - run:
+          # Unzip the browserstack binary file
+          name: Install Browserstack
+          command: unzip BrowserStackLocal-linux-x64.zip
+
+      - run:
+          # Run browserstack with your access key
+          name: Run Browserstack
+          command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
+          background: true
+
+      - run:
+          # Run functional tests
+          name: Run functional tests
+          command: node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome
+
+workflows:
+  version: 2
+  commit-workflow:
+    jobs:
+      - build
+  scheduled-workflow:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 0"
+          filters:
+            branches:
+              only:
+                - development
+    jobs:
+      - functional-tests
+
