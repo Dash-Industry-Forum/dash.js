@@ -14,13 +14,10 @@ If your goal is to improve or extend the code and contribute back to this projec
 
 All new work should be in the development branch. Master is now reserved for tagged builds.
 
-<<<<<<< HEAD
-=======
 ## Documentation
 Before you get started, please read the Dash.js v3.0 Migration Document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-3.0)
 
 Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html) is available describing all public methods, interfaces, properties, and events.
->>>>>>> 929f0c4162cc7e809ce0e90818625cd79e5bd868
 
 For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our [email list](https://groups.google.com/d/forum/dashjs) and read our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 
