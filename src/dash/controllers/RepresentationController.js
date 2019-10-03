@@ -145,8 +145,7 @@ function RepresentationController() {
             averageThroughput;
         let bitrate = null;
 
-        updating = true;
-        eventBus.trigger(Events.DATA_UPDATE_STARTED, {sender: this});
+        startDataUpdate();
 
         voAvailableRepresentations = availableRepresentations;
 
@@ -169,8 +168,7 @@ function RepresentationController() {
         realAdaptation = newRealAdaptation;
 
         if (type !== Constants.VIDEO && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
-            updating = false;
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
+            endDataUpdate();
             return;
         }
 
@@ -233,13 +231,26 @@ function RepresentationController() {
         });
     }
 
+    function startDataUpdate() {
+        updating = true;
+        eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+    }
+
+    function endDataUpdate(error) {
+        updating = false;
+        let eventArg = {sender: instance, data: realAdaptation, currentRepresentation: currentVoRepresentation};
+        if (error) {
+            eventArg.error = error;
+        }
+        eventBus.trigger(Events.DATA_UPDATE_COMPLETED, eventArg);
+    }
+
     function postponeUpdate(postponeTimePeriod) {
         let delay = postponeTimePeriod;
         let update = function () {
             if (isUpdating()) return;
 
-            updating = true;
-            eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+            startDataUpdate();
 
             // clear the segmentAvailabilityRange for all reps.
             // this ensures all are updated before the live edge search starts
@@ -249,8 +260,6 @@ function RepresentationController() {
                 indexHandler.updateRepresentation(voAvailableRepresentations[i]);
             }
         };
-
-        updating = false;
         eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
@@ -259,7 +268,7 @@ function RepresentationController() {
         if (e.sender.getType() !== streamProcessor.getType() || !isUpdating()) return;
 
         if (e.error) {
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, error: e.error});
+            endDataUpdate(e.error);
             return;
         }
 
@@ -283,8 +292,7 @@ function RepresentationController() {
             addDVRMetric();
             postponeUpdate(postponeTimePeriod);
             err = new DashJSError(Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, Errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation, error: err});
-
+            endDataUpdate(err);
             return;
         }
 
@@ -303,7 +311,6 @@ function RepresentationController() {
         }
 
         if (isAllRepresentationsUpdated()) {
-            updating = false;
             abrController.setPlaybackQuality(streamProcessor.getType(), streamProcessor.getStreamInfo(), getQualityForRepresentation(currentVoRepresentation));
             dashMetrics.updateManifestUpdateInfo({latency: currentVoRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
 
@@ -312,8 +319,7 @@ function RepresentationController() {
             if (!repSwitch) {
                 addRepresentationSwitch();
             }
-
-            eventBus.trigger(Events.DATA_UPDATE_COMPLETED, {sender: this, data: realAdaptation, currentRepresentation: currentVoRepresentation});
+            endDataUpdate();
         }
     }
 
