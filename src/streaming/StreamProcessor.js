@@ -119,7 +119,6 @@ function StreamProcessor(config) {
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
-        representationController.initialize();
     }
 
     function registerExternalController(controller) {
@@ -188,10 +187,6 @@ function StreamProcessor(config) {
 
     function getRepresentationController() {
         return representationController;
-    }
-
-    function getIndexHandler() {
-        return indexHandler;
     }
 
     function getBuffer() {
@@ -397,7 +392,6 @@ function StreamProcessor(config) {
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
         getRepresentationController: getRepresentationController,
-        getIndexHandler: getIndexHandler,
         getRepresentationInfo: getRepresentationInfo,
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,

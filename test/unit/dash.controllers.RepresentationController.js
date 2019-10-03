@@ -161,11 +161,12 @@ describe('RepresentationController', function () {
                 expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
             });
 
-            it('when a BUFFER_LEVEL_UPDATED event occurs, should update dvr info metrics', function () {
-                let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
-                expect(dvrInfo).to.be.null; // jshint ignore:line
+        it('when a REPRESENTATION_UPDATE_COMPLETED event occurs, should notify data update completed', function () {
+            let spy = chai.spy();
+            eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
 
-                eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: { getStreamProcessor() { return streamProcessor;}}, bufferLevel: 50 });
+            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}}, representation: voRepresentations[1]});
+            expect(spy).to.have.been.called.exactly(1);
 
                 dvrInfo = dashMetricsMock.getCurrentDVRInfo();
                 expect(dvrInfo).not.to.be.null; // jshint ignore:line

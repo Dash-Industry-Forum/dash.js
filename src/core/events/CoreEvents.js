@@ -61,7 +61,8 @@ class CoreEvents extends EventsBase {
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.REPRESENTATION_UPDATED = 'representationUpdated';
+        this.REPRESENTATION_UPDATE_STARTED = 'representationUpdateStarted';
+        this.REPRESENTATION_UPDATE_COMPLETED = 'representationUpdateCompleted';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
         this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
         this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';

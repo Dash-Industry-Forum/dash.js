@@ -70,17 +70,6 @@ function StreamProcessorMock (testType, streamInfo) {
         };
     };
 
-    this.getIndexHandler = function () {
-        return {
-            updateRepresentation: () => {},
-            getInitRequest: () => { return null;},
-            getNextSegmentRequest: () => { return null;},
-            getCurrentTime: () => {},
-            setCurrentTime: () => {},
-            updateSegmentList: () => {}
-        };
-    };
-
     this.getScheduleController = function () {
         return {
             getBufferTarget() {

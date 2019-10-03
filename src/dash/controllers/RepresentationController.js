@@ -47,7 +47,6 @@ function RepresentationController() {
         voAvailableRepresentations,
         currentVoRepresentation,
         abrController,
-        indexHandler,
         playbackController,
         timelineConverter,
         dashMetrics,
@@ -58,7 +57,7 @@ function RepresentationController() {
         resetInitialSettings();
 
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.on(Events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
@@ -92,12 +91,6 @@ function RepresentationController() {
         }
     }
 
-    function initialize() {
-        checkConfig();
-
-        indexHandler = streamProcessor.getIndexHandler();
-    }
-
     function getStreamProcessor() {
         return streamProcessor;
     }
@@ -127,12 +120,16 @@ function RepresentationController() {
     function reset() {
 
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
+        eventBus.off(Events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
+    }
+
+    function getType() {
+        return streamProcessor.getType();
     }
 
     function updateData(newRealAdaptation, availableRepresentations, type) {
@@ -172,9 +169,7 @@ function RepresentationController() {
             return;
         }
 
-        for (let i = 0; i < voAvailableRepresentations.length; i++) {
-            indexHandler.updateRepresentation(voAvailableRepresentations[i]);
-        }
+        updateAvailabilityWindow(playbackController.getIsDynamic(), true);
     }
 
     function addRepresentationSwitch() {
@@ -217,11 +212,33 @@ function RepresentationController() {
         return true;
     }
 
-    function updateAvailabilityWindow() {
+    function setExpectedLiveEdge(liveEdge) {
+        timelineConverter.setExpectedLiveEdge(liveEdge);
+        dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
+    }
+
+    function updateRepresentation(representation, isDynamic) {
+        representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
+
+        if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
+            let error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
+            endDataUpdate(error);
+            return;
+        }
+
+        if (isDynamic) {
+            setExpectedLiveEdge(representation.segmentAvailabilityRange.end);
+        }
+    }
+
+    function updateAvailabilityWindow(isDynamic, notifyUpdate) {
         checkConfig();
 
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            voAvailableRepresentations[i].segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voAvailableRepresentations[i], true);
+            updateRepresentation(voAvailableRepresentations[i], isDynamic);
+            if (notifyUpdate) {
+                eventBus.trigger(Events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
+            }
         }
     }
 
@@ -256,9 +273,7 @@ function RepresentationController() {
             // this ensures all are updated before the live edge search starts
             resetAvailabilityWindow();
 
-            for (let i = 0; i < voAvailableRepresentations.length; i++) {
-                indexHandler.updateRepresentation(voAvailableRepresentations[i]);
-            }
+            updateAvailabilityWindow(playbackController.getIsDynamic(), true);
         };
         eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
@@ -325,7 +340,7 @@ function RepresentationController() {
 
     function onWallclockTimeUpdated(e) {
         if (e.isDynamic) {
-            updateAvailabilityWindow();
+            updateAvailabilityWindow(e.isDynamic);
         }
     }
 
@@ -355,14 +370,15 @@ function RepresentationController() {
     }
 
     instance = {
-        initialize: initialize,
         setConfig: setConfig,
         getData: getData,
         isUpdating: isUpdating,
         updateData: updateData,
+        updateRepresentation: updateRepresentation,
         getStreamProcessor: getStreamProcessor,
         getCurrentRepresentation: getCurrentRepresentation,
         getRepresentationForQuality: getRepresentationForQuality,
+        getType: getType,
         reset: reset
     };
 

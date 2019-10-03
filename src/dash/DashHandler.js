@@ -30,11 +30,9 @@
  */
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import DashJSError from '../streaming/vo/DashJSError';
 import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
-import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
@@ -76,6 +74,7 @@ function DashHandler(config) {
 
         eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.on(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function initialize(isDynamic) {
@@ -112,6 +111,7 @@ function DashHandler(config) {
 
         eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.off(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -171,31 +171,22 @@ function DashHandler(config) {
         dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
     }
 
-    function updateRepresentation(voRepresentation) {
+    function onRepresentationUpdateStarted(eventObj) {
+        if (eventObj.sender.getType() !== getType()) return;
+
+        processRepresentation(eventObj.representation);
+    }
+
+    function processRepresentation(voRepresentation) {
         const hasInitialization = voRepresentation.hasInitialization();
         const hasSegments = voRepresentation.hasSegments();
-        let error;
 
-        if (voRepresentation) {
-            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamicManifest);
-
-            if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-                error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
-                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
-                return;
-            }
-
-            if (isDynamicManifest) {
-                setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
-            }
-
-            //if representation has initialization and segments information, REPRESENTATION_UPDATED can be triggered immediately
-            //otherwise, it means that a request has to be made to get initialization and/or segments informations
-            if (hasInitialization && hasSegments) {
-                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
-            } else {
-                segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
-            }
+        //if representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
+        //otherwise, it means that a request has to be made to get initialization and/or segments informations
+        if (hasInitialization && hasSegments) {
+            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
+        } else {
+            segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
         }
     }
 
@@ -351,7 +342,7 @@ function DashHandler(config) {
         const representation = e.representation;
         if (!representation.segments) return;
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
+        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     function onSegmentsLoaded(e) {
@@ -405,7 +396,7 @@ function DashHandler(config) {
             return;
         }
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: representation});
+        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     instance = {
@@ -414,7 +405,6 @@ function DashHandler(config) {
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        updateRepresentation: updateRepresentation,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
         reset: reset,
