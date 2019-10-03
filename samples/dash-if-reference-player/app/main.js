@@ -595,7 +595,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                     'video': maxBitrate
                 }
             }
-        }        
+        }
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
@@ -952,7 +952,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             if ($scope.drmLicenseURL.indexOf("%")) {
                 $scope.drmLicenseURL = unescape($scope.drmLicenseURL);
             }
-            $scope.drmKeySystem = $scope.drmKeySystems[0];
+            $scope.drmKeySystem = 'com.widevine.alpha';
         }
 
         // If supply playready= parameter in the query string then set up the DRM protection to playback PlayReady
@@ -961,7 +961,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             if ($scope.drmLicenseURL.indexOf("%")) {
                 $scope.drmLicenseURL = unescape($scope.drmLicenseURL);
             }
-            $scope.drmKeySystem = $scope.drmKeySystems[1];
+            $scope.drmKeySystem = 'com.microsoft.playready';
         }
 
         if (vars && vars.hasOwnProperty('stream')) {
