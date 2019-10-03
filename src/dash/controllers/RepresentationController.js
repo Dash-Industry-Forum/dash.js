@@ -217,11 +217,11 @@ function RepresentationController() {
         return true;
     }
 
-    function updateAvailabilityWindow(isDynamic) {
+    function updateAvailabilityWindow() {
         checkConfig();
 
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            voAvailableRepresentations[i].segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voAvailableRepresentations[i], isDynamic);
+            voAvailableRepresentations[i].segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voAvailableRepresentations[i], true);
         }
     }
 
@@ -325,7 +325,7 @@ function RepresentationController() {
 
     function onWallclockTimeUpdated(e) {
         if (e.isDynamic) {
-            updateAvailabilityWindow(e.isDynamic);
+            updateAvailabilityWindow();
         }
     }
 
