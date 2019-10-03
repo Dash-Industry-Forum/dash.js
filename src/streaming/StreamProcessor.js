@@ -219,10 +219,36 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        const realAdaptation = adapter.getRealAdaptation(getStreamInfo(), mediaInfo);
+
+        const streamInfo = getStreamInfo();
+        const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+
         if (representationController) {
-            representationController.updateData(realAdaptation, voRepresentations, type);
+            const realAdaptation = representationController.getData();
+            const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo ? streamInfo.id : null);
+            const minIdx = abrController.getMinAllowedIndexFor(type);
+
+            let quality,
+                averageThroughput;
+            let bitrate = null;
+
+            if ((realAdaptation === null || (realAdaptation.id != newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
+                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
+                bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
+                quality = abrController.getQualityForBitrate(mediaInfo, bitrate);
+            } else {
+                quality = abrController.getQualityFor(type);
+            }
+
+            if (minIdx !== undefined && quality < minIdx) {
+                quality = minIdx;
+            }
+            if (quality > maxQuality) {
+                quality = maxQuality;
+            }
+
+            representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
         }
     }
 

@@ -62,10 +62,6 @@ describe('RepresentationController', function () {
         it('should throw an exception when attempting to call updateData while setConfig has not been called properly', function () {
             expect(representationController.updateData.bind(representationController)).to.throw(Constants.MISSING_CONFIG_ERROR);
         });
-
-        it('should throw an exception when attempting to call initialize while setConfig has not been called properly', function () {
-            expect(representationController.initialize.bind(representationController)).to.throw(Constants.MISSING_CONFIG_ERROR);
-        });
     });
 
     describe('SetConfig previously called', function () {
@@ -78,7 +74,6 @@ describe('RepresentationController', function () {
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock
             });
-            representationController.initialize();
         });
 
         describe('when data update started', function () {

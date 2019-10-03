@@ -132,34 +132,12 @@ function RepresentationController() {
         return streamProcessor.getType();
     }
 
-    function updateData(newRealAdaptation, availableRepresentations, type) {
+    function updateData(newRealAdaptation, availableRepresentations, type, quality) {
         checkConfig();
-        const streamInfo = streamProcessor.getStreamInfo();
-        const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo ? streamInfo.id : null);
-        const minIdx = abrController.getMinAllowedIndexFor(type);
-
-        let quality,
-            averageThroughput;
-        let bitrate = null;
 
         startDataUpdate();
 
         voAvailableRepresentations = availableRepresentations;
-
-        if ((realAdaptation === null || (realAdaptation.id != newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
-            averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
-            bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
-            quality = abrController.getQualityForBitrate(streamProcessor.getMediaInfo(), bitrate);
-        } else {
-            quality = abrController.getQualityFor(type);
-        }
-
-        if (minIdx !== undefined && quality < minIdx) {
-            quality = minIdx;
-        }
-        if (quality > maxQuality) {
-            quality = maxQuality;
-        }
 
         currentVoRepresentation = getRepresentationForQuality(quality);
         realAdaptation = newRealAdaptation;
