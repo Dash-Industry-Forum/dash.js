@@ -41,7 +41,7 @@ class ObjectsHelper {
             calcMediaTimeFromPresentationTime: () => undefined,
             calcSegmentAvailabilityRange: (voRepresentation) =>  { return {start: voRepresentation.start, end: voRepresentation.end};},
             isTimeSyncCompleted: () => {return true;},
-            setExpectedLiveEdge: () => undefined
+            setExpectedLiveEdge: () => {}
         };
     }
 
