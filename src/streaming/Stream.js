@@ -654,13 +654,9 @@ function Stream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        let sp = e.sender.getStreamProcessor();
+        if (!streamInfo || e.sender.getStreamId() !== streamInfo.id) return;
 
-        if (sp.getStreamInfo() !== streamInfo) {
-            return;
-        }
-
-        updateError[sp.getType()] = e.error;
+        updateError[e.sender.getType()] = e.error;
         checkIfInitializationCompleted();
     }
 

@@ -52,6 +52,7 @@ function DashHandler(config) {
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
     const type = config.type;
+    const streamInfo = config.streamInfo;
 
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
@@ -84,6 +85,10 @@ function DashHandler(config) {
 
     function getType() {
         return type;
+    }
+
+    function getStreamInfo() {
+        return streamInfo;
     }
 
     function setCurrentTime(value) {
@@ -402,6 +407,7 @@ function DashHandler(config) {
     instance = {
         initialize: initialize,
         getType: getType, //need to be public in order to be used by logger
+        getStreamInfo: getStreamInfo,
         getInitRequest: getInitRequest,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,

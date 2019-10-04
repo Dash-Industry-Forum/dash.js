@@ -35,13 +35,16 @@ import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
 import { checkInteger } from './utils/SupervisorTools';
-
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
+import Errors from '../core/errors/Errors';
 
 function StreamProcessor(config) {
 
     config = config || {};
     let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
     let type = config.type;
     let errHandler = config.errHandler;
@@ -71,6 +74,9 @@ function StreamProcessor(config) {
 
     function setup() {
         resetInitialSettings();
+
+        eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }
 
     function initialize(mediaSource) {
@@ -82,7 +88,8 @@ function StreamProcessor(config) {
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController,
             errHandler: errHandler,
-            settings: settings
+            settings: settings,
+            streamInfo: getStreamInfo()
         });
 
         // initialize controllers
@@ -115,7 +122,9 @@ function StreamProcessor(config) {
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance
+            streamProcessor: instance,
+            type: type,
+            streamId: getStreamInfo() ? getStreamInfo().id : null
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -172,6 +181,9 @@ function StreamProcessor(config) {
             controller.reset();
         });
 
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+
         resetInitialSettings();
         type = null;
         stream = null;
@@ -179,6 +191,28 @@ function StreamProcessor(config) {
 
     function isUpdating() {
         return representationController ? representationController.isUpdating() : false;
+    }
+
+    function onDataUpdateCompleted(e) {
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== getStreamInfo().id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
+
+        addDVRMetric();
+    }
+
+    function onBufferLevelUpdated(e) {
+        if (e.sender.getStreamProcessor() !== instance) return;
+        let manifest = manifestModel.getValue();
+        if (!manifest.doNotUpdateDVRWindowOnBufferUpdated) {
+            addDVRMetric();
+        }
+    }
+
+    function addDVRMetric() {
+        const streamInfo = getStreamInfo();
+        const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
+        const isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
+        const range = timelineConverter.calcSegmentAvailabilityRange(representationController.getCurrentRepresentation(), isDynamic);
+        dashMetrics.addDVRInfo(getType(), playbackController.getTime(), manifestInfo, range);
     }
 
     function getType() {

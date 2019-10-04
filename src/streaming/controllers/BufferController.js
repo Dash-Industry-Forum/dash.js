@@ -756,7 +756,7 @@ function BufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor || e.error) return;
+        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id || e.error) return;
         updateBufferTimestampOffset(e.currentRepresentation.MSETimeOffset);
     }
 

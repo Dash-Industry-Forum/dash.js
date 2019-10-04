@@ -380,7 +380,7 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error || e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.error || e.sender.getType() !== streamProcessor.getType()) {
             return;
         }
 
@@ -526,7 +526,7 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateStarted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id) {
             return;
         }
 
@@ -577,7 +577,9 @@ function ScheduleController(config) {
     }
 
     function onTimedTextRequested(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        const streamInfo = streamProcessor.getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (e.sender.getStreamId() !== streamInfoId) {
             return;
         }
 

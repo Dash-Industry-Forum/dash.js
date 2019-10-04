@@ -69,10 +69,11 @@ describe('RepresentationController', function () {
             representationController.setConfig({
                 abrController: abrControllerMock,
                 manifestModel: manifestModel,
-                streamProcessor: streamProcessor,
                 timelineConverter: timelineConverter,
                 playbackController: playbackControllerMock,
-                dashMetrics: dashMetricsMock
+                dashMetrics: dashMetricsMock,
+                type: testType,
+                streamId: streamProcessor.getStreamInfo().id
             });
         });
 
@@ -160,7 +161,7 @@ describe('RepresentationController', function () {
             let spy = chai.spy();
             eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
 
-            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}}, representation: voRepresentations[1]});
+            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
             expect(spy).to.have.been.called.exactly(1);
 
                 dvrInfo = dashMetricsMock.getCurrentDVRInfo();
