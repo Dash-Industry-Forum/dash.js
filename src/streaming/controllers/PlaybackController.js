@@ -447,9 +447,9 @@ function PlaybackController() {
         if (e.error) return;
 
         const representationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
-        const info = representationInfo.mediaInfo.streamInfo;
+        const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
 
-        if (streamInfo.id !== info.id) return;
+        if (info === null || streamInfo.id !== info.id) return;
         streamInfo = info;
 
         updateCurrentTime();

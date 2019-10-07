@@ -39,8 +39,9 @@ class ObjectsHelper {
             calcAvailabilityEndTimeFromPresentationTime: () => 0,
             calcPeriodRelativeTimeFromMpdRelativeTime: () => NaN,
             calcMediaTimeFromPresentationTime: () => undefined,
-            calcSegmentAvailabilityRange: () =>  { return {start: undefined, end: undefined};},
-            isTimeSyncCompleted: () => {return true;}
+            calcSegmentAvailabilityRange: (voRepresentation) =>  { return {start: voRepresentation.start, end: voRepresentation.end};},
+            isTimeSyncCompleted: () => {return true;},
+            setExpectedLiveEdge: () => undefined
         };
     }
 

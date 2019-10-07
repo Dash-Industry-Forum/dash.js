@@ -299,14 +299,6 @@ function AbrController() {
         }
     }
 
-    function getMaxAllowedRepresentationRatioFor(type) {
-        return settings.get().streaming.abr.maxRepresentationRatio[type];
-    }
-
-    function getAutoSwitchBitrateFor(type) {
-        return !!settings.get().streaming.abr.autoSwitchBitrate[type];
-    }
-
     function checkPlaybackQuality(type) {
         if (type  && streamProcessorDict && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
@@ -327,7 +319,7 @@ function AbrController() {
                     droppedFramesHistory.push(playbackIndex, playbackQuality);
                 }
             }
-            if (getAutoSwitchBitrateFor(type)) {
+            if (!!settings.get().streaming.abr.autoSwitchBitrate[type]) {
                 const minIdx = getMinAllowedIndexFor(type);
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
@@ -559,7 +551,7 @@ function AbrController() {
     }
 
     function checkMaxRepresentationRatio(idx, type, maxIdx) {
-        const maxRepresentationRatio = getMaxAllowedRepresentationRatioFor(type);
+        const maxRepresentationRatio = settings.get().streaming.abr.maxRepresentationRatio[type];
         if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1 || maxRepresentationRatio < 0) {
             return idx;
         }
@@ -612,7 +604,7 @@ function AbrController() {
 
     function onFragmentLoadProgress(e) {
         const type = e.request.mediaType;
-        if (getAutoSwitchBitrateFor(type)) {
+        if (!!settings.get().streaming.abr.autoSwitchBitrate[type]) {
             const streamProcessor = streamProcessorDict[type];
             if (!streamProcessor) return; // There may be a fragment load in progress when we switch periods and recreated some controllers.
 

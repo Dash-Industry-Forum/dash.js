@@ -156,6 +156,8 @@ function DashHandler(config) {
     }
 
     function generateInitRequest(representation, mediaType) {
+        if (!representation) return null;
+
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
@@ -177,9 +179,7 @@ function DashHandler(config) {
     }
 
     function getInitRequest(representation) {
-        if (!representation) return null;
-        const request = generateInitRequest(representation, getType());
-        return request;
+        return generateInitRequest(representation, getType());
     }
 
     function setExpectedLiveEdge(liveEdge) {
@@ -192,26 +192,28 @@ function DashHandler(config) {
         const hasSegments = Representation.hasSegments(voRepresentation);
         let error;
 
-        voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
+        if (voRepresentation) {
+            voRepresentation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(voRepresentation, isDynamic());
 
-        if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
-            error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
-            return;
-        }
+            if ((voRepresentation.segmentAvailabilityRange.end < voRepresentation.segmentAvailabilityRange.start) && !voRepresentation.useCalculatedLiveEdgeTime) {
+                error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: voRepresentation.segmentAvailabilityRange.start - voRepresentation.segmentAvailabilityRange.end});
+                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation, error: error});
+                return;
+            }
 
-        if (isDynamic()) {
-            setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
-        }
+            if (isDynamic()) {
+                setExpectedLiveEdge(voRepresentation.segmentAvailabilityRange.end);
+            }
 
-        if (!keepIdx) {
-            resetIndex();
-        }
+            if (!keepIdx) {
+                resetIndex();
+            }
 
-        segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
+            segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
 
-        if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
+            if (hasInitialization && hasSegments) {
+                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: this, representation: voRepresentation});
+            }
         }
     }
 
@@ -254,9 +256,10 @@ function DashHandler(config) {
 
     function isMediaFinished(representation) {
         let isFinished = false;
-        const isDynamicMedia = isDynamic();
 
-        if (!isDynamicMedia) {
+        if (!representation) return isFinished;
+
+        if (!isDynamic()) {
             if (segmentIndex >= representation.availableSegmentsNumber) {
                 isFinished = true;
             }
@@ -274,13 +277,12 @@ function DashHandler(config) {
     }
 
     function getSegmentRequestForTime(representation, time, options) {
-        let request;
+        let request = null;
 
         if (!representation || !representation.segmentInfoType) {
-            return null;
+            return request;
         }
 
-        const type = getType();
         const idx = segmentIndex;
         const keepIdx = options ? options.keepIdx : false;
         const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
@@ -302,7 +304,7 @@ function DashHandler(config) {
                 request = new FragmentRequest();
                 request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
-                request.mediaType = type;
+                request.mediaType = getType();
                 request.mediaInfo = getMediaInfo();
                 logger.debug('Signal complete in getSegmentRequestForTime');
             }
@@ -316,14 +318,7 @@ function DashHandler(config) {
     }
 
     function getNextSegmentRequest(representation) {
-        let request;
-
-        if (!representation || !representation.segmentInfoType) {
-            return null;
-        }
-
-        const mediaStartTime = lastSegment ? lastSegment.mediaStartTime : -1;
-        const type = getType();
+        let request = null;
 
         requestedTime = null;
 
@@ -331,7 +326,7 @@ function DashHandler(config) {
         logger.debug('Getting the next request at index: ' + indexToRequest);
 
         // check that there is a segment in this index
-        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, mediaStartTime);
+        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
         if (!segment && !isEndlessMedia(representation)) {
             logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
@@ -353,7 +348,7 @@ function DashHandler(config) {
                 request = new FragmentRequest();
                 request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
-                request.mediaType = type;
+                request.mediaType = getType();
                 request.mediaInfo = getMediaInfo();
                 logger.debug('Signal complete');
             }
@@ -363,7 +358,7 @@ function DashHandler(config) {
     }
 
     function isEndlessMedia(representation) {
-        return !isDynamic() || (isDynamic() && isFinite(representation.adaptation.period.duration));
+        return !isDynamic() || (isDynamic() && isFinite(representation ? representation.adaptation.period.duration : undefined));
     }
 
     function onInitializationLoaded(e) {
@@ -386,7 +381,7 @@ function DashHandler(config) {
             s,
             seg;
 
-        for (i = 0, len = fragments.length; i < len; i++) {
+        for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
             s = fragments[i];
 
             seg = getTimeBasedSegment(
@@ -407,12 +402,11 @@ function DashHandler(config) {
             }
         }
 
-        len = segments.length;
-        representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
-        representation.availableSegmentsNumber = len;
+        if (segments.length > 0) {
+            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
+            representation.availableSegmentsNumber = segments.length;
+            representation.segments = segments;
 
-        representation.segments = segments;
-        if (segments && segments.length > 0) {
             if (isDynamic()) {
                 const lastSegment = segments[segments.length - 1];
                 const liveEdge = lastSegment.presentationStartTime - 8;

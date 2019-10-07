@@ -232,15 +232,16 @@ function DashManifestModel() {
     }
 
     function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
-        const realAdaptations = getRealAdaptations(manifest, periodIndex);
-        const len = realAdaptations.length;
+        if (!realAdaptation) {
+            return -1;
+        }
 
-        if (realAdaptation) {
-            for (let i = 0; i < len; i++) {
-                let objectUtils = ObjectUtils(context).getInstance();
-                if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
-                    return i;
-                }
+        const realAdaptations = getRealAdaptations(manifest, periodIndex);
+
+        for (let i = 0; i < realAdaptations.length; i++) {
+            let objectUtils = ObjectUtils(context).getInstance();
+            if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
+                return i;
             }
         }
 
@@ -1036,7 +1037,7 @@ function DashManifestModel() {
     }
 
     function getAvailabilityStartTime(mpd) {
-        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) ? mpd.availabilityStartTime.getTime() : null;
+        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null ? mpd.availabilityStartTime.getTime() : null;
     }
 
     function setConfig(config) {

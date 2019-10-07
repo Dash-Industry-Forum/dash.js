@@ -244,6 +244,10 @@ function MetricsModel(config) {
         let vo = new DroppedFrames();
         let list = getMetricsFor(mediaType).DroppedFrames;
 
+        if (!quality) {
+            return;
+        }
+
         vo.time = quality.creationTime;
         vo.droppedFrames = quality.droppedVideoFrames;
 
@@ -325,7 +329,7 @@ function MetricsModel(config) {
     }
 
     function addManifestUpdateRepresentationInfo(manifestUpdate, id, index, streamIndex, mediaType, presentationTimeOffset, startNumber, fragmentInfoType) {
-        if (manifestUpdate) {
+        if (manifestUpdate && manifestUpdate.representationInfo) {
 
             const vo = new ManifestUpdateRepresentationInfo();
             vo.id = id;

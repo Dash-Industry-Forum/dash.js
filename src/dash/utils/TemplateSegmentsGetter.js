@@ -50,7 +50,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
         const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
@@ -84,7 +84,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
         const duration = representation.segmentDuration;

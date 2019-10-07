@@ -94,6 +94,8 @@ function RepresentationController() {
     }
 
     function initialize() {
+        checkConfig();
+
         indexHandler = streamProcessor.getIndexHandler();
     }
 

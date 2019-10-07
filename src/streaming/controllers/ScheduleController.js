@@ -284,7 +284,7 @@ function ScheduleController(config) {
                 logger.debug('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality && !bufferResetInProgress) {
                 // The buffer has better quality it in then what we would request so set append point to end of buffer!!
-                setSeekTarget(playbackController.getTime() + streamProcessor.getBufferLevel());
+                setSeekTarget(playbackController.getTime() + bufferLevel);
             }
         }
     }
@@ -382,7 +382,7 @@ function ScheduleController(config) {
     }
 
     function onStreamInitialized(e) {
-        if (streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+        if (!e.streamInfo || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
             return;
         }
 

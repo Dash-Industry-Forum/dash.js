@@ -19,6 +19,7 @@ import CapabilitiesMock from './mocks/CapabilitiesMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import TextControllerMock from './mocks/TextControllerMock';
+import VideoModelMock from './mocks/VideoModelMock';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 
@@ -43,6 +44,7 @@ describe('Stream', function () {
     const mediaControllerMock = new MediaControllerMock();
     const dashMetricsMock = new DashMetricsMock();
     const textControllerMock = new TextControllerMock();
+    const videoModelMock = new VideoModelMock();
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamInfo = {
         index: 'id'
@@ -62,11 +64,18 @@ describe('Stream', function () {
                                              timelineConverter: timelineConverter,
                                              dashMetrics: dashMetricsMock,
                                              textController: textControllerMock,
+                                             videoModel: videoModelMock,
                                              settings: settings});
         });
 
         afterEach(function () {
             stream.reset();
+        });
+
+        it('should return false when isActive is called', () => {
+            const isActive = stream.isActive();
+
+            expect(isActive).to.be.false;            // jshint ignore:line
         });
 
         it('should return an empty array when getProcessors is called but streamProcessors attribute is an empty array', () => {
@@ -210,6 +219,13 @@ describe('Stream', function () {
             const thumbnailController = stream.getThumbnailController();
 
             expect(thumbnailController).to.be.undefined;          // jshint ignore:line
+        });
+
+        it('should returns an empty array when activate is called', function () {
+            const buffers = stream.activate();
+
+            expect(buffers).to.be.instanceOf(Object); // jshint ignore:line
+            expect(buffers).to.not.equal({});     // jshint ignore:line
         });
     });
 

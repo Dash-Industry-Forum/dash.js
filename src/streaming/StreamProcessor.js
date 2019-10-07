@@ -299,24 +299,21 @@ function StreamProcessor(config) {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
 
-        return voRepresentation ? adapter.convertDataToRepresentationInfo(voRepresentation) : null;
+        return adapter.convertDataToRepresentationInfo(voRepresentation);
     }
 
     function isBufferingCompleted() {
-        if (bufferController) {
-            return bufferController.getIsBufferingCompleted();
-        }
-
-        return false;
+        return bufferController ? bufferController.getIsBufferingCompleted() : false;
     }
 
     function getBufferLevel() {
-        return bufferController.getBufferLevel();
+        return bufferController ? bufferController.getBufferLevel() : 0;
     }
 
     function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            bufferController.switchInitData(getStreamInfo().id, representationId, bufferResetEnabled);
+            const streamInfo = getStreamInfo();
+            bufferController.switchInitData(streamInfo ? streamInfo.id : null, representationId, bufferResetEnabled);
         }
     }
 
@@ -396,9 +393,9 @@ function StreamProcessor(config) {
     function getFragmentRequest(representationInfo, time, options) {
         let fragRequest = null;
 
-        const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
-
         if (indexHandler) {
+            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
             // if time and options are undefined, it means the next segment is requested
             // otherwise, the segment at this specific time is requested.
             if (time !== undefined && options !== undefined) {
