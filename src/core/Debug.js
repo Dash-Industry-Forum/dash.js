@@ -31,7 +31,6 @@
 import EventBus from './EventBus';
 import Events from './events/Events';
 import FactoryMaker from './FactoryMaker';
-import Settings from './Settings';
 
 const LOG_LEVEL_NONE = 0;
 const LOG_LEVEL_FATAL = 1;
@@ -42,13 +41,15 @@ const LOG_LEVEL_DEBUG = 5;
 
 /**
  * @module Debug
+ * @param {object} config
  * @ignore
  */
-function Debug() {
+function Debug(config) {
 
+    config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const settings = Settings(context).getInstance();
+    const settings = config.settings;
 
     const logFn = [];
 
@@ -95,48 +96,6 @@ function Debug() {
             info: info.bind(instance),
             debug: debug.bind(instance)
         };
-    }
-
-    /**
-     * Sets up the log level. The levels are cumulative. For example, if you set the log level
-     * to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be logged. Possible values
-     *
-     * <ul>
-     * <li>dashjs.Debug.LOG_LEVEL_NONE<br/>
-     * No message is written in the browser console.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_FATAL<br/>
-     * Log fatal errors. An error is considered fatal when it causes playback to fail completely.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_ERROR<br/>
-     * Log error messages.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_WARNING<br/>
-     * Log warning messages.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_INFO<br/>
-     * Log info messages.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_DEBUG<br/>
-     * Log debug messages.
-     * </ul>
-     * @param {number} value Log level
-     * @default true
-     * @memberof module:Debug
-     * @instance
-     */
-    function setLogLevel(value) {
-        const s = { debug: { logLevel: value }};
-        settings.update(s);
-    }
-
-    /**
-     * Use this method to get the current log level.
-     * @memberof module:Debug
-     * @instance
-     */
-    function getLogLevel() {
-        return settings.get().debug.logLevel;
     }
 
     /**
@@ -216,9 +175,7 @@ function Debug() {
     instance = {
         getLogger: getLogger,
         setLogTimestampVisible: setLogTimestampVisible,
-        setCalleeNameVisible: setCalleeNameVisible,
-        setLogLevel: setLogLevel,
-        getLogLevel: getLogLevel
+        setCalleeNameVisible: setCalleeNameVisible
     };
 
     setup();
