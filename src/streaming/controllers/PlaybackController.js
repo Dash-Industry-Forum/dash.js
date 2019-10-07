@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import BufferController from './BufferController';
+import MetricsConstants from '../constants/MetricsConstants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -751,14 +751,14 @@ function PlaybackController() {
         if (e.streamInfo.id !== streamInfo.id) return;
 
         if (settings.get().streaming.lowLatencyEnabled) {
-            if (e.state === BufferController.BUFFER_EMPTY && !isSeeking()) {
+            if (e.state === MetricsConstants.BUFFER_EMPTY && !isSeeking()) {
                 if (!playbackStalled) {
                     playbackStalled = true;
                     stopPlaybackCatchUp();
                 }
             }
         } else {
-            videoModel.setStallState(e.mediaType, e.state === BufferController.BUFFER_EMPTY);
+            videoModel.setStallState(e.mediaType, e.state === MetricsConstants.BUFFER_EMPTY);
         }
     }
 

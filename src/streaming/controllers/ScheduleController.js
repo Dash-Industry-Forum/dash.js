@@ -31,7 +31,6 @@
 import Constants from '../constants/Constants';
 import { PlayListTrace } from '../vo/metrics/PlayList';
 import AbrController from './AbrController';
-import BufferController from './BufferController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import FragmentModel from '../models/FragmentModel';
@@ -556,7 +555,7 @@ function ScheduleController(config) {
     }
 
     function onBufferLevelStateChanged(e) {
-        if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === BufferController.BUFFER_EMPTY && !playbackController.isSeeking()) {
+        if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
             logger.info('Buffer is empty! Stalling!');
             clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
