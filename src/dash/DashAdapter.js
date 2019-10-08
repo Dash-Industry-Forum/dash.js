@@ -533,6 +533,7 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropperties(realAdaptation);
 
         return mediaInfo;
     }
@@ -576,6 +577,7 @@ function DashAdapter() {
         manifestInfo.maxFragmentDuration = mpd.maxSegmentDuration;
         manifestInfo.duration = dashManifestModel.getDuration(mpd.manifest);
         manifestInfo.isDynamic = dashManifestModel.getIsDynamic(mpd.manifest);
+        manifestInfo.serviceDescriptions = dashManifestModel.getServiceDescriptions(mpd.manifest);
 
         return manifestInfo;
     }

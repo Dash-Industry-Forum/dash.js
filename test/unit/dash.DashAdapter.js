@@ -14,6 +14,9 @@ const dashAdapter = DashAdapter(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
 const manifest_with_audio = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: Constants.AUDIO, lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
 const manifest_with_video_with_embedded_subtitles = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, Accessibility: {schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}, Accessibility_asArray: [{schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}]}, { id: 1, mimeType: Constants.VIDEO}] }] };
+const manifest_with_ll_service_description = { loadedTime: new Date(), mediaPresentationDuration: 10, ServiceDescription: {}, ServiceDescription_asArray: [{ Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' }, Latency: { target: 3000, max: 5000, min: 2000}, PlaybackRate: { max: 1.5, min: 0.5 } }], Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, SupplementalProperty: {}, SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }] }] }] };
+const manifest_without_supplemental_properties = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }] };
+
 
 describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
@@ -309,6 +312,34 @@ describe('DashAdapter', function () {
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
+            });
+
+            it('should read service description attributes', function () {
+                const streamInfos = dashAdapter.getStreamsInfo(manifest_with_ll_service_description, 10);
+
+                expect(streamInfos).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(streamInfos.length).equals(1);           // jshint ignore:line
+
+                expect(streamInfos[0].manifestInfo).not.to.be.null; ;    // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions.length).equals(1);           // jshint ignore:line
+
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].schemeIdUri).equals('urn:dvb:dash:lowlatency:scope:2019');           // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.target).equals(3000);        // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.max).equals(5000);           // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.min).equals(2000);           // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.max).equals(1.5);       // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.min).equals(0.5);       // jshint ignore:line
+            });
+
+            it('supplemental properties should be empty if not defined', function () {
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.VIDEO, manifest_without_supplemental_properties);
+
+                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
+                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+
+                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
+                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
             });
         });
     });
