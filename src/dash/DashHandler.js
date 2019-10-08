@@ -309,7 +309,7 @@ function DashHandler(config) {
 
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
-        if (!segment && !isEndlessMedia(representation)) {
+        if (!segment && isEndlessMedia(representation)) {
             logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
         } else {
@@ -340,7 +340,7 @@ function DashHandler(config) {
     }
 
     function isEndlessMedia(representation) {
-        return !isDynamicManifest || (isDynamicManifest && isFinite(representation.adaptation.period.duration));
+        return !isFinite(representation.adaptation.period.duration);
     }
 
     function onInitializationLoaded(e) {
