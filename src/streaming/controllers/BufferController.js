@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import MetricsConstants from '../constants/MetricsConstants';
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferSink from '../SourceBufferSink';
 import PreBufferSink from '../PreBufferSink';
@@ -44,8 +45,6 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 
-const BUFFER_LOADED = 'bufferLoaded';
-const BUFFER_EMPTY = 'bufferStalled';
 const STALL_THRESHOLD = 0.5;
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
@@ -552,17 +551,17 @@ function BufferController(config) {
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
         if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
-            notifyBufferStateChanged(BUFFER_EMPTY);
+            notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= streamProcessor.getStreamInfo().manifestInfo.minBufferTime) {
-                notifyBufferStateChanged(BUFFER_LOADED);
+                notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
             }
         }
     }
 
     function notifyBufferStateChanged(state) {
         if (bufferState === state ||
-            (state === BUFFER_EMPTY && playbackController.getTime() === 0) || // Don't trigger BUFFER_EMPTY if it's initial loading
+            (state === MetricsConstants.BUFFER_EMPTY && playbackController.getTime() === 0) || // Don't trigger BUFFER_EMPTY if it's initial loading
             (type === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
             return;
         }
@@ -571,8 +570,8 @@ function BufferController(config) {
         addBufferMetrics();
 
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
-        eventBus.trigger(state === BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
-        logger.debug(state === BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
+        eventBus.trigger(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
+        logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
@@ -756,7 +755,7 @@ function BufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor || e.error) return;
+        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id || e.error) return;
         updateBufferTimestampOffset(e.currentRepresentation.MSETimeOffset);
     }
 
@@ -928,8 +927,4 @@ function BufferController(config) {
 }
 
 BufferController.__dashjs_factory_name = BUFFER_CONTROLLER_TYPE;
-const factory = FactoryMaker.getClassFactory(BufferController);
-factory.BUFFER_LOADED = BUFFER_LOADED;
-factory.BUFFER_EMPTY = BUFFER_EMPTY;
-FactoryMaker.updateClassFactory(BufferController.__dashjs_factory_name, factory);
-export default factory;
+export default FactoryMaker.getClassFactory(BufferController);

@@ -32,10 +32,7 @@ import FactoryMaker from './FactoryMaker';
 import Utils from './Utils.js';
 import Debug from '../core/Debug';
 import Constants from '../streaming/constants/Constants';
-import {
-    HTTPRequest
-}
-    from '../streaming/vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.

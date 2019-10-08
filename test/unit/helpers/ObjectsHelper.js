@@ -15,8 +15,7 @@ class ObjectsHelper {
                                                 { bandwidth: 2000000 },
                                                 { bandwidth: 3000000 },
                                            ],
-                                           mimeType: "video/mp4" }},
-            getIndexHandler: () => this.getDummyIndexHandler()
+                                           mimeType: "video/mp4" }}
         };
     }
 
@@ -31,6 +30,9 @@ class ObjectsHelper {
     }
 
     getDummyTimelineConverter() {
+        let start = undefined;
+        let end = undefined;
+
         return {
             initialize: () => {},
             reset: () => {},
@@ -39,9 +41,10 @@ class ObjectsHelper {
             calcAvailabilityEndTimeFromPresentationTime: () => 0,
             calcPeriodRelativeTimeFromMpdRelativeTime: () => NaN,
             calcMediaTimeFromPresentationTime: () => undefined,
-            calcSegmentAvailabilityRange: (voRepresentation) =>  { return {start: voRepresentation.start, end: voRepresentation.end};},
+            calcSegmentAvailabilityRange: () =>  { return {start: start, end: end};},
             isTimeSyncCompleted: () => {return true;},
-            setExpectedLiveEdge: () => undefined
+            setExpectedLiveEdge: () => {},
+            setRange: (range) => {start = range.start; end = range.end;}
         };
     }
 

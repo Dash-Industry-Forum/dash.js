@@ -41,6 +41,8 @@ class MetricsConstants {
         this.HTTP_REQUEST = 'HttpList';
         this.TRACK_SWITCH = 'RepSwitchList';
         this.BUFFER_LEVEL = 'BufferLevel';
+        this.BUFFER_LOADED = 'bufferLoaded';
+        this.BUFFER_EMPTY = 'bufferStalled';
         this.BUFFER_STATE = 'BufferState';
         this.DVR_INFO = 'DVRInfo';
         this.DROPPED_FRAMES = 'DroppedFrames';

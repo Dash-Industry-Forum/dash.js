@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import BufferController from '../../controllers/BufferController';
+import MetricsConstants from '../../constants/MetricsConstants';
 
 /**
  * @class
@@ -45,10 +45,10 @@ class BufferState {
          */
         this.target = null;
         /**
-         * Current buffer state. Will be BufferController.BUFFER_EMPTY or BufferController.BUFFER_LOADED.
+         * Current buffer state. Will be MetricsConstants.BUFFER_EMPTY or MetricsConstants.BUFFER_LOADED.
          * @public
          */
-        this.state = BufferController.BUFFER_EMPTY;
+        this.state = MetricsConstants.BUFFER_EMPTY;
     }
 }
 

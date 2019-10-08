@@ -172,7 +172,8 @@ describe('NotFragmentedTextBufferController', function () {
 
                 let event = {
                     sender: {
-                        getStreamProcessor: function () { return streamProcessorMock; },
+                        getType: function () { return testType; },
+                        getStreamId: function () { return streamInfo.id; },
                         getCurrentRepresentation: function () { return { id: 0}; }
                     }
                 };

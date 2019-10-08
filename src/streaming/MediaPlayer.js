@@ -107,7 +107,7 @@ function MediaPlayer() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     let settings = Settings(context).getInstance();
-    const debug = Debug(context).getInstance();
+    const debug = Debug(context).getInstance({settings: settings});
 
     let instance,
         logger,

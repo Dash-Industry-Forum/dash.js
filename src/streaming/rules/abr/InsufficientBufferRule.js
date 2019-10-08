@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import BufferController from '../../controllers/BufferController';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import FactoryMaker from '../../../core/FactoryMaker';
@@ -91,7 +90,7 @@ function InsufficientBufferRule(config) {
             return switchRequest;
         }
 
-        if (lastBufferStateVO.state === BufferController.BUFFER_EMPTY) {
+        if (lastBufferStateVO.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
@@ -118,7 +117,7 @@ function InsufficientBufferRule(config) {
         let wasTriggered = false;
         if (bufferStateDict[mediaType].firstBufferLoadedEvent) {
             wasTriggered = true;
-        } else if (currentBufferState && currentBufferState.state === BufferController.BUFFER_LOADED) {
+        } else if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_LOADED) {
             bufferStateDict[mediaType].firstBufferLoadedEvent = true;
             wasTriggered = true;
         }

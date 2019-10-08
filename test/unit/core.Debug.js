@@ -1,4 +1,5 @@
 import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -7,7 +8,7 @@ const spies = require('chai-spies');
 chai.use(spies);
 
 const context = {};
-let debug;
+let debug, settings;
 
 describe('Debug', function () {
     before(function () {
@@ -29,20 +30,22 @@ describe('Debug', function () {
     });
 
     beforeEach(function () {
-        debug = Debug(context).getInstance();
+        settings = Settings(context).getInstance();
+        debug = Debug(context).getInstance({settings: settings});
     });
 
     afterEach(function () {
     });
 
     it('Default values', function () {
-        var logLevel = debug.getLogLevel();
+        var logLevel = settings.get().debug.logLevel;
         expect(logLevel).to.equal(Debug.LOG_LEVEL_WARNING);
     });
 
     it('should set log level', function () {
-        debug.setLogLevel(Debug.LOG_LEVEL_NONE);
-        var logLevel = debug.getLogLevel();
+        const s = { debug: { logLevel: Debug.LOG_LEVEL_NONE }};
+        settings.update(s);
+        var logLevel = settings.get().debug.logLevel;
         expect(logLevel).to.equal(Debug.LOG_LEVEL_NONE);
     });
 
@@ -59,7 +62,8 @@ describe('Debug', function () {
         it('shouldnt write logs when LOG_LEVEL_NONE level is set', function () {
             var logger = debug.getLogger();
 
-            debug.setLogLevel(Debug.LOG_LEVEL_NONE);
+            const s = { debug: { logLevel: Debug.LOG_LEVEL_NONE }};
+            settings.update(s);
             logger.fatal('Fatal error');
             expect(global.window.console.error).not.to.have.been.called; // jshint ignore:line
             logger.error('Error');
@@ -75,7 +79,8 @@ describe('Debug', function () {
         it('should manage log levels correctly', function () {
             var logger = debug.getLogger();
             // Debug
-            debug.setLogLevel(Debug.LOG_LEVEL_DEBUG);
+            let s = { debug: { logLevel: Debug.LOG_LEVEL_DEBUG }};
+            settings.update(s);
 
             logger.debug('debug message');
             expect(global.window.console.debug).to.have.been.called.once; // jshint ignore:line
@@ -84,7 +89,8 @@ describe('Debug', function () {
             expect(global.window.console.error).to.have.been.called.once; // jshint ignore:line
 
             // Warning
-            debug.setLogLevel(Debug.LOG_LEVEL_WARNING);
+            s = { debug: { logLevel: Debug.LOG_LEVEL_WARNING }};
+            settings.update(s);
 
             logger.debug('debug');
             expect(global.window.console.debug).not.to.have.been.called; // jshint ignore:line

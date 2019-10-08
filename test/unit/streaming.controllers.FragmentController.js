@@ -1,4 +1,3 @@
-import VoHelper from './helpers/VOHelper';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import FragmentController from '../../src/streaming/controllers/FragmentController';
@@ -13,7 +12,6 @@ const expect = chai.expect;
 describe('FragmentController', function () {
     let videoFragmentModel;
     const context = {};
-    const voHelper = new VoHelper();
     const eventBus = EventBus(context).getInstance();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
     const settings = Settings(context).getInstance();
@@ -40,19 +38,6 @@ describe('FragmentController', function () {
         expect(fragmentController.getModel(context2)).to.be.equal(model2);
     });
 
-    it('should identify an initialization segment', function () {
-        var request = voHelper.getInitRequest();
-        expect(fragmentController.isInitializationRequest(request)).to.be.ok; // jshint ignore:line
-
-        request.type = 'unknown';
-        expect(fragmentController.isInitializationRequest(request)).to.not.be.ok; // jshint ignore:line
-
-        request.type = undefined;
-        expect(fragmentController.isInitializationRequest(request)).to.not.be.ok; // jshint ignore:line
-
-        expect(fragmentController.isInitializationRequest(null)).to.not.be.ok; // jshint ignore:line
-    });
-
     it('should trigger INIT_FRAGMENT_LOADED event when an init segment download is completed.', function (done) {
         let onInitFragmentLoaded = function () {
             eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded);
@@ -60,7 +45,7 @@ describe('FragmentController', function () {
         };
 
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {response: {}, request: {mediaType: 'video', type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {response: {}, request: {mediaType: 'video', isInitializationRequest() { return true; }, type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
     });
 
     it('should trigger SERVICE_LOCATION_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {
@@ -70,6 +55,6 @@ describe('FragmentController', function () {
         };
 
         eventBus.on(Events.SERVICE_LOCATION_BLACKLIST_ADD, onInitFragmentLoadedWithError, this);
-        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {error: {}, response: {}, request: {mediaType: 'video', type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {error: {}, response: {}, request: {mediaType: 'video', isInitializationRequest() { return true; }, type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
     });
 });

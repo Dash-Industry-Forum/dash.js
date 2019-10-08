@@ -154,14 +154,12 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor || e.error) {
-            return;
-        }
+        if (e.sender.getType() !== streamProcessor.getType() || e.error) return;
 
-        const streamInfo = streamProcessor.getStreamInfo();
+        const streamId = e.sender.getStreamId();
         const currentRepresentation = e.sender.getCurrentRepresentation();
 
-        const chunk = initCache.extract(streamInfo ? streamInfo.id : null, currentRepresentation ? currentRepresentation.id : null);
+        const chunk = initCache.extract(streamId, currentRepresentation ? currentRepresentation.id : null);
 
         if (!chunk) {
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
