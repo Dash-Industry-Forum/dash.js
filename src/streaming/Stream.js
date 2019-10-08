@@ -460,6 +460,11 @@ function Stream(config) {
             initialMediaInfo = mediaController.getTracksFor(type, streamInfo)[0];
         }
 
+        eventBus.trigger(Events.STREAM_INITIALIZING, {
+            streamInfo: streamInfo,
+            mediaInfo: mediaInfo
+        });
+
         // TODO : How to tell index handler live/duration?
         // TODO : Pass to controller and then pass to each method on handler?
 
@@ -845,6 +850,7 @@ function Stream(config) {
 
         setPreloaded(true);
     }
+
 
     instance = {
         initialize: initialize,
