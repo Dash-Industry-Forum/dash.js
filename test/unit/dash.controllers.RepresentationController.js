@@ -91,7 +91,7 @@ describe('RepresentationController', function () {
 
             it('should fire dataUpdateStarted event when new data is set', function () {
                 // Act
-                representationController.updateData(data, voRepresentations, testType);
+                representationController.updateData(data, voRepresentations, testType, 0);
 
                 // Assert
                 expect(spy).to.have.been.called.exactly(1);
@@ -100,7 +100,7 @@ describe('RepresentationController', function () {
 
         describe('when data update completed', function () {
             beforeEach(function (done) {
-                representationController.updateData(data, voRepresentations, testType);
+                representationController.updateData(data, voRepresentations, testType, 0);
                 setTimeout(function () {
                     done();
                 }, specHelper.getExecutionDelay());
@@ -136,15 +136,18 @@ describe('RepresentationController', function () {
             it('when a WALLCLOCK_TIME_UPDATED event occurs, should update availability window for dynamic content', function () {
                 const firstRepresentation = representationController.getRepresentationForQuality(0);
 
-                expect(firstRepresentation.segmentAvailabilityRange).to.be.null; // jshint ignore:line
+                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined); // jshint ignore:line
+                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined); // jshint ignore:line
+
+                timelineConverter.setRange({start: 0, end: 4});
 
                 eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {
                     isDynamic: true,
                     time: new Date()
                 });
 
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined); // jshint ignore:line
+                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(0); // jshint ignore:line
+                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(4); // jshint ignore:line
             });
 
             it('when a QUALITY_CHANGE_REQUESTED event occurs, should update current representation', function () {
@@ -157,26 +160,12 @@ describe('RepresentationController', function () {
                 expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
             });
 
-        it('when a REPRESENTATION_UPDATE_COMPLETED event occurs, should notify data update completed', function () {
-            let spy = chai.spy();
-            eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
-
-            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
-            expect(spy).to.have.been.called.exactly(1);
-
-                dvrInfo = dashMetricsMock.getCurrentDVRInfo();
-                expect(dvrInfo).not.to.be.null; // jshint ignore:line
-                expect(dvrInfo.type).to.equal(testType); // jshint ignore:line
-            });
-
-            it('when a REPRESENTATION_UPDATED event occurs, should notify dat update completed', function () {
+            it('when a REPRESENTATION_UPDATE_COMPLETED event occurs, should notify data update completed', function () {
                 let spy = chai.spy();
                 eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
 
-                eventBus.trigger(Events.REPRESENTATION_UPDATED, {sender: { getType() { return testType;}}, representation: voRepresentations[1]});
+                eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
                 expect(spy).to.have.been.called.exactly(1);
-
-                eventBus.off(Events.DATA_UPDATE_COMPLETED, spy);
             });
         });
 
