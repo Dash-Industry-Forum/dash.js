@@ -51,8 +51,7 @@ function RepresentationController() {
         timelineConverter,
         dashMetrics,
         type,
-        streamId,
-        manifestModel;
+        streamId;
 
     function setup() {
         resetInitialSettings();
@@ -76,9 +75,6 @@ function RepresentationController() {
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
         if (config.type) {
             type = config.type;
         }
@@ -89,7 +85,7 @@ function RepresentationController() {
 
     function checkConfig() {
         if (!abrController || !dashMetrics || !playbackController ||
-            !timelineConverter || !manifestModel) {
+            !timelineConverter) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }

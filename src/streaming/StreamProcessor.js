@@ -118,10 +118,8 @@ function StreamProcessor(config) {
         representationController.setConfig({
             abrController: abrController,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance,
             type: type,
             streamId: getStreamInfo() ? getStreamInfo().id : null
         });
