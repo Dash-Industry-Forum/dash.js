@@ -44,12 +44,12 @@ function OfflineDownloaderRequestRule() {
         _fragmentModel = fragmentModel;
 
     }
-    function getNextSegmentRequest(representation) {
-        return _indexHandler.getNextSegmentRequest(representation);
+    function getNextSegmentRequest(mediaInfo, representation) {
+        return _indexHandler.getNextSegmentRequest(mediaInfo, representation);
     }
 
-    function execute(representation) {
-        let request = getNextSegmentRequest(representation);
+    function execute(mediaInfo, representation) {
+        let request = getNextSegmentRequest(mediaInfo, representation);
 
         // Then, check if this request was downloaded or not
         while (request && request.action !== FragmentRequest.ACTION_COMPLETE  && _fragmentModel.isFragmentLoadedOrPending(request)) {

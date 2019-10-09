@@ -56,6 +56,8 @@ function OfflineDownload(config) {
     const timelineConverter = config.timelineConverter;
     const requestModifier = config.requestModifier;
     const urlUtils = config.urlUtils;
+    const playbackController = config.playbackController;
+    const abrController = config.abrController;
 
     const context = this.context;
 
@@ -189,7 +191,9 @@ function OfflineDownload(config) {
                     offlineStoreController: offlineStoreController,
                     settings: settings,
                     dashMetrics: dashMetrics,
-                    urlUtils: urlUtils
+                    urlUtils: urlUtils,
+                    playbackController: playbackController,
+                    abrController: abrController
                 });
                 streams.push(stream);
 

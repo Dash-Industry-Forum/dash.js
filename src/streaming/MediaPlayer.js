@@ -244,6 +244,9 @@ function MediaPlayer() {
         timelineConverter = TimelineConverter(context).getInstance();
         if (!abrController) {
             abrController = AbrController(context).getInstance();
+            abrController.setConfig({
+                settings: settings
+            });
         }
 
         if (!schemeLoaderFactory) {
@@ -1153,7 +1156,9 @@ function MediaPlayer() {
                 dashConstants: DashConstants,
                 urlUtils: URLUtils(context).getInstance(),
                 timelineConverter: timelineConverter,
-                requestModifier: requestModifier
+                requestModifier: requestModifier,
+                playbackController: playbackController,
+                abrController: abrController
             });
 
             offlineControllerInitialized = true;

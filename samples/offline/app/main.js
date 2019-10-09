@@ -444,7 +444,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         $("#errorModal").modal('show');
     }, $scope);
 
-    $scope.downloader.getDebug().setLogLevel(dashjs.Debug.LOG_LEVEL_INFO);
+    $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
 
     $scope.downloads = DownloadService.getDownloads();
     DownloadService.init($scope.downloader);

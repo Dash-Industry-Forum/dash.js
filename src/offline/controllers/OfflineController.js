@@ -54,8 +54,10 @@ function OfflineController() {
         manifestModel,
         manifestUpdater,
         baseURLController,
+        playbackController,
         mediaPlayerModel,
         offlineStoreController,
+        abrController,
         urlUtils,
         offlineUrlUtils,
         settings,
@@ -149,6 +151,14 @@ function OfflineController() {
             requestModifier = config.requestModifier;
         }
 
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
+
+        if (config.abrController) {
+            abrController = config.abrController;
+        }
+
         schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
     }
 
@@ -191,7 +201,9 @@ function OfflineController() {
                 dashConstants: dashConstants,
                 timelineConverter: timelineConverter,
                 requestModifier: requestModifier,
-                urlUtils: urlUtils
+                urlUtils: urlUtils,
+                playbackController: playbackController,
+                abrController: abrController
             });
 
             downloads.push(download);

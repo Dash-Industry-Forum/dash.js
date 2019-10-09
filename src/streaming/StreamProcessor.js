@@ -127,16 +127,15 @@ function StreamProcessor(config) {
             mediaController: mediaController,
             settings: settings
         });
-        representationController = RepresentationController(context).create();
-        representationController.setConfig({
+        representationController = RepresentationController(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance,
             type: type,
-            streamId: getStreamInfo() ? getStreamInfo().id : null
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
+            events: Events,
+            eventBus: eventBus
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -206,7 +205,9 @@ function StreamProcessor(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== getStreamInfo().id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
+        const streamInfo = getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfoId || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
 
         addDVRMetric();
     }

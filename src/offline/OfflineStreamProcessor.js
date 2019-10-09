@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashHandler from './../dash/DashHandler';
+import RepresentationController from './../dash/controllers/RepresentationController';
 import OfflineDownloaderRequestRule from './rules/OfflineDownloaderRequestRule';
 import FragmentModel from './../streaming/models/FragmentModel';
 import FragmentLoader from './../streaming/FragmentLoader';
@@ -52,11 +53,15 @@ function OfflineStreamProcessor(config) {
     const manifestId = config.id;
     const completedCb = config.completed;
     const urlUtils = config.urlUtils;
+    const abrController = config.abrController;
+    const manifestModel = config.manifestModel;
+    const playbackController = config.playbackController;
 
     let instance,
         adapter,
         logger,
         indexHandler,
+        representationController,
         type,
         errHandler,
         mimeType,
@@ -66,7 +71,6 @@ function OfflineStreamProcessor(config) {
         mediaInfo,
         bitrate,
         updating,
-        currentVoRepresentation,
         offlineDownloaderRequestRule,
         offlineStoreController,
         downloadedSegments,
@@ -133,7 +137,6 @@ function OfflineStreamProcessor(config) {
         resetInitialSettings();
         logger = debug.getLogger(instance);
         eventBus.on(events.STREAM_COMPLETED, onStreamCompleted, instance);
-        eventBus.on(events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
@@ -191,6 +194,7 @@ function OfflineStreamProcessor(config) {
     */
     function initialize() {
         indexHandler = DashHandler(context).create({
+            type: type,
             mediaPlayerModel: mediaPlayerModel,
             mimeType: mimeType,
             baseURLController: baseURLController,
@@ -202,7 +206,20 @@ function OfflineStreamProcessor(config) {
             events: events,
             debug: debug,
             dashConstants: dashConstants,
-            urlUtils: urlUtils
+            urlUtils: urlUtils,
+            streamInfo: getStreamInfo()
+        });
+
+        representationController = RepresentationController(context).create({
+            abrController: abrController,
+            dashMetrics: dashMetrics,
+            manifestModel: manifestModel,
+            playbackController: playbackController,
+            timelineConverter: timelineConverter,
+            type: type,
+            eventBus: eventBus,
+            events: events,
+            streamId: getStreamInfo() ? getStreamInfo().id : null
         });
 
         let fragmentLoader = FragmentLoader(context).create({
@@ -225,7 +242,7 @@ function OfflineStreamProcessor(config) {
             debug: debug
         });
 
-        indexHandler.initialize(instance);
+        indexHandler.initialize(false);
 
         offlineDownloaderRequestRule = OfflineDownloaderRequestRule(context).create();
         offlineDownloaderRequestRule.initialize(indexHandler, fragmentModel);
@@ -246,11 +263,11 @@ function OfflineStreamProcessor(config) {
      * @memberof OfflineStreamProcessor#
     */
     function getInitRequest() {
-        if (!currentVoRepresentation) {
+        if (!representationController.getCurrentRepresentation()) {
             return null;
         }
 
-        let initRequest = indexHandler.getInitRequest(currentVoRepresentation);
+        let initRequest = indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation());
         return fragmentModel.executeRequest(initRequest);
     }
 
@@ -259,7 +276,7 @@ function OfflineStreamProcessor(config) {
      * @memberof OfflineStreamProcessor#
     */
     function start() {
-        if (!currentVoRepresentation) {
+        if (!representationController.getCurrentRepresentation()) {
             throw new Error('Start denied to OfflineStreamProcessor');
         }
         isStopped = false;
@@ -275,12 +292,12 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        if (isNaN(currentVoRepresentation)) {
+        if (isNaN(representationController.getCurrentRepresentation())) {
             if (!isInitialized) {
                 getInitRequest();
                 isInitialized = true;
             } else {
-                let request = offlineDownloaderRequestRule.execute(currentVoRepresentation);
+                let request = offlineDownloaderRequestRule.execute(getMediaInfo(), representationController.getCurrentRepresentation());
 
                 if (request) {
                     logger.info(`[${manifestId}] getNextFragment - request is ${request.url}`);
@@ -301,7 +318,7 @@ function OfflineStreamProcessor(config) {
         let voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
         // get representation VO according to id.
-        let rep = voRepresentations.find((representation) => {
+        let quality = voRepresentations.findIndex((representation) => {
             return representation.id === bitrate.id;
         });
 
@@ -310,14 +327,7 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        indexHandler.updateRepresentation(rep, true);
-    }
-
-    function onRepresentationUpdated(e) {
-        if (e.sender.getStreamProcessor() !== instance || !isUpdating()) return;
-
-        currentVoRepresentation = e.representation;
-        eventBus.trigger(events.DATA_UPDATE_COMPLETED, {sender: instance, currentRepresentation: currentVoRepresentation});
+        representationController.updateData(null, voRepresentations, type, quality);
     }
 
     function getStreamInfo() {
@@ -337,7 +347,7 @@ function OfflineStreamProcessor(config) {
     }
 
     function getAvailableSegmentsNumber() {
-        return currentVoRepresentation.availableSegmentsNumber;
+        return representationController.getCurrentRepresentation().availableSegmentsNumber;
     }
 
     function getDownloadedSegments() {
@@ -351,7 +361,6 @@ function OfflineStreamProcessor(config) {
         mediaInfo = null;
         bitrate = null;
         updating = false;
-        currentVoRepresentation = NaN;
         type = null;
         stream = null;
     }
@@ -365,7 +374,6 @@ function OfflineStreamProcessor(config) {
         indexHandler.reset();
 
         eventBus.off(events.STREAM_COMPLETED, onStreamCompleted, instance);
-        eventBus.off(events.REPRESENTATION_UPDATED, onRepresentationUpdated, instance);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 

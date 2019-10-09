@@ -57,6 +57,8 @@ function OfflineStream(config) {
     const startedCb = config.started;
     const finishedCb = config.finished;
     const urlUtils = config.urlUtils;
+    const playbackController = config.playbackController;
+    const abrController = config.abrController;
 
     let instance,
         offlineStreamProcessors,
@@ -221,7 +223,9 @@ function OfflineStream(config) {
             dashConstants: dashConstants,
             timelineConverter: timelineConverter,
             requestModifier: requestModifier,
-            urlUtils: urlUtils
+            urlUtils: urlUtils,
+            playbackController: playbackController,
+            abrController: abrController
         });
         streamProcessor.setConfig({
             type: mediaInfo.type,
@@ -250,11 +254,12 @@ function OfflineStream(config) {
 
     function onDataUpdateCompleted(e) {
         let sp = e.sender;
-        if (sp.getStreamInfo() !== streamInfo) {
-            return;
+        if (!streamInfo || sp.getStreamId() !== streamInfo.id) return;
+
+        for (let i = 0; i < offlineStreamProcessors.length; i++) {
+            offlineStreamProcessors[i].start();
         }
 
-        sp.start();
         checkIfAllOfflineStreamProcessorsStarted();
     }
 

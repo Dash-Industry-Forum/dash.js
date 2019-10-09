@@ -32,64 +32,38 @@ import Constants from '../../streaming/constants/Constants';
 import Errors from '../../core/errors/Errors';
 import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function RepresentationController() {
+function RepresentationController(config) {
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
+    config = config || {};
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const abrController = config.abrController;
+    const dashMetrics = config.dashMetrics;
+    const playbackController = config.playbackController;
+    const timelineConverter = config.timelineConverter;
+    const type = config.type;
+    const streamId = config.streamId;
 
     let instance,
         realAdaptation,
         updating,
         voAvailableRepresentations,
-        currentVoRepresentation,
-        abrController,
-        playbackController,
-        timelineConverter,
-        dashMetrics,
-        type,
-        streamId,
-        manifestModel;
+        currentVoRepresentation;
 
     function setup() {
         resetInitialSettings();
 
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
-    }
-
-    function setConfig(config) {
-        if (config.abrController) {
-            abrController = config.abrController;
-        }
-        if (config.dashMetrics) {
-            dashMetrics = config.dashMetrics;
-        }
-        if (config.playbackController) {
-            playbackController = config.playbackController;
-        }
-        if (config.timelineConverter) {
-            timelineConverter = config.timelineConverter;
-        }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-        if (config.type) {
-            type = config.type;
-        }
-        if (config.streamId) {
-            streamId = config.streamId;
-        }
+        eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.on(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
+        eventBus.on(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
     function checkConfig() {
         if (!abrController || !dashMetrics || !playbackController ||
-            !timelineConverter || !manifestModel) {
+            !timelineConverter) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -110,18 +84,14 @@ function RepresentationController() {
         realAdaptation = null;
         updating = true;
         voAvailableRepresentations = [];
-        abrController = null;
-        playbackController = null;
-        timelineConverter = null;
-        dashMetrics = null;
     }
 
     function reset() {
 
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.off(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
+        eventBus.off(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
     }
@@ -208,7 +178,7 @@ function RepresentationController() {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             updateRepresentation(voAvailableRepresentations[i], isDynamic);
             if (notifyUpdate) {
-                eventBus.trigger(Events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
+                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
             }
         }
     }
@@ -221,7 +191,7 @@ function RepresentationController() {
 
     function startDataUpdate() {
         updating = true;
-        eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+        eventBus.trigger(events.DATA_UPDATE_STARTED, { sender: instance });
     }
 
     function endDataUpdate(error) {
@@ -230,7 +200,7 @@ function RepresentationController() {
         if (error) {
             eventArg.error = error;
         }
-        eventBus.trigger(Events.DATA_UPDATE_COMPLETED, eventArg);
+        eventBus.trigger(events.DATA_UPDATE_COMPLETED, eventArg);
     }
 
     function postponeUpdate(postponeTimePeriod) {
@@ -246,7 +216,7 @@ function RepresentationController() {
 
             updateAvailabilityWindow(playbackController.getIsDynamic(), true);
         };
-        eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
+        eventBus.trigger(events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 
@@ -333,7 +303,6 @@ function RepresentationController() {
     }
 
     instance = {
-        setConfig: setConfig,
         getData: getData,
         isUpdating: isUpdating,
         updateData: updateData,

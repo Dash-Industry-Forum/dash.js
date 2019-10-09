@@ -3,7 +3,6 @@ import VoHelper from './helpers/VOHelper';
 import MpdHelper from './helpers/MPDHelper';
 import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
-import ManifestModel from '../../src/streaming/models/ManifestModel';
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import Constants from '../../src/streaming/constants/Constants';
@@ -35,12 +34,9 @@ describe('RepresentationController', function () {
     voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
-    const manifestModel = ManifestModel(context).getInstance();
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
 
     Events.extend(MediaPlayerEvents);
-
-    manifestModel.setValue(mpd);
 
     const abrControllerMock = new AbrControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
@@ -48,9 +44,19 @@ describe('RepresentationController', function () {
 
     abrControllerMock.registerStreamType();
 
-    const representationController = RepresentationController(context).create();
+    let representationController;
 
-    describe('SetConfig not previously called', function () {
+    describe('Config not correctly passed', function () {
+        beforeEach(function () {
+            representationController = RepresentationController(context).create({ events: Events,
+                eventBus: eventBus
+            });
+        });
+
+        afterEach(function () {
+            representationController.reset();
+            representationController = null;
+        });
         it('should not contain data before it is set', function () {
             // Act
             const data = representationController.getData();
@@ -64,17 +70,23 @@ describe('RepresentationController', function () {
         });
     });
 
-    describe('SetConfig previously called', function () {
+    describe('Config correctly passed', function () {
         beforeEach(function () {
-            representationController.setConfig({
+            representationController = RepresentationController(context).create({
                 abrController: abrControllerMock,
-                manifestModel: manifestModel,
                 timelineConverter: timelineConverter,
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock,
                 type: testType,
-                streamId: streamProcessor.getStreamInfo().id
+                streamId: streamProcessor.getStreamInfo().id,
+                events: Events,
+                eventBus: eventBus
             });
+        });
+
+        afterEach(function () {
+            representationController.reset();
+            representationController = null;
         });
 
         describe('when data update started', function () {
