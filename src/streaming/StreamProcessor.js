@@ -206,7 +206,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
 
         if (adapter && adapter.getIsTextTrack(type)) {
-            eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+            eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, instance);
         }
 
         resetInitialSettings();
