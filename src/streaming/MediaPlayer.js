@@ -48,6 +48,7 @@ import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
 import DOMStorage from './utils/DOMStorage';
+import InitCache from './utils/InitCache';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
 import EventBus from './../core/EventBus';
@@ -2009,7 +2010,8 @@ function MediaPlayer() {
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
                 BASE64: BASE64,
                 ISOBoxer: ISOBoxer,
-                settings: settings
+                settings: settings,
+                initCache: InitCache(context).getInstance()
             });
         }
     }

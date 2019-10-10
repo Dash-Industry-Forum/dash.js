@@ -77,6 +77,7 @@ function StreamProcessor(config) {
 
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.on(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
     }
 
     function initialize(mediaSource) {
@@ -111,6 +112,7 @@ function StreamProcessor(config) {
             streamController: streamController,
             textController: textController,
             streamProcessor: instance,
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
             mediaController: mediaController,
             settings: settings
         });
@@ -124,7 +126,12 @@ function StreamProcessor(config) {
             streamId: getStreamInfo() ? getStreamInfo().id : null
         });
         bufferController.initialize(mediaSource);
+
         scheduleController.initialize();
+
+        if (adapter.getIsTextTrack(mimeType)) {
+            eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+        }
     }
 
     function registerExternalController(controller) {
@@ -180,6 +187,11 @@ function StreamProcessor(config) {
 
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.off(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
+
+        if (adapter.getIsTextTrack(type)) {
+            eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
+        }
 
         resetInitialSettings();
         type = null;
@@ -343,10 +355,32 @@ function StreamProcessor(config) {
         return bufferController ? bufferController.getBufferLevel() : 0;
     }
 
-    function switchInitData(representationId, bufferResetEnabled) {
-        if (bufferController) {
-            const streamInfo = getStreamInfo();
-            bufferController.switchInitData(streamInfo ? streamInfo.id : null, representationId, bufferResetEnabled);
+    function onInitDataNeeded(eventObj) {
+        const streamInfo = getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (eventObj.sender.getType() !== getType() || eventObj.sender.getStreamId() !== streamInfoId) return;
+
+        if (bufferController && eventObj.representationId) {
+            let isInitRequestNeeded = bufferController.switchInitData(streamInfoId, eventObj.representationId);
+            if (isInitRequestNeeded) {
+                const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
+                scheduleController.setInitRequest(request);
+            }
+        }
+    }
+
+    function onTimedTextRequested(e) {
+        const streamInfo = getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (e.sender.getStreamId() !== streamInfoId) {
+            return;
+        }
+
+        //if subtitles are disabled, do not download subtitles file.
+        if (textController.isTextEnabled()) {
+            const representation = representationController ? representationController.getRepresentationForQuality(e.index) : null;
+            const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representation) : null;
+            scheduleController.setInitRequest(request);
         }
     }
 
@@ -415,14 +449,6 @@ function StreamProcessor(config) {
         }
     }
 
-    function getInitRequest(quality) {
-        checkInteger(quality);
-
-        const representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
-
-        return indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representation) : null;
-    }
-
     function getFragmentRequest(representationInfo, time, options) {
         let fragRequest = null;
 
@@ -451,7 +477,6 @@ function StreamProcessor(config) {
         getRepresentationController: getRepresentationController,
         getRepresentationInfo: getRepresentationInfo,
         getBufferLevel: getBufferLevel,
-        switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
         createBuffer: createBuffer,
         getStreamInfo: getStreamInfo,
@@ -473,7 +498,6 @@ function StreamProcessor(config) {
         setIndexHandlerTime: setIndexHandlerTime,
         getIndexHandlerTime: getIndexHandlerTime,
         resetIndexHandler: resetIndexHandler,
-        getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,
         reset: reset
     };

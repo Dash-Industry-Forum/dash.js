@@ -44,6 +44,7 @@ function MssHandler(config) {
     let eventBus = config.eventBus;
     const events = config.events;
     const constants = config.constants;
+    const initCache = config.initCache;
     const initSegmentType = config.initSegmentType;
     let dashMetrics = config.dashMetrics;
     let playbackController = config.playbackController;
@@ -64,34 +65,47 @@ function MssHandler(config) {
     function setup() {}
 
     function onInitializationRequested(e) {
-        let streamProcessor = e.sender.getStreamProcessor();
-        let request = new FragmentRequest();
-        let representationController = streamProcessor.getRepresentationController();
-        let representation = representationController.getCurrentRepresentation();
+        let streamController = playbackController.getStreamController();
 
-        request.mediaType = representation.adaptation.type;
-        request.type = initSegmentType;
-        request.range = representation.range;
-        request.quality = representation.index;
-        request.mediaInfo = streamProcessor.getMediaInfo();
-        request.representationId = representation.id;
+        if (streamController) {
+            let streamProcessor =  streamController.getActiveStreamProcessors().find((sp) => {
+                return sp.getType() === e.sender.getType();
+            });
+            const streamInfo = streamProcessor.getStreamInfo();
+            const streamId = streamInfo ? streamInfo.id : null;
+            let representationController = streamProcessor.getRepresentationController();
+            let representation = representationController.getCurrentRepresentation();
 
-        const chunk = createDataChunk(request, streamProcessor.getStreamInfo().id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
+            const chunk = initCache.extract(streamId, representation.id);
+            //if chunk has already created, bufferController will push it from the cache directly, not need to build init segment again
+            if (!chunk) {
+                let request = new FragmentRequest();
 
-        try {
-            // Generate initialization segment (moov)
-            chunk.bytes = mssFragmentProcessor.generateMoov(representation);
-        } catch (e) {
-            config.errHandler.error(new DashJSError(e.code, e.message, e.data));
+                request.mediaType = representation.adaptation.type;
+                request.type = initSegmentType;
+                request.range = representation.range;
+                request.quality = representation.index;
+                request.mediaInfo = streamProcessor.getMediaInfo();
+                request.representationId = representation.id;
+
+                const chunk = createDataChunk(request, streamId, e.type !== events.FRAGMENT_LOADING_PROGRESS);
+
+                try {
+                    // Generate initialization segment (moov)
+                    chunk.bytes = mssFragmentProcessor.generateMoov(representation);
+                } catch (e) {
+                    config.errHandler.error(new DashJSError(e.code, e.message, e.data));
+                }
+
+                eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
+                    chunk: chunk,
+                    fragmentModel: streamProcessor.getFragmentModel()
+                });
+
+                // Change the representationId value to stop event to be propagated
+                e.representationId = null;
+            }
         }
-
-        eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
-            chunk: chunk,
-            fragmentModel: streamProcessor.getFragmentModel()
-        });
-
-        // Change the sender value to stop event to be propagated
-        e.sender = null;
     }
 
     function createDataChunk(request, streamId, endFragment) {
@@ -189,7 +203,7 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.INIT_DATA_NEEDED, onInitializationRequested, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
@@ -197,7 +211,7 @@ function MssHandler(config) {
     }
 
     function reset() {
-        eventBus.off(events.INIT_REQUESTED, onInitializationRequested, this);
+        eventBus.off(events.INIT_DATA_NEEDED, onInitializationRequested, this);
         eventBus.off(events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);

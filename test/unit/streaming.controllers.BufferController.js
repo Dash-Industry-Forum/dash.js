@@ -141,17 +141,12 @@ describe('BufferController', function () {
             expect(mediaSourceMock.buffers[0].chunk).to.equal(chunk.bytes);
         });
 
-        it('should trigger INIT_REQUESTED if no init data is cached', function (done) {
+        it('should return true when switchInitData is called and cache is empty', function () {
             // reset cache
             initCache.reset();
 
-            const onInitRequest = function () {
-                eventBus.off(Events.INIT_REQUESTED, onInitRequest);
-                done();
-            };
-            eventBus.on(Events.INIT_REQUESTED, onInitRequest, this);
-
-            bufferController.switchInitData('streamId', 'representationId');
+            const isInitRequestIsNeeded = bufferController.switchInitData('streamId', 'representationId');
+            expect(isInitRequestIsNeeded).to.be.true; // jshint ignore:line
         });
     });
 

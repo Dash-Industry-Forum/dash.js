@@ -123,6 +123,7 @@ function BufferController(config) {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.on(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
     }
 
     function createBuffer(mediaInfo, oldBuffers) {
@@ -193,15 +194,22 @@ function BufferController(config) {
         appendToBuffer(e.chunk);
     }
 
-    function switchInitData(streamId, representationId, bufferResetEnabled) {
+    function onInitDataNeeded(eventObj) {
+        const streamInfo = streamProcessor.getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (eventObj.sender.getType() !== getType() || eventObj.sender.getStreamId() !== streamInfoId) return;
+
+        bufferResetInProgress = eventObj.resetBufferNeeded === true ? eventObj.resetBufferNeeded : false;
+    }
+
+    function switchInitData(streamId, representationId) {
         const chunk = initCache.extract(streamId, representationId);
-        bufferResetInProgress = bufferResetEnabled === true ? bufferResetEnabled : false;
         if (chunk) {
             logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
             appendToBuffer(chunk);
-        } else {
-            eventBus.trigger(Events.INIT_REQUESTED, { sender: instance });
+            return false;
         }
+        return true;
     }
 
     function onMediaFragmentLoaded(e) {
@@ -902,6 +910,7 @@ function BufferController(config) {
         eventBus.off(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.off(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
 
         resetInitialSettings(errored, keepBuffers);
     }

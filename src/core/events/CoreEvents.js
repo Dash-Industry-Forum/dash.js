@@ -51,7 +51,7 @@ class CoreEvents extends EventsBase {
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
-        this.INIT_REQUESTED = 'initRequested';
+        this.INIT_DATA_NEEDED = 'initDataNeeded';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
         this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
         this.LOADING_COMPLETED = 'loadingCompleted';

@@ -39,20 +39,6 @@ describe('StreamProcessor', function () {
         expect(streamProcessor.setIndexHandlerTime.bind(streamProcessor)).to.not.throw();
     });
 
-    it('should return null when getInitRequest is called and indexHandler is undefined', function () {
-        const streamProcessor = StreamProcessor(context).create({});
-
-        const initRequest = streamProcessor.getInitRequest(0);
-
-        expect(initRequest).to.be.null;                // jshint ignore:line
-    });
-
-    it('should throw an error when getInitRequest is called and streamProcessor is defined, but quality is not a number', function () {
-        const streamProcessor = StreamProcessor(context).create({});
-
-        expect(streamProcessor.getInitRequest.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
-    });
-
     it('should return null when getFragmentRequest is called and without parameters', function () {
         const streamProcessor = StreamProcessor(context).create({});
 

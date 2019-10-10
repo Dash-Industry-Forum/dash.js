@@ -132,7 +132,7 @@ function TextBufferController(config) {
     }
 
     function switchInitData(streamId, representationId) {
-        _BufferControllerImpl.switchInitData(streamId, representationId);
+        return _BufferControllerImpl.switchInitData(streamId, representationId);
     }
 
     function getIsPruningInProgress() {

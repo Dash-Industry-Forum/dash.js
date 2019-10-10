@@ -55,6 +55,7 @@ function ScheduleController(config) {
     const streamController = config.streamController;
     const textController = config.textController;
     const type = config.type;
+    const streamId = config.streamId;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
     const settings = config.settings;
@@ -108,10 +109,6 @@ function ScheduleController(config) {
             playbackController: playbackController
         });
 
-        if (adapter.getIsTextTrack(config.mimeType)) {
-            eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
-        }
-
         //eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
@@ -122,7 +119,6 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
-        eventBus.on(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
@@ -202,10 +198,10 @@ function ScheduleController(config) {
                     if (switchTrack) {
                         bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
                         logger.debug('Switch track has been asked, get init request for ' + type + ' with representationid = ' + currentRepresentationInfo.id + 'bufferResetInProgress = ' + bufferResetInProgress);
-                        streamProcessor.switchInitData(currentRepresentationInfo.id, bufferResetInProgress);
+                        eventBus.trigger(Events.INIT_DATA_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id, resetBufferNeeded: bufferResetInProgress });
                         switchTrack = false;
                     } else {
-                        streamProcessor.switchInitData(currentRepresentationInfo.id);
+                        eventBus.trigger(Events.INIT_DATA_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id });
                     }
                     lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
@@ -214,8 +210,7 @@ function ScheduleController(config) {
 
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
-                        streamProcessor.switchInitData(replacement.representationId);
-                        checkPlaybackQuality = false;
+                        eventBus.trigger(Events.INIT_DATA_NEEDED, { sender: instance, representationId: replacement.representationId });
                     } else {
                         let request;
                         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
@@ -302,14 +297,6 @@ function ScheduleController(config) {
         scheduleTimeout = setTimeout(schedule, value);
     }
 
-    function onInitRequested(e) {
-        if (!e.sender || e.sender.getStreamProcessor() !== streamProcessor) {
-            return;
-        }
-
-        getInitRequest(currentRepresentationInfo.quality);
-    }
-
     function setFragmentProcessState (state) {
         if (isFragmentProcessingInProgress !== state ) {
             isFragmentProcessingInProgress = state;
@@ -318,8 +305,7 @@ function ScheduleController(config) {
         }
     }
 
-    function getInitRequest(quality) {
-        const request = streamProcessor.getInitRequest(quality);
+    function setInitRequest(request) {
         if (request) {
             setFragmentProcessState(true);
             fragmentModel.executeRequest(request);
@@ -577,19 +563,6 @@ function ScheduleController(config) {
         stop();
     }
 
-    function onTimedTextRequested(e) {
-        const streamInfo = streamProcessor.getStreamInfo();
-        const streamInfoId = streamInfo ? streamInfo.id : null;
-        if (e.sender.getStreamId() !== streamInfoId) {
-            return;
-        }
-
-        //if subtitles are disabled, do not download subtitles file.
-        if (textController.isTextEnabled()) {
-            getInitRequest(e.index);
-        }
-    }
-
     function onPlaybackStarted() {
         if (isStopped || !settings.get().streaming.scheduleWhilePaused) {
             start();
@@ -636,6 +609,10 @@ function ScheduleController(config) {
 
     function getType() {
         return type;
+    }
+
+    function getStreamId() {
+        return streamId;
     }
 
     function finalisePlayList(time, reason) {
@@ -686,16 +663,13 @@ function ScheduleController(config) {
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
-        eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
+        //eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
-        if (adapter.getIsTextTrack(type)) {
-            eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
-        }
 
         stop();
         completeQualityChange(false);
@@ -709,6 +683,7 @@ function ScheduleController(config) {
     instance = {
         initialize: initialize,
         getType: getType,
+        getStreamId: getStreamId,
         setSeekTarget: setSeekTarget,
         setTimeToLoadDelay: setTimeToLoadDelay,
         replaceRequest: replaceRequest,
@@ -718,7 +693,8 @@ function ScheduleController(config) {
         stop: stop,
         reset: reset,
         getBufferTarget: getBufferTarget,
-        finalisePlayList: finalisePlayList
+        finalisePlayList: finalisePlayList,
+        setInitRequest: setInitRequest
     };
 
     setup();
