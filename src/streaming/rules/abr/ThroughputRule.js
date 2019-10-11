@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import AbrController from '../../controllers/AbrController';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
@@ -81,7 +80,7 @@ function ThroughputRule(config) {
             return switchRequest;
         }
 
-        if (abrController.getAbandonmentStateFor(mediaType) !== AbrController.ABANDON_LOAD) {
+        if (abrController.getAbandonmentStateFor(mediaType) !== MetricsConstants.ABANDON_LOAD) {
             if (bufferStateVO.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
                 scheduleController.setTimeToLoadDelay(0);

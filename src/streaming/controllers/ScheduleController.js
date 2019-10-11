@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
+import MetricsConstants from '../constants/MetricsConstants';
 import { PlayListTrace } from '../vo/metrics/PlayList';
-import AbrController from './AbrController';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import FragmentModel from '../models/FragmentModel';
@@ -39,7 +39,6 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaController from './MediaController';
-import MetricsConstants from '../constants/MetricsConstants';
 import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 
 function ScheduleController(config) {
@@ -283,7 +282,7 @@ function ScheduleController(config) {
             const trackChanged = !mediaController.isCurrentTrack(request.mediaInfo) && mediaController.getSwitchMode(request.mediaInfo.type) === MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE;
             const qualityChanged = request.quality < currentRepresentationInfo.quality;
 
-            if (fastSwitchModeEnabled && (trackChanged || qualityChanged) && bufferLevel >= safeBufferLevel && abandonmentState !== AbrController.ABANDON_LOAD) {
+            if (fastSwitchModeEnabled && (trackChanged || qualityChanged) && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
                 replaceRequest(request);
                 isReplacementRequest = true;
                 logger.debug('Reloading outdated fragment at index: ', request.index);

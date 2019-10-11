@@ -46,8 +46,6 @@ import Debug from '../../core/Debug';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import { checkInteger } from '../utils/SupervisorTools';
 
-const ABANDON_LOAD = 'abandonload';
-const ALLOW_LOAD = 'allowload';
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
 const QUALITY_DEFAULT = 0;
@@ -91,7 +89,7 @@ function AbrController() {
         switchHistoryDict[type] = switchHistoryDict[type] || SwitchRequestHistory(context).create();
         streamProcessorDict[type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
-        abandonmentStateDict[type].state = ALLOW_LOAD;
+        abandonmentStateDict[type].state = MetricsConstants.ALLOW_LOAD;
         isUsingBufferOccupancyABRDict[type] = false;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         if (type == Constants.VIDEO) {
@@ -334,7 +332,7 @@ function AbrController() {
                 switchHistoryDict[type].push({oldValue: oldQuality, newValue: newQuality});
 
                 if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
-                    if (abandonmentStateDict[type].state === ALLOW_LOAD || newQuality > oldQuality) {
+                    if (abandonmentStateDict[type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality) {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
                 } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
@@ -622,14 +620,14 @@ function AbrController() {
                 if (request) {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
                     fragmentModel.abortRequests();
-                    setAbandonmentStateFor(type, ABANDON_LOAD);
+                    setAbandonmentStateFor(type, MetricsConstants.ABANDON_LOAD);
                     switchHistoryDict[type].reset();
                     switchHistoryDict[type].push({oldValue: getQualityFor(type), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
                     setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.quality, switchRequest.reason);
 
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(
-                        () => {setAbandonmentStateFor(type, ALLOW_LOAD); abandonmentTimeout = null;},
+                        () => {setAbandonmentStateFor(type, MetricsConstants.ALLOW_LOAD); abandonmentTimeout = null;},
                         settings.get().streaming.abandonLoadTimeout
                     );
                 }
@@ -668,7 +666,6 @@ function AbrController() {
 
 AbrController.__dashjs_factory_name = 'AbrController';
 const factory = FactoryMaker.getSingletonFactory(AbrController);
-factory.ABANDON_LOAD = ABANDON_LOAD;
 factory.QUALITY_DEFAULT = QUALITY_DEFAULT;
 FactoryMaker.updateSingletonFactory(AbrController.__dashjs_factory_name, factory);
 export default factory;
