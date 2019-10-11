@@ -363,7 +363,6 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-
         const streamInfo = getStreamInfo();
         const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
