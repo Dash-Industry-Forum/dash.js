@@ -72,9 +72,6 @@ function StreamProcessorMock (testType, streamInfo) {
 
     this.getScheduleController = function () {
         return {
-            getBufferTarget() {
-                return 20;
-            },
             setSeekTarget() {
             },
             setTimeToLoadDelay() {

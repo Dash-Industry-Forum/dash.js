@@ -39,7 +39,6 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import MediaController from './MediaController';
-import LiveEdgeFinder from '../utils/LiveEdgeFinder';
 
 function ScheduleController(config) {
 
@@ -48,7 +47,6 @@ function ScheduleController(config) {
     const eventBus = EventBus(context).getInstance();
     const adapter = config.adapter;
     const dashMetrics = config.dashMetrics;
-    const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
@@ -79,17 +77,10 @@ function ScheduleController(config) {
         switchTrack,
         bufferResetInProgress,
         mediaRequest,
-        liveEdgeFinder,
-        checkPlaybackQuality,
         isReplacementRequest;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        if (playbackController && playbackController.getIsDynamic()) {
-            liveEdgeFinder = LiveEdgeFinder(context).create({
-                timelineConverter: timelineConverter
-            });
-        }
         resetInitialSettings();
     }
 
@@ -131,6 +122,10 @@ function ScheduleController(config) {
 
     function isStarted() {
         return (isStopped === false);
+    }
+
+    function isInitialRequest() {
+        return initialRequest;
     }
 
     function start() {
@@ -184,7 +179,7 @@ function ScheduleController(config) {
         const isReplacement = replaceRequestArray.length > 0;
         const streamInfo = streamProcessor.getStreamInfo();
         if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
-            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
+            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO))) {
 
             const getNextFragment = function () {
@@ -316,7 +311,7 @@ function ScheduleController(config) {
     }
 
     function onQualityChanged(e) {
-        if (type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+        if (type !== e.mediaType || streamId !== e.streamInfo.id) {
             return;
         }
 
@@ -362,7 +357,7 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error || e.sender.getType() !== streamProcessor.getType()) {
+        if (e.error || e.sender.getType() !== type) {
             return;
         }
 
@@ -370,62 +365,14 @@ function ScheduleController(config) {
     }
 
     function onStreamInitialized(e) {
-        if (!e.streamInfo || streamProcessor.getStreamInfo().id !== e.streamInfo.id) {
+        if (!e.streamInfo || streamId !== e.streamInfo.id) {
             return;
         }
 
         currentRepresentationInfo = streamProcessor.getRepresentationInfo();
 
-        if (initialRequest) {
-            if (playbackController.getIsDynamic()) {
-                timelineConverter.setTimeSyncCompleted(true);
-                setLiveEdgeSeekTarget();
-            } else {
-                setSeekTarget(playbackController.getStreamStartTime(false));
-                streamProcessor.getBufferController().setSeekStartTime(seekTarget);
-            }
-        }
-
         if (isStopped) {
             start();
-        }
-    }
-
-    function setLiveEdgeSeekTarget() {
-        if (liveEdgeFinder) {
-            const liveEdge = liveEdgeFinder.getLiveEdge(streamProcessor.getRepresentationInfo());
-            const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
-            const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
-                ignoreIsFinished: true
-            });
-
-            if (request) {
-                // When low latency mode is selected but browser doesn't support fetch
-                // start at the beginning of the segment to avoid consuming the whole buffer
-                if (settings.get().streaming.lowLatencyEnabled) {
-                    const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
-                    playbackController.setLiveStartTime(liveStartTime);
-                } else {
-                    playbackController.setLiveStartTime(request.startTime);
-                }
-            } else {
-                logger.debug('setLiveEdgeSeekTarget : getFragmentRequest returned undefined request object');
-            }
-            setSeekTarget(playbackController.getStreamStartTime(false, liveEdge));
-            streamProcessor.getBufferController().setSeekStartTime(seekTarget);
-
-            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
-            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
-            if (seekTarget > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
-                playbackController.seek(seekTarget);
-            }
-
-            dashMetrics.updateManifestUpdateInfo({
-                currentTime: seekTarget,
-                presentationStartTime: liveEdge,
-                latency: liveEdge - seekTarget,
-                clientTimeOffset: timelineConverter.getClientTimeOffset()
-            });
         }
     }
 
@@ -508,7 +455,7 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateStarted(e) {
-        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id) {
+        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamId) {
             return;
         }
 
@@ -664,10 +611,6 @@ function ScheduleController(config) {
         stop();
         completeQualityChange(false);
         resetInitialSettings();
-        if (liveEdgeFinder) {
-            liveEdgeFinder.reset();
-            liveEdgeFinder = null;
-        }
     }
 
     instance = {
@@ -679,6 +622,7 @@ function ScheduleController(config) {
         replaceRequest: replaceRequest,
         switchTrackAsked: switchTrackAsked,
         isStarted: isStarted,
+        isInitialRequest: isInitialRequest,
         start: start,
         stop: stop,
         reset: reset,

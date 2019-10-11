@@ -39,6 +39,8 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
+import LiveEdgeFinder from './utils/LiveEdgeFinder';
+import Debug from '../core/Debug';
 
 function StreamProcessor(config) {
 
@@ -69,16 +71,27 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         fragmentModel,
+        logger,
         spExternalControllers,
+        liveEdgeFinder,
         indexHandler;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+
+        if (playbackController && playbackController.getIsDynamic()) {
+            liveEdgeFinder = LiveEdgeFinder(context).create({
+                timelineConverter: timelineConverter
+            });
+        }
+
         resetInitialSettings();
 
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
+        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
     }
 
     function initialize(mediaSource) {
@@ -106,7 +119,6 @@ function StreamProcessor(config) {
             mimeType: mimeType,
             adapter: adapter,
             dashMetrics: dashMetrics,
-            timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
             abrController: abrController,
             playbackController: playbackController,
@@ -190,6 +202,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
+        eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
 
         if (adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
@@ -198,10 +211,73 @@ function StreamProcessor(config) {
         resetInitialSettings();
         type = null;
         stream = null;
+        if (liveEdgeFinder) {
+            liveEdgeFinder.reset();
+            liveEdgeFinder = null;
+        }
     }
 
     function isUpdating() {
         return representationController ? representationController.isUpdating() : false;
+    }
+
+    function onStreamInitialized(e) {
+        const streamInfo = getStreamInfo();
+        const streamId = streamInfo ? streamInfo.id : null;
+        if (!e.streamInfo || streamId !== e.streamInfo.id) {
+            return;
+        }
+
+        if (scheduleController.isInitialRequest()) {
+            if (playbackController.getIsDynamic()) {
+                timelineConverter.setTimeSyncCompleted(true);
+                setLiveEdgeSeekTarget();
+            } else {
+                const seekTarget = playbackController.getStreamStartTime(false);
+                scheduleController.setSeekTarget(seekTarget);
+                bufferController.setSeekStartTime(seekTarget);
+            }
+        }
+    }
+
+    function setLiveEdgeSeekTarget() {
+        if (liveEdgeFinder) {
+            const currentRepresentationInfo = getRepresentationInfo();
+            const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
+            const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
+            const request = getFragmentRequest(currentRepresentationInfo, startTime, {
+                ignoreIsFinished: true
+            });
+
+            if (request) {
+                // When low latency mode is selected but browser doesn't support fetch
+                // start at the beginning of the segment to avoid consuming the whole buffer
+                if (settings.get().streaming.lowLatencyEnabled) {
+                    const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
+                    playbackController.setLiveStartTime(liveStartTime);
+                } else {
+                    playbackController.setLiveStartTime(request.startTime);
+                }
+            } else {
+                logger.debug('setLiveEdgeSeekTarget : getFragmentRequest returned undefined request object');
+            }
+            const seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+            scheduleController.setSeekTarget(seekTarget);
+            bufferController.setSeekStartTime(seekTarget);
+
+            //special use case for multi period stream. If the startTime is out of the current period, send a seek command.
+            //in onPlaybackSeeking callback (StreamController), the detection of switch stream is done.
+            if (seekTarget > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
+                playbackController.seek(seekTarget);
+            }
+
+            dashMetrics.updateManifestUpdateInfo({
+                currentTime: seekTarget,
+                presentationStartTime: liveEdge,
+                latency: liveEdge - seekTarget,
+                clientTimeOffset: timelineConverter.getClientTimeOffset()
+            });
+        }
     }
 
     function onDataUpdateCompleted(e) {

@@ -2,6 +2,7 @@ import StreamProcessor from '../../src/streaming/StreamProcessor';
 import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 
@@ -24,6 +25,8 @@ const abrControllerMock = new AbrControllerMock();
 const streamMock = new StreamMock();
 const adapterMock = new AdapterMock();
 const eventBus = EventBus(context).getInstance();
+
+Events.extend(MediaPlayerEvents);
 
 describe('StreamProcessor', function () {
     it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {

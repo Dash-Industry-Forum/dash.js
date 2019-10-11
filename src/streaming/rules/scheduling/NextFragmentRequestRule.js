@@ -29,22 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../../constants/Constants';
-import Debug from '../../../core/Debug';
 import FactoryMaker from '../../../core/FactoryMaker';
 import FragmentRequest from '../../../streaming/vo/FragmentRequest';
 
 function NextFragmentRequestRule(config) {
 
     config = config || {};
-    const context = this.context;
     const textController = config.textController;
     const playbackController = config.playbackController;
 
-    let instance,
-        logger;
+    let instance;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function execute(streamProcessor, seekTarget, requestToReplace) {
