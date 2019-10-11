@@ -26,6 +26,8 @@ describe('BufferLevelRule', function () {
     const streamInfo = {
         id: 'id'
     };
+    const streamProcessorFragmentedText = new StreamProcessorMock(testFragmentedTextType, streamInfo);
+    const streamProcessorAudio = new StreamProcessorMock(testAudioType, streamInfo);
 
     afterEach(function () {
         settings.reset();
@@ -38,38 +40,38 @@ describe('BufferLevelRule', function () {
     });
 
     it('should return 0 if streamProcessor is defined and current representation is fragmentedText, and subtitles are disabled', function () {
-        const result = bufferLevelRule.getBufferTarget(new StreamProcessorMock(testFragmentedTextType, streamInfo));
+        const result = bufferLevelRule.getBufferTarget(testFragmentedTextType, streamProcessorFragmentedText.getRepresentationInfo());
 
         expect(result).to.be.equal(0);  // jshint ignore:line
     });
 
     it('should return 6 (value returns by currentRepresentationInfo.fragmentDuration) if streamProcessor is defined and current representation is fragmentedText, and subtitles are enabled', function () {
         textControllerMock.enableText(true);
-        const result = bufferLevelRule.getBufferTarget(new StreamProcessorMock(testFragmentedTextType, streamInfo));
+        const result = bufferLevelRule.getBufferTarget(testFragmentedTextType, streamProcessorFragmentedText.getRepresentationInfo());
 
         expect(result).to.be.equal(6);  // jshint ignore:line
     });
 
     it('should return 15 (value returns by getCurrentBufferLevel of DashMetricsMock) if streamProcessor is defined and current representation is audio and videoTrackPresent is true', function () {
-        const result = bufferLevelRule.getBufferTarget(new StreamProcessorMock(testAudioType, streamInfo), true);
+        const result = bufferLevelRule.getBufferTarget(testAudioType, streamProcessorAudio.getRepresentationInfo(), true);
 
         expect(result).to.be.equal(15); // jshint ignore:line
     });
 
     it('should return 12 (DEFAULT_MIN_BUFFER_TIME of MediaPlayerModelMock) if streamProcessor is defined and current representation is audio and videoTrackPresent is false', function () {
-        const result = bufferLevelRule.getBufferTarget(new StreamProcessorMock(testAudioType, streamInfo), false);
+        const result = bufferLevelRule.getBufferTarget(testAudioType, streamProcessorAudio.getRepresentationInfo(), false);
 
         expect(result).to.be.equal(12); // jshint ignore:line
     });
 
-    it('should return true if streamProcessor is undefined', function () {
+    it('should return true if parameters are undefined', function () {
         const result = bufferLevelRule.execute();
 
         expect(result).to.be.true;  // jshint ignore:line
     });
 
-    it('should return false if streamProcessor is defined', function () {
-        const result = bufferLevelRule.execute(new StreamProcessorMock(testAudioType, streamInfo));
+    it('should return false if parameters are defined', function () {
+        const result = bufferLevelRule.execute(testAudioType, streamProcessorAudio.getRepresentationInfo());
 
         expect(result).to.be.false;  // jshint ignore:line
     });

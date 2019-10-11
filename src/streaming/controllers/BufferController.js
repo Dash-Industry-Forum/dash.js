@@ -534,7 +534,6 @@ function BufferController(config) {
 
     function addBufferMetrics() {
         if (!isActive()) return;
-        dashMetrics.addBufferState(type, bufferState, streamProcessor.getScheduleController().getBufferTarget());
         dashMetrics.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 

@@ -78,6 +78,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
+        eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
     }
 
     function initialize(mediaSource) {
@@ -188,6 +189,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
+        eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
 
         if (adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
@@ -206,6 +208,24 @@ function StreamProcessor(config) {
         if (e.sender.getType() !== getType() || e.sender.getStreamId() !== getStreamInfo().id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
 
         addDVRMetric();
+    }
+
+    function onBufferCleared(e) {
+        if (e.sender.getStreamProcessor() !== instance) {
+            return;
+        }
+
+        const streamInfo = getStreamInfo();
+        if (streamInfo) {
+            if (e.unintended) {
+                // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
+                fragmentModel.removeExecutedRequestsAfterTime(e.from);
+            } else {
+                fragmentModel.syncExecutedRequestsWithBufferedRange(
+                    bufferController.getBuffer().getAllBufferRanges(),
+                    streamInfo.duration);
+            }
+        }
     }
 
     function onBufferLevelUpdated(e) {

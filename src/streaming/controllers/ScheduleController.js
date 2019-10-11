@@ -126,6 +126,7 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
+        eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
     }
 
     function isStarted() {
@@ -171,16 +172,10 @@ function ScheduleController(config) {
     }
 
     function schedule() {
-        const bufferController = streamProcessor.getBufferController();
-        if (isStopped || isFragmentProcessingInProgress || !bufferController ||
+        if (isStopped || isFragmentProcessingInProgress ||
             (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
             ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled())) {
             logger.debug('Schedule stop!');
-            return;
-        }
-
-        if (bufferController.getIsBufferingCompleted()) {
-            logger.debug('Schedule stop because buffering is completed!');
             return;
         }
 
@@ -190,7 +185,7 @@ function ScheduleController(config) {
         const streamInfo = streamProcessor.getStreamInfo();
         if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamInfo.id) ||
-            bufferLevelRule.execute(streamProcessor, streamController.isTrackTypePresent(Constants.VIDEO))) {
+            bufferLevelRule.execute(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO))) {
 
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!bufferResetInProgress)) {
@@ -520,21 +515,17 @@ function ScheduleController(config) {
         stop();
     }
 
-    function onBufferCleared(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+    function onBufferingCompleted(e) {
+        if (e.sender.getType() !== type || streamId !== e.streamInfo.id) {
             return;
         }
 
-        const streamInfo = streamProcessor.getStreamInfo();
-        if (streamInfo) {
-            if (e.unintended) {
-                // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-                fragmentModel.removeExecutedRequestsAfterTime(e.from);
-            } else {
-                fragmentModel.syncExecutedRequestsWithBufferedRange(
-                    streamProcessor.getBufferController().getBuffer().getAllBufferRanges(),
-                    streamInfo.duration);
-            }
+        stop();
+    }
+
+    function onBufferCleared(e) {
+        if (e.sender.getStreamProcessor() !== streamProcessor) {
+            return;
         }
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
@@ -543,9 +534,12 @@ function ScheduleController(config) {
     }
 
     function onBufferLevelStateChanged(e) {
-        if ((e.sender.getStreamProcessor() === streamProcessor) && e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            logger.info('Buffer is empty! Stalling!');
-            clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
+        if (e.streamInfo.id === streamId && e.mediaType === type) {
+            dashMetrics.addBufferState(type, e.state, bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO)));
+            if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
+                logger.info('Buffer is empty! Stalling!');
+                clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
+            }
         }
     }
 
@@ -601,10 +595,6 @@ function ScheduleController(config) {
 
     function setTimeToLoadDelay(value) {
         timeToLoadDelay = value;
-    }
-
-    function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(streamProcessor, streamController.isTrackTypePresent(Constants.VIDEO));
     }
 
     function getType() {
@@ -663,13 +653,13 @@ function ScheduleController(config) {
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
-        //eventBus.off(Events.INIT_REQUESTED, onInitRequested, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
+        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
 
         stop();
         completeQualityChange(false);
@@ -692,7 +682,6 @@ function ScheduleController(config) {
         start: start,
         stop: stop,
         reset: reset,
-        getBufferTarget: getBufferTarget,
         finalisePlayList: finalisePlayList,
         setInitRequest: setInitRequest
     };

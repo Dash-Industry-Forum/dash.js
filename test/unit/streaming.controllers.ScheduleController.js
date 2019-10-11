@@ -45,6 +45,7 @@ describe('ScheduleController', function () {
 
         scheduleController = ScheduleController(context).create({
             type: testType,
+            streamId: streamInfo.id,
             mediaPlayerModel: mediaPlayerModelMock,
             streamProcessor: streamProcessorMock,
             adapter: adapterMock,
@@ -79,11 +80,6 @@ describe('ScheduleController', function () {
         eventBus.trigger(Events.STREAM_INITIALIZED, {
             streamInfo: streamInfo
         });
-    });
-
-    it('should return 12 if streamProcessor is defined and current representation is video and videoTrackPresent is true', function () {
-        const bufferTarget = scheduleController.getBufferTarget();
-        expect(bufferTarget).to.be.equal(12); // jshint ignore:line
     });
 
     it('should stop is controller is started', function (done) {
