@@ -494,6 +494,7 @@ function StreamProcessor(config) {
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
                 type: type,
+                streamId: getStreamInfo() ? getStreamInfo().id : null,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
@@ -510,6 +511,7 @@ function StreamProcessor(config) {
         } else {
             controller = TextBufferController(context).create({
                 type: type,
+                streamId: getStreamInfo() ? getStreamInfo().id : null,
                 mimeType: mimeType,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,

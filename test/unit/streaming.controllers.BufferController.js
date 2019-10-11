@@ -62,6 +62,7 @@ describe('BufferController', function () {
             abrController: abrControllerMock,
             streamProcessor: streamProcessor,
             type: testType,
+            streamId: streamInfo.id,
             playbackController: playbackControllerMock,
             mediaPlayerModel: mediaPlayerModelMock,
             settings: settings
@@ -170,16 +171,15 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong fragment model', function (done) {
+        it('should not append data to source buffer if wrong streamId', function (done) {
             const event = {
-                fragmentModel: 'wrongFragmentModel',
                 chunk: {
                     bytes: 'initData',
                     quality: 2,
                     mediaInfo: {
                         type: 'video'
                     },
-                    streamId: 'streamId',
+                    streamId: 'wrong',
                     representationId: 'representationId'
                 }
             };
@@ -197,14 +197,13 @@ describe('BufferController', function () {
 
         it('should append data to source buffer ', function (done) {
             const event = {
-                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'initData',
                     quality: 2,
                     mediaInfo: {
                         type: 'video'
                     },
-                    streamId: 'streamId',
+                    streamId: 'id',
                     representationId: 'representationId'
                 }
             };
@@ -227,11 +226,10 @@ describe('BufferController', function () {
                 mediaInfo: {
                     type: 'video'
                 },
-                streamId: 'streamId',
+                streamId: 'id',
                 representationId: 'representationId'
             };
             const event = {
-                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: chunk
             };
 
@@ -258,16 +256,15 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong fragment model', function (done) {
+        it('should not append data to source buffer if wrong stream id', function (done) {
             const event = {
-                fragmentModel: 'wrongFragmentModel',
                 chunk: {
                     bytes: 'data',
                     quality: 2,
                     mediaInfo: {
                         type: 'video'
                     },
-                    streamId: 'streamId',
+                    streamId: 'wrong',
                     representationId: 'representationId'
                 }
             };
@@ -285,11 +282,13 @@ describe('BufferController', function () {
 
         it('should append data to source buffer ', function (done) {
             const event = {
-                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'data',
                     quality: 2,
-                    mediaInfo: 'video'
+                    mediaInfo: {
+                        type: 'video'
+                    },
+                    streamId: 'id'
                 }
             };
             const onMediaFragmentLoaded = function () {
@@ -306,13 +305,13 @@ describe('BufferController', function () {
 
         it('should trigger VIDEO_CHUNK_RECEIVED if event is video', function (done) {
             const event = {
-                fragmentModel: streamProcessor.getFragmentModel(),
                 chunk: {
                     bytes: 'data',
                     quality: 2,
                     mediaInfo: {
                         type: 'video'
-                    }
+                    },
+                    streamId: 'id'
                 }
             };
             const onVideoChunk = function () {

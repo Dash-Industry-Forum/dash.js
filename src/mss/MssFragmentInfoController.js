@@ -176,7 +176,7 @@ function MssFragmentInfoController(config) {
     function requestFragment(request) {
 
         logger.debug('Load fragment for time: ' + request.startTime);
-        if (streamProcessor.getFragmentModel().isFragmentLoadedOrPending(request)) {
+        if (fragmentModel.isFragmentLoadedOrPending(request)) {
             // We may have reached end of timeline in case of start-over streams
             logger.debug('No more fragments');
             return;

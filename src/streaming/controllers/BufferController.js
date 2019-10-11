@@ -66,6 +66,7 @@ function BufferController(config) {
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const type = config.type;
+    const streamId = config.streamId;
     const streamProcessor = config.streamProcessor;
     const settings = config.settings;
 
@@ -187,11 +188,12 @@ function BufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
+        const chunk = e.chunk;
+        if (chunk.streamId !== streamId || chunk.mediaInfo.type != type) return;
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
-        initCache.save(e.chunk);
+        initCache.save(chunk);
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality,  ', data size:', e.chunk.bytes.byteLength);
-        appendToBuffer(e.chunk);
+        appendToBuffer(chunk);
     }
 
     function onInitDataNeeded(eventObj) {
@@ -213,9 +215,10 @@ function BufferController(config) {
     }
 
     function onMediaFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
-
         const chunk = e.chunk;
+
+        if (chunk.streamId !== streamId || chunk.mediaInfo.type != type) return;
+
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = streamProcessor.getRepresentationInfo(quality);

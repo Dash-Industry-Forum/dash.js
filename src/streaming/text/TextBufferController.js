@@ -49,6 +49,7 @@ function TextBufferController(config) {
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 type: config.type,
+                streamId: config.streamId,
                 dashMetrics: config.dashMetrics,
                 mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
@@ -67,6 +68,7 @@ function TextBufferController(config) {
             // in this case, internal buffer controller is a not fragmented text controller object
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
                 type: config.type,
+                streamId: config.streamId,
                 mimeType: config.mimeType,
                 errHandler: config.errHandler,
                 streamProcessor: config.streamProcessor

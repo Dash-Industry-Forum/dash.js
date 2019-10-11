@@ -48,6 +48,7 @@ function NotFragmentedTextBufferController(config) {
 
     let errHandler = config.errHandler;
     let type = config.type;
+    let streamId = config.streamId;
     let mimeType = config.mimeType;
     let streamProcessor = config.streamProcessor;
 
@@ -154,7 +155,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== streamProcessor.getType() || e.error) return;
+        if (e.sender.getType() !== type || e.error) return;
 
         const streamId = e.sender.getStreamId();
         const currentRepresentation = e.sender.getCurrentRepresentation();
@@ -170,12 +171,12 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) {
-            return;
-        }
+        const chunk = e.chunk;
 
-        initCache.save(e.chunk);
-        buffer.append(e.chunk);
+        if (chunk.streamId !== streamId || chunk.mediaInfo.type != type || (!e.chunk.bytes)) return;
+
+        initCache.save(chunk);
+        buffer.append(chunk);
 
         eventBus.trigger(Events.STREAM_COMPLETED, {
             request: e.request,

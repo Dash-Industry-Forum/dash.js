@@ -177,9 +177,8 @@ function ScheduleController(config) {
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        const streamInfo = streamProcessor.getStreamInfo();
         if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
-            hasTopQualityChanged(currentRepresentationInfo.mediaInfo.type, streamId) ||
+            hasTopQualityChanged(type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO))) {
 
             const getNextFragment = function () {
@@ -214,7 +213,7 @@ function ScheduleController(config) {
                                 request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
                                 setTimeToLoadDelay(0);
                             }
-                            if (!request && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic) {
+                            if (!request && playbackController.getIsDynamic()) {
                                 logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
                             }
                         }
