@@ -175,8 +175,7 @@ function NotFragmentedTextBufferController(config) {
         buffer.append(chunk);
 
         eventBus.trigger(Events.STREAM_COMPLETED, {
-            request: e.request,
-            fragmentModel: e.fragmentModel
+            request: e.request
         });
     }
 

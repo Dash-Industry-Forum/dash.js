@@ -199,8 +199,7 @@ function FragmentModel(config) {
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
                 logger.debug('executeRequest trigger STREAM_COMPLETED');
                 eventBus.trigger(Events.STREAM_COMPLETED, {
-                    request: request,
-                    fragmentModel: this
+                    request: request
                 });
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:

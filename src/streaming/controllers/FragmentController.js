@@ -64,13 +64,13 @@ function FragmentController( config ) {
         if (!model) {
             model = FragmentModel(context).create({
                 dashMetrics: dashMetrics,
+                streamId: streamId,
                 fragmentLoader: FragmentLoader(context).create({
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
                     requestModifier: RequestModifier(context).getInstance(),
-                    settings: config.settings,
-                    streamId: streamId
+                    settings: config.settings
                 })
             });
 

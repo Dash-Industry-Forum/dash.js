@@ -376,7 +376,7 @@ function ScheduleController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.fragmentModel !== fragmentModel) {
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) {
             return;
         }
 

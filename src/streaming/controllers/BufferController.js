@@ -775,7 +775,7 @@ function BufferController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
         lastIndex = e.request.index;
         checkIfBufferingCompleted();
     }
