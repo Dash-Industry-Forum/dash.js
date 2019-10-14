@@ -696,7 +696,7 @@ function PlaybackController() {
             return;
         }
 
-        const type = e.sender.getType();
+        const type = e.mediaType;
 
         if (bufferedRange[streamInfo.id] === undefined) {
             bufferedRange[streamInfo.id] = [];

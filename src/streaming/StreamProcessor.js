@@ -110,8 +110,7 @@ function StreamProcessor(config) {
         indexHandler.initialize(playbackController.getIsDynamic());
         abrController.registerStreamType(type, instance);
 
-        fragmentModel = stream.getFragmentController().getModel(type);
-        fragmentModel.setStreamProcessor(instance);
+        fragmentModel = stream.getFragmentController().getModel(getStreamInfo() ? getStreamInfo().id : null, type);
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
@@ -174,7 +173,9 @@ function StreamProcessor(config) {
     }
 
     function reset(errored, keepBuffers) {
-        indexHandler.reset();
+        if (indexHandler) {
+            indexHandler.reset();
+        }
 
         if (bufferController) {
             bufferController.reset(errored, keepBuffers);
@@ -204,7 +205,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
 
-        if (adapter.getIsTextTrack(type)) {
+        if (adapter && adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -287,11 +288,12 @@ function StreamProcessor(config) {
     }
 
     function onBufferCleared(e) {
-        if (e.sender.getStreamProcessor() !== instance) {
+        const streamInfo = getStreamInfo();
+
+        if (e.streamId !== streamInfo.id || e.mediaType !== getType()) {
             return;
         }
 
-        const streamInfo = getStreamInfo();
         if (streamInfo) {
             if (e.unintended) {
                 // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
@@ -305,7 +307,10 @@ function StreamProcessor(config) {
     }
 
     function onBufferLevelUpdated(e) {
-        if (e.sender.getStreamProcessor() !== instance) return;
+        const streamInfo = getStreamInfo();
+
+        if (!streamInfo || e.streamId !== streamInfo.id || e.mediaType !== getType()) return;
+
         let manifest = manifestModel.getValue();
         if (!manifest.doNotUpdateDVRWindowOnBufferUpdated) {
             addDVRMetric();

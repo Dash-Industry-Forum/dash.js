@@ -287,7 +287,7 @@ function BufferController(config) {
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
-                eventBus.trigger(Events.QUOTA_EXCEEDED, { sender: instance, criticalBufferLevel: criticalBufferLevel }); //Tells ScheduleController to stop scheduling.
+                eventBus.trigger(Events.QUOTA_EXCEEDED, { mediaType: type, streamId: streamId, criticalBufferLevel: criticalBufferLevel }); //Tells ScheduleController to stop scheduling.
                 pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
             }
             return;
@@ -313,7 +313,8 @@ function BufferController(config) {
         }
 
         const dataEvent = {
-            sender: instance,
+            mediaType: type,
+            streamId: streamId,
             quality: appendedBytesInfo.quality,
             startTime: appendedBytesInfo.start,
             index: appendedBytesInfo.index,
@@ -530,7 +531,7 @@ function BufferController(config) {
     function updateBufferLevel() {
         if (playbackController) {
             bufferLevel = getBufferLength(getWorkingTime() || 0);
-            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, streamId: streamId, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
     }
@@ -582,7 +583,7 @@ function BufferController(config) {
         bufferState = state;
         addBufferMetrics();
 
-        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
+        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
         eventBus.trigger(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
         logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
@@ -755,7 +756,7 @@ function BufferController(config) {
                     appendToBuffer(mediaChunk);
                 }
             }
-            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
+            eventBus.trigger(Events.BUFFER_CLEARED, { mediaType: type, streamId: streamId, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
         }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
@@ -807,10 +808,6 @@ function BufferController(config) {
 
     function getType() {
         return type;
-    }
-
-    function getStreamProcessor() {
-        return streamProcessor;
     }
 
     function setSeekStartTime(value) {
@@ -923,7 +920,6 @@ function BufferController(config) {
         createBuffer: createBuffer,
         dischargePreBuffer: dischargePreBuffer,
         getType: getType,
-        getStreamProcessor: getStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,

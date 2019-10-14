@@ -411,7 +411,7 @@ function ScheduleController(config) {
     }
 
     function onBytesAppended(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.streamId !== streamId || e.mediaType !== type) {
             return;
         }
 
@@ -441,9 +441,10 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamProcessor !== streamProcessor) {
+        if (e.streamId !== streamId || e.mediaType !== type) {
             return;
         }
+
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
         if (!playbackController.isSeeking() && !switchTrack) {
             logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process or switch track call');
@@ -470,7 +471,7 @@ function ScheduleController(config) {
     }
 
     function onBufferCleared(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.streamId !== streamId || e.mediaType !== type) {
             return;
         }
 
@@ -490,7 +491,7 @@ function ScheduleController(config) {
     }
 
     function onQuotaExceeded(e) {
-        if (e.sender.getStreamProcessor() !== streamProcessor) {
+        if (e.streamId !== streamId || e.mediaType !== type) {
             return;
         }
 

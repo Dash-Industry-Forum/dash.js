@@ -15,6 +15,7 @@ import AdapterMock from './mocks/AdapterMock';
 
 const expect = require('chai').expect;
 const testType = 'video';
+let streamProcessor;
 const objectsHelper = new ObjectsHelper();
 const context = {};
 const dashMetricsMock = new DashMetricsMock();
@@ -22,61 +23,72 @@ const manifestModelMock = new ManifestModelMock();
 const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
 const playbackControllerMock = new PlaybackControllerMock();
 const abrControllerMock = new AbrControllerMock();
-const streamMock = new StreamMock();
+const streamMock = new StreamMock('streamId');
 const adapterMock = new AdapterMock();
 const eventBus = EventBus(context).getInstance();
 
 Events.extend(MediaPlayerEvents);
 
 describe('StreamProcessor', function () {
-    it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
-        const streamProcessor = StreamProcessor(context).create({});
-        const time = streamProcessor.getIndexHandlerTime();
+    describe('Not well initialized', function () {
+        beforeEach(function () {
+            streamProcessor = StreamProcessor(context).create({});
+        });
 
-        expect(time).to.be.NaN; // jshint ignore:line
-    });
+        afterEach(function () {
+            streamProcessor.reset();
+        });
 
-    it('should not throw an error when setIndexHandlerTime is called and indexHandler is undefined', function () {
-        const streamProcessor = StreamProcessor(context).create({});
+        it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
+            const time = streamProcessor.getIndexHandlerTime();
 
-        expect(streamProcessor.setIndexHandlerTime.bind(streamProcessor)).to.not.throw();
-    });
+            expect(time).to.be.NaN; // jshint ignore:line
+        });
 
-    it('should return null when getFragmentRequest is called and without parameters', function () {
-        const streamProcessor = StreamProcessor(context).create({});
+        it('should not throw an error when setIndexHandlerTime is called and indexHandler is undefined', function () {
+            expect(streamProcessor.setIndexHandlerTime.bind(streamProcessor)).to.not.throw();
+        });
 
-        const nextFragRequest = streamProcessor.getFragmentRequest();
+        it('should return null when getFragmentRequest is called and without parameters', function () {
+            const nextFragRequest = streamProcessor.getFragmentRequest();
 
-        expect(nextFragRequest).to.be.null;                // jshint ignore:line
-    });
+            expect(nextFragRequest).to.be.null;                // jshint ignore:line
+        });
 
-    describe('representationController parameter is properly defined, without its attributes', () => {
-        const streamProcessor = StreamProcessor(context).create({});
-
-        it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
-            expect(streamProcessor.getRepresentationInfo.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
+        describe('representationController parameter is properly defined, without its attributes', () => {
+            it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
+                expect(streamProcessor.getRepresentationInfo.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
+            });
         });
     });
 
-    it('when a BUFFER_LEVEL_UPDATED event occurs, should update dvr info metrics', function () {
-        const streamProcessor = StreamProcessor(context).create({type: testType,
-                                                                dashMetrics: dashMetricsMock,
-                                                                manifestModel: manifestModelMock,
-                                                                playbackController: playbackControllerMock,
-                                                                timelineConverter: timelineConverterMock,
-                                                                abrController: abrControllerMock,
-                                                                adapter: adapterMock,
-                                                                stream: streamMock});
+    describe('Well initialized', function () {
+        beforeEach(function () {
+            streamProcessor = StreamProcessor(context).create({type: testType,
+                dashMetrics: dashMetricsMock,
+                manifestModel: manifestModelMock,
+                playbackController: playbackControllerMock,
+                timelineConverter: timelineConverterMock,
+                abrController: abrControllerMock,
+                adapter: adapterMock,
+                stream: streamMock});
+        });
 
-        streamProcessor.initialize();
+        afterEach(function () {
+            streamProcessor.reset();
+        });
 
-        let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
-        expect(dvrInfo).to.be.null; // jshint ignore:line
+        it('when a BUFFER_LEVEL_UPDATED event occurs, should update dvr info metrics', function () {
+            streamProcessor.initialize();
 
-        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: { getStreamProcessor() { return streamProcessor;}}, bufferLevel: 50 });
+            let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
+            expect(dvrInfo).to.be.null; // jshint ignore:line
 
-        dvrInfo = dashMetricsMock.getCurrentDVRInfo();
-        expect(dvrInfo).not.to.be.null; // jshint ignore:line
-        expect(dvrInfo.type).to.equal(testType); // jshint ignore:line
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { mediaType: testType, streamId: 'streamId', bufferLevel: 50 });
+
+            dvrInfo = dashMetricsMock.getCurrentDVRInfo();
+            expect(dvrInfo).not.to.be.null; // jshint ignore:line
+            expect(dvrInfo.type).to.equal(testType); // jshint ignore:line
+        });
     });
 });

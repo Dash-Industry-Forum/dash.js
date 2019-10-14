@@ -1,4 +1,3 @@
-import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import BufferController from '../../src/streaming/controllers/BufferController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
@@ -26,7 +25,6 @@ const streamInfo = {
     id: 'id'
 };
 const eventBus = EventBus(context).getInstance();
-const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
 describe('BufferController', function () {
@@ -102,13 +100,6 @@ describe('BufferController', function () {
             const sink = bufferController.getBuffer();
             expect(sink.getBuffer).to.be.a('function'); //Is of type SourceBufferSink
             expect(sink.getBuffer()).to.equal(mediaSourceMock.buffers[0]);
-        });
-    });
-
-    describe('Method getStreamProcessor', function () {
-        it('should return configured stream processor', function () {
-            const configuredSP = bufferController.getStreamProcessor();
-            expect(objectUtils.areEqual(configuredSP, streamProcessor)).to.be.true; // jshint ignore:line
         });
     });
 

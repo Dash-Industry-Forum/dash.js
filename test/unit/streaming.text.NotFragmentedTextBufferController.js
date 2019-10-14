@@ -83,13 +83,6 @@ describe('NotFragmentedTextBufferController', function () {
             });
         });
 
-        describe('Method getStreamProcessor', function () {
-            it('should return streamProcessor', function () {
-                let sp = notFragmentedTextBufferController.getStreamProcessor();
-                expect(objectUtils.areEqual(sp, streamProcessorMock)).to.be.true; // jshint ignore:line
-            });
-        });
-
         describe('Method getBufferLevel', function () {
             it('should return 0', function () {
                 let bufferLevel = notFragmentedTextBufferController.getBufferLevel();

@@ -170,14 +170,21 @@ function MssHandler(config) {
         if (e.error) {
             return;
         }
-        // Process moof to transcode it from MSS to DASH
-        let streamProcessor = e.sender.getStreamProcessor();
-        mssFragmentProcessor.processFragment(e, streamProcessor);
 
-        // Start MssFragmentInfoControllers in case of start-over streams
-        let streamInfo = streamProcessor.getStreamInfo();
-        if (!streamInfo.manifestInfo.isDynamic && streamInfo.manifestInfo.DVRWindowSize !== Infinity) {
-            startFragmentInfoControllers();
+        let streamController = playbackController.getStreamController();
+
+        if (streamController) {
+            let streamProcessor =  streamController.getActiveStreamProcessors().find((sp) => {
+                return sp.getType() === e.request.mediaType;
+            });
+            // Process moof to transcode it from MSS to DASH
+            mssFragmentProcessor.processFragment(e, streamProcessor);
+
+            // Start MssFragmentInfoControllers in case of start-over streams
+            let streamInfo = streamProcessor.getStreamInfo();
+            if (!streamInfo.manifestInfo.isDynamic && streamInfo.manifestInfo.DVRWindowSize !== Infinity) {
+                startFragmentInfoControllers();
+            }
         }
     }
 

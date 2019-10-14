@@ -121,10 +121,6 @@ function NotFragmentedTextBufferController(config) {
         return mediaSource;
     }
 
-    function getStreamProcessor() {
-        return streamProcessor;
-    }
-
     function getIsPruningInProgress() {
         return false;
     }
@@ -210,7 +206,6 @@ function NotFragmentedTextBufferController(config) {
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
-        getStreamProcessor: getStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,

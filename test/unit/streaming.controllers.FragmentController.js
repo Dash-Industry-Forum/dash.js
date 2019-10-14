@@ -23,7 +23,7 @@ describe('FragmentController', function () {
     Events.extend(MediaPlayerEvents);
 
     it('should create or return model for a given media type', function () {
-        videoFragmentModel = fragmentController.getModel('video');
+        videoFragmentModel = fragmentController.getModel('streamId', 'video');
         expect(videoFragmentModel).to.exist; // jshint ignore:line
     });
 
