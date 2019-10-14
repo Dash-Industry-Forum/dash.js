@@ -27,6 +27,7 @@ const streamMock = new StreamMock('streamId');
 const adapterMock = new AdapterMock();
 
 const eventBus = EventBus(context).getInstance();
+
 Events.extend(MediaPlayerEvents);
 
 describe('StreamProcessor', function () {
