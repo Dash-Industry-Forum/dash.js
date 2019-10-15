@@ -197,9 +197,7 @@ function BufferController(config) {
     }
 
     function onInitDataNeeded(eventObj) {
-        const streamInfo = streamProcessor.getStreamInfo();
-        const streamInfoId = streamInfo ? streamInfo.id : null;
-        if (eventObj.sender.getType() !== getType() || eventObj.sender.getStreamId() !== streamInfoId) return;
+        if (eventObj.sender.getType() !== getType() || eventObj.sender.getStreamId() !== streamId) return;
 
         bufferResetInProgress = eventObj.resetBufferNeeded === true ? eventObj.resetBufferNeeded : false;
     }
@@ -770,7 +768,7 @@ function BufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id || e.error) return;
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamId || e.error) return;
         updateBufferTimestampOffset(e.currentRepresentation.MSETimeOffset);
     }
 
@@ -782,7 +780,7 @@ function BufferController(config) {
 
     function onCurrentTrackChanged(e) {
         const ranges = buffer && buffer.getAllBufferRanges();
-        if (!ranges || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
+        if (!ranges || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamId)) return;
 
         logger.info('Track change asked');
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
