@@ -213,6 +213,10 @@ function SegmentBaseLoader() {
                             count++;
 
                             if (count >= len) {
+                                // http requests can be processed in a wrong order, so, we have to reorder segments with an ascending start Time order
+                                segs.sort(function (a, b) {
+                                    return a.startTime - b.startTime < 0 ? -1 : 0;
+                                });
                                 callback(segs, representation, type);
                             }
                         } else {
