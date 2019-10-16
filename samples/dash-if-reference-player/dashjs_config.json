@@ -1,6 +1,6 @@
 {
     "debug": {
-        "logLevel": 5
+        "logLevel": 4
     },
     "streaming": {
         "metricsMaxListDepth": 50,
@@ -8,7 +8,7 @@
         "liveDelayFragmentCount": 4,
         "liveDelay": null,
         "scheduleWhilePaused": true,
-        "fastSwitchEnabled": false,
+        "fastSwitchEnabled": true,
         "bufferPruningInterval": 10,
         "bufferToKeep": 20,
         "bufferAheadToKeep": 80,
