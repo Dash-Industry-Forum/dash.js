@@ -229,7 +229,7 @@ function SegmentBaseLoader() {
                     }
 
                 } else {
-                    logger.debug('Parsing segments from SIDX.');
+                    logger.debug('Parsing segments from SIDX. representation ' + representation.id + ' for range : ' + info.range.start + ' - ' + info.range.end);
                     segments = getSegmentsForSidx(sidx, info);
                     callback(segments, representation, type);
                 }
@@ -241,7 +241,7 @@ function SegmentBaseLoader() {
         };
 
         httpLoader.load({request: request, success: onload, error: onerror});
-        logger.debug('Perform SIDX load: ' + info.url);
+        logger.debug('Perform SIDX load: ' + info.url + ' with range : ' + info.range.start + ' - ' + info.range.end);
     }
 
     function reset() {
