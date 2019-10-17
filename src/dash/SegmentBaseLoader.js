@@ -213,6 +213,10 @@ function SegmentBaseLoader() {
                             count++;
 
                             if (count >= len) {
+                                // http requests can be processed in a wrong order, so, we have to reorder segments with an ascending start Time order
+                                segs.sort(function (a, b) {
+                                    return a.startTime - b.startTime < 0 ? -1 : 0;
+                                });
                                 callback(segs, representation, type);
                             }
                         } else {
@@ -229,7 +233,7 @@ function SegmentBaseLoader() {
                     }
 
                 } else {
-                    logger.debug('Parsing segments from SIDX.');
+                    logger.debug('Parsing segments from SIDX. representation ' + representation.id + ' for range : ' + info.range.start + ' - ' + info.range.end);
                     segments = getSegmentsForSidx(sidx, info);
                     callback(segments, representation, type);
                 }
@@ -241,7 +245,7 @@ function SegmentBaseLoader() {
         };
 
         httpLoader.load({request: request, success: onload, error: onerror});
-        logger.debug('Perform SIDX load: ' + info.url);
+        logger.debug('Perform SIDX load: ' + info.url + ' with range : ' + info.range.start + ' - ' + info.range.end);
     }
 
     function reset() {
