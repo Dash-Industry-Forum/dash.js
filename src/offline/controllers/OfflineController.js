@@ -79,6 +79,10 @@ function OfflineController() {
     function setConfig(config) {
         if (!config) return;
 
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+
         if (config.events && config.eventBus) {
             events = config.events;
             eventBus = config.eventBus;
@@ -112,10 +116,6 @@ function OfflineController() {
 
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
-        }
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
         }
 
         if (config.schemeLoaderFactory) {

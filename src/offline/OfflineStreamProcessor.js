@@ -276,11 +276,13 @@ function OfflineStreamProcessor(config) {
      * @memberof OfflineStreamProcessor#
     */
     function start() {
-        if (!representationController.getCurrentRepresentation()) {
-            throw new Error('Start denied to OfflineStreamProcessor');
+        if (representationController) {
+            if (!representationController.getCurrentRepresentation()) {
+                throw new Error('Start denied to OfflineStreamProcessor');
+            }
+            isStopped = false;
+            download();
         }
-        isStopped = false;
-        download();
     }
 
     /**

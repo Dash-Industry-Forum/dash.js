@@ -175,6 +175,10 @@ function OfflineStream(config) {
     function initializeMedia(streamInfo) {
         createOfflineStreamProcessorFor(constants.VIDEO,streamInfo);
         createOfflineStreamProcessorFor(constants.AUDIO,streamInfo);
+
+        for (let i = 0; i < offlineStreamProcessors.length; i++) {
+            offlineStreamProcessors[i].initialize();
+        }
         /* 1st, we download audio and video.
         createOfflineStreamProcessorFor(Constants.TEXT,streamInfo);
         createOfflineStreamProcessorFor(Constants.FRAGMENTED_TEXT,streamInfo);
@@ -242,7 +246,6 @@ function OfflineStream(config) {
             settings: settings
         });
         offlineStreamProcessors.push(streamProcessor);
-        streamProcessor.initialize();
     }
 
     function onStreamCompleted() {
