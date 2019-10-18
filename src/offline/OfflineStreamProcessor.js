@@ -380,7 +380,6 @@ function OfflineStreamProcessor(config) {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
-        getFragmentModel: getFragmentModel,
         getStreamInfo: getStreamInfo,
         getMediaInfo: getMediaInfo,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
