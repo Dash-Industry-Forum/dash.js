@@ -161,6 +161,17 @@ function TextTracks() {
             setCurrentTrackIdx.call(this, defaultIndex);
 
             if (defaultIndex >= 0) {
+
+                let onMetadataLoaded = function () {
+                    const track = getTrackByIdx(defaultIndex);
+                    if (track) {
+                        checkVideoSize.call(this, track, true);
+                    }
+                    eventBus.off(Events.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
+                };
+
+                eventBus.on(Events.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
+
                 for (let idx = 0; idx < textTrackQueue.length; idx++) {
                     const videoTextTrack = getTrackByIdx(idx);
                     if (videoTextTrack) {
@@ -231,46 +242,50 @@ function TextTracks() {
         const videoHeight = videoModel.getVideoHeight();
         const videoOffsetTop = videoModel.getVideoRelativeOffsetTop();
         const videoOffsetLeft = videoModel.getVideoRelativeOffsetLeft();
-        let aspectRatio =  videoWidth / videoHeight;
-        let use80Percent = false;
-        if (track.isFromCEA608) {
-            // If this is CEA608 then use predefined aspect ratio
-            aspectRatio = 3.5 / 3.0;
-            use80Percent = true;
-        }
 
-        const realVideoSize = getVideoVisibleVideoSize.call(this, clientWidth, clientHeight, videoWidth, videoHeight, aspectRatio, use80Percent);
+        if (videoWidth !== 0 && videoHeight !== 0) {
 
-        const newVideoWidth = realVideoSize.w;
-        const newVideoHeight = realVideoSize.h;
-        const newVideoLeft = realVideoSize.x;
-        const newVideoTop = realVideoSize.y;
-
-        if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
-            actualVideoLeft = newVideoLeft + videoOffsetLeft;
-            actualVideoTop = newVideoTop + videoOffsetTop;
-            actualVideoWidth = newVideoWidth;
-            actualVideoHeight = newVideoHeight;
-
-            if (captionContainer) {
-                const containerStyle = captionContainer.style;
-                if (containerStyle) {
-                    containerStyle.left = actualVideoLeft + 'px';
-                    containerStyle.top = actualVideoTop + 'px';
-                    containerStyle.width = actualVideoWidth + 'px';
-                    containerStyle.height = actualVideoHeight + 'px';
-                    containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                    eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
-                }
+            let aspectRatio =  videoWidth / videoHeight;
+            let use80Percent = false;
+            if (track.isFromCEA608) {
+                // If this is CEA608 then use predefined aspect ratio
+                aspectRatio = 3.5 / 3.0;
+                use80Percent = true;
             }
 
-            // Video view has changed size, so resize any active cues
-            const activeCues = track.activeCues;
-            if (activeCues) {
-                const len = activeCues.length;
-                for (let i = 0; i < len; ++i) {
-                    const cue = activeCues[i];
-                    cue.scaleCue(cue);
+            const realVideoSize = getVideoVisibleVideoSize.call(this, clientWidth, clientHeight, videoWidth, videoHeight, aspectRatio, use80Percent);
+
+            const newVideoWidth = realVideoSize.w;
+            const newVideoHeight = realVideoSize.h;
+            const newVideoLeft = realVideoSize.x;
+            const newVideoTop = realVideoSize.y;
+
+            if (newVideoWidth != actualVideoWidth || newVideoHeight != actualVideoHeight || newVideoLeft != actualVideoLeft || newVideoTop != actualVideoTop || forceDrawing) {
+                actualVideoLeft = newVideoLeft + videoOffsetLeft;
+                actualVideoTop = newVideoTop + videoOffsetTop;
+                actualVideoWidth = newVideoWidth;
+                actualVideoHeight = newVideoHeight;
+
+                if (captionContainer) {
+                    const containerStyle = captionContainer.style;
+                    if (containerStyle) {
+                        containerStyle.left = actualVideoLeft + 'px';
+                        containerStyle.top = actualVideoTop + 'px';
+                        containerStyle.width = actualVideoWidth + 'px';
+                        containerStyle.height = actualVideoHeight + 'px';
+                        containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
+                        eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                    }
+                }
+
+                // Video view has changed size, so resize any active cues
+                const activeCues = track.activeCues;
+                if (activeCues) {
+                    const len = activeCues.length;
+                    for (let i = 0; i < len; ++i) {
+                        const cue = activeCues[i];
+                        cue.scaleCue(cue);
+                    }
                 }
             }
         }
