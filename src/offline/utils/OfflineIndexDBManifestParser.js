@@ -30,13 +30,6 @@
  */
 
 const Entities = require('html-entities').XmlEntities;
-const ELEMENT_TYPE_MPD = 'MPD';
-const ELEMENT_TYPE_PERIOD = 'Period';
-const ELEMENT_TYPE_BaseURL = 'BaseURL';
-const ELEMENT_TYPE_ADAPTATIONSET = 'AdaptationSet';
-const ELEMENT_TYPE_SEGMENT_TEMPLATE = 'SegmentTemplate';
-const ELEMENT_TYPE_REPRESENTATION = 'Representation';
-const ATTRIBUTE_TYPE_ID = 'id';
 const OFFLINE_BASE_URL = 'offline_indexdb://';
 
 /**
@@ -50,6 +43,7 @@ function OfflineIndexDBManifestParser(config) {
     const allMediaInfos = config.allMediaInfos;
     const urlUtils = config.urlUtils;
     const debug = config.debug;
+    const dashConstants = config.dashConstants;
 
     let instance,
         DOM,
@@ -69,7 +63,7 @@ function OfflineIndexDBManifestParser(config) {
     */
     function parse(XMLDoc) {
         DOM = new DOMParser().parseFromString(XMLDoc, 'application/xml');
-        let mpd = DOM.getElementsByTagName(ELEMENT_TYPE_MPD) ? DOM.getElementsByTagName(ELEMENT_TYPE_MPD) : null;
+        let mpd = DOM.getElementsByTagName(dashConstants.MPD) ? DOM.getElementsByTagName(dashConstants.MPD) : null;
 
         for (let i = 0; i < mpd.length; i++) {
             if (mpd[i] !== null) {
@@ -108,15 +102,15 @@ function OfflineIndexDBManifestParser(config) {
 
         let url = `${OFFLINE_BASE_URL}${manifestId}/`;
 
-        basesURL = currentMPD.getElementsByTagName(ELEMENT_TYPE_BaseURL);
+        basesURL = currentMPD.getElementsByTagName(dashConstants.BASE_URL);
         for (let i = 0; i < basesURL.length; i++) {
             let parent = basesURL[i].parentNode;
 
-            if (parent.nodeName === ELEMENT_TYPE_MPD) {
+            if (parent.nodeName === dashConstants.MPD) {
                 basesURL[i].innerHTML = url;
-            } else if (parent.nodeName === ELEMENT_TYPE_REPRESENTATION) {
+            } else if (parent.nodeName === dashConstants.REPRESENTATION) {
                 let adaptationsSet = parent.parentNode;
-                if (adaptationsSet.nodeName == ELEMENT_TYPE_ADAPTATIONSET) {
+                if (adaptationsSet.nodeName == dashConstants.ADAPTATION_SET) {
 
                     if (urlUtils.isHTTPS(basesURL[i].innerHTML) || urlUtils.isHTTPURL(basesURL[i].innerHTML)) {
                         fragmentId = getFragmentId(basesURL[i].innerHTML);
@@ -143,7 +137,7 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function browsePeriods(currentMPD) {
-        let periods = currentMPD.getElementsByTagName(ELEMENT_TYPE_PERIOD);
+        let periods = currentMPD.getElementsByTagName(dashConstants.PERIOD);
         for (let j = 0; j < periods.length; j++) {
             browseAdaptationsSet(periods[j]);
         }
@@ -161,7 +155,7 @@ function OfflineIndexDBManifestParser(config) {
             currentAdaptationType,
             representations;
 
-        adaptationsSet = currentPeriod.getElementsByTagName(ELEMENT_TYPE_ADAPTATIONSET);
+        adaptationsSet = currentPeriod.getElementsByTagName(dashConstants.ADAPTATION_SET);
 
         for (let i = adaptationsSet.length - 1; i >= 0; i--) {
             currentAdaptationSet = adaptationsSet[i];
@@ -232,7 +226,7 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function findRepresentations(currentAdaptationSet) {
-        return currentAdaptationSet.getElementsByTagName(ELEMENT_TYPE_REPRESENTATION);
+        return currentAdaptationSet.getElementsByTagName(dashConstants.REPRESENTATION);
     }
 
     /**
@@ -243,7 +237,7 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function getSegmentTemplate(currentAdaptationSet) {
-        return currentAdaptationSet.getElementsByTagName(ELEMENT_TYPE_SEGMENT_TEMPLATE);
+        return currentAdaptationSet.getElementsByTagName(dashConstants.SEGMENT_TEMPLATE);
     }
 
     /**
@@ -273,7 +267,7 @@ function OfflineIndexDBManifestParser(config) {
     function findAndKeepOnlySelectedRepresentations(currentAdaptationSet, representations, adaptationType) {
         for ( var i = representations.length - 1; i >= 0; i--) {
             let representation = representations[i];
-            let repId = representation.getAttribute(ATTRIBUTE_TYPE_ID);
+            let repId = representation.getAttribute(dashConstants.ID);
             if (allMediaInfos[adaptationType] && allMediaInfos[adaptationType].indexOf(repId) === -1) {
                 // representation is not selected, remove it
                 currentAdaptationSet.removeChild(representation);
@@ -303,9 +297,9 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function getBestRepresentationId(currentAdaptationSet) {
-        let bestRepresentation = currentAdaptationSet.getElementsByTagName(ELEMENT_TYPE_REPRESENTATION)[0];
-        console.log(bestRepresentation.getAttribute(ATTRIBUTE_TYPE_ID));
-        return bestRepresentation.getAttribute(ATTRIBUTE_TYPE_ID);
+        let bestRepresentation = currentAdaptationSet.getElementsByTagName(dashConstants.REPRESENTATION)[0];
+        console.log(bestRepresentation.getAttribute(dashConstants.ID));
+        return bestRepresentation.getAttribute(dashConstants.ID);
     }
 
     /**

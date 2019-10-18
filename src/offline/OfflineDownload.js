@@ -277,7 +277,8 @@ function OfflineDownload(config) {
         let parser = OfflineIndexDBManifestParser(context).create({
             manifestId: manifestId,
             allMediaInfos: selectedRepresentations,
-            debug: debug
+            debug: debug,
+            dashConstants: dashConstants
         });
 
         return parser.parse(XMLManifest).then(function (parsedManifest) {
