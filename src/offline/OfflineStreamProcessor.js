@@ -54,7 +54,6 @@ function OfflineStreamProcessor(config) {
     const completedCb = config.completed;
     const urlUtils = config.urlUtils;
     const abrController = config.abrController;
-    const manifestModel = config.manifestModel;
     const playbackController = config.playbackController;
 
     let instance,
@@ -213,7 +212,6 @@ function OfflineStreamProcessor(config) {
         representationController = RepresentationController(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
             type: type,
