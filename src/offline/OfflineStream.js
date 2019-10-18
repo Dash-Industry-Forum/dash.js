@@ -336,8 +336,7 @@ function OfflineStream(config) {
     function deactivate() {
         let ln = offlineStreamProcessors ? offlineStreamProcessors.length : 0;
         for (let i = 0; i < ln; i++) {
-            let fragmentModel = offlineStreamProcessors[i].getFragmentModel();
-            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
+            offlineStreamProcessors[i].removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
             offlineStreamProcessors[i].reset();
         }
     }

@@ -254,8 +254,10 @@ function OfflineStreamProcessor(config) {
         updateRepresentation(mediaInfo);
     }
 
-    function getFragmentModel() {
-        return fragmentModel;
+    function removeExecutedRequestsBeforeTime(time) {
+        if (fragmentModel) {
+            fragmentModel.removeExecutedRequestsBeforeTime(time);
+        }
     }
 
     /**
@@ -383,6 +385,7 @@ function OfflineStreamProcessor(config) {
         getFragmentModel: getFragmentModel,
         getStreamInfo: getStreamInfo,
         getMediaInfo: getMediaInfo,
+        removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
         getType: getType,
         isUpdating: isUpdating,
         start: start,
