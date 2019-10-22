@@ -77,96 +77,96 @@ declare namespace dashjs {
     }
 
     export class MediaPlayerSettingClass {
-        debug: {
-            logLevel: LogLevel;
+        debug?: {
+            logLevel?: LogLevel;
         };
-        streaming: {
-            metricsMaxListDepth: number;
-            abandonLoadTimeout: number;
-            liveDelayFragmentCount: number;
-            liveDelay: number;
-            scheduleWhilePaused: boolean;
-            fastSwitchEnabled: boolean;
-            bufferPruningInterval: number;
-            bufferToKeep: number;
-            bufferAheadToKeep: number;
-            jumpGaps: boolean;
-            smallGapLimit: number;
-            stableBufferTime: number;
-            bufferTimeAtTopQuality: number;
-            bufferTimeAtTopQualityLongForm: number;
-            longFormContentDurationThreshold: number;
-            wallclockTimeUpdateInterval: number;
-            lowLatencyEnabled: boolean;
-            keepProtectionMediaKeys: boolean;
-            useManifestDateHeaderTimeSource: boolean;
-            useSuggestedPresentationDelay: boolean;
-            manifestUpdateRetryInterval: number;
-            liveCatchUpMinDrift: number;
-            liveCatchUpMaxDrift: number;
-            liveCatchUpPlaybackRate: number;
-            lastBitrateCachingInfo: {
-                enabled: boolean;
-                ttl: number;
+        streaming?: {
+            metricsMaxListDepth?: number;
+            abandonLoadTimeout?: number;
+            liveDelayFragmentCount?: number;
+            liveDelay?: number;
+            scheduleWhilePaused?: boolean;
+            fastSwitchEnabled?: boolean;
+            bufferPruningInterval?: number;
+            bufferToKeep?: number;
+            bufferAheadToKeep?: number;
+            jumpGaps?: boolean;
+            smallGapLimit?: number;
+            stableBufferTime?: number;
+            bufferTimeAtTopQuality?: number;
+            bufferTimeAtTopQualityLongForm?: number;
+            longFormContentDurationThreshold?: number;
+            wallclockTimeUpdateInterval?: number;
+            lowLatencyEnabled?: boolean;
+            keepProtectionMediaKeys?: boolean;
+            useManifestDateHeaderTimeSource?: boolean;
+            useSuggestedPresentationDelay?: boolean;
+            manifestUpdateRetryInterval?: number;
+            liveCatchUpMinDrift?: number;
+            liveCatchUpMaxDrift?: number;
+            liveCatchUpPlaybackRate?: number;
+            lastBitrateCachingInfo?: {
+                enabled?: boolean;
+                ttl?: number;
             };
-            lastMediaSettingsCachingInfo: {
-                enabled: boolean;
-                ttl: number;
+            lastMediaSettingsCachingInfo?: {
+                enabled?: boolean;
+                ttl?: number;
             };
-            cacheLoadThresholds: {
-                video: number;
-                audio: number;
+            cacheLoadThresholds?: {
+                video?: number;
+                audio?: number;
             };
-            retryIntervals: {
-                'MPD':                       number;
-                'XLinkExpansion':            number;
-                'MediaSegment':              number;
-                'InitializationSegment':     number;
-                'BitstreamSwitchingSegment': number;
-                'IndexSegment':              number;
-                'other':                     number;
+            retryIntervals?: {
+                'MPD'?:                       number;
+                'XLinkExpansion'?:            number;
+                'MediaSegment'?:              number;
+                'InitializationSegment'?:     number;
+                'BitstreamSwitchingSegment'?: number;
+                'IndexSegment'?:              number;
+                'other'?:                     number;
             };
-            retryAttempts: {
-                'MPD':                       number;
-                'XLinkExpansion':            number;
-                'MediaSegment':              number;
-                'InitializationSegment':     number;
-                'BitstreamSwitchingSegment': number;
-                'IndexSegment':              number;
-                'other':                     number;
+            retryAttempts?: {
+                'MPD'?:                       number;
+                'XLinkExpansion'?:            number;
+                'MediaSegment'?:              number;
+                'InitializationSegment'?:     number;
+                'BitstreamSwitchingSegment'?: number;
+                'IndexSegment'?:              number;
+                'other'?:                     number;
             };
-            abr: {
-                movingAverageMethod: 'slidingWindow' | 'ewma';
-                ABRStrategy: 'abrDynamic' | 'abrBola';
-                bandwidthSafetyFactor: number;
-                useDefaultABRRules: boolean;
-                useBufferOccupancyABR: boolean;
-                useDeadTimeLatency: boolean;
-                limitBitrateByPortal: boolean;
-                usePixelRatioInLimitBitrateByPortal: boolean;
-                maxBitrate: {
-                    audio: number;
-                    video: number;
+            abr?: {
+                movingAverageMethod?: 'slidingWindow' | 'ewma';
+                ABRStrategy?: 'abrDynamic' | 'abrBola';
+                bandwidthSafetyFactor?: number;
+                useDefaultABRRules?: boolean;
+                useBufferOccupancyABR?: boolean;
+                useDeadTimeLatency?: boolean;
+                limitBitrateByPortal?: boolean;
+                usePixelRatioInLimitBitrateByPortal?: boolean;
+                maxBitrate?: {
+                    audio?: number;
+                    video?: number;
                 };
-                minBitrate: {
-                    audio: number;
-                    video: number;
+                minBitrate?: {
+                    audio?: number;
+                    video?: number;
                 };
-                maxRepresentationRatio: {
-                    audio: number;
-                    video: number;
+                maxRepresentationRatio?: {
+                    audio?: number;
+                    video?: number;
                 };
-                initialBitrate: {
-                    audio: number;
-                    video: number;
+                initialBitrate?: {
+                    audio?: number;
+                    video?: number;
                 };
-                initialRepresentationRatio: {
-                    audio: number;
-                    video: number;
+                initialRepresentationRatio?: {
+                    audio?: number;
+                    video?: number;
                 };
-                autoSwitchBitrate: {
-                    audio: boolean;
-                    video: boolean;
+                autoSwitchBitrate?: {
+                    audio?: boolean;
+                    video?: boolean;
                 };
             }
         }
