@@ -71,7 +71,8 @@ function ManifestLoader(config) {
             useFetch: config.settings.get().streaming.lowLatencyEnabled,
             urlUtils: urlUtils,
             constants: Constants,
-            dashConstants: DashConstants
+            dashConstants: DashConstants,
+            errors: Errors
         });
 
         xlinkController = XlinkController(context).create({

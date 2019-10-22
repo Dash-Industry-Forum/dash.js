@@ -33,7 +33,6 @@ import DashJSError from '../streaming/vo/DashJSError';
 import FactoryMaker from '../core/FactoryMaker';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import URLLoader from '../streaming/net/URLLoader';
-import Errors from '../core/errors/Errors';
 
 function SegmentBaseLoader() {
 
@@ -50,6 +49,7 @@ function SegmentBaseLoader() {
         urlLoader,
         events,
         eventBus,
+        errors,
         baseURLController;
 
     function setup() {
@@ -62,7 +62,8 @@ function SegmentBaseLoader() {
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier,
             useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
-            boxParser: boxParser
+            boxParser: boxParser,
+            errors: errors
         });
     }
 
@@ -105,6 +106,10 @@ function SegmentBaseLoader() {
 
         if (config.requestModifier) {
             requestModifier = config.requestModifier;
+        }
+
+        if (config.errors) {
+            errors = config.errors;
         }
     }
 
@@ -321,7 +326,7 @@ function SegmentBaseLoader() {
         if (segments) {
             eventBus.trigger(events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
+            eventBus.trigger(events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
         }
     }
 

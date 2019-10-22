@@ -45,6 +45,7 @@ function OfflineStreamProcessor(config) {
     config = config || {};
     const eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const debug = config.debug;
     const timelineConverter = config.timelineConverter;
     const constants = config.constants;
@@ -202,6 +203,7 @@ function OfflineStreamProcessor(config) {
             dashMetrics: dashMetrics,
             eventBus: eventBus,
             events: events,
+            errors: errors,
             debug: debug,
             dashConstants: dashConstants,
             urlUtils: urlUtils,
@@ -216,6 +218,8 @@ function OfflineStreamProcessor(config) {
             type: type,
             eventBus: eventBus,
             events: events,
+            errors: errors,
+            dashConstants: dashConstants,
             streamId: getStreamInfo() ? getStreamInfo().id : null
         });
 
@@ -227,6 +231,7 @@ function OfflineStreamProcessor(config) {
             dashMetrics: dashMetrics,
             eventBus: eventBus,
             events: events,
+            errors: errors,
             dashConstants: dashConstants,
             urlUtils: urlUtils
         });
@@ -304,7 +309,7 @@ function OfflineStreamProcessor(config) {
                     logger.info(`[${manifestId}] getNextFragment - request is ${request.url}`);
                     fragmentModel.executeRequest(request);
                 } else {
-                    logger.info(`[${manifestId}] getNextFragment - request is null - should be end of stream`);
+                    logger.info(`[${manifestId}] getNextFragment returns null`);
                 }
             }
         }

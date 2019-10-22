@@ -41,6 +41,7 @@ function OfflineStream(config) {
     const context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const constants = config.constants;
     const dashConstants = config.dashConstants;
     const debug = config.debug;
@@ -223,6 +224,7 @@ function OfflineStream(config) {
             debug: debug,
             events: events,
             eventBus: eventBus,
+            errors: errors,
             constants: constants,
             dashConstants: dashConstants,
             timelineConverter: timelineConverter,

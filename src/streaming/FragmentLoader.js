@@ -32,7 +32,6 @@ import Constants from './constants/Constants';
 import URLLoader from './net/URLLoader';
 import HeadRequest from './vo/HeadRequest';
 import DashJSError from './vo/DashJSError';
-import Errors from './../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 
 function FragmentLoader(config) {
@@ -42,6 +41,7 @@ function FragmentLoader(config) {
     const eventBus = config.eventBus;
     const events = config.events;
     const urlUtils = config.urlUtils;
+    const errors = config.errors;
 
     let instance,
         urlLoader;
@@ -49,6 +49,7 @@ function FragmentLoader(config) {
     function setup() {
         urlLoader = URLLoader(context).create({
             errHandler: config.errHandler,
+            errors: errors,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
@@ -120,7 +121,7 @@ function FragmentLoader(config) {
                     report(
                         undefined,
                         new DashJSError(
-                            Errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
+                            errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE,
                             errorText,
                             statusText
                         )
@@ -136,8 +137,8 @@ function FragmentLoader(config) {
             report(
                 undefined,
                 new DashJSError(
-                    Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE,
-                    Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE
+                    errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE,
+                    errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE
                 )
             );
         }

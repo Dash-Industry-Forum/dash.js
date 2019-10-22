@@ -29,8 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../../streaming/constants/Constants';
-import Errors from '../../core/errors/Errors';
-import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import FactoryMaker from '../../core/FactoryMaker';
 
@@ -39,12 +37,14 @@ function RepresentationController(config) {
     config = config || {};
     const eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const abrController = config.abrController;
     const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const timelineConverter = config.timelineConverter;
     const type = config.type;
     const streamId = config.streamId;
+    const dashConstants = config.dashConstants;
 
     let instance,
         realAdaptation,
@@ -144,7 +144,7 @@ function RepresentationController(config) {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
             if (voAvailableRepresentations[i].segmentAvailabilityRange === null || !voAvailableRepresentations[i].hasInitialization() ||
-                ((segmentInfoType === DashConstants.SEGMENT_BASE || segmentInfoType === DashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
+                ((segmentInfoType === dashConstants.SEGMENT_BASE || segmentInfoType === dashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
             ) {
                 return false;
             }
@@ -162,7 +162,7 @@ function RepresentationController(config) {
         representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
         if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-            let error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
+            let error = new DashJSError(errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
             endDataUpdate(error);
             return;
         }
@@ -237,7 +237,7 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === DashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod)
+        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod)
         {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
@@ -247,7 +247,7 @@ function RepresentationController(config) {
 
         if (postponeTimePeriod > 0) {
             postponeUpdate(postponeTimePeriod);
-            err = new DashJSError(Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, Errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
+            err = new DashJSError(errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
             endDataUpdate(err);
             return;
         }

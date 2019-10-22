@@ -4,6 +4,7 @@ import Debug from '../../src/core/Debug';
 import Settings from '../../src/core/Settings';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
+import Errors from '../../src/core/errors/Errors';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import DashMetricsMock from './mocks/DashMetricsMock';
@@ -35,7 +36,8 @@ describe('SegmentsController', function () {
         dashConstants: DashConstants,
         debug: debug,
         eventBus: eventBus,
-        events: Events
+        events: Events,
+        errors: Errors
     }, false);
 
     segmentsController.initialize();

@@ -98,6 +98,7 @@ function StreamProcessor(config) {
             boxParser: boxParser,
             events: Events,
             eventBus: eventBus,
+            errors: Errors,
             debug: Debug(context).getInstance(),
             requestModifier: RequestModifier(context).getInstance(),
             dashConstants: DashConstants,
@@ -133,9 +134,11 @@ function StreamProcessor(config) {
             playbackController: playbackController,
             timelineConverter: timelineConverter,
             type: type,
+            dashConstants: DashConstants,
             streamId: getStreamInfo() ? getStreamInfo().id : null,
             events: Events,
-            eventBus: eventBus
+            eventBus: eventBus,
+            errors: Errors
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();

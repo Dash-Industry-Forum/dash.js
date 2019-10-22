@@ -48,6 +48,7 @@ function OfflineDownload(config) {
     const manifestId = config.id;
     const eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const debug = config.debug;
     const manifestUpdater = config.manifestUpdater;
     const baseURLController = config.baseURLController;
@@ -181,6 +182,7 @@ function OfflineDownload(config) {
                     dashConstants: dashConstants,
                     eventBus: eventBus,
                     events: events,
+                    errors: errors,
                     debug: debug,
                     timelineConverter: timelineConverter,
                     requestModifier: requestModifier,

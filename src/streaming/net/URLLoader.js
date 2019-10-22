@@ -59,7 +59,8 @@ function URLLoader(cfg) {
             boxParser: cfg.boxParser ? cfg.boxParser : null,
             constants: cfg.constants ? cfg.constants : null,
             dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
-            urlUtils: cfg.urlUtils ? cfg.urlUtils : null
+            urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
+            errors: cfg.errors
         });
 
         loader.load(config);

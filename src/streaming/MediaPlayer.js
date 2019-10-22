@@ -1152,6 +1152,7 @@ function MediaPlayer() {
                 dashMetrics: dashMetrics,
                 eventBus: eventBus,
                 events: Events,
+                errors: Errors,
                 constants: Constants,
                 dashConstants: DashConstants,
                 urlUtils: URLUtils(context).getInstance(),

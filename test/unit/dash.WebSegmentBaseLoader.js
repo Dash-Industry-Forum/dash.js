@@ -65,6 +65,7 @@ describe('WebmSegmentBaseLoader', function () {
                 debug: new DebugMock(),
                 eventBus: eventBus,
                 events: Events,
+                errors: Errors,
                 requestModifier: RequestModifier(context).getInstance()
             });
             webmSegmentBaseLoader.initialize();

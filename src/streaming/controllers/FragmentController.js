@@ -35,6 +35,7 @@ import FragmentLoader from '../FragmentLoader';
 import RequestModifier from '../utils/RequestModifier';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import Errors from '../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
@@ -74,6 +75,7 @@ function FragmentController( config ) {
                     boxParser: config.boxParser,
                     eventBus: eventBus,
                     events: Events,
+                    errors: Errors,
                     dashConstants: config.dashConstants,
                     urlUtils: config.urlUtils
                 }),

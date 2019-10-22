@@ -5,7 +5,6 @@ import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import URLLoader from '../streaming/net/URLLoader';
 import DashJSError from '../streaming/vo/DashJSError';
-import Errors from '../core/errors/Errors';
 
 function WebmSegmentBaseLoader() {
 
@@ -22,6 +21,7 @@ function WebmSegmentBaseLoader() {
         settings,
         eventBus,
         events,
+        errors,
         baseURLController;
 
     function setup() {
@@ -96,7 +96,8 @@ function WebmSegmentBaseLoader() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: requestModifier,
-            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null
+            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
+            errors: errors
         });
     }
 
@@ -111,6 +112,7 @@ function WebmSegmentBaseLoader() {
         settings = config.settings;
         events = config.events;
         eventBus = config.eventBus;
+        errors = config.errors;
         logger = config.debug.getLogger(instance);
         requestModifier = config.requestModifier;
     }
@@ -401,7 +403,7 @@ function WebmSegmentBaseLoader() {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
             });
         }
     }

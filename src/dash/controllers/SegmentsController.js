@@ -52,6 +52,7 @@ function SegmentsController(config) {
     const debug = config.debug;
     const requestModifier = config.requestModifier;
     const dashConstants = config.dashConstants;
+    const errors = config.errors;
 
     let instance,
         getters,
@@ -69,6 +70,7 @@ function SegmentsController(config) {
             boxParser: boxParser,
             eventBus: eventBus,
             events: events,
+            errors: errors,
             debug: debug,
             requestModifier: requestModifier
         });

@@ -64,6 +64,7 @@ function OfflineController() {
         dashMetrics,
         events,
         eventBus,
+        errors,
         constants,
         dashConstants,
         timelineConverter,
@@ -159,6 +160,10 @@ function OfflineController() {
             abrController = config.abrController;
         }
 
+        if (config.errors) {
+            errors = config.errors;
+        }
+
         schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
     }
 
@@ -186,6 +191,7 @@ function OfflineController() {
                 id: id,
                 eventBus: eventBus,
                 events: events,
+                errors: errors,
                 manifestLoader: manifestLoader,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,

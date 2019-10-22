@@ -6,6 +6,7 @@ import RepresentationController from '../../src/dash/controllers/RepresentationC
 import Events from '../../src/core/events/Events';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import Constants from '../../src/streaming/constants/Constants';
+import DashConstants from '../../src/dash/constants/DashConstants';
 
 import SpecHelper from './helpers/SpecHelper';
 
@@ -80,7 +81,8 @@ describe('RepresentationController', function () {
                 type: testType,
                 streamId: streamProcessor.getStreamInfo().id,
                 events: Events,
-                eventBus: eventBus
+                eventBus: eventBus,
+                dashConstants: DashConstants
             });
         });
 
