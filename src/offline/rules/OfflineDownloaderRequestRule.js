@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FragmentRequest from './../../streaming/vo/FragmentRequest';
 
 /**
  * @module OfflineDownloaderRequestRule
@@ -36,27 +35,14 @@ import FragmentRequest from './../../streaming/vo/FragmentRequest';
  */
 function OfflineDownloaderRequestRule() {
     let instance,
-        _indexHandler,
-        _fragmentModel;
+        _indexHandler;
 
-    function initialize(indexHandler, fragmentModel) {
+    function initialize(indexHandler) {
         _indexHandler = indexHandler;
-        _fragmentModel = fragmentModel;
-
-    }
-    function getNextSegmentRequest(mediaInfo, representation) {
-        return _indexHandler.getNextSegmentRequest(mediaInfo, representation);
     }
 
     function execute(mediaInfo, representation) {
-        let request = getNextSegmentRequest(mediaInfo, representation);
-
-        // Then, check if this request was downloaded or not
-        while (request && request.action !== FragmentRequest.ACTION_COMPLETE  && _fragmentModel.isFragmentLoadedOrPending(request)) {
-            // loop until we found not loaded fragment, or no fragment
-            request = getNextSegmentRequest(representation);
-        }
-        return request;
+        return _indexHandler.getNextSegmentRequest(mediaInfo, representation);
     }
 
     instance = {

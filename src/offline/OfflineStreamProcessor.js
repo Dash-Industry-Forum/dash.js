@@ -149,13 +149,12 @@ function OfflineStreamProcessor(config) {
             offlineStoreController.storeFragment(manifestId, fragmentName, e.response);
         }
 
-        downloadedSegments++;
-
         if (e.error && e.request.serviceLocation && !isStopped) {
             fragmentModel.executeRequest(e.request);
+        } else {
+            downloadedSegments++;
+            download();
         }
-
-        download();
     }
 
     function onStreamCompleted(e) {
@@ -243,9 +242,9 @@ function OfflineStreamProcessor(config) {
         indexHandler.initialize(false);
 
         offlineDownloaderRequestRule = OfflineDownloaderRequestRule(context).create();
-        offlineDownloaderRequestRule.initialize(indexHandler, fragmentModel);
+        offlineDownloaderRequestRule.initialize(indexHandler);
 
-        if (adapter.getIsTextTrack(mimeType)) {
+        if (adapter && adapter.getIsTextTrack(mimeType)) {
             getInitRequest();
         }
 
@@ -304,6 +303,8 @@ function OfflineStreamProcessor(config) {
                 if (request) {
                     logger.info(`[${manifestId}] getNextFragment - request is ${request.url}`);
                     fragmentModel.executeRequest(request);
+                } else {
+                    logger.info(`[${manifestId}] getNextFragment - request is null - should be end of stream`);
                 }
             }
         }
