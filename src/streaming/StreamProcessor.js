@@ -82,7 +82,6 @@ function StreamProcessor(config) {
     function initialize(mediaSource) {
         indexHandler = DashHandler(context).create({
             type: type,
-            mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
@@ -281,7 +280,7 @@ function StreamProcessor(config) {
             if (quality > maxQuality) {
                 quality = maxQuality;
             }
-
+            indexHandler.setMimeType(mediaInfo ? mediaInfo.mimeType : null);
             representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
         }
     }

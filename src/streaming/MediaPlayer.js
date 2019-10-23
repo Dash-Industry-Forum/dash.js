@@ -61,6 +61,7 @@ import {
 from './../core/Version';
 
 //Dash
+import SegmentBaseController from '../dash/controllers/SegmentBaseController';
 import DashAdapter from '../dash/DashAdapter';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
@@ -136,7 +137,8 @@ function MediaPlayer() {
         videoModel,
         textController,
         uriFragmentModel,
-        domStorage;
+        domStorage,
+        segmentBaseController;
 
     /*
     ---------------------------------------------------------------------------
@@ -154,6 +156,7 @@ function MediaPlayer() {
         protectionController = null;
         protectionData = null;
         adapter = null;
+        segmentBaseController = null;
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
@@ -260,6 +263,20 @@ function MediaPlayer() {
             BASE64: BASE64
         });
 
+        segmentBaseController = SegmentBaseController(context).getInstance({
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler,
+            baseURLController: BaseURLController(context).getInstance(),
+            events: Events,
+            eventBus: eventBus,
+            debug: debug,
+            requestModifier: RequestModifier(context).getInstance(),
+            errors: Errors
+        });
+
+        segmentBaseController.initialize();
+
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -295,6 +312,8 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+
+        segmentBaseController.reset();
 
         settings.reset();
     }
