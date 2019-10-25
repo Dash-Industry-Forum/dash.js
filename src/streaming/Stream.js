@@ -170,8 +170,7 @@ function Stream(config) {
         let ln = streamProcessors ? streamProcessors.length : 0;
         const errored = false;
         for (let i = 0; i < ln; i++) {
-            let fragmentModel = streamProcessors[i].getFragmentModel();
-            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
+            streamProcessors[i].removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
             streamProcessors[i].reset(errored, keepBuffers);
         }
         streamProcessors = [];
