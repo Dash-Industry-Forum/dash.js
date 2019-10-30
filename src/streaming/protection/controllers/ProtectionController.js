@@ -409,8 +409,8 @@ function ProtectionController(config) {
 
         // Reorder key systems according to priority order provided in protectionData
         supportedKS = supportedKS.sort((ksA, ksB) => {
-            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priorityIndex >= 0) ? protDataSet[ksA.ks.systemString].priorityIndex : supportedKS.length;
-            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priorityIndex >= 0) ? protDataSet[ksB.ks.systemString].priorityIndex : supportedKS.length;
+            let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
+            let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
             return (indexA < indexB ? -1 : 0);
         });
 
