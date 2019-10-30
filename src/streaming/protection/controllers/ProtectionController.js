@@ -411,7 +411,7 @@ function ProtectionController(config) {
         supportedKS = supportedKS.sort((ksA, ksB) => {
             let indexA = (protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0) ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
             let indexB = (protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0) ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
-            return (indexA < indexB ? -1 : 0);
+            return indexA - indexB;
         });
 
         let ksIdx;
