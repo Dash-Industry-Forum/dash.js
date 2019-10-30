@@ -813,14 +813,14 @@ declare namespace dashjs {
         t: Date;
     }
 
-    export interface ILatestBufferLevelVO {
-        level: number;
-        t: Date;
+    export interface IBufferState {
+        target: number;
+        state: string;
     }
 
     export interface DashMetrics {
         getCurrentRepresentationSwitch(type: 'video' | 'audio' | 'image', readOnly: boolean): ICurrentRepresentationSwitch;
-        getLatestBufferInfoVO(): ILatestBufferLevelVO;
+        getCurrentBufferState(type: 'video' | 'audio' | 'image', readOnly: boolean): IBufferState;
         getCurrentBufferLevel(type: 'video' | 'audio' | 'image', readOnly: boolean): number;
         getCurrentHttpRequest(type: 'video' | 'audio' | 'image', readOnly: boolean): object;
         getHttpRequests(type: 'video' | 'audio' | 'image'): object[];
