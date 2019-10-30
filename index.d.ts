@@ -864,8 +864,8 @@ declare namespace dashjs {
          */
         clearkeys?: { [key: string]: string };
 
-        /** Priority order index (from 0) for selecting key system */
-        priorityIndex?: number = -1;
+        /** Priority level of the key system to be selected (0 is the highest prority, -1 for undefined priority) */
+        priority?: number = -1;
     }
 
     export interface KeySystem {
