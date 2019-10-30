@@ -113,6 +113,17 @@ function DashMetrics(config) {
      * @memberof module:DashMetrics
      * @instance
      */
+    function getCurrentBufferState(type, readOnly) {
+        return getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_STATE);
+    }
+
+    /**
+     * @param {string} type
+     * @param {boolean} readOnly
+     * @returns {number}
+     * @memberof module:DashMetrics
+     * @instance
+     */
     function getCurrentBufferLevel(type, readOnly) {
         const vo = getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_LEVEL);
 
@@ -512,6 +523,7 @@ function DashMetrics(config) {
     instance = {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
         getLatestBufferInfoVO: getLatestBufferInfoVO,
+        getCurrentBufferState: getCurrentBufferState,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
