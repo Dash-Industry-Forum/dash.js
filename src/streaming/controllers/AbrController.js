@@ -615,11 +615,10 @@ function AbrController() {
             const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
             if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
-                const fragmentModel = streamProcessor.getFragmentModel();
-                const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
+                const request = streamProcessor.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
                 if (request) {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
-                    fragmentModel.abortRequests();
+                    streamProcessor.abortRequests();
                     setAbandonmentStateFor(type, MetricsConstants.ABANDON_LOAD);
                     switchHistoryDict[type].reset();
                     switchHistoryDict[type].push({oldValue: getQualityFor(type), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});

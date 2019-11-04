@@ -226,7 +226,7 @@ function BufferController(config) {
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
-            const request = streamProcessor.getFragmentModel().getRequests({
+            const request = streamProcessor.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 quality: quality,
                 index: chunk.index
@@ -376,7 +376,7 @@ function BufferController(config) {
         const currentTime = playbackController.getTime();
         const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
 
-        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+        const currentTimeRequest = streamProcessor.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: currentTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -396,7 +396,7 @@ function BufferController(config) {
                 start: 0,
                 end: currentTimeRequest.startTime - STALL_THRESHOLD
             };
-            const prevReq = streamProcessor.getFragmentModel().getRequests({
+            const prevReq = streamProcessor.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 time: currentTimeRequest.startTime - (currentTimeRequest.duration / 2),
                 threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -414,7 +414,7 @@ function BufferController(config) {
                 start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 end: endOfBuffer
             };
-            const nextReq = streamProcessor.getFragmentModel().getRequests({
+            const nextReq = streamProcessor.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 time: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -635,7 +635,7 @@ function BufferController(config) {
             end: currentTime + settings.get().streaming.bufferAheadToKeep
         };
 
-        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+        const currentTimeRequest = streamProcessor.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: currentTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
