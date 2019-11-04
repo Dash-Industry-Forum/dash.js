@@ -4,15 +4,6 @@ function StreamMock (streamId) {
     this.getStreamInfo = function () {
         return {id: 'streamId'};
     };
-
-    this.getFragmentController = function () {
-        return { getModel: () => {
-            return {
-                        getRequests: () => {return [];}
-                    };
-        }
-     };
-    };
 }
 
 export default StreamMock;

@@ -94,7 +94,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
     }
 
-    function initialize(mediaSource) {
+    function initialize(mediaSource, fragmentModelForType) {
         indexHandler = DashHandler(context).create({
             type: type,
             timelineConverter: timelineConverter,
@@ -110,7 +110,7 @@ function StreamProcessor(config) {
         indexHandler.initialize(playbackController.getIsDynamic());
         abrController.registerStreamType(type, instance);
 
-        fragmentModel = stream.getFragmentController().getModel(getStreamInfo() ? getStreamInfo().id : null, type);
+        fragmentModel = fragmentModelForType;
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
