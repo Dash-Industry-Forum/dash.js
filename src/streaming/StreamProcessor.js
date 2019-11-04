@@ -575,6 +575,18 @@ function StreamProcessor(config) {
         }
     }
 
+    function removeExecutedRequestsAfterTime (time) {
+        if (fragmentModel) {
+            fragmentModel.removeExecutedRequestsAfterTime(time);
+        }
+    }
+
+    function abortRequests () {
+        if (fragmentModel) {
+            fragmentModel.abortRequests();
+        }
+    }
+
     instance = {
         initialize: initialize,
         isUpdating: isUpdating,
@@ -608,6 +620,8 @@ function StreamProcessor(config) {
         resetIndexHandler: resetIndexHandler,
         getFragmentRequest: getFragmentRequest,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
+        removeExecutedRequestsAfterTime: removeExecutedRequestsAfterTime,
+        abortRequests: abortRequests,
         reset: reset
     };
 

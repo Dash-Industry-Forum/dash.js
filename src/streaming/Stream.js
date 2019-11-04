@@ -352,7 +352,7 @@ function Stream(config) {
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 abrController.updateTopQualityIndex(mediaInfo);
                 processor.switchTrackAsked();
-                processor.getFragmentModel().abortRequests();
+                processor.abortRequests();
             } else {
                 processor.getScheduleController().setSeekTarget(currentTime);
                 processor.setIndexHandlerTime(currentTime);

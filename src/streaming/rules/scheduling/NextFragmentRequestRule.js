@@ -69,7 +69,7 @@ function NextFragmentRequestRule(config) {
             if ((range !== null || playingRange !== null) && !hasSeekTarget) {
                 if (!range || (playingRange && playingRange.start != range.start && playingRange.end != range.end)) {
                     if (hasDiscontinuities && mediaType !== Constants.FRAGMENTED_TEXT) {
-                        streamProcessor.getFragmentModel().removeExecutedRequestsAfterTime(playingRange.end);
+                        streamProcessor.removeExecutedRequestsAfterTime(playingRange.end);
                         bufferIsDivided = true;
                     }
                     range = playingRange;
