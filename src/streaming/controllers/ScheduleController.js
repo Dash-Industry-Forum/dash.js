@@ -32,7 +32,6 @@ import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
 import { PlayListTrace } from '../vo/metrics/PlayList';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
-import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -69,7 +68,6 @@ function ScheduleController(config) {
         scheduleTimeout,
         seekTarget,
         bufferLevelRule,
-        nextFragmentRequestRule,
         lastFragmentRequest,
         topQualityIndex,
         lastInitQuality,
@@ -93,11 +91,6 @@ function ScheduleController(config) {
             mediaPlayerModel: mediaPlayerModel,
             textController: textController,
             settings: settings
-        });
-
-        nextFragmentRequestRule = NextFragmentRequestRule(context).create({
-            textController: textController,
-            playbackController: playbackController
         });
 
         //eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
@@ -201,31 +194,7 @@ function ScheduleController(config) {
                         // To be sure the specific init segment had not already been loaded
                         eventBus.trigger(Events.INIT_DATA_NEEDED, { sender: instance, representationId: replacement.representationId });
                     } else {
-                        let request;
-                        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
-                        if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
-                            request = nextFragmentRequestRule.execute(streamProcessor, seekTarget, replacement);
-                            setSeekTarget(NaN);
-                            if (request && !replacement) {
-                                if (!isNaN(request.startTime + request.duration)) {
-                                    streamProcessor.setIndexHandlerTime(request.startTime + request.duration);
-                                }
-                                request.delayLoadingTime = new Date().getTime() + timeToLoadDelay;
-                                setTimeToLoadDelay(0);
-                            }
-                            if (!request && playbackController.getIsDynamic()) {
-                                logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
-                            }
-                        }
-
-                        if (request) {
-                            logger.debug('Next fragment request url is ' + request.url);
-                            fragmentModel.executeRequest(request);
-                        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-                            setFragmentProcessState(false);
-                            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
-                        }
-                        checkPlaybackQuality = true;
+                        eventBus.trigger(Events.NEW_FRAGMENT_NEEDED, { sender: instance, seekTarget: seekTarget, replacement: replacement });
                     }
                 }
             };
@@ -298,6 +267,19 @@ function ScheduleController(config) {
         if (request) {
             setFragmentProcessState(true);
             fragmentModel.executeRequest(request);
+        }
+    }
+
+    function setNewFragmentRequest(request) {
+        if (request) {
+            logger.debug('Next fragment request url is ' + request.url);
+            fragmentModel.executeRequest(request);
+        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+            if (playbackController.getIsDynamic()) {
+                logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
+            }
+            setFragmentProcessState(false);
+            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
         }
     }
 
@@ -544,6 +526,10 @@ function ScheduleController(config) {
         timeToLoadDelay = value;
     }
 
+    function getTimeToLoadDelay() {
+        return timeToLoadDelay;
+    }
+
     function getType() {
         return type;
     }
@@ -619,6 +605,7 @@ function ScheduleController(config) {
         getStreamId: getStreamId,
         setSeekTarget: setSeekTarget,
         setTimeToLoadDelay: setTimeToLoadDelay,
+        getTimeToLoadDelay: getTimeToLoadDelay,
         replaceRequest: replaceRequest,
         switchTrackAsked: switchTrackAsked,
         isStarted: isStarted,
@@ -627,7 +614,8 @@ function ScheduleController(config) {
         stop: stop,
         reset: reset,
         finalisePlayList: finalisePlayList,
-        setInitRequest: setInitRequest
+        setInitRequest: setInitRequest,
+        setNewFragmentRequest: setNewFragmentRequest
     };
 
     setup();

@@ -41,6 +41,7 @@ import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import Debug from '../core/Debug';
+import FragmentRequest from './vo/FragmentRequest';
 
 function StreamProcessor(config) {
 
@@ -90,6 +91,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
+        eventBus.on(Events.NEW_FRAGMENT_NEEDED, onNewFragmentNeeded, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
     }
@@ -202,6 +204,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_DATA_NEEDED, onInitDataNeeded, instance);
+        eventBus.off(Events.NEW_FRAGMENT_NEEDED, onNewFragmentNeeded, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
 
@@ -467,6 +470,80 @@ function StreamProcessor(config) {
                 scheduleController.setInitRequest(request);
             }
         }
+    }
+
+    function findNextRequest(seekTarget, requestToReplace) {
+        const representationInfo = getRepresentationInfo();
+        const hasSeekTarget = !isNaN(seekTarget);
+        const currentTime = playbackController.getNormalizedTime();
+        let time = hasSeekTarget ? seekTarget : getIndexHandlerTime();
+        let bufferIsDivided = false;
+        let request;
+
+        if (isNaN(time) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
+            return null;
+        }
+        /**
+         * This is critical for IE/Safari/EDGE
+         * */
+        if (bufferController) {
+            let range = bufferController.getRangeAt(time);
+            const playingRange = bufferController.getRangeAt(currentTime);
+            if ((range !== null || playingRange !== null) && !hasSeekTarget) {
+                if (!range || (playingRange && playingRange.start != range.start && playingRange.end != range.end)) {
+                    const hasDiscontinuities = bufferController.getBuffer().hasDiscontinuitiesAfter(currentTime);
+                    if (hasDiscontinuities && getType() !== Constants.FRAGMENTED_TEXT) {
+                        fragmentModel.removeExecutedRequestsAfterTime(playingRange.end);
+                        bufferIsDivided = true;
+                    }
+                }
+            }
+        }
+
+        if (requestToReplace) {
+            time = requestToReplace.startTime + (requestToReplace.duration / 2);
+            request = getFragmentRequest(representationInfo, time, {
+                timeThreshold: 0,
+                ignoreIsFinished: true
+            });
+        } else {
+            // Use time just whenever is strictly needed
+            request = getFragmentRequest(representationInfo,
+                hasSeekTarget || bufferIsDivided ? time : undefined, {
+                keepIdx: !hasSeekTarget && !bufferIsDivided
+            });
+
+            // Then, check if this request was downloaded or not
+            while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
+                // loop until we found not loaded fragment, or no fragment
+                request = getFragmentRequest(representationInfo);
+            }
+        }
+
+        return request;
+    }
+
+    function onNewFragmentNeeded(eventObj) {
+        const streamInfo = getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (eventObj.sender.getType() !== getType() || eventObj.sender.getStreamId() !== streamInfoId) return;
+
+        let request;
+
+        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
+        if (!bufferController.getIsPruningInProgress()) {
+            request = findNextRequest(eventObj.seekTarget, eventObj.replacement);
+            scheduleController.setSeekTarget(NaN);
+            if (request && !eventObj.replacement) {
+                if (!isNaN(request.startTime + request.duration)) {
+                    setIndexHandlerTime(request.startTime + request.duration);
+                }
+                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+                scheduleController.setTimeToLoadDelay(0);
+            }
+        }
+
+        scheduleController.setNewFragmentRequest(request);
     }
 
     function onTimedTextRequested(e) {
