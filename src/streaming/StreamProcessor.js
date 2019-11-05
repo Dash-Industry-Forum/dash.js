@@ -314,9 +314,12 @@ function StreamProcessor(config) {
     }
 
     function onMediaFragmentLoaded(e) {
-        if (e.fragmentModel !== fragmentModel) return;
-
+        const streamInfo = getStreamInfo();
+        const streamId = streamInfo ? streamInfo.id : null;
         const chunk = e.chunk;
+
+        if (chunk.streamId !== streamId || chunk.mediaInfo.type != type) return;
+
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = getRepresentationInfo(quality);
