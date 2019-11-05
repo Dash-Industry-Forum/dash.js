@@ -8,7 +8,6 @@ import StreamControllerMock from './mocks/StreamControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
-import AdapterMock from './mocks/AdapterMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
@@ -32,7 +31,6 @@ describe('BufferController', function () {
     let settings = Settings(context).getInstance();
     const streamProcessor = new StreamProcessorMock(testType, streamInfo);
     const streamControllerMock = new StreamControllerMock();
-    const adapterMock = new AdapterMock();
     const dashMetricsMock = new DashMetricsMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const mediaPlayerModelMock = new MediaPlayerModelMock();
@@ -55,7 +53,6 @@ describe('BufferController', function () {
             errHandler: errorHandlerMock,
             streamController: streamControllerMock,
             mediaController: mediaControllerMock,
-            adapter: adapterMock,
             textController: textControllerMock,
             abrController: abrControllerMock,
             streamProcessor: streamProcessor,

@@ -37,7 +37,6 @@ import AbrController from './AbrController';
 import MediaController from './MediaController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import BoxParser from '../utils/BoxParser';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
@@ -61,7 +60,6 @@ function BufferController(config) {
     const errHandler = config.errHandler;
     const streamController = config.streamController;
     const mediaController = config.mediaController;
-    const adapter = config.adapter;
     const textController = config.textController;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
@@ -214,27 +212,7 @@ function BufferController(config) {
 
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
-
         if (chunk.streamId !== streamId || chunk.mediaInfo.type != type) return;
-
-        const bytes = chunk.bytes;
-        const quality = chunk.quality;
-        const currentRepresentation = streamProcessor.getRepresentationInfo(quality);
-        const representationController = streamProcessor.getRepresentationController();
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
-        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
-
-        if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
-            const request = streamProcessor.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                quality: quality,
-                index: chunk.index
-            })[0];
-
-            const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            streamProcessor.addInbandEvents(events);
-        }
 
         if (bufferResetInProgress) {
             mediaChunk = chunk;
@@ -584,31 +562,6 @@ function BufferController(config) {
         eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
         eventBus.trigger(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
         logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
-    }
-
-    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
-        const fragmentStartTime = Math.max(!request || isNaN(request.startTime) ? 0 : request.startTime, 0);
-        const eventStreams = [];
-        const events = [];
-
-        /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
-        const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
-        for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
-            eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
-        }
-
-        const isoFile = BoxParser(context).getInstance().parse(data);
-        const eventBoxes = isoFile.getBoxes('emsg');
-
-        for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
-            const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
-
-            if (event) {
-                events.push(event);
-            }
-        }
-
-        return events;
     }
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */

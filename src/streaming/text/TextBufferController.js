@@ -46,7 +46,7 @@ function TextBufferController(config) {
         // according to text type, we create corresponding buffer controller
         if (config.type === Constants.FRAGMENTED_TEXT) {
 
-            // in this case, internal buffer ocntroller is a classical BufferController object
+            // in this case, internal buffer controller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 type: config.type,
                 streamId: config.streamId,
@@ -56,7 +56,6 @@ function TextBufferController(config) {
                 errHandler: config.errHandler,
                 streamController: config.streamController,
                 mediaController: config.mediaController,
-                adapter: config.adapter,
                 textController: config.textController,
                 abrController: config.abrController,
                 playbackController: config.playbackController,

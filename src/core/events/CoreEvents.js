@@ -81,6 +81,7 @@ class CoreEvents extends EventsBase {
         this.XLINK_READY = 'xlinkReady';
         this.SEGMENTBASE_INIT_REQUEST_NEEDED = 'segmentBaseInitRequestNeeded';
         this.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED = 'segmentBaseSegmentsListRequestNeeded';
+        this.ADD_INBAND_EVENTS_REQUESTED = 'addInbandEventsRequested';
     }
 }
 

@@ -42,6 +42,8 @@ import Errors from '../core/errors/Errors';
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import Debug from '../core/Debug';
 import FragmentRequest from './vo/FragmentRequest';
+import BoxParser from './utils/BoxParser';
+import FragmentModel from './models/FragmentModel';
 
 function StreamProcessor(config) {
 
@@ -94,6 +96,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.NEW_FRAGMENT_NEEDED, onNewFragmentNeeded, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
     }
 
     function initialize(mediaSource, fragmentModelForType) {
@@ -207,6 +210,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.NEW_FRAGMENT_NEEDED, onNewFragmentNeeded, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
 
         if (adapter && adapter.getIsTextTrack(type)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, instance);
@@ -284,6 +288,54 @@ function StreamProcessor(config) {
         }
     }
 
+    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+        const fragmentStartTime = Math.max(!request || isNaN(request.startTime) ? 0 : request.startTime, 0);
+        const eventStreams = [];
+        const events = [];
+
+        /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
+        const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
+        for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
+            eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
+        }
+
+        const isoFile = BoxParser(context).getInstance().parse(data);
+        const eventBoxes = isoFile.getBoxes('emsg');
+
+        for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
+            const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
+
+            if (event) {
+                events.push(event);
+            }
+        }
+
+        return events;
+    }
+
+    function onMediaFragmentLoaded(e) {
+        if (e.fragmentModel !== fragmentModel) return;
+
+        const chunk = e.chunk;
+        const bytes = chunk.bytes;
+        const quality = chunk.quality;
+        const currentRepresentation = getRepresentationInfo(quality);
+        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
+        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
+        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
+
+        if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
+            const request = fragmentModel.getRequests({
+                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+                quality: quality,
+                index: chunk.index
+            })[0];
+
+            const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+            eventBus.trigger(Events.ADD_INBAND_EVENTS_REQUESTED, { sender: instance, events: events });
+        }
+    }
+
     function onDataUpdateCompleted(e) {
         if (e.sender.getType() !== getType() || e.sender.getStreamId() !== getStreamInfo().id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
 
@@ -354,12 +406,6 @@ function StreamProcessor(config) {
 
     function getStreamInfo() {
         return stream ? stream.getStreamInfo() : null;
-    }
-
-    function addInbandEvents(events) {
-        if (stream) {
-            stream.addInbandEvents(events);
-        }
     }
 
     function selectMediaInfo(newMediaInfo) {
@@ -582,7 +628,6 @@ function StreamProcessor(config) {
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
-                adapter: adapter,
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
@@ -600,7 +645,6 @@ function StreamProcessor(config) {
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
-                adapter: adapter,
                 textController: textController,
                 abrController: abrController,
                 playbackController: playbackController,
@@ -695,7 +739,6 @@ function StreamProcessor(config) {
         unregisterExternalController: unregisterExternalController,
         getExternalControllers: getExternalControllers,
         unregisterAllExternalController: unregisterAllExternalController,
-        addInbandEvents: addInbandEvents,
         setIndexHandlerTime: setIndexHandlerTime,
         getIndexHandlerTime: getIndexHandlerTime,
         resetIndexHandler: resetIndexHandler,

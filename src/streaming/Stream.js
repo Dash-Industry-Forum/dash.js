@@ -104,11 +104,13 @@ function Stream(config) {
     function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.on(Events.ADD_INBAND_EVENTS_REQUESTED, onAddInbandEventsRequested, instance);
     }
 
     function unRegisterEvents() {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        eventBus.off(Events.ADD_INBAND_EVENTS_REQUESTED, onAddInbandEventsRequested, instance);
     }
 
     function registerProtectionEvents() {
@@ -485,9 +487,11 @@ function Stream(config) {
         eventController.addInlineEvents(events);
     }
 
-    function addInbandEvents (events) {
+    function onAddInbandEventsRequested (eventObj) {
+        if (eventObj.sender.getStreamInfo() !== getStreamInfo()) return;
+
         if (eventController) {
-            eventController.addInbandEvents(events);
+            eventController.addInbandEvents(eventObj.events);
         }
     }
 
@@ -864,8 +868,7 @@ function Stream(config) {
         setMediaSource: setMediaSource,
         isMediaCodecCompatible: isMediaCodecCompatible,
         isProtectionCompatible: isProtectionCompatible,
-        getPreloaded: getPreloaded,
-        addInbandEvents: addInbandEvents
+        getPreloaded: getPreloaded
     };
 
     setup();
