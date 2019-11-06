@@ -351,7 +351,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var setTime = async function (value) {
+    var setTime = function (value) {
         if (value < 0) {
             return;
         }
