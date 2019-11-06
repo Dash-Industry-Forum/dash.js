@@ -317,7 +317,7 @@ function DashHandler(config) {
                 request = getRequestForSegment(mediaInfo, segment);
                 segmentIndex = segment.availabilityIdx;
             } else {
-                segmentIndex = indexToRequest;
+                segmentIndex = indexToRequest - 1;
             }
         }
 
