@@ -777,9 +777,15 @@ function PlaybackController() {
     function applyServiceDescription(streamInfo, mediaInfo) {
         if (streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.serviceDescriptions) {
             // is there a service description for low latency defined?
-            const llsd = streamInfo.manifestInfo.serviceDescriptions.find((sd) => {
-                return sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME;
-            });
+            let llsd;
+
+            for (let i = 0; i < streamInfo.manifestInfo.serviceDescriptions.length; i++) {
+                const sd = streamInfo.manifestInfo.serviceDescriptions[i];
+                if (sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME) {
+                    llsd = sd;
+                    break;
+                }
+            }
 
             if (llsd) {
                 if (mediaInfo && mediaInfo.supplementalProperties &&
