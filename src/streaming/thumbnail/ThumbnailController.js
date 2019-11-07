@@ -62,15 +62,15 @@ function ThumbnailController(config) {
         }
 
         // Calculate index of the sprite given a time
-        if (!isNaN(track.segmentDuration)) {
-            offset = time % track.segmentDuration;
-        } else {
+        if (isNaN(track.segmentDuration)) {
             request = thumbnailTracks.getThumbnailRequestForTime(time);
             if (request) {
                 track.segmentDuration = request.duration;
-                offset = time % request.duration;
             }
         }
+
+        offset = time % track.segmentDuration;
+
         const thumbIndex = Math.floor((offset * track.tilesHor * track.tilesVert) / track.segmentDuration);
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
