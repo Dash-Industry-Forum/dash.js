@@ -59,6 +59,7 @@ import {
     getVersionString
 }
 from './../core/Version';
+import ObjectUtils from './utils/ObjectUtils';
 
 //Dash
 import DashAdapter from '../dash/DashAdapter';
@@ -260,7 +261,9 @@ function MediaPlayer() {
             constants: Constants,
             cea608parser: cea608parser,
             errHandler: errHandler,
-            BASE64: BASE64
+            BASE64: BASE64,
+            debug: debug,
+            objectUtils: ObjectUtils(context).getInstance()
         });
 
         restoreDefaultUTCTimingSources();

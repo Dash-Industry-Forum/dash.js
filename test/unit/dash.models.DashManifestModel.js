@@ -2,6 +2,8 @@ import DashManifestModel from '../../src/dash/models/DashManifestModel';
 import DashConstants from '../../src/dash/constants/DashConstants';
 import Constants from '../../src/streaming/constants/Constants';
 import BaseURL from '../../src/dash/vo/BaseURL';
+import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 import MpdHelper from './helpers/MPDHelper';
 import VoHelper from './helpers/VOHelper';
@@ -12,6 +14,7 @@ const expect = require('chai').expect;
 
 const context = {};
 const errorHandlerMock = new ErrorHandlerMock();
+let settings = Settings(context).getInstance();
 const dashManifestModel = DashManifestModel(context).getInstance();
 
 const TEST_URL = 'http://www.example.com/';
@@ -53,7 +56,8 @@ describe('DashManifestModel', function () {
     describe('SetConfig previously called', function () {
         beforeEach(function () {
             dashManifestModel.setConfig({
-                errHandler: errorHandlerMock
+                errHandler: errorHandlerMock,
+                debug: Debug(context).getInstance({settings: settings})
             });
         });
 

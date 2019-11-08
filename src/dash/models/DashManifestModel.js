@@ -38,10 +38,8 @@ import UTCTiming from '../vo/UTCTiming';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
-import ObjectUtils from '../../streaming/utils/ObjectUtils';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
 import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
@@ -50,6 +48,7 @@ function DashManifestModel() {
     let instance,
         logger,
         errHandler,
+        objectUtils,
         BASE64;
 
     const context = this.context;
@@ -62,7 +61,6 @@ function DashManifestModel() {
     };
 
     function setup () {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function getIsTypeOf(adaptation, type) {
@@ -239,7 +237,6 @@ function DashManifestModel() {
         const realAdaptations = getRealAdaptations(manifest, periodIndex);
 
         for (let i = 0; i < realAdaptations.length; i++) {
-            let objectUtils = ObjectUtils(context).getInstance();
             if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
                 return i;
             }
@@ -659,6 +656,7 @@ function DashManifestModel() {
                 if (voPeriod !== null) {
                     voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
                 } else {
+                    checkConfig();
                     logger.warn('First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
                 }
             }
@@ -1103,6 +1101,14 @@ function DashManifestModel() {
 
         if (config.BASE64) {
             BASE64 = config.BASE64;
+        }
+
+        if (config.debug) {
+            logger = config.debug.getLogger(instance);
+        }
+
+        if (config.objectUtils) {
+            objectUtils = config.objectUtils;
         }
     }
 
