@@ -44,6 +44,7 @@ import TextController from './text/TextController';
 import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
+import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import DOMStorage from './utils/DOMStorage';
@@ -247,7 +248,8 @@ function MediaPlayer() {
         dashMetrics = DashMetrics(context).getInstance({
             settings: settings,
             constants: Constants,
-            metricsConstants: MetricsConstants
+            metricsConstants: MetricsConstants,
+            metricsModel: MetricsModel(context).getInstance({settings: settings})
         });
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({

@@ -31,7 +31,6 @@
 import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import Round10 from './utils/Round10';
-import MetricsModel from '../streaming/models/MetricsModel';
 import {
     PlayList,
     PlayListTrace
@@ -47,19 +46,16 @@ function DashMetrics(config) {
 
     config = config || {};
 
-    const context = this.context;
     const constants = config.constants;
     const metricsConstants = config.metricsConstants;
+    const metricsModel = config.metricsModel;
 
     let instance,
         playListTraceMetricsClosed,
         playListTraceMetrics,
         playListMetrics;
 
-    let metricsModel = config.metricsModel;
-
     function setup() {
-        metricsModel = metricsModel || MetricsModel(context).getInstance({settings: config.settings});
         resetInitialSettings();
     }
 
