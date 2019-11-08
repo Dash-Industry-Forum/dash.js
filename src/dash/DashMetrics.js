@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
+import DashConstants from './constants/DashConstants';
 import FactoryMaker from '../core/FactoryMaker';
 import Round10 from './utils/Round10';
 import {
@@ -403,7 +403,7 @@ function DashMetrics(config) {
         for (i = httpRequestList.length - 1; i >= 0; i--) {
             httpRequest = httpRequestList[i];
 
-            if (httpRequest.type === HTTPRequest.MPD_TYPE) {
+            if (httpRequest.type === DashConstants.MPD) {
                 headers = parseResponseHeaders(httpRequest._responseHeaders);
                 break;
             }
