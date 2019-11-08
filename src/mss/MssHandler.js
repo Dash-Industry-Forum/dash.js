@@ -43,6 +43,7 @@ function MssHandler(config) {
     let context = this.context;
     let eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const constants = config.constants;
     const initSegmentType = config.initSegmentType;
     let dashMetrics = config.dashMetrics;
@@ -61,7 +62,9 @@ function MssHandler(config) {
     let mssParser,
         instance;
 
-    function setup() {}
+    function setup() {
+        eventBus.on(events.MANIFEST_PARSING_NEEDED, onParsingNeeded, instance);
+    }
 
     function onInitializationRequested(e) {
         let streamProcessor = e.sender.getStreamProcessor();
@@ -202,6 +205,32 @@ function MssHandler(config) {
         eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
         eventBus.off(events.TTML_TO_PARSE, onTTMLPreProcess, this);
+    }
+
+    function onParsingNeeded(eventObj) {
+        if (eventObj.dataToParse && eventObj.dataToParse.indexOf('SmoothStreamingMedia') > -1) {
+            let data = eventObj.dataToParse;
+            // Change dataToParse value to stop management of this manifest type by an other parser
+            eventObj.dataToParse = null;
+            let parser = MssParser(context).create(config);
+            let manifestParsed;
+            registerEvents();
+            try {
+                manifestParsed = parser.parse(data);
+            } catch (e) {
+                eventBus.trigger(
+                    events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new DashJSError(
+                            errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                            errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${eventObj.url}`
+                       )
+                    }
+                );
+                return;
+            }
+            eventBus.trigger(events.MANIFEST_PARSED, {manifest: manifestParsed});
+        }
     }
 
     function createMssParser() {

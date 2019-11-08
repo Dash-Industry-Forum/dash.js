@@ -70,6 +70,7 @@ import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
+import DashParser from '../dash/parser/DashParser';
 
 /**
  * @module MediaPlayer
@@ -156,6 +157,8 @@ function MediaPlayer() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
+
+        eventBus.on(Events.MANIFEST_PARSING_NEEDED, onParsingNeeded, instance);
     }
 
     /**
@@ -293,6 +296,8 @@ function MediaPlayer() {
         }
 
         settings.reset();
+
+        eventBus.off(Events.MANIFEST_PARSING_NEEDED, onParsingNeeded, instance);
     }
 
     /**
@@ -1968,6 +1973,7 @@ function MediaPlayer() {
                 baseURLController: BaseURLController(context).getInstance(),
                 errHandler: errHandler,
                 events: Events,
+                errors: Errors,
                 constants: Constants,
                 debug: debug,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
@@ -1975,6 +1981,34 @@ function MediaPlayer() {
                 ISOBoxer: ISOBoxer,
                 settings: settings
             });
+        }
+    }
+
+    function onParsingNeeded(eventObj) {
+        if (eventObj.dataToParse && eventObj.dataToParse.indexOf('MPD') > -1) {
+            let data = eventObj.dataToParse;
+            // Change dataToParse value to stop management of this manifest type by an other parser
+            eventObj.dataToParse = null;
+            let parser = DashParser(context).create();
+            let manifestParsed;
+            // init xlinkcontroller with matchers and iron object from created parser
+            eventObj.controller.setMatchers(parser.getMatchers());
+            eventObj.controller.setIron(parser.getIron());
+            try {
+                manifestParsed = parser.parse(data);
+            } catch (e) {
+                eventBus.trigger(
+                    Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new DashJSError(
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${eventObj.url}`
+                       )
+                    }
+                );
+                return;
+            }
+            eventBus.trigger(Events.MANIFEST_PARSED, {manifest: manifestParsed});
         }
     }
 

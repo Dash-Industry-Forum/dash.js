@@ -78,6 +78,8 @@ class CoreEvents extends EventsBase {
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
+        this.MANIFEST_PARSING_NEEDED = 'manifestParsingNeeded';
+        this.MANIFEST_PARSED = 'manifestParsed';
     }
 }
 

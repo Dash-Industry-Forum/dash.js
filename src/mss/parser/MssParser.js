@@ -797,14 +797,6 @@ function MssParser(config) {
         return xmlDoc;
     }
 
-    function getMatchers() {
-        return null;
-    }
-
-    function getIron() {
-        return null;
-    }
-
     function internalParse(data) {
         let xmlDoc = null;
         let manifest = null;
@@ -831,9 +823,7 @@ function MssParser(config) {
     }
 
     instance = {
-        parse: internalParse,
-        getMatchers: getMatchers,
-        getIron: getIron
+        parse: internalParse
     };
 
     setup();
