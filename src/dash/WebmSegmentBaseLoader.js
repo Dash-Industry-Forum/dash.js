@@ -3,7 +3,6 @@ import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
 import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
@@ -27,7 +26,6 @@ function WebmSegmentBaseLoader() {
         baseURLController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
         WebM = {
             EBML: {
                 tag: 0x1A45DFA3,
@@ -111,6 +109,7 @@ function WebmSegmentBaseLoader() {
         dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
+        logger = config.debug.getLogger(instance);
     }
 
     function parseCues(ab) {

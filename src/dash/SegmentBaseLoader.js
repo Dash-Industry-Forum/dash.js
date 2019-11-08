@@ -35,7 +35,6 @@ import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import Errors from '../core/errors/Errors';
@@ -56,7 +55,6 @@ function SegmentBaseLoader() {
         baseURLController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function initialize() {
@@ -85,6 +83,10 @@ function SegmentBaseLoader() {
 
         if (config.errHandler) {
             errHandler = config.errHandler;
+        }
+
+        if (config.debug) {
+            logger = config.debug.getLogger(instance);
         }
     }
 

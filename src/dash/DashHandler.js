@@ -34,7 +34,6 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import URLUtils from '../streaming/utils/URLUtils';
 import {
     replaceIDForTemplate,
@@ -68,7 +67,7 @@ function DashHandler(config) {
         segmentsController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = config.debug.getLogger(instance);
         resetInitialSettings();
 
         segmentsController = SegmentsController(context).create(config);

@@ -3,6 +3,8 @@ import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import Errors from '../../src/core/errors/Errors';
+import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -15,6 +17,7 @@ const sinon = require('sinon');
 const context = {};
 let webmSegmentBaseLoader;
 const eventBus = EventBus(context).getInstance();
+let settings = Settings(context).getInstance();
 
 describe('WebmSegmentBaseLoader', function () {
     beforeEach(function () {
@@ -59,7 +62,8 @@ describe('WebmSegmentBaseLoader', function () {
                 baseURLController: new BaseURLControllerMock(),
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                errHandler: new ErrorHandlerMock()
+                errHandler: new ErrorHandlerMock(),
+                debug: Debug(context).getInstance({settings: settings})
             });
             webmSegmentBaseLoader.initialize();
         });

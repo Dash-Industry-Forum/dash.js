@@ -1,4 +1,7 @@
 import SegmentsController from '../../src/dash/controllers/SegmentsController';
+import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
+
 import ObjectsHelper from './helpers/ObjectsHelper';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -6,8 +9,6 @@ import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
-
-
 
 describe('SegmentsController', function () {
     // Arrange
@@ -17,12 +18,14 @@ describe('SegmentsController', function () {
     const mediaPlayerModel = new MediaPlayerModelMock();
     const dashMetricsMock = new DashMetricsMock();
     const errHandler = new ErrorHandlerMock();
+    let settings = Settings(context).getInstance();
 
     const segmentsController = SegmentsController(context).create({
         dashMetrics: dashMetricsMock,
         mediaPlayerModel: mediaPlayerModel,
         errHandler: errHandler,
-        baseURLController: baseURLController
+        baseURLController: baseURLController,
+        debug: Debug(context).getInstance({settings: settings})
     }, false);
 
     segmentsController.initialize();

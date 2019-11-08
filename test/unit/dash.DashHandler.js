@@ -1,6 +1,8 @@
 import DashHandler from '../../src/dash/DashHandler';
 import Constants from '../../src/streaming/constants/Constants';
 import DashConstants from '../../src/dash/constants/DashConstants';
+import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
@@ -22,13 +24,15 @@ describe('DashHandler', function () {
     const baseURLController = objectsHelper.getDummyBaseURLController();
     const mediaPlayerModel = new MediaPlayerModelMock();
     const dashMetricsMock = new DashMetricsMock();
+    let settings = Settings(context).getInstance();
 
     const config = {
         mimeType: streamProcessor.getMediaInfo().mimeType,
         timelineConverter: timelineConverter,
         baseURLController: baseURLController,
         mediaPlayerModel: mediaPlayerModel,
-        dashMetrics: dashMetricsMock
+        dashMetrics: dashMetricsMock,
+        debug: Debug(context).getInstance({settings: settings})
     };
 
     const dashHandler = DashHandler(context).create(config);

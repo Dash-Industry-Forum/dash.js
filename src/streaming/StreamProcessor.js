@@ -39,6 +39,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
+import Debug from '../core/Debug';
 
 function StreamProcessor(config) {
 
@@ -81,6 +82,7 @@ function StreamProcessor(config) {
 
     function initialize(mediaSource) {
         indexHandler = DashHandler(context).create({
+            debug: Debug(context).getInstance({settings: settings}),
             type: type,
             mimeType: mimeType,
             timelineConverter: timelineConverter,
