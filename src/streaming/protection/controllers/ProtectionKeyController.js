@@ -321,6 +321,15 @@ function ProtectionKeyController() {
         }
     }
 
+    /**
+     * Attach KeySystem-specific data to use for license acquisition with EME
+     *
+     * @param {Object.<string, ProtectionData>} protectionDataSet an object containing
+     * property names corresponding to key system name strings (e.g. "org.w3.clearkey")
+     * and associated values being instances of {@link ProtectionData}
+     * @memberof module:ProtectionKeyController
+     * @instance
+     */
     function setProtectionData(protectionDataSet) {
         var getProtectionData = function (keySystemString) {
             var protData = null;
