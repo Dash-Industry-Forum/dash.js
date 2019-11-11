@@ -863,6 +863,9 @@ declare namespace dashjs {
          * Corresponding property values are keys, base64-encoded (no padding).
          */
         clearkeys?: { [key: string]: string };
+
+        /** Priority level of the key system to be selected (0 is the highest prority, -1 for undefined priority) */
+        priority?: number = -1;
     }
 
     export interface KeySystem {
