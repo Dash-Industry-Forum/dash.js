@@ -186,7 +186,15 @@
         },
         {
           "name": "SegmentBase, Single adaption set, 3x4 tiles",
-          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails.mpd"
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-static.mpd"
+        },
+        {
+          "name": "SegmentTemplate with SegmentTimeline",
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd"
+        },
+        {
+          "name": "SegmentNumber",
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd"
         }
       ]
     },

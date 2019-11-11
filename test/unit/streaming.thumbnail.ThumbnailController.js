@@ -132,7 +132,7 @@ describe('Thumbnails', function () {
             });
         });
 
-        it('shouldnt return any thumbnail after reset', function () {
+        it('shouldn\'t return any thumbnail after reset', function () {
             thumbnailController.reset();
             thumbnailController.get(0, thumbnail => {
                 expect(thumbnail).to.be.null; // jshint ignore:line
@@ -230,7 +230,7 @@ describe('Thumbnails', function () {
             expect(tracks).to.be.empty; // jshint ignore:line
         });
 
-        it('addTracks method doesnt add any track if config not set properly', function () {
+        it('addTracks method doesn\'t add any track if config not set properly', function () {
             thumbnailTracks = ThumbnailTracks(context).create({});
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
