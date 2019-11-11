@@ -36,7 +36,7 @@ declare namespace dashjs {
         setMediaElement(element: HTMLMediaElement): void;
         setSessionType(type: string): void;
         setRobustnessLevel(level: string): void;
-        setProtectionData(protData: ProtectionData): void;
+        setProtectionData(protData: ProtectionDataSet): void;
         getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
         getKeySystems(): KeySystem[];
         setKeySystems(keySystems: KeySystem[]): void;
@@ -278,7 +278,7 @@ declare namespace dashjs {
         getXHRWithCredentialsForType(type: string): boolean;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
-        setProtectionData(value: ProtectionData): void;
+        setProtectionData(value: ProtectionDataSet): void;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
@@ -863,6 +863,10 @@ declare namespace dashjs {
          * Corresponding property values are keys, base64-encoded (no padding).
          */
         clearkeys?: { [key: string]: string };
+    }
+    
+    export interface ProtectionDataSet {
+        [key: string]: ProtectionData;
     }
 
     export interface KeySystem {
