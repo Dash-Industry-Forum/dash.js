@@ -596,9 +596,15 @@ function MssParser(config) {
         timescale =  smoothStreamingMedia.getAttribute('TimeScale');
         manifest.timescale = timescale ? parseFloat(timescale) : DEFAULT_TIME_SCALE;
         let dvrWindowLength = parseFloat(smoothStreamingMedia.getAttribute('DVRWindowLength'));
+        // If the DVRWindowLength field is omitted for a live presentation or set to 0, the DVR window is effectively infinite
+        if (manifest.type === 'dynamic' && (dvrWindowLength === 0 || isNaN(dvrWindowLength))) {
+            dvrWindowLength = Infinity;
+        }
+        // Star-over
         if (dvrWindowLength === 0 && smoothStreamingMedia.getAttribute('CanSeek') === 'TRUE') {
             dvrWindowLength = Infinity;
         }
+
         if (dvrWindowLength > 0) {
             manifest.timeShiftBufferDepth = dvrWindowLength / manifest.timescale;
         }
