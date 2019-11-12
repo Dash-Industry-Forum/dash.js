@@ -1,7 +1,7 @@
 import WebmSegmentBaseLoader from '../../src/dash/WebmSegmentBaseLoader';
 import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
+import DashEvents from '../../src/dash/DashEvents';
 import DashErrors from '../../src/dash/errors/DashErrors';
 import Debug from '../../src/core/Debug';
 import Settings from '../../src/core/Settings';
@@ -75,10 +75,10 @@ describe('WebmSegmentBaseLoader', function () {
         it('should trigger INITIALIZATION_LOADED event when loadInitialization function is called without representation parameter', function (done) {
             const self = this.test.ctx;
             const onInitLoaded = function () {
-                eventBus.off(Events.INITIALIZATION_LOADED, onInitLoaded);
+                eventBus.off(DashEvents.INITIALIZATION_LOADED, onInitLoaded);
                 done();
             };
-            eventBus.on(Events.INITIALIZATION_LOADED, onInitLoaded, this);
+            eventBus.on(DashEvents.INITIALIZATION_LOADED, onInitLoaded, this);
             webmSegmentBaseLoader.loadInitialization();
             self.requests[0].respond(200);
         });
@@ -86,13 +86,13 @@ describe('WebmSegmentBaseLoader', function () {
         it('should trigger SEGMENTS_LOADED event with an error when loadSegments function is called without representation parameter', function (done) {
             const self = this.test.ctx;
             const onSegmentLoaded = function (e) {
-                eventBus.off(Events.SEGMENTS_LOADED, onSegmentLoaded);
+                eventBus.off(DashEvents.SEGMENTS_LOADED, onSegmentLoaded);
                 expect(e.error).not.to.equal(undefined);
                 expect(e.error.code).to.equal(DashErrors.SEGMENT_BASE_LOADER_ERROR_CODE);
                 expect(e.error.message).to.equal(DashErrors.SEGMENT_BASE_LOADER_ERROR_MESSAGE);
                 done();
             };
-            eventBus.on(Events.SEGMENTS_LOADED, onSegmentLoaded, this);
+            eventBus.on(DashEvents.SEGMENTS_LOADED, onSegmentLoaded, this);
             webmSegmentBaseLoader.loadSegments();
             self.requests[0].respond(200);
         });

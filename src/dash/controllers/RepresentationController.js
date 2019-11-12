@@ -31,6 +31,7 @@
 import Constants from '../../streaming/constants/Constants';
 import DashErrors from '../errors/DashErrors';
 import DashConstants from '../constants/DashConstants';
+import DashEvents from '../DashEvents';
 import DashJSError from '../../streaming/vo/DashJSError';
 import FactoryMaker from '../../core/FactoryMaker';
 
@@ -81,8 +82,9 @@ function RepresentationController() {
             eventBus = config.eventBus;
             events = config.events;
 
+            eventBus.on(DashEvents.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
+
             eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-            eventBus.on(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
             eventBus.on(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
             eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
         }
@@ -120,7 +122,7 @@ function RepresentationController() {
     function reset() {
 
         eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
+        eventBus.off(DashEvents.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.off(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
@@ -209,7 +211,7 @@ function RepresentationController() {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             updateRepresentation(voAvailableRepresentations[i], isDynamic);
             if (notifyUpdate) {
-                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
+                eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
             }
         }
     }

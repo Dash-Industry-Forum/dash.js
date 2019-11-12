@@ -1,4 +1,4 @@
-import Events from '../core/events/Events';
+import DashEvents from './DashEvents';
 import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
 import Constants from '../streaming/constants/Constants';
@@ -322,13 +322,13 @@ function WebmSegmentBaseLoader() {
         const onload = function () {
             // note that we don't explicitly set rep.initialization as this
             // will be computed when all BaseURLs are resolved later
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+            eventBus.trigger(DashEvents.INITIALIZATION_LOADED, {
                 representation: representation
             });
         };
 
         const onloadend = function () {
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+            eventBus.trigger(DashEvents.INITIALIZATION_LOADED, {
                 representation: representation
             });
         };
@@ -388,13 +388,13 @@ function WebmSegmentBaseLoader() {
 
     function onLoaded(segments, representation, type) {
         if (segments) {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {
+            eventBus.trigger(DashEvents.SEGMENTS_LOADED, {
                 segments: segments,
                 representation: representation,
                 mediaType: type
             });
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {
+            eventBus.trigger(DashEvents.SEGMENTS_LOADED, {
                 segments: null,
                 representation: representation,
                 mediaType: type,

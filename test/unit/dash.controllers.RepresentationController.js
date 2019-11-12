@@ -5,6 +5,7 @@ import EventBus from '../../src/core/EventBus';
 import RepresentationController from '../../src/dash/controllers/RepresentationController';
 import ManifestModel from '../../src/streaming/models/ManifestModel';
 import Events from '../../src/core/events/Events';
+import DashEvents from '../../src/dash/DashEvents';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import Constants from '../../src/streaming/constants/Constants';
 
@@ -166,7 +167,7 @@ describe('RepresentationController', function () {
                 let spy = chai.spy();
                 eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
 
-                eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
+                eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
                 expect(spy).to.have.been.called.exactly(1);
             });
         });

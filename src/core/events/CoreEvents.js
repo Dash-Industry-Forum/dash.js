@@ -49,7 +49,6 @@ class CoreEvents extends EventsBase {
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
-        this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_REQUESTED = 'initRequested';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
@@ -61,9 +60,6 @@ class CoreEvents extends EventsBase {
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.REPRESENTATION_UPDATE_STARTED = 'representationUpdateStarted';
-        this.REPRESENTATION_UPDATE_COMPLETED = 'representationUpdateCompleted';
-        this.SEGMENTS_LOADED = 'segmentsLoaded';
         this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
         this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
         this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';

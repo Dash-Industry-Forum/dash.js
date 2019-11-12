@@ -31,8 +31,8 @@
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
-import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
+import DashEvents from './DashEvents';
 import FactoryMaker from '../core/FactoryMaker';
 import {
     replaceIDForTemplate,
@@ -71,9 +71,9 @@ function DashHandler(config) {
 
         segmentsController = SegmentsController(context).create(config);
 
-        eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.on(DashEvents.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.on(DashEvents.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.on(DashEvents.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function initialize(isDynamic) {
@@ -112,9 +112,9 @@ function DashHandler(config) {
     function reset() {
         resetInitialSettings();
 
-        eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.off(DashEvents.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.off(DashEvents.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.off(DashEvents.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -187,7 +187,7 @@ function DashHandler(config) {
         //if representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
         //otherwise, it means that a request has to be made to get initialization and/or segments informations
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
+            eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
         } else {
             segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
         }
@@ -348,7 +348,7 @@ function DashHandler(config) {
         const representation = e.representation;
         if (!representation.segments) return;
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     function onSegmentsLoaded(e) {
@@ -402,7 +402,7 @@ function DashHandler(config) {
             return;
         }
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     instance = {
