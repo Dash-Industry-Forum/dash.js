@@ -40,6 +40,7 @@ import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
 import Debug from '../core/Debug';
+import URLUtils from './utils/URLUtils';
 
 function StreamProcessor(config) {
 
@@ -91,7 +92,8 @@ function StreamProcessor(config) {
             baseURLController: config.baseURLController,
             errHandler: errHandler,
             settings: settings,
-            streamInfo: getStreamInfo()
+            streamInfo: getStreamInfo(),
+            urlUtils: URLUtils(context).getInstance()
         });
 
         // initialize controllers

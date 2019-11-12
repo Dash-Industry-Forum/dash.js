@@ -2,6 +2,7 @@ import DashHandler from '../../src/dash/DashHandler';
 import Constants from '../../src/streaming/constants/Constants';
 import DashConstants from '../../src/dash/constants/DashConstants';
 import Debug from '../../src/core/Debug';
+import URLUtils from '../../src/streaming/utils/URLUtils';
 import Settings from '../../src/core/Settings';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
@@ -32,7 +33,8 @@ describe('DashHandler', function () {
         baseURLController: baseURLController,
         mediaPlayerModel: mediaPlayerModel,
         dashMetrics: dashMetricsMock,
-        debug: Debug(context).getInstance({settings: settings})
+        debug: Debug(context).getInstance({settings: settings}),
+        urlUtils: URLUtils(context).getInstance()
     };
 
     const dashHandler = DashHandler(context).create(config);

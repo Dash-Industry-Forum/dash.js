@@ -84,6 +84,10 @@ function DashAdapter() {
         if (config.objectUtils) {
             dashManifestModel.setConfig({objectUtils: config.objectUtils});
         }
+
+        if (config.urlUtils) {
+            dashManifestModel.setConfig({urlUtils: config.urlUtils});
+        }
     }
 
     function convertRepresentationToRepresentationInfo(voRepresentation) {

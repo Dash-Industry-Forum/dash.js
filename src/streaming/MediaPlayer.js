@@ -38,6 +38,7 @@ import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
+import URLUtils from './utils/URLUtils';
 import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
@@ -265,7 +266,8 @@ function MediaPlayer() {
             errHandler: errHandler,
             BASE64: BASE64,
             debug: debug,
-            objectUtils: ObjectUtils(context).getInstance()
+            objectUtils: ObjectUtils(context).getInstance(),
+            urlUtils: URLUtils(context).getInstance()
         });
 
         restoreDefaultUTCTimingSources();

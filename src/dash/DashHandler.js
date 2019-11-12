@@ -34,7 +34,6 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
 import Events from '../core/events/Events';
 import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
-import URLUtils from '../streaming/utils/URLUtils';
 import {
     replaceIDForTemplate,
     unescapeDollarsInTemplate,
@@ -49,7 +48,7 @@ function DashHandler(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const urlUtils = URLUtils(context).getInstance();
+    const urlUtils = config.urlUtils;
     const type = config.type;
     const streamInfo = config.streamInfo;
 

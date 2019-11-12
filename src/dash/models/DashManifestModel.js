@@ -38,7 +38,6 @@ import UTCTiming from '../vo/UTCTiming';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
-import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../../streaming/vo/DashJSError';
 import DashErrors from '../errors/DashErrors';
@@ -49,10 +48,8 @@ function DashManifestModel() {
         logger,
         errHandler,
         objectUtils,
+        urlUtils,
         BASE64;
-
-    const context = this.context;
-    const urlUtils = URLUtils(context).getInstance();
 
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
@@ -1109,6 +1106,10 @@ function DashManifestModel() {
 
         if (config.objectUtils) {
             objectUtils = config.objectUtils;
+        }
+
+        if (config.urlUtils) {
+            urlUtils = config.urlUtils;
         }
     }
 
