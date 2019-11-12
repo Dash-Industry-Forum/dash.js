@@ -1,5 +1,6 @@
 import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
+import Debug from '../../src/core/Debug';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AdapterMock from './mocks/AdapterMock';
@@ -66,7 +67,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -92,7 +94,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -163,7 +166,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -211,7 +215,8 @@ describe('Thumbnails', function () {
             thumbnailTracks = ThumbnailTracks(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -231,7 +236,7 @@ describe('Thumbnails', function () {
         });
 
         it('addTracks method doesn\'t add any track if config not set properly', function () {
-            thumbnailTracks = ThumbnailTracks(context).create({});
+            thumbnailTracks = ThumbnailTracks(context).create({debug: Debug(context).getInstance()});
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
             expect(tracks).to.be.empty; // jshint ignore:line
@@ -308,7 +313,8 @@ describe('Thumbnails', function () {
             thumbnailTracks = ThumbnailTracks(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -321,7 +327,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
 
             thumbnailTracks.initialize();
