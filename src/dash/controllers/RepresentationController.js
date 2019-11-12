@@ -32,14 +32,9 @@ import Constants from '../../streaming/constants/Constants';
 import Errors from '../../core/errors/Errors';
 import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
 function RepresentationController() {
-
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
 
     let instance,
         realAdaptation,
@@ -48,6 +43,8 @@ function RepresentationController() {
         currentVoRepresentation,
         abrController,
         playbackController,
+        eventBus,
+        events,
         timelineConverter,
         dashMetrics,
         type,
@@ -56,11 +53,6 @@ function RepresentationController() {
 
     function setup() {
         resetInitialSettings();
-
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
     function setConfig(config) {
@@ -84,6 +76,15 @@ function RepresentationController() {
         }
         if (config.streamId) {
             streamId = config.streamId;
+        }
+        if (config.eventBus && config.events) {
+            eventBus = config.eventBus;
+            events = config.events;
+
+            eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+            eventBus.on(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
+            eventBus.on(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+            eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
         }
     }
 
@@ -118,10 +119,10 @@ function RepresentationController() {
 
     function reset() {
 
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.off(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
+        eventBus.off(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
     }
@@ -208,7 +209,7 @@ function RepresentationController() {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             updateRepresentation(voAvailableRepresentations[i], isDynamic);
             if (notifyUpdate) {
-                eventBus.trigger(Events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
+                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
             }
         }
     }
@@ -221,7 +222,7 @@ function RepresentationController() {
 
     function startDataUpdate() {
         updating = true;
-        eventBus.trigger(Events.DATA_UPDATE_STARTED, { sender: instance });
+        eventBus.trigger(events.DATA_UPDATE_STARTED, { sender: instance });
     }
 
     function endDataUpdate(error) {
@@ -230,7 +231,7 @@ function RepresentationController() {
         if (error) {
             eventArg.error = error;
         }
-        eventBus.trigger(Events.DATA_UPDATE_COMPLETED, eventArg);
+        eventBus.trigger(events.DATA_UPDATE_COMPLETED, eventArg);
     }
 
     function postponeUpdate(postponeTimePeriod) {
@@ -246,7 +247,7 @@ function RepresentationController() {
 
             updateAvailabilityWindow(playbackController.getIsDynamic(), true);
         };
-        eventBus.trigger(Events.AST_IN_FUTURE, { delay: delay });
+        eventBus.trigger(events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 

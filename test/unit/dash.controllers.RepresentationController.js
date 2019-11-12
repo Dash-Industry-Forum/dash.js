@@ -73,6 +73,8 @@ describe('RepresentationController', function () {
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock,
                 type: testType,
+                events: Events,
+                eventBus: eventBus,
                 streamId: streamProcessor.getStreamInfo().id
             });
         });

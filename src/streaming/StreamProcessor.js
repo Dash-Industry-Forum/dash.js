@@ -126,6 +126,8 @@ function StreamProcessor(config) {
             timelineConverter: timelineConverter,
             streamProcessor: instance,
             type: type,
+            eventBus: eventBus,
+            events: Events,
             streamId: getStreamInfo() ? getStreamInfo().id : null
         });
         bufferController.initialize(mediaSource);
