@@ -28,14 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
-function TimelineConverter() {
+function TimelineConverter(config) {
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
+    config = config || {};
+    const eventBus = config.eventBus;
+    const events = config.events;
 
     let instance,
         clientServerTimeShift,
@@ -44,7 +43,7 @@ function TimelineConverter() {
 
     function initialize() {
         resetInitialSettings();
-        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        eventBus.on(events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
 
     function isTimeSyncCompleted() {
@@ -208,7 +207,7 @@ function TimelineConverter() {
     }
 
     function reset() {
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        eventBus.off(events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
         resetInitialSettings();
     }
 

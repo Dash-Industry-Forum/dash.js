@@ -2,6 +2,8 @@ import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import TimelineSegmentsGetter from '../../src/dash/utils/TimelineSegmentsGetter';
 import Constants from '../../src/streaming/constants/Constants';
 import VoHelper from './helpers/VOHelper';
+import Events from '../../src/core/events/Events';
+import EventBus from '../../src/core/EventBus';
 
 const expect = require('chai').expect;
 
@@ -142,7 +144,8 @@ function createRepresentationMock() {
 describe('TimelineSegmentsGetter', () => {
     const context = {};
 
-    const timelineConverter = TimelineConverter(context).getInstance();
+    const eventBus = EventBus(context).getInstance();
+    const timelineConverter = TimelineConverter(context).getInstance({events: Events, eventBus: eventBus});
     timelineConverter.initialize();
 
     const timelineSegmentsGetter = TimelineSegmentsGetter(context).create({

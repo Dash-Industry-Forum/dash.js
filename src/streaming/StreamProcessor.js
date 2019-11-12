@@ -93,7 +93,8 @@ function StreamProcessor(config) {
             errHandler: errHandler,
             settings: settings,
             streamInfo: getStreamInfo(),
-            urlUtils: URLUtils(context).getInstance()
+            urlUtils: URLUtils(context).getInstance(),
+            eventBus: eventBus
         });
 
         // initialize controllers

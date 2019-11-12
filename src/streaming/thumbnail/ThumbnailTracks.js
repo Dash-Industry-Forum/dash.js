@@ -39,6 +39,7 @@ import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
+import EventBus from '../../core/EventBus';
 
 export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
                                    'http://dashif.org/guidelines/thumbnail_tile'];
@@ -78,7 +79,8 @@ function ThumbnailTracks(config) {
 
         indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
                                 baseURLController: baseURLController,
-                                debug: debug});
+                                debug: debug,
+                                eventBus: EventBus(context).getInstance()});
 
         // initialize controllers
         indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);

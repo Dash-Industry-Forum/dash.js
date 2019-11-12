@@ -31,7 +31,6 @@
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
-import EventBus from '../core/EventBus';
 import DashEvents from './DashEvents';
 import FactoryMaker from '../core/FactoryMaker';
 import {
@@ -47,7 +46,7 @@ function DashHandler(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    const eventBus = config.eventBus;
     const urlUtils = config.urlUtils;
     const type = config.type;
     const streamInfo = config.streamInfo;

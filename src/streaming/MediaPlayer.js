@@ -232,7 +232,7 @@ function MediaPlayer() {
         mediaPlayerInitialized = true;
 
         // init some controllers and models
-        timelineConverter = TimelineConverter(context).getInstance();
+        timelineConverter = TimelineConverter(context).getInstance({eventBus: eventBus, events: Events});
         if (!abrController) {
             abrController = AbrController(context).getInstance();
         }
