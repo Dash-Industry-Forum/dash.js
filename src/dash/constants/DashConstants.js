@@ -130,6 +130,8 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
         this.SERVICE_DESCRIPTION_LATENCY = 'Latency';
         this.SERVICE_DESCRIPTION_PLAYBACK_RATE = 'PlaybackRate';
+        this.THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
+                                   'http://dashif.org/guidelines/thumbnail_tile'];
     }
 
     constructor () {
