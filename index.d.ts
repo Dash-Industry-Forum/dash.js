@@ -51,7 +51,7 @@ declare namespace dashjs {
         scanType?: string;
     }
 
-    export type MediaType = 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText';
+    export type MediaType = 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | 'image';
 
     export class MediaInfo {
         id: string | null;
