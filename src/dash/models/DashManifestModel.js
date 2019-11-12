@@ -41,7 +41,7 @@ import EventStream from '../vo/EventStream';
 import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../../streaming/vo/DashJSError';
-import Errors from '../../core/errors/Errors';
+import DashErrors from '../errors/DashErrors';
 import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
 
 function DashManifestModel() {
@@ -767,7 +767,7 @@ function DashManifestModel() {
         } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
+            errHandler.error(new DashJSError(DashErrors.MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
         }
 
         return periodEnd;

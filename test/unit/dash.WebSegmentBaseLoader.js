@@ -2,7 +2,7 @@ import WebmSegmentBaseLoader from '../../src/dash/WebmSegmentBaseLoader';
 import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
-import Errors from '../../src/core/errors/Errors';
+import DashErrors from '../../src/dash/errors/DashErrors';
 import Debug from '../../src/core/Debug';
 import Settings from '../../src/core/Settings';
 
@@ -88,8 +88,8 @@ describe('WebmSegmentBaseLoader', function () {
             const onSegmentLoaded = function (e) {
                 eventBus.off(Events.SEGMENTS_LOADED, onSegmentLoaded);
                 expect(e.error).not.to.equal(undefined);
-                expect(e.error.code).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_CODE);
-                expect(e.error.message).to.equal(Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE);
+                expect(e.error.code).to.equal(DashErrors.SEGMENT_BASE_LOADER_ERROR_CODE);
+                expect(e.error.message).to.equal(DashErrors.SEGMENT_BASE_LOADER_ERROR_MESSAGE);
                 done();
             };
             eventBus.on(Events.SEGMENTS_LOADED, onSegmentLoaded, this);

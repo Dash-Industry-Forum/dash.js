@@ -37,7 +37,7 @@ import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
-import Errors from '../core/errors/Errors';
+import DashErrors from './errors/DashErrors';
 
 function SegmentBaseLoader() {
 
@@ -303,7 +303,7 @@ function SegmentBaseLoader() {
         if (segments) {
             eventBus.trigger(Events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
+            eventBus.trigger(Events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(DashErrors.SEGMENT_BASE_LOADER_ERROR_CODE, DashErrors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
         }
     }
 

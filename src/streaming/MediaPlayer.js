@@ -73,6 +73,7 @@ import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
 import DashParser from '../dash/parser/DashParser';
+import DashErrors from '../dash/errors/DashErrors';
 
 /**
  * @module MediaPlayer
@@ -160,6 +161,7 @@ function MediaPlayer() {
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
 
+        Errors.extend(DashErrors);
         eventBus.on(Events.MANIFEST_PARSING_NEEDED, onParsingNeeded, instance);
     }
 

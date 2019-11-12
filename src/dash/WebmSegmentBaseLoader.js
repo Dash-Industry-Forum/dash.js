@@ -8,7 +8,7 @@ import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import DashJSError from '../streaming/vo/DashJSError';
-import Errors from '../core/errors/Errors';
+import DashErrors from './errors/DashErrors';
 
 function WebmSegmentBaseLoader() {
 
@@ -398,7 +398,7 @@ function WebmSegmentBaseLoader() {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                error: new DashJSError(DashErrors.SEGMENT_BASE_LOADER_ERROR_CODE, DashErrors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
             });
         }
     }

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../../streaming/constants/Constants';
-import Errors from '../../core/errors/Errors';
+import DashErrors from '../errors/DashErrors';
 import DashConstants from '../constants/DashConstants';
 import DashJSError from '../../streaming/vo/DashJSError';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -193,7 +193,7 @@ function RepresentationController() {
         representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
         if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
-            let error = new DashJSError(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
+            let error = new DashJSError(DashErrors.SEGMENTS_UNAVAILABLE_ERROR_CODE, DashErrors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
             endDataUpdate(error);
             return;
         }
@@ -278,7 +278,7 @@ function RepresentationController() {
 
         if (postponeTimePeriod > 0) {
             postponeUpdate(postponeTimePeriod);
-            err = new DashJSError(Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, Errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
+            err = new DashJSError(DashErrors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, DashErrors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
             endDataUpdate(err);
             return;
         }
