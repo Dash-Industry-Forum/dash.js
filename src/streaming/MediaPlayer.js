@@ -75,6 +75,7 @@ import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
 import DashParser from '../dash/parser/DashParser';
 import DashErrors from '../dash/errors/DashErrors';
+import DashConstants from '../dash/constants/DashConstants';
 
 /**
  * @module MediaPlayer
@@ -1905,6 +1906,7 @@ function MediaPlayer() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
+            dashConstants: DashConstants,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler,

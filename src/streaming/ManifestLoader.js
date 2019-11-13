@@ -74,6 +74,7 @@ function ManifestLoader(config) {
         xlinkController = XlinkController(context).create({
             errHandler: errHandler,
             dashMetrics: config.dashMetrics,
+            dashConstants: config.dashConstants,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier
         });
