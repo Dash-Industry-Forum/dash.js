@@ -22,7 +22,20 @@ const sampleRepresentation = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x1'
-    }]
+    }],
+    isSegmentTemplate: function () {
+        return true;
+    },
+    isSegmentBase: function () {
+        return false;
+    },
+    isSegmentTimeline: function () {
+        return false;
+    },
+    parseThumbnailAspectRatio:  function (thumbnailTrack) {
+        thumbnailTrack.tilesHor = 10;
+        thumbnailTrack.tilesVert = 1;
+    }
 };
 
 const sampleRepresentation2 = {
@@ -38,7 +51,20 @@ const sampleRepresentation2 = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x20'
-    }]
+    }],
+    isSegmentTemplate: function () {
+        return true;
+    },
+    isSegmentBase: function () {
+        return false;
+    },
+    isSegmentTimeline: function () {
+        return false;
+    },
+    parseThumbnailAspectRatio: function (thumbnailTrack) {
+        thumbnailTrack.tilesHor = 10;
+        thumbnailTrack.tilesVert = 20;
+    }
 };
 
 const sampleRepresentation3 = {
@@ -54,7 +80,20 @@ const sampleRepresentation3 = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/thumbnail_tile',
         value: '50x10'
-    }]
+    }],
+    isSegmentTemplate: function () {
+        return true;
+    },
+    isSegmentBase: function () {
+        return false;
+    },
+    isSegmentTimeline: function () {
+        return false;
+    },
+    parseThumbnailAspectRatio: function (thumbnailTrack) {
+        thumbnailTrack.tilesHor = 50;
+        thumbnailTrack.tilesVert = 10;
+    }
 };
 
 describe('Thumbnails', function () {
@@ -252,7 +291,17 @@ describe('Thumbnails', function () {
                 startNumber: 1,
                 segmentDuration: 10,
                 timescale: 1,
-                media: 'http://media/$RepresentationID$/$Number$.jpg'
+                media: 'http://media/$RepresentationID$/$Number$.jpg',
+                isSegmentTemplate: function () {
+                    return true;
+                },
+                isSegmentBase: function () {
+                    return false;
+                },
+                isSegmentTimeline: function () {
+                    return false;
+                },
+                parseThumbnailAspectRatio: function () {}
             });
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();

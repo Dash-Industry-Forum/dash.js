@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
@@ -138,11 +137,11 @@ function ThumbnailTracks(config) {
 
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
-                if ((rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media) ||
-                     rep.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+                if ((rep.isSegmentTemplate() && rep.segmentDuration > 0 && rep.media) ||
+                     rep.isSegmentTimeline()) {
                     createTrack(rep);
                 }
-                if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
+                if (rep.isSegmentBase()) {
                     createTrack(rep, true);
                 }
             });
@@ -164,17 +163,7 @@ function ThumbnailTracks(config) {
         track.tilesHor = 1;
         track.tilesVert = 1;
 
-        if (representation.essentialProperties) {
-            representation.essentialProperties.forEach((p) => {
-                if (DashConstants.THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
-                    const vars = p.value.split('x');
-                    if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
-                        track.tilesHor = parseInt(vars[0], 10);
-                        track.tilesVert = parseInt(vars[1], 10);
-                    }
-                }
-            });
-        }
+        representation.parseThumbnailAspectRatio(track);
 
         if (useSegmentBase) {
             segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function (segments, representation) {
