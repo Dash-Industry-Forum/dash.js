@@ -66,6 +66,14 @@ class FragmentRequest {
         return (this.type && this.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
+    isActionComplete() {
+        return (this.action === FragmentRequest.ACTION_COMPLETE);
+    }
+
+    setActionComplete() {
+        this.action = FragmentRequest.ACTION_COMPLETE;
+    }
+
     setInfo(info) {
         this.type = info && info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
         this.url = info && info.url ? info.url : null;

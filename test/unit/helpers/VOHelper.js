@@ -100,6 +100,10 @@ class VoHelper {
             req.quality = NaN;
         }
 
+        req.isActionComplete = function () {
+            return req.action === FragmentRequest.ACTION_COMPLETE ? true : false;
+        };
+
         return req;
     }
 

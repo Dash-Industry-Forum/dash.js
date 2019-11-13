@@ -49,7 +49,8 @@ function StreamProcessorMock (testType, streamInfo) {
 
     this.getFragmentRequest = function () {
         return {startTime: 0,
-            duration: 2};
+            duration: 2,
+            isActionComplete: function () { return false; }};
     };
 
     this.getBufferController = function () {

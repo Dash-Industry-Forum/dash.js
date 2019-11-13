@@ -277,10 +277,10 @@ function DashHandler(config) {
             const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
             if (finished) {
                 request = new FragmentRequest();
-                request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
                 request.mediaType = type;
                 request.mediaInfo = mediaInfo;
+                request.setActionComplete();
                 logger.debug('Signal complete in getSegmentRequestForTime');
             }
         }
@@ -328,10 +328,10 @@ function DashHandler(config) {
             const finished = isMediaFinished(representation, segment);
             if (finished) {
                 request = new FragmentRequest();
-                request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
                 request.mediaType = getType();
                 request.mediaInfo = mediaInfo;
+                request.setActionComplete();
                 logger.debug('Signal complete');
             }
         }
