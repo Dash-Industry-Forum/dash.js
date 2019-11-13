@@ -61,11 +61,6 @@ import {
 }
 from './../core/Version';
 import ObjectUtils from './utils/ObjectUtils';
-
-//Dash
-import DashAdapter from '../dash/DashAdapter';
-import DashMetrics from '../dash/DashMetrics';
-import TimelineConverter from '../dash/utils/TimelineConverter';
 import {
     HTTPRequest
 } from './vo/metrics/HTTPRequest';
@@ -73,6 +68,11 @@ import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
+
+//Dash
+import DashAdapter from '../dash/DashAdapter';
+import DashMetrics from '../dash/DashMetrics';
+import TimelineConverter from '../dash/utils/TimelineConverter';
 import DashParser from '../dash/parser/DashParser';
 import DashErrors from '../dash/errors/DashErrors';
 
