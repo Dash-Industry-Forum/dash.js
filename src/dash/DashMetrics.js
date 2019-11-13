@@ -31,10 +31,6 @@
 import DashConstants from './constants/DashConstants';
 import FactoryMaker from '../core/FactoryMaker';
 import Round10 from './utils/Round10';
-import {
-    PlayList,
-    PlayListTrace
-} from '../streaming/vo/metrics/PlayList';
 
 /**
  * @module DashMetrics
@@ -459,22 +455,13 @@ function DashMetrics(config) {
     }
 
     function createPlaylistMetrics(mediaStartTime, startReason) {
-        playListMetrics = new PlayList();
-
-        playListMetrics.start = new Date();
-        playListMetrics.mstart = mediaStartTime;
-        playListMetrics.starttype = startReason;
+        playListMetrics = metricsModel.createPlaylistMetrics(mediaStartTime, startReason);
     }
 
     function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
         if (playListTraceMetricsClosed === true ) {
             playListTraceMetricsClosed = false;
-            playListTraceMetrics = new PlayListTrace();
-
-            playListTraceMetrics.representationid = representationId;
-            playListTraceMetrics.start = new Date();
-            playListTraceMetrics.mstart = mediaStartTime;
-            playListTraceMetrics.playbackspeed = speed;
+            playListTraceMetrics = metricsModel.createPlaylistTraceMetrics(representationId, mediaStartTime, speed);
         }
     }
 

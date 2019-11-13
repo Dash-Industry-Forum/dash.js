@@ -39,8 +39,9 @@ import DVRInfo from '../vo/metrics/DVRInfo';
 import DroppedFrames from '../vo/metrics/DroppedFrames';
 import { ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo } from '../vo/metrics/ManifestUpdate';
 import SchedulingInfo from '../vo/metrics/SchedulingInfo';
-import EventBus from '../../core/EventBus';
+import { PlayList, PlayListTrace } from '../vo/metrics/PlayList';
 import RequestsQueue from '../vo/metrics/RequestsQueue';
+import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 
@@ -365,6 +366,27 @@ function MetricsModel(config) {
         pushAndNotify(Constants.STREAM, MetricsConstants.DVB_ERRORS, vo);
     }
 
+    function createPlaylistMetrics(mediaStartTime, startReason) {
+        let playListMetrics = new PlayList();
+
+        playListMetrics.start = new Date();
+        playListMetrics.mstart = mediaStartTime;
+        playListMetrics.starttype = startReason;
+
+        return playListMetrics;
+    }
+
+    function createPlaylistTraceMetrics(representationId, mediaStartTime, speed)  {
+        let playListTraceMetrics = new PlayListTrace();
+
+        playListTraceMetrics.representationid = representationId;
+        playListTraceMetrics.start = new Date();
+        playListTraceMetrics.mstart = mediaStartTime;
+        playListTraceMetrics.playbackspeed = speed;
+
+        return playListTraceMetrics;
+    }
+
     instance = {
         clearCurrentMetricsForType: clearCurrentMetricsForType,
         clearAllCurrentMetrics: clearAllCurrentMetrics,
@@ -382,7 +404,9 @@ function MetricsModel(config) {
         addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
         addPlayList: addPlayList,
-        addDVBErrors: addDVBErrors
+        addDVBErrors: addDVBErrors,
+        createPlaylistMetrics: createPlaylistMetrics,
+        createPlaylistTraceMetrics: createPlaylistTraceMetrics
     };
 
     setup();
