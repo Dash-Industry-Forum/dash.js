@@ -161,7 +161,7 @@ function MssFragmentProcessor(config) {
 
         let request = e.request;
 
-        if (request.type === 'MediaSegment') {
+        if (request.isMediaSegmentRequest()) {
             // it's a MediaSegment, let's convert fragment
             mssFragmentMoofProcessor.convertFragment(e, sp);
 

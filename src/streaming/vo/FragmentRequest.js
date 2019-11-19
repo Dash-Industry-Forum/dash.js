@@ -66,6 +66,10 @@ class FragmentRequest {
         return (this.type && this.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
+    isMediaSegmentRequest() {
+        return (this.type && this.type === HTTPRequest.MEDIA_SEGMENT_TYPE);
+    }
+
     setInfo(info) {
         this.type = info && info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
         this.url = info && info.url ? info.url : null;

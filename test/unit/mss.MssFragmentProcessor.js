@@ -51,7 +51,7 @@ describe('MssFragmentProcessor', function () {
     it('should throw an error when attempting to call processFragment for mp4 media live segment without tfrf box', () => {
         const file = fs.readFileSync(__dirname + '/data/mss/mss_moof_tfdt.mp4');
         const arrayBuffer = new Uint8Array(file).buffer;
-        const e = {request: {type: 'MediaSegment', mediaInfo: {index: 0}}, response: arrayBuffer};
+        const e = {request: {type: 'MediaSegment', isMediaSegmentRequest: function () { return true;}, mediaInfo: {index: 0}}, response: arrayBuffer};
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).to.equal(MssErrors.MSS_NO_TFRF_CODE);
@@ -60,14 +60,14 @@ describe('MssFragmentProcessor', function () {
     it('should not throw an error when attempting to call processFragment for mp4 media live segment with tfrf box', () => {
         const file = fs.readFileSync(__dirname + '/data/mss/mss_moof.mp4');
         const arrayBuffer = new Uint8Array(file).buffer;
-        const e = {request: {type: 'MediaSegment', mediaInfo: {index: 0}}, response: arrayBuffer};
+        const e = {request: {type: 'MediaSegment', isMediaSegmentRequest: function () { return true;}, mediaInfo: {index: 0}}, response: arrayBuffer};
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).not.to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).not.to.equal(MssErrors.MSS_NO_TFRF_CODE);
     });
 
     it('should trigger FRAGMENT_INFO_LOADING_COMPLETED event when attempting to call processFragment for fragmentInfo request', (done) => {
-        const e = {request: {type: 'FragmentInfoSegment', mediaInfo: {index: 0}}, response: {}};
+        const e = {request: {type: 'FragmentInfoSegment', isMediaSegmentRequest: function () { return false;}, mediaInfo: {index: 0}}, response: {}};
         let onFragmentInfoRequest = function () {
             eventBus.off(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, onFragmentInfoRequest);
             done();
