@@ -316,14 +316,17 @@ function DashHandler(config) {
             if (segment) {
                 request = getRequestForSegment(mediaInfo, segment);
                 segmentIndex = segment.availabilityIdx;
-            } else {
-                segmentIndex = indexToRequest - 1;
+            }else {
+                if (isDynamicManifest) {
+                    segmentIndex = indexToRequest - 1;
+                } else {
+                    segmentIndex = indexToRequest;
+                }
             }
         }
 
         if (segment) {
             lastSegment = segment;
-            request = getRequestForSegment(mediaInfo, segment);
         } else {
             const finished = isMediaFinished(representation, segment);
             if (finished) {
