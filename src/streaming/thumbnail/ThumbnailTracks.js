@@ -53,6 +53,10 @@ function ThumbnailTracks(config) {
     const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
+    const debug = config.debug;
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const dashConstants = config.dashConstants;
 
     const urlUtils = URLUtils(context).getInstance();
 
@@ -77,7 +81,11 @@ function ThumbnailTracks(config) {
         });
 
         indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
-                                baseURLController: baseURLController});
+                                baseURLController: baseURLController,
+                                debug: debug,
+                                eventBus: eventBus,
+                                events: events,
+                                dashConstants: dashConstants});
 
         // initialize controllers
         indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);

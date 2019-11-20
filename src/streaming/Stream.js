@@ -79,6 +79,7 @@ function Stream(config) {
         eventController,
         preloaded,
         boxParser,
+        debug,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -93,7 +94,8 @@ function Stream(config) {
     ];
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        debug = Debug(context).getInstance();
+        logger = debug.getLogger(instance);
         resetInitialSettings();
 
         boxParser = BoxParser(context).getInstance();
@@ -457,7 +459,11 @@ function Stream(config) {
                 adapter: adapter,
                 baseURLController: config.baseURLController,
                 stream: instance,
-                timelineConverter: config.timelineConverter
+                timelineConverter: config.timelineConverter,
+                debug: debug,
+                eventBus: eventBus,
+                events: Events,
+                dashConstants: DashConstants
             });
             return;
         }
