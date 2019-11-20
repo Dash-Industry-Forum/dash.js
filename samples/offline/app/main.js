@@ -261,6 +261,27 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             if ($scope.player) {
                 $scope.player.updateSettings(config);
             }
+            if($scope.downloader) {
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
+            }
+        } else {
+            // Set default initial configuration
+            var initialConfig = {
+                'debug': {
+                    'logLevel': dashjs.Debug.LOG_LEVEL_INFO
+                },
+                'streaming': {
+                    'fastSwitchEnabled': $scope.fastSwitchSelected,
+                    'jumpGaps': true,
+                    'abr': {
+                        'autoSwitchBitrate': {
+                            'video': $scope.videoAutoSwitchSelected
+                        }
+                    }
+                }
+            }
+            $scope.player.updateSettings(initialConfig);
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
         }
     };
     reqConfig.open("GET", "dashjs_config.json", true);
@@ -324,23 +345,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     if (doesTimeMarchesOn()) {
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
     }
-    
-    // Set initial configuration
-    var initialConfig = {
-        'debug': {
-            'logLevel': dashjs.Debug.LOG_LEVEL_INFO
-        },
-        'streaming': {
-            'fastSwitchEnabled': $scope.fastSwitchSelected,
-            'jumpGaps': false,
-            'abr': {
-                'autoSwitchBitrate': {
-                    'video': $scope.videoAutoSwitchSelected
-                }
-            }
-        }
-    }
-    $scope.player.updateSettings(initialConfig);
 
     // get buffer default value
     var currentConfig = $scope.player.getSettings();
@@ -477,8 +481,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             $("#errorModal").modal('show');
         }
     }, $scope);
-
-    $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
 
     $scope.downloads = DownloadService.getDownloads();
     DownloadService.init($scope.downloader);
@@ -709,26 +711,32 @@ $scope.toggleFastSwitch = function () {
         switch(level) {
             case 'none':
             $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
             break;
 
             case 'fatal':
             $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL }});
             break;
 
             case 'error':
             $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR }});
             break;
 
             case 'warning':
             $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING }});
             break;
 
             case 'info':
             $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
             break;
 
             default:
             $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
         }
     };
 
