@@ -324,7 +324,6 @@ describe('Thumbnails', function () {
     describe('CR URI schema', function () {
         const objectsHelper = new ObjectsHelper();
         const adapter = new AdapterMock();
-        let thumbnailController;
         let thumbnailTracks;
 
         beforeEach(function () {
@@ -345,15 +344,6 @@ describe('Thumbnails', function () {
 
         it('should support CR URI schema', function () {
             adapter.setRepresentation(sampleRepresentation3);
-            thumbnailController = ThumbnailController(context).create({
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock(),
-                debug: Debug(context).getInstance(),
-                eventBus: EventBus(context).getInstance(),
-                events: Events,
-                dashConstants: DashConstants
-            });
 
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
