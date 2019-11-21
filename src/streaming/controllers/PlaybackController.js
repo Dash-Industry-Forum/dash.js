@@ -155,9 +155,12 @@ function PlaybackController() {
                 }
             } else {
                 eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-                let initialStartTime = getStreamStartTime(false);
-                if (!isDynamic && time < initialStartTime) {
-                    time = initialStartTime;
+                if (!streamController.hasPreviousStream()) {
+                    //test that the user can't seek before initial start time only for the first period (for multi period use cases, don't do it for each period).
+                    let initialStartTime = getStreamStartTime(false);
+                    if (!isDynamic && time < initialStartTime) {
+                        time = initialStartTime;
+                    }
                 }
                 logger.info('Requesting seek to time: ' + time);
                 videoModel.setCurrentTime(time, stickToBuffered);
