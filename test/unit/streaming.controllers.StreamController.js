@@ -118,6 +118,12 @@ describe('StreamController', function () {
 
             expect(stream).to.be.null;    // jshint ignore:line
         });
+
+        it('should return false when attempting to call hasPreviousStream, and no stream has been composed', function () {
+            const hasPreviousStream = streamController.hasPreviousStream();
+
+            expect(hasPreviousStream).to.be.false;    // jshint ignore:line
+        });
     });
 
     describe('Well initialized', () => {

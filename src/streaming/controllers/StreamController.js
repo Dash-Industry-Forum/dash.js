@@ -472,6 +472,20 @@ function StreamController() {
         }
     }
 
+    function hasPreviousStream() {
+        let previousStreamArray = [];
+
+        if (activeStream) {
+            const start = getActiveStreamInfo().start;
+
+            previousStreamArray = streams.filter(function (stream) {
+                return (parseFloat((stream.getStreamInfo().start + stream.getStreamInfo().duration).toFixed(5)) === start);
+            });
+        }
+
+        return previousStreamArray.length > 0 ? true : false;
+    }
+
     function switchStream(oldStream, newStream, seekTime) {
         if (isStreamSwitchingInProgress || !newStream || (oldStream === newStream && newStream.isActive())) return;
         isStreamSwitchingInProgress = true;
@@ -1012,6 +1026,7 @@ function StreamController() {
         getActiveStreamProcessors: getActiveStreamProcessors,
         setConfig: setConfig,
         setProtectionData: setProtectionData,
+        hasPreviousStream: hasPreviousStream,
         reset: reset
     };
 
