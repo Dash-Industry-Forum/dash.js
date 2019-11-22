@@ -80,6 +80,15 @@ module.exports = function (grunt) {
                 }
             },
 
+            build_offline: {
+                options: {
+                    sourceMapIn: 'build/temp/dash.offline.debug.js.map'
+                },
+                files: {
+                    'build/temp/dash.offline.min.js': 'build/temp/dash.offline.debug.js'
+                }
+            },
+
             build_all: {
                 options: {
                     sourceMapIn: 'build/temp/dash.all.debug.js.map'
@@ -127,7 +136,8 @@ module.exports = function (grunt) {
                     'dash.protection.debug.js', 'dash.protection.debug.js.map',
                     'dash.reporting.debug.js', 'dash.reporting.debug.js.map',
                     'dash.mss.debug.js', 'dash.mss.debug.js.map',
-                    'dash.offline.debug.js', 'dash.offline.debug.js.map'
+                    'dash.offline.debug.js', 'dash.offline.debug.js.map',
+                    'dash.offline.min.js', 'dash.offline.min.js.map'
                 ],
                 dest: 'dist/',
                 filter: 'isFile'
