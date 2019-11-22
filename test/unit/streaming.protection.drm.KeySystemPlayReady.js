@@ -96,9 +96,9 @@ describe('KeySystemPlayready', function () {
             expect(licenseRequest).to.be.undefined;   // jshint ignore:line
         });
 
-        it('should return null when getRequestHeadersFromMessage is called without parameter', function () {
+        it('should return at least Content-Type header when getRequestHeadersFromMessage is called without parameter', function () {
             const requestHeaders = keySystem.getRequestHeadersFromMessage();
-            expect(requestHeaders['Content-Type']).to.equal('text/xml; charset=utf-16');
+            expect(requestHeaders['Content-Type']).to.equal('text/xml; charset=utf-8');
         });
 
         it('should return the correct cdmData', function () {
