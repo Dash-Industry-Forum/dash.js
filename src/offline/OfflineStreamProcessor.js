@@ -28,14 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashHandler from './../dash/DashHandler';
-import RepresentationController from './../dash/controllers/RepresentationController';
 import OfflineDownloaderRequestRule from './rules/OfflineDownloaderRequestRule';
-import FragmentModel from './../streaming/models/FragmentModel';
-import FragmentLoader from './../streaming/FragmentLoader';
+import OfflineEvents from './events/OfflineEvents';
 
 /**
- * @module  OfflineStreamProcessor
+ * @module OfflineStreamProcessor
  * @param {object} config configuration
  * @description Arrange downloading for each type
  */
@@ -45,17 +42,10 @@ function OfflineStreamProcessor(config) {
     config = config || {};
     const eventBus = config.eventBus;
     const events = config.events;
-    const errors = config.errors;
     const debug = config.debug;
-    const timelineConverter = config.timelineConverter;
     const constants = config.constants;
-    const dashConstants = config.dashConstants;
-    const requestModifier = config.requestModifier;
     const manifestId = config.id;
     const completedCb = config.completed;
-    const urlUtils = config.urlUtils;
-    const abrController = config.abrController;
-    const playbackController = config.playbackController;
 
     let instance,
         adapter,
@@ -63,11 +53,8 @@ function OfflineStreamProcessor(config) {
         indexHandler,
         representationController,
         type,
-        errHandler,
         mimeType,
-        baseURLController,
         fragmentModel,
-        mediaPlayerModel,
         mediaInfo,
         bitrate,
         updating,
@@ -76,9 +63,7 @@ function OfflineStreamProcessor(config) {
         downloadedSegments,
         isInitialized,
         isStopped,
-        stream,
-        settings,
-        dashMetrics;
+        stream;
 
     function setConfig(config) {
 
@@ -92,20 +77,12 @@ function OfflineStreamProcessor(config) {
             stream = config.stream;
         }
 
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
-
         if (config.mimeType) {
             mimeType = config.mimeType;
         }
 
         if (config.adapter) {
             adapter = config.adapter;
-        }
-
-        if (config.baseURLController) {
-            baseURLController = config.baseURLController;
         }
 
         if (config.mediaInfo) {
@@ -116,20 +93,8 @@ function OfflineStreamProcessor(config) {
             bitrate = config.bitrate;
         }
 
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
-        }
-
         if (config.offlineStoreController) {
             offlineStoreController = config.offlineStoreController;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
-        }
-
-        if (config.dashMetrics) {
-            dashMetrics = config.dashMetrics;
         }
     }
 
@@ -187,65 +152,7 @@ function OfflineStreamProcessor(config) {
         download();
     }
 
-    /**
-     * Initialization
-     * @memberof OfflineStreamProcessor#
-    */
-    function initialize() {
-        indexHandler = DashHandler(context).create({
-            type: type,
-            mediaPlayerModel: mediaPlayerModel,
-            mimeType: mimeType,
-            baseURLController: baseURLController,
-            errHandler: errHandler,
-            timelineConverter: timelineConverter,
-            settings: settings,
-            dashMetrics: dashMetrics,
-            eventBus: eventBus,
-            events: events,
-            errors: errors,
-            debug: debug,
-            dashConstants: dashConstants,
-            urlUtils: urlUtils,
-            streamInfo: getStreamInfo()
-        });
-
-        representationController = RepresentationController(context).create({
-            abrController: abrController,
-            dashMetrics: dashMetrics,
-            playbackController: playbackController,
-            timelineConverter: timelineConverter,
-            type: type,
-            eventBus: eventBus,
-            events: events,
-            errors: errors,
-            dashConstants: dashConstants,
-            streamId: getStreamInfo() ? getStreamInfo().id : null
-        });
-
-        let fragmentLoader = FragmentLoader(context).create({
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler,
-            requestModifier: requestModifier,
-            settings: settings,
-            dashMetrics: dashMetrics,
-            eventBus: eventBus,
-            events: events,
-            errors: errors,
-            dashConstants: dashConstants,
-            urlUtils: urlUtils
-        });
-
-        fragmentModel = FragmentModel(context).create({
-            dashMetrics: dashMetrics,
-            fragmentLoader: fragmentLoader,
-            eventBus: eventBus,
-            events: events,
-            debug: debug
-        });
-
-        indexHandler.initialize(false);
-
+    function initializeDownloader () {
         offlineDownloaderRequestRule = OfflineDownloaderRequestRule(context).create();
         offlineDownloaderRequestRule.initialize(indexHandler);
 
@@ -254,6 +161,26 @@ function OfflineStreamProcessor(config) {
         }
 
         updateRepresentation(mediaInfo);
+    }
+
+    function setDashElements(handler, fragModel, repController) {
+        indexHandler = handler;
+        indexHandler.initialize(false);
+
+        fragmentModel = fragModel;
+        representationController = repController;
+
+        initializeDownloader();
+    }
+
+    /**
+     * Initialization
+     * @memberof OfflineStreamProcessor#
+    */
+    function initialize() {
+        eventBus.trigger(OfflineEvents.DASH_ELEMENTS_CREATION_NEEDED, {sender: instance, config: {type: type,
+            mimeType: mimeType,
+            streamInfo: getStreamInfo()}} );
     }
 
     function removeExecutedRequestsBeforeTime(time) {
@@ -398,6 +325,7 @@ function OfflineStreamProcessor(config) {
         resume: resume,
         getAvailableSegmentsNumber: getAvailableSegmentsNumber,
         getDownloadedSegments: getDownloadedSegments,
+        setDashElements: setDashElements,
         reset: reset
     };
 

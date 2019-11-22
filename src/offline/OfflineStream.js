@@ -41,25 +41,13 @@ function OfflineStream(config) {
     const context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
-    const errors = config.errors;
     const constants = config.constants;
-    const dashConstants = config.dashConstants;
     const debug = config.debug;
-    const timelineConverter = config.timelineConverter;
-    const requestModifier = config.requestModifier;
     const adapter = config.adapter;
-    const errHandler = config.errHandler;
-    const baseURLController = config.baseURLController;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const offlineStoreController = config.offlineStoreController;
-    const settings = config.settings;
-    const dashMetrics = config.dashMetrics;
     const manifestId = config.id;
     const startedCb = config.started;
     const finishedCb = config.finished;
-    const urlUtils = config.urlUtils;
-    const playbackController = config.playbackController;
-    const abrController = config.abrController;
 
     let instance,
         offlineStreamProcessors,
@@ -224,14 +212,7 @@ function OfflineStream(config) {
             debug: debug,
             events: events,
             eventBus: eventBus,
-            errors: errors,
-            constants: constants,
-            dashConstants: dashConstants,
-            timelineConverter: timelineConverter,
-            requestModifier: requestModifier,
-            urlUtils: urlUtils,
-            playbackController: playbackController,
-            abrController: abrController
+            constants: constants
         });
         streamProcessor.setConfig({
             type: mediaInfo.type,
@@ -239,13 +220,8 @@ function OfflineStream(config) {
             mediaInfo: mediaInfo,
             bitrate: bitrate,
             adapter: adapter,
-            baseURLController: baseURLController,
-            errHandler: errHandler,
             stream: instance,
-            mediaPlayerModel: mediaPlayerModel,
-            offlineStoreController: offlineStoreController,
-            dashMetrics: dashMetrics,
-            settings: settings
+            offlineStoreController: offlineStoreController
         });
         offlineStreamProcessors.push(streamProcessor);
     }

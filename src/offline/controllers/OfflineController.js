@@ -54,21 +54,13 @@ function OfflineController() {
         manifestModel,
         manifestUpdater,
         baseURLController,
-        playbackController,
-        mediaPlayerModel,
         offlineStoreController,
-        abrController,
         urlUtils,
         offlineUrlUtils,
-        settings,
-        dashMetrics,
         events,
         eventBus,
-        errors,
         constants,
         dashConstants,
-        timelineConverter,
-        requestModifier,
         errHandler;
 
     function setup() {
@@ -103,10 +95,6 @@ function OfflineController() {
             manifestModel = config.manifestModel;
         }
 
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
-        }
-
         if (config.adapter) {
             adapter = config.adapter;
         }
@@ -123,14 +111,6 @@ function OfflineController() {
             schemeLoaderFactory = config.schemeLoaderFactory;
         }
 
-        if (config.settings) {
-            settings = config.settings;
-        }
-
-        if (config.dashMetrics) {
-            dashMetrics = config.dashMetrics;
-        }
-
         if (config.constants) {
             constants = config.constants;
         }
@@ -139,29 +119,9 @@ function OfflineController() {
             dashConstants = config.dashConstants;
         }
 
-        if (config.timelineConverter) {
-            timelineConverter = config.timelineConverter;
-        }
-
         if (config.urlUtils) {
             urlUtils = config.urlUtils;
             urlUtils.registerUrlRegex(offlineUrlUtils.getRegex(), offlineUrlUtils);
-        }
-
-        if (config.requestModifier) {
-            requestModifier = config.requestModifier;
-        }
-
-        if (config.playbackController) {
-            playbackController = config.playbackController;
-        }
-
-        if (config.abrController) {
-            abrController = config.abrController;
-        }
-
-        if (config.errors) {
-            errors = config.errors;
         }
 
         schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
@@ -191,25 +151,16 @@ function OfflineController() {
                 id: id,
                 eventBus: eventBus,
                 events: events,
-                errors: errors,
                 manifestLoader: manifestLoader,
-                mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 manifestUpdater: manifestUpdater,
                 baseURLController: baseURLController,
                 adapter: adapter,
                 errHandler: errHandler,
                 offlineStoreController: offlineStoreController,
-                settings: settings,
                 debug: debug,
-                dashMetrics: dashMetrics,
                 constants: constants,
-                dashConstants: dashConstants,
-                timelineConverter: timelineConverter,
-                requestModifier: requestModifier,
-                urlUtils: urlUtils,
-                playbackController: playbackController,
-                abrController: abrController
+                dashConstants: dashConstants
             });
 
             downloads.push(download);

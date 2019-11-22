@@ -39,26 +39,16 @@ function OfflineDownload(config) {
     config = config || {};
 
     const manifestLoader = config.manifestLoader;
-    const mediaPlayerModel = config.mediaPlayerModel;
     const adapter = config.adapter;
-    const errHandler = config.errHandler;
     const offlineStoreController = config.offlineStoreController;
-    const settings = config.settings;
-    const dashMetrics = config.dashMetrics;
     const manifestId = config.id;
     const eventBus = config.eventBus;
     const events = config.events;
-    const errors = config.errors;
     const debug = config.debug;
     const manifestUpdater = config.manifestUpdater;
     const baseURLController = config.baseURLController;
     const constants = config.constants;
     const dashConstants = config.dashConstants;
-    const timelineConverter = config.timelineConverter;
-    const requestModifier = config.requestModifier;
-    const urlUtils = config.urlUtils;
-    const playbackController = config.playbackController;
-    const abrController = config.abrController;
 
     const context = this.context;
 
@@ -179,23 +169,11 @@ function OfflineDownload(config) {
                     started: onDownloadingStarted,
                     finished: onDownloadingFinished,
                     constants: constants,
-                    dashConstants: dashConstants,
                     eventBus: eventBus,
                     events: events,
-                    errors: errors,
                     debug: debug,
-                    timelineConverter: timelineConverter,
-                    requestModifier: requestModifier,
                     adapter: adapter,
-                    errHandler: errHandler,
-                    baseURLController: baseURLController,
-                    mediaPlayerModel: mediaPlayerModel,
-                    offlineStoreController: offlineStoreController,
-                    settings: settings,
-                    dashMetrics: dashMetrics,
-                    urlUtils: urlUtils,
-                    playbackController: playbackController,
-                    abrController: abrController
+                    offlineStoreController: offlineStoreController
                 });
                 streams.push(stream);
 

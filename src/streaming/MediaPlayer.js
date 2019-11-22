@@ -74,6 +74,10 @@ import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
 import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
+import DashHandler from '../dash/DashHandler';
+import RepresentationController from '../dash/controllers/RepresentationController';
+import FragmentModel from './models/FragmentModel';
+import FragmentLoader from './FragmentLoader';
 
 /**
  * @module MediaPlayer
@@ -125,6 +129,7 @@ function MediaPlayer() {
         abrController,
         schemeLoaderFactory,
         offlineController,
+        offlineBaseURLController,
         timelineConverter,
         mediaController,
         protectionController,
@@ -325,6 +330,8 @@ function MediaPlayer() {
         if (offlineController) {
             offlineController.reset();
             offlineControllerInitialized = false;
+
+            eventBus.off(dashjs.OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance); /* jshint ignore:line */
         }
     }
 
@@ -1108,6 +1115,61 @@ function MediaPlayer() {
         }
     }
 
+    function onDashElementsNeeded(eventObj) {
+        let requestModifier = RequestModifier(context).getInstance();
+        let handler = DashHandler(context).create({
+            type: eventObj.config.type,
+            mediaPlayerModel: mediaPlayerModel,
+            mimeType: eventObj.config.mimeType,
+            baseURLController: offlineBaseURLController,
+            streamInfo: eventObj.config.streamInfo,
+            errHandler: errHandler,
+            timelineConverter: timelineConverter,
+            settings: settings,
+            dashMetrics: dashMetrics,
+            eventBus: eventBus,
+            events: Events,
+            errors: Errors,
+            debug: debug,
+            dashConstants: DashConstants,
+            urlUtils: URLUtils(context).getInstance()
+        });
+        let repController = RepresentationController(context).create({
+            abrController: abrController,
+            dashMetrics: dashMetrics,
+            playbackController: playbackController,
+            timelineConverter: timelineConverter,
+            type: eventObj.config.type,
+            eventBus: eventBus,
+            events: Events,
+            errors: Errors,
+            dashConstants: DashConstants,
+            streamId: eventObj.config.streamInfo ? eventObj.config.streamInfo.id : null
+        });
+
+        let fragLoader = FragmentLoader(context).create({
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler,
+            requestModifier: requestModifier,
+            settings: settings,
+            dashMetrics: dashMetrics,
+            eventBus: eventBus,
+            events: Events,
+            errors: Errors,
+            dashConstants: DashConstants,
+            urlUtils: URLUtils(context).getInstance()
+        });
+
+        let fragModel = FragmentModel(context).create({
+            dashMetrics: dashMetrics,
+            fragmentLoader: fragLoader,
+            eventBus: eventBus,
+            events: Events,
+            debug: debug
+        });
+        eventObj.sender.setDashElements(handler, fragModel, repController);
+    }
+
     function createOfflineControllers() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
@@ -1118,14 +1180,16 @@ function MediaPlayer() {
         if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
             offlineController = OfflineController(context).create();
 
+            eventBus.on(OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance);
+
             Events.extend(OfflineController.events);
             Events.extend(OfflineController.domExceptionEvents);
 
             const manifestLoader = createManifestLoader();
             const manifestUpdater = ManifestUpdater(context).create();
-            const baseURLController = BaseURLController(context).create();
+            offlineBaseURLController = BaseURLController(context).create();
 
-            baseURLController.setConfig({
+            offlineBaseURLController.setConfig({
                 adapter: adapter
             });
 
@@ -1136,30 +1200,20 @@ function MediaPlayer() {
                 errHandler: errHandler
             });
 
-            let requestModifier = RequestModifier(context).getInstance();
-
             offlineController.setConfig({
                 debug: debug,
                 manifestUpdater: manifestUpdater,
-                baseURLController: baseURLController,
+                baseURLController: offlineBaseURLController,
                 manifestLoader: manifestLoader,
-                mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 adapter: adapter,
                 errHandler: errHandler,
                 schemeLoaderFactory: schemeLoaderFactory,
-                settings: settings,
-                dashMetrics: dashMetrics,
                 eventBus: eventBus,
                 events: Events,
-                errors: Errors,
                 constants: Constants,
                 dashConstants: DashConstants,
-                urlUtils: URLUtils(context).getInstance(),
-                timelineConverter: timelineConverter,
-                requestModifier: requestModifier,
-                playbackController: playbackController,
-                abrController: abrController
+                urlUtils: URLUtils(context).getInstance()
             });
 
             offlineControllerInitialized = true;
