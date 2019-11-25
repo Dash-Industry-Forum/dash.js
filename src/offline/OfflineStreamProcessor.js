@@ -36,7 +36,6 @@ import OfflineEvents from './events/OfflineEvents';
  * @description Arrange downloading for each type
  */
 function OfflineStreamProcessor(config) {
-    const context = this.context;
 
     config = config || {};
     const eventBus = config.eventBus;

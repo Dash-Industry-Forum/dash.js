@@ -237,10 +237,14 @@ function OfflineStream(config) {
         let repCtrl = e.sender;
         if (!streamInfo || repCtrl.getStreamId() !== streamInfo.id) return;
 
+        let sp;
         // data are ready fr stream processor, let's start download
-        let sp = offlineStreamProcessors.find((streamProcessor) => {
-            return streamProcessor.getRepresentationController() === repCtrl;
-        })
+        for (let i = 0; i < offlineStreamProcessors.length; i++ ) {
+            if (offlineStreamProcessors[i].getRepresentationController() === repCtrl) {
+                sp = offlineStreamProcessors[i];
+                break;
+            }
+        }
 
         if (sp) {
             sp.start();
