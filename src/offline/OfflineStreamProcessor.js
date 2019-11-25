@@ -282,7 +282,7 @@ function OfflineStreamProcessor(config) {
     }
 
     function getAvailableSegmentsNumber() {
-        return representationController.getCurrentRepresentation().availableSegmentsNumber;
+        return representationController.getCurrentRepresentation().availableSegmentsNumber + 1; // do not forget init segment
     }
 
     function getDownloadedSegments() {
