@@ -234,14 +234,18 @@ function OfflineStream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        let sp = e.sender;
-        if (!streamInfo || sp.getStreamId() !== streamInfo.id) return;
+        let repCtrl = e.sender;
+        if (!streamInfo || repCtrl.getStreamId() !== streamInfo.id) return;
 
-        for (let i = 0; i < offlineStreamProcessors.length; i++) {
-            offlineStreamProcessors[i].start();
+        // data are ready fr stream processor, let's start download
+        let sp = offlineStreamProcessors.find((streamProcessor) => {
+            return streamProcessor.getRepresentationController() === repCtrl;
+        })
+
+        if (sp) {
+            sp.start();
+            checkIfAllOfflineStreamProcessorsStarted();
         }
-
-        checkIfAllOfflineStreamProcessorsStarted();
     }
 
     function checkIfAllOfflineStreamProcessorsStarted() {

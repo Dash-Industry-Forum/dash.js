@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import OfflineDownloaderRequestRule from './rules/OfflineDownloaderRequestRule';
 import OfflineEvents from './events/OfflineEvents';
 
 /**
@@ -58,7 +57,6 @@ function OfflineStreamProcessor(config) {
         mediaInfo,
         bitrate,
         updating,
-        offlineDownloaderRequestRule,
         offlineStoreController,
         downloadedSegments,
         isInitialized,
@@ -132,6 +130,10 @@ function OfflineStreamProcessor(config) {
         completedCb();
     }
 
+    function getRepresentationController () {
+        return representationController;
+    }
+
     /**
      * Stops download of fragments
      * @memberof OfflineStreamProcessor#
@@ -153,13 +155,6 @@ function OfflineStreamProcessor(config) {
     }
 
     function initializeDownloader () {
-        offlineDownloaderRequestRule = OfflineDownloaderRequestRule(context).create();
-        offlineDownloaderRequestRule.initialize(indexHandler);
-
-        if (adapter && adapter.getIsTextTrack(mimeType)) {
-            getInitRequest();
-        }
-
         updateRepresentation(mediaInfo);
     }
 
@@ -203,6 +198,14 @@ function OfflineStreamProcessor(config) {
     }
 
     /**
+     * Get next request
+     * @memberof OfflineStreamProcessor#
+    */
+    function getNextRequest() {
+        return indexHandler.getNextSegmentRequest(getMediaInfo(), representationController.getCurrentRepresentation());
+    }
+
+    /**
      * Start download
      * @memberof OfflineStreamProcessor#
     */
@@ -226,18 +229,19 @@ function OfflineStreamProcessor(config) {
         }
 
         if (isNaN(representationController.getCurrentRepresentation())) {
+            let request = null;
             if (!isInitialized) {
-                getInitRequest();
+                request = getInitRequest();
                 isInitialized = true;
             } else {
-                let request = offlineDownloaderRequestRule.execute(getMediaInfo(), representationController.getCurrentRepresentation());
+                request = getNextRequest();
+            }
 
-                if (request) {
-                    logger.info(`[${manifestId}] getNextFragment - request is ${request.url}`);
-                    fragmentModel.executeRequest(request);
-                } else {
-                    logger.info(`[${manifestId}] getNextFragment returns null`);
-                }
+            if (request) {
+                logger.info(`[${manifestId}] download request : ${request.url}`);
+                fragmentModel.executeRequest(request);
+            } else {
+                logger.info(`[${manifestId}] no request to be downloaded`);
             }
         }
     }
@@ -317,6 +321,7 @@ function OfflineStreamProcessor(config) {
         setConfig: setConfig,
         getStreamInfo: getStreamInfo,
         getMediaInfo: getMediaInfo,
+        getRepresentationController: getRepresentationController,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
         getType: getType,
         isUpdating: isUpdating,
