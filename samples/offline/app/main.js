@@ -56,7 +56,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
 
     $scope.selectedItem = {
-        url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+        url: 'https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd'
     };
 
     sources.query(function (data) {
@@ -79,7 +79,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             });
         });
     });
-    
+
     contributors.query(function (data) {
         $scope.contributors = data.items;
     });
@@ -1104,12 +1104,24 @@ $scope.toggleFastSwitch = function () {
     $scope.getSelectedRepresentations = function () {
         let representations = {};
         representations.video = [];
-        $('input[type="checkbox"][name="video"]:checked').each(function () {
-            representations.video.push($(this).attr('value'));
+        $scope.downloadableRepresentations.video.forEach((item) => {
+            if (item.selected) {
+                representations.video.push(item);
+            }
         });
-        representations.audio = [];
-        $('input[type="checkbox"][name="audio"]:checked').each(function () {
-            representations.audio.push($(this).attr('value'));
+
+       representations.audio = [];
+       $scope.downloadableRepresentations.audio.forEach((item) => {
+            if (item.selected) {
+                representations.audio.push(item);
+            }
+        });
+
+        representations.text = [];
+        $scope.downloadableRepresentations.text.forEach((item) => {
+            if (item.selected) {
+                representations.text.push(item);
+            }
         });
         representations.fragmentedText = [];
         $('input[type="checkbox"][name="fragmentedText"]:checked').each(function () {

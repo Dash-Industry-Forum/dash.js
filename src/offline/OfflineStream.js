@@ -89,8 +89,17 @@ function OfflineStream(config) {
         let downloadableRepresentations = {
             video: [],
             audio: [],
-            fragmentedText: []
+            text: []
         };
+
+        const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+        const getKind = function (mediaInfo) {
+            let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+            kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+            return kind;
+        };
+
+        // video
         let mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
         if (mediaInfo.length > 0) {
             mediaInfo.forEach((item) => {
@@ -104,6 +113,8 @@ function OfflineStream(config) {
                 });
             });
         }
+
+        // audio
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.AUDIO);
         if (mediaInfo.length > 0) {
             mediaInfo.forEach((item) => {
@@ -117,33 +128,64 @@ function OfflineStream(config) {
             });
         }
 
+        // text
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.FRAGMENTED_TEXT);
         if (mediaInfo.length > 0) {
+
             mediaInfo.forEach((item) => {
                 item.bitrateList.forEach((bitrate) => {
-                    downloadableRepresentations.fragmentedText.push({
+                    downloadableRepresentations.text.push({
                         id: bitrate.id,
-                        bandwidth: bitrate.bandwidth,
-                        lang: item.lang
+                        lang: item.lang,
+                        kind: getKind(item),
+                        roles: item.roles,
+                        accessibility: item.accessibility,
+                        type: constants.FRAGMENTED_TEXT
                     });
                 });
             });
         }
 
         /** 1st, we download audio and video.
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.TEXT);
+        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.TEXT);
+        if (mediaInfo.length > 0) {
+
+            mediaInfo.forEach((item) => {
+                item.bitrateList.forEach((bitrate) => {
+                    downloadableRepresentations.text.push({
+                        id: bitrate.id,
+                        lang: item.lang,
+                        kind: getKind(item),
+                        roles: item.roles,
+                        accessibility : item.accessibility,
+                        type: constants.TEXT
+                    });
+                });
+            });
+        }
+
+        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.EMBEDDED_TEXT);
+        if (mediaInfo.length > 0) {
+
+            mediaInfo.forEach((item) => {
+                item.bitrateList.forEach((bitrate) => {
+                    downloadableRepresentations.text.push({
+                        id: bitrate.id,
+                        lang: item.lang,
+                        kind: getKind(item),
+                        roles: item.roles,
+                        accessibility : item.accessibility,
+                        type: constants.EMBEDDED_TEXT
+                    });
+                });
+            });
+        }
+
+        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.MUXED);
         if (mediaInfo.length > 0) {
             downloadableRepresentations.push(mediaInfo);
         }
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.EMBEDDED_TEXT);
-        if (mediaInfo.length > 0) {
-            downloadableRepresentations.push(mediaInfo);
-        }
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.MUXED);
-        if (mediaInfo.length > 0) {
-            downloadableRepresentations.push(mediaInfo);
-        }
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.IMAGE);
+        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.IMAGE);
         if (mediaInfo.length > 0) {
             downloadableRepresentations.push(mediaInfo);
         }

@@ -342,19 +342,19 @@
                             <div class="form-group" >
                                 <div class="qualityLabelTitle">Video :</div>
                                 <div ng-repeat="media in downloadableRepresentations.video">
-                                    <input type="checkbox" name="video" value="{{media.id}}"/>
+                                    <input type="checkbox" name="video" value="{{media.id}}" ng-model="media.selected"/>
                                     {{media.id}} ({{media.width}} x {{media.height}}) : {{media.bandwidth}} bits
                                 </div>
                                 <div class="qualityLabelTitle">Audio :</div>
                                 <div ng-repeat="media in downloadableRepresentations.audio">
-                                    <input type="checkbox" name="audio" value="{{media.id}}"/>
+                                    <input type="checkbox" name="audio" value="{{media.id}}" ng-model="media.selected"/>
                                     {{media.id}} ({{media.lang}}) : {{media.bandwidth}} bits
                                 </div>
-                                <div class="qualityLabelTitle">Fragmented Subtitles :</div>
-                                <div ng-repeat="media in downloadableRepresentations.fragmentedText">
-                                    <input type="checkbox" name="fragmentedText" value="{{media.id}}"/>
-                                    {{media.id}} ({{media.lang}}) : {{media.bandwidth}} bits
-                                </div>                                
+                                <div class="qualityLabelTitle">Text :</div>
+                                <div ng-repeat="media in downloadableRepresentations.text">
+                                    <input type="checkbox" name="text" value="{{media.id}}" ng-model="media.selected"/>
+                                    {{media.id}} ({{media.lang}}) : {{media.kind}} ({{media.type}})
+                                </div>
                             </div>
                         </form>
                     </div>

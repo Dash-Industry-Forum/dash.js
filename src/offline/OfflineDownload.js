@@ -234,11 +234,34 @@ function OfflineDownload(config) {
         }
     }
 
+    function formatSelectedRepresentations(selectedRepresentations) {
+        let ret = {
+        };
+
+        ret[constants.VIDEO] = [];
+        ret[constants.AUDIO] = [];
+        ret[constants.TEXT] = [];
+        ret[constants.FRAGMENTED_TEXT] = [];
+        ret[constants.EMBEDDED_TEXT] = [];
+        selectedRepresentations.video.forEach(item => {
+            ret[constants.VIDEO].push(item.id);
+        });
+        selectedRepresentations.audio.forEach(item => {
+            ret[constants.AUDIO].push(item.id);
+        });
+        selectedRepresentations.text.forEach(item => {
+            ret[item.type].push(item.id);
+        });
+
+        return ret;
+    }
+
     function startDownload(selectedRepresentations) {
         try {
+            let rep = formatSelectedRepresentations(selectedRepresentations);
             createFragmentStore(manifestId);
-            generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId).then(function () {
-                initializeAllMediasInfoList(selectedRepresentations);
+            generateOfflineManifest(XMLManifest, rep, manifestId).then(function () {
+                initializeAllMediasInfoList(rep);
             });
         } catch (err) {
             throw new Error(err);
@@ -258,7 +281,8 @@ function OfflineDownload(config) {
             manifestId: manifestId,
             allMediaInfos: selectedRepresentations,
             debug: debug,
-            dashConstants: dashConstants
+            dashConstants: dashConstants,
+            constants: constants
         });
 
         return parser.parse(XMLManifest).then(function (parsedManifest) {

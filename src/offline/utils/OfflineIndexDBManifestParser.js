@@ -44,6 +44,7 @@ function OfflineIndexDBManifestParser(config) {
     const urlUtils = config.urlUtils;
     const debug = config.debug;
     const dashConstants = config.dashConstants;
+    const constants = config.constants;
 
     let instance,
         DOM,
@@ -102,6 +103,14 @@ function OfflineIndexDBManifestParser(config) {
 
         let url = `${OFFLINE_BASE_URL}${manifestId}/`;
 
+        basesURL = currentMPD.getElementsByTagName(dashConstants.BASE_URL);
+
+        if (basesURL.length === 0) {
+            // add baseURL
+            let element = DOM.createElement(dashConstants.BASE_URL);
+            element.innerHTML = url;
+            currentMPD.appendChild(element);
+        }
         basesURL = currentMPD.getElementsByTagName(dashConstants.BASE_URL);
         for (let i = 0; i < basesURL.length; i++) {
             let parent = basesURL[i].parentNode;
@@ -186,27 +195,94 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function findAdaptationType(currentAdaptationSet) {
-        if (findAdaptationSetContentType(currentAdaptationSet) !== null) {
-            return findAdaptationSetContentType(currentAdaptationSet);
-        } else if (findAdaptationSetMimeType(currentAdaptationSet) !== null) {
-            let mimeType = findAdaptationSetMimeType(currentAdaptationSet);
-            return mimeType.substring(0, mimeType.indexOf('/'));
-        } else {
-            return null;
+        if (getIsMuxed(currentAdaptationSet)) {
+            return constants.MUXED;
+        } else if (getIsAudio(currentAdaptationSet)) {
+            return constants.AUDIO;
+        } else if (getIsVideo(currentAdaptationSet)) {
+            return constants.VIDEO;
+        } else if (getIsFragmentedText(currentAdaptationSet)) {
+            return constants.FRAGMENTED_TEXT;
+        } else if (getIsImage(currentAdaptationSet)) {
+            return constants.IMAGE;
         }
+
+        return constants.TEXT;
     }
 
-    /**
-     * Returns content-type of adaptation set
-     * @param {XML} currentAdaptationSet
-     * @memberof module:offline
-     * @returns {string|null} contentType
-     * @instance
-    */
-    function findAdaptationSetContentType(currentAdaptationSet) {
-        return currentAdaptationSet.getAttribute('contentType');
+    function getIsAudio(adaptation) {
+        return getIsTypeOf(adaptation, constants.AUDIO);
     }
 
+    function getIsVideo(adaptation) {
+        return getIsTypeOf(adaptation, constants.VIDEO);
+    }
+
+    function getIsFragmentedText(adaptation) {
+        return getIsTypeOf(adaptation, constants.FRAGMENTED_TEXT);
+    }
+
+    function getIsMuxed(adaptation) {
+        return getIsTypeOf(adaptation, constants.MUXED);
+    }
+
+    function getIsImage(adaptation) {
+        return getIsTypeOf(adaptation, constants.IMAGE);
+    }
+
+    // based upon DashManifestModel, but using DomParser
+    function getIsTypeOf(adaptation, type) {
+
+        let representation,
+            mimeTypeRegEx;
+        let result = false;
+        let found = false;
+
+        if (!adaptation) {
+            throw new Error('adaptation is not defined');
+        }
+
+        if (!type) {
+            throw new Error('type is not defined');
+        }
+
+        if (type === constants.VIDEO) {
+            console.log('video test');
+        }
+
+        mimeTypeRegEx = (type !== constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
+
+        let representations = findRepresentations(adaptation);
+        if (representations && representations.length > 0) {
+
+            let codecs = representations[0].getAttribute(dashConstants.CODECS);
+            if (codecs) {
+                if (codecs.search(constants.STPP) === 0 || codecs.search(constants.WVTT) === 0) {
+                    return type === constants.FRAGMENTED_TEXT;
+                }
+            }
+        }
+
+        let mimeType = findAdaptationSetMimeType(adaptation);
+        if (mimeType) {
+            result = mimeTypeRegEx.test(mimeType);
+            found = true;
+        }
+
+        // couldn't find on adaptationset, so check a representation
+        if (!found && representations) {
+            for (let i = 0; i < representations.length; i++) {
+                mimeType = findAdaptationSetMimeType(representation);
+
+                if (mimeType) {
+                    result = mimeTypeRegEx.test(mimeType);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
     /**
      * Returns mime-type of adaptation set
      * @param {XML} currentAdaptationSet
