@@ -84,11 +84,11 @@ function IndexDBOfflineLoader(config) {
                         indexDBStore.createFragmentStore(item.fragmentStore);
                         config.success(item.manifest, null, config.request.url, constants.XML);
                     }).catch(function (err) {
-                        config.error(config.request.url, 404, err);
+                        config.error(config.request, 404, err);
                     });
                 }
             } else {
-                config.error(new Error('MediaType cannot be found'));
+                config.error(config.request, null, 'MediaType can not be found');
             }
         }
     }
