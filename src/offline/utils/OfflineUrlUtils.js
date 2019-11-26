@@ -61,11 +61,10 @@ function OfflineUrlUtils() {
     }
 
     function resolve(url, baseUrl) {
-        if ((baseUrl.charAt(baseUrl.length - 1 ) % 1 === 0)) {
-            return baseUrl.substring(0, baseUrl.length - 1) + url;
-        } else {
-            return baseUrl + url;
+        if (baseUrl.charAt(baseUrl.length - 1 ) !== '/') {
+            baseUrl = baseUrl.concat('/');
         }
+        return baseUrl + url;
     }
 
     setup();
