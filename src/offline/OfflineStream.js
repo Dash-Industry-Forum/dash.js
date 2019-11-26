@@ -88,7 +88,8 @@ function OfflineStream(config) {
     function getDownloadableRepresentations() {
         let downloadableRepresentations = {
             video: [],
-            audio: []
+            audio: [],
+            fragmentedText: []
         };
         let mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
         if (mediaInfo.length > 0) {
@@ -115,12 +116,22 @@ function OfflineStream(config) {
                 });
             });
         }
+
+        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.FRAGMENTED_TEXT);
+        if (mediaInfo.length > 0) {
+            mediaInfo.forEach((item) => {
+                item.bitrateList.forEach((bitrate) => {
+                    downloadableRepresentations.fragmentedText.push({
+                        id: bitrate.id,
+                        bandwidth: bitrate.bandwidth,
+                        lang: item.lang
+                    });
+                });
+            });
+        }
+
         /** 1st, we download audio and video.
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.TEXT);
-        if (mediaInfo.length > 0) {
-            downloadableRepresentations.push(mediaInfo);
-        }
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, Constants.FRAGMENTED_TEXT);
         if (mediaInfo.length > 0) {
             downloadableRepresentations.push(mediaInfo);
         }
@@ -164,13 +175,13 @@ function OfflineStream(config) {
     function initializeMedia(streamInfo) {
         createOfflineStreamProcessorFor(constants.VIDEO,streamInfo);
         createOfflineStreamProcessorFor(constants.AUDIO,streamInfo);
+        createOfflineStreamProcessorFor(constants.FRAGMENTED_TEXT,streamInfo);
 
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             offlineStreamProcessors[i].initialize();
         }
         /* 1st, we download audio and video.
         createOfflineStreamProcessorFor(Constants.TEXT,streamInfo);
-        createOfflineStreamProcessorFor(Constants.FRAGMENTED_TEXT,streamInfo);
         createOfflineStreamProcessorFor(Constants.EMBEDDED_TEXT,streamInfo);
         createOfflineStreamProcessorFor(Constants.MUXED,streamInfo);
         createOfflineStreamProcessorFor(Constants.IMAGE,streamInfo);

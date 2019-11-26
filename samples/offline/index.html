@@ -350,6 +350,11 @@
                                     <input type="checkbox" name="audio" value="{{media.id}}"/>
                                     {{media.id}} ({{media.lang}}) : {{media.bandwidth}} bits
                                 </div>
+                                <div class="qualityLabelTitle">Fragmented Subtitles :</div>
+                                <div ng-repeat="media in downloadableRepresentations.fragmentedText">
+                                    <input type="checkbox" name="fragmentedText" value="{{media.id}}"/>
+                                    {{media.id}} ({{media.lang}}) : {{media.bandwidth}} bits
+                                </div>                                
                             </div>
                         </form>
                     </div>

@@ -1111,6 +1111,10 @@ $scope.toggleFastSwitch = function () {
         $('input[type="checkbox"][name="audio"]:checked').each(function () {
             representations.audio.push($(this).attr('value'));
         });
+        representations.fragmentedText = [];
+        $('input[type="checkbox"][name="fragmentedText"]:checked').each(function () {
+            representations.fragmentedText.push($(this).attr('value'));
+        });
 
         return representations;
     }
