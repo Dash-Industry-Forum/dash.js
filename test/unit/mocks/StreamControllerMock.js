@@ -56,8 +56,6 @@ class StreamControllerMock {
     reset() {}
 
     getActiveStreamProcessors() { return [];}
-
-    hasPreviousStream() { return false; }
 }
 
 export default StreamControllerMock;
