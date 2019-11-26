@@ -192,8 +192,7 @@ function OfflineStreamProcessor(config) {
             return null;
         }
 
-        let initRequest = indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation());
-        return fragmentModel.executeRequest(initRequest);
+        return indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation());
     }
 
     /**
