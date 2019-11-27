@@ -316,7 +316,7 @@ function DashHandler(config) {
             if (segment) {
                 request = getRequestForSegment(mediaInfo, segment);
                 segmentIndex = segment.availabilityIdx;
-            }else {
+            } else {
                 if (isDynamicManifest) {
                     segmentIndex = indexToRequest - 1;
                 } else {
