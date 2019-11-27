@@ -1182,7 +1182,9 @@ function MediaPlayer() {
 
             eventBus.on(OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance);
 
-            Events.extend(OfflineController.events);
+            MediaPlayerEvents.extend(OfflineController.events, {
+                publicOnly: true
+            });
             Events.extend(OfflineController.domExceptionEvents);
 
             const manifestLoader = createManifestLoader();

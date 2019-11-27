@@ -40,19 +40,6 @@ class MediaPlayerEvents extends EventsBase {
      */
     constructor() {
         super();
-
-        /**
-         * Triggered when all mediaInfo has been loaded on OfflineStream
-         * Return a list of available bitrateInfo needed to download stream.
-         */
-        this.DOWNLOADABLE_REPRESENTATIONS_LOADED = 'downloadableRepresentationsInfoLoaded';
-
-        /**
-         * Triggered when all mediaInfo has been loaded on OfflineStream
-         * Return a list of available bitrateInfo needed to download stream.
-         */
-        this.AVAILABLE_BITRATES_LOADED = 'availableBitratesLoaded';
-
         /**
          * Triggered when playback will not start yet
          * as the MPD's availabilityStartTime is in the future.
@@ -86,31 +73,6 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#ERROR
          */
         this.ERROR = 'error';
-
-
-        /* Triggered when the downloading is initialize and started
-        * @event MediaPlayerEvents#DOWNLOADING_STOPPED
-        */
-        this.DOWNLOADING_STARTED = 'downloadingStarted';
-
-        /**
-         * Triggered when the user stop current downloading
-         * @event MediaPlayerEvents#DOWNLOADING_STOPPED
-         */
-        this.DOWNLOADING_STOPPED = 'downloadingStopped';
-
-        /**
-         * Triggered when all fragments has been downloaded
-         * @event MediaPlayerEvents#DOWNLOADING_FINISHED
-         */
-        this.DOWNLOADING_FINISHED = 'downloadingFinished';
-
-        /**
-         * Triggered when an error occurs during download
-         * @event MediaPlayerEvents#DOWNLOADING_ERROR
-         */
-        this.DOWNLOADING_ERROR = 'downloadingError';
-
         /**
          * Triggered when a fragment download has completed.
          * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
