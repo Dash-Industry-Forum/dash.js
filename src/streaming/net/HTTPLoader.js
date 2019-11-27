@@ -299,7 +299,6 @@ function HTTPLoader(cfg) {
             // set them to undefined so they are not called
             x.onloadend = x.onerror = x.onprogress = undefined;
             x.loader.abort(x);
-            x.onabort();
         });
         requests = [];
     }
