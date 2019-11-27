@@ -129,58 +129,32 @@ function OfflineStream(config) {
         }
 
         // text
+
+        const addTextInfo = function (infos, type) {
+            if (infos.length > 0) {
+
+                infos.forEach((item) => {
+                    item.bitrateList.forEach((bitrate) => {
+                        downloadableRepresentations.text.push({
+                            id: bitrate.id,
+                            lang: item.lang,
+                            kind: getKind(item),
+                            roles: item.roles,
+                            accessibility: item.accessibility,
+                            type: type
+                        });
+                    });
+                });
+            }
+        };
+
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.FRAGMENTED_TEXT);
-        if (mediaInfo.length > 0) {
+        addTextInfo(mediaInfo, constants.FRAGMENTED_TEXT);
 
-            mediaInfo.forEach((item) => {
-                item.bitrateList.forEach((bitrate) => {
-                    downloadableRepresentations.text.push({
-                        id: bitrate.id,
-                        lang: item.lang,
-                        kind: getKind(item),
-                        roles: item.roles,
-                        accessibility: item.accessibility,
-                        type: constants.FRAGMENTED_TEXT
-                    });
-                });
-            });
-        }
-
-        /** 1st, we download audio and video.
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.TEXT);
-        if (mediaInfo.length > 0) {
+        addTextInfo(mediaInfo, constants.TEXT);
 
-            mediaInfo.forEach((item) => {
-                item.bitrateList.forEach((bitrate) => {
-                    downloadableRepresentations.text.push({
-                        id: bitrate.id,
-                        lang: item.lang,
-                        kind: getKind(item),
-                        roles: item.roles,
-                        accessibility : item.accessibility,
-                        type: constants.TEXT
-                    });
-                });
-            });
-        }
-
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.EMBEDDED_TEXT);
-        if (mediaInfo.length > 0) {
-
-            mediaInfo.forEach((item) => {
-                item.bitrateList.forEach((bitrate) => {
-                    downloadableRepresentations.text.push({
-                        id: bitrate.id,
-                        lang: item.lang,
-                        kind: getKind(item),
-                        roles: item.roles,
-                        accessibility : item.accessibility,
-                        type: constants.EMBEDDED_TEXT
-                    });
-                });
-            });
-        }
-
+        /**
         mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.MUXED);
         if (mediaInfo.length > 0) {
             downloadableRepresentations.push(mediaInfo);
@@ -218,15 +192,14 @@ function OfflineStream(config) {
         createOfflineStreamProcessorFor(constants.VIDEO,streamInfo);
         createOfflineStreamProcessorFor(constants.AUDIO,streamInfo);
         createOfflineStreamProcessorFor(constants.FRAGMENTED_TEXT,streamInfo);
+        createOfflineStreamProcessorFor(constants.TEXT,streamInfo);
 
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             offlineStreamProcessors[i].initialize();
         }
-        /* 1st, we download audio and video.
-        createOfflineStreamProcessorFor(Constants.TEXT,streamInfo);
-        createOfflineStreamProcessorFor(Constants.EMBEDDED_TEXT,streamInfo);
-        createOfflineStreamProcessorFor(Constants.MUXED,streamInfo);
-        createOfflineStreamProcessorFor(Constants.IMAGE,streamInfo);
+        /*
+        createOfflineStreamProcessorFor(constants.MUXED,streamInfo);
+        createOfflineStreamProcessorFor(constants.IMAGE,streamInfo);
         */
     }
 

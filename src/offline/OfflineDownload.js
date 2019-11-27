@@ -49,6 +49,7 @@ function OfflineDownload(config) {
     const baseURLController = config.baseURLController;
     const constants = config.constants;
     const dashConstants = config.dashConstants;
+    const urlUtils = config.urlUtils;
 
     const context = this.context;
 
@@ -242,7 +243,6 @@ function OfflineDownload(config) {
         ret[constants.AUDIO] = [];
         ret[constants.TEXT] = [];
         ret[constants.FRAGMENTED_TEXT] = [];
-        ret[constants.EMBEDDED_TEXT] = [];
         selectedRepresentations.video.forEach(item => {
             ret[constants.VIDEO].push(item.id);
         });
@@ -282,7 +282,8 @@ function OfflineDownload(config) {
             allMediaInfos: selectedRepresentations,
             debug: debug,
             dashConstants: dashConstants,
-            constants: constants
+            constants: constants,
+            urlUtils: urlUtils
         });
 
         return parser.parse(XMLManifest).then(function (parsedManifest) {

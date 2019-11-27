@@ -160,7 +160,8 @@ function OfflineController() {
                 offlineStoreController: offlineStoreController,
                 debug: debug,
                 constants: constants,
-                dashConstants: dashConstants
+                dashConstants: dashConstants,
+                urlUtils: urlUtils
             });
 
             downloads.push(download);
