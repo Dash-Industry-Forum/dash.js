@@ -95,7 +95,7 @@ function OfflineStoreController(config) {
     }
 
     function setDownloadingStatus(manifestId, status) {
-        indexDBStore.setDownloadingStatus(manifestId, status).catch(function (err) {
+        return indexDBStore.setDownloadingStatus(manifestId, status).catch(function (err) {
             manageDOMError(err);
         });
     }
