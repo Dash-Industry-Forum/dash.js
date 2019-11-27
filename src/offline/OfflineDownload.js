@@ -310,7 +310,7 @@ function OfflineDownload(config) {
      * @instance
      */
     function stopDownload() {
-        if (manifestId !== null && isDownloading) {
+        if (manifestId !== null && isDownloading()) {
             for (let i = 0, ln = streams.length; i < ln; i++) {
                 streams[i].stopOfflineStreamProcessors();
             }
