@@ -73,7 +73,8 @@ function IndexDBOfflineLoader(config) {
                     config.request.mediaType === constants.FRAGMENTED_TEXT ||
                     config.request.mediaType === constants.EMBEDDED_TEXT
                 ) {
-                    let key = config.request.representationId + '_' + config.request.index;
+                    let suffix = config.request.type === 'InitializationSegment' ? 'init' : config.request.index;
+                    let key = config.request.representationId + '_' + suffix;
                     indexDBStore.getFragmentByKey(manifestId, key).then(function (fragment) {
                         config.success(fragment, null, config.request.url, constants.ARRAY_BUFFER);
                     }).catch(function (err) {

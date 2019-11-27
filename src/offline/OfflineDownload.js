@@ -227,14 +227,15 @@ function OfflineDownload(config) {
         XMLManifest = e.originalManifest;
 
         // check type of manifest
-        if (XMLManifest.indexOf(dashConstants.SEGMENT_TEMPLATE) === -1) {
+        if (XMLManifest.indexOf(dashConstants.SEGMENT_TEMPLATE) === -1 &&
+            XMLManifest.indexOf(dashConstants.SEGMENT_LIST) === -1) {
             eventBus.trigger(events.DOWNLOADING_ERROR, {
                 sender: this,
                 id: manifestId,
                 status: OfflineConstants.OFFLINE_STATUS_ERROR,
-                message: 'Cannot handle manifest, only SEGMENT_TEMPLATE !'
+                message: 'Cannot handle manifest, only SEGMENT_TEMPLATE or SEGMENT_LIST !'
             });
-            console.error('Cannot handle manifest, only SEGMENT_TEMPLATE');
+            console.error('Cannot handle manifest, only SEGMENT_TEMPLATE or SEGMENT_LIST');
 
             return;
         }

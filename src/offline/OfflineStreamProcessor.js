@@ -108,7 +108,8 @@ function OfflineStreamProcessor(config) {
         }
 
         if (e.request !== null) {
-            let fragmentName = e.request.representationId + '_' + e.request.index;
+            let suffix = e.request.type === 'InitializationSegment' ? 'init' : e.request.index;
+            let fragmentName = e.request.representationId + '_' + suffix;
             offlineStoreController.storeFragment(manifestId, fragmentName, e.response);
         }
 

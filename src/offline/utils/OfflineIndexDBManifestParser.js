@@ -182,6 +182,14 @@ function OfflineIndexDBManifestParser(config) {
                     if (segmentTemplate.length >= 1) {
                         editSegmentTemplateAttributes(segmentTemplate);
                     }
+
+                    for (let i = 0; i < representations.length; i++) {
+                        let rep = representations[i];
+                        let segmentList = getSegmentList(rep);
+                        if (getSegmentList.length >= 1) {
+                            editSegmentListAttributes(segmentList, rep);
+                        }
+                    }
                 }
             }
         }
@@ -314,6 +322,17 @@ function OfflineIndexDBManifestParser(config) {
     }
 
     /**
+     * Return segment list tags of adaptations set
+     * @param {XML} tag
+     * @memberof module:offline
+     * @returns {XML} representations
+     * @instance
+    */
+    function getSegmentList(tag) {
+        return tag.getElementsByTagName(dashConstants.SEGMENT_LIST);
+    }
+
+    /**
      * Update attributes of segment templates to match offline urls
      * @param {Array} segmentsTemplates
      * @memberof module:offline
@@ -323,9 +342,40 @@ function OfflineIndexDBManifestParser(config) {
         for (let i = 0; i < segmentsTemplates.length; i++) {
             let media = segmentsTemplates[i].getAttribute('media');
             media = '$RepresentationID$_$Number$' + media.substring(media.indexOf('.'), media.length); //id + extension
-            segmentsTemplates[i].setAttribute('startNumber', '1');
+            segmentsTemplates[i].setAttribute('startNumber', '0');
             segmentsTemplates[i].setAttribute('media', media);
-            segmentsTemplates[i].setAttribute('initialization','$RepresentationID$_0.m4v');
+            segmentsTemplates[i].setAttribute('initialization','$RepresentationID$_init');
+        }
+    }
+
+    /**
+     * Update attributes of segment list to match offline urls
+     * @param {Array} segmentLists
+     * @param {Object} representation
+     * @memberof module:offline
+     * @instance
+    */
+    function editSegmentListAttributes(segmentLists, representation) {
+        let repId = representation.getAttribute(dashConstants.ID);
+        for (let i = 0; i < segmentLists.length; i++) {
+
+            let segmentList = segmentLists[i];
+            let initialisation = segmentList.getElementsByTagName(dashConstants.INITIALIZATION);
+            if (initialisation) {
+                let sourceURL = initialisation[0].getAttribute(dashConstants.SOURCE_URL);
+                sourceURL = `${repId}_init`;
+                initialisation[0].setAttribute(dashConstants.SOURCE_URL, sourceURL);
+            }
+            let segmentURLs = segmentList.getElementsByTagName(dashConstants.SEGMENT_URL);
+
+            if (segmentURLs) {
+                for (let j = 0; j < segmentURLs.length; j++) {
+                    let segmentUrl = segmentURLs[j];
+                    let media = segmentUrl.getAttribute('media');
+                    media = `${repId}_${j}`;
+                    segmentUrl.setAttribute('media', media);
+                }
+            }
         }
     }
 
