@@ -11,6 +11,7 @@ class OfflineEvents extends EventsBase {
         this.DOWNLOADING_PAUSED = 'downloadingPaused';
         this.DOWNLOADING_STOPPED = 'downloadingStopped';
         this.DOWNLOADING_FINISHED = 'downloadingFinished';
+        this.DOWNLOADING_ERROR = 'downloadingError';
         this.DASH_ELEMENTS_CREATION_NEEDED = 'dashElementsCreationNeeded';
     }
 }

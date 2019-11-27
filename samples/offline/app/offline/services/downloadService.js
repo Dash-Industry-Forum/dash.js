@@ -40,6 +40,13 @@ service('DownloadService', function ($q) {
             }
         }, this);
 
+        player.on(dashjs.MediaPlayer.events.DOWNLOADING_ERROR, (e) => {
+            let download = this.getDownload(e.id);
+            if (download) {
+                download.status = `error - ${e.message}`;
+            }
+        }, this);
+
         this.getAllDownloads();
     }
 

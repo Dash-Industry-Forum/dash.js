@@ -106,6 +106,12 @@ class MediaPlayerEvents extends EventsBase {
         this.DOWNLOADING_FINISHED = 'downloadingFinished';
 
         /**
+         * Triggered when an error occurs during download
+         * @event MediaPlayerEvents#DOWNLOADING_ERROR
+         */
+        this.DOWNLOADING_ERROR = 'downloadingError';
+
+        /**
          * Triggered when a fragment download has completed.
          * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
          */

@@ -246,10 +246,6 @@ function OfflineIndexDBManifestParser(config) {
             throw new Error('type is not defined');
         }
 
-        if (type === constants.VIDEO) {
-            console.log('video test');
-        }
-
         mimeTypeRegEx = (type !== constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
         let representations = findRepresentations(adaptation);
@@ -272,6 +268,7 @@ function OfflineIndexDBManifestParser(config) {
         // couldn't find on adaptationset, so check a representation
         if (!found && representations) {
             for (let i = 0; i < representations.length; i++) {
+                representation = representations[i];
                 mimeType = findAdaptationSetMimeType(representation);
 
                 if (mimeType) {

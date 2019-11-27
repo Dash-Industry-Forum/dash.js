@@ -43,6 +43,7 @@ class OfflineConstants {
       this.OFFLINE_STATUS_STARTED = 'started';
       this.OFFLINE_STATUS_STOPPED = 'stopped';
       this.OFFLINE_STATUS_FINISHED = 'finished';
+      this.OFFLINE_STATUS_ERROR = 'error';
   }
 
   constructor () {

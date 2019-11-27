@@ -116,14 +116,6 @@ function OfflineDownload(config) {
         if (!e.error) {
             try {
                 manifest = e.manifest;
-
-                // initialise offline streams
-                composeStreams(manifest);
-
-                // get downloadable representations
-                getDownloadableRepresentations();
-
-                eventBus.trigger(events.STREAMS_COMPOSED);
             } catch (err) {
                 throw new Error(err);
             }
@@ -229,6 +221,27 @@ function OfflineDownload(config) {
      */
     function onOriginalManifestLoaded(e) {
         XMLManifest = e.originalManifest;
+
+        // check type of manifest
+        if (XMLManifest.indexOf(dashConstants.SEGMENT_TEMPLATE) === -1) {
+            eventBus.trigger(events.DOWNLOADING_ERROR, {
+                sender: this,
+                id: manifestId,
+                status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                message: 'Cannot handle manifest, only SEGMENT_TEMPLATE !'
+            });
+            console.error('Cannot handle manifest, only SEGMENT_TEMPLATE');
+
+            return;
+        }
+
+        // initialise offline streams
+        composeStreams(manifest);
+
+        // get downloadable representations
+        getDownloadableRepresentations();
+
+        eventBus.trigger(events.STREAMS_COMPOSED);
     }
 
     function initializeAllMediasInfoList(selectedRepresentations) {
