@@ -1142,6 +1142,11 @@ $scope.toggleFastSwitch = function () {
         }
     }
 
+    $scope.onCancelDownload = function () {
+        DownloadService.doDeleteDownload($scope.manifestId);
+        $scope.hideRepresentationModal();
+    }
+
     $scope.doDownload = function () {
         DownloadService.doDownload($scope.selectedItem.url);
     }
