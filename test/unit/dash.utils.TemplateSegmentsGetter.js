@@ -117,13 +117,13 @@ describe('TemplateSegmentsGetter', () => {
             expect(seg.duration).to.equal(5);
 
             seg = templateSegmentsGetter.getSegmentByTime(representation, 12);
-            expect(seg.availabilityIdx).to.equal(1);
-            expect(seg.presentationStartTime).to.equal(5);
+            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.presentationStartTime).to.equal(10);
             expect(seg.duration).to.equal(5);
 
             seg = templateSegmentsGetter.getSegmentByTime(representation, 17);
-            expect(seg.availabilityIdx).to.equal(2);
-            expect(seg.presentationStartTime).to.equal(10);
+            expect(seg.availabilityIdx).to.equal(3);
+            expect(seg.presentationStartTime).to.equal(15);
             expect(seg.duration).to.equal(5);
         });
 
