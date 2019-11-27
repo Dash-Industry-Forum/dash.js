@@ -171,13 +171,33 @@ function OfflineController() {
     }
 
     function removeDownloadFromId(id) {
-        let download = getDownloadFromId(id);
-        if (download) {
-            // download is running
-            download.deleteDownload();
-            let index = downloads.indexOf(download);
-            downloads.splice(index, 1);
-        }
+        return new Promise(function (resolve, reject) {
+            let download = getDownloadFromId(id);
+            let waitForStatusChanged = false;
+            if (download) {
+                //is download running?
+                if (download.isDownloading()) {
+                    //register status changed event
+                    waitForStatusChanged = true;
+                    const downloadStopped = function () {
+                        eventBus.off(events.DOWNLOADING_STOPPED, downloadStopped, instance);
+                        return offlineStoreController.deleteDownloadById(id).then(function () {
+                            resolve();
+                        }).catch(function (err) {
+                            reject(err);
+                        });
+                    };
+                    eventBus.on(events.DOWNLOADING_STOPPED, downloadStopped, instance);
+                }
+                download.deleteDownload();
+                let index = downloads.indexOf(download);
+                downloads.splice(index, 1);
+            }
+
+            if (!waitForStatusChanged) {
+                resolve();
+            }
+        });
     }
 
     /*
@@ -204,8 +224,9 @@ function OfflineController() {
             })
             .catch((e) => {
                 logger.error('Failed to download ' + e);
-                removeDownloadFromId(id);
-                reject(e);
+                removeDownloadFromId(id).then(function () {
+                    reject(e);
+                });
             });
         });
     }
@@ -229,12 +250,8 @@ function OfflineController() {
     }
 
     function deleteDownload(id) {
-        removeDownloadFromId(id);
-
-        return offlineStoreController.deleteDownloadById(id).then(function () {
-            return Promise.resolve();
-        }).catch(function (err) {
-            return Promise.reject(err);
+        return removeDownloadFromId(id).then(function () {
+            return offlineStoreController.deleteDownloadById(id);
         });
     }
 

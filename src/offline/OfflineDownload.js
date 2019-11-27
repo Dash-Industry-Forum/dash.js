@@ -135,8 +135,9 @@ function OfflineDownload(config) {
             return;
         }
         if (!e.error && manifestId !== null) {
-            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STARTED);
-            eventBus.trigger(events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
+            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STARTED).then(function () {
+                eventBus.trigger(events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
+            });
         } else {
             throw e.error;
         }
@@ -147,8 +148,9 @@ function OfflineDownload(config) {
             return;
         }
         if (!e.error && manifestId !== null) {
-            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED);
-            eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED).then(function () {
+                eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+            });
         } else {
             throw e.error;
         }
@@ -314,12 +316,14 @@ function OfflineDownload(config) {
             for (let i = 0, ln = streams.length; i < ln; i++) {
                 streams[i].stopOfflineStreamProcessors();
             }
-            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STOPPED);
-            eventBus.trigger(events.DOWNLOADING_STOPPED, {
-                sender: this,
-                id: manifestId,
-                status: OfflineConstants.OFFLINE_STATUS_STOPPED,
-                message: 'Downloading has been stopped for this stream !'
+            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STOPPED).then(function () {
+                eventBus.trigger(events.DOWNLOADING_STOPPED, {
+                    sender: this,
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_STOPPED,
+                    message: 'Downloading has been stopped for this stream !'
+                });
+                isDownloadingStatus = false;
             });
         }
     }
@@ -329,10 +333,7 @@ function OfflineDownload(config) {
      * @instance
      */
     function deleteDownload() {
-        if (streams.length >= 1) {
-            stopDownload();
-            isDownloadingStatus = false;
-        }
+        stopDownload();
     }
 
     /**
