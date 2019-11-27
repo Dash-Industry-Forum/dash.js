@@ -339,6 +339,7 @@ function DashMetrics(config) {
             null,
             request.type,
             request.url,
+            request.quality,
             responseURL,
             request.serviceLocation || null,
             request.range || null,
