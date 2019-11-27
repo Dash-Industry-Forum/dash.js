@@ -220,7 +220,7 @@ function OfflineController() {
             let download = createDownloadFromId(id);
 
             download.downloadFromUrl(url).then(() => {
-                resolve();
+                resolve(id);
             })
             .catch((e) => {
                 logger.error('Failed to download ' + e);
@@ -229,6 +229,13 @@ function OfflineController() {
                 });
             });
         });
+    }
+
+    function initDownload(id) {
+        let download = getDownloadFromId(id);
+        if (download) {
+            download.initDownload();
+        }
     }
 
     function startDownload(id, selectedRepresentations) {
@@ -288,6 +295,7 @@ function OfflineController() {
     instance = {
         setConfig: setConfig,
         createDownload: createDownload,
+        initDownload: initDownload,
         startDownload: startDownload,
         stopDownload: stopDownload,
         resumeDownload: resumeDownload,

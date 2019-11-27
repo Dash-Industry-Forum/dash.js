@@ -1070,6 +1070,14 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
 
+    /**
+     * Creates a new download object in storage
+     *
+     * @param {string} manifestURL - url of manifest
+     * @return {Promise} asynchronously resolved with identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function createDownload(manifestURL) {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
@@ -1077,12 +1085,40 @@ function MediaPlayer() {
         return offlineController ? offlineController.createDownload(manifestURL) : Promise.reject();
     }
 
+    /**
+     * Initialise download and gets manifest from url
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function initDownload(id) {
+        if (offlineController) {
+            offlineController.initDownload(id);
+        }
+    }
+
+    /**
+     * Start download of choosen representations
+     *
+     * @param {string} id - identifier of download
+     * @param {object} selectedRepresentations - choosen representations
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function startDownload(id, selectedRepresentations) {
         if (selectedRepresentations && offlineController) {
             offlineController.startDownload(id, selectedRepresentations);
         }
     }
 
+    /**
+     * Delete download
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function deleteDownload(id) {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
@@ -1090,29 +1126,58 @@ function MediaPlayer() {
         return offlineController ? offlineController.deleteDownload(id) : Promise.reject();
     }
 
+    /**
+     * Stop download
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function stopDownload(id) {
         if (offlineControllerInitialized && offlineController) {
             offlineController.stopDownload(id);
         }
     }
 
+    /**
+     * Resume download
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function resumeDownload(id) {
         if (offlineControllerInitialized && offlineController) {
             offlineController.resumeDownload(id);
         }
     }
 
+    /**
+     * Get progression of download
+     *
+     * @param {string} id - identifier of download
+     * @return {number} progression
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getDownloadProgression(id) {
+        if (offlineControllerInitialized) {
+            return offlineController ? offlineController.getDownloadProgression(id) : 0;
+        }
+    }
+
+    /**
+     * Get all saved downloads
+     *
+     * @return {Promise} asynchronously resolved with saved downloads
+     * @memberof module:MediaPlayer
+     * @instance
+     */
     function getAllDownloads() {
         if (!offlineControllerInitialized) {
             createOfflineControllers();
         }
         return offlineController ? offlineController.getAllDownloads() : Promise.reject();
-    }
-
-    function getDownloadProgression(id) {
-        if (offlineControllerInitialized) {
-            return offlineController ? offlineController.getDownloadProgression(id) : 0;
-        }
     }
 
     function onDashElementsNeeded(eventObj) {
@@ -2321,6 +2386,7 @@ function MediaPlayer() {
         resumeDownload: resumeDownload,
         getDownloadProgression: getDownloadProgression,
         startDownload: startDownload,
+        initDownload: initDownload,
         reset: reset
     };
 

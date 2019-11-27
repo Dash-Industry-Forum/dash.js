@@ -54,6 +54,7 @@ function OfflineDownload(config) {
     const context = this.context;
 
     let instance,
+        manifestURL,
         XMLManifest,
         streams,
         manifest,
@@ -80,10 +81,8 @@ function OfflineDownload(config) {
      * @instance
      */
     function downloadFromUrl(url) {
+        manifestURL = url;
         setupOfflineEvents();
-        manifestLoader.load(url);
-        isDownloadingStatus = true;
-
         let offlineManifest = {
             'fragmentStore': manifestId,
             'status': OfflineConstants.OFFLINE_STATUS_CREATED,
@@ -92,6 +91,11 @@ function OfflineDownload(config) {
             'originalURL': url
         };
         return createOfflineManifest(offlineManifest);
+    }
+
+    function initDownload() {
+        manifestLoader.load(manifestURL);
+        isDownloadingStatus = true;
     }
 
     function setupOfflineEvents() {
@@ -412,6 +416,7 @@ function OfflineDownload(config) {
     instance = {
         reset: reset,
         getId: getId,
+        initDownload: initDownload,
         downloadFromUrl: downloadFromUrl,
         startDownload: startDownload,
         stopDownload: stopDownload,

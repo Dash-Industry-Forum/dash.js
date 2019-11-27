@@ -67,8 +67,14 @@ service('DownloadService', function ($q) {
     };
 
     this.doDownload = function (url) {
-        player.createDownload(url).then(() => {
-            this.getAllDownloads();
+        let id;
+        player.createDownload(url).then((manifestId) => {
+            id = manifestId;
+            // new download has been created, let's refresh download list
+            return this.getAllDownloads();
+        }).then(() => {
+            // init download
+            player.initDownload(id);
         });
     }
 
@@ -79,15 +85,15 @@ service('DownloadService', function ($q) {
     }
 
     this.doStopDownload = function (manifestId) {
-        player.stopDownload(manifestId)
+        player.stopDownload(manifestId);
     }
 
     this.doResumeDownload = function (manifestId) {
-        player.resumeDownload(manifestId)
+        player.resumeDownload(manifestId);
     }
 
     this.getDownloadProgression = function (manifestId) {
-        return player.getDownloadProgression(manifestId)
+        return player.getDownloadProgression(manifestId);
     }
 
     return this;
