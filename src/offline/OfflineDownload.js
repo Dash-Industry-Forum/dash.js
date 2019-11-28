@@ -224,6 +224,9 @@ function OfflineDownload(config) {
      * @param {Object[]} e
      */
     function onOriginalManifestLoaded(e) {
+        // unregister form event
+        eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
+
         XMLManifest = e.originalManifest;
 
         // check type of manifest
@@ -236,6 +239,18 @@ function OfflineDownload(config) {
                 message: 'Cannot handle manifest, only SEGMENT_TEMPLATE or SEGMENT_LIST !'
             });
             console.error('Cannot handle manifest, only SEGMENT_TEMPLATE or SEGMENT_LIST');
+
+            return;
+        }
+
+        if (manifest.type === dashConstants.DYNAMIC) {
+            eventBus.trigger(events.DOWNLOADING_ERROR, {
+                sender: this,
+                id: manifestId,
+                status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                message: 'Cannot handle manifest, STATIC manifest only'
+            });
+            console.error('Cannot handle manifest, STATIC manifest only');
 
             return;
         }
