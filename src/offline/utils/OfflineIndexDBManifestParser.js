@@ -63,17 +63,18 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function parse(XMLDoc) {
-        DOM = new DOMParser().parseFromString(XMLDoc, 'application/xml');
-        let mpd = DOM.getElementsByTagName(dashConstants.MPD) ? DOM.getElementsByTagName(dashConstants.MPD) : null;
-
-        for (let i = 0; i < mpd.length; i++) {
-            if (mpd[i] !== null) {
-                editBaseURLAttribute(mpd[i]);
-                browsePeriods(mpd[i]);
-            }
-        }
-
         return new Promise(function (resolve, reject) {
+
+            DOM = new DOMParser().parseFromString(XMLDoc, 'application/xml');
+            let mpd = DOM.getElementsByTagName(dashConstants.MPD) ? DOM.getElementsByTagName(dashConstants.MPD) : null;
+
+            for (let i = 0; i < mpd.length; i++) {
+                if (mpd[i] !== null) {
+                    editBaseURLAttribute(mpd[i]);
+                    browsePeriods(mpd[i]);
+                }
+            }
+
             let manifestEncoded = encodeManifest(DOM);
             if (manifestEncoded !== '') {
                 resolve(manifestEncoded);
@@ -246,11 +247,6 @@ function OfflineIndexDBManifestParser(config) {
     // based upon DashManifestModel, but using DomParser
     function getIsTypeOf(adaptation, type) {
 
-        let representation,
-            mimeTypeRegEx;
-        let result = false;
-        let found = false;
-
         if (!adaptation) {
             throw new Error('adaptation is not defined');
         }
@@ -259,60 +255,89 @@ function OfflineIndexDBManifestParser(config) {
             throw new Error('type is not defined');
         }
 
-        mimeTypeRegEx = (type !== constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
+        // 1. check codecs for fragmented text
+        if (isFragmentedTextCodecFound(adaptation)) {
+            // fragmented text codec has been found for adaptation, let's check if tested type is fragmented text
+            return type === constants.FRAGMENTED_TEXT;
+        }
 
+        // 2. test mime type
+        return testMimeType(adaptation, type);
+    }
+
+    function testMimeType(adaptation, type) {
+        let mimeTypeRegEx = (type !== constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
+
+        let mimeType = findMimeType(adaptation);
+        if (mimeType) {
+            return mimeTypeRegEx.test(mimeType);
+        }
+
+        // no mime type in adaptation, search in representation
+        let representations = findRepresentations(adaptation);
+        if (representations) {
+            for (let i = 0; i < representations.length; i++) {
+                let representation = representations[i];
+                mimeType = findMimeType(representation);
+                if (mimeType) {
+                    return mimeTypeRegEx.test(mimeType);
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Search for fragmented text codec in adaptation (STPP or WVTT)
+     * @param {Object} adaptation
+     */
+    function isFragmentedTextCodecFound (adaptation) {
+        let isFragmentedTextCodecFoundInTag = function (tag) {
+            let codecs = tag.getAttribute(dashConstants.CODECS);
+            if (codecs) {
+                if (codecs.search(constants.STPP) === 0 ||
+                    codecs.search(constants.WVTT) === 0 ) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        if (isFragmentedTextCodecFoundInTag(adaptation)) {
+            return true;
+        }
+
+        // check in representations
         let representations = findRepresentations(adaptation);
         if (representations && representations.length > 0) {
 
-            let codecs = representations[0].getAttribute(dashConstants.CODECS);
-            if (codecs) {
-                if (codecs.search(constants.STPP) === 0 || codecs.search(constants.WVTT) === 0) {
-                    return type === constants.FRAGMENTED_TEXT;
-                }
+            if (isFragmentedTextCodecFoundInTag(representations[0])) {
+                return true;
             }
         }
-
-        let mimeType = findAdaptationSetMimeType(adaptation);
-        if (mimeType) {
-            result = mimeTypeRegEx.test(mimeType);
-            found = true;
-        }
-
-        // couldn't find on adaptationset, so check a representation
-        if (!found && representations) {
-            for (let i = 0; i < representations.length; i++) {
-                representation = representations[i];
-                mimeType = findAdaptationSetMimeType(representation);
-
-                if (mimeType) {
-                    result = mimeTypeRegEx.test(mimeType);
-                    break;
-                }
-            }
-        }
-
-        return result;
+        return false;
     }
+
     /**
-     * Returns mime-type of adaptation set
-     * @param {XML} currentAdaptationSet
+     * Returns mime-type of xml tag
+     * @param {Object} tag
      * @memberof module:offline
      * @returns {string|null} mimeType
      * @instance
     */
-    function findAdaptationSetMimeType(currentAdaptationSet) {
-        return currentAdaptationSet.getAttribute('mimeType');
+    function findMimeType(tag) {
+        return tag.getAttribute(dashConstants.MIME_TYPE);
     }
 
     /**
      * Returns representations of adaptation set
-     * @param {XML} currentAdaptationSet
+     * @param {XML} adaptation
      * @memberof module:offline
      * @returns {XML} representations
      * @instance
     */
-    function findRepresentations(currentAdaptationSet) {
-        return currentAdaptationSet.getElementsByTagName(dashConstants.REPRESENTATION);
+    function findRepresentations(adaptation) {
+        return adaptation.getElementsByTagName(dashConstants.REPRESENTATION);
     }
 
     /**
@@ -376,9 +401,9 @@ function OfflineIndexDBManifestParser(config) {
             if (segmentURLs) {
                 for (let j = 0; j < segmentURLs.length; j++) {
                     let segmentUrl = segmentURLs[j];
-                    let media = segmentUrl.getAttribute('media');
+                    let media = segmentUrl.getAttribute(dashConstants.MEDIA);
                     media = `${repId}_${j}`;
-                    segmentUrl.setAttribute('media', media);
+                    segmentUrl.setAttribute(dashConstants.MEDIA, media);
                 }
             }
         }

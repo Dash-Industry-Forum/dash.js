@@ -1134,7 +1134,9 @@ $scope.toggleFastSwitch = function () {
     $scope.onStartDownload = function () {
         let selectedRepresentation = $scope.getSelectedRepresentations();
 
-        if (selectedRepresentation.video.length >= 1 || selectedRepresentation.audio.length >= 1) {
+        if (selectedRepresentation.video.length >= 1 ||
+            selectedRepresentation.audio.length >= 1 ||
+            selectedRepresentation.text.length >= 1) {
             $scope.downloader.startDownload($scope.manifestId, selectedRepresentation);
             $scope.hideRepresentationModal();
         } else {
