@@ -345,11 +345,11 @@ function OfflineIndexDBManifestParser(config) {
     */
     function editSegmentTemplateAttributes(segmentsTemplates) {
         for (let i = 0; i < segmentsTemplates.length; i++) {
-            let media = segmentsTemplates[i].getAttribute('media');
+            let media = segmentsTemplates[i].getAttribute(dashConstants.MEDIA);
             media = '$RepresentationID$_$Number$' + media.substring(media.indexOf('.'), media.length); //id + extension
-            segmentsTemplates[i].setAttribute('startNumber', '0');
-            segmentsTemplates[i].setAttribute('media', media);
-            segmentsTemplates[i].setAttribute('initialization','$RepresentationID$_init');
+            segmentsTemplates[i].setAttribute(dashConstants.START_NUMBER, '0');
+            segmentsTemplates[i].setAttribute(dashConstants.MEDIA, media);
+            segmentsTemplates[i].setAttribute(dashConstants.INITIALIZATION_MINUS,'$RepresentationID$_init');
         }
     }
 
