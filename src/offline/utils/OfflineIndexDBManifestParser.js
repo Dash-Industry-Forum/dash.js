@@ -58,7 +58,7 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Parse XML manifest
      * @param {string} XMLDoc - xml manifest
-     * @returns {string} parsed XML
+     * @returns {Promise} a promise that will be resolved or rejected at the end of encoding process
      * @memberof module:OfflineIndexDBManifestParser
      * @instance
     */
@@ -72,9 +72,14 @@ function OfflineIndexDBManifestParser(config) {
                 browsePeriods(mpd[i]);
             }
         }
-        //TODO : remove promise timeOut
-        return wait(1000).then(function () {
-            return encodeManifest(DOM);
+
+        return new Promise(function (resolve, reject) {
+            let manifestEncoded = encodeManifest(DOM);
+            if (manifestEncoded !== '') {
+                resolve(manifestEncoded);
+            } else {
+                reject('Encoded error');
+            }
         });
     }
 
@@ -399,19 +404,6 @@ function OfflineIndexDBManifestParser(config) {
     }
 
     //  UTILS
-
-    /**
-     * Timeout to perform operations on manifest --> TODO to be replaced by a promise
-     * @param {number} delay
-     * @memberof module:offline
-     * @instance
-    */
-    function wait(delay) {
-        return new Promise(function (resolve) {
-            setTimeout(resolve, delay);
-        });
-    }
-
     /**
      * Get id of first representation of adaptation set
      * @param {XMl} currentAdaptationSet
