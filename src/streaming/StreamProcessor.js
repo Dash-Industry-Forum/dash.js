@@ -102,6 +102,7 @@ function StreamProcessor(config) {
             debug: Debug(context).getInstance(),
             requestModifier: RequestModifier(context).getInstance(),
             dashConstants: DashConstants,
+            constants: Constants,
             urlUtils: URLUtils(context).getInstance()
         });
 

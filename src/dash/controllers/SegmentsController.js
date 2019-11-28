@@ -52,6 +52,8 @@ function SegmentsController(config) {
     const debug = config.debug;
     const requestModifier = config.requestModifier;
     const dashConstants = config.dashConstants;
+    const constants = config.constants;
+    const urlUtils = config.urlUtils;
     const errors = config.errors;
 
     let instance,
@@ -72,7 +74,10 @@ function SegmentsController(config) {
             events: events,
             errors: errors,
             debug: debug,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            dashConstants: dashConstants,
+            constants: constants,
+            urlUtils: urlUtils
         });
     }
 

@@ -50,6 +50,9 @@ function SegmentBaseLoader() {
         events,
         eventBus,
         errors,
+        constants,
+        dashConstants,
+        urlUtils,
         baseURLController;
 
     function setup() {
@@ -63,7 +66,10 @@ function SegmentBaseLoader() {
             requestModifier: requestModifier,
             useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
             boxParser: boxParser,
-            errors: errors
+            errors: errors,
+            urlUtils: urlUtils,
+            constants: constants,
+            dashConstants: dashConstants
         });
     }
 
@@ -110,6 +116,18 @@ function SegmentBaseLoader() {
 
         if (config.errors) {
             errors = config.errors;
+        }
+
+        if (config.urlUtils) {
+            urlUtils = config.urlUtils;
+        }
+
+        if (config.constants) {
+            constants = config.constants;
+        }
+
+        if (config.dashConstants) {
+            dashConstants = config.dashConstants;
         }
     }
 

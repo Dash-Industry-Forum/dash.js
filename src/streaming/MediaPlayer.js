@@ -78,6 +78,7 @@ import DashHandler from '../dash/DashHandler';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FragmentModel from './models/FragmentModel';
 import FragmentLoader from './FragmentLoader';
+import BoxParser from './utils/BoxParser';
 
 /**
  * @module MediaPlayer
@@ -1197,7 +1198,9 @@ function MediaPlayer() {
             errors: Errors,
             debug: debug,
             dashConstants: DashConstants,
-            urlUtils: URLUtils(context).getInstance()
+            requestModifier: requestModifier,
+            urlUtils: URLUtils(context).getInstance(),
+            boxParser: BoxParser(context).getInstance()
         });
         let repController = RepresentationController(context).create({
             abrController: abrController,
