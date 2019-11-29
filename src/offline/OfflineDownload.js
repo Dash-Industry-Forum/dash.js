@@ -248,9 +248,21 @@ function OfflineDownload(config) {
                 sender: this,
                 id: manifestId,
                 status: OfflineConstants.OFFLINE_STATUS_ERROR,
-                message: 'Cannot handle manifest, STATIC manifest only'
+                message: 'Cannot handle DYNAMIC manifest'
             });
-            console.error('Cannot handle manifest, STATIC manifest only');
+            console.error('Cannot handle DYNAMIC manifest');
+
+            return;
+        }
+
+        if (manifest.Period_asArray.length > 1) {
+            eventBus.trigger(events.DOWNLOADING_ERROR, {
+                sender: this,
+                id: manifestId,
+                status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                message: 'MultiPeriod manifest are not yet supported'
+            });
+            console.error('MultiPeriod manifest are not yet supported');
 
             return;
         }
