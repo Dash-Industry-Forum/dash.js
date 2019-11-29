@@ -1055,6 +1055,7 @@ $scope.toggleFastSwitch = function () {
     }
     $scope.hideRepresentationModal = function () {
         $scope.manifestId = undefined;
+        $scope.downloadableRepresentations = null;
         $('#representationModal').modal('hide');
     }
 
