@@ -60,7 +60,9 @@ function OfflineDownload(config) {
         manifest,
         isDownloadingStatus,
         logger,
-        isComposed;
+        isComposed,
+        representationsToUpdate,
+        indexDBManifestParser;
 
 
     function setup() {
@@ -145,12 +147,43 @@ function OfflineDownload(config) {
         }
         if (!e.error && manifestId !== null) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED).then(function () {
-                eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                if (representationsToUpdate) {
+                    indexDBManifestParser.parse(XMLManifest, representationsToUpdate).then(function (parsedManifest) {
+                        if (parsedManifest !== null && manifestId !== null) {
+                            let offlineManifest = {
+                                'fragmentStore': manifestId,
+                                'status': OfflineConstants.OFFLINE_STATUS_FINISHED,
+                                'manifestId': manifestId,
+                                'url': OfflineConstants.OFFLINE_SCHEME + '://' + manifestId,
+                                'originalURL': manifest.url,
+                                'manifest': parsedManifest
+                            };
+                            updateOfflineManifest(offlineManifest).then( function () {
+                                eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                                resetDownload();
+                            });
+                        } else {
+                            throw 'falling parsing offline manifest';
+                        }
+                    }).catch(function (err) {
+                        throw err;
+                    });
+                } else {
+                    eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                    resetDownload();
+                }
             });
         } else {
             throw e.error;
         }
-        resetDownload();
+    }
+
+    function onManifestUpdateNeeded(e) {
+        if (e.id !== manifestId) {
+            return;
+        }
+
+        representationsToUpdate = e.representations;
     }
 
     function composeStreams() {
@@ -167,6 +200,7 @@ function OfflineDownload(config) {
                     id: manifestId,
                     started: onDownloadingStarted,
                     finished: onDownloadingFinished,
+                    updateManifestNeeded: onManifestUpdateNeeded,
                     constants: constants,
                     eventBus: eventBus,
                     events: events,
@@ -228,20 +262,6 @@ function OfflineDownload(config) {
         eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
 
         XMLManifest = e.originalManifest;
-
-        // check type of manifest
-        if (XMLManifest.indexOf(dashConstants.SEGMENT_TEMPLATE) === -1 &&
-            XMLManifest.indexOf(dashConstants.SEGMENT_LIST) === -1) {
-            eventBus.trigger(events.DOWNLOADING_ERROR, {
-                sender: this,
-                id: manifestId,
-                status: OfflineConstants.OFFLINE_STATUS_ERROR,
-                message: 'Cannot handle manifest, only SEGMENT_TEMPLATE or SEGMENT_LIST !'
-            });
-            console.error('Cannot handle manifest, only SEGMENT_TEMPLATE or SEGMENT_LIST');
-
-            return;
-        }
 
         if (manifest.type === dashConstants.DYNAMIC) {
             eventBus.trigger(events.DOWNLOADING_ERROR, {
@@ -324,7 +344,7 @@ function OfflineDownload(config) {
      * @instance
      */
     function generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId) {
-        let parser = OfflineIndexDBManifestParser(context).create({
+        indexDBManifestParser = OfflineIndexDBManifestParser(context).create({
             manifestId: manifestId,
             allMediaInfos: selectedRepresentations,
             debug: debug,
@@ -333,7 +353,7 @@ function OfflineDownload(config) {
             urlUtils: urlUtils
         });
 
-        return parser.parse(XMLManifest).then(function (parsedManifest) {
+        return indexDBManifestParser.parse(XMLManifest).then(function (parsedManifest) {
             if (parsedManifest !== null && manifestId !== null) {
                 let offlineManifest = {
                     'fragmentStore': manifestId,
@@ -413,14 +433,11 @@ function OfflineDownload(config) {
         for (let i = 0, ln = streams.length; i < ln; i++) {
             streams[i].reset();
         }
+        indexDBManifestParser = null;
         isDownloadingStatus = false;
         streams = [];
         eventBus.off(events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
-        resetOfflineEvents();
-    }
-
-    function resetOfflineEvents() {
         resetIndexedDBEvents();
     }
 

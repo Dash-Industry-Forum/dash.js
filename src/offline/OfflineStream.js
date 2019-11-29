@@ -48,6 +48,7 @@ function OfflineStream(config) {
     const manifestId = config.id;
     const startedCb = config.started;
     const finishedCb = config.finished;
+    const updateManifest = config.updateManifestNeeded;
 
     let instance,
         offlineStreamProcessors,
@@ -55,6 +56,7 @@ function OfflineStream(config) {
         finishedOfflineStreamProcessors,
         streamInfo,
         availableSegments,
+        representationsToUpdate,
         allMediasInfosList;
 
     function setup() {
@@ -71,6 +73,7 @@ function OfflineStream(config) {
         startedOfflineStreamProcessors = 0;
         finishedOfflineStreamProcessors = 0;
         allMediasInfosList = [];
+        representationsToUpdate = [];
     }
 
     /**
@@ -263,6 +266,10 @@ function OfflineStream(config) {
         let repCtrl = e.sender;
         if (!streamInfo || repCtrl.getStreamId() !== streamInfo.id) return;
 
+        if (e.currentRepresentation.segments && e.currentRepresentation.segments.length > 0) {
+            representationsToUpdate.push(e.currentRepresentation);
+        }
+
         let sp;
         // data are ready fr stream processor, let's start download
         for (let i = 0; i < offlineStreamProcessors.length; i++ ) {
@@ -282,6 +289,7 @@ function OfflineStream(config) {
         startedOfflineStreamProcessors++;
         if (startedOfflineStreamProcessors === offlineStreamProcessors.length) {
             startedCb({sender: this, id: manifestId, message: 'Downloading started for this stream !'});
+            updateManifest({sender: this, id: manifestId, representations: representationsToUpdate});
         }
     }
 

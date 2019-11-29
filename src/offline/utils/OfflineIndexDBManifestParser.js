@@ -58,11 +58,12 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Parse XML manifest
      * @param {string} XMLDoc - xml manifest
+     * @param {object} representation
      * @returns {Promise} a promise that will be resolved or rejected at the end of encoding process
      * @memberof module:OfflineIndexDBManifestParser
      * @instance
     */
-    function parse(XMLDoc) {
+    function parse(XMLDoc, representation) {
         return new Promise(function (resolve, reject) {
 
             DOM = new DOMParser().parseFromString(XMLDoc, 'application/xml');
@@ -71,7 +72,7 @@ function OfflineIndexDBManifestParser(config) {
             for (let i = 0; i < mpd.length; i++) {
                 if (mpd[i] !== null) {
                     editBaseURLAttribute(mpd[i]);
-                    browsePeriods(mpd[i]);
+                    browsePeriods(mpd[i], representation);
                 }
             }
 
@@ -148,23 +149,25 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Browse periods
      * @param {XML} currentMPD
+     * @param {Object} representation
      * @memberof module:OfflineIndexDBManifestParser
      * @instance
     */
-    function browsePeriods(currentMPD) {
+    function browsePeriods(currentMPD, representation) {
         let periods = currentMPD.getElementsByTagName(dashConstants.PERIOD);
         for (let j = 0; j < periods.length; j++) {
-            browseAdaptationsSet(periods[j]);
+            browseAdaptationsSet(periods[j], representation);
         }
     }
 
     /**
      * Browse adapatation set to update data (delete those taht are not choosen by user ...)
      * @param {XML} currentPeriod
+     * @param {Array} representationsToUpdate
      * @memberof module:offline
      * @instance
     */
-    function browseAdaptationsSet(currentPeriod) {
+    function browseAdaptationsSet(currentPeriod, representationsToUpdate) {
         let adaptationsSet,
             currentAdaptationSet,
             currentAdaptationType,
@@ -184,17 +187,34 @@ function OfflineIndexDBManifestParser(config) {
                 if (representations.length === 0) {
                     currentPeriod.removeChild(currentAdaptationSet);
                 } else {
+                    //detect Segment list use case
+                    for (let i = 0; i < representations.length; i++) {
+                        let rep = representations[i];
+                        let segmentList = getSegmentList(rep);
+                        if (segmentList.length >= 1) {
+                            editSegmentListAttributes(segmentList, rep);
+                        }
+                    }
+
                     let segmentTemplate = getSegmentTemplate(currentAdaptationSet);
+                    // segmentTemplate is defined, update attributes in order to be correctly played offline
                     if (segmentTemplate.length >= 1) {
                         editSegmentTemplateAttributes(segmentTemplate);
                     }
 
-                    for (let i = 0; i < representations.length; i++) {
-                        let rep = representations[i];
-                        let segmentList = getSegmentList(rep);
-                        if (getSegmentList.length >= 1) {
-                            editSegmentListAttributes(segmentList, rep);
+                    // detect SegmentBase use case => transfrom manifest to SegmentList in SegmentTemplate
+                    if (representationsToUpdate && representationsToUpdate.length > 0 ) {
+                        let selectedRep;
+                        for (let i = 0; i < representations.length; i++) {
+                            let rep = representations[i];
+                            for (let j = 0; representationsToUpdate && j < representationsToUpdate.length; j++) {
+                                if (representationsToUpdate[j].id === rep.id) {
+                                    selectedRep = representationsToUpdate[j];
+                                    break;
+                                }
+                            }
                         }
+                        addSegmentTemplateAttributes(currentAdaptationSet, selectedRep);
                     }
                 }
             }
@@ -363,6 +383,25 @@ function OfflineIndexDBManifestParser(config) {
     }
 
     /**
+     * @param {XML} segmentTemplate
+     * @param {object} rep
+     * @memberof module:offline
+     * @instance
+    */
+    function addSegmentTimelineElements(segmentTemplate, rep) {
+        let segmentTimelineElement = DOM.createElement(dashConstants.SEGMENT_TIMELINE);
+        for (let i = 0; i < rep.segments.length; i++) {
+            let S = DOM.createElement('S');
+            if (i === 0) {
+                S.setAttribute('t', 0);
+            }
+            S.setAttribute('d', rep.segments[i].duration);
+            segmentTimelineElement.appendChild(S);
+        }
+        segmentTemplate.appendChild(segmentTimelineElement);
+    }
+
+    /**
      * Update attributes of segment templates to match offline urls
      * @param {Array} segmentsTemplates
      * @memberof module:offline
@@ -407,6 +446,21 @@ function OfflineIndexDBManifestParser(config) {
                 }
             }
         }
+    }
+
+    /**
+     * @param {XML} adaptationSet
+     * @param {object} rep
+     * @memberof module:offline
+     * @instance
+    */
+    function addSegmentTemplateAttributes(adaptationSet, rep) {
+        let segmentTemplateElement = DOM.createElement(dashConstants.SEGMENT_TEMPLATE);
+        segmentTemplateElement.setAttribute(dashConstants.START_NUMBER, '0');
+        segmentTemplateElement.setAttribute(dashConstants.MEDIA, '$RepresentationID$-$Time$');
+        segmentTemplateElement.setAttribute(dashConstants.INITIALIZATION_MINUS,'$RepresentationID$_init');
+        addSegmentTimelineElements(segmentTemplateElement, rep);
+        adaptationSet.appendChild(segmentTemplateElement);
     }
 
     /**
