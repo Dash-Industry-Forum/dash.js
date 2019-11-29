@@ -163,7 +163,7 @@ function OfflineDownload(config) {
         }
         if (!e.error && manifestId !== null) {
             offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED).then(function () {
-                if (representationsToUpdate) {
+                if (representationsToUpdate.length > 0) {
                     indexDBManifestParser.parse(XMLManifest, representationsToUpdate).then(function (parsedManifest) {
                         if (parsedManifest !== null && manifestId !== null) {
                             let offlineManifest = {

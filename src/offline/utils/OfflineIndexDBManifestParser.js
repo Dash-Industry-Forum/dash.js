@@ -184,6 +184,9 @@ function OfflineIndexDBManifestParser(config) {
                 findAndKeepOnlySelectedRepresentations(currentAdaptationSet, representations, currentAdaptationType);
 
                 representations = findRepresentations(currentAdaptationSet);
+
+                deleteSegmentBase(currentAdaptationSet);
+
                 if (representations.length === 0) {
                     currentPeriod.removeChild(currentAdaptationSet);
                 } else {
@@ -382,6 +385,14 @@ function OfflineIndexDBManifestParser(config) {
         return tag.getElementsByTagName(dashConstants.SEGMENT_LIST);
     }
 
+    function deleteSegmentBase(tag) {
+        let elements = tag.getElementsByTagName(dashConstants.SEGMENT_BASE);
+        for (let i = 0; i < elements.length; i++) {
+            let segmentBase = elements[i];
+            segmentBase.parentNode.removeChild(segmentBase);
+        }
+    }
+
     /**
      * @param {XML} segmentTemplate
      * @param {object} rep
@@ -389,16 +400,18 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function addSegmentTimelineElements(segmentTemplate, rep) {
-        let segmentTimelineElement = DOM.createElement(dashConstants.SEGMENT_TIMELINE);
-        for (let i = 0; i < rep.segments.length; i++) {
-            let S = DOM.createElement('S');
-            if (i === 0) {
-                S.setAttribute('t', 0);
+        if (rep && rep.segments) {
+            let segmentTimelineElement = DOM.createElement(dashConstants.SEGMENT_TIMELINE);
+            for (let i = 0; i < rep.segments.length; i++) {
+                let S = DOM.createElement('S');
+                if (i === 0) {
+                    S.setAttribute('t', 0);
+                }
+                S.setAttribute('d', rep.segments[i].duration);
+                segmentTimelineElement.appendChild(S);
             }
-            S.setAttribute('d', rep.segments[i].duration);
-            segmentTimelineElement.appendChild(S);
+            segmentTemplate.appendChild(segmentTimelineElement);
         }
-        segmentTemplate.appendChild(segmentTimelineElement);
     }
 
     /**
