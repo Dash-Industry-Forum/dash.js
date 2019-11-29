@@ -31,6 +31,7 @@
 import OfflineConstants from './constants/OfflineConstants';
 import OfflineStream from './OfflineStream';
 import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser';
+import OfflineErrors from './errors/OfflineErrors';
 
 /**
  * @class OfflineDownload
@@ -43,6 +44,7 @@ function OfflineDownload(config) {
     const offlineStoreController = config.offlineStoreController;
     const manifestId = config.id;
     const eventBus = config.eventBus;
+    const errHandler = config.errHandler;
     const events = config.events;
     const debug = config.debug;
     const manifestUpdater = config.manifestUpdater;
@@ -107,8 +109,7 @@ function OfflineDownload(config) {
     }
 
     function setupIndexedDBEvents() {
-        eventBus.on(events.INDEXEDDB_QUOTA_EXCEED_ERROR, stopDownload, instance);
-        eventBus.on(events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
+        eventBus.on(events.ERROR, onError, instance);
     }
 
     function isDownloading() {
@@ -123,7 +124,14 @@ function OfflineDownload(config) {
             try {
                 manifest = e.manifest;
             } catch (err) {
-                throw new Error(err);
+                errHandler.error({
+                    code: OfflineErrors.OFFLINE_ERROR,
+                    message: err.message,
+                    data: {
+                        id: manifestId,
+                        status: OfflineConstants.OFFLINE_STATUS_ERROR
+                    }
+                });
             }
         }
     }
@@ -137,7 +145,15 @@ function OfflineDownload(config) {
                 eventBus.trigger(events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
             });
         } else {
-            throw e.error;
+            errHandler.error({
+                code: OfflineErrors.OFFLINE_ERROR,
+                message: 'Cannot start download ',
+                data: {
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                    error: e.error
+                }
+            });
         }
     }
 
@@ -174,7 +190,15 @@ function OfflineDownload(config) {
                 }
             });
         } else {
-            throw e.error;
+            errHandler.error({
+                code: OfflineErrors.OFFLINE_ERROR,
+                message: 'Error finishing download ',
+                data: {
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                    error: e.error
+                }
+            });
         }
     }
 
@@ -192,7 +216,14 @@ function OfflineDownload(config) {
             baseURLController.initialize(manifest);
             const streamsInfo = adapter.getStreamsInfo();
             if (streamsInfo.length === 0) {
-                throw new Error('There are no streams');
+                errHandler.error({
+                    code: OfflineErrors.OFFLINE_ERROR,
+                    message: 'Cannot download - no streams',
+                    data: {
+                        id: manifestId,
+                        status: OfflineConstants.OFFLINE_STATUS_ERROR
+                    }
+                });
             }
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
                 const streamInfo = streamsInfo[i];
@@ -216,7 +247,15 @@ function OfflineDownload(config) {
             isComposed = true;
         } catch (e) {
             logger.info(e);
-            throw e.error;
+            errHandler.error({
+                code: OfflineErrors.OFFLINE_ERROR,
+                message: e.message,
+                data: {
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                    error: e.error
+                }
+            });
         }
     }
 
@@ -264,25 +303,29 @@ function OfflineDownload(config) {
         XMLManifest = e.originalManifest;
 
         if (manifest.type === dashConstants.DYNAMIC) {
-            eventBus.trigger(events.DOWNLOADING_ERROR, {
-                sender: this,
-                id: manifestId,
-                status: OfflineConstants.OFFLINE_STATUS_ERROR,
-                message: 'Cannot handle DYNAMIC manifest'
+            errHandler.error({
+                code: OfflineErrors.OFFLINE_ERROR,
+                message: 'Cannot handle DYNAMIC manifest',
+                data: {
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_ERROR
+                }
             });
-            console.error('Cannot handle DYNAMIC manifest');
+            logger.error('Cannot handle DYNAMIC manifest');
 
             return;
         }
 
         if (manifest.Period_asArray.length > 1) {
-            eventBus.trigger(events.DOWNLOADING_ERROR, {
-                sender: this,
-                id: manifestId,
-                status: OfflineConstants.OFFLINE_STATUS_ERROR,
-                message: 'MultiPeriod manifest are not yet supported'
+            errHandler.error({
+                code: OfflineErrors.OFFLINE_ERROR,
+                message: 'MultiPeriod manifest are not yet supported',
+                data: {
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_ERROR
+                }
             });
-            console.error('MultiPeriod manifest are not yet supported');
+            logger.error('MultiPeriod manifest are not yet supported');
 
             return;
         }
@@ -331,7 +374,14 @@ function OfflineDownload(config) {
                 initializeAllMediasInfoList(rep);
             });
         } catch (err) {
-            throw new Error(err);
+            errHandler.error({
+                code: OfflineErrors.OFFLINE_ERROR,
+                message: err.message,
+                data: {
+                    id: manifestId,
+                    status: OfflineConstants.OFFLINE_STATUS_ERROR
+                }
+            });
         }
     }
 
@@ -441,9 +491,15 @@ function OfflineDownload(config) {
         resetIndexedDBEvents();
     }
 
+    function onError(e) {
+        if ( e.error.code === OfflineErrors.INDEXEDDB_QUOTA_EXCEED_ERROR ||
+             e.error.code === OfflineErrors.INDEXEDDB_INVALID_STATE_ERROR ) {
+            stopDownload();
+        }
+    }
+
     function resetIndexedDBEvents() {
-        eventBus.off(events.INDEXEDDB_QUOTA_EXCEED_ERROR, stopDownload, instance);
-        eventBus.off(events.INDEXEDDB_INVALID_STATE_ERROR, stopDownload, instance);
+        eventBus.on(events.ERROR, onError, instance);
     }
 
     /**

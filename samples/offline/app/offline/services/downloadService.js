@@ -40,10 +40,28 @@ service('DownloadService', function ($q) {
             }
         }, this);
 
-        player.on(dashjs.MediaPlayer.events.DOWNLOADING_ERROR, (e) => {
-            let download = this.getDownload(e.id);
-            if (download) {
-                download.status = `error - ${e.message}`;
+
+        player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
+            switch (e.error.code) {
+                // offline errors
+                case dashjs.MediaPlayer.errors.OFFLINE_ERROR:
+                    this.onError(e.error);
+                    break;
+                case dashjs.MediaPlayer.error.INDEXEDDB_QUOTA_EXCEED_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_INVALID_STATE_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_NOT_READABLE_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_NOT_FOUND_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_NETWORK_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_DATA_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_TRANSACTION_INACTIVE_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_NOT_ALLOWED_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_NOT_SUPPORTED_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_VERSION_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_TIMEOUT_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_ABORT_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_UNKNOWN_ERROR:
+                    console.log(e.message);
+                    break;
             }
         }, this);
 
@@ -94,6 +112,13 @@ service('DownloadService', function ($q) {
 
     this.getDownloadProgression = function (manifestId) {
         return player.getDownloadProgression(manifestId);
+    }
+
+    this.onError = function (error) {
+        let download = this.getDownload(error.data.id);
+        if (download) {
+            download.status = `error - ${error.message}`;
+        }
     }
 
     return this;

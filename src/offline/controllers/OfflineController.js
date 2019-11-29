@@ -35,7 +35,7 @@ import OfflineDownload from '../OfflineDownload';
 import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader';
 import OfflineUrlUtils from '../utils/OfflineUrlUtils';
 import OfflineEvents from '../events/OfflineEvents';
-import DOMExceptionsEvents from '../events/DOMExceptionsEvents';
+import OfflineErrors from '../errors/OfflineErrors';
 
 /**
  * @class OfflineController
@@ -79,7 +79,7 @@ function OfflineController() {
         if (config.events && config.eventBus) {
             events = config.events;
             eventBus = config.eventBus;
-            offlineStoreController = OfflineStoreController(context).create({events: config.events, eventBus: config.eventBus, errHandler: errHandler});
+            offlineStoreController = OfflineStoreController(context).create({ eventBus: config.eventBus, errHandler: errHandler});
         }
 
         if (config.debug) {
@@ -314,6 +314,6 @@ function OfflineController() {
 OfflineController.__dashjs_factory_name = 'OfflineController';
 const factory = dashjs.FactoryMaker.getClassFactory(OfflineController); /* jshint ignore:line */
 factory.events = OfflineEvents;
-factory.domExceptionEvents = DOMExceptionsEvents;
+factory.errors = OfflineErrors;
 dashjs.FactoryMaker.updateClassFactory(OfflineController.__dashjs_factory_name, factory); /* jshint ignore:line */
 export default factory;

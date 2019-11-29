@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import IndexDBStore from '../storage/IndexDBStore';
+import OfflineErrors from '../errors/OfflineErrors';
 
 /**
  * @class OfflineStoreController
@@ -40,8 +41,6 @@ function OfflineStoreController(config) {
     config = config || {};
     const context = this.context;
     const errHandler = config.errHandler;
-    const events = config.events;
-    const eventBus = config.eventBus;
 
     let instance,
         indexDBStore;
@@ -101,23 +100,26 @@ function OfflineStoreController(config) {
     }
 
     function manageDOMError(err) {
+        let error;
         if (err) {
             switch (err.name) {
                 case 'QuotaExceededError':
-                    eventBus.trigger(events.INDEXEDDB_QUOTA_EXCEED_ERROR);
+                    error = OfflineErrors.INDEXEDDB_QUOTA_EXCEED_ERROR;
                     break;
                 case 'InvalidStateError':
-                    eventBus.trigger(events.INDEXEDDB_INVALID_STATE_ERROR);
+                    error = OfflineErrors.INDEXEDDB_INVALID_STATE_ERROR;
                     break;
                 case 'NotFoundError':
-                    eventBus.trigger(events.INDEXEDDB_NOT_FOUND_ERROR);
+                    error = OfflineErrors.INDEXEDDB_NOT_FOUND_ERROR;
                     break;
                 case 'VersionError':
-                    eventBus.trigger(events.INDEXEDDB_VERSION_ERROR);
+                    error = OfflineErrors.INDEXEDDB_VERSION_ERROR;
                     break;
                 // TODO : Manage all DOM cases
             }
-            errHandler.indexedDBError(err);
+
+            // avoid importing DashJSError object from streaming
+            errHandler.error({code: error, message: err.name, data: err});
         }
     }
 

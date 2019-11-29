@@ -1253,7 +1253,7 @@ function MediaPlayer() {
             MediaPlayerEvents.extend(OfflineController.events, {
                 publicOnly: true
             });
-            Events.extend(OfflineController.domExceptionEvents);
+            Errors.extend(OfflineController.errors);
 
             const manifestLoader = createManifestLoader();
             const manifestUpdater = ManifestUpdater(context).create();

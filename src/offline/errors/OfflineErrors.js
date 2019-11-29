@@ -28,33 +28,33 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-
 /**
- * @module ErrorHandler
- * @ignore
+ * Offline Errors declaration
+ * @class
  */
-function ErrorHandler() {
+class Errors {
+    constructor () {
+        /**
+         * Error code returned when an error occurs in offline module
+         */
+        this.OFFLINE_ERROR = 11000;
 
-    let instance;
-    const context = this.context;
-    const eventBus = EventBus(context).getInstance();
-
-    /**
-     * @param {object} err DashJSError with code, message and data attributes
-     * @memberof module:ErrorHandler
-     */
-    function error(err) {
-        eventBus.trigger(Events.ERROR, {error: err});
+        // Based upon https://developer.mozilla.org/fr/docs/Web/API/DOMException
+        this.INDEXEDDB_QUOTA_EXCEED_ERROR = 11001;
+        this.INDEXEDDB_INVALID_STATE_ERROR = 11002;
+        this.INDEXEDDB_NOT_READABLE_ERROR = 11003;
+        this.INDEXEDDB_NOT_FOUND_ERROR = 11004;
+        this.INDEXEDDB_NETWORK_ERROR = 11005;
+        this.INDEXEDDB_DATA_ERROR = 11006;
+        this.INDEXEDDB_TRANSACTION_INACTIVE_ERROR = 11007;
+        this.INDEXEDDB_NOT_ALLOWED_ERROR = 11008;
+        this.INDEXEDDB_NOT_SUPPORTED_ERROR = 11009;
+        this.INDEXEDDB_VERSION_ERROR = 11010;
+        this.INDEXEDDB_TIMEOUT_ERROR = 11011;
+        this.INDEXEDDB_ABORT_ERROR = 11012;
+        this.INDEXEDDB_UNKNOWN_ERROR = 11013;
     }
-    instance = {
-        error: error
-    };
-
-    return instance;
 }
 
-ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
-export default FactoryMaker.getSingletonFactory(ErrorHandler);
+let errors = new Errors();
+export default errors;

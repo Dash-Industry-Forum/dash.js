@@ -34,12 +34,6 @@ class OfflineEvents extends EventsBase {
         * @event OfflineEvents#DOWNLOADING_FINISHED
         */
         this.DOWNLOADING_FINISHED = 'public_downloadingFinished';
-
-        /**
-        * Triggered when an error occurs during download
-        * @event OfflineEvents#DOWNLOADING_ERROR
-        */
-        this.DOWNLOADING_ERROR = 'public_downloadingError';
     }
 }
 

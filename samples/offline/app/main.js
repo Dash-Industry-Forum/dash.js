@@ -439,49 +439,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.downloader = dashjs.MediaPlayer().create(); /* jshint ignore:line */
     $scope.downloader.initialize($scope.video, null, $scope.autoPlaySelected);
 
-    $scope.downloader.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
-        if (!e.event) {
-            $scope.$apply(function () {
-                $scope.error = e.error.message;
-                $scope.errorType = 'Dash.js :' + e.error.code;
-                switch (e.error.code) {
-                    case dashjs.MediaPlayer.errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.SEGMENTS_UNAVAILABLE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.SEGMENT_BASE_LOADER_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.TIME_SYNC_FAILED_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.APPEND_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.REMOVE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.DATA_UPDATE_FAILED_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.CAPABILITY_MEDIASOURCE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.CAPABILITY_MEDIAKEYS_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.DOWNLOAD_ERROR_ID_SIDX:
-                    case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_CODEC:
-                    case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_PARSE:
-                    case dashjs.MediaPlayer.errors.MANIFEST_ERROR_ID_NOSTREAMS:
-                    case dashjs.MediaPlayer.errors.TIMED_TEXT_ERROR_ID_PARSE:
-                    // mss errors
-                    case dashjs.MediaPlayer.errors.MSS_NO_TFRF_CODE:
-                    // protection errors
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_CODE:
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_UNKNOWN_CODE:
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_CLIENT_CODE:
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_SERVICE_CODE:
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_OUTPUT_CODE:
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_HARDWARECHANGE_CODE:
-                    case dashjs.MediaPlayer.errors.MEDIA_KEYERR_DOMAIN_CODE:
-                        break;
-                }
-            });
-            $("#errorModal").modal('show');
-        }
-    }, $scope);
-
     $scope.downloads = DownloadService.getDownloads();
     DownloadService.init($scope.downloader);
 
