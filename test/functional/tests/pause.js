@@ -38,6 +38,8 @@ define([
 
             load: function() {
                 if (!stream.available) this.skip();
+                // Ignore streams that are insufficiently long
+                if (stream.duration < 60) this.skip();
                 utils.log(NAME, 'Load stream');
                 command = this.remote.get(require.toUrl(intern.config.testPage));
                 return command.execute(player.loadStream, [stream])
@@ -62,10 +64,10 @@ define([
                 utils.log(NAME, 'Play');
                 return command.execute(player.play)
                 .then(function () {
-                    var sleepTime = PAUSE_DELAY + Math.round(Math.random() * 10);
+                    var sleepTime = Math.round(Math.random() * 10);
                     utils.log(NAME, 'Wait ' + sleepTime + ' sec. and pause playback');
                     // Wait and pause the player
-                    return command.sleep(sleepTime * 1000).execute(player.pause)                        
+                    return command.sleep(sleepTime * 1000).execute(player.pause)
                 })
                 .then(function() {
                     // Pause the player
