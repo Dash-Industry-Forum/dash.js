@@ -1,3 +1,6 @@
+/* global angular, dashjs */
+/* global player:true */
+
 angular.module('DashPlayer').
 service('DownloadService', function ($q) {
 
@@ -10,11 +13,11 @@ service('DownloadService', function ($q) {
         });
 
         return element;
-    }
+    };
 
     this.getDownloads = function () {
         return downloads;
-    }
+    };
 
     this.init = function (playerInstance) {
         player = playerInstance;
@@ -66,7 +69,7 @@ service('DownloadService', function ($q) {
         }, this);
 
         this.getAllDownloads();
-    }
+    };
 
     this.getAllDownloads = function () {
         let deferred = $q.defer();
@@ -94,32 +97,32 @@ service('DownloadService', function ($q) {
             // init download
             player.initDownload(id);
         });
-    }
+    };
 
     this.doDeleteDownload = function (manifestId) {
         player.deleteDownload(manifestId).then(() => {
             this.getAllDownloads();
         });
-    }
+    };
 
     this.doStopDownload = function (manifestId) {
         player.stopDownload(manifestId);
-    }
+    };
 
     this.doResumeDownload = function (manifestId) {
         player.resumeDownload(manifestId);
-    }
+    };
 
     this.getDownloadProgression = function (manifestId) {
         return player.getDownloadProgression(manifestId);
-    }
+    };
 
     this.onError = function (error) {
         let download = this.getDownload(error.data.id);
         if (download) {
             download.status = `error - ${error.message}`;
         }
-    }
+    };
 
     return this;
 });
