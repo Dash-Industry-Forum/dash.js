@@ -51,7 +51,7 @@ function ListSegmentsGetter(config, isDynamic) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
         const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
@@ -80,7 +80,7 @@ function ListSegmentsGetter(config, isDynamic) {
         checkConfig();
 
         if (!representation) {
-            throw new Error('no representation');
+            return null;
         }
 
         const duration = representation.segmentDuration;

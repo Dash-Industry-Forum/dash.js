@@ -29,8 +29,10 @@ define([
 
     // Filter streams if input stream name is set
     if (intern.config.testStream) {
-        streams = streams.filter(stream => stream.name.indexOf(intern.config.testStream) !== -1);
-    }
+        streams = streams.filter(stream => {
+            return stream.name.indexOf(intern.config.testStream) !== -1;
+        });
+    };
 
     // streams = streams.slice(0, 1);
 

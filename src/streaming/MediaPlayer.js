@@ -107,7 +107,7 @@ function MediaPlayer() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     let settings = Settings(context).getInstance();
-    const debug = Debug(context).getInstance();
+    const debug = Debug(context).getInstance({settings: settings});
 
     let instance,
         logger,
@@ -1972,7 +1972,8 @@ function MediaPlayer() {
                 debug: debug,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
                 BASE64: BASE64,
-                ISOBoxer: ISOBoxer
+                ISOBoxer: ISOBoxer,
+                settings: settings
             });
         }
     }

@@ -49,7 +49,6 @@ function ManifestUpdater() {
         manifestModel,
         adapter,
         errHandler,
-        mediaPlayerModel,
         settings;
 
     function setup() {
@@ -64,9 +63,6 @@ function ManifestUpdater() {
         }
         if (config.adapter) {
             adapter = config.adapter;
-        }
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
         }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;

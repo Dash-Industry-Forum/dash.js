@@ -63,14 +63,14 @@ class Representation {
         this.availabilityTimeComplete = true;
     }
 
-    static hasInitialization(r) {
-        return (r.initialization !== null || r.range !== null);
+    hasInitialization() {
+        return (this.initialization !== null || this.range !== null);
     }
 
-    static hasSegments(r) {
-        return r.segmentInfoType !== DashConstants.BASE_URL &&
-            r.segmentInfoType !== DashConstants.SEGMENT_BASE &&
-            !r.indexRange;
+    hasSegments() {
+        return this.segmentInfoType !== DashConstants.BASE_URL &&
+            this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
+            !this.indexRange;
     }
 }
 

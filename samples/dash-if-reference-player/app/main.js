@@ -240,8 +240,26 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             if ($scope.player) {
                 $scope.player.updateSettings(config);
             }
+        } else {
+            // Set default initial configuration
+            var initialConfig = {
+                'debug': {
+                    'logLevel': dashjs.Debug.LOG_LEVEL_INFO
+                },
+                'streaming': {
+                    'fastSwitchEnabled': $scope.fastSwitchSelected,
+                    'jumpGaps': true,
+                    'abr': {
+                        'autoSwitchBitrate': {
+                            'video': $scope.videoAutoSwitchSelected
+                        }
+                    }
+                }
+            }
+            $scope.player.updateSettings(initialConfig);
         }
     };
+
     reqConfig.open("GET", "dashjs_config.json", true);
     reqConfig.setRequestHeader("Content-type", "application/json");
     reqConfig.send();
@@ -296,23 +314,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     if (doesTimeMarchesOn()) {
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
     }
-
-    // Set initial configuration
-    var initialConfig = {
-        'debug': {
-            'logLevel': dashjs.Debug.LOG_LEVEL_INFO
-        },
-        'streaming': {
-            'fastSwitchEnabled': $scope.fastSwitchSelected,
-            'jumpGaps': true,
-            'abr': {
-                'autoSwitchBitrate': {
-                    'video': $scope.videoAutoSwitchSelected
-                }
-            }
-        }
-    }
-    $scope.player.updateSettings(initialConfig);
 
     // get buffer default value
     var currentConfig = $scope.player.getSettings();

@@ -38,6 +38,7 @@ import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/Segm
 import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
+import DashHandler from '../../dash/DashHandler';
 
 export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
                                    'http://dashif.org/guidelines/thumbnail_tile'];
@@ -57,7 +58,9 @@ function ThumbnailTracks(config) {
 
     let instance,
         tracks,
+        indexHandler,
         currentTrackIndex,
+        mediaInfo,
         loader, segmentBaseLoader, boxParser;
 
     function initialize() {
@@ -71,6 +74,12 @@ function ThumbnailTracks(config) {
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler
         });
+
+        indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
+                                baseURLController: baseURLController});
+
+        // initialize controllers
+        indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);
 
         // parse representation and create tracks
         addTracks();
@@ -119,7 +128,7 @@ function ThumbnailTracks(config) {
         }
 
         // Extract thumbnail tracks
-        const mediaInfo = adapter.getMediaInfoForType(streamInfo, Constants.IMAGE);
+        mediaInfo = adapter.getMediaInfoForType(streamInfo, Constants.IMAGE);
         if (!mediaInfo) {
             return;
         }
@@ -128,10 +137,13 @@ function ThumbnailTracks(config) {
 
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
-                if (rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media)
+                if ((rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media) ||
+                     rep.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
                     createTrack(rep);
-                if (rep.segmentInfoType === DashConstants.SEGMENT_BASE)
+                }
+                if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
                     createTrack(rep, true);
+                }
             });
         }
 
@@ -261,9 +273,23 @@ function ThumbnailTracks(config) {
         currentTrackIndex = index;
     }
 
+    function getThumbnailRequestForTime(time) {
+        let currentVoRep;
+        const voReps = adapter.getVoRepresentations(mediaInfo);
+        for (let i = 0; i < voReps.length; i++) {
+            if (tracks[currentTrackIndex].id === voReps[i].id) {
+                currentVoRep = voReps[i];
+                break;
+            }
+        }
+
+        return indexHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
+    }
+
     function reset() {
         tracks = [];
         currentTrackIndex = -1;
+        mediaInfo = null;
     }
 
     instance = {
@@ -272,7 +298,8 @@ function ThumbnailTracks(config) {
         reset: reset,
         setTrackByIndex: setTrackByIndex,
         getCurrentTrack: getCurrentTrack,
-        getCurrentTrackIndex: getCurrentTrackIndex
+        getCurrentTrackIndex: getCurrentTrackIndex,
+        getThumbnailRequestForTime: getThumbnailRequestForTime
     };
 
     initialize();

@@ -186,7 +186,15 @@
         },
         {
           "name": "SegmentBase, Single adaption set, 3x4 tiles",
-          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails.mpd"
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-static.mpd"
+        },
+        {
+          "name": "SegmentTemplate with SegmentTimeline",
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd"
+        },
+        {
+          "name": "SegmentNumber",
+          "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd"
         }
       ]
     },
@@ -482,11 +490,13 @@
           "protData": {
             "org.w3.clearkey": {
               "clearkeys": {
-                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
-                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
-                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
-                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
-                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+                "CHJ4bvnnRl-jok5bDvj6RQ": "wyYRebq2Hu7JedLUBpURzw",
+                "wU8HCfK5RCeRa2G1JYZQag": "7fsXeXJHs8enQ0SEfkhTBQ",
+                "LW6Th2DKQUWuwsQIN7SwJg": "QtC_8bYPe-SfF9YDSE0MuQ",
+                "3gLwf6CYTuC1VpB8DRf7vA": "GQnGyyKBez4x8aNTD6cNzw",
+                "kU5p9AqzRTSen5hTYV4m9g": "0DBllUYESc5WdSJMebqlBA",
+                "KfBej6GuRuSA6SLc1EzXoQ": "BxGxfISpDLtBCXJkyQG3Mg",
+                "af5wd9rdS1WWzcPts5kYUw": "7TqCUJKmSlCbdIeJ0xbAgQ"
               }
             }
           },
@@ -524,11 +534,13 @@
           "protData": {
             "org.w3.clearkey": {
               "clearkeys": {
-                "gDmb9YohQBSAU-J-dI6YwA": "3aHppzZ2g3Y3wK1uNnUXmg",
-                "kJU-CWyySaOiYHpf7-rUmQ": "zsmKW7Mq9Unz5R7oUGeF8w",
-                "Dk2pK9DoSmaMP8Jal-tlMg": "UmYYfGb7znuoFAQM79ayHw",
-                "WF8jPzByRvGfpG3CLGagFA": "jayKpC3tmPq4YKXkapa8FA",
-                "QiK9eLxFQb-2Pm-BTcOR3w": "GAMi9v92b9ca5yBwaptN-Q"
+                "CHJ4bvnnRl-jok5bDvj6RQ": "wyYRebq2Hu7JedLUBpURzw",
+                "wU8HCfK5RCeRa2G1JYZQag": "7fsXeXJHs8enQ0SEfkhTBQ",
+                "LW6Th2DKQUWuwsQIN7SwJg": "QtC_8bYPe-SfF9YDSE0MuQ",
+                "3gLwf6CYTuC1VpB8DRf7vA": "GQnGyyKBez4x8aNTD6cNzw",
+                "kU5p9AqzRTSen5hTYV4m9g": "0DBllUYESc5WdSJMebqlBA",
+                "KfBej6GuRuSA6SLc1EzXoQ": "BxGxfISpDLtBCXJkyQG3Mg",
+                "af5wd9rdS1WWzcPts5kYUw": "7TqCUJKmSlCbdIeJ0xbAgQ"
               }
             }
           },
@@ -563,6 +575,19 @@
         {
           "name": "Multi-period audio with W3C Clear Key, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_AudioOnly_ClearKey.mpd",
+          "protData": {
+            "org.w3.clearkey": {
+              "clearkeys": {
+                "CHJ4bvnnRl-jok5bDvj6RQ": "wyYRebq2Hu7JedLUBpURzw",
+                "wU8HCfK5RCeRa2G1JYZQag": "7fsXeXJHs8enQ0SEfkhTBQ",
+                "LW6Th2DKQUWuwsQIN7SwJg": "QtC_8bYPe-SfF9YDSE0MuQ",
+                "3gLwf6CYTuC1VpB8DRf7vA": "GQnGyyKBez4x8aNTD6cNzw",
+                "kU5p9AqzRTSen5hTYV4m9g": "0DBllUYESc5WdSJMebqlBA",
+                "KfBej6GuRuSA6SLc1EzXoQ": "BxGxfISpDLtBCXJkyQG3Mg",
+                "af5wd9rdS1WWzcPts5kYUw": "7TqCUJKmSlCbdIeJ0xbAgQ"
+              }
+            }
+          },
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
@@ -922,23 +947,7 @@
         },
         {
           "url": "http://2is7server2.rd.francetelecom.com/hasplayer/LIVE_1.isml/manifest",
-          "name": "Prince Of Persia - Live",
-          "bufferConfig" : {
-            "liveDelay": 16,
-            "stableBufferTime": 16,
-            "bufferTimeAtTopQuality": 16,
-            "bufferTimeAtTopQualityLongForm": 16
-          }
-        },
-        {
-          "url": "http://2is7server1.rd.francetelecom.com/C4/C4-50_TVApp2.isml/Manifest",
-          "name": "Arte (subtitles)",
-          "bufferConfig" : {
-            "liveDelay": 16,
-            "stableBufferTime": 16,
-            "bufferTimeAtTopQuality": 16,
-            "bufferTimeAtTopQualityLongForm": 16
-          }
+          "name": "Prince Of Persia - Live"
         },
         {
           "url": "http://2is7server1.rd.francetelecom.com/VOD/BBB-SD/big_buck_bunny_1080p_stereo.ism/Manifest",

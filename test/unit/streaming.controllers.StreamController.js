@@ -3,6 +3,7 @@ import Events from '../../src/core/events/Events';
 import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
 import EventBus from '../../src/core/EventBus';
 import Settings from '../../src/core/Settings';
+import Constants from '../../src/streaming/constants/Constants';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AdapterMock from './mocks/AdapterMock';
@@ -67,16 +68,16 @@ describe('StreamController', function () {
         });
 
         it('should throw an exception when attempting to call initialize while setConfig has not been called', function () {
-            expect(streamController.initialize.bind(streamController)).to.throw('setConfig function has to be called previously');
+            expect(streamController.initialize.bind(streamController)).to.throw(Constants.MISSING_CONFIG_ERROR);
         });
 
         it('should throw an exception when attempting to call load while setConfig has not been called', function () {
-            expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
+            expect(streamController.load.bind(streamController)).to.throw(Constants.MISSING_CONFIG_ERROR);
         });
 
         it('should throw an exception when attempting to call load while setConfig has not been called properly - empty manifestLoader object', function () {
             streamController.setConfig({manifestLoader: {}});
-            expect(streamController.load.bind(streamController)).to.throw('setConfig function has to be called previously');
+            expect(streamController.load.bind(streamController)).to.throw(Constants.MISSING_CONFIG_ERROR);
         });
 
         it('should throw an exception when attempting to call loadWithManifest while initialize has not been called', function () {
@@ -84,7 +85,7 @@ describe('StreamController', function () {
         });
 
         it('should throw an exception when attempting to call reset while setConfig has not been called', function () {
-            expect(streamController.reset.bind(streamController)).to.throw('setConfig function has to be called previously');
+            expect(streamController.reset.bind(streamController)).to.throw(Constants.MISSING_CONFIG_ERROR);
         });
 
         it('should return an empty array when attempting to call getActiveStreamProcessors while no activeStream has been defined', function () {

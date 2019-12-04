@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 import DataChunk from '../vo/DataChunk';
 import FragmentModel from '../models/FragmentModel';
 import FragmentLoader from '../FragmentLoader';
@@ -80,10 +79,6 @@ function FragmentController( config ) {
         return model;
     }
 
-    function isInitializationRequest(request) {
-        return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
-    }
-
     function resetInitialSettings() {
         for (let model in fragmentModels) {
             fragmentModels[model].reset();
@@ -122,7 +117,7 @@ function FragmentController( config ) {
 
         const request = e.request;
         const bytes = e.response;
-        const isInit = isInitializationRequest(request);
+        const isInit = request.isInitializationRequest();
         const streamInfo = request.mediaInfo.streamInfo;
 
         if (e.error) {
@@ -145,7 +140,6 @@ function FragmentController( config ) {
 
     instance = {
         getModel: getModel,
-        isInitializationRequest: isInitializationRequest,
         reset: reset
     };
 

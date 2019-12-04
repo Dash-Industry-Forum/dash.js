@@ -52,7 +52,9 @@ describe('SegmentBaseGetter', () => {
 
         it('should throw an error if representation parameter has not been properly set', function () {
             const getter = SegmentBaseGetter(context).create({ timelineConverter: timelineConverter });
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw('no representation');
+            const segment = getter.getSegmentByIndex();
+
+            expect(segment).to.be.null; // jshint ignore:line
         });
     });
 

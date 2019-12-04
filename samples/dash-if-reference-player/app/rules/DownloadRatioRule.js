@@ -37,7 +37,6 @@ function DownloadRatioRuleClass() {
 
     let factory = dashjs.FactoryMaker;
     let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
-    let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
     let DashMetrics = factory.getSingletonFactoryByName('DashMetrics');
     let DashManifestModel = factory.getSingletonFactoryByName('DashManifestModel');
     let StreamController = factory.getSingletonFactoryByName('StreamController');

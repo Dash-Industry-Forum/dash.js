@@ -124,7 +124,6 @@ function StreamController() {
         manifestUpdater.setConfig({
             manifestModel: manifestModel,
             adapter: adapter,
-            mediaPlayerModel: mediaPlayerModel,
             manifestLoader: manifestLoader,
             errHandler: errHandler,
             settings: settings
@@ -420,9 +419,7 @@ function StreamController() {
         let streamStart = 0;
         let streamDur = null;
 
-        const ln = streams.length;
-
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streams.length; i++) {
             stream = streams[i];
             streamStart = stream.getStartTime();
             streamDur = stream.getDuration();
@@ -520,7 +517,7 @@ function StreamController() {
 
         function onMediaSourceOpen() {
             // Manage situations in which a call to reset happens while MediaSource is being opened
-            if (!mediaSource) return;
+            if (!mediaSource || mediaSource.readyState != 'open') return;
 
             logger.debug('MediaSource is open!');
             window.URL.revokeObjectURL(sourceUrl);
@@ -582,7 +579,7 @@ function StreamController() {
                 let startTime = playbackController.getStreamStartTime(true);
                 if (!keepBuffers) {
                     getActiveStreamProcessors().forEach(p => {
-                        adapter.setIndexHandlerTime(p, startTime);
+                        p.setIndexHandlerTime(startTime);
                     });
                 }
             }
@@ -848,7 +845,7 @@ function StreamController() {
         if (!manifestLoader || !manifestLoader.hasOwnProperty('load') || !timelineConverter || !timelineConverter.hasOwnProperty('initialize') ||
             !timelineConverter.hasOwnProperty('reset') || !timelineConverter.hasOwnProperty('getClientTimeOffset') || !manifestModel || !errHandler ||
             !dashMetrics || !playbackController) {
-            throw new Error('setConfig function has to be called previously');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 

@@ -171,6 +171,12 @@ class MediaPlayerEvents extends EventsBase {
         this.SOURCE_INITIALIZED = 'sourceInitialized';
 
         /**
+         * Triggered when a stream (period) is being loaded
+         * @event MediaPlayerEvents#STREAM_INITIALIZING
+         */
+        this.STREAM_INITIALIZING = 'streamInitializing';
+
+        /**
          * Triggered when a stream (period) is loaded
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */

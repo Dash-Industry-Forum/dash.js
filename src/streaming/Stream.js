@@ -263,7 +263,7 @@ function Stream(config) {
     }
 
     function checkConfig() {
-        if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
+        if (!videoModel || !abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -335,13 +335,13 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
-        let processor = getProcessorForMediaInfo(e.newMediaInfo);
+        let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
 
         let currentTime = playbackController.getTime();
@@ -359,7 +359,7 @@ function Stream(config) {
                 processor.switchTrackAsked();
                 processor.getFragmentModel().abortRequests();
             } else {
-                processor.getScheduleController().setSeekTarget(NaN);
+                processor.getScheduleController().setSeekTarget(currentTime);
                 processor.setIndexHandlerTime(currentTime);
                 processor.resetIndexHandler();
             }
@@ -460,6 +460,11 @@ function Stream(config) {
             initialMediaInfo = mediaController.getTracksFor(type, streamInfo)[0];
         }
 
+        eventBus.trigger(Events.STREAM_INITIALIZING, {
+            streamInfo: streamInfo,
+            mediaInfo: mediaInfo
+        });
+
         // TODO : How to tell index handler live/duration?
         // TODO : Pass to controller and then pass to each method on handler?
 
@@ -546,7 +551,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(streamInfo ? streamInfo.index : null, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
@@ -601,10 +606,9 @@ function Stream(config) {
     }
 
     function getMediaInfo(type) {
-        const ln = streamProcessors.length;
         let streamProcessor = null;
 
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streamProcessors.length; i++) {
             streamProcessor = streamProcessors[i];
 
             if (streamProcessor.getType() === type) {
@@ -655,13 +659,9 @@ function Stream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        let sp = e.sender.getStreamProcessor();
+        if (!streamInfo || e.sender.getStreamId() !== streamInfo.id) return;
 
-        if (sp.getStreamInfo() !== streamInfo) {
-            return;
-        }
-
-        updateError[sp.getType()] = e.error;
+        updateError[e.sender.getType()] = e.error;
         checkIfInitializationCompleted();
     }
 
@@ -678,13 +678,12 @@ function Stream(config) {
     }
 
     function getProcessors() {
-        const ln = streamProcessors.length;
         let arr = [];
 
         let type,
             streamProcessor;
 
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streamProcessors.length; i++) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
@@ -719,7 +718,7 @@ function Stream(config) {
 
         if (trackChangedEvent) {
             let mediaInfo = trackChangedEvent.newMediaInfo;
-            if (mediaInfo.type !== 'fragmentedText') {
+            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                 if (!processor) return;
                 processor.switchTrackAsked();
@@ -847,6 +846,7 @@ function Stream(config) {
 
         setPreloaded(true);
     }
+
 
     instance = {
         initialize: initialize,

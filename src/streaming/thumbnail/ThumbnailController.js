@@ -55,13 +55,22 @@ function ThumbnailController(config) {
 
     function getThumbnail(time, callback) {
         const track = thumbnailTracks.getCurrentTrack();
+        let offset,
+            request;
         if (!track || track.segmentDuration <= 0 || time === undefined || time === null) {
             return null;
         }
 
         // Calculate index of the sprite given a time
-        const seq = Math.floor(time / track.segmentDuration);
-        const offset = time % track.segmentDuration;
+        if (isNaN(track.segmentDuration)) {
+            request = thumbnailTracks.getThumbnailRequestForTime(time);
+            if (request) {
+                track.segmentDuration = request.duration;
+            }
+        }
+
+        offset = time % track.segmentDuration;
+
         const thumbIndex = Math.floor((offset * track.tilesHor * track.tilesVert) / track.segmentDuration);
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
@@ -78,7 +87,13 @@ function ThumbnailController(config) {
                     callback(thumbnail);
             });
         } else {
-            thumbnail.url = buildUrlFromTemplate(track, seq);
+            if (!request) {
+                const seq = Math.floor(time / track.segmentDuration);
+                thumbnail.url = buildUrlFromTemplate(track, seq);
+            } else {
+                thumbnail.url = request.url;
+                track.segmentDuration = NaN;
+            }
             if (callback)
                 callback(thumbnail);
             return thumbnail;

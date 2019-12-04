@@ -29,20 +29,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
-import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
 import { checkInteger } from './utils/SupervisorTools';
-
+import EventBus from '../core/EventBus';
+import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
+import Errors from '../core/errors/Errors';
 
 function StreamProcessor(config) {
 
     config = config || {};
     let context = this.context;
+    let eventBus = EventBus(context).getInstance();
 
     let type = config.type;
     let errHandler = config.errHandler;
@@ -65,35 +67,33 @@ function StreamProcessor(config) {
         mediaInfoArr,
         bufferController,
         scheduleController,
-        liveEdgeFinder,
         representationController,
         fragmentModel,
         spExternalControllers,
         indexHandler;
 
     function setup() {
-        if (playbackController && playbackController.getIsDynamic()) {
-            liveEdgeFinder = LiveEdgeFinder(context).create({
-                timelineConverter: timelineConverter,
-                streamProcessor: instance
-            });
-        }
         resetInitialSettings();
+
+        eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }
 
     function initialize(mediaSource) {
         indexHandler = DashHandler(context).create({
+            type: type,
             mimeType: mimeType,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             baseURLController: config.baseURLController,
             errHandler: errHandler,
-            settings: settings
+            settings: settings,
+            streamInfo: getStreamInfo()
         });
 
         // initialize controllers
-        indexHandler.initialize(instance);
+        indexHandler.initialize(playbackController.getIsDynamic());
         abrController.registerStreamType(type, instance);
 
         fragmentModel = stream.getFragmentController().getModel(type);
@@ -122,11 +122,12 @@ function StreamProcessor(config) {
             manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance
+            streamProcessor: instance,
+            type: type,
+            streamId: getStreamInfo() ? getStreamInfo().id : null
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
-        representationController.initialize();
     }
 
     function registerExternalController(controller) {
@@ -180,17 +181,38 @@ function StreamProcessor(config) {
             controller.reset();
         });
 
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+
         resetInitialSettings();
         type = null;
         stream = null;
-        if (liveEdgeFinder) {
-            liveEdgeFinder.reset();
-            liveEdgeFinder = null;
-        }
     }
 
     function isUpdating() {
         return representationController ? representationController.isUpdating() : false;
+    }
+
+    function onDataUpdateCompleted(e) {
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== getStreamInfo().id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
+
+        addDVRMetric();
+    }
+
+    function onBufferLevelUpdated(e) {
+        if (e.sender.getStreamProcessor() !== instance) return;
+        let manifest = manifestModel.getValue();
+        if (!manifest.doNotUpdateDVRWindowOnBufferUpdated) {
+            addDVRMetric();
+        }
+    }
+
+    function addDVRMetric() {
+        const streamInfo = getStreamInfo();
+        const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
+        const isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
+        const range = timelineConverter.calcSegmentAvailabilityRange(representationController.getCurrentRepresentation(), isDynamic);
+        dashMetrics.addDVRInfo(getType(), playbackController.getTime(), manifestInfo, range);
     }
 
     function getType() {
@@ -199,14 +221,6 @@ function StreamProcessor(config) {
 
     function getRepresentationController() {
         return representationController;
-    }
-
-    function getIndexHandler() {
-        return indexHandler;
-    }
-
-    function getFragmentController() {
-        return stream ? stream.getFragmentController() : null;
     }
 
     function getBuffer() {
@@ -225,10 +239,6 @@ function StreamProcessor(config) {
         return fragmentModel;
     }
 
-    function getLiveEdgeFinder() {
-        return liveEdgeFinder;
-    }
-
     function getStreamInfo() {
         return stream ? stream.getStreamInfo() : null;
     }
@@ -243,10 +253,36 @@ function StreamProcessor(config) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
         }
-        const realAdaptation = adapter.getRealAdaptation(getStreamInfo(), mediaInfo);
+
+        const streamInfo = getStreamInfo();
+        const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+
         if (representationController) {
-            representationController.updateData(realAdaptation, voRepresentations, type);
+            const realAdaptation = representationController.getData();
+            const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo ? streamInfo.id : null);
+            const minIdx = abrController.getMinAllowedIndexFor(type);
+
+            let quality,
+                averageThroughput;
+            let bitrate = null;
+
+            if ((realAdaptation === null || (realAdaptation.id != newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
+                averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
+                bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
+                quality = abrController.getQualityForBitrate(mediaInfo, bitrate);
+            } else {
+                quality = abrController.getQualityFor(type);
+            }
+
+            if (minIdx !== undefined && quality < minIdx) {
+                quality = minIdx;
+            }
+            if (quality > maxQuality) {
+                quality = maxQuality;
+            }
+
+            representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
         }
     }
 
@@ -299,24 +335,21 @@ function StreamProcessor(config) {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
 
-        return voRepresentation ? adapter.convertDataToRepresentationInfo(voRepresentation) : null;
+        return adapter.convertDataToRepresentationInfo(voRepresentation);
     }
 
     function isBufferingCompleted() {
-        if (bufferController) {
-            return bufferController.getIsBufferingCompleted();
-        }
-
-        return false;
+        return bufferController ? bufferController.getIsBufferingCompleted() : false;
     }
 
     function getBufferLevel() {
-        return bufferController.getBufferLevel();
+        return bufferController ? bufferController.getBufferLevel() : 0;
     }
 
     function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            bufferController.switchInitData(getStreamInfo().id, representationId, bufferResetEnabled);
+            const streamInfo = getStreamInfo();
+            bufferController.switchInitData(streamInfo ? streamInfo.id : null, representationId, bufferResetEnabled);
         }
     }
 
@@ -390,21 +423,21 @@ function StreamProcessor(config) {
 
         const representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
 
-        return indexHandler ? indexHandler.getInitRequest(representation) : null;
+        return indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representation) : null;
     }
 
     function getFragmentRequest(representationInfo, time, options) {
         let fragRequest = null;
 
-        const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
-
         if (indexHandler) {
+            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
             // if time and options are undefined, it means the next segment is requested
             // otherwise, the segment at this specific time is requested.
             if (time !== undefined && options !== undefined) {
-                fragRequest = indexHandler.getSegmentRequestForTime(representation, time, options);
+                fragRequest = indexHandler.getSegmentRequestForTime(getMediaInfo(), representation, time, options);
             } else {
-                fragRequest = indexHandler.getNextSegmentRequest(representation);
+                fragRequest = indexHandler.getNextSegmentRequest(getMediaInfo(), representation);
             }
         }
 
@@ -418,10 +451,7 @@ function StreamProcessor(config) {
         getBufferController: getBufferController,
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
-        getLiveEdgeFinder: getLiveEdgeFinder,
-        getFragmentController: getFragmentController,
         getRepresentationController: getRepresentationController,
-        getIndexHandler: getIndexHandler,
         getRepresentationInfo: getRepresentationInfo,
         getBufferLevel: getBufferLevel,
         switchInitData: switchInitData,

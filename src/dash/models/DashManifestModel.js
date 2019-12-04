@@ -188,6 +188,10 @@ function DashManifestModel() {
         return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? adaptation.AudioChannelConfiguration_asArray : [];
     }
 
+    function getAudioChannelConfigurationForRepresentation(representation) {
+        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY) ? representation.AudioChannelConfiguration_asArray : [];
+    }
+
     function getRepresentationSortFunction() {
         return (a, b) => a.bandwidth - b.bandwidth;
     }
@@ -228,15 +232,16 @@ function DashManifestModel() {
     }
 
     function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
-        const realAdaptations = getRealAdaptations(manifest, periodIndex);
-        const len = realAdaptations.length;
+        if (!realAdaptation) {
+            return -1;
+        }
 
-        if (realAdaptation) {
-            for (let i = 0; i < len; i++) {
-                let objectUtils = ObjectUtils(context).getInstance();
-                if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
-                    return i;
-                }
+        const realAdaptations = getRealAdaptations(manifest, periodIndex);
+
+        for (let i = 0; i < realAdaptations.length; i++) {
+            let objectUtils = ObjectUtils(context).getInstance();
+            if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
+                return i;
             }
         }
 
@@ -748,7 +753,7 @@ function DashManifestModel() {
 
     function checkConfig() {
         if (!errHandler || !errHandler.hasOwnProperty('error')) {
-            throw new Error('setConfig function has to be called previously');
+            throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
@@ -811,7 +816,8 @@ function DashManifestModel() {
                     }
 
                     if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
-                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary);
+                        // toString is used to manage both regular and namespaced tags
+                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary.toString());
                     } else {
                         // From Cor.1: 'NOTE: this attribute is an alternative
                         // to specifying a complete XML element(s) in the Event.
@@ -1031,7 +1037,61 @@ function DashManifestModel() {
     }
 
     function getAvailabilityStartTime(mpd) {
-        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) ? mpd.availabilityStartTime.getTime() : null;
+        return mpd && mpd.hasOwnProperty(DashConstants.AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null ? mpd.availabilityStartTime.getTime() : null;
+    }
+
+    function getServiceDescriptions(manifest) {
+        const serviceDescriptions = [];
+        if (manifest && manifest.hasOwnProperty(DashConstants.SERVICE_DESCRIPTION)) {
+            for (const sd of manifest.ServiceDescription_asArray) {
+                // Convert each of the properties defined in
+                let id, schemeIdUri, latency, playbackRate;
+                for (const prop in sd) {
+                    if (sd.hasOwnProperty(prop)) {
+                        if (prop === DashConstants.ID) {
+                            id = sd[prop];
+                        } else if (prop === DashConstants.SERVICE_DESCRIPTION_SCOPE) {
+                            schemeIdUri = sd[prop].schemeIdUri;
+                        } else if (prop === DashConstants.SERVICE_DESCRIPTION_LATENCY) {
+                            latency = {
+                                target: sd[prop].target,
+                                max: sd[prop].max,
+                                min: sd[prop].min
+                            };
+                        } else if (prop === DashConstants.SERVICE_DESCRIPTION_PLAYBACK_RATE) {
+                            playbackRate = {
+                                max: sd[prop].max,
+                                min: sd[prop].min
+                            };
+                        }
+                    }
+                }
+                // we have a ServiceDescription for low latency. Add it if it really has parameters defined
+                if (schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME && (latency || playbackRate)) {
+                    serviceDescriptions.push({
+                        id,
+                        schemeIdUri,
+                        latency,
+                        playbackRate
+                    });
+                }
+            }
+        }
+
+        return serviceDescriptions;
+    }
+
+    function getSupplementalPropperties(adaptation) {
+        const supplementalProperties = {};
+
+        if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+            for (const sp of adaptation.SupplementalProperty_asArray) {
+                if (sp.hasOwnProperty(Constants.SCHEME_ID_URI) && sp.hasOwnProperty(DashConstants.VALUE)) {
+                    supplementalProperties[sp[Constants.SCHEME_ID_URI]] = sp[DashConstants.VALUE];
+                }
+            }
+        }
+        return supplementalProperties;
     }
 
     function setConfig(config) {
@@ -1054,6 +1114,7 @@ function DashManifestModel() {
         getRolesForAdaptation: getRolesForAdaptation,
         getAccessibilityForAdaptation: getAccessibilityForAdaptation,
         getAudioChannelConfigurationForAdaptation: getAudioChannelConfigurationForAdaptation,
+        getAudioChannelConfigurationForRepresentation: getAudioChannelConfigurationForRepresentation,
         getAdaptationForIndex: getAdaptationForIndex,
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
@@ -1085,6 +1146,8 @@ function DashManifestModel() {
         getUseCalculatedLiveEdgeTimeForAdaptation: getUseCalculatedLiveEdgeTimeForAdaptation,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
         getAvailabilityStartTime: getAvailabilityStartTime,
+        getServiceDescriptions: getServiceDescriptions,
+        getSupplementalPropperties: getSupplementalPropperties,
         setConfig: setConfig
     };
 

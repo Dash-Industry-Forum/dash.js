@@ -94,30 +94,21 @@ function SegmentsController(config) {
     }
 
     function updateSegments(voRepresentation, type) {
-        segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation.indexRange);
+        segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation ? voRepresentation.indexRange : null);
     }
 
     function getSegmentsGetter(representation) {
-        if (representation.segments) {
-            return getters[DashConstants.SEGMENT_BASE];
-        }
-        return getters[representation.segmentInfoType];
+        return representation ? representation.segments ? getters[DashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
     }
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {
         const getter = getSegmentsGetter(representation);
-        if (getter) {
-            return getter.getSegmentByIndex(representation, index, lastSegmentTime);
-        }
-        return null;
+        return getter ? getter.getSegmentByIndex(representation, index, lastSegmentTime) : null;
     }
 
     function getSegmentByTime(representation, time) {
         const getter = getSegmentsGetter(representation);
-        if (getter) {
-            return getter.getSegmentByTime(representation, time);
-        }
-        return null;
+        return getter ? getter.getSegmentByTime(representation, time) : null;
     }
 
     instance = {

@@ -6,9 +6,6 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
-import {
-    HTTPRequest
-} from '../streaming/vo/metrics/HTTPRequest';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import DashJSError from '../streaming/vo/DashJSError';
@@ -307,7 +304,6 @@ function WebmSegmentBaseLoader() {
         checkConfig();
         let request = null;
         let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
-        let media = baseUrl ? baseUrl.url : undefined;
         let initRange = representation ? representation.range.split('-') : null;
         let info = loadingInfo || {
             range: {
@@ -315,8 +311,9 @@ function WebmSegmentBaseLoader() {
                 end: initRange ? parseFloat(initRange[1]) : null
             },
             request: request,
-            url: media,
-            init: true
+            url: baseUrl ? baseUrl.url : undefined,
+            init: true,
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         logger.info('Start loading initialization.');
@@ -361,7 +358,8 @@ function WebmSegmentBaseLoader() {
             },
             request: request,
             url: media,
-            init: false
+            init: false,
+            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
         };
 
         callback = !callback ? onLoaded : callback;
@@ -407,12 +405,8 @@ function WebmSegmentBaseLoader() {
     }
 
     function getFragmentRequest(info) {
-        let request = new FragmentRequest();
-
-        request.type = info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
-        request.url = info.url;
-        request.range = info.range.start + '-' + info.range.end;
-
+        const request = new FragmentRequest();
+        request.setInfo(info);
         return request;
     }
 

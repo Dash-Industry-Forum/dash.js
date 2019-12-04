@@ -50,4 +50,8 @@ describe('SegmentsController', function () {
         // Assert
         expect(s).to.be.null; // jshint ignore:line
     });
+
+    it('update should not throw an error even if no parameter is defined', function () {
+        expect(segmentsController.update.bind(segmentsController)).not.to.throw();
+    });
 });
