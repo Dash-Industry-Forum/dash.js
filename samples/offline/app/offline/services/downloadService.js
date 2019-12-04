@@ -47,7 +47,7 @@ service('DownloadService', function ($q) {
                 case dashjs.MediaPlayer.errors.OFFLINE_ERROR:
                     this.onError(e.error);
                     break;
-                case dashjs.MediaPlayer.error.INDEXEDDB_QUOTA_EXCEED_ERROR:
+                case dashjs.MediaPlayer.errors.INDEXEDDB_QUOTA_EXCEED_ERROR:
                 case dashjs.MediaPlayer.errors.INDEXEDDB_INVALID_STATE_ERROR:
                 case dashjs.MediaPlayer.errors.INDEXEDDB_NOT_READABLE_ERROR:
                 case dashjs.MediaPlayer.errors.INDEXEDDB_NOT_FOUND_ERROR:
