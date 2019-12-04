@@ -527,6 +527,9 @@ var Constants = (function () {
       this.UTF8 = 'utf-8';
       this.SCHEME_ID_URI = 'schemeIdUri';
       this.START_TIME = 'starttime';
+
+      this.SERVICE_DESCRIPTION_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
+      this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
     }
   }]);
 
@@ -1362,7 +1365,7 @@ function MetricsHandlerFactory(config) {
 
     config = config || {};
     var instance = undefined;
-    var debug = config.debug;
+    var logger = config.debug ? config.debug.getLogger(instance) : {};
 
     // group 1: key, [group 3: n [, group 5: type]]
     var keyRegex = /([a-zA-Z]*)(\(([0-9]*)(\,\s*([a-zA-Z]*))?\))?/;
@@ -1394,7 +1397,7 @@ function MetricsHandlerFactory(config) {
             handler.initialize(matches[1], reportingController, matches[3], matches[5]);
         } catch (e) {
             handler = null;
-            debug.error('MetricsHandlerFactory: Could not create handler for type ' + matches[1] + ' with args ' + matches[3] + ', ' + matches[5] + ' (' + e.message + ')');
+            logger.error('MetricsHandlerFactory: Could not create handler for type ' + matches[1] + ' with args ' + matches[3] + ', ' + matches[5] + ' (' + e.message + ')');
         }
 
         return handler;
@@ -1894,10 +1897,9 @@ function ReportingFactory(config) {
     };
 
     var context = this.context;
-    var debug = config.debug;
-    var metricsConstants = config.metricsConstants;
-
     var instance = undefined;
+    var logger = config.debug ? config.debug.getLogger(instance) : {};
+    var metricsConstants = config.metricsConstants;
 
     function create(entry, rangeController) {
         var reporting = undefined;
@@ -1910,7 +1912,7 @@ function ReportingFactory(config) {
             reporting.initialize(entry, rangeController);
         } catch (e) {
             reporting = null;
-            debug.error('ReportingFactory: could not create Reporting with schemeIdUri ' + entry.schemeIdUri + ' (' + e.message + ')');
+            logger.error('ReportingFactory: could not create Reporting with schemeIdUri ' + entry.schemeIdUri + ' (' + e.message + ')');
         }
 
         return reporting;
@@ -2445,7 +2447,6 @@ function ManifestParsing(config) {
     var constants = config.constants;
 
     function getMetricsRangeStartTime(manifest, dynamic, range) {
-        var mpd = adapter.getMpd(manifest);
         var voPeriods = undefined,
             reportingStartTime = undefined;
         var presentationStartTime = 0;
@@ -2455,12 +2456,12 @@ function ManifestParsing(config) {
             // indicated in wall clock time by adding the value of this
             // attribute to the value of the MPD@availabilityStartTime
             // attribute.
-            presentationStartTime = adapter.getAvailabilityStartTime(mpd) / 1000;
+            presentationStartTime = adapter.getAvailabilityStartTime(manifest) / 1000;
         } else {
             // For services with MPD@type='static', the start time is indicated
             // in Media Presentation time and is relative to the PeriodStart
             // time of the first Period in this MPD.
-            voPeriods = adapter.getRegularPeriods(mpd);
+            voPeriods = adapter.getRegularPeriods(manifest);
 
             if (voPeriods.length) {
                 presentationStartTime = voPeriods[0].start;

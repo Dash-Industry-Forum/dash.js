@@ -1310,6 +1310,13 @@ function ProtectionController(config) {
         var self = this;
         var requestedKeySystems = [];
 
+        // Reorder key systems according to priority order provided in protectionData
+        supportedKS = supportedKS.sort(function (ksA, ksB) {
+            var indexA = protDataSet && protDataSet[ksA.ks.systemString] && protDataSet[ksA.ks.systemString].priority >= 0 ? protDataSet[ksA.ks.systemString].priority : supportedKS.length;
+            var indexB = protDataSet && protDataSet[ksB.ks.systemString] && protDataSet[ksB.ks.systemString].priority >= 0 ? protDataSet[ksB.ks.systemString].priority : supportedKS.length;
+            return indexA - indexB;
+        });
+
         var ksIdx = undefined;
         if (keySystem) {
             // We have a key system
@@ -2341,16 +2348,17 @@ function KeySystemPlayReady(config) {
         for (var i = 0; i < headerNameList.length; i++) {
             headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
         }
-        // some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
+        // Some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
         // this is NOT w3c conform and license servers may reject the request!
         // -> rename it to proper w3c definition!
         if (headers.hasOwnProperty('Content')) {
             headers['Content-Type'] = headers.Content;
             delete headers.Content;
         }
-        // some devices (Ex: LG SmartTVs) require content-type to be defined
+        // Set Content-Type header by default if not provided in the the CDM message (<PlayReadyKeyMessage/>)
+        // or if the message contains directly the challenge itself (Ex: LG SmartTVs)
         if (!headers.hasOwnProperty('Content-Type')) {
-            headers['Content-Type'] = 'text/xml; charset=' + messageFormat;
+            headers['Content-Type'] = 'text/xml; charset=utf-8';
         }
         return headers;
     }
@@ -2370,6 +2378,9 @@ function KeySystemPlayReady(config) {
                 licenseRequest = BASE64.decode(Challenge);
             }
         } else {
+            // The message from CDM is not a wrapped message as on IE11 and Edge,
+            // thus it contains direclty the challenge itself
+            // (note that the xmlDoc at this point may be unreadable since it may have been interpreted as UTF-16)
             return message;
         }
 
