@@ -400,18 +400,32 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function addSegmentTimelineElements(segmentTemplate, rep) {
+        let S = DOM.createElement('S');
         if (rep && rep.segments) {
             let segmentTimelineElement = DOM.createElement(dashConstants.SEGMENT_TIMELINE);
-            for (let i = 0; i < rep.segments.length; i++) {
-                let S = DOM.createElement('S');
-                if (i === 0) {
-                    S.setAttribute('t', 0);
+            let changedDuration = getDurationChangeArray(rep);
+            for (let i = 0; i < changedDuration.length; i++) {
+                let repeatValue = i + 1 < changedDuration.length ? (changedDuration[i + 1] - changedDuration[i]) - 1 : 0;
+                if (repeatValue > 1) {
+                    S.setAttribute('r', repeatValue);
                 }
-                S.setAttribute('d', rep.segments[i].duration);
+                S.setAttribute('d', rep.segments[changedDuration[i]].duration);
                 segmentTimelineElement.appendChild(S);
+                S = DOM.createElement('S');
             }
             segmentTemplate.appendChild(segmentTimelineElement);
         }
+    }
+
+    function getDurationChangeArray(rep) {
+        let array = [];
+        array.push(0);
+        for (let i = 1; i < rep.segments.length; i++) {
+            if (rep.segments[i - 1].duration !== rep.segments[i].duration) {
+                array.push(i);
+            }
+        }
+        return array;
     }
 
     /**
