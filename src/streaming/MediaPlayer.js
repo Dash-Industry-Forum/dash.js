@@ -1071,6 +1071,18 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
 
+    /** Loads downloads from storage
+     * This methos has to be called first, to be sure that all downloads have been loaded
+     * @return {Promise} asynchronously resolved
+     * @memberof module:MediaPlayer
+     */
+    function loadDownloadsFromStorage() {
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
+        return offlineController ? offlineController.loadDownloadsFromStorage() : Promise.reject();
+    }
+
     /**
      * Creates a new download object in storage
      *
@@ -2378,6 +2390,7 @@ function MediaPlayer() {
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getThumbnail: getThumbnail,
+        loadDownloadsFromStorage: loadDownloadsFromStorage,
         createDownload: createDownload,
         getDashAdapter: getDashAdapter,
         getSettings: getSettings,

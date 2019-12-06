@@ -56,27 +56,47 @@ function OfflineDownload(config) {
     const context = this.context;
 
     let instance,
-        manifestURL,
-        XMLManifest,
-        streams,
-        manifest,
-        isDownloadingStatus,
         logger,
-        isComposed,
-        representationsToUpdate,
-        indexDBManifestParser;
+        _manifestURL,
+        _xmlManifest,
+        _streams,
+        _manifest,
+        _isDownloadingStatus,
+        _isComposed,
+        _representationsToUpdate,
+        _indexDBManifestParser,
+        _progressionById,
+        _progression,
+        _status;
 
 
     function setup() {
         logger = debug.getLogger(instance);
         manifestUpdater.initialize();
-        streams = [];
-        isDownloadingStatus = false;
-        isComposed = false;
+        _streams = [];
+        _isDownloadingStatus = false;
+        _isComposed = false;
+        _progressionById = {};
+        _progression = 0;
+        _status = undefined;
     }
 
     function getId() {
         return manifestId;
+    }
+
+    function getManifestUrl () {
+        return _manifestURL;
+    }
+
+    function getStatus () {
+        return _status;
+    }
+
+    function setInitialState(state) {
+        _progression = state.progress;
+        _manifestURL = state.url;
+        _status = state.status;
     }
 
     /**
@@ -85,11 +105,12 @@ function OfflineDownload(config) {
      * @instance
      */
     function downloadFromUrl(url) {
-        manifestURL = url;
+        _manifestURL = url;
+        _status = OfflineConstants.OFFLINE_STATUS_CREATED;
         setupOfflineEvents();
         let offlineManifest = {
             'fragmentStore': manifestId,
-            'status': OfflineConstants.OFFLINE_STATUS_CREATED,
+            'status': _status,
             'manifestId': manifestId,
             'url': OfflineConstants.OFFLINE_SCHEME + '://' + manifestId,
             'originalURL': url
@@ -98,8 +119,8 @@ function OfflineDownload(config) {
     }
 
     function initDownload() {
-        manifestLoader.load(manifestURL);
-        isDownloadingStatus = true;
+        manifestLoader.load(_manifestURL);
+        _isDownloadingStatus = true;
     }
 
     function setupOfflineEvents() {
@@ -113,23 +134,24 @@ function OfflineDownload(config) {
     }
 
     function isDownloading() {
-        return isDownloadingStatus;
+        return _isDownloadingStatus;
     }
 
     function onManifestUpdated(e) {
-        if (isComposed) {
+        if (_isComposed) {
             return;
         }
         if (!e.error) {
             try {
-                manifest = e.manifest;
+                _manifest = e.manifest;
             } catch (err) {
+                _status = OfflineConstants.OFFLINE_STATUS_ERROR;
                 errHandler.error({
                     code: OfflineErrors.OFFLINE_ERROR,
                     message: err.message,
                     data: {
                         id: manifestId,
-                        status: OfflineConstants.OFFLINE_STATUS_ERROR
+                        status: _status
                     }
                 });
             }
@@ -141,19 +163,55 @@ function OfflineDownload(config) {
             return;
         }
         if (!e.error && manifestId !== null) {
-            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STARTED).then(function () {
+            _status = OfflineConstants.OFFLINE_STATUS_STARTED;
+            offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
                 eventBus.trigger(events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
             });
         } else {
+            _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
                 message: 'Cannot start download ',
                 data: {
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                    status: _status,
                     error: e.error
                 }
             });
+        }
+    }
+
+    function OnStreamProgression(stream, downloaded, available) {
+
+        _progressionById[stream.getStreamInfo().id] = {
+            downloaded,
+            available
+        };
+
+        let segments = 0;
+        let allSegments = 0;
+        let waitForAllProgress;
+        for (var property in _progressionById) {
+            if (_progressionById.hasOwnProperty(property)) {
+                if (_progressionById[property] === null) {
+                    waitForAllProgress = true;
+                } else {
+                    segments += _progressionById[property].downloaded;
+                    allSegments += _progressionById[property].available;
+                }
+            }
+        }
+
+        if (!waitForAllProgress) {
+            // all progression have been started, we can compute global progression
+            _progression = segments / allSegments;
+
+            // store progression
+            offlineStoreController.getManifestById(manifestId)
+                .then((item) => {
+                    item.progress = _progression;
+                    return updateOfflineManifest(item);
+                });
         }
     }
 
@@ -162,19 +220,18 @@ function OfflineDownload(config) {
             return;
         }
         if (!e.error && manifestId !== null) {
-            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_FINISHED).then(function () {
-                if (representationsToUpdate.length > 0) {
-                    indexDBManifestParser.parse(XMLManifest, representationsToUpdate).then(function (parsedManifest) {
+            _status = OfflineConstants.OFFLINE_STATUS_FINISHED;
+            offlineStoreController.setDownloadingStatus(manifestId, _status)
+            .then(function () {
+                if (_representationsToUpdate.length > 0) {
+                    _indexDBManifestParser.parse(_xmlManifest, _representationsToUpdate).then(function (parsedManifest) {
                         if (parsedManifest !== null && manifestId !== null) {
-                            let offlineManifest = {
-                                'fragmentStore': manifestId,
-                                'status': OfflineConstants.OFFLINE_STATUS_FINISHED,
-                                'manifestId': manifestId,
-                                'url': OfflineConstants.OFFLINE_SCHEME + '://' + manifestId,
-                                'originalURL': manifest.url,
-                                'manifest': parsedManifest
-                            };
-                            updateOfflineManifest(offlineManifest).then( function () {
+                            offlineStoreController.getManifestById(manifestId)
+                            .then((item) => {
+                                item.manifest = parsedManifest;
+                                return updateOfflineManifest(item);
+                            })
+                            .then( function () {
                                 eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
                                 resetDownload();
                             });
@@ -190,12 +247,13 @@ function OfflineDownload(config) {
                 }
             });
         } else {
+            _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
                 message: 'Error finishing download ',
                 data: {
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                    status: _status,
                     error: e.error
                 }
             });
@@ -207,21 +265,22 @@ function OfflineDownload(config) {
             return;
         }
 
-        representationsToUpdate = e.representations;
+        _representationsToUpdate = e.representations;
     }
 
     function composeStreams() {
         try {
-            adapter.updatePeriods(manifest);
-            baseURLController.initialize(manifest);
+            adapter.updatePeriods(_manifest);
+            baseURLController.initialize(_manifest);
             const streamsInfo = adapter.getStreamsInfo();
             if (streamsInfo.length === 0) {
+                _status = OfflineConstants.OFFLINE_STATUS_ERROR;
                 errHandler.error({
                     code: OfflineErrors.OFFLINE_ERROR,
                     message: 'Cannot download - no streams',
                     data: {
                         id: manifestId,
-                        status: OfflineConstants.OFFLINE_STATUS_ERROR
+                        status: _status
                     }
                 });
             }
@@ -229,8 +288,11 @@ function OfflineDownload(config) {
                 const streamInfo = streamsInfo[i];
                 let stream = OfflineStream(context).create({
                     id: manifestId,
-                    started: onDownloadingStarted,
-                    finished: onDownloadingFinished,
+                    callbacks: {
+                        started: onDownloadingStarted,
+                        progression: OnStreamProgression,
+                        finished: onDownloadingFinished
+                    },
                     updateManifestNeeded: onManifestUpdateNeeded,
                     constants: constants,
                     eventBus: eventBus,
@@ -239,20 +301,22 @@ function OfflineDownload(config) {
                     adapter: adapter,
                     offlineStoreController: offlineStoreController
                 });
-                streams.push(stream);
+                _streams.push(stream);
 
                 // initialise stream and get downloadable representations
                 stream.initialize(streamInfo);
+                _progressionById[streamInfo.id] = null;
             }
-            isComposed = true;
+            _isComposed = true;
         } catch (e) {
             logger.info(e);
+            _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
                 message: e.message,
                 data: {
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_ERROR,
+                    status: _status,
                     error: e.error
                 }
             });
@@ -260,7 +324,7 @@ function OfflineDownload(config) {
     }
 
     function getDownloadableRepresentations() {
-        streams.forEach(stream => {
+        _streams.forEach(stream => {
             stream.getDownloadableRepresentations();
         });
     }
@@ -300,15 +364,16 @@ function OfflineDownload(config) {
         // unregister form event
         eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
 
-        XMLManifest = e.originalManifest;
+        _xmlManifest = e.originalManifest;
 
-        if (manifest.type === dashConstants.DYNAMIC) {
+        if (_manifest.type === dashConstants.DYNAMIC) {
+            _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
                 message: 'Cannot handle DYNAMIC manifest',
                 data: {
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_ERROR
+                    status: _status
                 }
             });
             logger.error('Cannot handle DYNAMIC manifest');
@@ -316,13 +381,14 @@ function OfflineDownload(config) {
             return;
         }
 
-        if (manifest.Period_asArray.length > 1) {
+        if (_manifest.Period_asArray.length > 1) {
+            _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
                 message: 'MultiPeriod manifest are not yet supported',
                 data: {
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_ERROR
+                    status: _status
                 }
             });
             logger.error('MultiPeriod manifest are not yet supported');
@@ -330,8 +396,10 @@ function OfflineDownload(config) {
             return;
         }
 
+        // save original manifest (for resume)
+
         // initialise offline streams
-        composeStreams(manifest);
+        composeStreams(_manifest);
 
         // get downloadable representations
         getDownloadableRepresentations();
@@ -340,8 +408,8 @@ function OfflineDownload(config) {
     }
 
     function initializeAllMediasInfoList(selectedRepresentations) {
-        for (let i = 0; i < streams.length; i++) {
-            streams[i].initializeAllMediasInfoList(selectedRepresentations);
+        for (let i = 0; i < _streams.length; i++) {
+            _streams[i].initializeAllMediasInfoList(selectedRepresentations);
         }
     }
 
@@ -369,17 +437,25 @@ function OfflineDownload(config) {
     function startDownload(selectedRepresentations) {
         try {
             let rep = formatSelectedRepresentations(selectedRepresentations);
-            createFragmentStore(manifestId);
-            generateOfflineManifest(XMLManifest, rep, manifestId).then(function () {
+
+            offlineStoreController.saveSelectedRepresentations(manifestId, rep)
+            .then(() => {
+                return createFragmentStore(manifestId);
+            })
+            .then(() => {
+                return generateOfflineManifest(_xmlManifest, rep, manifestId);
+            })
+            .then(function () {
                 initializeAllMediasInfoList(rep);
             });
         } catch (err) {
+            _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
                 code: OfflineErrors.OFFLINE_ERROR,
                 message: err.message,
                 data: {
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_ERROR
+                    status: _status
                 }
             });
         }
@@ -394,7 +470,7 @@ function OfflineDownload(config) {
      * @instance
      */
     function generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId) {
-        indexDBManifestParser = OfflineIndexDBManifestParser(context).create({
+        _indexDBManifestParser = OfflineIndexDBManifestParser(context).create({
             manifestId: manifestId,
             allMediaInfos: selectedRepresentations,
             debug: debug,
@@ -403,17 +479,15 @@ function OfflineDownload(config) {
             urlUtils: urlUtils
         });
 
-        return indexDBManifestParser.parse(XMLManifest).then(function (parsedManifest) {
+        return _indexDBManifestParser.parse(XMLManifest).then(function (parsedManifest) {
             if (parsedManifest !== null && manifestId !== null) {
-                let offlineManifest = {
-                    'fragmentStore': manifestId,
-                    'status': OfflineConstants.OFFLINE_STATUS_CREATED,
-                    'manifestId': manifestId,
-                    'url': OfflineConstants.OFFLINE_SCHEME + '://' + manifestId,
-                    'originalURL': manifest.url,
-                    'manifest': parsedManifest
-                };
-                return updateOfflineManifest(offlineManifest);
+                return offlineStoreController.getManifestById(manifestId)
+                .then((item) => {
+                    item.originalURL = _manifest.url;
+                    item.originalManifest = _manifest;
+                    item.manifest = parsedManifest;
+                    return updateOfflineManifest(item);
+                });
             } else {
                 return Promise.reject('falling parsing offline manifest');
             }
@@ -428,17 +502,25 @@ function OfflineDownload(config) {
      */
     function stopDownload() {
         if (manifestId !== null && isDownloading()) {
-            for (let i = 0, ln = streams.length; i < ln; i++) {
-                streams[i].stopOfflineStreamProcessors();
+            for (let i = 0, ln = _streams.length; i < ln; i++) {
+                _streams[i].stopOfflineStreamProcessors();
             }
-            offlineStoreController.setDownloadingStatus(manifestId, OfflineConstants.OFFLINE_STATUS_STOPPED).then(function () {
+
+            // remove streams
+            _streams = [];
+
+            _isComposed = false;
+
+            _status = OfflineConstants.OFFLINE_STATUS_STOPPED;
+            // update status
+            offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
                 eventBus.trigger(events.DOWNLOADING_STOPPED, {
                     sender: this,
                     id: manifestId,
-                    status: OfflineConstants.OFFLINE_STATUS_STOPPED,
+                    status: _status,
                     message: 'Downloading has been stopped for this stream !'
                 });
-                isDownloadingStatus = false;
+                _isDownloadingStatus = false;
             });
         }
     }
@@ -456,10 +538,23 @@ function OfflineDownload(config) {
      * @instance
      */
     function resumeDownload() {
-        if (isDownloading()) {
-            for (let i = 0, ln = streams.length; i < ln; i++) {
-                streams[i].resumeOfflineStreamProcessors();
-            }
+        if (!isDownloading()) {
+            _isDownloadingStatus = true;
+
+            let selectedRepresentation;
+
+            offlineStoreController.getManifestById(manifestId)
+            .then((item) => {
+                _manifest = item.originalManifest;
+                selectedRepresentation = item.selected;
+
+                composeStreams(_manifest);
+                eventBus.trigger(events.STREAMS_COMPOSED);
+
+                return createFragmentStore(manifestId);
+            }). then(() => {
+                initializeAllMediasInfoList(selectedRepresentation);
+            });
         }
     }
 
@@ -468,11 +563,7 @@ function OfflineDownload(config) {
      * @instance
      */
     function getDownloadProgression() {
-        let globalProgression = 0;
-        for (let i = 0, ln = streams.length; i < ln; i++) {
-            globalProgression = +streams[i].getDownloadProgression();
-        }
-        return Math.round(globalProgression * 100);
+        return Math.round(_progression * 100);
     }
 
     /**
@@ -480,12 +571,12 @@ function OfflineDownload(config) {
      * @instance
      */
     function resetDownload() {
-        for (let i = 0, ln = streams.length; i < ln; i++) {
-            streams[i].reset();
+        for (let i = 0, ln = _streams.length; i < ln; i++) {
+            _streams[i].reset();
         }
-        indexDBManifestParser = null;
-        isDownloadingStatus = false;
-        streams = [];
+        _indexDBManifestParser = null;
+        _isDownloadingStatus = false;
+        _streams = [];
         eventBus.off(events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.off(events.ORIGINAL_MANIFEST_LOADED, onOriginalManifestLoaded, instance);
         resetIndexedDBEvents();
@@ -517,6 +608,9 @@ function OfflineDownload(config) {
     instance = {
         reset: reset,
         getId: getId,
+        getManifestUrl: getManifestUrl,
+        getStatus: getStatus,
+        setInitialState: setInitialState,
         initDownload: initDownload,
         downloadFromUrl: downloadFromUrl,
         startDownload: startDownload,

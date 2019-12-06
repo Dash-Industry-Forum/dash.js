@@ -46,8 +46,9 @@ function OfflineStream(config) {
     const adapter = config.adapter;
     const offlineStoreController = config.offlineStoreController;
     const manifestId = config.id;
-    const startedCb = config.started;
-    const finishedCb = config.finished;
+    const startedCb = config.callbacks && config.callbacks.started;
+    const progressionCb = config.callbacks && config.callbacks.progression;
+    const finishedCb = config.callbacks && config.callbacks.finished;
     const updateManifest = config.updateManifestNeeded;
 
     let instance,
@@ -57,7 +58,9 @@ function OfflineStream(config) {
         streamInfo,
         availableSegments,
         representationsToUpdate,
-        allMediasInfosList;
+        allMediasInfosList,
+        progressionById,
+        progression;
 
     function setup() {
         resetInitialSettings();
@@ -74,6 +77,8 @@ function OfflineStream(config) {
         finishedOfflineStreamProcessors = 0;
         allMediasInfosList = [];
         representationsToUpdate = [];
+        progressionById = {};
+        progression = 0;
     }
 
     /**
@@ -237,7 +242,10 @@ function OfflineStream(config) {
 
         let streamProcessor = OfflineStreamProcessor(context).create({
             id: manifestId,
-            completed: onStreamCompleted,
+            callbacks: {
+                completed: onStreamCompleted,
+                progression: onStreamProgression
+            },
             debug: debug,
             events: events,
             eventBus: eventBus,
@@ -253,12 +261,43 @@ function OfflineStream(config) {
             offlineStoreController: offlineStoreController
         });
         offlineStreamProcessors.push(streamProcessor);
+
+        progressionById[bitrate.id] = null;
     }
 
     function onStreamCompleted() {
         finishedOfflineStreamProcessors++;
         if (finishedOfflineStreamProcessors === offlineStreamProcessors.length) {
             finishedCb({sender: this, id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+        }
+    }
+
+    function onStreamProgression(streamProcessor, downloadedSegments, availableSegments ) {
+        progressionById[streamProcessor.getRepresentationId()] = {
+            downloadedSegments,
+            availableSegments
+        };
+
+        let segments = 0;
+        let allSegments = 0;
+        let waitForAllProgress;
+        for (var property in progressionById) {
+            if (progressionById.hasOwnProperty(property)) {
+                if (progressionById[property] === null) {
+                    waitForAllProgress = true;
+                } else {
+                    segments += progressionById[property].downloadedSegments;
+                    allSegments += progressionById[property].availableSegments;
+                }
+            }
+        }
+
+        if (!waitForAllProgress && progressionCb) {
+            // all progression have been started, we can compute global progression
+            progression = segments / allSegments;
+            if (allSegments > 0) {
+                progressionCb(instance, segments, allSegments);
+            }
         }
     }
 
@@ -289,7 +328,8 @@ function OfflineStream(config) {
         startedOfflineStreamProcessors++;
         if (startedOfflineStreamProcessors === offlineStreamProcessors.length) {
             startedCb({sender: this, id: manifestId, message: 'Downloading started for this stream !'});
-            updateManifest({sender: this, id: manifestId, representations: representationsToUpdate});
+
+            updateManifest({sender: this, id: manifestId, representations: representationsToUpdate });
         }
     }
 
@@ -311,48 +351,6 @@ function OfflineStream(config) {
     function stopOfflineStreamProcessors() {
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             offlineStreamProcessors[i].stop();
-        }
-    }
-
-    /**
-     * Resume offline stream processors
-     */
-    function resumeOfflineStreamProcessors() {
-        for (let i = 0; i < offlineStreamProcessors.length; i++) {
-            offlineStreamProcessors[i].resume();
-        }
-        eventBus.trigger(events.DOWNLOADING_STARTED, {sender: this, id: manifestId, message: 'Downloading started for this stream !'});
-    }
-
-    /**
-     * Returns the progression (nbDownloaded/availableSegments)
-     * @returns {number} Download progression
-     */
-    function getDownloadProgression() {
-        let downloadedSegments = 0;
-
-        if (isNaN(availableSegments)) {
-            setAvailableSegments();
-        }
-
-        for (let i = 0; i < offlineStreamProcessors.length; i++) {
-            downloadedSegments += offlineStreamProcessors[i].getDownloadedSegments();
-        }
-        return downloadedSegments / availableSegments;
-    }
-
-    /**
-     * Initialize total numbers of segments
-     */
-    function setAvailableSegments() {
-        availableSegments = 0;
-        //TODO compter par taille de segments et non par le nombre
-        for (let i = 0; i < offlineStreamProcessors.length; i++) {
-            if (offlineStreamProcessors[i].getAvailableSegmentsNumber()) {
-                availableSegments += offlineStreamProcessors[i].getAvailableSegmentsNumber();
-            } else {    //format différent
-                availableSegments = 0;
-            }
         }
     }
 
@@ -381,8 +379,6 @@ function OfflineStream(config) {
         initializeAllMediasInfoList: initializeAllMediasInfoList,
         getStreamInfo: getStreamInfo,
         stopOfflineStreamProcessors: stopOfflineStreamProcessors,
-        resumeOfflineStreamProcessors: resumeOfflineStreamProcessors,
-        getDownloadProgression: getDownloadProgression,
         reset: reset
     };
 

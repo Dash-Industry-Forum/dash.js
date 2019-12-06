@@ -36,6 +36,7 @@ import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader';
 import OfflineUrlUtils from '../utils/OfflineUrlUtils';
 import OfflineEvents from '../events/OfflineEvents';
 import OfflineErrors from '../errors/OfflineErrors';
+import OfflineDownloadVo from '../vo/OfflineDownloadVo';
 
 /**
  * @class OfflineController
@@ -170,6 +171,26 @@ function OfflineController() {
         return download;
     }
 
+    function createDownloadFromStorage(offline) {
+        let download = getDownloadFromId(offline.manifestId);
+
+        if (!download) {
+            download = createDownloadFromId(offline.manifestId);
+            let status = offline.status;
+            if (status === OfflineConstants.OFFLINE_STATUS_STARTED) {
+                status = OfflineConstants.OFFLINE_STATUS_STOPPED;
+            }
+
+            download.setInitialState({
+                progress: offline.progress,
+                url: offline.originalURL,
+                status: status
+            });
+        }
+
+        return download;
+    }
+
     function removeDownloadFromId(id) {
         return new Promise(function (resolve, reject) {
             let download = getDownloadFromId(id);
@@ -212,6 +233,22 @@ function OfflineController() {
         return timestamp;
     }
 
+    function loadDownloadsFromStorage() {
+
+        return new Promise(function (resolve, reject) {
+            offlineStoreController.getAllManifests().then((items) => {
+                items.manifests.forEach((offline) => {
+                    createDownloadFromStorage(offline);
+                });
+
+                resolve();
+            }).catch((e) => {
+                logger.error('Failed to load downloads ' + e);
+                reject(e);
+            });
+        });
+    }
+
     function createDownload(url) {
         return new Promise(function (resolve, reject) {
             let id = generateManifestId();
@@ -246,7 +283,18 @@ function OfflineController() {
     }
 
     function getAllDownloads() {
-        return offlineStoreController.getAllManifests();
+
+        let ret = [];
+        downloads.forEach((download) => {
+            const offlineDownload = new OfflineDownloadVo();
+            offlineDownload.id = download.getId();
+            offlineDownload.progress = download.getDownloadProgression();
+            offlineDownload.url = download.getManifestUrl();
+            offlineDownload.status = download.getStatus();
+            ret.push(offlineDownload);
+        });
+
+        return ret;
     }
 
     function stopDownload(id) {
@@ -294,6 +342,7 @@ function OfflineController() {
 
     instance = {
         setConfig: setConfig,
+        loadDownloadsFromStorage: loadDownloadsFromStorage,
         createDownload: createDownload,
         initDownload: initDownload,
         startDownload: startDownload,

@@ -58,7 +58,7 @@ function OfflineStoreController(config) {
     }
 
     function storeFragment(manifestId, fragmentId, fragmentData) {
-        indexDBStore.storeFragment(manifestId, fragmentId, fragmentData).catch(function (err) {
+        return indexDBStore.storeFragment(manifestId, fragmentId, fragmentData).catch(function (err) {
             manageDOMError(err);
         });
     }
@@ -71,6 +71,18 @@ function OfflineStoreController(config) {
 
     function updateOfflineManifest(manifest) {
         return indexDBStore.updateManifest(manifest).catch(function (err) {
+            manageDOMError(err);
+        });
+    }
+
+    function getManifestById(manifestId) {
+        return indexDBStore.getManifestById(manifestId).catch(function (err) {
+            manageDOMError(err);
+        });
+    }
+
+    function saveSelectedRepresentations (manifestId, selected) {
+        return indexDBStore.saveSelectedRepresentations(manifestId, selected).catch(function (err) {
             manageDOMError(err);
         });
     }
@@ -95,6 +107,18 @@ function OfflineStoreController(config) {
 
     function setDownloadingStatus(manifestId, status) {
         return indexDBStore.setDownloadingStatus(manifestId, status).catch(function (err) {
+            manageDOMError(err);
+        });
+    }
+
+    function setRepresentationCurrentState(manifestId, representationId, state) {
+        return indexDBStore.setRepresentationCurrentState(manifestId, representationId, state).catch(function (err) {
+            manageDOMError(err);
+        });
+    }
+
+    function getRepresentationCurrentState(manifestId, representationId) {
+        return indexDBStore.getRepresentationCurrentState(manifestId, representationId).catch(function (err) {
             manageDOMError(err);
         });
     }
@@ -127,11 +151,15 @@ function OfflineStoreController(config) {
         storeFragment: storeFragment,
         createOfflineManifest: createOfflineManifest,
         updateOfflineManifest: updateOfflineManifest,
+        getManifestById: getManifestById,
+        saveSelectedRepresentations: saveSelectedRepresentations,
         createFragmentStore: createFragmentStore,
         getCurrentHigherManifestId: getCurrentHigherManifestId,
         getAllManifests: getAllManifests,
         deleteDownloadById: deleteDownloadById,
-        setDownloadingStatus: setDownloadingStatus
+        setDownloadingStatus: setDownloadingStatus,
+        setRepresentationCurrentState: setRepresentationCurrentState,
+        getRepresentationCurrentState: getRepresentationCurrentState
     };
 
     setup();

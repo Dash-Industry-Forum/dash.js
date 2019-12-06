@@ -9,7 +9,7 @@ angular.module('DashPlayer').
       link: function (scope) {
 
         scope.progressTimer;
-        scope.downloadProgression = 0;
+        scope.downloadProgression = DownloadService.getDownloadProgression(scope.download.id);
 
         scope.$watch('download.status', function(newValue, oldValue) {
           if (newValue === 'started') {
@@ -28,20 +28,20 @@ angular.module('DashPlayer').
         }
 
         scope.doStop = function () {
-          DownloadService.doStopDownload(scope.download.manifestId)
+          DownloadService.doStopDownload(scope.download.id)
         }
 
         scope.doResume = function () {
-          DownloadService.doResumeDownload(scope.download.manifestId)
+          DownloadService.doResumeDownload(scope.download.id)
         }
 
         scope.doDelete =  function(){
-          DownloadService.doDeleteDownload(scope.download.manifestId);
+          DownloadService.doDeleteDownload(scope.download.id);
         }
 
         scope.updateDownloadProgression = function () {
           scope.progressTimer = $timeout(function () {
-            scope.downloadProgression = DownloadService.getDownloadProgression(scope.download.manifestId);
+            scope.downloadProgression = DownloadService.getDownloadProgression(scope.download.id);
             scope.updateDownloadProgression();
           }, 200);
         }

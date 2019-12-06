@@ -98,6 +98,14 @@ function DashHandler(config) {
         return currentTime;
     }
 
+    function setCurrentIndex (value) {
+        segmentIndex = value;
+    }
+
+    function getCurrentIndex () {
+        return segmentIndex;
+    }
+
     function resetIndex() {
         segmentIndex = -1;
         lastSegment = null;
@@ -416,6 +424,8 @@ function DashHandler(config) {
         getNextSegmentRequest: getNextSegmentRequest,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
+        setCurrentIndex: setCurrentIndex,
+        getCurrentIndex: getCurrentIndex,
         isMediaFinished: isMediaFinished,
         reset: reset,
         resetIndex: resetIndex

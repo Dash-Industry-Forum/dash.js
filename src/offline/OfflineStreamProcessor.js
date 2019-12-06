@@ -43,7 +43,8 @@ function OfflineStreamProcessor(config) {
     const debug = config.debug;
     const constants = config.constants;
     const manifestId = config.id;
-    const completedCb = config.completed;
+    const completedCb = config.callbacks && config.callbacks.completed;
+    const progressCb = config.callbacks && config.callbacks.progression;
 
     let instance,
         adapter,
@@ -102,15 +103,29 @@ function OfflineStreamProcessor(config) {
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
+    function isInitRequest(request) {
+        return request.type === 'InitializationSegment';
+    }
+
     function onFragmentLoadingCompleted(e) {
         if (e.sender !== fragmentModel) {
             return;
         }
 
         if (e.request !== null) {
-            let suffix = e.request.type === 'InitializationSegment' ? 'init' : e.request.index;
+            let isInit = isInitRequest(e.request);
+            let suffix = isInit ? 'init' : e.request.index;
             let fragmentName = e.request.representationId + '_' + suffix;
-            offlineStoreController.storeFragment(manifestId, fragmentName, e.response);
+            offlineStoreController.storeFragment(manifestId, fragmentName, e.response)
+            .then(() => {
+                if (!isInit) {
+                    // store current index and downloadedSegments number
+                    offlineStoreController.setRepresentationCurrentState(manifestId, e.request.representationId, {
+                        index: e.request.index,
+                        downloaded: downloadedSegments
+                    } );
+                }
+            });
         }
 
         if (e.error && e.request.serviceLocation && !isStopped) {
@@ -134,6 +149,10 @@ function OfflineStreamProcessor(config) {
         return representationController;
     }
 
+    function getRepresentationId() {
+        return representationController.getCurrentRepresentation().id;
+    }
+
     /**
      * Stops download of fragments
      * @memberof OfflineStreamProcessor#
@@ -143,15 +162,6 @@ function OfflineStreamProcessor(config) {
             return;
         }
         isStopped = true;
-    }
-
-    /**
-     * Resume download
-     * @memberof OfflineStreamProcessor#
-     */
-    function resume() {
-        isStopped = false;
-        download();
     }
 
     function initializeDownloader () {
@@ -214,7 +224,18 @@ function OfflineStreamProcessor(config) {
                 throw new Error('Start denied to OfflineStreamProcessor');
             }
             isStopped = false;
-            download();
+
+            offlineStoreController.getRepresentationCurrentState(manifestId, representationController.getCurrentRepresentation().id)
+            .then((state) => {
+                if (state) {
+                    indexHandler.setCurrentIndex(state.index);
+                    downloadedSegments = state.downloaded;
+                }
+                download();
+            }).catch(() => {
+                // start from beginining
+                download();
+            });
         }
     }
 
@@ -234,6 +255,9 @@ function OfflineStreamProcessor(config) {
                 isInitialized = true;
             } else {
                 request = getNextRequest();
+
+                // update progression : done here because availableSegmentsNumber is done in getNextRequest from dash handler
+                updateProgression();
             }
 
             if (request) {
@@ -288,8 +312,10 @@ function OfflineStreamProcessor(config) {
         return representationController.getCurrentRepresentation().availableSegmentsNumber + 1; // do not forget init segment
     }
 
-    function getDownloadedSegments() {
-        return downloadedSegments;
+    function updateProgression () {
+        if (progressCb) {
+            progressCb(instance, downloadedSegments, getAvailableSegmentsNumber());
+        }
     }
 
     function resetInitialSettings() {
@@ -323,12 +349,11 @@ function OfflineStreamProcessor(config) {
         getRepresentationController: getRepresentationController,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
         getType: getType,
+        getRepresentationId: getRepresentationId,
         isUpdating: isUpdating,
         start: start,
         stop: stop,
-        resume: resume,
         getAvailableSegmentsNumber: getAvailableSegmentsNumber,
-        getDownloadedSegments: getDownloadedSegments,
         setDashElements: setDashElements,
         reset: reset
     };

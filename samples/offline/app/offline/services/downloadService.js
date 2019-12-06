@@ -7,9 +7,9 @@ service('DownloadService', function ($q) {
     player = undefined;
     var downloads = [];
 
-    this.getDownload = function (manifestId) {
+    this.getDownload = function (id) {
         let element = downloads.find((download) => {
-            return download.manifestId === manifestId;
+            return download.id === id;
         });
 
         return element;
@@ -68,53 +68,45 @@ service('DownloadService', function ($q) {
             }
         }, this);
 
-        this.getAllDownloads();
+        player.loadDownloadsFromStorage().then(() => {
+            this.getAllDownloads();
+        });
     };
 
     this.getAllDownloads = function () {
-        let deferred = $q.defer();
-
-        player.getAllDownloads().then(function (items) {
-            downloads.splice(0, downloads.length);
-            items.manifests.forEach(element => {
-                downloads.push(element);
-            });
-            deferred.resolve(downloads);
-        }, function (err) {
-            deferred.reject(err);
+        downloads.splice(0, downloads.length);
+        player.getAllDownloads().forEach(element => {
+            downloads.push(element);
         });
-
-        return deferred.promise;
     };
 
     this.doDownload = function (url) {
         let id;
-        player.createDownload(url).then((manifestId) => {
-            id = manifestId;
+        player.createDownload(url).then((id) => {
+            id = id;
             // new download has been created, let's refresh download list
-            return this.getAllDownloads();
-        }).then(() => {
+            this.getAllDownloads();
             // init download
             player.initDownload(id);
         });
     };
 
-    this.doDeleteDownload = function (manifestId) {
-        player.deleteDownload(manifestId).then(() => {
+    this.doDeleteDownload = function (id) {
+        player.deleteDownload(id).then(() => {
             this.getAllDownloads();
         });
     };
 
-    this.doStopDownload = function (manifestId) {
-        player.stopDownload(manifestId);
+    this.doStopDownload = function (id) {
+        player.stopDownload(id);
     };
 
-    this.doResumeDownload = function (manifestId) {
-        player.resumeDownload(manifestId);
+    this.doResumeDownload = function (id) {
+        player.resumeDownload(id);
     };
 
-    this.getDownloadProgression = function (manifestId) {
-        return player.getDownloadProgression(manifestId);
+    this.getDownloadProgression = function (id) {
+        return player.getDownloadProgression(id);
     };
 
     this.onError = function (error) {

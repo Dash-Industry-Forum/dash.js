@@ -74,15 +74,17 @@ function IndexDBStore() {
      * @instance
      */
     function createFragmentStore(storeName) {
-        console.log('setStore  ' + storeName);
-        let fragmentStore = localforage.createInstance({
-            driver: localforage.INDEXEDDB,
-            name: 'dash_offline_db',
-            version: 1.0,
-            storeName: storeName
-        });
 
-        fragmentStores[storeName] = fragmentStore;
+        if (!fragmentStores[storeName]) {
+            console.log('setStore  ' + storeName);
+            let fragmentStore = localforage.createInstance({
+                driver: localforage.INDEXEDDB,
+                name: 'dash_offline_db',
+                version: 1.0,
+                storeName: storeName
+            });
+            fragmentStores[storeName] = fragmentStore;
+        }
     }
 
     /**
@@ -105,6 +107,60 @@ function IndexDBStore() {
     }
 
     /**
+     * Updat last downloaded fragment index for representationId
+     * @memberof module:IndexDBStore
+     * @param {number} manifestId - manifest id
+      * @param {string} representationId - representation
+     * @param {number} state - representation state
+     * @returns {Promise} promise
+     * @instance
+     */
+    function setRepresentationCurrentState(manifestId, representationId, state) {
+        return getManifestById(manifestId).then(function (item) {
+            if (!item.state) {
+                item.state = {};
+            }
+
+            if (!item.state[representationId]) {
+                item.state[representationId] = {
+                    index: -1,
+                    downloaded: 0
+                };
+            }
+
+            item.state[representationId] = state;
+            return updateManifest(item).catch(function () {
+                return Promise.reject('Cannot set current index for represenation id ' + representationId);
+            });
+        }).catch(function (err) {
+            return Promise.reject(err);
+        });
+    }
+
+    /**
+     * Returns current downloaded segment index for representation
+     * @memberof module:IndexDBStore
+     * @param {number} manifestId - manifest id
+     * @param {string} representationId - representation
+     * @returns {Promise} promise
+     * @instance
+     */
+    function getRepresentationCurrentState(manifestId, representationId) {
+        return getManifestById(manifestId).then(function (item) {
+            let state = {
+                index: -1,
+                downloaded: 0
+            };
+            if (item.state && item.state[representationId]) {
+                state = item.state[representationId];
+            }
+            return Promise.resolve(state);
+        }).catch(function (err) {
+            return Promise.reject(err);
+        });
+    }
+
+    /**
      * Returns a fragment from its key
      * @memberof module:IndexDBStore
      * @param {number} manifestId
@@ -114,6 +170,11 @@ function IndexDBStore() {
      */
     function getFragmentByKey(manifestId, key) {
         let fragmentStore = fragmentStores[manifestId];
+
+        if (!fragmentStore) {
+            return Promise.reject(new Error (`No fragment store found for manifest ${manifestId}`));
+        }
+
         return fragmentStore.getItem(key).then(function (value) {
             return Promise.resolve(value);
         }).catch(function (err) {
@@ -193,10 +254,10 @@ function IndexDBStore() {
     }
 
     /**
-     * MaJ le manifest
+     * Update manifest
      * @memberof module:IndexDBStore
-     * @param {Object} manifest à jour
-     * @returns {Promise} Object promise de l'action
+     * @param {Object} manifest updated manifest
+     * @returns {Promise} promise asynchronously resolved
      * @instance
      */
     function updateManifest(manifest) {
@@ -215,7 +276,30 @@ function IndexDBStore() {
     }
 
     /**
-     * Stock un manifest dans le tableau des manifests
+     * save selected representation by user
+     * @memberof module:IndexDBStore
+     * @param {Object} manifest updated manifest
+     * @param {Object} selected selected representations
+     * @returns {Promise} promise asynchronously resolved
+     * @instance
+     */
+    function saveSelectedRepresentations(manifest, selected) {
+        return getManifestById(manifest).then(function (item) {
+            if (!item.selected) {
+                item.selected = {};
+            }
+
+            item.selected = selected;
+            return updateManifest(item).catch(function () {
+                return Promise.reject('Cannot save selected representations');
+            });
+        }).catch(function (err) {
+            return Promise.reject(err);
+        });
+    }
+
+    /**
+     * Store a manifest in manifest array
      * @memberof module:IndexDBStore
      * @param {Object} manifest
      * @instance
@@ -231,16 +315,21 @@ function IndexDBStore() {
     }
 
     /**
-     * Stock un fragment dans le store initialisé
+     * Store a fragment in fragment store
      * @memberof module:IndexDBStore
      * @param {number} manifestId
      * @param {number} fragmentId
      * @param {Object} fragmentData
-     * @returns {Promise} résultat de l'ajout
+     * @returns {Promise} promise asynchronously resolved
      * @instance
      */
     function storeFragment(manifestId, fragmentId, fragmentData) {
         let fragmentStore = fragmentStores[manifestId];
+
+        if (!fragmentStore) {
+            return Promise.reject(new Error (`No fragment store found for manifest ${manifestId}`));
+        }
+
         return fragmentStore.setItem(fragmentId, fragmentData, function () {
             return Promise.resolve();
         }).catch(function (err) {
@@ -255,9 +344,9 @@ function IndexDBStore() {
     ////////////////////////////////////////
 
     /**
-     * Supprime le contenu de tous les fragmentStore et du manifestStore
+     * Remove all manifest and fragment store
      * @memberof module:IndexDBStore
-     * @returns {Promise} résultat de la suppression
+     * @returns {Promise} promise asynchronously resolved
      * @instance
      */
     function dropAll() {
@@ -269,7 +358,7 @@ function IndexDBStore() {
     }
 
     /**
-     * Supprime le store courant contenant les fragments
+     * Remove framgent store given its name
      * @param {string} storeName
      * @memberof module:IndexDBStore
      * @instance
@@ -289,10 +378,10 @@ function IndexDBStore() {
     }
 
     /**
-     * Supprime l'enregistrement (fragmentStore + du tableau des manifests), à partir de son Id
+     * Remove download given its id (fragmentStore + manifest entry in manifest array)
      * @memberof module:IndexDBStore
      * @param {number} manifestId
-     * @returns {Promise} résultat de la suppression
+     * @returns {Promise} promise asynchronously resolved
      * @instance
      */
     function deleteDownloadById(manifestId) {
@@ -319,10 +408,10 @@ function IndexDBStore() {
     }
 
     /**
-     * Supprime le store contenant les fragments
+     * Remove fragment store
      * @memberof module:IndexDBStore
      * @param {string} storeName
-     * @returns {Promise} résultat de la suppression
+     * @returns {Promise} promise asynchronously resolved
      * @instance
      */
     function deleteFragmentStore(storeName) {
@@ -353,8 +442,11 @@ function IndexDBStore() {
         storeFragment: storeFragment,
         storeManifest: storeManifest,
         updateManifest: updateManifest,
+        saveSelectedRepresentations: saveSelectedRepresentations,
         createFragmentStore: createFragmentStore,
         setDownloadingStatus: setDownloadingStatus,
+        setRepresentationCurrentState: setRepresentationCurrentState,
+        getRepresentationCurrentState: getRepresentationCurrentState,
         getCurrentHigherManifestId: getCurrentHigherManifestId,
         getAllManifests: getAllManifests,
         dropFragmentStore: dropFragmentStore,
