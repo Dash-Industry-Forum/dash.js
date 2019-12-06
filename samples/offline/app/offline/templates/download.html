@@ -1,4 +1,5 @@
-<div class='offline-item'>
+
+<div ng-class="{'offline-item': true, 'disabled' : !isDownloadEnabled()}">
     <span class="offline-title">{{download.id}} : {{download.originalUrl}}
     </span>
     <div class="progress-container">

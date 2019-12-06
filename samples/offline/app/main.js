@@ -1106,7 +1106,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     };
 
     $scope.onCancelDownload = function () {
-        DownloadService.doDeleteDownload($scope.manifestId);
+        $scope.createdDownload.doDelete();
         $scope.hideRepresentationModal();
     };
 
@@ -1117,6 +1117,10 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.onLoadDownload = function (download) {
         $scope.selectedItem = download;
         $scope.doLoad();
+    };
+
+    $scope.onCreated = function (download) {
+        $scope.createdDownload = download;
     };
 });
 

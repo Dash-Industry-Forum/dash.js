@@ -316,7 +316,7 @@
                     <h2>Downloads</h2>
                     <h4 ng-if="downloads.length ===0">No available offline streams</h4>
                     <div ng-repeat="download in downloads">
-                        <dash-download download="download" on-load="onLoadDownload"></dash-download>
+                        <dash-download download="download" on-load="onLoadDownload" on-created="onCreated"></dash-download>
                     </div>
                 </div>
                 <!-- NETWORK STATUS !-->

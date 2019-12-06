@@ -5,15 +5,20 @@ angular.module('DashPlayer').
         return {
             scope: {
                 download: '=',
-                onLoad: '='
+                onLoad: '=',
+                onCreated: '='
             },
             templateUrl: 'app/offline/templates/download.html',
             link: function (scope) {
 
                 scope.progressTimer = null;
                 scope.downloadProgression = DownloadService.getDownloadProgression(scope.download.id);
-
+                scope.isEnabled = true;
+                
                 scope.$watch('download.status', function (newValue) {
+                    if (newValue === 'created') {
+                      scope.onCreated(scope);
+                    }
                     if (newValue === 'started') {
                         scope.updateDownloadProgression();
                     } else {
@@ -38,6 +43,7 @@ angular.module('DashPlayer').
                 };
 
                 scope.doDelete = function () {
+                    scope.isEnabled = false;
                     DownloadService.doDeleteDownload(scope.download.id);
                 };
 
@@ -47,6 +53,10 @@ angular.module('DashPlayer').
                         scope.updateDownloadProgression();
                     }, 200);
                 };
+
+                scope.isDownloadEnabled = function () {
+                  return scope.isEnabled;
+                };        
 
                 scope.canPlay = function () {
                     return (scope.download.status === 'stopped') || (scope.download.status === 'finished');
