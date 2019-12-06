@@ -58,6 +58,7 @@ function OfflineDownload(config) {
     let instance,
         logger,
         _manifestURL,
+        _offlineURL,
         _xmlManifest,
         _streams,
         _manifest,
@@ -85,6 +86,10 @@ function OfflineDownload(config) {
         return manifestId;
     }
 
+    function getOfflineUrl () {
+        return _offlineURL;
+    }
+
     function getManifestUrl () {
         return _manifestURL;
     }
@@ -94,8 +99,9 @@ function OfflineDownload(config) {
     }
 
     function setInitialState(state) {
+        _offlineURL = state.url;
         _progression = state.progress;
-        _manifestURL = state.url;
+        _manifestURL = state.originalUrl;
         _status = state.status;
     }
 
@@ -106,13 +112,14 @@ function OfflineDownload(config) {
      */
     function downloadFromUrl(url) {
         _manifestURL = url;
+        _offlineURL = `${OfflineConstants.OFFLINE_SCHEME}://${manifestId}`;
         _status = OfflineConstants.OFFLINE_STATUS_CREATED;
         setupOfflineEvents();
         let offlineManifest = {
             'fragmentStore': manifestId,
             'status': _status,
             'manifestId': manifestId,
-            'url': OfflineConstants.OFFLINE_SCHEME + '://' + manifestId,
+            'url': _offlineURL,
             'originalURL': url
         };
         return createOfflineManifest(offlineManifest);
@@ -608,6 +615,7 @@ function OfflineDownload(config) {
     instance = {
         reset: reset,
         getId: getId,
+        getOfflineUrl: getOfflineUrl,
         getManifestUrl: getManifestUrl,
         getStatus: getStatus,
         setInitialState: setInitialState,

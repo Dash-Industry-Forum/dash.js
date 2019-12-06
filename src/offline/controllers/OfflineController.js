@@ -182,8 +182,9 @@ function OfflineController() {
             }
 
             download.setInitialState({
+                url: offline.url,
                 progress: offline.progress,
-                url: offline.originalURL,
+                originalUrl: offline.originalURL,
                 status: status
             });
         }
@@ -289,7 +290,8 @@ function OfflineController() {
             const offlineDownload = new OfflineDownloadVo();
             offlineDownload.id = download.getId();
             offlineDownload.progress = download.getDownloadProgression();
-            offlineDownload.url = download.getManifestUrl();
+            offlineDownload.url = download.getOfflineUrl();
+            offlineDownload.originalUrl = download.getManifestUrl();
             offlineDownload.status = download.getStatus();
             ret.push(offlineDownload);
         });

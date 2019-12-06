@@ -36,6 +36,7 @@ class OfflineDownload {
     constructor() {
         this.id = null;
         this.url = null;
+        this.originalUrl = null;
         this.status = null;
         this.progress = null;
     }
