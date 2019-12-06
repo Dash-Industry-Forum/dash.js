@@ -2,7 +2,7 @@
 /* global player:true */
 
 angular.module('DashPlayer').
-service('DownloadService', function ($q) {
+service('DownloadService', function () {
 
     player = undefined;
     var downloads = [];
@@ -81,7 +81,6 @@ service('DownloadService', function ($q) {
     };
 
     this.doDownload = function (url) {
-        let id;
         player.createDownload(url).then((id) => {
             id = id;
             // new download has been created, let's refresh download list

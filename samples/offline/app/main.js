@@ -1,3 +1,5 @@
+/* global angular, dashjs */
+
 'use strict';
 
 if ('serviceWorker' in navigator) {
@@ -99,7 +101,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
                 lineWidth: 2,
                 shadowSize: 1,
                 steps: false,
-                fill: false,
+                fill: false
             },
             points: {
                 radius: 4,
@@ -131,7 +133,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             tickDecimals: 0,
             color: '#136bfb',
             position: 'right',
-            axisLabelPadding: 20,
+            axisLabelPadding: 20
         },
         yaxes: []
     };
@@ -143,27 +145,27 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.chartData = [];
 
     $scope.chartState = {
-        audio:{
-            buffer:         {data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level'},
-            bitrate:        {data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (kbps)'},
-            index:          {data: [], selected: false, color: '#ffd446', label: 'Audio Current Index'},
-            pendingIndex:   {data: [], selected: false, color: '#FF6700', label: 'AudioPending Index'},
-            ratio:          {data: [], selected: false, color: '#329d61', label: 'Audio Ratio'},
-            download:       {data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)'},
-            latency:        {data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)'},
-            droppedFPS:     {data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS'},
-            liveLatency:     {data: [], selected: false, color: '#65080c', label: 'Live Latency'}
+        audio: {
+            buffer: { data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level' },
+            bitrate: { data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (kbps)' },
+            index: { data: [], selected: false, color: '#ffd446', label: 'Audio Current Index' },
+            pendingIndex: { data: [], selected: false, color: '#FF6700', label: 'AudioPending Index' },
+            ratio: { data: [], selected: false, color: '#329d61', label: 'Audio Ratio' },
+            download: { data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)' },
+            latency: { data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)' },
+            droppedFPS: { data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS' },
+            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
         },
-        video:{
-            buffer:         {data: [], selected: true, color: '#00589d', label: 'Video Buffer Level'},
-            bitrate:        {data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (kbps)'},
-            index:          {data: [], selected: false, color: '#326e88', label: 'Video Current Quality'},
-            pendingIndex:   {data: [], selected: false, color: '#44c248', label: 'Video Pending Index'},
-            ratio:          {data: [], selected: false, color: '#00CCBE', label: 'Video Ratio'},
-            download:       {data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)'},
-            latency:        {data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)'},
-            droppedFPS:     {data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS'},
-            liveLatency:     {data: [], selected: false, color: '#65080c', label: 'Live Latency'}
+        video: {
+            buffer: { data: [], selected: true, color: '#00589d', label: 'Video Buffer Level' },
+            bitrate: { data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (kbps)' },
+            index: { data: [], selected: false, color: '#326e88', label: 'Video Current Quality' },
+            pendingIndex: { data: [], selected: false, color: '#44c248', label: 'Video Pending Index' },
+            ratio: { data: [], selected: false, color: '#00CCBE', label: 'Video Ratio' },
+            download: { data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)' },
+            latency: { data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)' },
+            droppedFPS: { data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS' },
+            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
         }
     };
 
@@ -255,14 +257,14 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     //
     ////////////////////////////////////////
     let reqConfig = new XMLHttpRequest();
-    reqConfig.onload = function() {
+    reqConfig.onload = function () {
         if (reqConfig.status === 200) {
             let config = JSON.parse(reqConfig.responseText);
             if ($scope.player) {
                 $scope.player.updateSettings(config);
             }
-            if($scope.downloader) {
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
+            if ($scope.downloader) {
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
             }
         } else {
             // Set default initial configuration
@@ -279,13 +281,13 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
                         }
                     }
                 }
-            }
+            };
             $scope.player.updateSettings(initialConfig);
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
+            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
         }
     };
-    reqConfig.open("GET", "dashjs_config.json", true);
-    reqConfig.setRequestHeader("Content-type", "application/json");
+    reqConfig.open('GET', 'dashjs_config.json', true);
+    reqConfig.setRequestHeader('Content-type', 'application/json');
     reqConfig.send();
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
@@ -334,7 +336,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
                         break;
                 }
             });
-            $("#errorModal").modal('show');
+            $('#errorModal').modal('show');
         }
     }, $scope);
 
@@ -492,7 +494,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         }
     };
 
-$scope.toggleFastSwitch = function () {
+    $scope.toggleFastSwitch = function () {
         $scope.player.updateSettings({
             'streaming': {
                 'fastSwitchEnabled': $scope.fastSwitchSelected
@@ -627,7 +629,7 @@ $scope.toggleFastSwitch = function () {
                 'initialBitrate': {
                     'video': initBitrate
                 }
-            }
+            };
         }
 
         $scope.player.updateSettings(config);
@@ -664,36 +666,36 @@ $scope.toggleFastSwitch = function () {
     };
 
     $scope.setLogLevel = function () {
-        var level = $("input[name='log-level']:checked").val();
-        switch(level) {
+        var level = $('input[name=\'log-level\']:checked').val();
+        switch (level) {
             case 'none':
-            $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
-            break;
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
+                break;
 
             case 'fatal':
-            $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL }});
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL }});
-            break;
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL } });
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL } });
+                break;
 
             case 'error':
-            $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR }});
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR }});
-            break;
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR } });
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR } });
+                break;
 
             case 'warning':
-            $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING }});
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING }});
-            break;
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
+                break;
 
             case 'info':
-            $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO }});
-            break;
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
+                break;
 
             default:
-            $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
+                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
         }
     };
 
@@ -733,9 +735,9 @@ $scope.toggleFastSwitch = function () {
     };
 
     function calculateHTTPMetrics(type, requests) {
-        var latency = {},
-            download = {},
-            ratio = {};
+        var latency = {};
+        var download = {};
+        var ratio = {};
 
         var requestWindow = requests.slice(-20).filter(function (req) {
             return req.responsecode >= 200 && req.responsecode < 300 && req.type === 'MediaSegment' && req._stream === type && !!req._mediaduration;
@@ -989,7 +991,7 @@ $scope.toggleFastSwitch = function () {
         if (vars && vars.hasOwnProperty('stream')) {
             try {
                 item = JSON.parse(atob(vars.stream));
-            } catch (e) {}
+            } catch (e) { }
         }
 
 
@@ -1028,36 +1030,37 @@ $scope.toggleFastSwitch = function () {
 
     $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_STARTED, function (e) { /* jshint ignore:line */
         $scope.successMessage = e.message;
-        $(".alert.alert-success").show();
-        $(".alert.alert-success").fadeTo(2500, 500).slideUp(500, function () {
-            $(".alert.alert-success").slideUp(500);
+        $('.alert.alert-success').show();
+        $('.alert.alert-success').fadeTo(2500, 500).slideUp(500, function () {
+            $('.alert.alert-success').slideUp(500);
         });
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_FINISHED, function (e) { /* jshint ignore:line */
         $scope.successMessage = e.message;
-        $(".alert.alert-success").show();
-        $(".alert.alert-success").fadeTo(2500, 500).slideUp(500, function () {
-            $(".alert.alert-success").slideUp(500);
+        $('.alert.alert-success').show();
+        $('.alert.alert-success').fadeTo(2500, 500).slideUp(500, function () {
+            $('.alert.alert-success').slideUp(500);
         });
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_STOPPED, function (e) { /* jshint ignore:line */
         $scope.warningMessage = e.message;
-        $(".alert.alert-warning").show();
-        $(".alert.alert-warning").fadeTo(2500, 500).slideUp(500, function () {
-            $(".alert.alert-warning").slideUp(500);
+        $('.alert.alert-warning').show();
+        $('.alert.alert-warning').fadeTo(2500, 500).slideUp(500, function () {
+            $('.alert.alert-warning').slideUp(500);
         });
     }, $scope);
 
     $scope.showRepresentationModal = function () {
         $('#representationModal').modal('show');
-    }
+    };
+
     $scope.hideRepresentationModal = function () {
         $scope.manifestId = undefined;
         $scope.downloadableRepresentations = null;
         $('#representationModal').modal('hide');
-    }
+    };
 
     $scope.getSelectedRepresentations = function () {
         let representations = {};
@@ -1068,8 +1071,8 @@ $scope.toggleFastSwitch = function () {
             }
         });
 
-       representations.audio = [];
-       $scope.downloadableRepresentations.audio.forEach((item) => {
+        representations.audio = [];
+        $scope.downloadableRepresentations.audio.forEach((item) => {
             if (item.selected) {
                 representations.audio.push(item);
             }
@@ -1087,7 +1090,7 @@ $scope.toggleFastSwitch = function () {
         });
 
         return representations;
-    }
+    };
 
     $scope.onStartDownload = function () {
         let selectedRepresentation = $scope.getSelectedRepresentations();
@@ -1100,21 +1103,21 @@ $scope.toggleFastSwitch = function () {
         } else {
             alert('You must select at least 1 quality !');
         }
-    }
+    };
 
     $scope.onCancelDownload = function () {
         DownloadService.doDeleteDownload($scope.manifestId);
         $scope.hideRepresentationModal();
-    }
+    };
 
     $scope.doDownload = function () {
         DownloadService.doDownload($scope.selectedItem.url);
-    }
+    };
 
     $scope.onLoadDownload = function (download) {
         $scope.selectedItem = download;
         $scope.doLoad();
-    }
+    };
 });
 
 function legendLabelClickHandler(obj) { /* jshint ignore:line */
