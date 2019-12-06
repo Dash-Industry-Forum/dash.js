@@ -59,7 +59,9 @@ angular.module('DashPlayer').
                 };        
 
                 scope.canPlay = function () {
-                    return (scope.download.status === 'stopped') || (scope.download.status === 'finished');
+                    return scope.download.status === 'stopped' ||
+                            scope.download.status === 'finished' ||
+                            scope.downloadProgression > 5;
                 };
 
                 scope.canStop = function () {
