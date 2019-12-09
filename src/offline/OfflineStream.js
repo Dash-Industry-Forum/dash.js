@@ -56,7 +56,6 @@ function OfflineStream(config) {
         startedOfflineStreamProcessors,
         finishedOfflineStreamProcessors,
         streamInfo,
-        availableSegments,
         representationsToUpdate,
         allMediasInfosList,
         progressionById,
@@ -70,7 +69,6 @@ function OfflineStream(config) {
      * Reset
      */
     function resetInitialSettings() {
-        availableSegments = NaN;
         streamInfo = null;
         offlineStreamProcessors = [];
         startedOfflineStreamProcessors = 0;
@@ -319,7 +317,6 @@ function OfflineStream(config) {
         }
 
         if (sp) {
-            sp.start();
             checkIfAllOfflineStreamProcessorsStarted();
         }
     }
@@ -329,7 +326,11 @@ function OfflineStream(config) {
         if (startedOfflineStreamProcessors === offlineStreamProcessors.length) {
             startedCb({sender: this, id: manifestId, message: 'Downloading started for this stream !'});
 
-            updateManifest({sender: this, id: manifestId, representations: representationsToUpdate });
+            if (representationsToUpdate.length > 0) {
+                updateManifest({sender: this, id: manifestId, representations: representationsToUpdate });
+            } else {
+                startOfflineStreamProcessors();
+            }
         }
     }
 
@@ -351,6 +352,15 @@ function OfflineStream(config) {
     function stopOfflineStreamProcessors() {
         for (let i = 0; i < offlineStreamProcessors.length; i++) {
             offlineStreamProcessors[i].stop();
+        }
+    }
+
+    /**
+     * Start offline stream processors
+     */
+    function startOfflineStreamProcessors() {
+        for (let i = 0; i < offlineStreamProcessors.length; i++) {
+            offlineStreamProcessors[i].start();
         }
     }
 
@@ -379,6 +389,7 @@ function OfflineStream(config) {
         initializeAllMediasInfoList: initializeAllMediasInfoList,
         getStreamInfo: getStreamInfo,
         stopOfflineStreamProcessors: stopOfflineStreamProcessors,
+        startOfflineStreamProcessors: startOfflineStreamProcessors,
         reset: reset
     };
 

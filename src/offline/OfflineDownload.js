@@ -230,28 +230,8 @@ function OfflineDownload(config) {
             _status = OfflineConstants.OFFLINE_STATUS_FINISHED;
             offlineStoreController.setDownloadingStatus(manifestId, _status)
             .then(function () {
-                if (_representationsToUpdate.length > 0) {
-                    _indexDBManifestParser.parse(_xmlManifest, _representationsToUpdate).then(function (parsedManifest) {
-                        if (parsedManifest !== null && manifestId !== null) {
-                            offlineStoreController.getManifestById(manifestId)
-                            .then((item) => {
-                                item.manifest = parsedManifest;
-                                return updateOfflineManifest(item);
-                            })
-                            .then( function () {
-                                eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
-                                resetDownload();
-                            });
-                        } else {
-                            throw 'falling parsing offline manifest';
-                        }
-                    }).catch(function (err) {
-                        throw err;
-                    });
-                } else {
-                    eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
-                    resetDownload();
-                }
+                eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                resetDownload();
             });
         } else {
             _status = OfflineConstants.OFFLINE_STATUS_ERROR;
@@ -273,6 +253,27 @@ function OfflineDownload(config) {
         }
 
         _representationsToUpdate = e.representations;
+
+        if (_representationsToUpdate.length > 0) {
+            _indexDBManifestParser.parse(_xmlManifest, _representationsToUpdate).then(function (parsedManifest) {
+                if (parsedManifest !== null && manifestId !== null) {
+                    offlineStoreController.getManifestById(manifestId)
+                    .then((item) => {
+                        item.manifest = parsedManifest;
+                        return updateOfflineManifest(item);
+                    })
+                    .then( function () {
+                        for (let i = 0, ln = _streams.length; i < ln; i++) {
+                            _streams[i].startOfflineStreamProcessors();
+                        }
+                    });
+                } else {
+                    throw 'falling parsing offline manifest';
+                }
+            }).catch(function (err) {
+                throw err;
+            });
+        }
     }
 
     function composeStreams() {
