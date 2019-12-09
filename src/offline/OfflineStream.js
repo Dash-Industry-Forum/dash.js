@@ -49,7 +49,7 @@ function OfflineStream(config) {
     const startedCb = config.callbacks && config.callbacks.started;
     const progressionCb = config.callbacks && config.callbacks.progression;
     const finishedCb = config.callbacks && config.callbacks.finished;
-    const updateManifest = config.updateManifestNeeded;
+    const updateManifest = config.callbacks && config.callbacks.updateManifestNeeded;
 
     let instance,
         offlineStreamProcessors,

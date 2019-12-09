@@ -299,9 +299,9 @@ function OfflineDownload(config) {
                     callbacks: {
                         started: onDownloadingStarted,
                         progression: OnStreamProgression,
-                        finished: onDownloadingFinished
+                        finished: onDownloadingFinished,
+                        updateManifestNeeded: onManifestUpdateNeeded
                     },
-                    updateManifestNeeded: onManifestUpdateNeeded,
                     constants: constants,
                     eventBus: eventBus,
                     events: events,
