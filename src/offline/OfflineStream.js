@@ -58,8 +58,7 @@ function OfflineStream(config) {
         streamInfo,
         representationsToUpdate,
         allMediasInfosList,
-        progressionById,
-        progression;
+        progressionById;
 
     function setup() {
         resetInitialSettings();
@@ -76,7 +75,6 @@ function OfflineStream(config) {
         allMediasInfosList = [];
         representationsToUpdate = [];
         progressionById = {};
-        progression = 0;
     }
 
     /**
@@ -292,7 +290,6 @@ function OfflineStream(config) {
 
         if (!waitForAllProgress && progressionCb) {
             // all progression have been started, we can compute global progression
-            progression = segments / allSegments;
             if (allSegments > 0) {
                 progressionCb(instance, segments, allSegments);
             }
