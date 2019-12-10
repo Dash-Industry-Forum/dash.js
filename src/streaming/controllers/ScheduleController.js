@@ -459,8 +459,8 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-        logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined',
-            ', Range:', e.request.range ? e.request.range : 'undefined');
+        logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ?
+            ', Range:' + e.request.range : '');
         if (adapter.getIsTextTrack(type)) {
             setFragmentProcessState(false);
         }
