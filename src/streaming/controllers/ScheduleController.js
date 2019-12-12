@@ -79,6 +79,7 @@ function ScheduleController(config) {
         bufferResetInProgress,
         mediaRequest,
         liveEdgeFinder,
+        checkPlaybackQualityNeeded,
         isReplacementRequest;
 
     function setup() {
@@ -197,6 +198,7 @@ function ScheduleController(config) {
 
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!bufferResetInProgress)) {
+                    checkPlaybackQualityNeeded = false;
                     logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     if (switchTrack) {
                         bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
@@ -214,8 +216,10 @@ function ScheduleController(config) {
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
                         streamProcessor.switchInitData(replacement.representationId);
+                        checkPlaybackQualityNeeded = false;
                     } else {
                         let request;
+                        checkPlaybackQualityNeeded = true;
                         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
                             request = nextFragmentRequestRule.execute(streamProcessor, seekTarget, replacement);
@@ -244,7 +248,7 @@ function ScheduleController(config) {
             };
 
             setFragmentProcessState(true);
-            if (!isReplacement && !switchTrack) {
+            if (!isReplacement && checkPlaybackQualityNeeded) {
                 abrController.checkPlaybackQuality(type);
             }
 
@@ -651,6 +655,7 @@ function ScheduleController(config) {
     }
 
     function resetInitialSettings() {
+        checkPlaybackQualityNeeded = true;
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
