@@ -398,7 +398,10 @@ function ScheduleController(config) {
                 setLiveEdgeSeekTarget();
             } else {
                 setSeekTarget(playbackController.getStreamStartTime(false));
-                streamProcessor.getBufferController().setSeekStartTime(seekTarget);
+                const bufferController = streamProcessor.getBufferController();
+                if (bufferController) {
+                    bufferController.setSeekStartTime(seekTarget);
+                }
             }
         }
 

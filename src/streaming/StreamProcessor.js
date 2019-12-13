@@ -39,6 +39,7 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
+import DashJSError from './vo/DashJSError';
 
 function StreamProcessor(config) {
 
@@ -126,7 +127,9 @@ function StreamProcessor(config) {
             type: type,
             streamId: getStreamInfo() ? getStreamInfo().id : null
         });
-        bufferController.initialize(mediaSource);
+        if (bufferController) {
+            bufferController.initialize(mediaSource);
+        }
         scheduleController.initialize();
     }
 
@@ -224,7 +227,7 @@ function StreamProcessor(config) {
     }
 
     function getBuffer() {
-        return bufferController.getBuffer();
+        return bufferController ? bufferController.getBuffer() : null;
     }
 
     function setBuffer(buffer) {
@@ -354,7 +357,7 @@ function StreamProcessor(config) {
     }
 
     function createBuffer(previousBuffers) {
-        return (bufferController.getBuffer() || bufferController.createBuffer(mediaInfo, previousBuffers));
+        return (getBuffer() || bufferController ? bufferController.createBuffer(mediaInfo, previousBuffers) : null);
     }
 
     function switchTrackAsked() {
@@ -363,6 +366,11 @@ function StreamProcessor(config) {
 
     function createBufferControllerForType(type) {
         let controller = null;
+
+        if (!type) {
+            errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + 'not properly defined'));
+            return null;
+        }
 
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
