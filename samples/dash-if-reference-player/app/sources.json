@@ -335,7 +335,7 @@
           "moreInfo": "https://github.com/Axinom/dash-test-vectors"
         },
         {
-           "name": "2160p with PlayReady and Widevine DRM, multiple keys",
+          "name": "2160p with PlayReady and Widevine DRM, multiple keys",
           "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey/Manifest.mpd",
           "protData": {
             "com.widevine.alpha": {
