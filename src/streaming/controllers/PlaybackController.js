@@ -229,6 +229,7 @@ function PlaybackController() {
         let delay,
             ret,
             startTime;
+        let startTimeParameters = getStartTimeFromUriParameters();
         const END_OF_PLAYLIST_PADDING = 10;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
@@ -239,7 +240,10 @@ function PlaybackController() {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (!isNaN(fragmentDuration)) {
+        } else if (startTimeParameters && startTimeParameters.fragT) {
+            delay = startTimeParameters.fragT;
+        }
+        else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;

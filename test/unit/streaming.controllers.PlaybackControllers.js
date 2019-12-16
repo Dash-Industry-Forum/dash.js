@@ -165,6 +165,7 @@ describe('PlaybackController', function () {
             });
 
             it('getStartTimeFromUriParameters should return the expected value', function () {
+                uriFragmentModelMock.setURIFragmentData({t: 18.2});
                 const uriParameters = playbackController.getStartTimeFromUriParameters();
                 expect(uriParameters.fragT).to.exist; // jshint ignore:line
                 expect(uriParameters.fragT).to.equal(18.2);

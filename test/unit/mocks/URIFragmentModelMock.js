@@ -1,9 +1,14 @@
 class URIFragmentModelMock {
     constructor() {
+        this.uriFragmentData = null;
     }
 
     getURIFragmentData() {
-        return {t: 18.2};
+        return this.uriFragmentData;
+    }
+
+    setURIFragmentData(uri) {
+        this.uriFragmentData = uri;
     }
 }
 
