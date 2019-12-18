@@ -705,7 +705,7 @@ function PlaybackController() {
         const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
         const hasAudioTrack = streamController.isTrackTypePresent(Constants.AUDIO);
 
-        initialStartTime = getStreamStartTime(true);
+        initialStartTime = getStreamStartTime(false);
         if (hasAudioTrack && hasVideoTrack) {
             //current stream has audio and video contents
             if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {
