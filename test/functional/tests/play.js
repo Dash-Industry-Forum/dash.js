@@ -86,6 +86,20 @@ define([
                     utils.log(NAME, 'duration: ' + duration);
                     stream.duration = duration;
                 });
+            },
+
+            detectPeriodsStart: function() {
+                if (!stream.available) {
+                    this.skip();
+                }
+                return command.execute(player.getStreams)
+                .then(function (streams) {
+                    utils.log(NAME, 'streams divided in ' + streams.length + ' period');
+                    stream.periods = [];
+                    for(let i=0; i < streams.length; i++ ){
+                        stream.periods.push({start: streams[i].start});
+                    }
+                });
             }
         });
     };

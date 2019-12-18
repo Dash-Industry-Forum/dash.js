@@ -34,6 +34,9 @@ define([], function () {
             player.stop();
         },
 
+        getStreams: function () {
+            return player.getStreamsFromManifest();
+        },
 
         isPlaying: function(timeout, done) {
             var _timeout = null,
