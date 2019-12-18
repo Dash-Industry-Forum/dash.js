@@ -951,7 +951,10 @@
         },
         {
           "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
-          "name": "Super Speedway + PlayReady DRM"
+          "name": "Super Speedway + PlayReady DRM",
+          "protData": {
+            "com.microsoft.playready": {
+            }}
         },
         {
           "url": "http://test.playready.microsoft.com/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
