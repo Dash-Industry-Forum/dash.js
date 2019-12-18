@@ -58,7 +58,7 @@ define([
             name: NAME,
 
             pause: function() {
-                if (!stream.available) this.skip();
+                if (!stream.available || stream.duration < 60) this.skip();
                 var pauseTime = 0;
                 // Execute a play in case previous pause test has failed
                 utils.log(NAME, 'Play');
