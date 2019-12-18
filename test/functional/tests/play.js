@@ -74,6 +74,12 @@ define([
                 .then(function (dynamic) {
                     utils.log(NAME, 'dynamic: ' + dynamic);
                     stream.dynamic = dynamic;
+                    return command.execute(player.getDVRWindowSize)
+                })
+                .then(function (dvrWindow) {
+                    if (dvrWindow > 0) {
+                        stream.dvrWindow = dvrWindow;
+                    }
                 });
             },
 
