@@ -231,13 +231,13 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 22);
-            expect(seg.availabilityIdx).to.equal(4);
-            expect(seg.presentationStartTime).to.equal(16.016);
+            expect(seg.availabilityIdx).to.equal(5);
+            expect(seg.presentationStartTime).to.equal(20.02);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 53);
-            expect(seg.availabilityIdx).to.equal(12);
-            expect(seg.presentationStartTime).to.equal(48.048);
+            expect(seg.availabilityIdx).to.equal(13);
+            expect(seg.presentationStartTime).to.equal(52.052);
             expect(seg.duration).to.equal(4.004);
 
         });
