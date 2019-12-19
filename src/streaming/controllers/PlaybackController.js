@@ -730,8 +730,10 @@ function PlaybackController() {
             //current stream has only audio or only video content
             if (commonEarliestTime[streamInfo.id][type]) {
                 earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
-                if (!compatibleWithPreviousStream) {
-                    seek(earliestTime, false, true);
+                if (!checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id][type])) {
+                    if (!compatibleWithPreviousStream) {
+                        seek(earliestTime, false, true);
+                    }
                 }
                 commonEarliestTime[streamInfo.id].started = true;
             }
