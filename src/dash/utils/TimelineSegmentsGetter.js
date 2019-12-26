@@ -188,7 +188,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             // In some cases when requiredMediaTime = actual end time of the last segment
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list.
-            if (scaledTime >= (requiredMediaTime - (frag.d / fTimescale))) {
+            if (requiredMediaTime < (scaledTime + (frag.d / fTimescale))) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
 
