@@ -184,3 +184,5 @@ pip-log.txt
 # Mac crap
 .DS_Store
 build/typings/
+dist/
+package-lock.json
