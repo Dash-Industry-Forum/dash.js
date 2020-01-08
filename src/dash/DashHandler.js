@@ -317,13 +317,16 @@ function DashHandler(config) {
                 request = getRequestForSegment(mediaInfo, segment);
                 segmentIndex = segment.availabilityIdx;
             } else {
-                segmentIndex = indexToRequest - 1;
+                if (isDynamicManifest) {
+                    segmentIndex = indexToRequest - 1;
+                } else {
+                    segmentIndex = indexToRequest;
+                }
             }
         }
 
         if (segment) {
             lastSegment = segment;
-            request = getRequestForSegment(mediaInfo, segment);
         } else {
             const finished = isMediaFinished(representation, segment);
             if (finished) {
@@ -385,7 +388,7 @@ function DashHandler(config) {
         }
 
         if (segments.length > 0) {
-            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
+            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[segments.length - 1].presentationStartTime};
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
 

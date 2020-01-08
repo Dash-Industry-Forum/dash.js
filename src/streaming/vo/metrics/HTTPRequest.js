@@ -114,6 +114,11 @@ class HTTPRequest {
          */
         this._mediaduration = null;
         /**
+         * The media segment quality
+         * @public
+         */
+        this._quality = null;
+        /**
          * all the response headers from request.
          * @public
          */

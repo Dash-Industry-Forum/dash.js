@@ -372,10 +372,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var updateDuration = function () {
         var duration = player.duration();
         if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-            if (!startedPlaying && duration && player.isDynamic()) {
-                seekLive();
-                startedPlaying = true;
-            }
             setDuration(displayUTCTimeCodes ? player.durationAsUTC() : duration);
             seekbar.max = duration;
         }
