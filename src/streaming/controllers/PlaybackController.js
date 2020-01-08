@@ -90,6 +90,7 @@ function PlaybackController() {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
@@ -150,15 +151,11 @@ function PlaybackController() {
                     // Internal seek = seek video model only (disable 'seeking' listener),
                     // buffer(s) are already appended at given time (see onBytesAppended())
                     videoModel.removeEventListener('seeking', onPlaybackSeeking);
-                    logger.info('Requesting seek to time: ' + time);
+                    logger.info('Requesting internal seek to time: ' + time);
                     videoModel.setCurrentTime(time, stickToBuffered);
                 }
             } else {
                 eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-                if (streamInfo) {
-                    delete bufferedRange[streamInfo.id];
-                    delete commonEarliestTime[streamInfo.id];
-                }
                 logger.info('Requesting seek to time: ' + time);
                 videoModel.setCurrentTime(time, stickToBuffered);
             }
@@ -298,6 +295,7 @@ function PlaybackController() {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
             eventBus.off(Events.STREAM_INITIALIZING, onStreamInitializing, this);
+            eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -668,6 +666,19 @@ function PlaybackController() {
     function stopPlaybackCatchUp() {
         if (videoModel) {
             videoModel.setPlaybackRate(1.0);
+        }
+    }
+
+    function onBufferCleared(e) {
+        const type = e.sender.getType();
+
+        if (streamInfo && commonEarliestTime[streamInfo.id] && (commonEarliestTime[streamInfo.id][type] >= e.from && commonEarliestTime[streamInfo.id][type] <= e.to)) {
+            logger.info('Reset commonEarliestTime and bufferedRange for ' + type);
+            bufferedRange[streamInfo.id][type] = undefined;
+            commonEarliestTime[streamInfo.id][type] = undefined;
+            commonEarliestTime[streamInfo.id].started = false;
+        } else {
+            logger.info('No need to reset commonEarliestTime and bufferedRange for ' + type);
         }
     }
 
