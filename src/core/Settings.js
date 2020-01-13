@@ -353,6 +353,7 @@ function Settings() {
             logLevel: Debug.LOG_LEVEL_WARNING
         },
         streaming: {
+            appendWindowEndEnabled: true,
             metricsMaxListDepth: 1000,
             abandonLoadTimeout: 10000,
             liveDelayFragmentCount: 4,

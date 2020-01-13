@@ -81,6 +81,7 @@ declare namespace dashjs {
             logLevel?: LogLevel;
         };
         streaming?: {
+            appendWindowEndEnabled?: boolean,
             metricsMaxListDepth?: number;
             abandonLoadTimeout?: number;
             liveDelayFragmentCount?: number;
