@@ -107,7 +107,7 @@ function ManifestUpdater() {
 
     function stopManifestRefreshTimer() {
         if (refreshTimer !== null) {
-            clearInterval(refreshTimer);
+            clearTimeout(refreshTimer);
             refreshTimer = null;
         }
     }
