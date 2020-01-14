@@ -51,7 +51,7 @@ function PlaybackController() {
         timelineConverter,
         liveStartTime,
         wallclockTimeIntervalId,
-        commonEarliestTime,
+        earliestTime,
         liveDelay,
         bufferedRange,
         streamInfo,
@@ -106,9 +106,9 @@ function PlaybackController() {
     }
 
     function onPeriodSwitchStarted(e) {
-        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id] !== undefined) {
+        if (!isDynamic && e.fromStreamInfo && earliestTime[e.fromStreamInfo.id] !== undefined) {
             delete bufferedRange[e.fromStreamInfo.id];
-            delete commonEarliestTime[e.fromStreamInfo.id];
+            delete earliestTime[e.fromStreamInfo.id];
         }
     }
 
@@ -281,7 +281,7 @@ function PlaybackController() {
     function reset() {
         liveStartTime = NaN;
         playOnceInitialized = false;
-        commonEarliestTime = {};
+        earliestTime = {};
         liveDelay = 0;
         availabilityStartTime = 0;
         bufferedRange = {};
@@ -386,8 +386,8 @@ function PlaybackController() {
                 if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
                     presentationStartTime = startTimeOffset;
                 } else {
-                    let earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                    presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio !== undefined ? earliestTime.audio : 0, earliestTime.video !== undefined ? earliestTime.video : 0, streamInfo.start) : streamInfo.start;
+                    let currentEarliestTime = earliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
+                    presentationStartTime = currentEarliestTime !== undefined ? Math.max(currentEarliestTime.audio !== undefined ? currentEarliestTime.audio : 0, currentEarliestTime.video !== undefined ? currentEarliestTime.video : 0, streamInfo.start) : streamInfo.start;
                 }
             }
         }
@@ -672,22 +672,22 @@ function PlaybackController() {
     function onBufferCleared(e) {
         const type = e.sender.getType();
 
-        if (streamInfo && commonEarliestTime[streamInfo.id] && (commonEarliestTime[streamInfo.id][type] >= e.from && commonEarliestTime[streamInfo.id][type] <= e.to)) {
+        if (streamInfo && earliestTime[streamInfo.id] && (earliestTime[streamInfo.id][type] >= e.from && earliestTime[streamInfo.id][type] <= e.to)) {
             logger.info('Reset commonEarliestTime and bufferedRange for ' + type);
             bufferedRange[streamInfo.id][type] = undefined;
-            commonEarliestTime[streamInfo.id][type] = undefined;
-            commonEarliestTime[streamInfo.id].started = false;
+            earliestTime[streamInfo.id][type] = undefined;
+            earliestTime[streamInfo.id].started = false;
         } else {
             logger.info('No need to reset commonEarliestTime and bufferedRange for ' + type);
         }
     }
 
     function onBytesAppended(e) {
-        let earliestTime,
+        let commonEarliestTime,
             initialStartTime;
         let ranges = e.bufferedRanges;
         if (!ranges || !ranges.length) return;
-        if (commonEarliestTime[streamInfo.id] && commonEarliestTime[streamInfo.id].started === true) {
+        if (earliestTime[streamInfo.id] && earliestTime[streamInfo.id].started === true) {
             //stream has already been started.
             return;
         }
@@ -700,13 +700,13 @@ function PlaybackController() {
 
         bufferedRange[streamInfo.id][type] = ranges;
 
-        if (commonEarliestTime[streamInfo.id] === undefined) {
-            commonEarliestTime[streamInfo.id] = [];
-            commonEarliestTime[streamInfo.id].started = false;
+        if (earliestTime[streamInfo.id] === undefined) {
+            earliestTime[streamInfo.id] = [];
+            earliestTime[streamInfo.id].started = false;
         }
 
-        if (commonEarliestTime[streamInfo.id][type] === undefined) {
-            commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
+        if (earliestTime[streamInfo.id][type] === undefined) {
+            earliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
         const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
@@ -715,36 +715,36 @@ function PlaybackController() {
         initialStartTime = getStreamStartTime(true);
         if (hasAudioTrack && hasVideoTrack) {
             //current stream has audio and video contents
-            if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {
+            if (!isNaN(earliestTime[streamInfo.id].audio) && !isNaN(earliestTime[streamInfo.id].video)) {
 
-                if (commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video) {
+                if (earliestTime[streamInfo.id].audio < earliestTime[streamInfo.id].video) {
                     // common earliest is video time
                     // check buffered audio range has video time, if ok, we seek, otherwise, we wait some other data
-                    earliestTime = commonEarliestTime[streamInfo.id].video > initialStartTime ? commonEarliestTime[streamInfo.id].video : initialStartTime;
+                    commonEarliestTime = earliestTime[streamInfo.id].video > initialStartTime ? earliestTime[streamInfo.id].video : initialStartTime;
                     ranges = bufferedRange[streamInfo.id].audio;
                 } else {
                     // common earliest is audio time
                     // check buffered video range has audio time, if ok, we seek, otherwise, we wait some other data
-                    earliestTime = commonEarliestTime[streamInfo.id].audio > initialStartTime ? commonEarliestTime[streamInfo.id].audio : initialStartTime;
+                    commonEarliestTime = earliestTime[streamInfo.id].audio > initialStartTime ? earliestTime[streamInfo.id].audio : initialStartTime;
                     ranges = bufferedRange[streamInfo.id].video;
                 }
-                if (checkTimeInRanges(earliestTime, ranges)) {
+                if (checkTimeInRanges(commonEarliestTime, ranges)) {
                     if (!(checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id].audio) && checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id].video))) {
-                        if (!compatibleWithPreviousStream && earliestTime !== 0) {
-                            seek(earliestTime, true, true);
+                        if (!compatibleWithPreviousStream && commonEarliestTime !== 0) {
+                            seek(commonEarliestTime, true, true);
                         }
                     }
-                    commonEarliestTime[streamInfo.id].started = true;
+                    earliestTime[streamInfo.id].started = true;
                 }
             }
         } else {
             //current stream has only audio or only video content
-            if (commonEarliestTime[streamInfo.id][type]) {
-                earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
+            if (earliestTime[streamInfo.id][type]) {
+                commonEarliestTime = earliestTime[streamInfo.id][type] > initialStartTime ? earliestTime[streamInfo.id][type] : initialStartTime;
                 if (!compatibleWithPreviousStream) {
-                    seek(earliestTime, false, true);
+                    seek(commonEarliestTime, false, true);
                 }
-                commonEarliestTime[streamInfo.id].started = true;
+                earliestTime[streamInfo.id].started = true;
             }
         }
     }
