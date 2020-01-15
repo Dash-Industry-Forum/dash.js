@@ -735,6 +735,7 @@ function BufferController(config) {
             if (!bufferResetInProgress) {
                 logger.debug('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
+                addBufferMetrics();
             } else {
                 bufferResetInProgress = false;
                 if (mediaChunk) {
