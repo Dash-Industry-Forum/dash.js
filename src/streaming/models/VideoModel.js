@@ -372,9 +372,18 @@ function VideoModel() {
         return null;
     }
 
-    function addTextTrack(kind, label, lang) {
+    function addTextTrack(kind, label, lang, isTTML, isEmbedded) {
+        let track = getTextTrack(kind, label, lang, isTTML, isEmbedded);
         if (element) {
-            return element.addTextTrack(kind, label, lang);
+            if (track) {
+                return track;
+            } else {
+                let createdTrack = element.addTextTrack(kind, label, lang);
+                createdTrack.isEmbedded = isEmbedded;
+                createdTrack.isTTML = isTTML;
+
+                return createdTrack;
+            }
         }
         return null;
     }
