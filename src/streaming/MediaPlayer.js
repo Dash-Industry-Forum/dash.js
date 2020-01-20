@@ -1373,13 +1373,12 @@ function MediaPlayer() {
 
     /**
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
-     * is following:
-     * {lang: langValue,
+     * is following: <br />
+     * {lang: langValue (can be either a string or a regex to match),
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
      *  accessibility: accessibilityValue,
      *  role: roleValue}
-     *
      *
      * @param {string} type
      * @param {Object} value

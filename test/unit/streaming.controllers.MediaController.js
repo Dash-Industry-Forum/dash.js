@@ -435,6 +435,71 @@ describe('MediaController', function () {
 
         });
 
+        it('should check initial media settings to choose initial track with a string/regex lang', function () {
+            const trackType = 'audio';
+            const streamInfo = {
+                id: 'id'
+            };
+            const track = {
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'fr',
+                viewpoint: 'viewpoint',
+                roles: 1,
+                accessibility: 1,
+                audioChannelConfiguration: 1
+            };
+
+            mediaController.addTrack(track);
+
+            // call to checkInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: 'fr|en|qtz',
+                viewpoint: 'viewpoint'
+            });
+            mediaController.checkInitialMediaSettingsForType(trackType, streamInfo);
+
+            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
+        });
+
+        it('should check initial media settings to choose initial track with a regex lang', function () {
+            const trackType = 'audio';
+            const streamInfo = {
+                id: 'id'
+            };
+            const frTrack = {
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'fr',
+                viewpoint: 'viewpoint',
+                roles: 1,
+                accessibility: 1,
+                audioChannelConfiguration: 1
+            };
+            const qtzTrack = {
+                type: trackType,
+                streamInfo: streamInfo,
+                lang: 'qtz',
+                viewpoint: 'viewpoint',
+                roles: 1,
+                accessibility: 1,
+                audioChannelConfiguration: 1
+            };
+
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(qtzTrack);
+
+            // call to checkInitialMediaSettingsForType
+            mediaController.setInitialSettings(trackType, {
+                lang: /qtz|mis/,
+                viewpoint: 'viewpoint'
+            });
+            mediaController.checkInitialMediaSettingsForType(trackType, streamInfo);
+
+            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true; // jshint ignore:line
+        });
     });
 
 });
