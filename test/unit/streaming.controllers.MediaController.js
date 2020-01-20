@@ -239,7 +239,7 @@ describe('MediaController', function () {
         });
 
         it('getTracksFor should return an empty array if parameters are defined, but internal tracks array is empty', function () {
-            const trackArray = mediaController.getTracksFor(Constants.VIDEO,{id: 'id'});
+            const trackArray = mediaController.getTracksFor(Constants.VIDEO, {id: 'id'});
 
             expect(trackArray).to.be.instanceOf(Array);    // jshint ignore:line
             expect(trackArray).to.be.empty;                // jshint ignore:line
@@ -436,7 +436,6 @@ describe('MediaController', function () {
         });
 
         it('should check initial media settings to choose initial track with a string/regex lang', function () {
-            const trackType = 'audio';
             const streamInfo = {
                 id: 'id'
             };
@@ -452,6 +451,13 @@ describe('MediaController', function () {
 
             mediaController.addTrack(track);
 
+            let trackList = mediaController.getTracksFor(trackType, streamInfo);
+            expect(trackList).to.have.lengthOf(1);
+            expect(objectUtils.areEqual(trackList[0], track)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            expect(objectUtils.areEqual(currentTrack, track)).to.be.false; // jshint ignore:line
+
             // call to checkInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'fr|en|qtz',
@@ -459,12 +465,11 @@ describe('MediaController', function () {
             });
             mediaController.checkInitialMediaSettingsForType(trackType, streamInfo);
 
-            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
             expect(objectUtils.areEqual(currentTrack, track)).to.be.true; // jshint ignore:line
         });
 
         it('should check initial media settings to choose initial track with a regex lang', function () {
-            const trackType = 'audio';
             const streamInfo = {
                 id: 'id'
             };
@@ -490,6 +495,15 @@ describe('MediaController', function () {
             mediaController.addTrack(frTrack);
             mediaController.addTrack(qtzTrack);
 
+            let trackList = mediaController.getTracksFor(trackType, streamInfo);
+            expect(trackList).to.have.lengthOf(2);
+            expect(objectUtils.areEqual(trackList[0], frTrack)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(trackList[1], qtzTrack)).to.be.true; // jshint ignore:line
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.false; // jshint ignore:line
+            expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.false; // jshint ignore:line
+
             // call to checkInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: /qtz|mis/,
@@ -497,7 +511,7 @@ describe('MediaController', function () {
             });
             mediaController.checkInitialMediaSettingsForType(trackType, streamInfo);
 
-            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
+            currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo);
             expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true; // jshint ignore:line
         });
     });
