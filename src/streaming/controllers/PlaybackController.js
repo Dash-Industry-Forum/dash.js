@@ -228,9 +228,15 @@ function PlaybackController() {
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
         let delay,
             ret,
+            r,
             startTime;
-        let startTimeParameters = getStartTimeFromUriParameters();
         const END_OF_PLAYLIST_PADDING = 10;
+
+        let uriParameters = uriFragmentModel.getURIFragmentData();
+
+        if (uriParameters) {
+            r = parseInt(uriParameters.r, 10);
+        }
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
@@ -240,8 +246,8 @@ function PlaybackController() {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (startTimeParameters && startTimeParameters.fragT) {
-            delay = startTimeParameters.fragT;
+        } else if (r) {
+            delay = r;
         }
         else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
