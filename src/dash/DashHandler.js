@@ -388,7 +388,7 @@ function DashHandler(config) {
         }
 
         if (segments.length > 0) {
-            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime};
+            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[segments.length - 1].presentationStartTime};
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
 

@@ -24,6 +24,8 @@ For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our 
 ## Reference players
 The released [pre-built reference players](http://reference.dashif.org/dash.js/) are publicly accessible if you want direct access without writing any Javascript.
 
+Multiple dash.js samples covering a wide set of common use cases can be found in the project's sample folder hosted [here](http://reference.dashif.org/dash.js/latest/samples/index.html).
+
 The [nightly build of the /dev branch reference player](http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html), is pre-release but contains the latest fixes. It is a good place to start if you are debugging playback problems.
 
 A nightly build of the latest minified files are also available: [dash.all.min.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.min.js) and its debug version  [dash.all.debug.js](http://reference.dashif.org/dash.js/nightly/dist/dash.all.debug.js).
