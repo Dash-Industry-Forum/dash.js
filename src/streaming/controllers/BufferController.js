@@ -341,7 +341,7 @@ function BufferController(config) {
     }
 
     function onPlaybackSeeked() {
-        seekStartTime = undefined;
+        setSeekStartTime(undefined);
     }
 
     // Prune full buffer but what is around current time position
@@ -446,6 +446,9 @@ function BufferController(config) {
     }
 
     function onPlaybackPlaying() {
+        if (seekStartTime !== undefined) {
+            setSeekStartTime(undefined);
+        }
         checkIfSufficientBuffer();
     }
 
