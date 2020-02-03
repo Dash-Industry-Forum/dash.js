@@ -16648,7 +16648,7 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 exports.getVersionString = getVersionString;
-var VERSION = '3.0.1';
+var VERSION = '3.0.2';
 
 function getVersionString() {
     return VERSION;
@@ -18264,7 +18264,7 @@ function DashHandler(config) {
         }
 
         if (segments.length > 0) {
-            representation.segmentAvailabilityRange = { start: segments[0].presentationStartTime, end: segments[len - 1].presentationStartTime };
+            representation.segmentAvailabilityRange = { start: segments[0].presentationStartTime, end: segments[segments.length - 1].presentationStartTime };
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
 
@@ -22373,7 +22373,7 @@ var DurationMatcher = (function (_BaseMatcher) {
         }, function (str) {
             //str = "P10Y10M10DT10H10M10.1S";
             var match = durationRegex.exec(str);
-            var result = parseFloat(match[2] || 0) * SECONDS_IN_YEAR + parseFloat(match[4] || 0) * SECONDS_IN_MONTH + parseFloat(match[6] || 0) * SECONDS_IN_DAY + parseFloat(match[8] || 0) * SECONDS_IN_HOUR + parseFloat(match[10] || 0) * SECONDS_IN_MIN + parseFloat(match[12] || 0);
+            var result = parseFloat(match[3] || 0) * SECONDS_IN_YEAR + parseFloat(match[5] || 0) * SECONDS_IN_MONTH + parseFloat(match[7] || 0) * SECONDS_IN_DAY + parseFloat(match[9] || 0) * SECONDS_IN_HOUR + parseFloat(match[11] || 0) * SECONDS_IN_MIN + parseFloat(match[13] || 0);
 
             if (match[1] !== undefined) {
                 result = -result;
@@ -23228,7 +23228,15 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
 
     var segmentTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, segment.presentationStartTime);
     if (segmentTime >= periodRelativeEnd) {
-        return false;
+        if (isDynamic) {
+            // segment is not available in current period, but it may be segment available in another period that current one (in DVR window)
+            // if not (time > segmentAvailabilityRange.end), then return false
+            if (representation.segmentAvailabilityRange && segment.presentationStartTime >= representation.segmentAvailabilityRange.end) {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     return true;
@@ -25340,7 +25348,7 @@ function ManifestUpdater() {
 
     function stopManifestRefreshTimer() {
         if (refreshTimer !== null) {
-            clearInterval(refreshTimer);
+            clearTimeout(refreshTimer);
             refreshTimer = null;
         }
     }
@@ -26900,13 +26908,12 @@ function MediaPlayer() {
 
     /**
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
-     * is following:
-     * {lang: langValue,
+     * is following: <br />
+     * {lang: langValue (can be either a string or a regex to match),
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
      *  accessibility: accessibilityValue,
      *  role: roleValue}
-     *
      *
      * @param {string} type
      * @param {Object} value
@@ -32506,6 +32513,7 @@ function BufferController(config) {
             if (!bufferResetInProgress) {
                 logger.debug('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
+                addBufferMetrics();
             } else {
                 bufferResetInProgress = false;
                 if (mediaChunk) {
@@ -33573,7 +33581,7 @@ function MediaController() {
     }
 
     function matchSettings(settings, track) {
-        var matchLang = !settings.lang || settings.lang === track.lang;
+        var matchLang = !settings.lang || track.lang.match(settings.lang);
         var matchViewPoint = !settings.viewpoint || settings.viewpoint === track.viewpoint;
         var matchRole = !settings.role || !!track.roles.filter(function (item) {
             return item === settings.role;
@@ -33947,7 +33955,7 @@ function PlaybackController() {
         timelineConverter = undefined,
         liveStartTime = undefined,
         wallclockTimeIntervalId = undefined,
-        commonEarliestTime = undefined,
+        earliestTime = undefined,
         liveDelay = undefined,
         bufferedRange = undefined,
         streamInfo = undefined,
@@ -33986,6 +33994,7 @@ function PlaybackController() {
 
         eventBus.on(_coreEventsEvents2['default'].DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(_coreEventsEvents2['default'].BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(_coreEventsEvents2['default'].BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(_coreEventsEvents2['default'].LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.on(_coreEventsEvents2['default'].BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(_coreEventsEvents2['default'].PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
@@ -34001,9 +34010,9 @@ function PlaybackController() {
     }
 
     function onPeriodSwitchStarted(e) {
-        if (!isDynamic && e.fromStreamInfo && commonEarliestTime[e.fromStreamInfo.id] !== undefined) {
+        if (!isDynamic && e.fromStreamInfo && earliestTime[e.fromStreamInfo.id] !== undefined) {
             delete bufferedRange[e.fromStreamInfo.id];
-            delete commonEarliestTime[e.fromStreamInfo.id];
+            delete earliestTime[e.fromStreamInfo.id];
         }
     }
 
@@ -34046,15 +34055,11 @@ function PlaybackController() {
                     // Internal seek = seek video model only (disable 'seeking' listener),
                     // buffer(s) are already appended at given time (see onBytesAppended())
                     videoModel.removeEventListener('seeking', onPlaybackSeeking);
-                    logger.info('Requesting seek to time: ' + time);
+                    logger.info('Requesting internal seek to time: ' + time);
                     videoModel.setCurrentTime(time, stickToBuffered);
                 }
             } else {
                 eventBus.trigger(_coreEventsEvents2['default'].PLAYBACK_SEEK_ASKED);
-                if (streamInfo) {
-                    delete bufferedRange[streamInfo.id];
-                    delete commonEarliestTime[streamInfo.id];
-                }
                 logger.info('Requesting seek to time: ' + time);
                 videoModel.setCurrentTime(time, stickToBuffered);
             }
@@ -34124,8 +34129,15 @@ function PlaybackController() {
     function computeLiveDelay(fragmentDuration, dvrWindowSize) {
         var delay = undefined,
             ret = undefined,
+            r = undefined,
             startTime = undefined;
         var END_OF_PLAYLIST_PADDING = 10;
+
+        var uriParameters = uriFragmentModel.getURIFragmentData();
+
+        if (uriParameters) {
+            r = parseInt(uriParameters.r, 10);
+        }
 
         var suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
@@ -34135,7 +34147,9 @@ function PlaybackController() {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (!isNaN(fragmentDuration)) {
+        } else if (r) {
+                delay = r;
+            } else if (!isNaN(fragmentDuration)) {
                 delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
             } else {
                 delay = streamInfo.manifestInfo.minBufferTime * 2;
@@ -34180,7 +34194,7 @@ function PlaybackController() {
     function reset() {
         liveStartTime = NaN;
         playOnceInitialized = false;
-        commonEarliestTime = {};
+        earliestTime = {};
         liveDelay = 0;
         availabilityStartTime = 0;
         bufferedRange = {};
@@ -34194,6 +34208,7 @@ function PlaybackController() {
             eventBus.off(_coreEventsEvents2['default'].PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             eventBus.off(_coreEventsEvents2['default'].PLAYBACK_ENDED, onPlaybackEnded, this);
             eventBus.off(_coreEventsEvents2['default'].STREAM_INITIALIZING, onStreamInitializing, this);
+            eventBus.off(_coreEventsEvents2['default'].BUFFER_CLEARED, onBufferCleared, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -34282,8 +34297,8 @@ function PlaybackController() {
                 if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
                     presentationStartTime = startTimeOffset;
                 } else {
-                    var earliestTime = commonEarliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                    presentationStartTime = earliestTime !== undefined ? Math.max(earliestTime.audio !== undefined ? earliestTime.audio : 0, earliestTime.video !== undefined ? earliestTime.video : 0, streamInfo.start) : streamInfo.start;
+                    var currentEarliestTime = earliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
+                    presentationStartTime = currentEarliestTime !== undefined ? Math.max(currentEarliestTime.audio !== undefined ? currentEarliestTime.audio : 0, currentEarliestTime.video !== undefined ? currentEarliestTime.video : 0, streamInfo.start) : streamInfo.start;
                 }
             }
         }
@@ -34296,10 +34311,13 @@ function PlaybackController() {
         var DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         var actualTime = undefined;
 
-        if (!DVRWindow) return NaN;
+        if (!DVRWindow) {
+            return NaN;
+        }
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
-        } else if (currentTime + 0.250 < DVRWindow.start && DVRWindow.start - currentTime > DVRWindow.start - 315360000) {
+        } else if (currentTime > 0 && currentTime + 0.250 < DVRWindow.start && Math.abs(currentTime - DVRWindow.start) < 315360000) {
+
             // Checking currentTime plus 250ms as the 'timeupdate' is fired with a frequency between 4Hz and 66Hz
             // https://developer.mozilla.org/en-US/docs/Web/Events/timeupdate
             // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
@@ -34557,12 +34575,25 @@ function PlaybackController() {
         }
     }
 
+    function onBufferCleared(e) {
+        var type = e.sender.getType();
+
+        if (streamInfo && earliestTime[streamInfo.id] && earliestTime[streamInfo.id][type] >= e.from && earliestTime[streamInfo.id][type] <= e.to) {
+            logger.info('Reset commonEarliestTime and bufferedRange for ' + type);
+            bufferedRange[streamInfo.id][type] = undefined;
+            earliestTime[streamInfo.id][type] = undefined;
+            earliestTime[streamInfo.id].started = false;
+        } else {
+            logger.info('No need to reset commonEarliestTime and bufferedRange for ' + type);
+        }
+    }
+
     function onBytesAppended(e) {
-        var earliestTime = undefined,
+        var commonEarliestTime = undefined,
             initialStartTime = undefined;
         var ranges = e.bufferedRanges;
         if (!ranges || !ranges.length) return;
-        if (commonEarliestTime[streamInfo.id] && commonEarliestTime[streamInfo.id].started === true) {
+        if (earliestTime[streamInfo.id] && earliestTime[streamInfo.id].started === true) {
             //stream has already been started.
             return;
         }
@@ -34575,51 +34606,51 @@ function PlaybackController() {
 
         bufferedRange[streamInfo.id][type] = ranges;
 
-        if (commonEarliestTime[streamInfo.id] === undefined) {
-            commonEarliestTime[streamInfo.id] = [];
-            commonEarliestTime[streamInfo.id].started = false;
+        if (earliestTime[streamInfo.id] === undefined) {
+            earliestTime[streamInfo.id] = [];
+            earliestTime[streamInfo.id].started = false;
         }
 
-        if (commonEarliestTime[streamInfo.id][type] === undefined) {
-            commonEarliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
+        if (earliestTime[streamInfo.id][type] === undefined) {
+            earliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
         var hasVideoTrack = streamController.isTrackTypePresent(_constantsConstants2['default'].VIDEO);
         var hasAudioTrack = streamController.isTrackTypePresent(_constantsConstants2['default'].AUDIO);
 
-        initialStartTime = getStreamStartTime(true);
+        initialStartTime = getStreamStartTime(false);
         if (hasAudioTrack && hasVideoTrack) {
             //current stream has audio and video contents
-            if (!isNaN(commonEarliestTime[streamInfo.id].audio) && !isNaN(commonEarliestTime[streamInfo.id].video)) {
+            if (!isNaN(earliestTime[streamInfo.id].audio) && !isNaN(earliestTime[streamInfo.id].video)) {
 
-                if (commonEarliestTime[streamInfo.id].audio < commonEarliestTime[streamInfo.id].video) {
+                if (earliestTime[streamInfo.id].audio < earliestTime[streamInfo.id].video) {
                     // common earliest is video time
                     // check buffered audio range has video time, if ok, we seek, otherwise, we wait some other data
-                    earliestTime = commonEarliestTime[streamInfo.id].video > initialStartTime ? commonEarliestTime[streamInfo.id].video : initialStartTime;
+                    commonEarliestTime = earliestTime[streamInfo.id].video > initialStartTime ? earliestTime[streamInfo.id].video : initialStartTime;
                     ranges = bufferedRange[streamInfo.id].audio;
                 } else {
                     // common earliest is audio time
                     // check buffered video range has audio time, if ok, we seek, otherwise, we wait some other data
-                    earliestTime = commonEarliestTime[streamInfo.id].audio > initialStartTime ? commonEarliestTime[streamInfo.id].audio : initialStartTime;
+                    commonEarliestTime = earliestTime[streamInfo.id].audio > initialStartTime ? earliestTime[streamInfo.id].audio : initialStartTime;
                     ranges = bufferedRange[streamInfo.id].video;
                 }
-                if (checkTimeInRanges(earliestTime, ranges)) {
+                if (checkTimeInRanges(commonEarliestTime, ranges)) {
                     if (!(checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id].audio) && checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id].video))) {
-                        if (!compatibleWithPreviousStream && earliestTime !== 0) {
-                            seek(earliestTime, true, true);
+                        if (!compatibleWithPreviousStream && commonEarliestTime !== 0) {
+                            seek(commonEarliestTime, true, true);
                         }
                     }
-                    commonEarliestTime[streamInfo.id].started = true;
+                    earliestTime[streamInfo.id].started = true;
                 }
             }
         } else {
             //current stream has only audio or only video content
-            if (commonEarliestTime[streamInfo.id][type]) {
-                earliestTime = commonEarliestTime[streamInfo.id][type] > initialStartTime ? commonEarliestTime[streamInfo.id][type] : initialStartTime;
+            if (earliestTime[streamInfo.id][type]) {
+                commonEarliestTime = earliestTime[streamInfo.id][type] > initialStartTime ? earliestTime[streamInfo.id][type] : initialStartTime;
                 if (!compatibleWithPreviousStream) {
-                    seek(earliestTime, false, true);
+                    seek(commonEarliestTime, false, true);
                 }
-                commonEarliestTime[streamInfo.id].started = true;
+                earliestTime[streamInfo.id].started = true;
             }
         }
     }
