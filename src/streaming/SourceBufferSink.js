@@ -56,7 +56,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, isAppendWi
     let callbacks = [];
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let appendWindowEndEnabled = isAppendWindowEndEnabled !== undefined ? isAppendWindowEndEnabled : true;
+    let appendWindowEndEnabled = !(isAppendWindowEndEnabled === false);
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
