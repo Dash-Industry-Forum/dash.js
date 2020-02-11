@@ -43,7 +43,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
  * @ignore
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useWindowAppendEnd, oldBuffer) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendWindowEnd, oldBuffer) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -56,7 +56,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useWindowA
     let callbacks = [];
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let setAppendWindowEnd = (useWindowAppendEnd === false) ? false : true;
+    let setAppendWindowEnd = (useAppendWindowEnd === false) ? false : true;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
