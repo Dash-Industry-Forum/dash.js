@@ -43,7 +43,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
  * @ignore
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, isAppendWindowEndEnabled, oldBuffer) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useWindowAppendEnd, oldBuffer) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -56,7 +56,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, isAppendWi
     let callbacks = [];
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let appendWindowEndEnabled = (isAppendWindowEndEnabled === false) ? false : true;
+    let setAppendWindowEnd = (useWindowAppendEnd === false) ? false : true;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -77,8 +77,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, isAppendWi
                 buffer.changeType(codec);
             }
 
-            if (appendWindowEndEnabled) {
-                setAppendWindowEnd(mediaSource.duration);
+            if (setAppendWindowEnd && buffer) {
+                buffer.appendWindowEnd = mediaSource.duration;
             }
 
             const CHECK_INTERVAL = 50;
@@ -342,12 +342,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, isAppendWi
 
         if (!buffer.updating) {
             executeCallback();
-        }
-    }
-
-    function setAppendWindowEnd(timeEnd) {
-        if (buffer) {
-            buffer.appendWindowEnd = timeEnd;
         }
     }
 

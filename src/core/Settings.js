@@ -72,6 +72,7 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  *          keepProtectionMediaKeys: false,
  *          useManifestDateHeaderTimeSource: true,
  *          useSuggestedPresentationDelay: false,
+ *          useAppendWindowEnd: true,
  *          manifestUpdateRetryInterval: 100,
  *          liveCatchUpMinDrift: 0.02,
  *          liveCatchUpMaxDrift: 0,
@@ -261,6 +262,8 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {boolean} [useSuggestedPresentationDelay=false]
  * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
+ * @property {boolean} [useAppendWindowEnd=true]
+ * Specifies if the appendWindowEnd attribute of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
@@ -353,7 +356,6 @@ function Settings() {
             logLevel: Debug.LOG_LEVEL_WARNING
         },
         streaming: {
-            appendWindowEndEnabled: true,
             metricsMaxListDepth: 1000,
             abandonLoadTimeout: 10000,
             liveDelayFragmentCount: 4,
@@ -374,6 +376,7 @@ function Settings() {
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
             useSuggestedPresentationDelay: false,
+            useAppendWindowEnd: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
             liveCatchUpMaxDrift: 0,

@@ -130,9 +130,9 @@ function BufferController(config) {
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.appendWindowEndEnabled, oldBuffers[type]);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useWindowAppendEnd, oldBuffers[type]);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.appendWindowEndEnabled);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useWindowAppendEnd);
                 }
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamProcessor);
