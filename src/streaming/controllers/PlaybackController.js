@@ -90,7 +90,6 @@ function PlaybackController() {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
-        eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
@@ -156,6 +155,10 @@ function PlaybackController() {
                 }
             } else {
                 eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+                if (streamInfo) {
+                    delete bufferedRange[streamInfo.id];
+                    delete earliestTime[streamInfo.id];
+                }
                 logger.info('Requesting seek to time: ' + time);
                 videoModel.setCurrentTime(time, stickToBuffered);
             }
@@ -305,7 +308,6 @@ function PlaybackController() {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
             eventBus.off(Events.STREAM_INITIALIZING, onStreamInitializing, this);
-            eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -680,19 +682,6 @@ function PlaybackController() {
     function stopPlaybackCatchUp() {
         if (videoModel) {
             videoModel.setPlaybackRate(1.0);
-        }
-    }
-
-    function onBufferCleared(e) {
-        const type = e.sender.getType();
-
-        if (streamInfo && earliestTime[streamInfo.id] && (earliestTime[streamInfo.id][type] >= e.from && earliestTime[streamInfo.id][type] <= e.to)) {
-            logger.info('Reset commonEarliestTime and bufferedRange for ' + type);
-            bufferedRange[streamInfo.id][type] = undefined;
-            earliestTime[streamInfo.id][type] = undefined;
-            earliestTime[streamInfo.id].started = false;
-        } else {
-            logger.info('No need to reset commonEarliestTime and bufferedRange for ' + type);
         }
     }
 
