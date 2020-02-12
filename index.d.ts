@@ -101,6 +101,7 @@ declare namespace dashjs {
             keepProtectionMediaKeys?: boolean;
             useManifestDateHeaderTimeSource?: boolean;
             useSuggestedPresentationDelay?: boolean;
+            useAppendWindowEnd?: boolean,
             manifestUpdateRetryInterval?: number;
             liveCatchUpMinDrift?: number;
             liveCatchUpMaxDrift?: number;
