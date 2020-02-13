@@ -79,7 +79,7 @@ function ScheduleController(config) {
         bufferResetInProgress,
         mediaRequest,
         liveEdgeFinder,
-        checkPlaybackQualityNeeded,
+        checkPlaybackQuality,
         isReplacementRequest;
 
     function setup() {
@@ -198,7 +198,6 @@ function ScheduleController(config) {
 
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!bufferResetInProgress)) {
-                    checkPlaybackQualityNeeded = false;
                     logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     if (switchTrack) {
                         bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
@@ -209,17 +208,16 @@ function ScheduleController(config) {
                         streamProcessor.switchInitData(currentRepresentationInfo.id);
                     }
                     lastInitQuality = currentRepresentationInfo.quality;
-
+                    checkPlaybackQuality = false;
                 } else {
                     const replacement = replaceRequestArray.shift();
 
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
                         streamProcessor.switchInitData(replacement.representationId);
-                        checkPlaybackQualityNeeded = false;
+                        checkPlaybackQuality = false;
                     } else {
                         let request;
-                        checkPlaybackQualityNeeded = true;
                         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
                         if (!streamProcessor.getBufferController().getIsPruningInProgress()) {
                             request = nextFragmentRequestRule.execute(streamProcessor, seekTarget, replacement);
@@ -243,12 +241,13 @@ function ScheduleController(config) {
                             setFragmentProcessState(false);
                             startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
                         }
+                        checkPlaybackQuality = true;
                     }
                 }
             };
 
             setFragmentProcessState(true);
-            if (!isReplacement && checkPlaybackQualityNeeded) {
+            if (!isReplacement && checkPlaybackQuality) {
                 abrController.checkPlaybackQuality(type);
             }
 
@@ -655,7 +654,7 @@ function ScheduleController(config) {
     }
 
     function resetInitialSettings() {
-        checkPlaybackQualityNeeded = true;
+        checkPlaybackQuality = true;
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;
