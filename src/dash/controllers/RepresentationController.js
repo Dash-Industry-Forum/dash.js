@@ -188,83 +188,11 @@ function RepresentationController() {
         dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
     }
 
-    function getSegmentsRange(representation) {
-        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-        AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
-        representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-        AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        const timeline = base.SegmentTimeline;
-
-        let time = 0;
-        let scaledTime = 0;
-        let availabilityIdx = -1;
-        const segmentsRange = {};
-
-        let fragments,
-            frag,
-            i,
-            len,
-            j,
-            repeat,
-            repeatEndTime,
-            nextFrag,
-            fTimescale;
-
-        fTimescale = representation.timescale;
-
-        fragments = timeline.S_asArray;
-
-        for (i = 0, len = fragments.length; i < len; i++) {
-            frag = fragments[i];
-            repeat = 0;
-            if (frag.hasOwnProperty('r')) {
-                repeat = frag.r;
-            }
-
-            // For a repeated S element, t belongs only to the first segment
-            if (frag.hasOwnProperty('t')) {
-                time = frag.t;
-                scaledTime = time / fTimescale;
-            }
-
-            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
-            // next MPD update."
-            if (repeat < 0) {
-                nextFrag = fragments[i + 1];
-
-                if (nextFrag && nextFrag.hasOwnProperty('t')) {
-                    repeatEndTime = nextFrag.t / fTimescale;
-                } else {
-                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, true).end);
-                    repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
-                    representation.segmentDuration = frag.d / fTimescale;
-                }
-
-                repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
-            }
-
-            for (j = 0; j <= repeat; j++) {
-                availabilityIdx++;
-
-                if (availabilityIdx === 0) {
-                    segmentsRange.start = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
-                }
-
-                time += frag.d;
-                scaledTime = time / fTimescale;
-            }
-        }
-        const scaledDuration = Math.min(frag.d / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration);
-        segmentsRange.end = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation) + scaledDuration;
-
-        return segmentsRange;
-    }
-
     function updateRepresentation(representation, isDynamic) {
         if (!isDynamic || representation.segmentInfoType !== DashConstants.SEGMENT_TIMELINE) {
             representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
         } else {
-            representation.segmentAvailabilityRange = getSegmentsRange(representation);
+            representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRangeForSegTimeline(representation);
         }
 
         if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {

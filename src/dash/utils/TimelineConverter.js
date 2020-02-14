@@ -138,7 +138,7 @@ function TimelineConverter() {
     function calcSegmentAvailabilityRange(voRepresentation, isDynamic) {
         // Static Range Finder
         const voPeriod = voRepresentation.adaptation.period;
-        const range = { start: voPeriod.start, end: voPeriod.start + voPeriod.duration };
+        const range = {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
         if (!isDynamic) return range;
 
         if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
@@ -152,11 +152,97 @@ function TimelineConverter() {
         range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
 
         const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
-            voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
+        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
 
         range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
 
         return range;
+    }
+
+    /**
+     * Returns the available segment range for a dynamic manifest with SegmentTimeline
+     * @param {object} voRepresentation
+     * @returns {object} The start and end time of the segment range
+     */
+    function calcSegmentAvailabilityRangeForSegTimeline(voRepresentation) {
+        const base = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index].Representation_asArray[voRepresentation.index].SegmentTemplate ||
+            voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index].Representation_asArray[voRepresentation.index].SegmentList;
+        const timeline = base.SegmentTimeline;
+
+        let time = 0;
+        let scaledTime = 0;
+        let availabilityIdx = -1;
+        const timelineSegmentRange = {};
+
+        let fragments,
+            frag,
+            i,
+            len,
+            j,
+            repeat,
+            repeatEndTime,
+            nextFrag,
+            fTimescale;
+
+        fTimescale = voRepresentation.timescale;
+
+        fragments = timeline.S_asArray;
+
+        for (i = 0, len = fragments.length; i < len; i++) {
+            frag = fragments[i];
+            repeat = 0;
+            if (frag.hasOwnProperty('r')) {
+                repeat = frag.r;
+            }
+
+            // For a repeated S element, t belongs only to the first segment
+            if (frag.hasOwnProperty('t')) {
+                time = frag.t;
+                scaledTime = time / fTimescale;
+            }
+
+            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+            // next MPD update."
+            if (repeat < 0) {
+                nextFrag = fragments[i + 1];
+
+                if (nextFrag && nextFrag.hasOwnProperty('t')) {
+                    repeatEndTime = nextFrag.t / fTimescale;
+                } else {
+                    const availabilityEnd = voRepresentation.segmentAvailabilityRange ? voRepresentation.segmentAvailabilityRange.end : (calcSegmentAvailabilityRange(voRepresentation, true).end);
+                    repeatEndTime = voRepresentation.calcMediaTimeFromPresentationTime(availabilityEnd, voRepresentation);
+                    voRepresentation.segmentDuration = frag.d / fTimescale;
+                }
+
+                repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
+            }
+
+            for (j = 0; j <= repeat; j++) {
+                availabilityIdx++;
+
+                if (availabilityIdx === 0) {
+                    timelineSegmentRange.start = calcPresentationTimeFromMediaTime(scaledTime, voRepresentation);
+                }
+
+                time += frag.d;
+                scaledTime = time / fTimescale;
+            }
+        }
+        const scaledDuration = Math.min(frag.d / fTimescale, voRepresentation.adaptation.period.mpd.maxSegmentDuration);
+        timelineSegmentRange.end = calcPresentationTimeFromMediaTime(scaledTime, voRepresentation) + scaledDuration;
+
+        // We need to ensure that the derived segment range is within the timeShiftBufferDepth and not outside the live edge
+        const commonSegmentRange = calcSegmentAvailabilityRange(voRepresentation, true);
+
+        // This is an edge case. If the last signaled segment is out of the timeShiftBufferDepth window we just use the timelineSegmentRange
+        if (timelineSegmentRange.end < commonSegmentRange.start) {
+            return timelineSegmentRange;
+        }
+
+        return {
+            start: Math.max(commonSegmentRange.start, timelineSegmentRange.start),
+            end: Math.min(commonSegmentRange.end, timelineSegmentRange.end)
+        };
     }
 
     function getPeriodEnd(voRepresentation, isDynamic) {
@@ -176,7 +262,7 @@ function TimelineConverter() {
         const periodEnd = voPeriod.start + voPeriod.duration;
 
         const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
-            voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
+        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
 
         return Math.min(now - endOffset, periodEnd);
     }
@@ -227,6 +313,7 @@ function TimelineConverter() {
         calcPeriodRelativeTimeFromMpdRelativeTime: calcPeriodRelativeTimeFromMpdRelativeTime,
         calcMediaTimeFromPresentationTime: calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRange: calcSegmentAvailabilityRange,
+        calcSegmentAvailabilityRangeForSegTimeline: calcSegmentAvailabilityRangeForSegTimeline,
         getPeriodEnd: getPeriodEnd,
         calcWallTimeForSegment: calcWallTimeForSegment,
         reset: reset
