@@ -94,27 +94,14 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {string} mediaType
-     * @param {boolean} readOnly
-     * @param {string} infoType
-     * @returns {*}
-     * @memberof module:DashMetrics
-     * @instance
-     */
-    function getLatestBufferInfoVO(mediaType, readOnly, infoType) {
-        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
-        return getCurrent(metrics, infoType);
-    }
-
-    /**
      * @param {string} type
      * @param {boolean} readOnly
      * @returns {number}
-     * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentBufferState(type, readOnly) {
-        return getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_STATE);
+    function getCurrentBufferState(type) {
+        const metrics = metricsModel.getMetricsFor(type, true);
+        return getCurrent(metrics, MetricsConstants.BUFFER_STATE);
     }
 
     /**

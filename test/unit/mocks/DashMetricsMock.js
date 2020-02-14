@@ -11,10 +11,6 @@ function DashMetricsMock () {
         return 15;
     };
 
-    this.getLatestBufferInfoVO = function () {
-        return this.bufferState;
-    };
-
     this.addSchedulingInfo = function () {
 
     };
