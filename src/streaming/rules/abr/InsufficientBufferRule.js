@@ -57,7 +57,7 @@ function InsufficientBufferRule(config) {
     }
 
     function checkConfig() {
-        if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel') || !dashMetrics.hasOwnProperty('getLatestBufferInfoVO')) {
+        if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel') || !dashMetrics.hasOwnProperty('getCurrentBufferState')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -81,16 +81,16 @@ function InsufficientBufferRule(config) {
         checkConfig();
 
         const mediaType = rulesContext.getMediaType();
-        const lastBufferStateVO = dashMetrics.getLatestBufferInfoVO(mediaType, true, MetricsConstants.BUFFER_STATE);
+        const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-        if (!lastBufferStateVO || !wasFirstBufferLoadedEventTriggered(mediaType, lastBufferStateVO) || !fragmentDuration) {
+        if (!currentBufferState || !wasFirstBufferLoadedEventTriggered(mediaType, currentBufferState) || !fragmentDuration) {
             return switchRequest;
         }
 
-        if (lastBufferStateVO.state === MetricsConstants.BUFFER_EMPTY) {
+        if (currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';

@@ -65,8 +65,8 @@ function BufferLevelRule(config) {
                 if (isNaN(representationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
                     // call metrics function to have data in the latest scheduling info...
                     // if no metric, returns 0. In this case, rule will return false.
-                    const bufferInfo = dashMetrics.getLatestBufferInfoVO(Constants.FRAGMENTED_TEXT, true, MetricsConstants.SCHEDULING_INFO);
-                    bufferTarget = bufferInfo ? bufferInfo.duration : 0;
+                    const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(MetricsConstants.SCHEDULING_INFO);
+                    bufferTarget = schedulingInfo ? schedulingInfo.duration : 0;
                 } else {
                     bufferTarget = representationInfo.fragmentDuration;
                 }

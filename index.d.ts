@@ -821,10 +821,10 @@ declare namespace dashjs {
     }
 
     export interface DashMetrics {
-        getCurrentRepresentationSwitch(type: MediaType, readOnly: boolean): ICurrentRepresentationSwitch;
-        getCurrentBufferState(type: MediaType, readOnly: boolean): IBufferState;
-        getCurrentBufferLevel(type: MediaType, readOnly: boolean): number;
-        getCurrentHttpRequest(type: MediaType, readOnly: boolean): object;
+        getCurrentRepresentationSwitch(type: MediaType): ICurrentRepresentationSwitch;
+        getCurrentBufferState(type: MediaType): IBufferState;
+        getCurrentBufferLevel(type: MediaType): number;
+        getCurrentHttpRequest(type: MediaType): object;
         getHttpRequests(type: MediaType): object[];
         getCurrentDroppedFrames(): IDroppedFrames;
         getCurrentSchedulingInfo(type: MediaType): object;
