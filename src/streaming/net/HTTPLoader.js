@@ -209,7 +209,7 @@ function HTTPLoader(cfg) {
             });
         }
 
-        const modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        const modifiedUrl = requestModifier.modifyRequestURL(request);
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
 

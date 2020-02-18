@@ -65,7 +65,8 @@ function XHRLoader(cfg) {
         }
 
         if (requestModifier) {
-            xhr = requestModifier.modifyRequestHeader(xhr);
+            const headers = requestModifier.getRequestHeaders(httpRequest);
+            updateRequestHeaders(xhr, headers);
         }
 
         xhr.withCredentials = httpRequest.withCredentials;
@@ -85,6 +86,17 @@ function XHRLoader(cfg) {
         const x = request.response;
         x.onloadend = x.onerror = x.onprogress = undefined; //Ignore events from aborted requests.
         x.abort();
+    }
+
+    function updateRequestHeaders(xhr, headers) {
+        if (!headers || headers.length === 0) {
+            return;
+        }
+        headers.forEach((header) => {
+            if (header.key && header.value) {
+                xhr.setRequestHeader(header.key, header.value);
+            }
+        });
     }
 
     instance = {
