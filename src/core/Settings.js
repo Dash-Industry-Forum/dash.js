@@ -417,6 +417,15 @@ function Settings() {
                 initialBitrate: { audio: -1, video: -1 },
                 initialRepresentationRatio: { audio: -1, video: -1 },
                 autoSwitchBitrate: { audio: true, video: true }
+            },
+            cmcd: {
+                sendAsHeader: false,
+                sendAsQueryParam: false,
+                params: {
+                    sid: null,
+                    cid: null,
+                    did: null,
+                }
             }
         }
     };
