@@ -31,12 +31,14 @@
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from "../../core/Debug";
-import Utils from "../../core/Utils";
-import Settings from "../../core/Settings";
-import DashManifestModel from "../../dash/models/DashManifestModel";
+import Debug from '../../core/Debug';
+import Utils from '../../core/Utils';
+import Settings from '../../core/Settings';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import DashManifestModel from '../../dash/models/DashManifestModel';
 
 const CMCD_REQUEST_HEADER_FIELD_NAME = 'Common-Media-Client-Data';
+const CMCD_VERSION = 1;
 
 function CmcdModel() {
 
@@ -64,17 +66,18 @@ function CmcdModel() {
             pr: null,
             nor: null,
             st: null,
+            sf: null
         };
     }
 
     function getRequestHeader(request) {
         try {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.sendAsHeader && settings.get().streaming.cmcd.params.sid) {
-                if (request.type === 'MPD') {
+                if (request.type === HTTPRequest.MPD_TYPE) {
                     return _getRequestHeaderForMpd(request);
-                } else if (request.type === 'MediaSegment') {
+                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                     return _getRequestHeaderForMediaSegment(request);
-                } else if (request.type === 'InitSegment') {
+                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
                     return _getRequestHeaderForInitSegment(request);
                 }
             }
@@ -86,15 +89,27 @@ function CmcdModel() {
     function _getRequestHeaderForMpd(request) {
         const data = _getGenericRequestData(request);
 
+        data.ot = 'm';
+
         return buildRequestHeader(data);
     }
 
     function _getRequestHeaderForMediaSegment(request) {
         const data = _getGenericRequestData(request);
         const encodedBitrate = _getBitrateFromRequest(request);
+        const d = _getObjectDurationFromRequest(request);
+        const ot = request.mediaType === 'video' ? 'v' : request.mediaType === 'audio' ? 'a' : null;
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
+        }
+
+        if (ot) {
+            data.ot = ot;
+        }
+
+        if(d) {
+            data.d = d;
         }
 
         return buildRequestHeader(data);
@@ -103,11 +118,15 @@ function CmcdModel() {
     function _getRequestHeaderForInitSegment(request) {
         const data = _getGenericRequestData(request);
 
+        data.ot = 'i';
+
         return buildRequestHeader(data);
     }
 
     function _getGenericRequestData(request) {
         const data = {};
+
+        data.v = CMCD_VERSION;
 
         if (settings.get().streaming.cmcd.params.sid) {
             data.sid = settings.get().streaming.cmcd.params.sid;
@@ -129,12 +148,6 @@ function CmcdModel() {
             data.st = internalData.pr;
         }
 
-        const objectType = _getObjecTypeFromRequest(request);
-
-        if (objectType) {
-            data.ot = objectType;
-        }
-
         return data;
     }
 
@@ -149,10 +162,10 @@ function CmcdModel() {
         }
     }
 
-    function _getObjecTypeFromRequest(request) {
+    function _getObjectDurationFromRequest(request) {
         try {
-            return;
-        } catch (e) {
+            return !isNaN(request.duration) ? Math.round(request.duration * 1000) : null;
+        } catch(e) {
             return null;
         }
     }
@@ -169,8 +182,10 @@ function CmcdModel() {
         try {
             const isDynamic = dashManifestModel.getIsDynamic(data.data);
             const st = isDynamic ? 'l' : 'v';
+            const sf = data.protocol && data.protocol === 'MSS' ? 's' : 'd';
 
             internalData.st = st;
+            internalData.sf = sf;
         } catch (e) {
         }
     }
