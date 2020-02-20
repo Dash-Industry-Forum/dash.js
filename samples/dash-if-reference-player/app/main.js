@@ -596,7 +596,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                     'video': maxBitrate
                 }
             }
-        }        
+        }
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
@@ -947,6 +947,24 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             item.url = vars.source;
         }
 
+        // If supply widevine= parameter in the query string then set up the DRM protection to playback Widevine
+        if (vars && vars.hasOwnProperty('widevine')) {
+            $scope.drmLicenseURL = vars.widevine;
+            if ($scope.drmLicenseURL.indexOf("%")) {
+                $scope.drmLicenseURL = unescape($scope.drmLicenseURL);
+            }
+            $scope.drmKeySystem = 'com.widevine.alpha';
+        }
+
+        // If supply playready= parameter in the query string then set up the DRM protection to playback PlayReady
+        if (vars && vars.hasOwnProperty('playready')) {
+            $scope.drmLicenseURL = vars.playready;
+            if ($scope.drmLicenseURL.indexOf("%")) {
+                $scope.drmLicenseURL = unescape($scope.drmLicenseURL);
+            }
+            $scope.drmKeySystem = 'com.microsoft.playready';
+        }
+
         if (vars && vars.hasOwnProperty('stream')) {
             try {
                 item = JSON.parse(atob(vars.stream));
@@ -967,6 +985,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         }
 
         if (item.url) {
+            // Detect if the URL contains escaped characters, if so unescape the URL
+            if (item.url.indexOf("%")) {
+                item.url = unescape(item.url);
+            }
+
             var startPlayback = false;
 
             $scope.selectedItem = item;
