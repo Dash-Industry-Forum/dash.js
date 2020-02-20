@@ -60,9 +60,20 @@ function FetchLoader(cfg) {
             request.requestStartDate = requestStartTime;
         }
 
+        if (httpRequest.additionalHeader && httpRequest.additionalHeader.length > 0) {
+            addAdditionalHeader(headers, httpRequest.additionalHeader);
+        }
+
         if (requestModifier) {
-            const modHeaders = requestModifier.getRequestHeaders(httpRequest);
-            updateRequestHeaders(headers, modHeaders);
+            // modifyRequestHeader expects a XMLHttpRequest object so,
+            // to keep backward compatibility, we should expose a setRequestHeader method
+            // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
+            // a more generic way to intercept/modify requests
+            requestModifier.modifyRequestHeader({
+                setRequestHeader: function (header, value) {
+                    headers.append(header, value);
+                }
+            });
         }
 
         let abortController;
@@ -258,16 +269,17 @@ function FetchLoader(cfg) {
         return null;
     }
 
-    function updateRequestHeaders(headersObj, headers) {
-        if (!headers || headers.length === 0) {
+    function addAdditionalHeader(headersObj, header) {
+        if (!header || header.length === 0) {
             return;
         }
-        headers.forEach((header) => {
+        header.forEach((header) => {
             if (header.key && header.value) {
                 headersObj.append(header.key, header.value);
             }
         });
     }
+
 
     instance = {
         load: load,

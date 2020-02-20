@@ -72,6 +72,28 @@ class Utils {
         }
         return Utils.mixin(r, src, Utils.clone);
     }
+
+    static _addAditionalQueryParameterToUrl(url, params) {
+        try {
+            if (!params || params.length === 0) {
+                return url;
+            }
+
+            let modifiedUrl = new URL(url);
+
+            params.forEach((param) => {
+                if (param.key && param.value) {
+                    modifiedUrl.searchParams.set(param.key, param.value);
+                }
+            });
+
+            return modifiedUrl.href;
+
+
+        } catch (e) {
+            return url;
+        }
+    }
 }
 
 export default Utils;

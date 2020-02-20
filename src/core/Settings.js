@@ -420,7 +420,7 @@ function Settings() {
             },
             cmcd: {
                 sendAsHeader: false,
-                sendAsQueryParam: false,
+                sendAsQueryParameter: false,
                 params: {
                     sid: null,
                     cid: null,

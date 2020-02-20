@@ -46,6 +46,7 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
+import CmcdModel from './models/CmcdModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -131,6 +132,7 @@ function MediaPlayer() {
         playbackController,
         dashMetrics,
         manifestModel,
+        cmcdModel,
         videoModel,
         textController,
         uriFragmentModel,
@@ -241,6 +243,8 @@ function MediaPlayer() {
 
         manifestModel = ManifestModel(context).getInstance();
 
+        cmcdModel = CmcdModel(context).getInstance();
+
         dashMetrics = DashMetrics(context).getInstance({
             settings: settings
         });
@@ -254,6 +258,11 @@ function MediaPlayer() {
             cea608parser: cea608parser,
             errHandler: errHandler,
             BASE64: BASE64
+        });
+
+        cmcdModel.setConfig({
+            abrController,
+            dashMetrics
         });
 
         restoreDefaultUTCTimingSources();

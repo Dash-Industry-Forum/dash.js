@@ -30,34 +30,22 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import CmcdModel from '../models/CmcdModel';
 
 function RequestModifier() {
 
-    let context = this.context;
     let instance;
-    let cmcdModel = CmcdModel(context).getInstance();
 
-    function modifyRequestURL(request) {
-        return request.url;
+    function modifyRequestURL(url) {
+        return url;
     }
 
-    function getRequestHeaders(httpRequest) {
-        const headers = [];
-        let cmcdHeader = cmcdModel.getRequestHeader(httpRequest.request);
-
-        cmcdHeader = null;
-
-        if (cmcdHeader && cmcdHeader.key && cmcdHeader.value) {
-            headers.push(cmcdHeader);
-        }
-
-        return headers;
+    function modifyRequestHeader(request) {
+        return request;
     }
 
     instance = {
         modifyRequestURL: modifyRequestURL,
-        getRequestHeaders
+        modifyRequestHeader: modifyRequestHeader
     };
 
     return instance;

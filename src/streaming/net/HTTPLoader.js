@@ -30,10 +30,12 @@
  */
 import XHRLoader from './XHRLoader';
 import FetchLoader from './FetchLoader';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
 import Errors from '../../core/errors/Errors';
 import DashJSError from '../vo/DashJSError';
+import CmcdModel from '../models/CmcdModel';
+import Utils from '../../core/Utils';
 
 /**
  * @module HTTPLoader
@@ -57,12 +59,14 @@ function HTTPLoader(cfg) {
         requests,
         delayedRequests,
         retryRequests,
-        downloadErrorToRequestTypeMap;
+        downloadErrorToRequestTypeMap,
+        cmcdModel;
 
     function setup() {
         requests = [];
         delayedRequests = [];
         retryRequests = [];
+        cmcdModel = CmcdModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -98,10 +102,10 @@ function HTTPLoader(cfg) {
 
             if (!request.checkExistenceOnly) {
                 dashMetrics.addHttpRequest(request, httpRequest.response ? httpRequest.response.responseURL : null,
-                                           httpRequest.response ? httpRequest.response.status : null,
-                                           httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                                           httpRequest.response ? httpRequest.response.responseHeaders : [],
-                                           success ? traces : null);
+                    httpRequest.response ? httpRequest.response.status : null,
+                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                        httpRequest.response ? httpRequest.response.responseHeaders : [],
+                    success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request.type, request.requestStartDate, request.requestEndDate);
@@ -121,7 +125,7 @@ function HTTPLoader(cfg) {
 
                 if (remainingAttempts > 0) {
                     remainingAttempts--;
-                    let retryRequest = { config: config };
+                    let retryRequest = {config: config};
                     retryRequests.push(retryRequest);
                     retryRequest.timeout = setTimeout(function () {
                         if (retryRequests.indexOf(retryRequest) === -1) {
@@ -132,7 +136,10 @@ function HTTPLoader(cfg) {
                         internalLoad(config, remainingAttempts);
                     }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
-                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
+                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
+                        request: request,
+                        response: httpRequest.response
+                    }));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);
@@ -209,9 +216,13 @@ function HTTPLoader(cfg) {
             });
         }
 
-        const modifiedUrl = requestModifier.modifyRequestURL(request);
+        let modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        const additionalQueryParameter = _getAdditionalQueryParameter(request);
+        modifiedUrl = Utils._addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
+
+        const additionalHeader = _getAdditionalHeader(request);
 
         httpRequest = {
             url: modifiedUrl,
@@ -223,7 +234,8 @@ function HTTPLoader(cfg) {
             onerror: onloadend,
             progress: progress,
             onabort: onabort,
-            loader: loader
+            loader: loader,
+            additionalHeader
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
@@ -234,7 +246,7 @@ function HTTPLoader(cfg) {
             loader.load(httpRequest);
         } else {
             // delay
-            let delayedRequest = { httpRequest: httpRequest };
+            let delayedRequest = {httpRequest: httpRequest};
             delayedRequests.push(delayedRequest);
             delayedRequest.delayTimeout = setTimeout(function () {
                 if (delayedRequests.indexOf(delayedRequest) === -1) {
@@ -251,6 +263,36 @@ function HTTPLoader(cfg) {
                     delayedRequest.httpRequest.onerror();
                 }
             }, (request.delayLoadingTime - now));
+        }
+    }
+
+    function _getAdditionalHeader(request) {
+        try {
+            const additionalHeader = [];
+            const cmcdHeader = cmcdModel.getRequestHeader(request);
+
+            if (cmcdHeader) {
+                additionalHeader.push(cmcdHeader);
+            }
+
+            return additionalHeader;
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function _getAdditionalQueryParameter(request) {
+        try {
+            const additionalQueryParameter = [];
+            const cmcdQueryParameter = cmcdModel.getQueryParameter(request);
+
+            if (cmcdQueryParameter) {
+                additionalQueryParameter.push(cmcdQueryParameter);
+            }
+
+            return additionalQueryParameter;
+        } catch (e) {
+            return [];
         }
     }
 

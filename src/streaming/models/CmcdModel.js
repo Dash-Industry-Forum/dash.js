@@ -32,7 +32,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import Utils from '../../core/Utils';
 import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
@@ -45,7 +44,9 @@ function CmcdModel() {
     let logger,
         dashManifestModel,
         instance,
-        internalData;
+        internalData,
+        abrController,
+        dashMetrics;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -61,6 +62,18 @@ function CmcdModel() {
         resetInitialSettings();
     }
 
+    function setConfig(config) {
+        if (!config) return;
+
+        if (config.abrController) {
+            abrController = config.abrController;
+        }
+
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
+    }
+
     function resetInitialSettings() {
         internalData = {
             pr: null,
@@ -73,32 +86,72 @@ function CmcdModel() {
     function getRequestHeader(request) {
         try {
             if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.sendAsHeader && settings.get().streaming.cmcd.params.sid) {
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    return _getRequestHeaderForMpd(request);
-                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    return _getRequestHeaderForMediaSegment(request);
-                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                    return _getRequestHeaderForInitSegment(request);
-                }
+                const cmcdData = _getCmcdData(request);
+                const finalPayloadString = _buildFinalString(cmcdData);
+
+                return {
+                    key: CMCD_REQUEST_HEADER_FIELD_NAME,
+                    value: finalPayloadString
+                };
             }
+
+            return null;
         } catch (e) {
             return null;
         }
     }
 
-    function _getRequestHeaderForMpd(request) {
-        const data = _getGenericRequestData(request);
+    function getQueryParameter(request) {
+        try {
+            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.sendAsQueryParameter && !settings.get().streaming.cmcd.sendAsHeader && settings.get().streaming.cmcd.params.sid) {
+                const cmcdData = _getCmcdData(request);
+                const finalPayloadString = _buildFinalString(cmcdData);
+
+                return {
+                    key: CMCD_REQUEST_HEADER_FIELD_NAME,
+                    value: finalPayloadString
+                };
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getCmcdData(request) {
+        try {
+            let cmcdData = null;
+
+            if (request.type === HTTPRequest.MPD_TYPE) {
+                return _getCmcdDataForMpd(request);
+            } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                return _getCmcdDataForMediaSegment(request);
+            } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                return _getCmcdDataForInitSegment(request);
+            }
+
+            return cmcdData;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getCmcdDataForMpd() {
+        const data = _getGenericCmcdData();
 
         data.ot = 'm';
 
-        return buildRequestHeader(data);
+        return data;
     }
 
-    function _getRequestHeaderForMediaSegment(request) {
-        const data = _getGenericRequestData(request);
-        const encodedBitrate = _getBitrateFromRequest(request);
-        const d = _getObjectDurationFromRequest(request);
+    function _getCmcdDataForMediaSegment(request) {
+        const data = _getGenericCmcdData();
+        const encodedBitrate = _getBitrateByRequest(request);
+        const d = _getObjectDurationByRequest(request);
         const ot = request.mediaType === 'video' ? 'v' : request.mediaType === 'audio' ? 'a' : null;
+        const mtp = _getMeasuredThroughputByType(request.mediaType);
+        const dl = _getDeadlineByType(request.mediaType);
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -108,22 +161,30 @@ function CmcdModel() {
             data.ot = ot;
         }
 
-        if(d) {
+        if (!isNaN(d)) {
             data.d = d;
         }
 
-        return buildRequestHeader(data);
+        if (!isNaN(mtp)) {
+            data.mpt = mtp;
+        }
+
+        if (!isNaN(dl)) {
+            data.dl = dl;
+        }
+
+        return data;
     }
 
-    function _getRequestHeaderForInitSegment(request) {
-        const data = _getGenericRequestData(request);
+    function _getCmcdDataForInitSegment() {
+        const data = _getGenericCmcdData();
 
         data.ot = 'i';
 
-        return buildRequestHeader(data);
+        return data;
     }
 
-    function _getGenericRequestData(request) {
+    function _getGenericCmcdData() {
         const data = {};
 
         data.v = CMCD_VERSION;
@@ -140,7 +201,7 @@ function CmcdModel() {
             data.did = settings.get().streaming.cmcd.params.did;
         }
 
-        if (!isNaN(internalData.pr) && internalData.pr !== 1) {
+        if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;
         }
 
@@ -151,7 +212,7 @@ function CmcdModel() {
         return data;
     }
 
-    function _getBitrateFromRequest(request) {
+    function _getBitrateByRequest(request) {
         try {
             const quality = request.quality;
             const bitrateList = request.mediaInfo.bitrateList;
@@ -162,10 +223,33 @@ function CmcdModel() {
         }
     }
 
-    function _getObjectDurationFromRequest(request) {
+    function _getObjectDurationByRequest(request) {
         try {
             return !isNaN(request.duration) ? Math.round(request.duration * 1000) : null;
-        } catch(e) {
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getMeasuredThroughputByType(type) {
+        try {
+            return Math.round(abrController.getThroughputHistory().getSafeAverageThroughput(type));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getDeadlineByType(type) {
+        try {
+            const playbackRate = internalData.pr;
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
+
+            if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
+                return (bufferLevel / playbackRate) * 1000;
+            }
+
+            return null;
+        } catch (e) {
             return null;
         }
     }
@@ -190,19 +274,16 @@ function CmcdModel() {
         }
     }
 
-    function reset() {
-        eventBus.off(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-        eventBus.off(Events.MANIFEST_LOADED, _onManifestLoaded, this);
-
-        resetInitialSettings();
-    }
-
-    function buildRequestHeader(requestData) {
+    function _buildFinalString(cmcdData) {
         try {
-            const keys = Object.keys(requestData);
+            if (!cmcdData) {
+                return null;
+            }
+            const keys = Object.keys(cmcdData);
             const length = keys.length;
-            const finalPayloadString = keys.reduce((acc, key, index) => {
-                acc += `${key}:${requestData[key]}`;
+
+            return keys.reduce((acc, key, index) => {
+                acc += `${key}:${cmcdData[key]}`;
                 if (index < length - 1) {
                     acc += ',';
                 }
@@ -210,17 +291,22 @@ function CmcdModel() {
                 return acc;
             }, '');
 
-            return {
-                key: CMCD_REQUEST_HEADER_FIELD_NAME,
-                value: finalPayloadString
-            };
         } catch (e) {
-            logger.error(e);
+            return null;
         }
     }
 
+    function reset() {
+        eventBus.off(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
+        eventBus.off(Events.MANIFEST_LOADED, _onManifestLoaded, this);
+
+        resetInitialSettings();
+    }
+
     instance = {
-        getRequestHeader
+        getRequestHeader,
+        getQueryParameter,
+        setConfig
     };
 
     setup();

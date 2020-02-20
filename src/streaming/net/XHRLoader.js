@@ -60,13 +60,16 @@ function XHRLoader(cfg) {
             xhr.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
+        if (httpRequest.additionalHeader && httpRequest.additionalHeader.length > 0) {
+            addAdditionalHeader(xhr, httpRequest.additionalHeader);
+        }
+
         if (!request.requestStartDate) {
             request.requestStartDate = requestStartTime;
         }
 
         if (requestModifier) {
-            const headers = requestModifier.getRequestHeaders(httpRequest);
-            updateRequestHeaders(xhr, headers);
+            xhr = requestModifier.modifyRequestHeader(xhr);
         }
 
         xhr.withCredentials = httpRequest.withCredentials;
@@ -88,13 +91,14 @@ function XHRLoader(cfg) {
         x.abort();
     }
 
-    function updateRequestHeaders(xhr, headers) {
-        if (!headers || headers.length === 0) {
+
+    function addAdditionalHeader(xhr, header) {
+        if (!header || header.length === 0) {
             return;
         }
-        headers.forEach((header) => {
-            if (header.key && header.value) {
-                xhr.setRequestHeader(header.key, header.value);
+        header.forEach((h) => {
+            if (h.key && h.value) {
+                xhr.setRequestHeader(h.key, h.value);
             }
         });
     }
