@@ -266,25 +266,8 @@ function RepresentationController() {
         let r = e.representation;
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
-        let postponeTimePeriod = 0;
         let repInfo,
-            err,
             repSwitch;
-
-        if (r.adaptation.period.mpd.manifest.type === DashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod)
-        {
-            let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
-            // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            let liveDelay = playbackController.computeLiveDelay(currentVoRepresentation.segmentDuration, streamInfo.manifestInfo.DVRWindowSize);
-            postponeTimePeriod = (liveDelay - segmentAvailabilityTimePeriod) * 1000;
-        }
-
-        if (postponeTimePeriod > 0) {
-            postponeUpdate(postponeTimePeriod);
-            err = new DashJSError(Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, Errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
-            endDataUpdate(err);
-            return;
-        }
 
         if (manifestUpdateInfo) {
             for (let i = 0; i < manifestUpdateInfo.representationInfo.length; i++) {
