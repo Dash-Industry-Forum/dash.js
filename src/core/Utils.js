@@ -73,7 +73,7 @@ class Utils {
         return Utils.mixin(r, src, Utils.clone);
     }
 
-    static _addAditionalQueryParameterToUrl(url, params) {
+    static addAditionalQueryParameterToUrl(url, params) {
         try {
             if (!params || params.length === 0) {
                 return url;
@@ -92,6 +92,14 @@ class Utils {
 
         } catch (e) {
             return url;
+        }
+    }
+
+    static isUuid(id) {
+        try {
+            return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
+        } catch (e) {
+            return false;
         }
     }
 }
