@@ -123,7 +123,7 @@ describe('TimelineSegmentsGetter', () => {
         });
     });
 
-    describe.only('getSegmentByTime', () => {
+    describe('getSegmentByTime', () => {
         it('should return segment by time', () => {
             const representation = createRepresentationMock();
 
