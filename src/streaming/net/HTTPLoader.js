@@ -218,7 +218,7 @@ function HTTPLoader(cfg) {
 
         let modifiedUrl = requestModifier.modifyRequestURL(request.url);
         const additionalQueryParameter = _getAdditionalQueryParameter(request);
-        modifiedUrl = Utils._addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+        modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
 

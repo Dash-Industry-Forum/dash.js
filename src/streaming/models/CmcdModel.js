@@ -59,7 +59,7 @@ function CmcdModel() {
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(Events.MANIFEST_LOADED, _onManifestLoaded, instance);
 
-        resetInitialSettings();
+        reset();
     }
 
     function setConfig(config) {
@@ -310,6 +310,7 @@ function CmcdModel() {
     };
 
     setup();
+
     return instance;
 }
 

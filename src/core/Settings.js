@@ -424,7 +424,7 @@ function Settings() {
                 params: {
                     sid: null,
                     cid: null,
-                    did: null,
+                    did: null
                 }
             }
         }
