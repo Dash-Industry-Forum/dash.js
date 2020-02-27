@@ -599,17 +599,9 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             config.streaming.abr.maxBitrate = {'video': maxBitrate};
         }
 
-        if ($scope.cmcdSessionId) {
-            config.streaming.cmcd.sid = $scope.cmcdSessionId;
-        }
-
-        if ($scope.cmcdContentId) {
-            config.streaming.cmcd.cid = $scope.cmcdContentId;
-        }
-
-        if ($scope.cmcdDeviceId) {
-            config.streaming.cmcd.did = $scope.cmcdDeviceId;
-        }
+        config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
+        config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
+        config.streaming.cmcd.did = $scope.cmcdDeviceId ? $scope.cmcdDeviceId : null;
 
         $scope.player.updateSettings(config);
 
