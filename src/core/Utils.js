@@ -33,6 +33,7 @@
  * @class
  * @ignore
  */
+
 class Utils {
     static mixin(dest, source, copy) {
         let s;
@@ -92,14 +93,6 @@ class Utils {
 
         } catch (e) {
             return url;
-        }
-    }
-
-    static isUuid(id) {
-        try {
-            return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(id);
-        } catch (e) {
-            return false;
         }
     }
 }
