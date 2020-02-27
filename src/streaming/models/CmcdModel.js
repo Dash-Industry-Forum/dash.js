@@ -29,14 +29,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 
-const CMCD_REQUEST_HEADER_FIELD_NAME = 'Common-Media-Client-Data';
+const CMCD_REQUEST_FIELD_NAME = 'Common-Media-Client-Data';
 const CMCD_VERSION = 1;
 
 function CmcdModel() {
@@ -56,8 +56,8 @@ function CmcdModel() {
         logger = Debug(context).getInstance().getLogger(instance);
         dashManifestModel = DashManifestModel(context).getInstance();
 
-        eventBus.on(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
-        eventBus.on(Events.MANIFEST_LOADED, _onManifestLoaded, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
 
         reset();
     }
@@ -83,32 +83,14 @@ function CmcdModel() {
         };
     }
 
-    function getRequestHeader(request) {
-        try {
-            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.sendAsHeader && settings.get().streaming.cmcd.params.sid) {
-                const cmcdData = _getCmcdData(request);
-                const finalPayloadString = _buildFinalString(cmcdData);
-
-                return {
-                    key: CMCD_REQUEST_HEADER_FIELD_NAME,
-                    value: finalPayloadString
-                };
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
     function getQueryParameter(request) {
         try {
-            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.sendAsQueryParameter && !settings.get().streaming.cmcd.sendAsHeader && settings.get().streaming.cmcd.params.sid) {
+            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled && settings.get().streaming.cmcd.sid) {
                 const cmcdData = _getCmcdData(request);
                 const finalPayloadString = _buildFinalString(cmcdData);
 
                 return {
-                    key: CMCD_REQUEST_HEADER_FIELD_NAME,
+                    key: CMCD_REQUEST_FIELD_NAME,
                     value: finalPayloadString
                 };
             }
@@ -166,7 +148,7 @@ function CmcdModel() {
         }
 
         if (!isNaN(mtp)) {
-            data.mpt = mtp;
+            data.mtp = mtp;
         }
 
         if (!isNaN(dl)) {
@@ -189,16 +171,16 @@ function CmcdModel() {
 
         data.v = CMCD_VERSION;
 
-        if (settings.get().streaming.cmcd.params.sid) {
-            data.sid = settings.get().streaming.cmcd.params.sid;
+        if (settings.get().streaming.cmcd.sid) {
+            data.sid = settings.get().streaming.cmcd.sid;
         }
 
-        if (settings.get().streaming.cmcd.params.cid) {
-            data.cid = settings.get().streaming.cmcd.params.cid;
+        if (settings.get().streaming.cmcd.cid) {
+            data.cid = settings.get().streaming.cmcd.cid;
         }
 
-        if (settings.get().streaming.cmcd.params.did) {
-            data.did = settings.get().streaming.cmcd.params.did;
+        if (settings.get().streaming.cmcd.did) {
+            data.did = settings.get().streaming.cmcd.did;
         }
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
@@ -297,14 +279,13 @@ function CmcdModel() {
     }
 
     function reset() {
-        eventBus.off(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-        eventBus.off(Events.MANIFEST_LOADED, _onManifestLoaded, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
 
         resetInitialSettings();
     }
 
     instance = {
-        getRequestHeader,
         getQueryParameter,
         setConfig
     };

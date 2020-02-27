@@ -60,10 +60,6 @@ function XHRLoader(cfg) {
             xhr.setRequestHeader('Range', 'bytes=' + request.range);
         }
 
-        if (httpRequest.additionalHeader && httpRequest.additionalHeader.length > 0) {
-            addAdditionalHeader(xhr, httpRequest.additionalHeader);
-        }
-
         if (!request.requestStartDate) {
             request.requestStartDate = requestStartTime;
         }
@@ -89,18 +85,6 @@ function XHRLoader(cfg) {
         const x = request.response;
         x.onloadend = x.onerror = x.onprogress = undefined; //Ignore events from aborted requests.
         x.abort();
-    }
-
-
-    function addAdditionalHeader(xhr, header) {
-        if (!header || header.length === 0) {
-            return;
-        }
-        header.forEach((h) => {
-            if (h.key && h.value) {
-                xhr.setRequestHeader(h.key, h.value);
-            }
-        });
     }
 
     instance = {

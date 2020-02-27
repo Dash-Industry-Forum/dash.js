@@ -222,7 +222,6 @@ function HTTPLoader(cfg) {
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
 
-        const additionalHeader = _getAdditionalHeader(request);
 
         httpRequest = {
             url: modifiedUrl,
@@ -234,8 +233,7 @@ function HTTPLoader(cfg) {
             onerror: onloadend,
             progress: progress,
             onabort: onabort,
-            loader: loader,
-            additionalHeader
+            loader: loader
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
@@ -263,21 +261,6 @@ function HTTPLoader(cfg) {
                     delayedRequest.httpRequest.onerror();
                 }
             }, (request.delayLoadingTime - now));
-        }
-    }
-
-    function _getAdditionalHeader(request) {
-        try {
-            const additionalHeader = [];
-            const cmcdHeader = cmcdModel.getRequestHeader(request);
-
-            if (cmcdHeader) {
-                additionalHeader.push(cmcdHeader);
-            }
-
-            return additionalHeader;
-        } catch (e) {
-            return [];
         }
     }
 

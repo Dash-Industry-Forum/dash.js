@@ -60,10 +60,6 @@ function FetchLoader(cfg) {
             request.requestStartDate = requestStartTime;
         }
 
-        if (httpRequest.additionalHeader && httpRequest.additionalHeader.length > 0) {
-            addAdditionalHeader(headers, httpRequest.additionalHeader);
-        }
-
         if (requestModifier) {
             // modifyRequestHeader expects a XMLHttpRequest object so,
             // to keep backward compatibility, we should expose a setRequestHeader method
@@ -268,18 +264,6 @@ function FetchLoader(cfg) {
         }
         return null;
     }
-
-    function addAdditionalHeader(headersObj, header) {
-        if (!header || header.length === 0) {
-            return;
-        }
-        header.forEach((header) => {
-            if (header.key && header.value) {
-                headersObj.append(header.key, header.value);
-            }
-        });
-    }
-
 
     instance = {
         load: load,
