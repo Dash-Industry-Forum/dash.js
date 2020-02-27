@@ -59,7 +59,7 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
 
-        reset();
+        _resetInitialSettings();
     }
 
     function setConfig(config) {
@@ -74,9 +74,9 @@ function CmcdModel() {
         }
     }
 
-    function resetInitialSettings() {
+    function _resetInitialSettings() {
         internalData = {
-            pr: null,
+            pr: 1,
             nor: null,
             st: null,
             sf: null
@@ -188,7 +188,7 @@ function CmcdModel() {
         }
 
         if (internalData.st) {
-            data.st = internalData.pr;
+            data.st = internalData.st;
         }
 
         return data;
@@ -199,7 +199,7 @@ function CmcdModel() {
             const quality = request.quality;
             const bitrateList = request.mediaInfo.bitrateList;
 
-            return bitrateList[quality].bandwidth / 1000;
+            return parseInt(bitrateList[quality].bandwidth / 1000);
         } catch (e) {
             return null;
         }
@@ -282,12 +282,13 @@ function CmcdModel() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
 
-        resetInitialSettings();
+        _resetInitialSettings();
     }
 
     instance = {
         getQueryParameter,
-        setConfig
+        setConfig,
+        reset
     };
 
     setup();
