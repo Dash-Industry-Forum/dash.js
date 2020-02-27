@@ -1671,6 +1671,7 @@ function MediaPlayer() {
 
         if (streamingInitialized || playbackInitialized) {
             resetPlaybackControllers();
+            cmcdModel.reset();
         }
 
         if (isReady()) {
