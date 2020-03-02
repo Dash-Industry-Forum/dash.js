@@ -95,6 +95,31 @@ class Utils {
             return url;
         }
     }
+
+    static generateUuid() {
+        let dt = new Date().getTime();
+        const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            const r = (dt + Math.random() * 16) % 16 | 0;
+            dt = Math.floor(dt / 16);
+            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        return uuid;
+    }
+
+    static generateHashCode(string) {
+        let hash = 0;
+
+        if (string.length === 0) {
+            return hash;
+        }
+
+        for (let i = 0; i < string.length; i++) {
+            const chr = string.charCodeAt(i);
+            hash = ((hash << 5) - hash) + chr;
+            hash |= 0;
+        }
+        return hash;
+    }
 }
 
 export default Utils;
