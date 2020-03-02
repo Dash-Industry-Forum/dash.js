@@ -35,9 +35,33 @@ import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
+import Utils from '../../core/Utils';
 
 const CMCD_REQUEST_FIELD_NAME = 'Common-Media-Client-Data';
 const CMCD_VERSION = 1;
+const DEFAULT_DEVICE_ID = 'dash.js-cmcd-default-id';
+const BUFFER_STATES = {
+    DEFAULT: null,
+    INITIALIZING: 1,
+    SEEKING: 2,
+    RISK: 3,
+    EMPTY: 4
+};
+const OBJECT_TYPES = {
+    MANIFEST: 'm',
+    AUDIO: 'a',
+    VIDEO: 'v',
+    INIT: 'i',
+    CAPTION: 'c'
+};
+const STREAMING_FORMATS = {
+    DASH: 'd',
+    MSS: 's'
+};
+const STREAM_TYPES = {
+    VOD: 'v',
+    LIVE: 'l'
+};
 
 function CmcdModel() {
 
@@ -46,7 +70,8 @@ function CmcdModel() {
         instance,
         internalData,
         abrController,
-        dashMetrics;
+        dashMetrics,
+        playbackController;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -56,10 +81,13 @@ function CmcdModel() {
         logger = Debug(context).getInstance().getLogger(instance);
         dashManifestModel = DashManifestModel(context).getInstance();
 
+        _resetInitialSettings();
+    }
+
+    function initialize() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
-
-        _resetInitialSettings();
+        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
     }
 
     function setConfig(config) {
@@ -72,6 +100,10 @@ function CmcdModel() {
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
+
+        if (config.playbackController) {
+            playbackController = config.playbackController;
+        }
     }
 
     function _resetInitialSettings() {
@@ -79,13 +111,21 @@ function CmcdModel() {
             pr: 1,
             nor: null,
             st: null,
-            sf: null
+            sf: null,
+            sid: `"${Utils.generateUuid()}"`,
+            bs: {
+                audio: BUFFER_STATES.INITIALIZING,
+                video: BUFFER_STATES.INITIALIZING
+            },
+            cid: null,
+            did: `"${DEFAULT_DEVICE_ID}"`
+
         };
     }
 
     function getQueryParameter(request) {
         try {
-            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled && settings.get().streaming.cmcd.sid) {
+            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
                 const cmcdData = _getCmcdData(request);
                 const finalPayloadString = _buildFinalString(cmcdData);
 
@@ -106,6 +146,7 @@ function CmcdModel() {
             let cmcdData = null;
 
             if (request.type === HTTPRequest.MPD_TYPE) {
+                _setDefaultContentId(request);
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                 return _getCmcdDataForMediaSegment(request);
@@ -119,10 +160,18 @@ function CmcdModel() {
         }
     }
 
+    function _setDefaultContentId(request) {
+        try {
+            internalData.cid = `"${Utils.generateHashCode(request.url)}"`;
+        } catch (e) {
+
+        }
+    }
+
     function _getCmcdDataForMpd() {
         const data = _getGenericCmcdData();
 
-        data.ot = 'm';
+        data.ot = `${OBJECT_TYPES.MANIFEST}`;
 
         return data;
     }
@@ -131,9 +180,10 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const ot = request.mediaType === 'video' ? 'v' : request.mediaType === 'audio' ? 'a' : null;
+        const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
+        const bs = _getBufferStateByRequest(request);
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -155,13 +205,17 @@ function CmcdModel() {
             data.dl = dl;
         }
 
+        if (!isNaN(bs) && bs !== null) {
+            data.bs = bs;
+        }
+
         return data;
     }
 
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
-        data.ot = 'i';
+        data.ot = `${OBJECT_TYPES.INIT}`;
 
         return data;
     }
@@ -170,18 +224,9 @@ function CmcdModel() {
         const data = {};
 
         data.v = CMCD_VERSION;
-
-        if (settings.get().streaming.cmcd.sid) {
-            data.sid = settings.get().streaming.cmcd.sid;
-        }
-
-        if (settings.get().streaming.cmcd.cid) {
-            data.cid = settings.get().streaming.cmcd.cid;
-        }
-
-        if (settings.get().streaming.cmcd.did) {
-            data.did = settings.get().streaming.cmcd.did;
-        }
+        data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
+        data.cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
+        data.did = settings.get().streaming.cmcd.did ? settings.get().streaming.cmcd.did : internalData.did;
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;
@@ -213,18 +258,18 @@ function CmcdModel() {
         }
     }
 
-    function _getMeasuredThroughputByType(type) {
+    function _getMeasuredThroughputByType(mediaType) {
         try {
-            return Math.round(abrController.getThroughputHistory().getSafeAverageThroughput(type));
+            return Math.round(abrController.getThroughputHistory().getSafeAverageThroughput(mediaType));
         } catch (e) {
             return null;
         }
     }
 
-    function _getDeadlineByType(type) {
+    function _getDeadlineByType(mediaType) {
         try {
             const playbackRate = internalData.pr;
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
 
             if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
                 return (bufferLevel / playbackRate) * 1000;
@@ -233,6 +278,25 @@ function CmcdModel() {
             return null;
         } catch (e) {
             return null;
+        }
+    }
+
+    function _getBufferStateByRequest(request) {
+        try {
+            const mediaType = request.mediaType;
+            if (internalData.bs[mediaType] !== null) {
+                return internalData.bs[mediaType];
+            }
+
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
+            const duration = request.duration;
+            if (bufferLevel < duration) {
+                return BUFFER_STATES.RISK;
+            }
+
+            return BUFFER_STATES.DEFAULT;
+        } catch (e) {
+
         }
     }
 
@@ -247,12 +311,36 @@ function CmcdModel() {
     function _onManifestLoaded(data) {
         try {
             const isDynamic = dashManifestModel.getIsDynamic(data.data);
-            const st = isDynamic ? 'l' : 'v';
-            const sf = data.protocol && data.protocol === 'MSS' ? 's' : 'd';
+            const st = isDynamic ? `${STREAM_TYPES.LIVE}` : `${STREAM_TYPES.VOD}`;
+            const sf = data.protocol && data.protocol === 'MSS' ? `${STREAMING_FORMATS.MSS}` : `${STREAMING_FORMATS.DASH}`;
 
-            internalData.st = st;
-            internalData.sf = sf;
+            internalData.st = `"${st}"`;
+            internalData.sf = `"${sf}"`;
         } catch (e) {
+        }
+    }
+
+    function _onBufferLevelStateChanged(data) {
+        try {
+            if (data.state && data.mediaType) {
+                let state = null;
+                switch (data.state) {
+                    case MediaPlayerEvents.BUFFER_LOADED:
+                        state = BUFFER_STATES.DEFAULT;
+                        break;
+                    case MediaPlayerEvents.BUFFER_EMPTY:
+                        if (playbackController.isSeeking()) {
+                            state = BUFFER_STATES.SEEKING;
+                        }
+                        state = BUFFER_STATES.EMPTY;
+                        break;
+                    default:
+                }
+                internalData.bs[data.mediaType] = state;
+
+            }
+        } catch (e) {
+
         }
     }
 
@@ -265,7 +353,7 @@ function CmcdModel() {
             const length = keys.length;
 
             return keys.reduce((acc, key, index) => {
-                acc += `${key}:${cmcdData[key]}`;
+                acc += `${key}=${cmcdData[key]}`;
                 if (index < length - 1) {
                     acc += ',';
                 }
@@ -281,6 +369,7 @@ function CmcdModel() {
     function reset() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+        eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
 
         _resetInitialSettings();
     }
@@ -288,7 +377,8 @@ function CmcdModel() {
     instance = {
         getQueryParameter,
         setConfig,
-        reset
+        reset,
+        initialize
     };
 
     setup();

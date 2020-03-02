@@ -260,11 +260,6 @@ function MediaPlayer() {
             BASE64: BASE64
         });
 
-        cmcdModel.setConfig({
-            abrController,
-            dashMetrics
-        });
-
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -1671,7 +1666,6 @@ function MediaPlayer() {
 
         if (streamingInitialized || playbackInitialized) {
             resetPlaybackControllers();
-            cmcdModel.reset();
         }
 
         if (isReady()) {
@@ -1826,6 +1820,7 @@ function MediaPlayer() {
                 detectProtection();
             }
         }
+        cmcdModel.reset();
     }
 
     function createPlaybackControllers() {
@@ -1890,8 +1885,15 @@ function MediaPlayer() {
             videoModel: videoModel
         });
 
+        cmcdModel.setConfig({
+            abrController,
+            dashMetrics,
+            playbackController
+        });
+
         // initialises controller
         streamController.initialize(autoPlay, protectionData);
+        cmcdModel.initialize();
     }
 
     function createManifestLoader() {
