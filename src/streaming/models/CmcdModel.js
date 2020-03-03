@@ -272,7 +272,7 @@ function CmcdModel() {
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
 
             if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
-                return (bufferLevel / playbackRate) * 1000;
+                return parseInt((bufferLevel / playbackRate) * 1000);
             }
 
             return null;
