@@ -113,6 +113,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              initialBitrate: { audio: -1, video: -1 },
  *              initialRepresentationRatio: { audio: -1, video: -1 },
  *              autoSwitchBitrate: { audio: true, video: true }
+ *          },
+ *          cmcd: {
+ *              enabled: false,
+ *              sid: null,
+ *              cid: null,
+ *              did: null
  *          }
  *      }
  * }
@@ -313,6 +319,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt.
  * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails.
  * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
+ * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
  */
 
 /**
@@ -337,6 +344,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [BitstreamSwitchingSegment] Bitrate stream switching type of request
  * @property {number} [other] Other type of request
  *
+ */
+
+/**
+ * @typedef {Object} module:Settings~CmcdSettings
+ * @property {boolean} [enable=false] Enable or disable the CMCD reporting.
+ * @property {string} [sid] GUID identifying the current playback session. Should be in UUID format. If not specified a UUID will be automatically generated.
+ * @property {string} [cid] A unique string to identify the current content. If not specified it will be a hash of the MPD url.
+ * @property {string} [did=dash.js-cmcd-default-id] A unique string identifying the current device.
  */
 
 
