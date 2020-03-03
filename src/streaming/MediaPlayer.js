@@ -46,6 +46,7 @@ import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
+import CmcdModel from './models/CmcdModel';
 import DOMStorage from './utils/DOMStorage';
 import Debug from './../core/Debug';
 import Errors from './../core/errors/Errors';
@@ -131,6 +132,7 @@ function MediaPlayer() {
         playbackController,
         dashMetrics,
         manifestModel,
+        cmcdModel,
         videoModel,
         textController,
         uriFragmentModel,
@@ -240,6 +242,8 @@ function MediaPlayer() {
         adapter = DashAdapter(context).getInstance();
 
         manifestModel = ManifestModel(context).getInstance();
+
+        cmcdModel = CmcdModel(context).getInstance();
 
         dashMetrics = DashMetrics(context).getInstance({
             settings: settings
@@ -1816,6 +1820,7 @@ function MediaPlayer() {
                 detectProtection();
             }
         }
+        cmcdModel.reset();
     }
 
     function createPlaybackControllers() {
@@ -1880,8 +1885,15 @@ function MediaPlayer() {
             videoModel: videoModel
         });
 
+        cmcdModel.setConfig({
+            abrController,
+            dashMetrics,
+            playbackController
+        });
+
         // initialises controller
         streamController.initialize(autoPlay, protectionData);
+        cmcdModel.initialize();
     }
 
     function createManifestLoader() {

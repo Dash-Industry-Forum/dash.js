@@ -201,6 +201,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     // Starting Options
     $scope.autoPlaySelected = true;
+    $scope.cmcdEnabled = false;
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
     $scope.localStorageSelected = true;
@@ -507,6 +508,16 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.optionsGutter = bool;
     };
 
+    $scope.toggleCmcdEnabled = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'cmcd': {
+                    'enabled': $scope.cmcdEnabled
+                }
+            }
+        });
+    };
+
     $scope.selectVideoQuality = function (quality) {
         $scope.player.setQualityFor('video', quality);
     };
@@ -544,7 +555,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 'bufferTimeAtTopQuality': $scope.defaultBufferTimeAtTopQuality,
                 'bufferTimeAtTopQualityLongForm': $scope.defaultBufferTimeAtTopQualityLongForm,
                 'lowLatencyEnabled': $scope.lowLatencyModeSelected,
-                abr: {}
+                abr: {},
+                cmcd: {}
             }
         };
 
@@ -586,6 +598,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         if (!isNaN(maxBitrate)) {
             config.streaming.abr.maxBitrate = {'video': maxBitrate};
         }
+
+        config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
+        config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
+        config.streaming.cmcd.did = $scope.cmcdDeviceId ? $scope.cmcdDeviceId : null;
 
         $scope.player.updateSettings(config);
 
