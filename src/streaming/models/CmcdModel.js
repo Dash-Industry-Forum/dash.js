@@ -112,13 +112,13 @@ function CmcdModel() {
             nor: null,
             st: null,
             sf: null,
-            sid: `"${Utils.generateUuid()}"`,
+            sid: `${Utils.generateUuid()}`,
             bs: {
                 audio: BUFFER_STATES.INITIALIZING,
                 video: BUFFER_STATES.INITIALIZING
             },
             cid: null,
-            did: `"${DEFAULT_DEVICE_ID}"`
+            did: `${DEFAULT_DEVICE_ID}`
 
         };
     }
@@ -171,7 +171,7 @@ function CmcdModel() {
     function _getCmcdDataForMpd() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.MANIFEST}`;
+        data.ot = `"${OBJECT_TYPES.MANIFEST}"`;
 
         return data;
     }
@@ -180,7 +180,7 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
+        const ot = request.mediaType === 'video' ? `"${OBJECT_TYPES.VIDEO}"` : request.mediaType === 'audio' ? `"${OBJECT_TYPES.AUDIO}"` : request.mediaType === 'fragmentedText' ? `"${OBJECT_TYPES.CAPTION}"` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bs = _getBufferStateByRequest(request);
@@ -215,7 +215,7 @@ function CmcdModel() {
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.INIT}`;
+        data.ot = `"${OBJECT_TYPES.INIT}"`;
 
         return data;
     }
@@ -227,6 +227,10 @@ function CmcdModel() {
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
         data.cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
         data.did = settings.get().streaming.cmcd.did ? settings.get().streaming.cmcd.did : internalData.did;
+
+        data.sid = `"${data.sid}"`;
+        data.cid = `"${data.cid}"`;
+        data.did = `"${data.did}"`;
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;
