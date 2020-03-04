@@ -163,7 +163,7 @@ function CmcdModel() {
 
     function _setDefaultContentId(request) {
         try {
-            internalData.cid = `"${Utils.generateHashCode(request.url)}"`;
+            internalData.cid = `${Utils.generateHashCode(request.url)}`;
         } catch (e) {
 
         }
