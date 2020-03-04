@@ -36,10 +36,11 @@ import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
+import {getVersionString} from '../../core/Version';
 
 const CMCD_REQUEST_FIELD_NAME = 'Common-Media-Client-Data';
 const CMCD_VERSION = 1;
-const DEFAULT_DEVICE_ID = 'dash.js-cmcd-default-id';
+const DEFAULT_DEVICE_ID = `dash.js-v${getVersionString()}`;
 const BUFFER_STATES = {
     DEFAULT: null,
     INITIALIZING: 1,
@@ -171,7 +172,7 @@ function CmcdModel() {
     function _getCmcdDataForMpd() {
         const data = _getGenericCmcdData();
 
-        data.ot = `"${OBJECT_TYPES.MANIFEST}"`;
+        data.ot = `${OBJECT_TYPES.MANIFEST}`;
 
         return data;
     }
@@ -180,7 +181,7 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const ot = request.mediaType === 'video' ? `"${OBJECT_TYPES.VIDEO}"` : request.mediaType === 'audio' ? `"${OBJECT_TYPES.AUDIO}"` : request.mediaType === 'fragmentedText' ? `"${OBJECT_TYPES.CAPTION}"` : null;
+        const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bs = _getBufferStateByRequest(request);
@@ -215,7 +216,7 @@ function CmcdModel() {
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
-        data.ot = `"${OBJECT_TYPES.INIT}"`;
+        data.ot = `${OBJECT_TYPES.INIT}`;
 
         return data;
     }
@@ -238,6 +239,10 @@ function CmcdModel() {
 
         if (internalData.st) {
             data.st = internalData.st;
+        }
+
+        if (internalData.sf) {
+            data.sf = internalData.sf;
         }
 
         return data;
@@ -318,8 +323,8 @@ function CmcdModel() {
             const st = isDynamic ? `${STREAM_TYPES.LIVE}` : `${STREAM_TYPES.VOD}`;
             const sf = data.protocol && data.protocol === 'MSS' ? `${STREAMING_FORMATS.MSS}` : `${STREAMING_FORMATS.DASH}`;
 
-            internalData.st = `"${st}"`;
-            internalData.sf = `"${sf}"`;
+            internalData.st = `${st}`;
+            internalData.sf = `${sf}`;
         } catch (e) {
         }
     }
