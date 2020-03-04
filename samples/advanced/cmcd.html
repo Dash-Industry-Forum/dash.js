@@ -13,11 +13,13 @@
         function init() {
             var video,
                 player,
-                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
+                version;
 
             player = dashjs.MediaPlayer().create();
             video = document.querySelector("video");
             player.initialize(); 
+            version = player.getVersion();
 
             player.updateSettings({
                 streaming: {
@@ -25,7 +27,7 @@
                         enabled: true, /* enable reporting of cmcd parameters */
                         sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
                         cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
-                        did: 'dash.js-cmcd-default-id' /* device id send with each request */
+                        did: 'dash.js-v' + version/* device id send with each request */
                     }
                 }
             });
