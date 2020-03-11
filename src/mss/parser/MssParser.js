@@ -117,9 +117,13 @@ function MssParser(config) {
             segments,
             i;
 
-        adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : streamIndex.getAttribute('Type');
-        adaptationSet.contentType = streamIndex.getAttribute('Type');
-        adaptationSet.lang = streamIndex.getAttribute('Language') || 'und';
+        const languageAttribute = streamIndex.getAttribute('Language');
+        const typeAttribute = streamIndex.getAttribute('Type');
+        const fallBackAdaptationSetId = languageAttribute ? typeAttribute + '_' + languageAttribute : typeAttribute;
+
+        adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : fallBackAdaptationSetId;
+        adaptationSet.contentType = typeAttribute;
+        adaptationSet.lang = languageAttribute || 'und';
         adaptationSet.mimeType = mimeTypeMap[adaptationSet.contentType];
         adaptationSet.subType = streamIndex.getAttribute('Subtype');
         adaptationSet.maxWidth = streamIndex.getAttribute('MaxWidth');
@@ -205,9 +209,9 @@ function MssParser(config) {
         // If still not defined (optionnal for audio stream, see https://msdn.microsoft.com/en-us/library/ff728116%28v=vs.95%29.aspx),
         // then we consider the stream is an audio AAC stream
         if (fourCCValue === null || fourCCValue === '') {
-            if (type === constants.AUDIO) {
+            if (type === 'audio') {
                 fourCCValue = 'AAC';
-            } else if (type === constants.VIDEO) {
+            } else if (type === 'video') {
                 logger.debug('FourCC is not defined whereas it is required for a QualityLevel element for a StreamIndex of type "video"');
                 return null;
             }
@@ -741,7 +745,7 @@ function MssParser(config) {
                 timestampOffset = prevManifest.timestampOffset;
             } else {
                 for (i = 0; i < adaptations.length; i++) {
-                    if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
+                    if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
                         segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
                         startTime = segments[0].t / adaptations[i].SegmentTemplate.timescale;
                         if (timestampOffset === undefined) {
@@ -765,7 +769,7 @@ function MssParser(config) {
                         }
                         segments[j].t -= (timestampOffset * adaptations[i].SegmentTemplate.timescale);
                     }
-                    if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
+                    if (adaptations[i].contentType === 'audio' || adaptations[i].contentType === 'video') {
                         period.start = Math.max(segments[0].t, period.start);
                         adaptations[i].SegmentTemplate.presentationTimeOffset = period.start;
                     }
