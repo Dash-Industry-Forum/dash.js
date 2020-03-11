@@ -984,7 +984,10 @@ function StreamController() {
                 });
             }
         }
-
+        if (activeStream) {
+            activeStream.stopEventController();
+            activeStream.deactivate(true);
+        }
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         resetInitialSettings();
     }
