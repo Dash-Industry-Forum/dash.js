@@ -99,7 +99,7 @@ function FetchLoader(cfg) {
 
             let responseHeaders = '';
             for (const key of response.headers.keys()) {
-                responseHeaders += key + ': ' + response.headers.get(key) + '\n';
+                responseHeaders += key + ': ' + response.headers.get(key) + '\r\n';
             }
             httpRequest.response.responseHeaders = responseHeaders;
 
