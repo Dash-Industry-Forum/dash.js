@@ -130,9 +130,9 @@ function BufferController(config) {
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type]);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd, oldBuffers[type]);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this));
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd);
                 }
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamProcessor);
@@ -341,7 +341,7 @@ function BufferController(config) {
     }
 
     function onPlaybackSeeked() {
-        seekStartTime = undefined;
+        setSeekStartTime(undefined);
     }
 
     // Prune full buffer but what is around current time position
@@ -446,6 +446,9 @@ function BufferController(config) {
     }
 
     function onPlaybackPlaying() {
+        if (seekStartTime !== undefined) {
+            setSeekStartTime(undefined);
+        }
         checkIfSufficientBuffer();
     }
 
@@ -538,7 +541,7 @@ function BufferController(config) {
 
     function checkIfSufficientBuffer() {
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
-        if (type !== 'audio' && type !== 'video') return;
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
 
         if (seekClearedBufferingCompleted && !isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd() - bufferLevel < STALL_THRESHOLD) {
             seekClearedBufferingCompleted = false;

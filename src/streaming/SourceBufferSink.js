@@ -43,7 +43,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
  * @ignore
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendWindowEnd, oldBuffer) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -56,6 +56,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     let callbacks = [];
     let appendQueue = [];
     let onAppended = onAppendedCallback;
+    let setAppendWindowEnd = (useAppendWindowEnd === false) ? false : true;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -74,6 +75,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             if (buffer.changeType && oldBuffer) {
                 logger.debug('Doing period transition with changeType');
                 buffer.changeType(codec);
+            }
+
+            if (setAppendWindowEnd && buffer) {
+                buffer.appendWindowEnd = mediaSource.duration;
             }
 
             const CHECK_INTERVAL = 50;
@@ -111,6 +116,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 buffer.removeEventListener('abort', errHandler, false);
             }
             clearInterval(intervalId);
+            buffer.appendWindowEnd = Infinity;
             if (!keepBuffer) {
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
