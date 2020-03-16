@@ -1,6 +1,6 @@
 {
     "debug": {
-        "logLevel": 4
+        "logLevel": 5
     },
     "streaming": {
         "metricsMaxListDepth": 50,
@@ -22,7 +22,7 @@
         "lowLatencyEnabled": false,
         "keepProtectionMediaKeys": false,
         "useManifestDateHeaderTimeSource": true,
-        "useSuggestedPresentationDelay": false,
+        "useSuggestedPresentationDelay": true,
         "manifestUpdateRetryInterval": 100,
         "liveCatchUpMinDrift": 0.02,
         "liveCatchUpMaxDrift": 0,

@@ -715,7 +715,8 @@ function MssParser(config) {
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
-                targetLiveDelay = segmentDuration * settings.get().streaming.liveDelayFragmentCount;
+                const liveDelayFragmentCount = settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) ? settings.get().streaming.liveDelayFragmentCount : 4;
+                targetLiveDelay = segmentDuration * liveDelayFragmentCount;
             }
             let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);

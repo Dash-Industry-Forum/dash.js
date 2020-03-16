@@ -240,18 +240,18 @@ function PlaybackController() {
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
-        if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
-            delay = suggestedPresentationDelay;
-        } else if (settings.get().streaming.lowLatencyEnabled) {
+        if (settings.get().streaming.lowLatencyEnabled) {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
+        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(fragmentDuration)) {
+            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
+        }  else if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
+            delay = suggestedPresentationDelay;
         } else if (r) {
             delay = r;
         }
-        else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
-        } else {
+        else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
 

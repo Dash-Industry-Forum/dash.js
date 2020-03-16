@@ -373,7 +373,7 @@ function Settings() {
         streaming: {
             metricsMaxListDepth: 1000,
             abandonLoadTimeout: 10000,
-            liveDelayFragmentCount: 4,
+            liveDelayFragmentCount: null,
             liveDelay: null,
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
@@ -390,7 +390,7 @@ function Settings() {
             lowLatencyEnabled: false,
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
-            useSuggestedPresentationDelay: false,
+            useSuggestedPresentationDelay: true,
             useAppendWindowEnd: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
