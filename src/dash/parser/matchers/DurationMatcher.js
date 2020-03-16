@@ -50,7 +50,7 @@ class DurationMatcher extends BaseMatcher {
                 const attributeList = [
                     DashConstants.MIN_BUFFER_TIME, DashConstants.MEDIA_PRESENTATION_DURATION,
                     DashConstants.MINIMUM_UPDATE_PERIOD, DashConstants.TIMESHIFT_BUFFER_DEPTH, DashConstants.MAX_SEGMENT_DURATION,
-                    DashConstants.MAX_SUBSEGMENT_DURATION, Constants.SUGGESTED_PRESENTATION_DELAY, DashConstants.START,
+                    DashConstants.MAX_SUBSEGMENT_DURATION, DashConstants.SUGGESTED_PRESENTATION_DELAY, DashConstants.START,
                     Constants.START_TIME, DashConstants.DURATION
                 ];
                 const len = attributeList.length;
