@@ -602,7 +602,7 @@ describe('MediaPlayer', function () {
 
         it('should configure LiveDelayFragmentCount', function () {
             let liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
-            expect(liveDelayFragmentCount).to.equal(4);
+            expect(liveDelayFragmentCount).to.equal(null);
 
             player.updateSettings({'streaming': { 'liveDelayFragmentCount': 5 }});
 
@@ -612,12 +612,12 @@ describe('MediaPlayer', function () {
 
         it('should configure useSuggestedPresentationDelay', function () {
             let useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
-            expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
+            expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'useSuggestedPresentationDelay': true }});
+            player.updateSettings({'streaming': { 'useSuggestedPresentationDelay': false }});
 
             useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
-            expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
+            expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
         });
 
         it('should configure scheduleWhilePaused', function () {
