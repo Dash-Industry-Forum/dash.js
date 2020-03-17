@@ -246,10 +246,10 @@ function PlaybackController() {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(fragmentDuration)) {
             delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
-        } else if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
-            delay = suggestedPresentationDelay;
         } else if (r) {
             delay = r;
+        } else if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
+            delay = suggestedPresentationDelay;
         } else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * 4;
         } else {
