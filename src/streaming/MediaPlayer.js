@@ -38,12 +38,14 @@ import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
+import URLUtils from './utils/URLUtils';
 import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
 import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
+import MetricsModel from './models/MetricsModel';
 import AbrController from './controllers/AbrController';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
@@ -59,11 +61,7 @@ import {
     getVersionString
 }
 from './../core/Version';
-
-//Dash
-import DashAdapter from '../dash/DashAdapter';
-import DashMetrics from '../dash/DashMetrics';
-import TimelineConverter from '../dash/utils/TimelineConverter';
+import ObjectUtils from './utils/ObjectUtils';
 import {
     HTTPRequest
 } from './vo/metrics/HTTPRequest';
@@ -71,6 +69,14 @@ import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
+
+//Dash
+import DashAdapter from '../dash/DashAdapter';
+import DashMetrics from '../dash/DashMetrics';
+import TimelineConverter from '../dash/utils/TimelineConverter';
+import DashParser from '../dash/parser/DashParser';
+import DashErrors from '../dash/errors/DashErrors';
+import DashConstants from '../dash/constants/DashConstants';
 
 /**
  * @module MediaPlayer
@@ -158,6 +164,9 @@ function MediaPlayer() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
+
+        Errors.extend(DashErrors);
+        eventBus.on(Events.MANIFEST_PARSING_NEEDED, onParsingNeeded, instance);
     }
 
     /**
@@ -226,7 +235,7 @@ function MediaPlayer() {
         mediaPlayerInitialized = true;
 
         // init some controllers and models
-        timelineConverter = TimelineConverter(context).getInstance();
+        timelineConverter = TimelineConverter(context).getInstance({eventBus: eventBus, events: Events});
         if (!abrController) {
             abrController = AbrController(context).getInstance();
         }
@@ -246,7 +255,10 @@ function MediaPlayer() {
         cmcdModel = CmcdModel(context).getInstance();
 
         dashMetrics = DashMetrics(context).getInstance({
-            settings: settings
+            settings: settings,
+            constants: Constants,
+            metricsConstants: MetricsConstants,
+            metricsModel: MetricsModel(context).getInstance({settings: settings})
         });
         textController = TextController(context).getInstance();
         domStorage = DOMStorage(context).getInstance({
@@ -257,7 +269,10 @@ function MediaPlayer() {
             constants: Constants,
             cea608parser: cea608parser,
             errHandler: errHandler,
-            BASE64: BASE64
+            BASE64: BASE64,
+            debug: debug,
+            objectUtils: ObjectUtils(context).getInstance(),
+            urlUtils: URLUtils(context).getInstance()
         });
 
         restoreDefaultUTCTimingSources();
@@ -297,6 +312,8 @@ function MediaPlayer() {
         }
 
         settings.reset();
+
+        eventBus.off(Events.MANIFEST_PARSING_NEEDED, onParsingNeeded, instance);
     }
 
     /**
@@ -1900,6 +1917,7 @@ function MediaPlayer() {
         return ManifestLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
+            dashConstants: DashConstants,
             mediaPlayerModel: mediaPlayerModel,
             requestModifier: RequestModifier(context).getInstance(),
             mssHandler: mssHandler,
@@ -1979,6 +1997,7 @@ function MediaPlayer() {
                 baseURLController: BaseURLController(context).getInstance(),
                 errHandler: errHandler,
                 events: Events,
+                errors: Errors,
                 constants: Constants,
                 debug: debug,
                 initSegmentType: HTTPRequest.INIT_SEGMENT_TYPE,
@@ -1986,6 +2005,34 @@ function MediaPlayer() {
                 ISOBoxer: ISOBoxer,
                 settings: settings
             });
+        }
+    }
+
+    function onParsingNeeded(eventObj) {
+        if (eventObj.dataToParse && eventObj.dataToParse.indexOf('MPD') > -1) {
+            let data = eventObj.dataToParse;
+            // Change dataToParse value to stop management of this manifest type by an other parser
+            eventObj.dataToParse = null;
+            let parser = DashParser(context).create();
+            let manifestParsed;
+            // init xlinkcontroller with matchers and iron object from created parser
+            eventObj.controller.setMatchers(parser.getMatchers());
+            eventObj.controller.setIron(parser.getIron());
+            try {
+                manifestParsed = parser.parse(data);
+            } catch (e) {
+                eventBus.trigger(
+                    Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new DashJSError(
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${eventObj.url}`
+                       )
+                    }
+                );
+                return;
+            }
+            eventBus.trigger(Events.MANIFEST_PARSED, {manifest: manifestParsed});
         }
     }
 

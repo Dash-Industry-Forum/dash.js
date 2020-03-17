@@ -1,5 +1,6 @@
 import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
+import Debug from '../../src/core/Debug';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AdapterMock from './mocks/AdapterMock';
@@ -21,7 +22,20 @@ const sampleRepresentation = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x1'
-    }]
+    }],
+    isSegmentTemplate: function () {
+        return true;
+    },
+    isSegmentBase: function () {
+        return false;
+    },
+    isSegmentTimeline: function () {
+        return false;
+    },
+    parseThumbnailAspectRatio:  function (thumbnailTrack) {
+        thumbnailTrack.tilesHor = 10;
+        thumbnailTrack.tilesVert = 1;
+    }
 };
 
 const sampleRepresentation2 = {
@@ -37,7 +51,20 @@ const sampleRepresentation2 = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/guidelines/thumbnail_tile',
         value: '10x20'
-    }]
+    }],
+    isSegmentTemplate: function () {
+        return true;
+    },
+    isSegmentBase: function () {
+        return false;
+    },
+    isSegmentTimeline: function () {
+        return false;
+    },
+    parseThumbnailAspectRatio: function (thumbnailTrack) {
+        thumbnailTrack.tilesHor = 10;
+        thumbnailTrack.tilesVert = 20;
+    }
 };
 
 const sampleRepresentation3 = {
@@ -53,7 +80,20 @@ const sampleRepresentation3 = {
     essentialProperties: [{
         schemeIdUri: 'http://dashif.org/thumbnail_tile',
         value: '50x10'
-    }]
+    }],
+    isSegmentTemplate: function () {
+        return true;
+    },
+    isSegmentBase: function () {
+        return false;
+    },
+    isSegmentTimeline: function () {
+        return false;
+    },
+    parseThumbnailAspectRatio: function (thumbnailTrack) {
+        thumbnailTrack.tilesHor = 50;
+        thumbnailTrack.tilesVert = 10;
+    }
 };
 
 describe('Thumbnails', function () {
@@ -66,7 +106,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -92,7 +133,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -163,7 +205,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -211,7 +254,8 @@ describe('Thumbnails', function () {
             thumbnailTracks = ThumbnailTracks(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -231,7 +275,7 @@ describe('Thumbnails', function () {
         });
 
         it('addTracks method doesn\'t add any track if config not set properly', function () {
-            thumbnailTracks = ThumbnailTracks(context).create({});
+            thumbnailTracks = ThumbnailTracks(context).create({debug: Debug(context).getInstance()});
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
             expect(tracks).to.be.empty; // jshint ignore:line
@@ -247,7 +291,17 @@ describe('Thumbnails', function () {
                 startNumber: 1,
                 segmentDuration: 10,
                 timescale: 1,
-                media: 'http://media/$RepresentationID$/$Number$.jpg'
+                media: 'http://media/$RepresentationID$/$Number$.jpg',
+                isSegmentTemplate: function () {
+                    return true;
+                },
+                isSegmentBase: function () {
+                    return false;
+                },
+                isSegmentTimeline: function () {
+                    return false;
+                },
+                parseThumbnailAspectRatio: function () {}
             });
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
@@ -308,7 +362,8 @@ describe('Thumbnails', function () {
             thumbnailTracks = ThumbnailTracks(context).create({
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
         });
 
@@ -321,7 +376,8 @@ describe('Thumbnails', function () {
             thumbnailController = ThumbnailController(context).create({
                 adapter: new AdapterMock(),
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                stream: new StreamMock(),
+                debug: Debug(context).getInstance()
             });
 
             thumbnailTracks.initialize();

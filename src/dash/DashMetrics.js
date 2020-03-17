@@ -28,16 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
-import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
+import DashConstants from './constants/DashConstants';
 import FactoryMaker from '../core/FactoryMaker';
-import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
-import MetricsModel from '../streaming/models/MetricsModel';
-import {
-    PlayList,
-    PlayListTrace
-} from '../streaming/vo/metrics/PlayList';
 
 /**
  * @module DashMetrics
@@ -49,16 +42,16 @@ function DashMetrics(config) {
 
     config = config || {};
 
-    const context = this.context;
+    const constants = config.constants;
+    const metricsConstants = config.metricsConstants;
+    const metricsModel = config.metricsModel;
+
     let instance,
         playListTraceMetricsClosed,
         playListTraceMetrics,
         playListMetrics;
 
-    let metricsModel = config.metricsModel;
-
     function setup() {
-        metricsModel = metricsModel || MetricsModel(context).getInstance({settings: config.settings});
         resetInitialSettings();
     }
 
@@ -77,7 +70,7 @@ function DashMetrics(config) {
      */
     function getCurrentRepresentationSwitch(mediaType, readOnly) {
         const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
-        return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
+        return getCurrent(metrics, metricsConstants.TRACK_SWITCH);
     }
 
     /**
@@ -114,7 +107,7 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentBufferLevel(type, readOnly) {
-        const vo = getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_LEVEL);
+        const vo = getLatestBufferInfoVO(type, readOnly, metricsConstants.BUFFER_LEVEL);
 
         if (vo) {
             return Round10.round10(vo.level / 1000, -3);
@@ -241,8 +234,8 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentDroppedFrames() {
-        const metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
-        return getCurrent(metrics, MetricsConstants.DROPPED_FRAMES);
+        const metrics = metricsModel.getMetricsFor(constants.VIDEO, true);
+        return getCurrent(metrics, metricsConstants.DROPPED_FRAMES);
     }
 
     /**
@@ -251,7 +244,7 @@ function DashMetrics(config) {
      * @instance
      */
     function addDroppedFrames(quality) {
-        metricsModel.addDroppedFrames(Constants.VIDEO, quality);
+        metricsModel.addDroppedFrames(constants.VIDEO, quality);
     }
 
     /**
@@ -262,7 +255,7 @@ function DashMetrics(config) {
      */
     function getCurrentSchedulingInfo(mediaType) {
         const metrics = metricsModel.getMetricsFor(mediaType, true);
-        return getCurrent(metrics, MetricsConstants.SCHEDULING_INFO);
+        return getCurrent(metrics, metricsConstants.SCHEDULING_INFO);
     }
 
     /**
@@ -290,8 +283,8 @@ function DashMetrics(config) {
      * @instance
      */
     function getCurrentManifestUpdate() {
-        const streamMetrics = metricsModel.getMetricsFor(Constants.STREAM);
-        return getCurrent(streamMetrics, MetricsConstants.MANIFEST_UPDATE);
+        const streamMetrics = metricsModel.getMetricsFor(constants.STREAM);
+        return getCurrent(streamMetrics, metricsConstants.MANIFEST_UPDATE);
     }
 
     /**
@@ -322,7 +315,7 @@ function DashMetrics(config) {
      * @instance
      */
     function addManifestUpdate(request) {
-        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.requestStartDate, request.requestEndDate);
+        metricsModel.addManifestUpdate(constants.STREAM, request.type, request.requestStartDate, request.requestEndDate);
     }
 
     /**
@@ -373,8 +366,8 @@ function DashMetrics(config) {
      */
     function getCurrentDVRInfo(mediaType) {
         const metrics = mediaType ? metricsModel.getMetricsFor(mediaType, true) :
-            metricsModel.getMetricsFor(Constants.VIDEO, true) || metricsModel.getMetricsFor(Constants.AUDIO, true);
-        return getCurrent(metrics, MetricsConstants.DVR_INFO);
+            metricsModel.getMetricsFor(constants.VIDEO, true) || metricsModel.getMetricsFor(constants.AUDIO, true);
+        return getCurrent(metrics, metricsConstants.DVR_INFO);
     }
 
     /**
@@ -401,12 +394,12 @@ function DashMetrics(config) {
             httpRequest,
             i;
 
-        httpRequestList = getHttpRequests(Constants.STREAM);
+        httpRequestList = getHttpRequests(constants.STREAM);
 
         for (i = httpRequestList.length - 1; i >= 0; i--) {
             httpRequest = httpRequestList[i];
 
-            if (httpRequest.type === HTTPRequest.MPD_TYPE) {
+            if (httpRequest.type === DashConstants.MPD) {
                 headers = parseResponseHeaders(httpRequest._responseHeaders);
                 break;
             }
@@ -462,22 +455,13 @@ function DashMetrics(config) {
     }
 
     function createPlaylistMetrics(mediaStartTime, startReason) {
-        playListMetrics = new PlayList();
-
-        playListMetrics.start = new Date();
-        playListMetrics.mstart = mediaStartTime;
-        playListMetrics.starttype = startReason;
+        playListMetrics = metricsModel.createPlaylistMetrics(mediaStartTime, startReason);
     }
 
     function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
         if (playListTraceMetricsClosed === true ) {
             playListTraceMetricsClosed = false;
-            playListTraceMetrics = new PlayListTrace();
-
-            playListTraceMetrics.representationid = representationId;
-            playListTraceMetrics.start = new Date();
-            playListTraceMetrics.mstart = mediaStartTime;
-            playListTraceMetrics.playbackspeed = speed;
+            playListTraceMetrics = metricsModel.createPlaylistTraceMetrics(representationId, mediaStartTime, speed);
         }
     }
 

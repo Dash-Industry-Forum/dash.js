@@ -28,61 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import EventsBase from '../core/events/EventsBase';
 
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+class DashEvents extends EventsBase {
 
-/**
- * @class
- * @ignore
- */
-class FragmentRequest {
     constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
-        this.representationId = null;
-    }
+        super();
 
-    isInitializationRequest() {
-        return (this.type && this.type === HTTPRequest.INIT_SEGMENT_TYPE);
-    }
-
-    isActionComplete() {
-        return (this.action === FragmentRequest.ACTION_COMPLETE);
-    }
-
-    setActionComplete() {
-        this.action = FragmentRequest.ACTION_COMPLETE;
-    }
-
-    setInfo(info) {
-        this.type = info && info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
-        this.url = info && info.url ? info.url : null;
-        this.range = info && info.range ? info.range.start + '-' + info.range.end : null;
-        this.mediaType = info && info.mediaType ? info.mediaType : null;
+        this.REPRESENTATION_UPDATE_STARTED = 'representationUpdateStarted';
+        this.REPRESENTATION_UPDATE_COMPLETED = 'representationUpdateCompleted';
+        this.SEGMENTS_LOADED = 'segmentsLoaded';
+        this.INITIALIZATION_LOADED = 'initializationLoaded';
     }
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
-
-export default FragmentRequest;
+let dashEvents = new DashEvents();
+export default dashEvents;

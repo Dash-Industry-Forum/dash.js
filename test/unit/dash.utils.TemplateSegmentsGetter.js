@@ -2,13 +2,16 @@ import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import TemplateSegmentsGetter from '../../src/dash/utils/TemplateSegmentsGetter';
 import Constants from '../../src/streaming/constants/Constants';
 import VoHelper from './helpers/VOHelper';
+import Events from '../../src/core/events/Events';
+import EventBus from '../../src/core/EventBus';
 
 const expect = require('chai').expect;
 
 describe('TemplateSegmentsGetter', () => {
     const context = {};
     const voHelper = new VoHelper();
-    const timelineConverter = TimelineConverter(context).getInstance();
+    const eventBus = EventBus(context).getInstance();
+    const timelineConverter = TimelineConverter(context).getInstance({events: Events, eventBus: eventBus});
     timelineConverter.initialize();
 
     const templateSegmentsGetter = TemplateSegmentsGetter(context).create({

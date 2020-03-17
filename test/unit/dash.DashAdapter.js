@@ -2,6 +2,7 @@ import DashAdapter from '../../src/dash/DashAdapter';
 import MediaInfo from '../../src/dash/vo/MediaInfo';
 import Constants from '../../src/streaming/constants/Constants';
 import cea608parser from '../../externals/cea608-parser';
+import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 
 import VoHelper from './helpers/VOHelper';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
@@ -152,7 +153,8 @@ describe('DashAdapter', function () {
             dashAdapter.setConfig({
                 constants: Constants,
                 errHandler: errorHandlerMock,
-                cea608parser: cea608parser
+                cea608parser: cea608parser,
+                objectUtils: ObjectUtils(context).getInstance()
             });
         });
 

@@ -28,61 +28,24 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
-
+import ErrorsBase from '../../core/errors/ErrorsBase';
 /**
  * @class
- * @ignore
+ *
  */
-class FragmentRequest {
-    constructor() {
-        this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
-        this.availabilityEndTime = null;
-        this.wallStartTime = null;
-        this.bytesLoaded = NaN;
-        this.bytesTotal = NaN;
-        this.delayLoadingTime = NaN;
-        this.responseType = 'arraybuffer';
-        this.representationId = null;
-    }
-
-    isInitializationRequest() {
-        return (this.type && this.type === HTTPRequest.INIT_SEGMENT_TYPE);
-    }
-
-    isActionComplete() {
-        return (this.action === FragmentRequest.ACTION_COMPLETE);
-    }
-
-    setActionComplete() {
-        this.action = FragmentRequest.ACTION_COMPLETE;
-    }
-
-    setInfo(info) {
-        this.type = info && info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
-        this.url = info && info.url ? info.url : null;
-        this.range = info && info.range ? info.range.start + '-' + info.range.end : null;
-        this.mediaType = info && info.mediaType ? info.mediaType : null;
+class DashErrors extends ErrorsBase {
+	constructor () {
+        super();
+        /**
+         * Error code returned when the update of segments list has failed
+         */
+        this.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 13;
+        this.SEGMENT_BASE_LOADER_ERROR_CODE = 15;
+        this.MANIFEST_ERROR_ID_PARSE_CODE = 31;
+        this.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE = 'Segments update failed';
+        this.SEGMENT_BASE_LOADER_ERROR_MESSAGE = 'error loading segments';
     }
 }
 
-FragmentRequest.ACTION_DOWNLOAD = 'download';
-FragmentRequest.ACTION_COMPLETE = 'complete';
-
-export default FragmentRequest;
+let dashErrors = new DashErrors();
+export default dashErrors;

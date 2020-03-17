@@ -1,6 +1,6 @@
-import EventBus from '../../src/core/EventBus';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
 import Events from '../../src/core/events/Events';
+import EventBus from '../../src/core/EventBus';
 
 import SpecHelper from './helpers/SpecHelper';
 import VoHelper from './helpers/VOHelper';
@@ -15,7 +15,7 @@ describe('TimelineConverter', function () {
     const specHelper = new SpecHelper();
     const eventBus = EventBus(context).getInstance();
     const representation = voHelper.getDummyRepresentation(testType);
-    const timelineConverter = TimelineConverter(context).getInstance();
+    const timelineConverter = TimelineConverter(context).getInstance({events: Events, eventBus: eventBus});
 
     timelineConverter.initialize();
 

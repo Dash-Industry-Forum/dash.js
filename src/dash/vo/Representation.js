@@ -61,6 +61,7 @@ class Representation {
         this.maxPlayoutRate = NaN;
         this.availabilityTimeOffset = 0;
         this.availabilityTimeComplete = true;
+        this.essentialProperties = null;
     }
 
     hasInitialization() {
@@ -71,6 +72,32 @@ class Representation {
         return this.segmentInfoType !== DashConstants.BASE_URL &&
             this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
             !this.indexRange;
+    }
+
+    isSegmentTemplate() {
+        return this.segmentInfoType === DashConstants.SEGMENT_TEMPLATE ? true : false;
+    }
+
+    isSegmentBase() {
+        return this.segmentInfoType === DashConstants.SEGMENT_BASE ? true : false;
+    }
+
+    isSegmentTimeline() {
+        return this.segmentInfoType === DashConstants.SEGMENT_TIMELINE ? true : false;
+    }
+
+    parseThumbnailAspectRatio(thumbnailTrack) {
+        if (this.essentialProperties) {
+            this.essentialProperties.forEach((p) => {
+                if (DashConstants.THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
+                    const vars = p.value.split('x');
+                    if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
+                        thumbnailTrack.tilesHor = parseInt(vars[0], 10);
+                        thumbnailTrack.tilesVert = parseInt(vars[1], 10);
+                    }
+                }
+            });
+        }
     }
 }
 

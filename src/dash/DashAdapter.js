@@ -76,6 +76,18 @@ function DashAdapter() {
         if (config.BASE64) {
             dashManifestModel.setConfig({BASE64: config.BASE64});
         }
+
+        if (config.debug) {
+            dashManifestModel.setConfig({debug: config.debug});
+        }
+
+        if (config.objectUtils) {
+            dashManifestModel.setConfig({objectUtils: config.objectUtils});
+        }
+
+        if (config.urlUtils) {
+            dashManifestModel.setConfig({urlUtils: config.urlUtils});
+        }
     }
 
     function convertRepresentationToRepresentationInfo(voRepresentation) {

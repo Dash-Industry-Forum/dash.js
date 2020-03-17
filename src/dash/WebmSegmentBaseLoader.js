@@ -1,15 +1,14 @@
-import Events from '../core/events/Events';
+import DashEvents from './DashEvents';
 import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
 import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import DashJSError from '../streaming/vo/DashJSError';
-import Errors from '../core/errors/Errors';
+import DashErrors from './errors/DashErrors';
 
 function WebmSegmentBaseLoader() {
 
@@ -27,7 +26,6 @@ function WebmSegmentBaseLoader() {
         baseURLController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
         WebM = {
             EBML: {
                 tag: 0x1A45DFA3,
@@ -111,6 +109,7 @@ function WebmSegmentBaseLoader() {
         dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
+        logger = config.debug.getLogger(instance);
     }
 
     function parseCues(ab) {
@@ -323,13 +322,13 @@ function WebmSegmentBaseLoader() {
         const onload = function () {
             // note that we don't explicitly set rep.initialization as this
             // will be computed when all BaseURLs are resolved later
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+            eventBus.trigger(DashEvents.INITIALIZATION_LOADED, {
                 representation: representation
             });
         };
 
         const onloadend = function () {
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+            eventBus.trigger(DashEvents.INITIALIZATION_LOADED, {
                 representation: representation
             });
         };
@@ -389,17 +388,17 @@ function WebmSegmentBaseLoader() {
 
     function onLoaded(segments, representation, type) {
         if (segments) {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {
+            eventBus.trigger(DashEvents.SEGMENTS_LOADED, {
                 segments: segments,
                 representation: representation,
                 mediaType: type
             });
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {
+            eventBus.trigger(DashEvents.SEGMENTS_LOADED, {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                error: new DashJSError(DashErrors.SEGMENT_BASE_LOADER_ERROR_CODE, DashErrors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
             });
         }
     }

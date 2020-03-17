@@ -31,7 +31,6 @@
 import Constants from '../../constants/Constants';
 import Debug from '../../../core/Debug';
 import FactoryMaker from '../../../core/FactoryMaker';
-import FragmentRequest from '../../../streaming/vo/FragmentRequest';
 
 function NextFragmentRequestRule(config) {
 
@@ -95,7 +94,7 @@ function NextFragmentRequestRule(config) {
             });
 
             // Then, check if this request was downloaded or not
-            while (request && request.action !== FragmentRequest.ACTION_COMPLETE && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
+            while (request && !request.isActionComplete() && streamProcessor.getFragmentModel().isFragmentLoaded(request)) {
                 // loop until we found not loaded fragment, or no fragment
                 request = streamProcessor.getFragmentRequest(representationInfo);
             }

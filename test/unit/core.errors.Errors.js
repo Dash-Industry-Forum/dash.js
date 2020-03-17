@@ -8,9 +8,7 @@ describe('Errors', function () {
         expect(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE).to.equal(10);
         expect(Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE).to.equal(11);
         expect(Errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE).to.equal(12);
-        expect(Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE).to.equal(13);
         expect(Errors.SEGMENTS_UNAVAILABLE_ERROR_CODE).to.equal(14);
-        expect(Errors.SEGMENT_BASE_LOADER_ERROR_CODE).to.equal(15);
         expect(Errors.TIME_SYNC_FAILED_ERROR_CODE).to.equal(16);
         expect(Errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE).to.equal(17);
         expect(Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE).to.equal(18);
@@ -26,7 +24,6 @@ describe('Errors', function () {
         expect(Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE).to.equal(28);
         expect(Errors.DOWNLOAD_ERROR_ID_XLINK_CODE).to.equal(29);
         expect(Errors.MANIFEST_ERROR_ID_CODEC_CODE).to.equal(30);
-        expect(Errors.MANIFEST_ERROR_ID_PARSE_CODE).to.equal(31);
         expect(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE).to.equal(32);
         expect(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE).to.equal(33);
         expect(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE).to.equal(34);
@@ -38,9 +35,7 @@ describe('Errors', function () {
         expect(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE).to.equal('parsing failed for ');
         expect(Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE).to.equal('Failed loading manifest: ');
         expect(Errors.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE).to.equal('Failed loading Xlink element: ');
-        expect(Errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE).to.equal('Segments update failed');
         expect(Errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE).to.equal('no segments are available yet');
-        expect(Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE).to.equal('error loading segments');
         expect(Errors.TIME_SYNC_FAILED_ERROR_MESSAGE).to.equal('Failed to synchronize time');
         expect(Errors.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE).to.equal('request is null');
         expect(Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE).to.equal('Failed to resolve a valid URL');

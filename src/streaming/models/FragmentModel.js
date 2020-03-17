@@ -33,7 +33,6 @@
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import FragmentRequest from '../vo/FragmentRequest';
 import Debug from '../../core/Debug';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
@@ -73,7 +72,7 @@ function FragmentModel(config) {
 
     function isFragmentLoaded(request) {
         const isEqualComplete = function (req1, req2) {
-            return ((req1.action === FragmentRequest.ACTION_COMPLETE) && (req1.action === req2.action));
+            return ((req1.isActionComplete()) && (req1.action === req2.action));
         };
 
         const isEqualMedia = function (req1, req2) {
@@ -201,23 +200,18 @@ function FragmentModel(config) {
     }
 
     function executeRequest(request) {
-        switch (request.action) {
-            case FragmentRequest.ACTION_COMPLETE:
-                executedRequests.push(request);
-                addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
-                logger.debug('executeRequest trigger STREAM_COMPLETED');
-                eventBus.trigger(Events.STREAM_COMPLETED, {
-                    request: request,
-                    fragmentModel: this
-                });
-                break;
-            case FragmentRequest.ACTION_DOWNLOAD:
-                addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
-                loadingRequests.push(request);
-                loadCurrentFragment(request);
-                break;
-            default:
-                logger.warn('Unknown request action.');
+        if (request.isActionComplete()) {
+            executedRequests.push(request);
+            addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
+            logger.debug('executeRequest trigger STREAM_COMPLETED');
+            eventBus.trigger(Events.STREAM_COMPLETED, {
+                request: request,
+                fragmentModel: this
+            });
+        } else {
+            addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
+            loadingRequests.push(request);
+            loadCurrentFragment(request);
         }
     }
 

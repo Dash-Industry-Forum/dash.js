@@ -1,6 +1,6 @@
 import DashMetrics from '../../src/dash/DashMetrics';
-
-import ManifestModelMock from './mocks/ManifestModelMock';
+import Constants from '../../src/streaming/constants/Constants';
+import MetricsConstants from '../../src/streaming/constants/MetricsConstants';
 import MetricsModelMock from './mocks/MetricsModelMock';
 
 const expect = require('chai').expect;
@@ -8,8 +8,7 @@ const expect = require('chai').expect;
 const context = {};
 
 const metricsModelMock = new MetricsModelMock();
-const manifestModelMock = new ManifestModelMock();
-const dashMetrics = DashMetrics(context).getInstance({manifestModel: manifestModelMock, metricsModel: metricsModelMock });
+const dashMetrics = DashMetrics(context).getInstance({metricsModel: metricsModelMock, constants: Constants, metricsConstants: MetricsConstants });
 
 describe('DashMetrics', function () {
     it('should return null when getCurrentRepresentationSwitch is called and type is undefined', () => {

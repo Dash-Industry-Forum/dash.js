@@ -1,4 +1,5 @@
 import DashParser from '../../src/dash/parser/DashParser';
+import DashConstants from '../../src/dash/constants/DashConstants';
 import URLUtils from '../../src/streaming/utils/URLUtils';
 import XlinkController from '../../src/streaming/controllers/XlinkController';
 import Events from '../../src/core/events/Events';
@@ -59,7 +60,7 @@ describe('XlinkController', function () {
     });
 
     beforeEach(function () {
-        xLinkController = XlinkController(context).create({});
+        xLinkController = XlinkController(context).create({dashConstants: DashConstants});
     });
 
     afterEach(function () {

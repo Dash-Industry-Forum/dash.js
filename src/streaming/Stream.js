@@ -446,7 +446,8 @@ function Stream(config) {
                 adapter: adapter,
                 baseURLController: config.baseURLController,
                 stream: instance,
-                timelineConverter: config.timelineConverter
+                timelineConverter: config.timelineConverter,
+                debug: Debug(context).getInstance()
             });
             return;
         }

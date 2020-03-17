@@ -39,6 +39,8 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
+import Debug from '../core/Debug';
+import URLUtils from './utils/URLUtils';
 
 function StreamProcessor(config) {
 
@@ -81,6 +83,7 @@ function StreamProcessor(config) {
 
     function initialize(mediaSource) {
         indexHandler = DashHandler(context).create({
+            debug: Debug(context).getInstance({settings: settings}),
             type: type,
             mimeType: mimeType,
             timelineConverter: timelineConverter,
@@ -89,7 +92,9 @@ function StreamProcessor(config) {
             baseURLController: config.baseURLController,
             errHandler: errHandler,
             settings: settings,
-            streamInfo: getStreamInfo()
+            streamInfo: getStreamInfo(),
+            urlUtils: URLUtils(context).getInstance(),
+            eventBus: eventBus
         });
 
         // initialize controllers
@@ -124,6 +129,8 @@ function StreamProcessor(config) {
             timelineConverter: timelineConverter,
             streamProcessor: instance,
             type: type,
+            eventBus: eventBus,
+            events: Events,
             streamId: getStreamInfo() ? getStreamInfo().id : null
         });
         bufferController.initialize(mediaSource);

@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
@@ -39,9 +38,7 @@ import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
-
-export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
-                                   'http://dashif.org/guidelines/thumbnail_tile'];
+import EventBus from '../../core/EventBus';
 
 function ThumbnailTracks(config) {
     const context = this.context;
@@ -53,6 +50,7 @@ function ThumbnailTracks(config) {
     const dashMetrics = config.dashMetrics;
     const mediaPlayerModel = config.mediaPlayerModel;
     const errHandler = config.errHandler;
+    const debug = config.debug;
 
     const urlUtils = URLUtils(context).getInstance();
 
@@ -76,7 +74,9 @@ function ThumbnailTracks(config) {
         });
 
         indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
-                                baseURLController: baseURLController});
+                                baseURLController: baseURLController,
+                                debug: debug,
+                                eventBus: EventBus(context).getInstance()});
 
         // initialize controllers
         indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);
@@ -137,11 +137,11 @@ function ThumbnailTracks(config) {
 
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
-                if ((rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media) ||
-                     rep.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+                if ((rep.isSegmentTemplate() && rep.segmentDuration > 0 && rep.media) ||
+                     rep.isSegmentTimeline()) {
                     createTrack(rep);
                 }
-                if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
+                if (rep.isSegmentBase()) {
                     createTrack(rep, true);
                 }
             });
@@ -163,17 +163,7 @@ function ThumbnailTracks(config) {
         track.tilesHor = 1;
         track.tilesVert = 1;
 
-        if (representation.essentialProperties) {
-            representation.essentialProperties.forEach((p) => {
-                if (THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
-                    const vars = p.value.split('x');
-                    if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
-                        track.tilesHor = parseInt(vars[0], 10);
-                        track.tilesVert = parseInt(vars[1], 10);
-                    }
-                }
-            });
-        }
+        representation.parseThumbnailAspectRatio(track);
 
         if (useSegmentBase) {
             segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function (segments, representation) {

@@ -38,22 +38,17 @@ import UTCTiming from '../vo/UTCTiming';
 import Event from '../vo/Event';
 import BaseURL from '../vo/BaseURL';
 import EventStream from '../vo/EventStream';
-import ObjectUtils from '../../streaming/utils/ObjectUtils';
-import URLUtils from '../../streaming/utils/URLUtils';
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
 import DashJSError from '../../streaming/vo/DashJSError';
-import Errors from '../../core/errors/Errors';
-import { THUMBNAILS_SCHEME_ID_URIS } from '../../streaming/thumbnail/ThumbnailTracks';
+import DashErrors from '../errors/DashErrors';
 
 function DashManifestModel() {
     let instance,
         logger,
         errHandler,
+        objectUtils,
+        urlUtils,
         BASE64;
-
-    const context = this.context;
-    const urlUtils = URLUtils(context).getInstance();
 
     const isInteger = Number.isInteger || function (value) {
         return typeof value === 'number' &&
@@ -62,7 +57,6 @@ function DashManifestModel() {
     };
 
     function setup () {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function getIsTypeOf(adaptation, type) {
@@ -92,7 +86,7 @@ function DashManifestModel() {
 
         if (adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) {
             let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
-            if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
+            if (essentialProperties && essentialProperties.length > 0 && DashConstants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
                 return type === Constants.IMAGE;
             }
             if (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS)) {
@@ -239,7 +233,6 @@ function DashManifestModel() {
         const realAdaptations = getRealAdaptations(manifest, periodIndex);
 
         for (let i = 0; i < realAdaptations.length; i++) {
-            let objectUtils = ObjectUtils(context).getInstance();
             if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
                 return i;
             }
@@ -659,6 +652,7 @@ function DashManifestModel() {
                 if (voPeriod !== null) {
                     voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
                 } else {
+                    checkConfig();
                     logger.warn('First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
                 }
             }
@@ -769,7 +763,7 @@ function DashManifestModel() {
         } else if (isDynamic) {
             periodEnd = Number.POSITIVE_INFINITY;
         } else {
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
+            errHandler.error(new DashJSError(DashErrors.MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
         }
 
         return periodEnd;
@@ -1103,6 +1097,18 @@ function DashManifestModel() {
 
         if (config.BASE64) {
             BASE64 = config.BASE64;
+        }
+
+        if (config.debug) {
+            logger = config.debug.getLogger(instance);
+        }
+
+        if (config.objectUtils) {
+            objectUtils = config.objectUtils;
+        }
+
+        if (config.urlUtils) {
+            urlUtils = config.urlUtils;
         }
     }
 

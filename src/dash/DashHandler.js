@@ -31,11 +31,8 @@
 import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
-import Events from '../core/events/Events';
-import EventBus from '../core/EventBus';
+import DashEvents from './DashEvents';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
-import URLUtils from '../streaming/utils/URLUtils';
 import {
     replaceIDForTemplate,
     unescapeDollarsInTemplate,
@@ -49,8 +46,8 @@ function DashHandler(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
-    const urlUtils = URLUtils(context).getInstance();
+    const eventBus = config.eventBus;
+    const urlUtils = config.urlUtils;
     const type = config.type;
     const streamInfo = config.streamInfo;
 
@@ -68,14 +65,14 @@ function DashHandler(config) {
         segmentsController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = config.debug.getLogger(instance);
         resetInitialSettings();
 
         segmentsController = SegmentsController(context).create(config);
 
-        eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.on(DashEvents.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.on(DashEvents.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.on(DashEvents.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function initialize(isDynamic) {
@@ -114,9 +111,9 @@ function DashHandler(config) {
     function reset() {
         resetInitialSettings();
 
-        eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.off(DashEvents.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.off(DashEvents.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.off(DashEvents.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -189,7 +186,7 @@ function DashHandler(config) {
         //if representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
         //otherwise, it means that a request has to be made to get initialization and/or segments informations
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
+            eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
         } else {
             segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
         }
@@ -280,10 +277,10 @@ function DashHandler(config) {
             const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
             if (finished) {
                 request = new FragmentRequest();
-                request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
                 request.mediaType = type;
                 request.mediaInfo = mediaInfo;
+                request.setActionComplete();
                 logger.debug('Signal complete in getSegmentRequestForTime');
             }
         }
@@ -331,10 +328,10 @@ function DashHandler(config) {
             const finished = isMediaFinished(representation, segment);
             if (finished) {
                 request = new FragmentRequest();
-                request.action = FragmentRequest.ACTION_COMPLETE;
                 request.index = segmentIndex - 1;
                 request.mediaType = getType();
                 request.mediaInfo = mediaInfo;
+                request.setActionComplete();
                 logger.debug('Signal complete');
             }
         }
@@ -350,7 +347,7 @@ function DashHandler(config) {
         const representation = e.representation;
         if (!representation.segments) return;
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     function onSegmentsLoaded(e) {
@@ -404,7 +401,7 @@ function DashHandler(config) {
             return;
         }
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(DashEvents.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     instance = {

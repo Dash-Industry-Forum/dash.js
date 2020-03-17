@@ -49,7 +49,8 @@ function ThumbnailController(config) {
             adapter: config.adapter,
             baseURLController: config.baseURLController,
             stream: config.stream,
-            timelineConverter: config.timelineConverter
+            timelineConverter: config.timelineConverter,
+            debug: config.debug
         });
     }
 

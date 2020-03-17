@@ -48,12 +48,7 @@ class Errors extends ErrorsBase {
          * Error code returned when a xlink loading error occurs
          */
         this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 12;
-        /**
-         * Error code returned when the update of segments list has failed
-         */
-        this.SEGMENTS_UPDATE_FAILED_ERROR_CODE = 13;
         this.SEGMENTS_UNAVAILABLE_ERROR_CODE = 14;
-        this.SEGMENT_BASE_LOADER_ERROR_CODE = 15;
         this.TIME_SYNC_FAILED_ERROR_CODE = 16;
         this.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE = 17;
         this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE = 18;
@@ -80,7 +75,6 @@ class Errors extends ErrorsBase {
         this.DOWNLOAD_ERROR_ID_XLINK_CODE           = 29;
 
         this.MANIFEST_ERROR_ID_CODEC_CODE           = 30;
-        this.MANIFEST_ERROR_ID_PARSE_CODE           = 31;
 
         /**
          * Error code returned when no stream (period) has been detected in the manifest
@@ -102,9 +96,7 @@ class Errors extends ErrorsBase {
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading manifest: ';
         this.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading Xlink element: ';
-        this.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE = 'Segments update failed';
         this.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE = 'no segments are available yet';
-        this.SEGMENT_BASE_LOADER_ERROR_MESSAGE = 'error loading segments';
         this.TIME_SYNC_FAILED_ERROR_MESSAGE = 'Failed to synchronize time';
         this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE = 'request is null';
         this.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
