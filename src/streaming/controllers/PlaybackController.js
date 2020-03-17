@@ -246,12 +246,13 @@ function PlaybackController() {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(fragmentDuration)) {
             delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
-        }  else if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
+        } else if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
             delay = suggestedPresentationDelay;
         } else if (r) {
             delay = r;
-        }
-        else {
+        } else if (!isNaN(fragmentDuration)) {
+            delay = fragmentDuration * 4;
+        } else {
             delay = streamInfo.manifestInfo.minBufferTime * 2;
         }
 
@@ -758,7 +759,7 @@ function PlaybackController() {
             const minDelay = 1.2 * e.request.duration;
             if (minDelay > mediaPlayerModel.getLiveDelay()) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
-                const s = { streaming: { liveDelay: minDelay } };
+                const s = {streaming: {liveDelay: minDelay}};
                 settings.update(s);
             }
         }
