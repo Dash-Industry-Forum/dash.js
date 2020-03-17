@@ -5,7 +5,7 @@
     "streaming": {
         "metricsMaxListDepth": 50,
         "abandonLoadTimeout": 10000,
-        "liveDelayFragmentCount": 4,
+        "liveDelayFragmentCount": null,
         "liveDelay": null,
         "scheduleWhilePaused": true,
         "fastSwitchEnabled": true,
