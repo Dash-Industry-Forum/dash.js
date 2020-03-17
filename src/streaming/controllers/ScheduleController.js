@@ -75,6 +75,7 @@ function ScheduleController(config) {
         switchTrack,
         bufferResetInProgress,
         mediaRequest,
+        checkPlaybackQuality,
         isReplacementRequest;
 
     function setup() {
