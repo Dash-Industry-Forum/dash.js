@@ -94,13 +94,13 @@ define([
                 });
             },
 
-            detectPeriodsStart: function() {
+            getPeriods: function() {
                 if (!stream.available) {
                     this.skip();
                 }
                 return command.execute(player.getStreams)
                 .then(function (streams) {
-                    utils.log(NAME, 'streams divided in ' + streams.length + ' period');
+                    utils.log(NAME, 'Nb periods: ' + streams.length);
                     stream.periods = [];
                     for(let i=0; i < streams.length; i++ ){
                         stream.periods.push({start: streams[i].start});
