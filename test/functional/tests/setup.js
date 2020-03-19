@@ -27,7 +27,7 @@ define([
                 if (stream.protData) {
                     stream.available = false;
                     Object.keys(stream.protData).forEach(keySystem => {
-                        stream.available |= browsersConf.keySystems.includes(keySystem);
+                        stream.available |= browsersConf.keySystems[keySystem] === true;
                     });
                     if (!stream.available) {
                         this.skip();
@@ -42,7 +42,7 @@ define([
                 });
             }
         });
-    };    
+    };
 
     return {
         register: function (stream) {
