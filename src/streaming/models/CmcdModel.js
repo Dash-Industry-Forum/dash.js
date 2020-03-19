@@ -278,7 +278,7 @@ function CmcdModel() {
     function _getDeadlineByType(mediaType) {
         try {
             const playbackRate = internalData.pr;
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
 
             if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
                 return parseInt((bufferLevel / playbackRate) * 1000);
@@ -297,7 +297,7 @@ function CmcdModel() {
                 return internalData.bs[mediaType];
             }
 
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
             const duration = request.duration;
             if (bufferLevel < duration) {
                 return BUFFER_STATES.RISK;

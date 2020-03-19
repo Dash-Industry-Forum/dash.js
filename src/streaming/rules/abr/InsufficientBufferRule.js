@@ -99,7 +99,7 @@ function InsufficientBufferRule(config) {
             const abrController = rulesContext.getAbrController();
             const throughputHistory = abrController.getThroughputHistory();
 
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
             const throughput = throughputHistory.getAverageThroughput(mediaType);
             const latency = throughputHistory.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;

@@ -48,7 +48,7 @@ function BufferLevelRule(config) {
         if (!streamProcessor) {
             return true;
         }
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(streamProcessor.getType(), true);
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(streamProcessor.getType());
         return bufferLevel < getBufferTarget(streamProcessor, videoTrackPresent);
     }
 
@@ -74,7 +74,7 @@ function BufferLevelRule(config) {
                 bufferTarget = 0;
             }
         } else if (type === Constants.AUDIO && videoTrackPresent) {
-            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO, true);
+            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             if (isNaN(representationInfo.fragmentDuration)) {
                 bufferTarget = videoBufferLevel;
             } else {
