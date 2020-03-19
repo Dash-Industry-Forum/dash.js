@@ -3,6 +3,7 @@ import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import Errors from '../../src/core/errors/Errors';
+import RequestModifier from '../../src/streaming/utils/RequestModifier';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -59,7 +60,11 @@ describe('WebmSegmentBaseLoader', function () {
                 baseURLController: new BaseURLControllerMock(),
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                errHandler: new ErrorHandlerMock()
+                errHandler: new ErrorHandlerMock(),
+                requestModifier: RequestModifier(context).getInstance(),
+                eventBus: eventBus,
+                events: Events,
+                errors: Errors
             });
             webmSegmentBaseLoader.initialize();
         });
