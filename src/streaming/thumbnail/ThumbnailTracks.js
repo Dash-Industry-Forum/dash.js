@@ -169,7 +169,7 @@ function ThumbnailTracks(config) {
         }
 
         if (useSegmentBase) {
-            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: stream.getMediaInfo().mimeType, mediaType: Constants.IMAGE, representation: representation, function(segments, representation) {
+            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mediaInfo.mimeType, mediaType: Constants.IMAGE, representation: representation, function(segments, representation) {
                 let cache = [];
                 segments = normalizeSegments(segments, representation);
                 track.segmentDuration = segments[0].duration; //assume all segments have the same duration
