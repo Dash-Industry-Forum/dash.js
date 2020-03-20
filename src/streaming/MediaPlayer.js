@@ -73,6 +73,13 @@ import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
 
+/* jscs:disable */
+/**
+ * The media types
+ * @typedef {("video" | "audio" | "text" | "fragmentedText" | "embeddedText" | "image")} MediaType
+ */
+/* jscs:enable */
+
 /**
  * @module MediaPlayer
  * @description The MediaPlayer is the primary dash.js Module and a Facade to build your player around.
@@ -583,7 +590,7 @@ function MediaPlayer() {
      * and the presentation does not include any adaption sets of valid media
      * type.
      *
-     * @param {MediaType} type - the media type of the buffer (@link MediaType)
+     * @param {MediaType} type - 'video', 'audio' or 'fragmentedText'
      * @returns {number} The length of the buffer for the given media type, in
      *  seconds, or NaN
      * @memberof module:MediaPlayer
@@ -753,10 +760,9 @@ function MediaPlayer() {
     */
     /**
      * Gets the top quality BitrateInfo checking portal limit and max allowed.
-     *
      * It calls getTopQualityIndexFor internally
      *
-     * @param {MediaType} type - 'video' or 'audio' are the type options.
+     * @param {MediaType} type - 'video' or 'audio'
      * @memberof module:MediaPlayer
      * @returns {BitrateInfo | null}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
