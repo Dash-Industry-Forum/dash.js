@@ -70,13 +70,12 @@ function DashMetrics(config) {
 
     /**
      * @param {string} mediaType
-     * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentRepresentationSwitch(mediaType, readOnly) {
-        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+    function getCurrentRepresentationSwitch(mediaType) {
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         return getCurrent(metrics, MetricsConstants.TRACK_SWITCH);
     }
 
@@ -94,30 +93,27 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {string} mediaType
-     * @param {boolean} readOnly
-     * @param {string} infoType
-     * @returns {*}
-     * @memberof module:DashMetrics
+     * @param {string} type
+     * @returns {number}
      * @instance
      */
-    function getLatestBufferInfoVO(mediaType, readOnly, infoType) {
-        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
-        return getCurrent(metrics, infoType);
+    function getCurrentBufferState(type) {
+        const metrics = metricsModel.getMetricsFor(type, true);
+        return getCurrent(metrics, MetricsConstants.BUFFER_STATE);
     }
 
     /**
      * @param {string} type
-     * @param {boolean} readOnly
      * @returns {number}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentBufferLevel(type, readOnly) {
-        const vo = getLatestBufferInfoVO(type, readOnly, MetricsConstants.BUFFER_LEVEL);
+    function getCurrentBufferLevel(type) {
+        const metrics = metricsModel.getMetricsFor(type, true);
+        const metric = getCurrent(metrics, MetricsConstants.BUFFER_LEVEL);
 
-        if (vo) {
-            return Round10.round10(vo.level / 1000, -3);
+        if (metric) {
+            return Round10.round10(metric.level / 1000, -3);
         }
 
         return 0;
@@ -155,13 +151,12 @@ function DashMetrics(config) {
 
     /**
      * @param {string} mediaType
-     * @param {boolean} readOnly
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentHttpRequest(mediaType, readOnly) {
-        const metrics = metricsModel.getMetricsFor(mediaType, readOnly);
+    function getCurrentHttpRequest(mediaType) {
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
 
         if (!metrics) {
             return null;
@@ -225,14 +220,8 @@ function DashMetrics(config) {
         if (!metrics) {
             return null;
         }
-
         const list = metrics[metricName];
-
-        if (!list || list.length <= 0) {
-            return null;
-        }
-
-        return list[list.length - 1];
+        return (!list || list.length === 0) ? null : list[list.length - 1];
     }
 
     /**
@@ -511,7 +500,7 @@ function DashMetrics(config) {
 
     instance = {
         getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
-        getLatestBufferInfoVO: getLatestBufferInfoVO,
+        getCurrentBufferState: getCurrentBufferState,
         getCurrentBufferLevel: getCurrentBufferLevel,
         getCurrentHttpRequest: getCurrentHttpRequest,
         getHttpRequests: getHttpRequests,
