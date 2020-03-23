@@ -56,7 +56,7 @@ jobs:
       - run: *install_dependencies
       - save_cache: *save_cache
       - store_test_results:
-          path: ~/test/functional/test-reports
+          path: test/functional/test-reports/results.xml
 
       # run functional tests
       - run:

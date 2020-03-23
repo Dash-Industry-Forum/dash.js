@@ -41,7 +41,7 @@ define({
             'Runner',
             {
                 id: 'JUnit',
-                filename: 'test/functional/test-reports/' + (new Date().getFullYear())+'-'+(new Date().getMonth()+1)+'-'+(new Date().getDate())+'_'+(new Date().getHours())+'-'+(new Date().getMinutes()) + '_report.xml'
+                filename: 'test/functional/test-reports/results.xml'
             }
         ]
     }
