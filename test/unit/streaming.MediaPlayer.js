@@ -602,7 +602,7 @@ describe('MediaPlayer', function () {
 
         it('should configure LiveDelayFragmentCount', function () {
             let liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
-            expect(liveDelayFragmentCount).to.equal(null);
+            expect(liveDelayFragmentCount).to.be.NaN; // jshint ignore:line
 
             player.updateSettings({'streaming': { 'liveDelayFragmentCount': 5 }});
 
