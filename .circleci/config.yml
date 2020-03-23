@@ -79,8 +79,7 @@ jobs:
 
       - store_test_results:
         path: ~/test/functional/test-reports/results.xml
-  
-  
+
 workflows:
   version: 2
   commit-workflow:
