@@ -21,8 +21,7 @@ define([
 
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var SEEK_SHIFT = 5; // Timeout (in sec.) for checking playback progress
+    var SEEK_SHIFT = 10; // Timeout (in sec.) for checking playback progress
     var SEEK_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
     var ENDED_TIMEOUT = SEEK_SHIFT + 10; // Timeout (in sec.) for checking seek to be completed
 
@@ -56,6 +55,7 @@ define([
                 if (!stream.available) this.skip();
                 if (stream.dynamic) this.skip();
                 // Seek the player before end
+                utils.log(NAME, 'Seek before end: ' + (stream.duration - SEEK_SHIFT));
                 return command.executeAsync(player.seek, [(stream.duration - SEEK_SHIFT), SEEK_TIMEOUT])
                 .then(function(seeked) {
                     assert.isTrue(seeked);

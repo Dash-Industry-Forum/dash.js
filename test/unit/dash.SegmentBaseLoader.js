@@ -41,7 +41,10 @@ describe('SegmentBaseLoader', function () {
                 baseURLController: new BaseURLControllerMock(),
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                errHandler: new ErrorHandlerMock()
+                errHandler: new ErrorHandlerMock(),
+                eventBus: eventBus,
+                events: Events,
+                errors: Errors
             });
             segmentBaseLoader.initialize();
         });

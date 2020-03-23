@@ -61,6 +61,7 @@ import {
 from './../core/Version';
 
 //Dash
+import SegmentBaseController from '../dash/controllers/SegmentBaseController';
 import DashAdapter from '../dash/DashAdapter';
 import DashMetrics from '../dash/DashMetrics';
 import TimelineConverter from '../dash/utils/TimelineConverter';
@@ -71,6 +72,13 @@ import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
+
+/* jscs:disable */
+/**
+ * The media types
+ * @typedef {("video" | "audio" | "text" | "fragmentedText" | "embeddedText" | "image")} MediaType
+ */
+/* jscs:enable */
 
 /**
  * @module MediaPlayer
@@ -136,7 +144,8 @@ function MediaPlayer() {
         videoModel,
         textController,
         uriFragmentModel,
-        domStorage;
+        domStorage,
+        segmentBaseController;
 
     /*
     ---------------------------------------------------------------------------
@@ -154,6 +163,7 @@ function MediaPlayer() {
         protectionController = null;
         protectionData = null;
         adapter = null;
+        segmentBaseController = null;
         Events.extend(MediaPlayerEvents);
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
@@ -260,6 +270,20 @@ function MediaPlayer() {
             BASE64: BASE64
         });
 
+        segmentBaseController = SegmentBaseController(context).getInstance({
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler,
+            baseURLController: BaseURLController(context).getInstance(),
+            events: Events,
+            eventBus: eventBus,
+            debug: debug,
+            requestModifier: RequestModifier(context).getInstance(),
+            errors: Errors
+        });
+
+        segmentBaseController.initialize();
+
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -295,6 +319,8 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
+
+        segmentBaseController.reset();
 
         settings.reset();
     }
@@ -564,7 +590,7 @@ function MediaPlayer() {
      * and the presentation does not include any adaption sets of valid media
      * type.
      *
-     * @param {string} type - the media type of the buffer
+     * @param {MediaType} type - 'video', 'audio' or 'fragmentedText'
      * @returns {number} The length of the buffer for the given media type, in
      *  seconds, or NaN
      * @memberof module:MediaPlayer
@@ -734,10 +760,9 @@ function MediaPlayer() {
     */
     /**
      * Gets the top quality BitrateInfo checking portal limit and max allowed.
-     *
      * It calls getTopQualityIndexFor internally
      *
-     * @param {string} type - 'video' or 'audio' are the type options.
+     * @param {MediaType} type - 'video' or 'audio'
      * @memberof module:MediaPlayer
      * @returns {BitrateInfo | null}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -755,7 +780,7 @@ function MediaPlayer() {
      * rules update this value before every new download unless setAutoSwitchQualityFor(type, false) is called. For 'image'
      * type, thumbnails, there is no ABR algorithm and quality is set manually.
      *
-     * @param {string} type - 'video', 'audio' or 'image' (thumbnails)
+     * @param {MediaType} type - 'video', 'audio' or 'image' (thumbnails)
      * @returns {number} the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
@@ -783,7 +808,7 @@ function MediaPlayer() {
      * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
      * This value will be overwritten by the ABR rules unless setAutoSwitchQualityFor(type, false) is called.
      *
-     * @param {string} type - 'video', 'audio' or 'image'
+     * @param {MediaType} type - 'video', 'audio' or 'image'
      * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
@@ -989,7 +1014,7 @@ function MediaPlayer() {
     /**
      * Returns the average throughput computed in the ABR logic
      *
-     * @param {string} type
+     * @param {MediaType} type
      * @return {number} value
      * @memberof module:MediaPlayer
      * @instance
@@ -1294,7 +1319,7 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
     /**
-     * @param {string} type
+     * @param {MediaType} type
      * @returns {Array}
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -1325,7 +1350,7 @@ function MediaPlayer() {
 
     /**
      * This method returns the list of all available tracks for a given media type
-     * @param {string} type
+     * @param {MediaType} type
      * @returns {Array} list of {@link MediaInfo}
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -1341,7 +1366,7 @@ function MediaPlayer() {
 
     /**
      * This method returns the list of all available tracks for a given media type and streamInfo from a given manifest
-     * @param {string} type
+     * @param {MediaType} type
      * @param {Object} manifest
      * @param {Object} streamInfo
      * @returns {Array}  list of {@link MediaInfo}
@@ -1360,7 +1385,7 @@ function MediaPlayer() {
     }
 
     /**
-     * @param {string} type
+     * @param {MediaType} type
      * @returns {Object|null} {@link MediaInfo}
      *
      * @memberof module:MediaPlayer
@@ -1384,7 +1409,7 @@ function MediaPlayer() {
      *  accessibility: accessibilityValue,
      *  role: roleValue}
      *
-     * @param {string} type
+     * @param {MediaType} type
      * @param {Object} value
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
@@ -1405,7 +1430,7 @@ function MediaPlayer() {
      *  audioChannelConfiguration: audioChannelConfigurationValue,
      *  accessibility: accessibilityValue,
      *  role: roleValue}
-     * @param {string} type
+     * @param {MediaType} type
      * @returns {Object}
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
@@ -1434,7 +1459,7 @@ function MediaPlayer() {
     /**
      * This method returns the current track switch mode.
      *
-     * @param {string} type
+     * @param {MediaType} type
      * @returns {string} mode
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
@@ -1457,7 +1482,7 @@ function MediaPlayer() {
      * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
      *
-     * @param {string} type
+     * @param {MediaType} type
      * @param {string} mode
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function

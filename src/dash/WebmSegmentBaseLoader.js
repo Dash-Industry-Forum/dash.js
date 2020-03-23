@@ -1,20 +1,15 @@
-import Events from '../core/events/Events';
-import EventBus from '../core/EventBus';
 import EBMLParser from '../streaming/utils/EBMLParser';
 import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
-import RequestModifier from '../streaming/utils/RequestModifier';
 import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import HTTPLoader from '../streaming/net/HTTPLoader';
 import DashJSError from '../streaming/vo/DashJSError';
-import Errors from '../core/errors/Errors';
 
 function WebmSegmentBaseLoader() {
 
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
 
     let instance,
         logger,
@@ -24,6 +19,9 @@ function WebmSegmentBaseLoader() {
         dashMetrics,
         mediaPlayerModel,
         httpLoader,
+        eventBus,
+        events,
+        errors,
         baseURLController;
 
     function setup() {
@@ -94,7 +92,6 @@ function WebmSegmentBaseLoader() {
     }
 
     function initialize() {
-        requestModifier = RequestModifier(context).getInstance();
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
@@ -111,6 +108,10 @@ function WebmSegmentBaseLoader() {
         dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
+        requestModifier = config.requestModifier;
+        eventBus = config.eventBus;
+        events = config.events;
+        errors = config.errors;
     }
 
     function parseCues(ab) {
@@ -323,13 +324,13 @@ function WebmSegmentBaseLoader() {
         const onload = function () {
             // note that we don't explicitly set rep.initialization as this
             // will be computed when all BaseURLs are resolved later
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+            eventBus.trigger(events.INITIALIZATION_LOADED, {
                 representation: representation
             });
         };
 
         const onloadend = function () {
-            eventBus.trigger(Events.INITIALIZATION_LOADED, {
+            eventBus.trigger(events.INITIALIZATION_LOADED, {
                 representation: representation
             });
         };
@@ -389,17 +390,17 @@ function WebmSegmentBaseLoader() {
 
     function onLoaded(segments, representation, type) {
         if (segments) {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {
+            eventBus.trigger(events.SEGMENTS_LOADED, {
                 segments: segments,
                 representation: representation,
                 mediaType: type
             });
         } else {
-            eventBus.trigger(Events.SEGMENTS_LOADED, {
+            eventBus.trigger(events.SEGMENTS_LOADED, {
                 segments: null,
                 representation: representation,
                 mediaType: type,
-                error: new DashJSError(Errors.SEGMENT_BASE_LOADER_ERROR_CODE, Errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
             });
         }
     }
