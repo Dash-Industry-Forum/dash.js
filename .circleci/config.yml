@@ -1,9 +1,9 @@
 version: 2
 
 _defaults: &defaults
-    working_directory: ~/repo
-    docker:
-      - image: circleci/node:7.10
+  working_directory: ~/repo
+  docker:
+    - image: circleci/node:7.10
 
 _steps:
   restore_cache: &restore_cache
@@ -55,9 +55,6 @@ jobs:
       - restore_cache: *restore_cache
       - run: *install_dependencies
       - save_cache: *save_cache
-      - store_test_results:
-          path: test/functional/test-reports/results.xml
-
       # run functional tests
       - run:
           # Download the browserstack binary file to create a tunnel
@@ -80,6 +77,10 @@ jobs:
           name: Run functional tests
           command: node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https stream="VOD (Static MPD) / SegmentTemplate/Number, live profile"
 
+      - store_test_results:
+        path: ~/test/functional/test-reports/results.xml
+  
+  
 workflows:
   version: 2
   commit-workflow:
