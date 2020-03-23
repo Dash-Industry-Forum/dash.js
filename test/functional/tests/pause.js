@@ -55,7 +55,7 @@ define([
     var pause = function(stream) {
 
         registerSuite({
-            name: NAME,
+            name: stream.name + ' # ' + NAME,
 
             pause: function() {
                 if (!stream.available || stream.duration < 60) this.skip();
