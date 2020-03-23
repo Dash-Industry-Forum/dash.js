@@ -41,7 +41,7 @@ define({
             'Runner',
             {
                 id: 'JUnit',
-                filename: 'test/functional/test-reports/results.xml'
+                filename: 'test/functional/reports/junit/results.xml'
             }
         ]
     }
