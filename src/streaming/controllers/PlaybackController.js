@@ -253,7 +253,7 @@ function PlaybackController() {
         } else if (!isNaN(fragmentDuration)) {
             delay = fragmentDuration * 4;
         } else {
-            delay = streamInfo.manifestInfo.minBufferTime * 2;
+            delay = streamInfo.manifestInfo.minBufferTime * 4;
         }
 
         startTime = adapter.getAvailabilityStartTime();
