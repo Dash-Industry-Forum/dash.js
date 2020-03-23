@@ -54,7 +54,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *      streaming: {
  *          metricsMaxListDepth: 1000,
  *          abandonLoadTimeout: 10000,
- *          liveDelayFragmentCount: 4,
+ *          liveDelayFragmentCount: NaN,
  *          liveDelay: null,
  *          scheduleWhilePaused: true,
  *          fastSwitchEnabled: false,
@@ -203,7 +203,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  * This will only take effect after an abandoned fragment event occurs.
- * @property {number} [liveDelayFragmentCount=4]
+ * @property {number} [liveDelayFragmentCount=NaN]
  * Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
  * to define a time in seconds to delay a live stream from the live edge. Lowering this value will lower latency but may decrease
  * the player's ability to build a stable buffer.
@@ -373,7 +373,7 @@ function Settings() {
         streaming: {
             metricsMaxListDepth: 1000,
             abandonLoadTimeout: 10000,
-            liveDelayFragmentCount: 4,
+            liveDelayFragmentCount: NaN,
             liveDelay: null,
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
@@ -390,7 +390,7 @@ function Settings() {
             lowLatencyEnabled: false,
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
-            useSuggestedPresentationDelay: false,
+            useSuggestedPresentationDelay: true,
             useAppendWindowEnd: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
