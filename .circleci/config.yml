@@ -75,7 +75,7 @@ jobs:
       - run:
           # Run functional tests
           name: Run functional tests
-          command:
+          command: |
             node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https stream="VOD (Static MPD)"
             node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=http stream="VOD (Static MPD)"
 
