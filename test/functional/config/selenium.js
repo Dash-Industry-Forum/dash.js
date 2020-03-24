@@ -13,7 +13,7 @@ define({
             'Runner',
             {
                 id: 'JUnit',
-                filename: 'test/functional/test-reports/junit/results_' + (new Date().getFullYear())+'-'+(new Date().getMonth()+1)+'-'+(new Date().getDate())+'_'+(new Date().getHours())+'-'+(new Date().getMinutes()) + '.xml'
+                filename: 'test/functional/reports/junit/results_' + (new Date().getFullYear())+'-'+(new Date().getMonth()+1)+'-'+(new Date().getDate())+'_'+(new Date().getHours())+'-'+(new Date().getMinutes()) + '.xml'
             }
         ],
         capabilities: {
@@ -41,7 +41,7 @@ define({
             'Runner',
             {
                 id: 'JUnit',
-                filename: 'test/functional/test-reports/junit/results_' + (new Date().getFullYear())+'-'+(new Date().getMonth()+1)+'-'+(new Date().getDate())+'_'+(new Date().getHours())+'-'+(new Date().getMinutes()) + '.xml'
+                filename: 'test/functional/reports/junit/results_' + (new Date().getFullYear())+'-'+(new Date().getMonth()+1)+'-'+(new Date().getDate())+'_'+(new Date().getHours())+'-'+(new Date().getMinutes()) + '.xml'
             }
         ]
     }
