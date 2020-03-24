@@ -122,11 +122,11 @@ cd test/functional
 
 As for Windows, the script can be modified to setup the tests.
 
-####Troubleshooting
+#### Troubleshooting
 Question: The localhost:3000 webserver is not available and all tests fail.  
 Answer: A local webserver needs to run on port 3000. In order to launch a debug server launch the following command in the root folder of the project:
 ```
-npm dev
+npm run dev
 ```
 
 Question: The webserver responds with "cannot establish a secure connection"  
