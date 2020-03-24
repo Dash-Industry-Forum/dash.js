@@ -551,7 +551,7 @@ function ScheduleController(config) {
             }
         }
 
-        if (e.hasEnoughSpaceToAppend && isStopped) {
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && isStopped) {
             start();
         }
     }
