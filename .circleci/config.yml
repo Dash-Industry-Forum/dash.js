@@ -75,7 +75,9 @@ jobs:
       - run:
           # Run functional tests
           name: Run functional tests
-          command: node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https
+          command:
+            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https
+            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=http
 
       - store_test_results:
           path: test/functional/reports
