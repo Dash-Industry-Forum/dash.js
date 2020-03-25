@@ -139,9 +139,8 @@ function ScheduleController(config) {
     }
 
     function stop() {
-        if (isStopped) {
-            return;
-        }
+        if (isStopped) return;
+
         logger.debug('Schedule Controller stops');
         isStopped = true;
         clearTimeout(scheduleTimeout);
@@ -293,9 +292,7 @@ function ScheduleController(config) {
     }
 
     function onQualityChanged(e) {
-        if (type !== e.mediaType || streamId !== e.streamInfo.id) {
-            return;
-        }
+        if (type !== e.mediaType || streamId !== e.streamInfo.id) return;
 
         currentRepresentationInfo = streamProcessor.getRepresentationInfo(e.newQuality);
 
@@ -339,17 +336,13 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error || e.sender.getType() !== type) {
-            return;
-        }
+        if (e.error || e.sender.getType() !== type) return;
 
         currentRepresentationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
     }
 
     function onStreamInitialized(e) {
-        if (!e.streamInfo || streamId !== e.streamInfo.id) {
-            return;
-        }
+        if (!e.streamInfo || streamId !== e.streamInfo.id) return;
 
         currentRepresentationInfo = streamProcessor.getRepresentationInfo();
 
@@ -359,9 +352,7 @@ function ScheduleController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) {
-            return;
-        }
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
 
         stop();
         setFragmentProcessState(false);
@@ -369,9 +360,8 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (e.sender !== fragmentModel) {
-            return;
-        }
+        if (e.sender !== fragmentModel) return;
+
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ?
             ', Range:' + e.request.range : '');
         if (adapter.getIsTextTrack(type)) {
@@ -394,9 +384,7 @@ function ScheduleController(config) {
     }
 
     function onBytesAppended(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type) return;
 
         if (bufferResetInProgress && !isNaN(e.startTime)) {
             bufferResetInProgress = false;
@@ -424,9 +412,7 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type) return;
 
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
         if (!playbackController.isSeeking() && !switchTrack) {
@@ -438,25 +424,19 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateStarted(e) {
-        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamId) {
-            return;
-        }
+        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamId)  return;
 
         stop();
     }
 
     function onBufferingCompleted(e) {
-        if (e.sender.getType() !== type || streamId !== e.streamInfo.id) {
-            return;
-        }
+        if (e.sender.getType() !== type || streamId !== e.streamInfo.id) return;
 
         stop();
     }
 
     function onBufferCleared(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type) return;
 
         if (e.hasEnoughSpaceToAppend && isStopped) {
             start();
@@ -464,9 +444,8 @@ function ScheduleController(config) {
     }
 
     function onBufferLevelStateChanged(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type)  return;
+
         dashMetrics.addBufferState(type, e.state, bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO)));
         if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
             logger.info('Buffer is empty! Stalling!');
@@ -475,9 +454,7 @@ function ScheduleController(config) {
     }
 
     function onQuotaExceeded(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type) return;
 
         stop();
         setFragmentProcessState(false);
