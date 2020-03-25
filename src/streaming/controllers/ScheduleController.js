@@ -464,12 +464,13 @@ function ScheduleController(config) {
     }
 
     function onBufferLevelStateChanged(e) {
-        if (e.streamInfo.id === streamId && e.mediaType === type) {
-            dashMetrics.addBufferState(type, e.state, bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO)));
-            if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
-                logger.info('Buffer is empty! Stalling!');
-                clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
-            }
+        if (e.streamId !== streamId || e.mediaType !== type) {
+            return;
+        }
+        dashMetrics.addBufferState(type, e.state, bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, streamController.isTrackTypePresent(Constants.VIDEO)));
+        if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
+            logger.info('Buffer is empty! Stalling!');
+            clearPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
     }
 
