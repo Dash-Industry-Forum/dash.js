@@ -73,12 +73,17 @@ jobs:
           background: true
 
       - run:
-          # Run functional tests
+          # Run functional tests for chrome browser for https
           name: Run functional tests
-          command: |
-            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https
-            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=http
+          command:
+            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https stream="LIVE (Dynamic MPD)"
 
+      - run:
+          # Run functional tests for chrome browser for http
+          name: Run functional tests
+          command:
+            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=http stream="LIVE (Dynamic MPD)"
+      
       - store_test_results:
           path: test/functional/reports
 
