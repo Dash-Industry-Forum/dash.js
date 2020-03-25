@@ -92,7 +92,7 @@ workflows:
   version: 2
   commit-workflow:
     jobs:
-      - development
+      - functional-tests
   scheduled-workflow:
     triggers:
       - schedule:
