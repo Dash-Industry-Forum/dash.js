@@ -34,7 +34,7 @@ define([
 
     var load = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             load: function() {
                 if (!stream.available) this.skip();
@@ -55,7 +55,7 @@ define([
     var pause = function(stream) {
 
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             pause: function() {
                 if (!stream.available || stream.duration < 60) this.skip();

@@ -30,7 +30,7 @@ define([
 
     var loadAtRValue = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             load: function() {
                 if (!stream.available) this.skip();
@@ -53,7 +53,7 @@ define([
 
     var play = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             play: function() {
                 if (!stream.available) this.skip();
