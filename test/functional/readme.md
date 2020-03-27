@@ -88,7 +88,7 @@ node node_modules/intern/runner.js config=test/functional/config.js os=windows b
 ```
 - run all tests on stream "VOD (Static MPD) / SegmentBase, ondemand profile"
 ```sh
-node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome stream=\"VOD (Static MPD) / SegmentBase, ondemand profile\"
+node node_modules/intern/runner.js config=test/functional/config.js os=windows browsers=chrome stream="VOD (Static MPD) / SegmentBase, ondemand profile"
 ```
 
 
