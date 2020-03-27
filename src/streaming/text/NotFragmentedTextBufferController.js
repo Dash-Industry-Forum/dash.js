@@ -47,6 +47,7 @@ function NotFragmentedTextBufferController(config) {
     const textController = TextController(context).getInstance();
 
     let errHandler = config.errHandler;
+    let streamId = config.streamId;
     let type = config.type;
     let mimeType = config.mimeType;
     let streamProcessor = config.streamProcessor;
@@ -170,16 +171,13 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel() || (!e.chunk.bytes)) {
-            return;
-        }
+        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type != type || (!e.chunk.bytes)) return;
 
         initCache.save(e.chunk);
         buffer.append(e.chunk);
 
         eventBus.trigger(Events.STREAM_COMPLETED, {
-            request: e.request,
-            fragmentModel: e.fragmentModel
+            request: e.request
         });
     }
 

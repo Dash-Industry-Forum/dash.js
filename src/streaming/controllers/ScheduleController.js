@@ -50,10 +50,12 @@ function ScheduleController(config) {
     const dashMetrics = config.dashMetrics;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const fragmentModel = config.fragmentModel;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const streamController = config.streamController;
     const textController = config.textController;
+    const streamId = config.streamId;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
@@ -61,7 +63,6 @@ function ScheduleController(config) {
 
     let instance,
         logger,
-        fragmentModel,
         currentRepresentationInfo,
         initialRequest,
         isStopped,
@@ -93,8 +94,6 @@ function ScheduleController(config) {
     }
 
     function initialize() {
-        fragmentModel = streamProcessor.getFragmentModel();
-
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -472,9 +471,7 @@ function ScheduleController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.fragmentModel !== fragmentModel) {
-            return;
-        }
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
 
         stop();
         setFragmentProcessState(false);

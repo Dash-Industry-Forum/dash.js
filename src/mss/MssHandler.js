@@ -86,8 +86,7 @@ function MssHandler(config) {
         }
 
         eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
-            chunk: chunk,
-            fragmentModel: streamProcessor.getFragmentModel()
+            chunk: chunk
         });
 
         // Change the sender value to stop event to be propagated

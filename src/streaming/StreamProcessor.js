@@ -114,12 +114,14 @@ function StreamProcessor(config) {
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
             type: type,
             mimeType: mimeType,
             adapter: adapter,
             dashMetrics: dashMetrics,
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
+            fragmentModel: fragmentModel,
             abrController: abrController,
             playbackController: playbackController,
             streamController: streamController,
@@ -129,16 +131,17 @@ function StreamProcessor(config) {
             settings: settings
         });
         representationController = RepresentationController(context).create({
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
+            type: type,
             abrController: abrController,
             dashMetrics: dashMetrics,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            type: type,
             dashConstants: DashConstants,
-            streamId: getStreamInfo() ? getStreamInfo().id : null,
             events: Events,
             eventBus: eventBus,
-            errors: Errors
+            errors: Errors,
+            streamProcessor: instance
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -382,10 +385,12 @@ function StreamProcessor(config) {
 
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
+                streamId: getStreamInfo() ? getStreamInfo().id : null,
                 type: type,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
+                fragmentModel: fragmentModel,
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
@@ -398,11 +403,13 @@ function StreamProcessor(config) {
             });
         } else {
             controller = TextBufferController(context).create({
+                streamId: getStreamInfo() ? getStreamInfo().id : null,
                 type: type,
                 mimeType: mimeType,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
+                fragmentModel: fragmentModel,
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,

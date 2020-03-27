@@ -145,7 +145,7 @@ function FragmentController( config ) {
         const chunk = createDataChunk(bytes, request, streamInfo.id, e.type !== Events.FRAGMENT_LOADING_PROGRESS);
         eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {
             chunk: chunk,
-            fragmentModel: e.sender
+            request: request
         });
     }
 

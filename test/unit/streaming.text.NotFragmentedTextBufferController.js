@@ -31,6 +31,7 @@ describe('NotFragmentedTextBufferController', function () {
     beforeEach(function () {
         mediaSourceMock = new MediaSourceMock();
         notFragmentedTextBufferController = NotFragmentedTextBufferController(context).create({
+            streamId: streamInfo.id,
             type: testType,
             errHandler: errorHandlerMock,
             streamProcessor: streamProcessorMock
@@ -189,14 +190,17 @@ describe('NotFragmentedTextBufferController', function () {
 
         describe('Event INIT_FRAGMENT_LOADED Handler', function () {
 
-            it('should not append data to buffer - wrong fragment model', function (done) {
+            it('should not append data to buffer - wrong stream id', function (done) {
 
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
 
                 let event = {
-                    fragmentModel: 'wrongFragmentModel',
                     chunk: {
+                        streamId: 'wrong',
+                        mediaInfo: {
+                            type: testType
+                        },
                         bytes: 'data'
                     }
                 };
@@ -217,8 +221,11 @@ describe('NotFragmentedTextBufferController', function () {
                 const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
 
                 let event = {
-                    fragmentModel: streamProcessorMock.getFragmentModel(),
                     chunk: {
+                        streamId: 'id',
+                        mediaInfo: {
+                            type: testType
+                        }
                     }
                 };
 
@@ -236,8 +243,11 @@ describe('NotFragmentedTextBufferController', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfo);
                 const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
                 let event = {
-                    fragmentModel: streamProcessorMock.getFragmentModel(),
                     chunk: {
+                        streamId: 'id',
+                        mediaInfo: {
+                            type: testType
+                        },
                         bytes: 'data'
                     }
                 };
