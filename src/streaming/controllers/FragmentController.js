@@ -61,10 +61,11 @@ function FragmentController( config ) {
         eventBus.on(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, instance);
     }
 
-    function getModel(type) {
+    function getModel(streamId, type) {
         let model = fragmentModels[type];
         if (!model) {
             model = FragmentModel(context).create({
+                streamId: streamId,
                 dashMetrics: dashMetrics,
                 fragmentLoader: FragmentLoader(context).create({
                     dashMetrics: dashMetrics,

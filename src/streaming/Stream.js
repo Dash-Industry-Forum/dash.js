@@ -379,6 +379,9 @@ function Stream(config) {
     }
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
+
+        let fragmentModel = fragmentController.getModel(getId(), mediaInfo.type);
+
         let streamProcessor = StreamProcessor(context).create({
             type: mediaInfo ? mediaInfo.type : null,
             mimeType: mediaInfo ? mediaInfo.mimeType : null,
@@ -386,6 +389,7 @@ function Stream(config) {
             adapter: adapter,
             manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
+            fragmentModel: fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             stream: instance,

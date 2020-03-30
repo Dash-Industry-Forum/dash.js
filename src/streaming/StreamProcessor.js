@@ -58,6 +58,7 @@ function StreamProcessor(config) {
     let manifestModel = config.manifestModel;
     let mediaPlayerModel = config.mediaPlayerModel;
     let stream = config.stream;
+    let fragmentModel = config.fragmentModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let streamController = config.streamController;
@@ -73,7 +74,6 @@ function StreamProcessor(config) {
         bufferController,
         scheduleController,
         representationController,
-        fragmentModel,
         spExternalControllers,
         indexHandler;
 
@@ -108,9 +108,6 @@ function StreamProcessor(config) {
         // initialize controllers
         indexHandler.initialize(playbackController.getIsDynamic());
         abrController.registerStreamType(type, instance);
-
-        fragmentModel = stream.getFragmentController().getModel(type);
-        fragmentModel.setStreamProcessor(instance);
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({

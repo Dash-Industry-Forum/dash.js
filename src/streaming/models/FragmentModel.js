@@ -45,10 +45,10 @@ function FragmentModel(config) {
     const dashMetrics = config.dashMetrics;
     const fragmentLoader = config.fragmentLoader;
     const debug = config.debug;
+    const streamId = config.streamId;
 
     let instance,
         logger,
-        streamProcessor,
         executedRequests,
         loadingRequests;
 
@@ -58,14 +58,6 @@ function FragmentModel(config) {
         eventBus.on(events.LOADING_COMPLETED, onLoadingCompleted, instance);
         eventBus.on(events.LOADING_DATA_PROGRESS, onLoadingInProgress, instance);
         eventBus.on(events.LOADING_ABANDONED, onLoadingAborted, instance);
-    }
-
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
-    function getStreamProcessor() {
-        return streamProcessor;
     }
 
     function isFragmentLoaded(request) {
@@ -309,7 +301,7 @@ function FragmentModel(config) {
     function onLoadingAborted(e) {
         if (e.sender !== fragmentLoader) return;
 
-        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { streamProcessor: this.getStreamProcessor(), request: e.request, mediaType: e.mediaType });
+        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { streamId: streamId, request: e.request, mediaType: e.mediaType });
     }
 
     function resetInitialSettings() {
@@ -333,8 +325,6 @@ function FragmentModel(config) {
     }
 
     instance = {
-        setStreamProcessor: setStreamProcessor,
-        getStreamProcessor: getStreamProcessor,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,
