@@ -266,10 +266,6 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getFragmentController() {
-        return fragmentController;
-    }
-
     function getThumbnailController() {
         return thumbnailController;
     }
@@ -879,7 +875,6 @@ function Stream(config) {
         getId: getId,
         getStreamInfo: getStreamInfo,
         preload: preload,
-        getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
         getBitrateListFor: getBitrateListFor,
         startEventController: startEventController,
