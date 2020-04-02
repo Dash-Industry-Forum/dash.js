@@ -21,7 +21,7 @@ define(function(require) {
         defaultTimeout: 30000,
 
         // A regular expression matching URLs to files that should not be included in code coverage analysis
-        excludeInstrumentation: /^tests|bower_components|node_modules|testIntern/,
+        excludeInstrumentation: /^test|node_modules/,
 
         // to keep browser opened at the end of the test
         leaveRemoteOpen: false
@@ -79,7 +79,9 @@ define(function(require) {
     }
 
     // Set application protocol
-    conf.testPage = conf.protocol + '://' + conf.testPage
+    if (!conf.testPage.startsWith('http')) {
+        conf.testPage = conf.protocol + '://' + conf.testPage
+    };
 
     console.log('conf.testPage: ' + conf.testPage);
 

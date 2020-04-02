@@ -34,9 +34,6 @@ import TemplateSegmentsGetter from '../utils/TemplateSegmentsGetter';
 import ListSegmentsGetter from '../utils/ListSegmentsGetter';
 import SegmentBaseGetter from '../utils/SegmentBaseGetter';
 
-import SegmentBaseLoader from '../SegmentBaseLoader';
-import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader';
-
 function SegmentsController(config) {
     config = config || {};
 
@@ -57,60 +54,27 @@ function SegmentsController(config) {
     const errors = config.errors;
 
     let instance,
-        getters,
-        segmentBaseLoader;
+        getters;
 
     function setup() {
         getters = {};
-
-        segmentBaseLoader = isWebM(config.mimeType) ? WebmSegmentBaseLoader(context).getInstance() : SegmentBaseLoader(context).getInstance();
-        segmentBaseLoader.setConfig({
-            baseURLController: baseURLController,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler,
-            boxParser: boxParser,
-            eventBus: eventBus,
-            events: events,
-            errors: errors,
-            debug: debug,
-            requestModifier: requestModifier,
-            dashConstants: dashConstants,
-            constants: constants,
-            urlUtils: urlUtils
-        });
-    }
-
-    function isWebM(mimeType) {
-        const type = mimeType ? mimeType.split('/')[1] : '';
-        return 'webm' === type.toLowerCase();
     }
 
     function initialize(isDynamic) {
-        segmentBaseLoader.initialize();
-
         getters[dashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
         getters[dashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
         getters[dashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
         getters[dashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
     }
 
-    function update(voRepresentation, type, hasInitialization, hasSegments) {
+    function update(voRepresentation, type, mimeType, hasInitialization, hasSegments) {
         if (!hasInitialization) {
-            updateInitSegment(voRepresentation);
+            eventBus.trigger(Events.SEGMENTBASE_INIT_REQUEST_NEEDED, {mimeType: mimeType, representation: voRepresentation});
         }
 
         if (!hasSegments) {
-            updateSegments(voRepresentation, type);
+            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mimeType, mediaType: type, representation: voRepresentation});
         }
-    }
-
-    function updateInitSegment(voRepresentation) {
-        segmentBaseLoader.loadInitialization(voRepresentation);
-    }
-
-    function updateSegments(voRepresentation, type) {
-        segmentBaseLoader.loadSegments(voRepresentation, type, voRepresentation ? voRepresentation.indexRange : null);
     }
 
     function getSegmentsGetter(representation) {

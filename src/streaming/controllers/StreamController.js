@@ -665,6 +665,12 @@ function StreamController() {
                     const initialTime = !isNaN(startTimeFormUriParameters.fragS) ? startTimeFormUriParameters.fragS : startTimeFormUriParameters.fragT;
                     initialStream = getStreamForTime(initialTime);
                 }
+                // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a rough calculation of the expected seek time to find the right stream object.
+                if (!initialStream && adapter.getIsDynamic() && streams.length) {
+                    logger.debug('Dynamic multi-period stream: Trying to find the correct starting period');
+                    const targetTime = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
+                    initialStream = getStreamForTime(targetTime);
+                }
                 switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
             }
 

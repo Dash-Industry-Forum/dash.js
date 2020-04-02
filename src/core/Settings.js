@@ -32,7 +32,7 @@ import FactoryMaker from './FactoryMaker';
 import Utils from './Utils.js';
 import Debug from '../core/Debug';
 import Constants from '../streaming/constants/Constants';
-import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
@@ -54,7 +54,7 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  *      streaming: {
  *          metricsMaxListDepth: 1000,
  *          abandonLoadTimeout: 10000,
- *          liveDelayFragmentCount: 4,
+ *          liveDelayFragmentCount: NaN,
  *          liveDelay: null,
  *          scheduleWhilePaused: true,
  *          fastSwitchEnabled: false,
@@ -72,6 +72,7 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  *          keepProtectionMediaKeys: false,
  *          useManifestDateHeaderTimeSource: true,
  *          useSuggestedPresentationDelay: false,
+ *          useAppendWindowEnd: true,
  *          manifestUpdateRetryInterval: 100,
  *          liveCatchUpMinDrift: 0.02,
  *          liveCatchUpMaxDrift: 0,
@@ -112,10 +113,16 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  *              initialBitrate: { audio: -1, video: -1 },
  *              initialRepresentationRatio: { audio: -1, video: -1 },
  *              autoSwitchBitrate: { audio: true, video: true }
+ *          },
+ *          cmcd: {
+ *              enabled: false,
+ *              sid: null,
+ *              cid: null,
+ *              did: null
  *          }
  *      }
  * }
-*/
+ */
 
 
 /**
@@ -188,7 +195,7 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}] Explicitly set the starting bitrate for audio or video
  * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}] Explicitly set the initial representation ratio. If initalBitrate is specified, this is ignored.
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}] Indicates whether the player should enable ABR algorithms to switch the bitrate.
-*/
+ */
 
 /**
  * @typedef {Object} StreamingSettings
@@ -196,7 +203,7 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  * This will only take effect after an abandoned fragment event occurs.
- * @property {number} [liveDelayFragmentCount=4]
+ * @property {number} [liveDelayFragmentCount=NaN]
  * Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
  * to define a time in seconds to delay a live stream from the live edge. Lowering this value will lower latency but may decrease
  * the player's ability to build a stable buffer.
@@ -261,6 +268,8 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {boolean} [useSuggestedPresentationDelay=false]
  * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
+ * @property {boolean} [useAppendWindowEnd=true]
+ * Specifies if the appendWindowEnd attribute of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
@@ -310,7 +319,8 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt.
  * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails.
  * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
-*/
+ * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
+ */
 
 /**
  * @typedef {Object} CachingInfoSettings
@@ -319,10 +329,10 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
-* @typedef {Object} module:Settings~AudioVideoSettings
-* @property {number|boolean} [audio] Configuration for audio media type of tracks.
-* @property {number|boolean} [video] Configuration for video media type of tracks.
-*/
+ * @typedef {Object} module:Settings~AudioVideoSettings
+ * @property {number|boolean} [audio] Configuration for audio media type of tracks.
+ * @property {number|boolean} [video] Configuration for video media type of tracks.
+ */
 
 /**
  * @typedef {Object} RequestTypeSettings
@@ -334,7 +344,15 @@ import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [BitstreamSwitchingSegment] Bitrate stream switching type of request
  * @property {number} [other] Other type of request
  *
-*/
+ */
+
+/**
+ * @typedef {Object} module:Settings~CmcdSettings
+ * @property {boolean} [enable=false] Enable or disable the CMCD reporting.
+ * @property {string} [sid] GUID identifying the current playback session. Should be in UUID format. If not specified a UUID will be automatically generated.
+ * @property {string} [cid] A unique string to identify the current content. If not specified it will be a hash of the MPD url.
+ * @property {string} [did=dash.js-cmcd-default-id] A unique string identifying the current device.
+ */
 
 
 /**
@@ -355,7 +373,7 @@ function Settings() {
         streaming: {
             metricsMaxListDepth: 1000,
             abandonLoadTimeout: 10000,
-            liveDelayFragmentCount: 4,
+            liveDelayFragmentCount: NaN,
             liveDelay: null,
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
@@ -372,14 +390,15 @@ function Settings() {
             lowLatencyEnabled: false,
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
-            useSuggestedPresentationDelay: false,
+            useSuggestedPresentationDelay: true,
+            useAppendWindowEnd: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
             liveCatchUpMaxDrift: 0,
             liveCatchUpPlaybackRate: 0.5,
-            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
-            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
-            cacheLoadThresholds: { video: 50, audio: 5 },
+            lastBitrateCachingInfo: {enabled: true, ttl: 360000},
+            lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
+            cacheLoadThresholds: {video: 50, audio: 5},
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
@@ -407,12 +426,18 @@ function Settings() {
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
-                maxBitrate: { audio: -1, video: -1 },
-                minBitrate: { audio: -1, video: -1 },
-                maxRepresentationRatio: { audio: 1, video: 1 },
-                initialBitrate: { audio: -1, video: -1 },
-                initialRepresentationRatio: { audio: -1, video: -1 },
-                autoSwitchBitrate: { audio: true, video: true }
+                maxBitrate: {audio: -1, video: -1},
+                minBitrate: {audio: -1, video: -1},
+                maxRepresentationRatio: {audio: 1, video: 1},
+                initialBitrate: {audio: -1, video: -1},
+                initialRepresentationRatio: {audio: -1, video: -1},
+                autoSwitchBitrate: {audio: true, video: true}
+            },
+            cmcd: {
+                enabled: false,
+                sid: null,
+                cid: null,
+                did: null
             }
         }
     };
@@ -425,7 +450,7 @@ function Settings() {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (dest.hasOwnProperty(n)) {
-                    if (typeof source[n] === 'object') {
+                    if (typeof source[n] === 'object' && source[n] !== null) {
                         mixinSettings(source[n], dest[n], path.slice() + n + '.');
                     } else {
                         dest[n] = Utils.clone(source[n]);

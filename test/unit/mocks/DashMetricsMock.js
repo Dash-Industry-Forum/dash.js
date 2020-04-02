@@ -7,12 +7,12 @@ function DashMetricsMock () {
         return this.currentDVRInfo;
     };
 
-    this.getCurrentBufferLevel = function () {
-        return 15;
+    this.getCurrentBufferState = function () {
+        return this.bufferState;
     };
 
-    this.getLatestBufferInfoVO = function () {
-        return this.bufferState;
+    this.getCurrentBufferLevel = function () {
+        return 15;
     };
 
     this.addSchedulingInfo = function () {

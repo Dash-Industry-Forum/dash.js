@@ -372,11 +372,19 @@ function VideoModel() {
         return null;
     }
 
-    function addTextTrack(kind, label, lang) {
-        if (element) {
-            return element.addTextTrack(kind, label, lang);
+    function addTextTrack(kind, label, lang, isTTML, isEmbedded) {
+        if (!element) {
+            return null;
         }
-        return null;
+        // check if track of same type has not been already created for previous stream
+        // then use it (no way to remove existing text track from video element)
+        let track = getTextTrack(kind, label, lang, isTTML, isEmbedded);
+        if (!track) {
+            track = element.addTextTrack(kind, label, lang);
+            track.isEmbedded = isEmbedded;
+            track.isTTML = isTTML;
+        }
+        return track;
     }
 
     function appendChild(childElement) {

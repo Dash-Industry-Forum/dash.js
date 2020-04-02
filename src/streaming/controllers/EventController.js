@@ -184,6 +184,8 @@ function EventController() {
         var presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
         lastEventTimerCall = currentVideoTime;
 
+        presentationTimeThreshold = Math.max(0,presentationTimeThreshold);
+
         triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
         triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
         removeEvents();

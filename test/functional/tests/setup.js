@@ -15,7 +15,7 @@ define([
 
     var setup = function (stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             setup: function () {
                 utils.info(NAME, 'Setup stream: ' + stream.name);
@@ -27,7 +27,7 @@ define([
                 if (stream.protData) {
                     stream.available = false;
                     Object.keys(stream.protData).forEach(keySystem => {
-                        stream.available |= browsersConf.keySystems.includes(keySystem);
+                        stream.available |= browsersConf.keySystems[keySystem] === true;
                     });
                     if (!stream.available) {
                         this.skip();
@@ -42,7 +42,7 @@ define([
                 });
             }
         });
-    };    
+    };
 
     return {
         register: function (stream) {

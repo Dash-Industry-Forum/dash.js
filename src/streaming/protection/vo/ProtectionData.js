@@ -46,12 +46,14 @@ class ProtectionData {
      * @param {Object} clearkeys defines a set of clear keys that are available to
      * the key system.  Object properties are base64-encoded keyIDs (with no padding).
      * Corresponding property values are keys, base64-encoded (no padding).
+     * @param {number|undefined} priority priority order of the current ProtectionData
      * @class
      */
-    constructor(serverURL, httpRequestHeaders, clearkeys) {
+    constructor(serverURL, httpRequestHeaders, clearkeys, priority) {
         this.serverURL = serverURL;
         this.httpRequestHeaders = httpRequestHeaders;
         this.clearkeys = clearkeys;
+        this.priority = priority === undefined ? -1 : priority;
     }
 }
 
@@ -83,6 +85,16 @@ class ProtectionData {
  * @instance
  * @type Object
  * @name ProtectionData.clearkeys
+ * @readonly
+ * @memberof ProtectionData
+ */
+
+/**
+ * priority
+ *
+ * @instance
+ * @type Object
+ * @name ProtectionData.priority
  * @readonly
  * @memberof ProtectionData
  */

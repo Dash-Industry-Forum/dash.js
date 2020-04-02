@@ -34,8 +34,9 @@ import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
 import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
+import Events from '../../core/events/Events';
+import EventBus from '../../core/EventBus';
 
-import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
@@ -45,6 +46,7 @@ export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
 
 function ThumbnailTracks(config) {
     const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
@@ -65,20 +67,13 @@ function ThumbnailTracks(config) {
         indexHandler,
         currentTrackIndex,
         mediaInfo,
-        loader, segmentBaseLoader, boxParser;
+        loader,
+        boxParser;
 
     function initialize() {
         reset();
         loader = XHRLoader(context).create({});
         boxParser = BoxParser(context).getInstance();
-        segmentBaseLoader = SegmentBaseLoader(context).getInstance();
-        segmentBaseLoader.setConfig({
-            baseURLController: baseURLController,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler,
-            boxParser: boxParser
-        });
 
         indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
                                 baseURLController: baseURLController,
@@ -185,8 +180,8 @@ function ThumbnailTracks(config) {
         }
 
         if (useSegmentBase) {
-            segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function (segments, representation) {
-                var cache = [];
+            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mediaInfo.mimeType, mediaType: Constants.IMAGE, representation: representation, function(segments, representation) {
+                let cache = [];
                 segments = normalizeSegments(segments, representation);
                 track.segmentDuration = segments[0].duration; //assume all segments have the same duration
                 track.readThumbnail = function (time, callback) {
@@ -229,7 +224,7 @@ function ThumbnailTracks(config) {
                         });
                     }
                 };
-            });
+            }});
         } else {
             track.startNumber = representation.startNumber;
             track.segmentDuration = representation.segmentDuration;

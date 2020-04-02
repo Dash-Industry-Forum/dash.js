@@ -36,7 +36,7 @@ import { HTTPRequest } from '../vo/metrics/HTTPRequest';
  * @ignore
  */
 class FragmentRequest {
-    constructor() {
+    constructor(url) {
         this.action = FragmentRequest.ACTION_DOWNLOAD;
         this.startTime = NaN;
         this.mediaType = null;
@@ -45,7 +45,7 @@ class FragmentRequest {
         this.duration = NaN;
         this.timescale = NaN;
         this.range = null;
-        this.url = null;
+        this.url = url || null;
         this.serviceLocation = null;
         this.requestStartDate = null;
         this.firstByteDate = null;

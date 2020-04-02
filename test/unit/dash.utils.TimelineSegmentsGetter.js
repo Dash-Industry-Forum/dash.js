@@ -5,123 +5,28 @@ import VoHelper from './helpers/VOHelper';
 
 const expect = require('chai').expect;
 
+const segments = [
+    {
+        't': 0,
+        'd': 360360,
+        'r': 24
+    },
+    {
+        'd': 90000
+    }
+];
+
 const segmentTemplate = {
     'timescale': 90000,
     'initialization': 'test-$RepresentationID$.dash',
     'SegmentTimeline': {
-        'S': [
-            {
-                't': 0,
-                'd': 360360,
-                'r': 24
-            },
-            {
-                'd': 123873
-            }
-        ],
-        'S_asArray': [
-            {
-                't': 0,
-                'd': 360360,
-                'r': 24
-            },
-            {
-                'd': 123873
-            }
-        ],
-        '__children': [
-            {
-                'S': {
-                    't': 0,
-                    'd': 360360,
-                    'r': 24
-                }
-            },
-            {
-                'S': {
-                    'd': 123873
-                }
-            }
-        ]
+        'S': segments,
+        'S_asArray': segments
     },
     'SegmentTimeline_asArray': [
         {
-            'S': [
-                {
-                    't': 0,
-                    'd': 360360,
-                    'r': 24
-                },
-                {
-                    'd': 123873
-                }
-            ],
-            'S_asArray': [
-                {
-                    't': 0,
-                    'd': 360360,
-                    'r': 24
-                },
-                {
-                    'd': 123873
-                }
-            ],
-            '__children': [
-                {
-                    'S': {
-
-                        't': 0,
-                        'd': 360360,
-                        'r': 24
-                    }
-                },
-                {
-                    'S': {
-
-                        'd': 123873
-                    }
-                }
-            ]
-        }
-    ],
-    '__children': [
-        {
-            'SegmentTimeline': {
-                'S': [
-                    {
-                        't': 0,
-                        'd': 360360,
-                        'r': 24
-                    },
-                    {
-                        'd': 123873
-                    }
-                ],
-                'S_asArray': [
-                    {
-                        't': 0,
-                        'd': 360360,
-                        'r': 24
-                    },
-                    {
-                        'd': 123873
-                    }
-                ],
-                '__children': [
-                    {
-                        'S': {
-                            't': 0,
-                            'd': 360360,
-                            'r': 24
-                        }
-                    },
-                    {
-                        'S': {
-                            'd': 123873
-                        }
-                    }
-                ]
-            }
+            'S': segments,
+            'S_asArray': segments
         }
     ],
     'media': 'test-$RepresentationID$-$Time$.dash'
@@ -134,6 +39,7 @@ function createRepresentationMock() {
     representation.SegmentTemplate = segmentTemplate;
     representation.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].Representation_asArray[0] = representation;
     representation.adaptation.period.mpd.maxSegmentDuration = 5;
+    representation.adaptation.period.duration = 101.1;
     representation.presentationTimeOffset = 0;
 
     return representation;
@@ -230,22 +136,36 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(4.004);
 
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 5);
+            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.presentationStartTime).to.equal(4.004);
+            expect(seg.duration).to.equal(4.004);
+
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 22);
-            expect(seg.availabilityIdx).to.equal(4);
-            expect(seg.presentationStartTime).to.equal(16.016);
+            expect(seg.availabilityIdx).to.equal(5);
+            expect(seg.presentationStartTime).to.equal(20.02);
             expect(seg.duration).to.equal(4.004);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 53);
-            expect(seg.availabilityIdx).to.equal(12);
-            expect(seg.presentationStartTime).to.equal(48.048);
+            expect(seg.availabilityIdx).to.equal(13);
+            expect(seg.presentationStartTime).to.equal(52.052);
             expect(seg.duration).to.equal(4.004);
 
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 4.004);
+            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.presentationStartTime).to.equal(4.004);
+            expect(seg.duration).to.equal(4.004);
+
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 100.2);
+            expect(seg.availabilityIdx).to.equal(25);
+            expect(seg.presentationStartTime).to.equal(100.1);
+            expect(seg.duration).to.equal(1);
         });
 
         it('should return null if segment is out of range', () => {
             const representation = createRepresentationMock();
 
-            let seg = timelineSegmentsGetter.getSegmentByTime(representation, 1100);
+            let seg = timelineSegmentsGetter.getSegmentByTime(representation, 102);
             expect(seg).to.be.null; // jshint ignore:line
         });
     });

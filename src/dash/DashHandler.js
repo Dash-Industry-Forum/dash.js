@@ -64,6 +64,7 @@ function DashHandler(config) {
         requestedTime,
         currentTime,
         isDynamicManifest,
+        selectedMimeType,
         segmentsController;
 
     function setup() {
@@ -116,6 +117,7 @@ function DashHandler(config) {
         currentTime = 0;
         requestedTime = null;
         segmentsController = null;
+        selectedMimeType = null;
     }
 
     function reset() {
@@ -178,6 +180,10 @@ function DashHandler(config) {
         return request;
     }
 
+    function setMimeType(newMimeType) {
+        selectedMimeType = newMimeType;
+    }
+
     function setExpectedLiveEdge(liveEdge) {
         timelineConverter.setExpectedLiveEdge(liveEdge);
         dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
@@ -198,7 +204,7 @@ function DashHandler(config) {
         if (hasInitialization && hasSegments) {
             eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
         } else {
-            segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
+            segmentsController.update(voRepresentation, getType(), selectedMimeType, hasInitialization, hasSegments);
         }
     }
 
@@ -428,7 +434,8 @@ function DashHandler(config) {
         getCurrentIndex: getCurrentIndex,
         isMediaFinished: isMediaFinished,
         reset: reset,
-        resetIndex: resetIndex
+        resetIndex: resetIndex,
+        setMimeType: setMimeType
     };
 
     setup();

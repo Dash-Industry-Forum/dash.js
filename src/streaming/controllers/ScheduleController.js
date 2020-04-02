@@ -79,6 +79,7 @@ function ScheduleController(config) {
         bufferResetInProgress,
         mediaRequest,
         liveEdgeFinder,
+        checkPlaybackQuality,
         isReplacementRequest;
 
     function setup() {
@@ -207,13 +208,14 @@ function ScheduleController(config) {
                         streamProcessor.switchInitData(currentRepresentationInfo.id);
                     }
                     lastInitQuality = currentRepresentationInfo.quality;
-
+                    checkPlaybackQuality = false;
                 } else {
                     const replacement = replaceRequestArray.shift();
 
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
                         streamProcessor.switchInitData(replacement.representationId);
+                        checkPlaybackQuality = false;
                     } else {
                         let request;
                         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
@@ -239,12 +241,13 @@ function ScheduleController(config) {
                             setFragmentProcessState(false);
                             startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
                         }
+                        checkPlaybackQuality = true;
                     }
                 }
             };
 
             setFragmentProcessState(true);
-            if (!isReplacement && !switchTrack) {
+            if (!isReplacement && checkPlaybackQuality) {
                 abrController.checkPlaybackQuality(type);
             }
 
@@ -264,8 +267,8 @@ function ScheduleController(config) {
         if (isNaN(currentRepresentationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
             // call metrics function to have data in the latest scheduling info...
             // if no metric, returns 0. In this case, rule will return false.
-            const bufferInfo = dashMetrics.getLatestBufferInfoVO(currentRepresentationInfo.mediaInfo.type, true, MetricsConstants.SCHEDULING_INFO);
-            safeBufferLevel = bufferInfo ? bufferInfo.duration * 1.5 : 1.5;
+            const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(currentRepresentationInfo.mediaInfo.type);
+            safeBufferLevel = schedulingInfo ? schedulingInfo.duration * 1.5 : 1.5;
         }
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -459,8 +462,8 @@ function ScheduleController(config) {
         if (e.sender !== fragmentModel) {
             return;
         }
-        logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined',
-            ', Range:', e.request.range ? e.request.range : 'undefined');
+        logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ?
+            ', Range:' + e.request.range : '');
         if (adapter.getIsTextTrack(type)) {
             setFragmentProcessState(false);
         }
@@ -550,7 +553,7 @@ function ScheduleController(config) {
             }
         }
 
-        if (e.hasEnoughSpaceToAppend && isStopped) {
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && isStopped) {
             start();
         }
     }
@@ -653,6 +656,7 @@ function ScheduleController(config) {
     }
 
     function resetInitialSettings() {
+        checkPlaybackQuality = true;
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         seekTarget = NaN;

@@ -84,6 +84,7 @@ function BufferController(config) {
         appendedBytesInfo,
         wallclockTicked,
         isPruningInProgress,
+        isQuotaExceeded,
         initCache,
         seekStartTime,
         seekClearedBufferingCompleted,
@@ -130,9 +131,9 @@ function BufferController(config) {
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type]);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd, oldBuffers[type]);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this));
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd);
                 }
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamProcessor);
@@ -262,6 +263,7 @@ function BufferController(config) {
     function onAppended(e) {
         if (e.error) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
+                isQuotaExceeded = true;
                 criticalBufferLevel = getTotalBufferedTime() * 0.8;
                 logger.warn('Quota exceeded, Critical Buffer: ' + criticalBufferLevel);
 
@@ -281,6 +283,7 @@ function BufferController(config) {
             }
             return;
         }
+        isQuotaExceeded = false;
 
         appendedBytesInfo = e.chunk;
         if (appendedBytesInfo && !isNaN(appendedBytesInfo.index)) {
@@ -341,7 +344,7 @@ function BufferController(config) {
     }
 
     function onPlaybackSeeked() {
-        seekStartTime = undefined;
+        setSeekStartTime(undefined);
     }
 
     // Prune full buffer but what is around current time position
@@ -446,6 +449,9 @@ function BufferController(config) {
     }
 
     function onPlaybackPlaying() {
+        if (seekStartTime !== undefined) {
+            setSeekStartTime(undefined);
+        }
         checkIfSufficientBuffer();
     }
 
@@ -538,7 +544,7 @@ function BufferController(config) {
 
     function checkIfSufficientBuffer() {
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
-        if (type !== 'audio' && type !== 'video') return;
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
 
         if (seekClearedBufferingCompleted && !isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd() - bufferLevel < STALL_THRESHOLD) {
             seekClearedBufferingCompleted = false;
@@ -735,13 +741,14 @@ function BufferController(config) {
             if (!bufferResetInProgress) {
                 logger.debug('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
+                addBufferMetrics();
             } else {
                 bufferResetInProgress = false;
                 if (mediaChunk) {
                     appendToBuffer(mediaChunk);
                 }
             }
-            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend() });
+            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(), quotaExceeded: isQuotaExceeded });
         }
         //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
@@ -866,6 +873,7 @@ function BufferController(config) {
         appendedBytesInfo = null;
         isBufferingCompleted = false;
         isPruningInProgress = false;
+        isQuotaExceeded = false;
         seekClearedBufferingCompleted = false;
         bufferLevel = 0;
         wallclockTicked = 0;
