@@ -35,8 +35,6 @@ import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
 import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
 import Events from '../../core/events/Events';
-import EventBus from '../../core/EventBus';
-
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
@@ -46,15 +44,10 @@ export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
 
 function ThumbnailTracks(config) {
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
-
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
     const timelineConverter = config.timelineConverter;
-    const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
-    const errHandler = config.errHandler;
     const debug = config.debug;
     const eventBus = config.eventBus;
     const events = config.events;

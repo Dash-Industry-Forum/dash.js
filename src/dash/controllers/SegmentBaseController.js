@@ -44,6 +44,7 @@ function SegmentBaseController(config) {
     const errHandler = config.errHandler;
     const baseURLController = config.baseURLController;
     const debug = config.debug;
+    const boxParser = config.boxParser;
     const requestModifier = config.requestModifier;
     const errors = config.errors;
 
@@ -64,6 +65,7 @@ function SegmentBaseController(config) {
             events: events,
             errors: errors,
             debug: debug,
+            boxParser: boxParser,
             requestModifier: requestModifier
         });
 
@@ -93,19 +95,19 @@ function SegmentBaseController(config) {
         webmSegmentBaseLoader.initialize();
     }
 
-    function onInitSegmentBaseNeeded(eventObj) {
-        if (isWebM(eventObj.mimeType)) {
-            webmSegmentBaseLoader.loadInitialization(eventObj.representation);
+    function onInitSegmentBaseNeeded(e) {
+        if (isWebM(e.mimeType)) {
+            webmSegmentBaseLoader.loadInitialization(e.representation);
         } else {
-            segmentBaseLoader.loadInitialization(eventObj.representation);
+            segmentBaseLoader.loadInitialization(e.representation);
         }
     }
 
-    function onSegmentsListSegmentBaseNeeded(eventObj) {
-        if (isWebM(eventObj.mimeType)) {
-            webmSegmentBaseLoader.loadSegments(eventObj.representation, eventObj.mediaType, eventObj.representation ? eventObj.representation.indexRange : null, eventObj.callback);
+    function onSegmentsListSegmentBaseNeeded(e) {
+        if (isWebM(e.mimeType)) {
+            webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, e.callback);
         } else {
-            segmentBaseLoader.loadSegments(eventObj.representation, eventObj.mediaType, eventObj.representation ? eventObj.representation.indexRange : null, eventObj.callback);
+            segmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, e.callback);
         }
     }
 

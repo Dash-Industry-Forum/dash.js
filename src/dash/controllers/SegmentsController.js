@@ -38,20 +38,9 @@ function SegmentsController(config) {
     config = config || {};
 
     const context = this.context;
-
-    const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
-    const errHandler = config.errHandler;
-    const baseURLController = config.baseURLController;
-    const boxParser = config.boxParser;
     const events = config.events;
     const eventBus = config.eventBus;
-    const debug = config.debug;
-    const requestModifier = config.requestModifier;
     const dashConstants = config.dashConstants;
-    const constants = config.constants;
-    const urlUtils = config.urlUtils;
-    const errors = config.errors;
 
     let instance,
         getters;
@@ -69,11 +58,11 @@ function SegmentsController(config) {
 
     function update(voRepresentation, type, mimeType, hasInitialization, hasSegments) {
         if (!hasInitialization) {
-            eventBus.trigger(Events.SEGMENTBASE_INIT_REQUEST_NEEDED, {mimeType: mimeType, representation: voRepresentation});
+            eventBus.trigger(events.SEGMENTBASE_INIT_REQUEST_NEEDED, {mimeType: mimeType, representation: voRepresentation});
         }
 
         if (!hasSegments) {
-            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mimeType, mediaType: type, representation: voRepresentation});
+            eventBus.trigger(events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mimeType, mediaType: type, representation: voRepresentation});
         }
     }
 

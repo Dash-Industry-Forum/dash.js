@@ -139,7 +139,6 @@ function MediaPlayer() {
         abrController,
         schemeLoaderFactory,
         offlineController,
-        offlineBaseURLController,
         timelineConverter,
         mediaController,
         protectionController,
@@ -251,10 +250,6 @@ function MediaPlayer() {
             return;
         }
 
-        if (!baseURLController) {
-            baseURLController = BaseURLController(context).create();
-        }
-
         if (mediaPlayerInitialized) return;
         mediaPlayerInitialized = true;
 
@@ -279,7 +274,6 @@ function MediaPlayer() {
             mediaController = MediaController(context).getInstance();
         }
 
-
         adapter = DashAdapter(context).getInstance();
 
         manifestModel = ManifestModel(context).getInstance();
@@ -301,14 +295,24 @@ function MediaPlayer() {
             BASE64: BASE64
         });
 
+        if (!baseURLController) {
+            baseURLController = BaseURLController(context).create();
+        }
+
+        baseURLController.setConfig({
+            adapter: adapter
+        });
+
+
         segmentBaseController = SegmentBaseController(context).getInstance({
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler,
-            baseURLController: BaseURLController(context).getInstance(),
+            baseURLController: baseURLController,
             events: Events,
             eventBus: eventBus,
             debug: debug,
+            boxParser: BoxParser(context).getInstance(),
             requestModifier: RequestModifier(context).getInstance(),
             errors: Errors
         });
@@ -1228,7 +1232,7 @@ function MediaPlayer() {
             type: eventObj.config.type,
             mediaPlayerModel: mediaPlayerModel,
             mimeType: eventObj.config.mimeType,
-            baseURLController: offlineBaseURLController,
+            baseURLController: baseURLController,
             streamInfo: eventObj.config.streamInfo,
             errHandler: errHandler,
             timelineConverter: timelineConverter,
@@ -1286,49 +1290,46 @@ function MediaPlayer() {
 
         let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
 
-        if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
-            offlineController = OfflineController(context).create();
-
-            eventBus.on(OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance);
-
-            MediaPlayerEvents.extend(OfflineController.events, {
-                publicOnly: true
-            });
-            Errors.extend(OfflineController.errors);
-
-            const manifestLoader = createManifestLoader();
-            const manifestUpdater = ManifestUpdater(context).create();
-            offlineBaseURLController = BaseURLController(context).create();
-
-            offlineBaseURLController.setConfig({
-                adapter: adapter
-            });
-
-            manifestUpdater.setConfig({
-                manifestModel: manifestModel,
-                adapter: adapter,
-                manifestLoader: manifestLoader,
-                errHandler: errHandler
-            });
-
-            offlineController.setConfig({
-                debug: debug,
-                manifestUpdater: manifestUpdater,
-                baseURLController: offlineBaseURLController,
-                manifestLoader: manifestLoader,
-                manifestModel: manifestModel,
-                adapter: adapter,
-                errHandler: errHandler,
-                schemeLoaderFactory: schemeLoaderFactory,
-                eventBus: eventBus,
-                events: Events,
-                constants: Constants,
-                dashConstants: DashConstants,
-                urlUtils: URLUtils(context).getInstance()
-            });
-
-            offlineControllerInitialized = true;
+        if (typeof OfflineController !== 'function') { //TODO need a better way to register/detect plugin components
+            return;
         }
+
+        offlineController = OfflineController(context).create();
+
+        eventBus.on(OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance);
+
+        MediaPlayerEvents.extend(OfflineController.events, {
+            publicOnly: true
+        });
+        Errors.extend(OfflineController.errors);
+
+        const manifestLoader = createManifestLoader();
+        const manifestUpdater = ManifestUpdater(context).create();
+
+        manifestUpdater.setConfig({
+            manifestModel: manifestModel,
+            adapter: adapter,
+            manifestLoader: manifestLoader,
+            errHandler: errHandler
+        });
+
+        offlineController.setConfig({
+            debug: debug,
+            manifestUpdater: manifestUpdater,
+            baseURLController: baseURLController,
+            manifestLoader: manifestLoader,
+            manifestModel: manifestModel,
+            adapter: adapter,
+            errHandler: errHandler,
+            schemeLoaderFactory: schemeLoaderFactory,
+            eventBus: eventBus,
+            events: Events,
+            constants: Constants,
+            dashConstants: DashConstants,
+            urlUtils: URLUtils(context).getInstance()
+        });
+
+        offlineControllerInitialized = true;
     }
 
     /*

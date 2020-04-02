@@ -128,10 +128,6 @@ function StreamController() {
         });
         manifestUpdater.initialize();
 
-        baseURLController.setConfig({
-            adapter: adapter
-        });
-
         registerEvents();
     }
 
