@@ -186,7 +186,6 @@ function PlaybackController() {
                 t -= timeOffset;
             }
         }
-
         return t;
     }
 
@@ -222,15 +221,18 @@ function PlaybackController() {
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @param {number} fragmentDuration - seconds?
      * @param {number} dvrWindowSize - seconds?
+     * @param {number} minBufferTime - seconds?
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeLiveDelay(fragmentDuration, dvrWindowSize) {
+    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime = NaN) {
         let delay,
             ret,
             r,
             startTime;
         const END_OF_PLAYLIST_PADDING = 10;
+        const MIN_BUFFER_TIME_FACTOR = 4;
+        const FRAGMENT_DURATION_FACTOR = 4;
 
         let uriParameters = uriFragmentModel.getURIFragmentData();
 
@@ -251,9 +253,9 @@ function PlaybackController() {
         } else if (settings.get().streaming.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
         } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * 4;
+            delay = fragmentDuration * FRAGMENT_DURATION_FACTOR;
         } else {
-            delay = streamInfo.manifestInfo.minBufferTime * 4;
+            delay = !isNaN(minBufferTime) ? minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
 
         startTime = adapter.getAvailabilityStartTime();
@@ -453,7 +455,6 @@ function PlaybackController() {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime);
-
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
             seek(actualTime);
