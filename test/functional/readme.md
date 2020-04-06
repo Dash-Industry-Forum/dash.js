@@ -26,7 +26,8 @@ In ```config``` folder, you will multiple configurations files that are used by 
 - ```selenium.js``` provides the configuration for the Selenium nodes configuration. Only 'local' configuration is provided so far
 - ```os.js``` and ```browsers/*.js``` provides the available Selenium configurations for executing the tests on the different browsers on different platforms
 - ```applications.js``` provides the configuration for some web application that can be used to execute the tests
-- ```streams.js``` provides the list of input streams to be used by the tests, based on streams list provided in dash-if-reference-player sample.
+- ```streams.js``` provides the list of input streams to be used by the tests, based on streams list provided in dash-if-reference-player sample
+- ```sources.js``` provides the customization of websites to perform tests on. Keep the given format of the referenced .json file.
 
 ## Running tests on Windows
 #### WebDrivers
@@ -76,7 +77,10 @@ testSuites=<test_suite_names_separated_by_comma>
 ```sh
 stream=<stream name>
 ```
-
+- only for running custom websites (see ```config/sources.js```)
+```sh
+sources=<full or custom>
+```
 For example:
 - run all tests on chrome
 ```sh
