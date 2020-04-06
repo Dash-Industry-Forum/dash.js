@@ -1,13 +1,18 @@
 define([
     'intern',
-    'require'
-], function (intern, require) {
+    'require',
+    './sources'
+], function (intern, require, sources) {
 
+    
     var fs = require('intern/dojo/node!fs');
 
     // Get streams from reference sample application
-    var sources = JSON.parse(fs.readFileSync('./samples/dash-if-reference-player/app/sources.json', 'utf8'));
-
+    if(intern.args.sources) {
+        var sources = JSON.parse(fs.readFileSync(sources[intern.args.sources], 'utf8'));
+    }else{
+        var sources = JSON.parse(fs.readFileSync('./samples/dash-if-reference-player/app/sources.json', 'utf8'));
+    }    
     // Get test application protocol
     // var applicationProtocol = /^(https?|)/.exec(intern.config.testPage)[0];
     // console.log('Application protocol: ' + applicationProtocol);
