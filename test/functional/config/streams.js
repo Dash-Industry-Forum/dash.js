@@ -4,6 +4,8 @@ define([
     './sources'
 ], function (intern, require, sources) {
 
+    // Same path as in sources.js 
+    const standard_sources_path = './samples/dash-if-reference-player/app/sources.json',
     
     var fs = require('intern/dojo/node!fs');
 
@@ -11,7 +13,7 @@ define([
     if(intern.args.sources) {
         var sources = JSON.parse(fs.readFileSync(sources[intern.args.sources], 'utf8'));
     }else{
-        var sources = JSON.parse(fs.readFileSync('./samples/dash-if-reference-player/app/sources.json', 'utf8'));
+        var sources = JSON.parse(fs.readFileSync(standard_sources_path, 'utf8'));
     }    
     // Get test application protocol
     // var applicationProtocol = /^(https?|)/.exec(intern.config.testPage)[0];
