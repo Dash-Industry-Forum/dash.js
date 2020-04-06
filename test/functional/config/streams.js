@@ -5,7 +5,7 @@ define([
 ], function (intern, require, sources) {
 
     // Same path as in sources.js 
-    const standard_sources_path = './samples/dash-if-reference-player/app/sources.json',
+    const standard_sources_path = './samples/dash-if-reference-player/app/sources.json';
     
     var fs = require('intern/dojo/node!fs');
 
