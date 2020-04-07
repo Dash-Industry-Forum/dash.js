@@ -32,7 +32,8 @@ define(function () {
             'com.widevine.alpha': false,
             'com.microsoft.playready': true,
             'org.w3.clearkey': true
-        }
+        },
+        'ms:edgeOptions': { w3c: false }
     };
 
     return {
