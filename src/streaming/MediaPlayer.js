@@ -30,6 +30,7 @@
  */
 import cea608parser from '../../externals/cea608-parser';
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
@@ -45,6 +46,7 @@ import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
 import AbrController from './controllers/AbrController';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory';
 import VideoModel from './models/VideoModel';
 import CmcdModel from './models/CmcdModel';
 import DOMStorage from './utils/DOMStorage';
@@ -72,6 +74,13 @@ import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
+import ManifestUpdater from './ManifestUpdater';
+import URLUtils from '../streaming/utils/URLUtils';
+import DashHandler from '../dash/DashHandler';
+import RepresentationController from '../dash/controllers/RepresentationController';
+import FragmentModel from './models/FragmentModel';
+import FragmentLoader from './FragmentLoader';
+import BoxParser from './utils/BoxParser';
 
 /* jscs:disable */
 /**
@@ -123,10 +132,13 @@ function MediaPlayer() {
         source,
         protectionData,
         mediaPlayerInitialized,
+        offlineControllerInitialized,
         streamingInitialized,
         playbackInitialized,
         autoPlay,
         abrController,
+        schemeLoaderFactory,
+        offlineController,
         timelineConverter,
         mediaController,
         protectionController,
@@ -135,6 +147,7 @@ function MediaPlayer() {
         adapter,
         mediaPlayerModel,
         errHandler,
+        baseURLController,
         capabilities,
         streamController,
         playbackController,
@@ -157,10 +170,12 @@ function MediaPlayer() {
     function setup() {
         logger = debug.getLogger(instance);
         mediaPlayerInitialized = false;
+        offlineControllerInitialized = false;
         playbackInitialized = false;
         streamingInitialized = false;
         autoPlay = true;
         protectionController = null;
+        offlineController = null;
         protectionData = null;
         adapter = null;
         segmentBaseController = null;
@@ -195,6 +210,9 @@ function MediaPlayer() {
         }
         if (config.abrController) {
             abrController = config.abrController;
+        }
+        if (config.schemeLoaderFactory) {
+            schemeLoaderFactory = config.schemeLoaderFactory;
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
@@ -239,6 +257,13 @@ function MediaPlayer() {
         timelineConverter = TimelineConverter(context).getInstance();
         if (!abrController) {
             abrController = AbrController(context).getInstance();
+            abrController.setConfig({
+                settings: settings
+            });
+        }
+
+        if (!schemeLoaderFactory) {
+            schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
         }
 
         if (!playbackController) {
@@ -270,14 +295,24 @@ function MediaPlayer() {
             BASE64: BASE64
         });
 
+        if (!baseURLController) {
+            baseURLController = BaseURLController(context).create();
+        }
+
+        baseURLController.setConfig({
+            adapter: adapter
+        });
+
+
         segmentBaseController = SegmentBaseController(context).getInstance({
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             errHandler: errHandler,
-            baseURLController: BaseURLController(context).getInstance(),
+            baseURLController: baseURLController,
             events: Events,
             eventBus: eventBus,
             debug: debug,
+            boxParser: BoxParser(context).getInstance(),
             requestModifier: RequestModifier(context).getInstance(),
             errors: Errors
         });
@@ -295,6 +330,9 @@ function MediaPlayer() {
             attachSource(source);
         }
 
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
 
@@ -323,6 +361,13 @@ function MediaPlayer() {
         segmentBaseController.reset();
 
         settings.reset();
+
+        if (offlineController) {
+            offlineController.reset();
+            offlineControllerInitialized = false;
+
+            eventBus.off(dashjs.OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance); /* jshint ignore:line */
+        }
     }
 
     /**
@@ -565,7 +610,7 @@ function MediaPlayer() {
      * @instance
      */
     function setVolume(value) {
-        if ( typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
+        if (typeof value !== 'number' || isNaN(value) || value < 0.0 || value > 1.0) {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
         getVideoElement().volume = value;
@@ -1049,6 +1094,242 @@ function MediaPlayer() {
      */
     function getXHRWithCredentialsForType(type) {
         return mediaPlayerModel.getXHRWithCredentialsForType(type);
+    }
+
+    /*
+    ---------------------------------------------------------------------------
+
+        OFFLINE
+
+    ---------------------------------------------------------------------------
+    */
+
+    /** Loads downloads from storage
+     * This methos has to be called first, to be sure that all downloads have been loaded
+     * @return {Promise} asynchronously resolved
+     * @memberof module:MediaPlayer
+     */
+    function loadDownloadsFromStorage() {
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
+        return offlineController ? offlineController.loadDownloadsFromStorage() : Promise.reject();
+    }
+
+    /**
+     * Creates a new download object in storage
+     *
+     * @param {string} manifestURL - url of manifest
+     * @return {Promise} asynchronously resolved with identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function createDownload(manifestURL) {
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
+        return offlineController ? offlineController.createDownload(manifestURL) : Promise.reject();
+    }
+
+    /**
+     * Initialise download and gets manifest from url
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function initDownload(id) {
+        if (offlineController) {
+            offlineController.initDownload(id);
+        }
+    }
+
+    /**
+     * Start download of choosen representations
+     *
+     * @param {string} id - identifier of download
+     * @param {object} selectedRepresentations - choosen representations
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function startDownload(id, selectedRepresentations) {
+        if (selectedRepresentations && offlineController) {
+            offlineController.startDownload(id, selectedRepresentations);
+        }
+    }
+
+    /**
+     * Delete download
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function deleteDownload(id) {
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
+        return offlineController ? offlineController.deleteDownload(id) : Promise.reject();
+    }
+
+    /**
+     * Stop download
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function stopDownload(id) {
+        if (offlineControllerInitialized && offlineController) {
+            offlineController.stopDownload(id);
+        }
+    }
+
+    /**
+     * Resume download
+     *
+     * @param {string} id - identifier of download
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function resumeDownload(id) {
+        if (offlineControllerInitialized && offlineController) {
+            offlineController.resumeDownload(id);
+        }
+    }
+
+    /**
+     * Get progression of download
+     *
+     * @param {string} id - identifier of download
+     * @return {number} progression
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getDownloadProgression(id) {
+        if (offlineControllerInitialized) {
+            return offlineController ? offlineController.getDownloadProgression(id) : 0;
+        }
+    }
+
+    /**
+     * Get all saved downloads
+     *
+     * @return {Promise} asynchronously resolved with saved downloads
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getAllDownloads() {
+        if (!offlineControllerInitialized) {
+            createOfflineControllers();
+        }
+        return offlineController ? offlineController.getAllDownloads() : Promise.reject();
+    }
+
+    function onDashElementsNeeded(eventObj) {
+        let requestModifier = RequestModifier(context).getInstance();
+        let handler = DashHandler(context).create({
+            type: eventObj.config.type,
+            mediaPlayerModel: mediaPlayerModel,
+            mimeType: eventObj.config.mimeType,
+            baseURLController: baseURLController,
+            streamInfo: eventObj.config.streamInfo,
+            errHandler: errHandler,
+            timelineConverter: timelineConverter,
+            settings: settings,
+            dashMetrics: dashMetrics,
+            eventBus: eventBus,
+            events: Events,
+            errors: Errors,
+            debug: debug,
+            dashConstants: DashConstants,
+            requestModifier: requestModifier,
+            urlUtils: URLUtils(context).getInstance(),
+            boxParser: BoxParser(context).getInstance()
+        });
+        let repController = RepresentationController(context).create({
+            abrController: abrController,
+            dashMetrics: dashMetrics,
+            playbackController: playbackController,
+            timelineConverter: timelineConverter,
+            type: eventObj.config.type,
+            eventBus: eventBus,
+            events: Events,
+            errors: Errors,
+            dashConstants: DashConstants,
+            streamId: eventObj.config.streamInfo ? eventObj.config.streamInfo.id : null
+        });
+
+        let fragLoader = FragmentLoader(context).create({
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler,
+            requestModifier: requestModifier,
+            settings: settings,
+            dashMetrics: dashMetrics,
+            eventBus: eventBus,
+            events: Events,
+            errors: Errors,
+            dashConstants: DashConstants,
+            urlUtils: URLUtils(context).getInstance()
+        });
+
+        let fragModel = FragmentModel(context).create({
+            dashMetrics: dashMetrics,
+            fragmentLoader: fragLoader,
+            eventBus: eventBus,
+            events: Events,
+            debug: debug
+        });
+        eventObj.sender.setDashElements(handler, fragModel, repController);
+    }
+
+    function createOfflineControllers() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
+
+        if (typeof OfflineController !== 'function') { //TODO need a better way to register/detect plugin components
+            return;
+        }
+
+        offlineController = OfflineController(context).create();
+
+        eventBus.on(OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance);
+
+        MediaPlayerEvents.extend(OfflineController.events, {
+            publicOnly: true
+        });
+        Errors.extend(OfflineController.errors);
+
+        const manifestLoader = createManifestLoader();
+        const manifestUpdater = ManifestUpdater(context).create();
+
+        manifestUpdater.setConfig({
+            manifestModel: manifestModel,
+            adapter: adapter,
+            manifestLoader: manifestLoader,
+            errHandler: errHandler
+        });
+
+        offlineController.setConfig({
+            debug: debug,
+            manifestUpdater: manifestUpdater,
+            baseURLController: baseURLController,
+            manifestLoader: manifestLoader,
+            manifestModel: manifestModel,
+            adapter: adapter,
+            errHandler: errHandler,
+            schemeLoaderFactory: schemeLoaderFactory,
+            eventBus: eventBus,
+            events: Events,
+            constants: Constants,
+            dashConstants: DashConstants,
+            urlUtils: URLUtils(context).getInstance()
+        });
+
+        offlineControllerInitialized = true;
     }
 
     /*
@@ -1876,7 +2157,8 @@ function MediaPlayer() {
             abrController: abrController,
             mediaController: mediaController,
             textController: textController,
-            settings: settings
+            settings: settings,
+            baseURLController: baseURLController
         });
 
         playbackController.setConfig({
@@ -2001,7 +2283,7 @@ function MediaPlayer() {
                 manifestModel: manifestModel,
                 playbackController: playbackController,
                 protectionController: protectionController,
-                baseURLController: BaseURLController(context).getInstance(),
+                baseURLController: baseURLController,
                 errHandler: errHandler,
                 events: Events,
                 constants: Constants,
@@ -2028,6 +2310,10 @@ function MediaPlayer() {
     }
 
     function initializePlayback() {
+        if (offlineControllerInitialized) {
+            offlineController.resetDownloads();
+        }
+
         if (!streamingInitialized && source) {
             streamingInitialized = true;
             logger.info('Streaming Initialized');
@@ -2141,10 +2427,19 @@ function MediaPlayer() {
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
         getThumbnail: getThumbnail,
+        loadDownloadsFromStorage: loadDownloadsFromStorage,
+        createDownload: createDownload,
         getDashAdapter: getDashAdapter,
         getSettings: getSettings,
         updateSettings: updateSettings,
         resetSettings: resetSettings,
+        stopDownload: stopDownload,
+        getAllDownloads: getAllDownloads,
+        deleteDownload: deleteDownload,
+        resumeDownload: resumeDownload,
+        getDownloadProgression: getDownloadProgression,
+        startDownload: startDownload,
+        initDownload: initDownload,
         reset: reset
     };
 

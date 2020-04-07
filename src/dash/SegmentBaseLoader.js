@@ -30,11 +30,9 @@
  */
 import Segment from './vo/Segment';
 import DashJSError from '../streaming/vo/DashJSError';
-import BoxParser from '../streaming/utils/BoxParser';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import HTTPLoader from '../streaming/net/HTTPLoader';
+import URLLoader from '../streaming/net/URLLoader';
 
 function SegmentBaseLoader() {
 
@@ -46,24 +44,32 @@ function SegmentBaseLoader() {
         boxParser,
         requestModifier,
         dashMetrics,
+        settings,
         mediaPlayerModel,
-        httpLoader,
-        eventBus,
+        urlLoader,
         events,
+        eventBus,
         errors,
+        constants,
+        dashConstants,
+        urlUtils,
         baseURLController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function initialize() {
-        boxParser = BoxParser(context).getInstance();
-        httpLoader = HTTPLoader(context).create({
+        urlLoader = URLLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
+            boxParser: boxParser,
+            errors: errors,
+            urlUtils: urlUtils,
+            constants: constants,
+            dashConstants: dashConstants
         });
     }
 
@@ -84,20 +90,44 @@ function SegmentBaseLoader() {
             errHandler = config.errHandler;
         }
 
-        if (config.requestModifier) {
-            requestModifier = config.requestModifier;
+        if (config.settings) {
+            settings = config.settings;
+        }
+
+        if (config.boxParser) {
+            boxParser = config.boxParser;
         }
 
         if (config.events) {
             events = config.events;
         }
 
+        if (config.eventBus) {
+            eventBus = config.eventBus;
+        }
+
+        if (config.debug) {
+            logger = config.debug.getLogger(instance);
+        }
+
+        if (config.requestModifier) {
+            requestModifier = config.requestModifier;
+        }
+
         if (config.errors) {
             errors = config.errors;
         }
 
-        if (config.eventBus) {
-            eventBus = config.eventBus;
+        if (config.urlUtils) {
+            urlUtils = config.urlUtils;
+        }
+
+        if (config.constants) {
+            constants = config.constants;
+        }
+
+        if (config.dashConstants) {
+            dashConstants = config.dashConstants;
         }
     }
 
@@ -147,7 +177,7 @@ function SegmentBaseLoader() {
             eventBus.trigger(events.INITIALIZATION_LOADED, {representation: representation});
         };
 
-        httpLoader.load({request: request, success: onload, error: onerror});
+        urlLoader.load({request: request, success: onload, error: onerror});
 
         logger.debug('Perform init search: ' + info.url);
     }
@@ -257,13 +287,13 @@ function SegmentBaseLoader() {
             callback(null, representation, type);
         };
 
-        httpLoader.load({request: request, success: onload, error: onerror});
+        urlLoader.load({request: request, success: onload, error: onerror});
         logger.debug('Perform SIDX load: ' + info.url + ' with range : ' + info.range.start + ' - ' + info.range.end);
     }
 
     function reset() {
-        httpLoader.abort();
-        httpLoader = null;
+        urlLoader.abort();
+        urlLoader = null;
         errHandler = null;
         boxParser = null;
         requestModifier = null;

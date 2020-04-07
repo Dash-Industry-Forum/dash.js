@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import StreamProcessor from './StreamProcessor';
 import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
@@ -39,12 +40,15 @@ import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
+import BoxParser from './utils/BoxParser';
+import URLUtils from './utils/URLUtils';
 
 function Stream(config) {
 
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
 
     const manifestModel = config.manifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
@@ -74,6 +78,8 @@ function Stream(config) {
         thumbnailController,
         eventController,
         preloaded,
+        boxParser,
+        debug,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -88,14 +94,20 @@ function Stream(config) {
     ];
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        debug = Debug(context).getInstance();
+        logger = debug.getLogger(instance);
         resetInitialSettings();
+
+        boxParser = BoxParser(context).getInstance();
 
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
-            settings: settings
+            settings: settings,
+            boxParser: boxParser,
+            dashConstants: DashConstants,
+            urlUtils: urlUtils
         });
 
         registerEvents();
@@ -383,7 +395,8 @@ function Stream(config) {
             streamController: config.streamController,
             textController: textController,
             errHandler: errHandler,
-            settings: settings
+            settings: settings,
+            boxParser: boxParser
         });
 
         streamProcessor.initialize(mediaSource);
@@ -446,7 +459,11 @@ function Stream(config) {
                 adapter: adapter,
                 baseURLController: config.baseURLController,
                 stream: instance,
-                timelineConverter: config.timelineConverter
+                timelineConverter: config.timelineConverter,
+                debug: debug,
+                eventBus: eventBus,
+                events: Events,
+                dashConstants: DashConstants
             });
             return;
         }

@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
@@ -39,6 +40,9 @@ import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
 import Errors from '../core/errors/Errors';
+import Debug from '../core/Debug';
+import RequestModifier from './utils/RequestModifier';
+import URLUtils from '../streaming/utils/URLUtils';
 
 function StreamProcessor(config) {
 
@@ -61,6 +65,7 @@ function StreamProcessor(config) {
     let textController = config.textController;
     let dashMetrics = config.dashMetrics;
     let settings = config.settings;
+    let boxParser = config.boxParser;
 
     let instance,
         mediaInfo,
@@ -88,7 +93,16 @@ function StreamProcessor(config) {
             baseURLController: config.baseURLController,
             errHandler: errHandler,
             settings: settings,
-            streamInfo: getStreamInfo()
+            streamInfo: getStreamInfo(),
+            boxParser: boxParser,
+            events: Events,
+            eventBus: eventBus,
+            errors: Errors,
+            debug: Debug(context).getInstance(),
+            requestModifier: RequestModifier(context).getInstance(),
+            dashConstants: DashConstants,
+            constants: Constants,
+            urlUtils: URLUtils(context).getInstance()
         });
 
         // initialize controllers
@@ -114,16 +128,17 @@ function StreamProcessor(config) {
             mediaController: mediaController,
             settings: settings
         });
-        representationController = RepresentationController(context).create();
-        representationController.setConfig({
+        representationController = RepresentationController(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
-            manifestModel: manifestModel,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            streamProcessor: instance,
             type: type,
-            streamId: getStreamInfo() ? getStreamInfo().id : null
+            dashConstants: DashConstants,
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
+            events: Events,
+            eventBus: eventBus,
+            errors: Errors
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
@@ -193,7 +208,9 @@ function StreamProcessor(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== getStreamInfo().id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
+        const streamInfo = getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfoId || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
 
         addDVRMetric();
     }

@@ -32,7 +32,6 @@ import XHRLoader from './XHRLoader';
 import FetchLoader from './FetchLoader';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
-import Errors from '../../core/errors/Errors';
 import DashJSError from '../vo/DashJSError';
 import CmcdModel from '../models/CmcdModel';
 import Utils from '../../core/Utils';
@@ -54,6 +53,7 @@ function HTTPLoader(cfg) {
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
+    const errors = cfg.errors;
 
     let instance,
         requests,
@@ -69,13 +69,13 @@ function HTTPLoader(cfg) {
         cmcdModel = CmcdModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
-            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
-            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
+            [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.OTHER_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
         };
     }
 

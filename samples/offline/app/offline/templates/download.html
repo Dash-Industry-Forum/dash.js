@@ -1,0 +1,20 @@
+
+<div ng-class="{'offline-item': true, 'disabled' : !isDownloadEnabled()}">
+    <span class="offline-title">{{download.id}} : {{download.originalUrl}}
+    </span>
+    <div class="progress-container">
+        <div class="offline-progress progress">
+            <div class="offline-progress progress-bar" role="progressbar" ng-style="{ 'width': getDownloadProgression() + '%' }"
+                aria-valuenow="{{ getDownloadProgression() }}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <div>{{ getDownloadProgression() }} %</div>
+    </div>
+
+    <div class="offline-actions">
+        <span ng-class="{'disabled' : !canPlay()}" class="offline-action glyphicon glyphicon-play" ng-click="doPlay()"></span>
+        <span ng-class="{'disabled' : !canStop()}" class="offline-action glyphicon glyphicon-stop" ng-click="doStop()"></span>
+        <span ng-class="{'disabled' : !canResume()}" class="offline-action glyphicon glyphicon-refresh" ng-click="doResume()"></span>
+        <span class="offline-action glyphicon glyphicon-trash" ng-click="doDelete()"></span>
+    </div>
+    <h4>Status : {{download.status}}</h4>
+</div>

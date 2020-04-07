@@ -9,6 +9,7 @@ import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import BaseURLControllerMock from './mocks/BaseURLControllerMock';
+import DebugMock from './mocks/DebugMock';
 
 const expect = require('chai').expect;
 const sinon = require('sinon');
@@ -61,10 +62,11 @@ describe('WebmSegmentBaseLoader', function () {
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
                 errHandler: new ErrorHandlerMock(),
-                requestModifier: RequestModifier(context).getInstance(),
+                debug: new DebugMock(),
                 eventBus: eventBus,
                 events: Events,
-                errors: Errors
+                errors: Errors,
+                requestModifier: RequestModifier(context).getInstance()
             });
             webmSegmentBaseLoader.initialize();
         });

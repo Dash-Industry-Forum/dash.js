@@ -29,8 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import XlinkController from './controllers/XlinkController';
-import HTTPLoader from './net/HTTPLoader';
+import URLLoader from './net/URLLoader';
 import URLUtils from './utils/URLUtils';
 import TextRequest from './vo/TextRequest';
 import DashJSError from './vo/DashJSError';
@@ -51,7 +52,7 @@ function ManifestLoader(config) {
 
     let instance,
         logger,
-        httpLoader,
+        urlLoader,
         xlinkController,
         parser;
 
@@ -62,18 +63,24 @@ function ManifestLoader(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
-        httpLoader = HTTPLoader(context).create({
-            errHandler: errHandler,
+        urlLoader = URLLoader(context).create({
+            errHandler: config.errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier
+            requestModifier: config.requestModifier,
+            useFetch: config.settings.get().streaming.lowLatencyEnabled,
+            urlUtils: urlUtils,
+            constants: Constants,
+            dashConstants: DashConstants,
+            errors: Errors
         });
 
         xlinkController = XlinkController(context).create({
             errHandler: errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier
+            requestModifier: config.requestModifier,
+            settings: config.settings
         });
 
         parser = null;
@@ -105,9 +112,10 @@ function ManifestLoader(config) {
     }
 
     function load(url) {
+
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: function (data, textStatus, responseURL) {
                 // Manage situations in which success is called after calling reset
@@ -188,6 +196,12 @@ function ManifestLoader(config) {
                     manifest.baseUri = baseUri;
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);
+
+                    eventBus.trigger(
+                        Events.ORIGINAL_MANIFEST_LOADED, {
+                            originalManifest: data
+                        }
+                    );
                 } else {
                     eventBus.trigger(
                         Events.INTERNAL_MANIFEST_LOADED, {
@@ -222,9 +236,9 @@ function ManifestLoader(config) {
             xlinkController = null;
         }
 
-        if (httpLoader) {
-            httpLoader.abort();
-            httpLoader = null;
+        if (urlLoader) {
+            urlLoader.abort();
+            urlLoader = null;
         }
 
         if (mssHandler) {

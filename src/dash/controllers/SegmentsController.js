@@ -28,9 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashConstants from '../constants/DashConstants';
-import Events from '../../core/events/Events';
-import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import TimelineSegmentsGetter from '../utils/TimelineSegmentsGetter';
 import TemplateSegmentsGetter from '../utils/TemplateSegmentsGetter';
@@ -41,7 +38,9 @@ function SegmentsController(config) {
     config = config || {};
 
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
+    const events = config.events;
+    const eventBus = config.eventBus;
+    const dashConstants = config.dashConstants;
 
     let instance,
         getters;
@@ -51,24 +50,24 @@ function SegmentsController(config) {
     }
 
     function initialize(isDynamic) {
-        getters[DashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
-        getters[DashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_TIMELINE] = TimelineSegmentsGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_TEMPLATE] = TemplateSegmentsGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_LIST] = ListSegmentsGetter(context).create(config, isDynamic);
+        getters[dashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
     }
 
     function update(voRepresentation, type, mimeType, hasInitialization, hasSegments) {
         if (!hasInitialization) {
-            eventBus.trigger(Events.SEGMENTBASE_INIT_REQUEST_NEEDED, {mimeType: mimeType, representation: voRepresentation});
+            eventBus.trigger(events.SEGMENTBASE_INIT_REQUEST_NEEDED, {mimeType: mimeType, representation: voRepresentation});
         }
 
         if (!hasSegments) {
-            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mimeType, mediaType: type, representation: voRepresentation});
+            eventBus.trigger(events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mimeType, mediaType: type, representation: voRepresentation});
         }
     }
 
     function getSegmentsGetter(representation) {
-        return representation ? representation.segments ? getters[DashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
+        return representation ? representation.segments ? getters[dashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
     }
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {

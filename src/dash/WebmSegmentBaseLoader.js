@@ -1,10 +1,9 @@
 import EBMLParser from '../streaming/utils/EBMLParser';
 import Constants from '../streaming/constants/Constants';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
 import Segment from './vo/Segment';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import HTTPLoader from '../streaming/net/HTTPLoader';
+import URLLoader from '../streaming/net/URLLoader';
 import DashJSError from '../streaming/vo/DashJSError';
 
 function WebmSegmentBaseLoader() {
@@ -18,14 +17,14 @@ function WebmSegmentBaseLoader() {
         requestModifier,
         dashMetrics,
         mediaPlayerModel,
-        httpLoader,
+        urlLoader,
+        settings,
         eventBus,
         events,
         errors,
         baseURLController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
         WebM = {
             EBML: {
                 tag: 0x1A45DFA3,
@@ -92,11 +91,13 @@ function WebmSegmentBaseLoader() {
     }
 
     function initialize() {
-        httpLoader = HTTPLoader(context).create({
+        urlLoader = URLLoader(context).create({
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier
+            requestModifier: requestModifier,
+            useFetch: settings ? settings.get().streaming.lowLatencyEnabled : null,
+            errors: errors
         });
     }
 
@@ -108,10 +109,12 @@ function WebmSegmentBaseLoader() {
         dashMetrics = config.dashMetrics;
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
-        requestModifier = config.requestModifier;
-        eventBus = config.eventBus;
+        settings = config.settings;
         events = config.events;
+        eventBus = config.eventBus;
         errors = config.errors;
+        logger = config.debug.getLogger(instance);
+        requestModifier = config.requestModifier;
     }
 
     function parseCues(ab) {
@@ -286,7 +289,7 @@ function WebmSegmentBaseLoader() {
             callback(null);
         };
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: onload,
             error: onloadend
@@ -335,7 +338,7 @@ function WebmSegmentBaseLoader() {
             });
         };
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: onload,
             error: onloadend
@@ -381,7 +384,7 @@ function WebmSegmentBaseLoader() {
             callback(null, representation, type);
         };
 
-        httpLoader.load({
+        urlLoader.load({
             request: request,
             success: onload,
             error: onloadend

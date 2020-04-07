@@ -30,6 +30,7 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
+import DefaultURLUtils from './DefaultURLUtils';
 
 /**
  * @module URLUtils
@@ -41,83 +42,40 @@ import FactoryMaker from '../../core/FactoryMaker';
  */
 function URLUtils() {
 
-    let resolveFunction;
+    let instance;
+    let defaultURLUtils;
+    let regexUtils = [];
+    const context = this.context;
 
-    const schemeRegex = /^[a-z][a-z0-9+\-.]*:/i;
-    const httpUrlRegex = /^https?:\/\//i;
-    const httpsUrlRegex = /^https:\/\//i;
-    const originRegex = /^([a-z][a-z0-9+\-.]*:\/\/[^\/]+)\/?/i;
-
-    /**
-     * Resolves a url given an optional base url
-     * Uses window.URL to do the resolution.
-     *
-     * @param {string} url
-     * @param {string} [baseUrl]
-     * @return {string}
-     * @memberof module:URLUtils
-     * @instance
-     * @private
-     */
-    const nativeURLResolver = (url, baseUrl) => {
-        try {
-            // this will throw if baseurl is undefined, invalid etc
-            return new window.URL(url, baseUrl).toString();
-        } catch (e) {
-            return url;
+    function getUtils(url) {
+        let i;
+        for (i = 0; i < regexUtils.length; i++) {
+            let regex = regexUtils[i].regex;
+            if (regex.test(url)) {
+                return regexUtils[i].utils;
+            }
         }
-    };
-
-    /**
-     * Resolves a url given an optional base url
-     * Does not resolve ./, ../ etc but will do enough to construct something
-     * which will satisfy XHR etc when window.URL is not available ie
-     * IE11/node etc.
-     *
-     * @param {string} url
-     * @param {string} [baseUrl]
-     * @return {string}
-     * @memberof module:URLUtils
-     * @instance
-     * @private
-     */
-    const dumbURLResolver = (url, baseUrl) => {
-        let baseUrlParseFunc = parseBaseUrl;
-
-        if (!baseUrl) {
-            return url;
-        }
-
-        if (!isRelative(url)) {
-            return url;
-        }
-
-        if (isPathAbsolute(url)) {
-            baseUrlParseFunc = parseOrigin;
-        }
-
-        if (isSchemeRelative(url)) {
-            baseUrlParseFunc = parseScheme;
-        }
-
-        const base = baseUrlParseFunc(baseUrl);
-        const joinChar =
-              base.charAt(base.length - 1) !== '/' &&
-              url.charAt(0) !== '/' ?
-              '/' : '';
-
-        return [base, url].join(joinChar);
-    };
+        return defaultURLUtils;
+    }
 
     function setup() {
-        try {
-            const u = new window.URL('x', 'http://y'); //jshint ignore:line
-            resolveFunction = nativeURLResolver;
-        } catch (e) {
-            // must be IE11/Node etc
-        } finally {
-            resolveFunction = resolveFunction || dumbURLResolver;
-        }
+        defaultURLUtils = DefaultURLUtils(context).getInstance();
+    }
+
+    /**
+     * Register a module to handle specific url.
+     * @param {regex} regex - url regex
+     * @param {object} utils - object that handles the regex
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function registerUrlRegex(regex, utils) {
+        regexUtils.push({regex: regex, utils: utils});
+    }
+
+    function internalCall(functionName, url, baseUrl) {
+        let utils = getUtils(baseUrl || url);
+        return utils && typeof (utils[functionName]) === 'function' ? utils[functionName](url, baseUrl) : defaultURLUtils[functionName](url, baseUrl);
     }
 
     /**
@@ -128,23 +86,7 @@ function URLUtils() {
      * @instance
      */
     function parseBaseUrl(url) {
-        const slashIndex = url.indexOf('/');
-        const lastSlashIndex = url.lastIndexOf('/');
-
-        if (slashIndex !== -1) {
-            // if there is only '//'
-            if (lastSlashIndex === slashIndex + 1) {
-                return url;
-            }
-
-            if (url.indexOf('?') !== -1) {
-                url = url.substring(0, url.indexOf('?'));
-            }
-
-            return url.substring(0, lastSlashIndex + 1);
-        }
-
-        return '';
+        return internalCall('parseBaseUrl', url);
     }
 
     /**
@@ -156,13 +98,19 @@ function URLUtils() {
      * @instance
      */
     function parseOrigin(url) {
-        const matches = url.match(originRegex);
+        return internalCall('parseOrigin', url);
+    }
 
-        if (matches) {
-            return matches[1];
-        }
-
-        return '';
+    /**
+     * Returns a string that contains the fragment of a URL without scheme,
+     * if determinable.
+     * @param {string} url - full url
+     * @return {string}
+     * @memberof module:URLUtils
+     * @instance
+     */
+    function removeHostname(url) {
+        return internalCall('removeHostname', url);
     }
 
     /**
@@ -173,24 +121,18 @@ function URLUtils() {
      * @instance
      */
     function parseScheme(url) {
-        const matches = url.match(schemeRegex);
-
-        if (matches) {
-            return matches[0];
-        }
-
-        return '';
+        return internalCall('parseScheme', url);
     }
 
     /**
      * Determines whether the url is relative.
-     * @return {bool}
+     * @return {boolean}
      * @param {string} url
      * @memberof module:URLUtils
      * @instance
      */
     function isRelative(url) {
-        return !schemeRegex.test(url);
+        return internalCall('isRelative', url);
     }
 
     /**
@@ -201,7 +143,7 @@ function URLUtils() {
      * @instance
      */
     function isPathAbsolute(url) {
-        return isRelative(url) && url.charAt(0) === '/';
+        return internalCall('isPathAbsolute', url);
     }
 
     /**
@@ -212,7 +154,7 @@ function URLUtils() {
      * @instance
      */
     function isSchemeRelative(url) {
-        return url.indexOf('//') === 0;
+        return internalCall('isSchemeRelative', url);
     }
 
     /**
@@ -224,7 +166,7 @@ function URLUtils() {
      * @instance
      */
     function isHTTPURL(url) {
-        return httpUrlRegex.test(url);
+        return internalCall('isHTTPURL', url);
     }
 
     /**
@@ -235,7 +177,7 @@ function URLUtils() {
      * @instance
      */
     function isHTTPS(url) {
-        return httpsUrlRegex.test(url);
+        return internalCall('isHTTPS', url);
     }
 
     /**
@@ -247,12 +189,12 @@ function URLUtils() {
      * @instance
      */
     function resolve(url, baseUrl) {
-        return resolveFunction(url, baseUrl);
+        return internalCall('resolve', url, baseUrl);
     }
 
     setup();
-
-    const instance = {
+    instance = {
+        registerUrlRegex:   registerUrlRegex,
         parseBaseUrl:       parseBaseUrl,
         parseOrigin:        parseOrigin,
         parseScheme:        parseScheme,
@@ -261,6 +203,7 @@ function URLUtils() {
         isSchemeRelative:   isSchemeRelative,
         isHTTPURL:          isHTTPURL,
         isHTTPS:            isHTTPS,
+        removeHostname:     removeHostname,
         resolve:            resolve
     };
 
@@ -268,4 +211,5 @@ function URLUtils() {
 }
 
 URLUtils.__dashjs_factory_name = 'URLUtils';
-export default FactoryMaker.getSingletonFactory(URLUtils);
+const factory = FactoryMaker.getSingletonFactory(URLUtils);
+export default factory;
