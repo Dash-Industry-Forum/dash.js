@@ -27,7 +27,7 @@ define([
 
     var load = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             load: function() {
                 if (!stream.available) this.skip();
@@ -40,7 +40,7 @@ define([
 
     var play = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             play: function() {
                 if (!stream.available) this.skip();
@@ -66,7 +66,7 @@ define([
 
     var getInfos = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             isDynamic: function() {
                 if (!stream.available) this.skip();
@@ -74,6 +74,12 @@ define([
                 .then(function (dynamic) {
                     utils.log(NAME, 'dynamic: ' + dynamic);
                     stream.dynamic = dynamic;
+                    return command.execute(player.getDVRWindowSize)
+                })
+                .then(function (dvrWindow) {
+                    if (dvrWindow > 0) {
+                        stream.dvrWindow = dvrWindow;
+                    }
                 });
             },
 
@@ -85,6 +91,20 @@ define([
                 .then(function (duration) {
                     utils.log(NAME, 'duration: ' + duration);
                     stream.duration = duration;
+                });
+            },
+
+            getPeriods: function() {
+                if (!stream.available) {
+                    this.skip();
+                }
+                return command.execute(player.getStreams)
+                .then(function (streams) {
+                    utils.log(NAME, 'Nb periods: ' + streams.length);
+                    stream.periods = [];
+                    for(let i=0; i < streams.length; i++ ){
+                        stream.periods.push({start: streams[i].start});
+                    }
                 });
             }
         });

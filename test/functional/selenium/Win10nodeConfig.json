@@ -32,7 +32,7 @@
 	"hubPort": 4444,
 	"hubHost": "127.0.0.1",
 	"Dwebdriver.chrome.driver=chromedriver.exe": "",
-	"Dwebdriver.edge.driver=MicrosoftWebDriver.exe": "",
+	"Dwebdriver.edge.driver=msedgedriver.exe": "",
 	"Dwebdriver.gecko.driver=geckodriver.exe": ""
 
 }

@@ -49,7 +49,6 @@ function ErrorHandler() {
     function error(err) {
         eventBus.trigger(Events.ERROR, {error: err});
     }
-
     instance = {
         error: error
     };

@@ -34,6 +34,13 @@ define([], function () {
             player.stop();
         },
 
+        getStreams: function () {
+            return player.getStreamsFromManifest();
+        },
+
+        getDVRWindowSize: function () {
+            return player.getDVRWindowSize();
+        },
 
         isPlaying: function(timeout, done) {
             var _timeout = null,

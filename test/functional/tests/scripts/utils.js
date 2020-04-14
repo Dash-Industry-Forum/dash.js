@@ -3,8 +3,13 @@ define([
     ], function (intern) {
 
     var defaultTimeout = intern.config.defaultTimeout;
-    
+
     return {
+
+        testName: function (name, stream) {
+            return stream.name + ' # ' + name;
+        },
+
 
         info: function (tag, message) {
             console.info('[' + tag + ']', message);

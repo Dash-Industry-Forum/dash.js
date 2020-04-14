@@ -58,6 +58,14 @@ function DashAdapter() {
 
     // #region PUBLIC FUNCTIONS
     // --------------------------------------------------
+    function getVoAdaptations() {
+        return voAdaptations;
+    }
+
+    function getVoPeriods() {
+        return voPeriods;
+    }
+
     function setConfig(config) {
         if (!config) return;
 
@@ -664,7 +672,6 @@ function DashAdapter() {
         getEvent: getEvent,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        setCurrentMediaInfo: setCurrentMediaInfo,
         getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
         getIsTextTrack: getIsTextTrack,
         getUTCTimingSources: getUTCTimingSources,
@@ -679,6 +686,9 @@ function DashAdapter() {
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
         getCodec: getCodec,
+        getVoAdaptations: getVoAdaptations,
+        getVoPeriods: getVoPeriods,
+        setCurrentMediaInfo: setCurrentMediaInfo,
         reset: reset
     };
 

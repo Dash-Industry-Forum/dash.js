@@ -267,8 +267,8 @@ function ScheduleController(config) {
         if (isNaN(currentRepresentationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
             // call metrics function to have data in the latest scheduling info...
             // if no metric, returns 0. In this case, rule will return false.
-            const bufferInfo = dashMetrics.getLatestBufferInfoVO(currentRepresentationInfo.mediaInfo.type, true, MetricsConstants.SCHEDULING_INFO);
-            safeBufferLevel = bufferInfo ? bufferInfo.duration * 1.5 : 1.5;
+            const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(currentRepresentationInfo.mediaInfo.type);
+            safeBufferLevel = schedulingInfo ? schedulingInfo.duration * 1.5 : 1.5;
         }
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -527,7 +527,9 @@ function ScheduleController(config) {
     }
 
     function onDataUpdateStarted(e) {
-        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id) {
+        const streamInfo = streamProcessor.getStreamInfo();
+        const streamInfoId = streamInfo ? streamInfo.id : null;
+        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamInfoId) {
             return;
         }
 
@@ -551,7 +553,7 @@ function ScheduleController(config) {
             }
         }
 
-        if (e.hasEnoughSpaceToAppend && isStopped) {
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && isStopped) {
             start();
         }
     }

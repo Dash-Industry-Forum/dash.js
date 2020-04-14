@@ -99,11 +99,7 @@ function TextTracks() {
         const lang = textTrackQueue[i].lang;
         const isTTML = textTrackQueue[i].isTTML;
         const isEmbedded = textTrackQueue[i].isEmbedded;
-        const track = videoModel.addTextTrack(kind, label, lang);
-
-        track.isEmbedded = isEmbedded;
-        track.isTTML = isTTML;
-
+        const track = videoModel.addTextTrack(kind, label, lang, isTTML, isEmbedded);
         return track;
     }
 

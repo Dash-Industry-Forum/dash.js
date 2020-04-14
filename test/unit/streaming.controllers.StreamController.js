@@ -7,6 +7,7 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AdapterMock from './mocks/AdapterMock';
+import BaseURLControllerMock from './mocks/BaseURLControllerMock';
 import ManifestLoaderMock from './mocks/ManifestLoaderMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
@@ -36,6 +37,7 @@ const dashMetricsMock = new DashMetricsMock();
 const protectionControllerMock = new ProtectionControllerMock();
 const videoModelMock = new VideoModelMock();
 const playbackControllerMock = new PlaybackControllerMock();
+const baseUrlControllerMock = new BaseURLControllerMock();
 
 Events.extend(ProtectionEvents);
 
@@ -132,6 +134,7 @@ describe('StreamController', function () {
                                         protectionController: protectionControllerMock,
                                         videoModel: videoModelMock,
                                         playbackController: playbackControllerMock,
+                                        baseURLController: baseUrlControllerMock,
                                         settings: settings});
 
             streamController.initialize(false);

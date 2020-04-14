@@ -220,5 +220,15 @@
                 "href": "advanced/cmcd.html"
             }
         ]
+    },
+    {
+        "section": "Offline ",
+        "samples": [
+            {
+                "title": "Offline mode",
+                "description": "Example showing how store and read back streams without network connexion to Dash",
+                "href": "offline/index.html"
+            }
+        ]
     }
 ]

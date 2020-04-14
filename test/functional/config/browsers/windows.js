@@ -5,7 +5,11 @@ define(function () {
         platform: 'WINDOWS',
         os: 'WINDOWS',
         os_version: '10',
-        keySystems: ['com.widevine.alpha', 'org.w3.clearkey'],
+        keySystems: {
+            'com.widevine.alpha': true,
+            'com.microsoft.playready': false,
+            'org.w3.clearkey': true
+        },
         'goog:chromeOptions': { w3c: false }
     };
 
@@ -14,13 +18,21 @@ define(function () {
         platform: 'WINDOWS',
         os: 'WINDOWS',
         os_version: '10',
-        keySystems: ['com.widevine.alpha', 'org.w3.clearkey']
+        keySystems: {
+            'com.widevine.alpha': true,
+            'com.microsoft.playready': false,
+            'org.w3.clearkey': true
+        }
     };
 
     var EDGE_CONFIG = {
         browserName: 'MicrosoftEdge',
         platform: 'WINDOWS',
-        keySystems: ['com.microsoft.playready', 'org.w3.clearkey']
+        keySystems: {
+            'com.widevine.alpha': false,
+            'com.microsoft.playready': true,
+            'org.w3.clearkey': true
+        }
     };
 
     return {

@@ -186,7 +186,6 @@ function PlaybackController() {
                 t -= timeOffset;
             }
         }
-
         return t;
     }
 
@@ -222,15 +221,18 @@ function PlaybackController() {
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @param {number} fragmentDuration - seconds?
      * @param {number} dvrWindowSize - seconds?
+     * @param {number} minBufferTime - seconds?
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeLiveDelay(fragmentDuration, dvrWindowSize) {
+    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime = NaN) {
         let delay,
             ret,
             r,
             startTime;
         const END_OF_PLAYLIST_PADDING = 10;
+        const MIN_BUFFER_TIME_FACTOR = 4;
+        const FRAGMENT_DURATION_FACTOR = 4;
 
         let uriParameters = uriFragmentModel.getURIFragmentData();
 
@@ -240,19 +242,20 @@ function PlaybackController() {
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
-        if (settings.get().streaming.useSuggestedPresentationDelay && suggestedPresentationDelay !== null) {
-            delay = suggestedPresentationDelay;
-        } else if (settings.get().streaming.lowLatencyEnabled) {
+        if (settings.get().streaming.lowLatencyEnabled) {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
+        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(fragmentDuration)) {
+            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else if (r) {
             delay = r;
-        }
-        else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
+        } else if (settings.get().streaming.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
+            delay = suggestedPresentationDelay;
+        } else if (!isNaN(fragmentDuration)) {
+            delay = fragmentDuration * FRAGMENT_DURATION_FACTOR;
         } else {
-            delay = streamInfo.manifestInfo.minBufferTime * 2;
+            delay = !isNaN(minBufferTime) ? minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
 
         startTime = adapter.getAvailabilityStartTime();
@@ -452,7 +455,6 @@ function PlaybackController() {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime);
-
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
             seek(actualTime);
@@ -758,7 +760,7 @@ function PlaybackController() {
             const minDelay = 1.2 * e.request.duration;
             if (minDelay > mediaPlayerModel.getLiveDelay()) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
-                const s = { streaming: { liveDelay: minDelay } };
+                const s = {streaming: {liveDelay: minDelay}};
                 settings.update(s);
             }
         }

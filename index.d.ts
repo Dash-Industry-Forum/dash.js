@@ -10,7 +10,7 @@ declare namespace dashjs {
         fatal(...params: any[]): void;
     }
 
-    enum LogLevel {
+    const enum LogLevel {
         LOG_LEVEL_NONE = 0,
         LOG_LEVEL_FATAL = 1,
         LOG_LEVEL_ERROR = 2,
@@ -51,10 +51,12 @@ declare namespace dashjs {
         scanType?: string;
     }
 
+    export type MediaType = 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | 'image';
+
     export class MediaInfo {
         id: string | null;
         index: number | null;
-        type: 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | null;
+        type: MediaType | null;
         streamInfo: StreamInfo | null;
         representationCount: number;
         labels: string[];
@@ -193,6 +195,7 @@ declare namespace dashjs {
         on(type: ManifestLoadedEvent['type'], listener: (e: ManifestLoadedEvent) => void, scope?: object): void;
         on(type: MetricEvent['type'], listener: (e: MetricEvent) => void, scope?: object): void;
         on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
+        on(type: OfflineStreamEvent['type'], listener: (e: OfflineStreamEvent) => void, scope?: object): void;
         on(type: PeriodSwitchEvent['type'], listener: (e: PeriodSwitchEvent) => void, scope?: object): void;
         on(type: PlaybackErrorEvent['type'], listener: (e: PlaybackErrorEvent) => void, scope?: object): void;
         on(type: PlaybackPausedEvent['type'], listener: (e: PlaybackPausedEvent) => void, scope?: object): void;
@@ -238,18 +241,18 @@ declare namespace dashjs {
         formatUTC(time: number, locales: string, hour12: boolean, withDate?: boolean): string;
         getVersion(): string;
         getDebug(): Debug;
-        getBufferLength(type: 'video' | 'audio' | 'fragmentedText'): number;
+        getBufferLength(type: MediaType): number;
         getVideoModel(): VideoModel;
         getTTMLRenderingDiv(): HTMLDivElement | null;
         getVideoElement(): HTMLVideoElement;
         getSource(): string | object;
-        getTopBitrateInfoFor(type: 'video' | 'audio'): BitrateInfo;
+        getTopBitrateInfoFor(type: MediaType): BitrateInfo;
         setAutoPlay(value: boolean): void;
         getAutoPlay(): boolean;
         getDashMetrics(): DashMetrics;
         getDashAdapter(): DashAdapter;
-        getQualityFor(type: 'video' | 'audio' | 'image'): number;
-        setQualityFor(type: 'video' | 'audio' | 'image', value: number): void;
+        getQualityFor(type: MediaType): number;
+        setQualityFor(type: MediaType, value: number): void;
         updatePortalSize(): void;
         enableText(enable: boolean): void;
         setTextTrack(idx: number): void;
@@ -258,16 +261,16 @@ declare namespace dashjs {
         getTextDefaultEnabled(): boolean | undefined;
         setTextDefaultEnabled(enable: boolean): void;
         getThumbnail(time: number): Thumbnail;
-        getBitrateInfoListFor(type: 'video' | 'audio' | 'image'): BitrateInfo[];
+        getBitrateInfoListFor(type: MediaType): BitrateInfo[];
         getStreamsFromManifest(manifest: object): StreamInfo[];
-        getTracksFor(type: 'video' | 'audio' | 'text' | 'fragmentedText'): MediaInfo[];
-        getTracksForTypeFromManifest(type: 'video' | 'audio' | 'text' | 'fragmentedText', manifest: object, streamInfo: StreamInfo): MediaInfo[];
-        getCurrentTrackFor(type: 'video' | 'audio' | 'text' | 'fragmentedText'): MediaInfo | null;
-        setInitialMediaSettingsFor(type: 'video' | 'audio', value: MediaSettings): void;
-        getInitialMediaSettingsFor(type: 'video' | 'audio'): MediaSettings;
+        getTracksFor(type: MediaType): MediaInfo[];
+        getTracksForTypeFromManifest(type: MediaType, manifest: object, streamInfo: StreamInfo): MediaInfo[];
+        getCurrentTrackFor(type: MediaType): MediaInfo | null;
+        setInitialMediaSettingsFor(type: MediaType, value: MediaSettings): void;
+        getInitialMediaSettingsFor(type: MediaType): MediaSettings;
         setCurrentTrack(track: MediaInfo): void;
-        getTrackSwitchModeFor(type: 'video' | 'audio'): TrackSwitchMode;
-        setTrackSwitchModeFor(type: 'video' | 'audio', mode: TrackSwitchMode): void;
+        getTrackSwitchModeFor(type: MediaType): TrackSwitchMode;
+        setTrackSwitchModeFor(type: MediaType, mode: TrackSwitchMode): void;
         setSelectionModeForInitialTrack(mode: TrackSelectionMode): void;
         getSelectionModeForInitialTrack(): TrackSelectionMode;
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
@@ -418,12 +421,12 @@ declare namespace dashjs {
 
     export interface BufferEvent extends Event {
         type: MediaPlayerEvents['BUFFER_EMPTY' | 'BUFFER_LOADED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
     }
 
     export interface BufferStateChangedEvent extends Event {
         type: MediaPlayerEvents['BUFFER_LEVEL_STATE_CHANGED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
         sender: object;
         state: 'bufferStalled' | 'bufferLoaded';
         streamInfo: StreamInfo;
@@ -537,7 +540,7 @@ declare namespace dashjs {
         type: MediaPlayerEvents['FRAGMENT_LOADING_ABANDONED'];
         streamProcessor: object;
         request: object;
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
     }
 
     export class KeyError {
@@ -608,14 +611,14 @@ declare namespace dashjs {
 
     export interface MetricEvent extends Event {
         type: MediaPlayerEvents['METRIC_ADDED' | 'METRIC_UPDATED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
         metric: MetricType;
         value: object;
     }
 
     export interface MetricChangedEvent extends Event {
         type: MediaPlayerEvents['METRIC_CHANGED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
     }
 
     export interface PeriodSwitchEvent extends Event {
@@ -678,21 +681,21 @@ declare namespace dashjs {
 
     export interface TrackChangeRenderedEvent extends Event {
         type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
         oldMediaInfo: MediaInfo;
         newMediaInfo: MediaInfo;
     }
 
     export interface QualityChangeRenderedEvent extends Event {
         type: MediaPlayerEvents['QUALITY_CHANGE_RENDERED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
         oldQuality: number;
         newQuality: number;
     }
 
     export interface QualityChangeRequestedEvent extends Event {
         type: MediaPlayerEvents['QUALITY_CHANGE_REQUESTED'];
-        mediaType: 'video' | 'audio' | 'fragmentedText';
+        mediaType: MediaType;
         oldQuality: number;
         newQuality: number;
         streamInfo: StreamInfo | null;
@@ -746,7 +749,7 @@ declare namespace dashjs {
         firstByteDate: Date;
         index: number;
         mediaInfo: MediaInfo;
-        mediaType: 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText';
+        mediaType: MediaType;
         quality: number;
         representationId: string;
         requestStartDate: Date;
@@ -784,7 +787,7 @@ declare namespace dashjs {
         getStartTime(): number;
         getId(): string;
         getStreamInfo(): StreamInfo | null;
-        getBitrateListFor(type: 'video' | 'audio' | 'image'): BitrateInfo[];
+        getBitrateListFor(type: MediaType): BitrateInfo[];
         updateData(updatedStreamInfo: StreamInfo): void;
         reset(): void;
     }
@@ -813,23 +816,23 @@ declare namespace dashjs {
         t: Date;
     }
 
-    export interface ILatestBufferLevelVO {
-        level: number;
-        t: Date;
+    export interface IBufferState {
+        target: number;
+        state: string;
     }
 
     export interface DashMetrics {
-        getCurrentRepresentationSwitch(type: 'video' | 'audio' | 'image', readOnly: boolean): ICurrentRepresentationSwitch;
-        getLatestBufferInfoVO(): ILatestBufferLevelVO;
-        getCurrentBufferLevel(type: 'video' | 'audio' | 'image', readOnly: boolean): number;
-        getCurrentHttpRequest(type: 'video' | 'audio' | 'image', readOnly: boolean): object;
-        getHttpRequests(type: 'video' | 'audio' | 'image'): object[];
+        getCurrentRepresentationSwitch(type: MediaType): ICurrentRepresentationSwitch;
+        getCurrentBufferState(type: MediaType): IBufferState;
+        getCurrentBufferLevel(type: MediaType): number;
+        getCurrentHttpRequest(type: MediaType): object;
+        getHttpRequests(type: MediaType): object[];
         getCurrentDroppedFrames(): IDroppedFrames;
-        getCurrentSchedulingInfo(type: 'video' | 'audio' | 'image'): object;
-        getCurrentDVRInfo(type: 'video' | 'audio' | 'image'): IDVRInfo[];
+        getCurrentSchedulingInfo(type: MediaType): object;
+        getCurrentDVRInfo(type: MediaType): IDVRInfo[];
         getCurrentManifestUpdate(): any;
         getLatestFragmentRequestHeaderValueByID(id: string): string;
-        getLatestMPDRequestHeaderValueByID(type: 'video' | 'audio' | 'image', id: string): string;
+        getLatestMPDRequestHeaderValueByID(type: MediaType, id: string): string;
     }
 
     export interface DashAdapter {
@@ -842,7 +845,7 @@ declare namespace dashjs {
          * @param bufferType String 'audio' or 'video',
          * @param periodIdx Make sure this is the period index not id
          */
-        getMaxIndexForBufferType(bufferType: 'video' | 'audio', periodIdx: number): number;
+        getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
     }
 
     export class ProtectionData {

@@ -2,11 +2,13 @@ import SegmentBaseLoader from '../../src/dash/SegmentBaseLoader';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
 import Errors from '../../src/core/errors/Errors';
+import RequestModifier from '../../src/streaming/utils/RequestModifier';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import BaseURLControllerMock from './mocks/BaseURLControllerMock';
+import DebugMock from './mocks/DebugMock';
 
 const expect = require('chai').expect;
 
@@ -41,7 +43,12 @@ describe('SegmentBaseLoader', function () {
                 baseURLController: new BaseURLControllerMock(),
                 dashMetrics: new DashMetricsMock(),
                 mediaPlayerModel: new MediaPlayerModelMock(),
-                errHandler: new ErrorHandlerMock()
+                errHandler: new ErrorHandlerMock(),
+                debug: new DebugMock(),
+                eventBus: eventBus,
+                events: Events,
+                errors: Errors,
+                requestModifier: RequestModifier(context).getInstance()
             });
             segmentBaseLoader.initialize();
         });

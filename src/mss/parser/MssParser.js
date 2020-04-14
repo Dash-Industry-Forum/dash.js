@@ -117,10 +117,15 @@ function MssParser(config) {
             segments,
             i;
 
-        adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : streamIndex.getAttribute('Type');
-        adaptationSet.contentType = streamIndex.getAttribute('Type');
-        adaptationSet.lang = streamIndex.getAttribute('Language') || 'und';
-        adaptationSet.mimeType = mimeTypeMap[adaptationSet.contentType];
+        const name = streamIndex.getAttribute('Name');
+        const type = streamIndex.getAttribute('Type');
+        const lang = streamIndex.getAttribute('Language');
+        const fallBackId = lang ? type + '_' + lang : type;
+
+        adaptationSet.id = name || fallBackId;
+        adaptationSet.contentType = type;
+        adaptationSet.lang = lang || 'und';
+        adaptationSet.mimeType = mimeTypeMap[type];
         adaptationSet.subType = streamIndex.getAttribute('Subtype');
         adaptationSet.maxWidth = streamIndex.getAttribute('MaxWidth');
         adaptationSet.maxHeight = streamIndex.getAttribute('MaxHeight');
@@ -710,7 +715,8 @@ function MssParser(config) {
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
-                targetLiveDelay = segmentDuration * settings.get().streaming.liveDelayFragmentCount;
+                const liveDelayFragmentCount = settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) ? settings.get().streaming.liveDelayFragmentCount : 4;
+                targetLiveDelay = segmentDuration * liveDelayFragmentCount;
             }
             let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);

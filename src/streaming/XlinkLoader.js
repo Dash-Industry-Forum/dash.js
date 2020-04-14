@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashJSError from './vo/DashJSError';
-import HTTPLoader from './net/HTTPLoader';
+import URLLoader from './net/URLLoader';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
 import TextRequest from './vo/TextRequest';
 import EventBus from '../core/EventBus';
@@ -45,11 +45,12 @@ function XlinkLoader(config) {
     const context  = this.context;
     const eventBus = EventBus(context).getInstance();
 
-    let httpLoader = HTTPLoader(context).create({
+    let urlLoader = URLLoader(context).create({
         errHandler: config.errHandler,
         dashMetrics: config.dashMetrics,
         mediaPlayerModel: config.mediaPlayerModel,
-        requestModifier: config.requestModifier
+        requestModifier: config.requestModifier,
+        useFetch: config.settings ? config.settings.get().streaming.lowLatencyEnabled : null
     });
 
     let instance;
@@ -76,7 +77,7 @@ function XlinkLoader(config) {
         } else {
             const request = new TextRequest(url, HTTPRequest.XLINK_EXPANSION_TYPE);
 
-            httpLoader.load({
+            urlLoader.load({
                 request: request,
                 success: function (data) {
                     report(data);
@@ -89,9 +90,9 @@ function XlinkLoader(config) {
     }
 
     function reset() {
-        if (httpLoader) {
-            httpLoader.abort();
-            httpLoader = null;
+        if (urlLoader) {
+            urlLoader.abort();
+            urlLoader = null;
         }
     }
 
