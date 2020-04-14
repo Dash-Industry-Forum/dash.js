@@ -2915,10 +2915,15 @@ function MssParser(config) {
             segments = undefined,
             i = undefined;
 
-        adaptationSet.id = streamIndex.getAttribute('Name') ? streamIndex.getAttribute('Name') : streamIndex.getAttribute('Type');
-        adaptationSet.contentType = streamIndex.getAttribute('Type');
-        adaptationSet.lang = streamIndex.getAttribute('Language') || 'und';
-        adaptationSet.mimeType = mimeTypeMap[adaptationSet.contentType];
+        var name = streamIndex.getAttribute('Name');
+        var type = streamIndex.getAttribute('Type');
+        var lang = streamIndex.getAttribute('Language');
+        var fallBackId = lang ? type + '_' + lang : type;
+
+        adaptationSet.id = name || fallBackId;
+        adaptationSet.contentType = type;
+        adaptationSet.lang = lang || 'und';
+        adaptationSet.mimeType = mimeTypeMap[type];
         adaptationSet.subType = streamIndex.getAttribute('Subtype');
         adaptationSet.maxWidth = streamIndex.getAttribute('MaxWidth');
         adaptationSet.maxHeight = streamIndex.getAttribute('MaxHeight');
@@ -3505,7 +3510,8 @@ function MssParser(config) {
         if (manifest.type === 'dynamic') {
             var targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
-                targetLiveDelay = segmentDuration * settings.get().streaming.liveDelayFragmentCount;
+                var liveDelayFragmentCount = settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) ? settings.get().streaming.liveDelayFragmentCount : 4;
+                targetLiveDelay = segmentDuration * liveDelayFragmentCount;
             }
             var targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10, /*END_OF_PLAYLIST_PADDING*/manifest.timeShiftBufferDepth / 2);
             var liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
@@ -3739,7 +3745,6 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * @event MediaPlayerEvents#ERROR
      */
     this.ERROR = 'error';
-
     /**
      * Triggered when a fragment download has completed.
      * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
@@ -4180,7 +4185,7 @@ var _voMetricsHTTPRequest = _dereq_(17);
  */
 
 var FragmentRequest = (function () {
-    function FragmentRequest() {
+    function FragmentRequest(url) {
         _classCallCheck(this, FragmentRequest);
 
         this.action = FragmentRequest.ACTION_DOWNLOAD;
@@ -4191,7 +4196,7 @@ var FragmentRequest = (function () {
         this.duration = NaN;
         this.timescale = NaN;
         this.range = null;
-        this.url = null;
+        this.url = url || null;
         this.serviceLocation = null;
         this.requestStartDate = null;
         this.firstByteDate = null;

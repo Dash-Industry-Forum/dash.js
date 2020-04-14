@@ -517,7 +517,6 @@ var Constants = (function () {
        *  @static
        */
       this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
-
       this.LOCATION = 'Location';
       this.INITIALIZE = 'initialize';
       this.TEXT_SHOWING = 'showing';
@@ -527,9 +526,10 @@ var Constants = (function () {
       this.UTF8 = 'utf-8';
       this.SCHEME_ID_URI = 'schemeIdUri';
       this.START_TIME = 'starttime';
-
       this.SERVICE_DESCRIPTION_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
       this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+      this.XML = 'XML';
+      this.ARRAY_BUFFER = 'ArrayBuffer';
     }
   }]);
 

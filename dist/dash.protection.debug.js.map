@@ -1,7 +1,7 @@
 {
   "version": 3,
   "sources": [
-    "../node_modules/browser-pack/_prelude.js",
+    "../node_modules/browserify/node_modules/browser-pack/_prelude.js",
     "core/errors/ErrorsBase.js",
     "core/events/EventsBase.js",
     "streaming/constants/ProtectionConstants.js",
