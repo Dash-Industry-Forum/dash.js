@@ -412,19 +412,8 @@ function ScheduleController(config) {
 
     function setLiveEdgeSeekTarget() {
         if (liveEdgeFinder) {
-            let request = null;
-            let liveDelay = playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
             const liveEdge = liveEdgeFinder.getLiveEdge(streamProcessor.getRepresentationInfo());
-            const dvrWindowSize = !isNaN(currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize) ? currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize : liveDelay;
-
-            // Try to find a request as close as possible to the targeted live edge
-            while (!request && liveDelay <= dvrWindowSize) {
-                let startTime = liveEdge - liveDelay;
-                request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
-                    ignoreIsFinished: true
-                });
-                liveDelay += 1; // Increase by one second for each iteration
-            }
+            let request = _findRequestForLiveEdge(liveEdge);
 
             if (request) {
                 // When low latency mode is selected but browser doesn't support fetch
@@ -453,6 +442,32 @@ function ScheduleController(config) {
                 latency: liveEdge - seekTarget,
                 clientTimeOffset: timelineConverter.getClientTimeOffset()
             });
+        }
+    }
+
+    function _findRequestForLiveEdge(liveEdge) {
+        try {
+            let request = null;
+            let liveDelay = playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
+            const dvrWindowSize = !isNaN(currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize) ? currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize : liveDelay;
+
+            // Make sure that we have at least a valid request for the end of the DVR window, otherwise we might try forever
+            if (streamProcessor.getFragmentRequest(currentRepresentationInfo, liveEdge - dvrWindowSize, {
+                ignoreIsFinished: true
+            })) {
+                // Try to find a request as close as possible to the targeted live edge
+                while (!request && liveDelay <= dvrWindowSize) {
+                    let startTime = liveEdge - liveDelay;
+                    request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
+                        ignoreIsFinished: true
+                    });
+                    liveDelay += 1; // Increase by one second for each iteration
+                }
+            }
+
+            return request;
+        } catch (e) {
+            return null;
         }
     }
 
