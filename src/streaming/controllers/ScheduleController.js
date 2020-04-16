@@ -30,7 +30,7 @@
  */
 import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
-import { PlayListTrace } from '../vo/metrics/PlayList';
+import {PlayListTrace} from '../vo/metrics/PlayList';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import FragmentModel from '../models/FragmentModel';
@@ -310,8 +310,8 @@ function ScheduleController(config) {
         getInitRequest(currentRepresentationInfo.quality);
     }
 
-    function setFragmentProcessState (state) {
-        if (isFragmentProcessingInProgress !== state ) {
+    function setFragmentProcessState(state) {
+        if (isFragmentProcessingInProgress !== state) {
             isFragmentProcessingInProgress = state;
         } else {
             logger.debug('isFragmentProcessingInProgress is already equal to', state);
@@ -412,11 +412,19 @@ function ScheduleController(config) {
 
     function setLiveEdgeSeekTarget() {
         if (liveEdgeFinder) {
+            let request = null;
+            let liveDelay = playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
             const liveEdge = liveEdgeFinder.getLiveEdge(streamProcessor.getRepresentationInfo());
-            const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
-            const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
-                ignoreIsFinished: true
-            });
+            const dvrWindowSize = !isNaN(currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize) ? currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize : liveDelay;
+
+            // Try to find a request as close as possible to the targeted live edge
+            while (!request && liveDelay <= dvrWindowSize) {
+                let startTime = liveEdge - liveDelay;
+                request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
+                    ignoreIsFinished: true
+                });
+                liveDelay += 1; // Increase by one second for each iteration
+            }
 
             if (request) {
                 // When low latency mode is selected but browser doesn't support fetch
@@ -503,8 +511,7 @@ function ScheduleController(config) {
             const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
             if ((currentTime + safeBufferLevel) >= fragEndTime) {
                 startScheduleTimer(0);
-            }
-            else {
+            } else {
                 startScheduleTimer((fragEndTime - (currentTime + safeBufferLevel)) * 1000);
             }
             isReplacementRequest = false;
