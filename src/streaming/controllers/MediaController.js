@@ -496,6 +496,7 @@ function MediaController() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         isMultiTrackSupportedByType: isMultiTrackSupportedByType,
         isTracksEqual: isTracksEqual,
+        matchSettings: matchSettings,
         setConfig: setConfig,
         reset: reset
     };

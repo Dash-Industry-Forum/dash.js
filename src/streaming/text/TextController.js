@@ -54,7 +54,7 @@ function TextController() {
         vttParser,
         ttmlParser,
         eventBus,
-        defaultLanguage,
+        defaultSettings,
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
@@ -63,7 +63,7 @@ function TextController() {
 
     function setup() {
 
-        defaultLanguage = '';
+        defaultSettings = {};
         lastEnabledIndex = -1;
         textDefaultEnabled = true;
         forceTextStreaming = false;
@@ -170,24 +170,31 @@ function TextController() {
 
     function setTextDefaultLanguage(lang) {
         checkParameterType(lang, 'string');
-        defaultLanguage = lang;
+        defaultSettings.lang = lang;
+    }
+
+    function setInitialSettings(settings) {
+        defaultSettings = settings;
     }
 
     function getTextDefaultLanguage() {
-        return defaultLanguage;
+        return defaultSettings.lang || '';
     }
 
     function onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
 
-        tracks.some((item, idx) => {
-            if (item.lang === defaultLanguage) {
-                this.setTextTrack(idx);
-                index = idx;
-                return true;
-            }
-        });
+        if (defaultSettings) {
+            tracks.some((item, idx) => {
+                // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
+                if (mediaController.matchSettings(defaultSettings, item)) {
+                    this.setTextTrack(idx);
+                    index = idx;
+                    return true;
+                }
+            });
+        }
 
         if (!textDefaultEnabled) {
             // disable text at startup
@@ -249,7 +256,7 @@ function TextController() {
     }
 
     function setTextTrack(idx) {
-        //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+        //For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
@@ -342,6 +349,7 @@ function TextController() {
         setTextDefaultLanguage: setTextDefaultLanguage,
         setTextDefaultEnabled: setTextDefaultEnabled,
         getTextDefaultEnabled: getTextDefaultEnabled,
+        setInitialSettings: setInitialSettings,
         enableText: enableText,
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,
