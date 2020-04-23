@@ -1,16 +1,15 @@
 define([
     'intern',
-    'require'
-], function (intern, require) {
+    'require',
+    './sources'
+], function (intern, require, sources) {
 
-    // Same path as in sources.js
-    var sources = require('./sources');
     var standardSourcePath = './samples/dash-if-reference-player/app/sources.json';
     var fs = require('intern/dojo/node!fs');
 
     // Get streams from reference sample application
     var sourcePath = intern.args.source ? sources[intern.args.source] : standardSourcePath;
-    var source = fs.readFileSync(sourcePath, 'utf8');
+    var source = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
     var streams = [];
 
     for (var i = 0; i < source.items.length; i++) {
