@@ -1,33 +1,25 @@
 define([
     'intern',
-    'require',
-    './sources'
-], function (intern, require, sources) {
+    'require'
+], function (intern, require) {
 
-    // Same path as in sources.js 
-    const standard_sources_path = './samples/dash-if-reference-player/app/sources.json';
-    
+    // Same path as in sources.js
+    var sources = require('./sources');
+    var standardSourcePath = './samples/dash-if-reference-player/app/sources.json';
     var fs = require('intern/dojo/node!fs');
 
     // Get streams from reference sample application
-    if(intern.args.sources) {
-        var sources = JSON.parse(fs.readFileSync(sources[intern.args.sources], 'utf8'));
-    }else{
-        var sources = JSON.parse(fs.readFileSync(standard_sources_path, 'utf8'));
-    }    
-    // Get test application protocol
-    // var applicationProtocol = /^(https?|)/.exec(intern.config.testPage)[0];
-    // console.log('Application protocol: ' + applicationProtocol);
-
+    var sourcePath = intern.args.source ? sources[intern.args.source] : standardSourcePath;
+    var source = fs.readFileSync(sourcePath, 'utf8');
     var streams = [];
 
-    for (var i = 0; i < sources.items.length; i++) {
-        var group = sources.items[i];
+    for (var i = 0; i < source.items.length; i++) {
+        var group = source.items[i];
         var groupName = group.name;
         for (var j = 0; j < group.submenu.length; j++) {
             var stream = group.submenu[j];
             stream.name = groupName + ' / ' + stream.name;
-            streams.push(stream);    
+            streams.push(stream);
         }
     }
 
@@ -39,11 +31,10 @@ define([
         streams = streams.filter(stream => {
             return stream.name.indexOf(intern.config.testStream) !== -1;
         });
-    };
+    }
 
-    // streams = streams.slice(0, 1);
 
     return {
         items: streams
-    }
+    };
 });
