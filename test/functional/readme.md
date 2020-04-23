@@ -36,11 +36,11 @@ In ```selenium``` folder, the following web drivers are available:
 - Chromium Edge
 
 #### Legacy Edge
-Download matching Edge driver (MicrosoftWebDriver) from https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
+Download the matching Edge driver (MicrosoftWebDriver) from https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
-For Edge version 17 and prior you need to adjust the "Dwebdriver.edge.driver" property in startClient.bat. 
+For Edge version <=17 you need to adjust the "Dwebdriver.edge.driver" property in startClient.bat. 
 
-For Version 18 and 19 follow the instructions in the same link above and remove the "Dwebdriver.edge.driver" property and the MicrosoftWebDriver.exe in the selenium folder.
+For Version 18 and 19 follow the instructions in the link above and remove the "Dwebdriver.edge.driver" property and the MicrosoftWebDriver.exe in the selenium folder.
 
 #### Launch the tests
 1. Start selenium hub. Open a new terminal and launch the command:
