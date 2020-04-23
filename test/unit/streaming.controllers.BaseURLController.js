@@ -44,7 +44,7 @@ describe('BaseURLController', function () {
             selector: basicSelector
         });
 
-        const baseURLController = BaseURLController(context).getInstance();
+        const baseURLController = BaseURLController(context).create();
         baseURLController.setConfig({
             baseURLTreeModel: dummyBaseURLTreeModel,
             baseURLSelector: baseURLSelector

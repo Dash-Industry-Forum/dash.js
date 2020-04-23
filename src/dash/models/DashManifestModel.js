@@ -373,7 +373,8 @@ function DashManifestModel() {
                 bandwidth: realRepresentation.bandwidth,
                 width: realRepresentation.width || 0,
                 height: realRepresentation.height || 0,
-                scanType: realRepresentation.scanType || null
+                scanType: realRepresentation.scanType || null,
+                id: realRepresentation.id || null
             };
         });
     }
@@ -735,7 +736,7 @@ function DashManifestModel() {
                 mpd.mediaPresentationDuration = manifest.mediaPresentationDuration;
             }
 
-            if (manifest.hasOwnProperty(Constants.SUGGESTED_PRESENTATION_DELAY)) {
+            if (manifest.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY)) {
                 mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
             }
 

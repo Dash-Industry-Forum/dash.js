@@ -28,14 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashConstants from './constants/DashConstants';
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
-import Events from '../core/events/Events';
-import EventBus from '../core/EventBus';
 import FactoryMaker from '../core/FactoryMaker';
-import Debug from '../core/Debug';
-import URLUtils from '../streaming/utils/URLUtils';
 import {
     replaceIDForTemplate,
     unescapeDollarsInTemplate,
@@ -49,8 +44,12 @@ function DashHandler(config) {
 
     config = config || {};
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
-    const urlUtils = URLUtils(context).getInstance();
+
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const debug = config.debug;
+    const dashConstants = config.dashConstants;
+    const urlUtils = config.urlUtils;
     const type = config.type;
     const streamInfo = config.streamInfo;
 
@@ -65,17 +64,18 @@ function DashHandler(config) {
         requestedTime,
         currentTime,
         isDynamicManifest,
+        selectedMimeType,
         segmentsController;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = debug.getLogger(instance);
         resetInitialSettings();
 
         segmentsController = SegmentsController(context).create(config);
 
-        eventBus.on(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        eventBus.on(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-        eventBus.on(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.on(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.on(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.on(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function initialize(isDynamic) {
@@ -99,6 +99,14 @@ function DashHandler(config) {
         return currentTime;
     }
 
+    function setCurrentIndex (value) {
+        segmentIndex = value;
+    }
+
+    function getCurrentIndex () {
+        return segmentIndex;
+    }
+
     function resetIndex() {
         segmentIndex = -1;
         lastSegment = null;
@@ -109,14 +117,15 @@ function DashHandler(config) {
         currentTime = 0;
         requestedTime = null;
         segmentsController = null;
+        selectedMimeType = null;
     }
 
     function reset() {
         resetInitialSettings();
 
-        eventBus.off(Events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
-        eventBus.off(Events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
-        eventBus.off(Events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.off(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
+        eventBus.off(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
+        eventBus.off(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -171,6 +180,10 @@ function DashHandler(config) {
         return request;
     }
 
+    function setMimeType(newMimeType) {
+        selectedMimeType = newMimeType;
+    }
+
     function setExpectedLiveEdge(liveEdge) {
         timelineConverter.setExpectedLiveEdge(liveEdge);
         dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
@@ -189,9 +202,9 @@ function DashHandler(config) {
         //if representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
         //otherwise, it means that a request has to be made to get initialization and/or segments informations
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
+            eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: instance, representation: voRepresentation});
         } else {
-            segmentsController.update(voRepresentation, getType(), hasInitialization, hasSegments);
+            segmentsController.update(voRepresentation, getType(), selectedMimeType, hasInitialization, hasSegments);
         }
     }
 
@@ -289,7 +302,7 @@ function DashHandler(config) {
         }
 
         if (keepIdx && idx >= 0) {
-            segmentIndex = representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && isDynamicManifest ? segmentIndex : idx;
+            segmentIndex = representation.segmentInfoType === dashConstants.SEGMENT_TIMELINE && isDynamicManifest ? segmentIndex : idx;
         }
 
         return request;
@@ -350,7 +363,7 @@ function DashHandler(config) {
         const representation = e.representation;
         if (!representation.segments) return;
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     function onSegmentsLoaded(e) {
@@ -404,7 +417,7 @@ function DashHandler(config) {
             return;
         }
 
-        eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
     instance = {
@@ -412,12 +425,17 @@ function DashHandler(config) {
         getType: getType, //need to be public in order to be used by logger
         getStreamInfo: getStreamInfo,
         getInitRequest: getInitRequest,
+        getRequestForSegment: getRequestForSegment,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
         setCurrentTime: setCurrentTime,
         getCurrentTime: getCurrentTime,
+        setCurrentIndex: setCurrentIndex,
+        getCurrentIndex: getCurrentIndex,
+        isMediaFinished: isMediaFinished,
         reset: reset,
-        resetIndex: resetIndex
+        resetIndex: resetIndex,
+        setMimeType: setMimeType
     };
 
     setup();

@@ -73,7 +73,6 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#ERROR
          */
         this.ERROR = 'error';
-
         /**
          * Triggered when a fragment download has completed.
          * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED

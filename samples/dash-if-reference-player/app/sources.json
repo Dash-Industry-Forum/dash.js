@@ -17,7 +17,7 @@
           "name": "SegmentTimeline/Time"
         },
         {
-          "url": "https://dash.akamaized.net/dash264/TestCases/5a/1/manifest.mpd",
+          "url": "http://dash.akamaized.net/dash264/TestCases/5a/1/manifest.mpd",
           "name": "Multiperiod"
         },
         {
@@ -92,15 +92,6 @@
             "lowLatencyMode": true,
             "liveDelay": 3
           }
-        },
-        {
-          "url": "http://24x7dash-i.akamaihd.net/dash/live/900080/dash-demo/dash.mpd",
-          "name": "Akamai 24x7 reference stream - segmentTemplate"
-        },
-        {
-          "url": "https://akamai-axtest.akamaized.net/routes/lapd-v1-acceptance/www_c4/Manifest.mpd",
-          "name": "Axinom reference stream (Live-Clear)",
-          "moreInfo": "https://github.com/Axinom/dash-test-vectors#live-clear"
         },
         {
            "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
@@ -807,7 +798,7 @@
           "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
           "protData": {
             "com.microsoft.playready": {
-              "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
+              "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
               "sessionType": "persistent-license"
             }
           }
@@ -942,24 +933,15 @@
       "name": "Smooth Streaming",
       "submenu": [
         {
-          "url": "http://2is7server2.rd.francetelecom.com/hasplayer/VOD_1/VOD_1.ism/manifest",
-          "name": "Prince Of Persia"
-        },
-        {
-          "url": "http://2is7server2.rd.francetelecom.com/hasplayer/LIVE_1.isml/manifest",
-          "name": "Prince Of Persia - Live"
-        },
-        {
-          "url": "http://2is7server1.rd.francetelecom.com/VOD/BBB-SD/big_buck_bunny_1080p_stereo.ism/Manifest",
-          "name": "Big Buck Bunny"
-        },
-        {
           "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
           "name": "Super Speedway"
         },
         {
           "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
-          "name": "Super Speedway + PlayReady DRM"
+          "name": "Super Speedway + PlayReady DRM",
+          "protData": {
+            "com.microsoft.playready": {
+            }}
         },
         {
           "url": "http://test.playready.microsoft.com/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",

@@ -1,4 +1,11 @@
 import SegmentsController from '../../src/dash/controllers/SegmentsController';
+import DashConstants from '../../src/dash/constants/DashConstants';
+import Debug from '../../src/core/Debug';
+import Settings from '../../src/core/Settings';
+import EventBus from '../../src/core/EventBus';
+import Events from '../../src/core/events/Events';
+import Errors from '../../src/core/errors/Errors';
+
 import ObjectsHelper from './helpers/ObjectsHelper';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -17,12 +24,20 @@ describe('SegmentsController', function () {
     const mediaPlayerModel = new MediaPlayerModelMock();
     const dashMetricsMock = new DashMetricsMock();
     const errHandler = new ErrorHandlerMock();
+    const settings = Settings(context).getInstance();
+    const debug = Debug(context).getInstance({settings: settings});
+    const eventBus = EventBus(context).getInstance();
 
     const segmentsController = SegmentsController(context).create({
         dashMetrics: dashMetricsMock,
         mediaPlayerModel: mediaPlayerModel,
         errHandler: errHandler,
-        baseURLController: baseURLController
+        baseURLController: baseURLController,
+        dashConstants: DashConstants,
+        debug: debug,
+        eventBus: eventBus,
+        events: Events,
+        errors: Errors
     }, false);
 
     segmentsController.initialize();

@@ -1,5 +1,6 @@
 import HTTPLoader from '../../src/streaming/net/HTTPLoader';
 import RequestModifier from '../../src/streaming/utils/RequestModifier';
+import Errors from '../../src/core/errors/Errors';
 import ErrorHandler from '../../src/streaming/utils/ErrorHandler';
 import DashMetrics from '../../src/dash/DashMetrics';
 import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
@@ -94,7 +95,7 @@ describe('HTTPLoader', function () {
     });
 
     it('should throw an exception when attempting to call load and config parameter has not been set properly', () => {
-        httpLoader = HTTPLoader(context).create({ mediaPlayerModel: mediaPlayerModelMock });
+        httpLoader = HTTPLoader(context).create({ mediaPlayerModel: mediaPlayerModelMock, errors: Errors });
         expect(httpLoader.load.bind(httpLoader, { request: {} })).to.throw('config object is not correct or missing');
     });
 
@@ -109,7 +110,8 @@ describe('HTTPLoader', function () {
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true
+            useFetch: true,
+            errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
@@ -129,7 +131,8 @@ describe('HTTPLoader', function () {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
@@ -152,7 +155,8 @@ describe('HTTPLoader', function () {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
-            mediaPlayerModel: mediaPlayerModelMock
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
@@ -176,7 +180,8 @@ describe('HTTPLoader', function () {
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true
+            useFetch: true,
+            errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
 
@@ -197,7 +202,8 @@ describe('HTTPLoader', function () {
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true
+            useFetch: true,
+            errors: Errors
         });
         global.fetch.returns(Promise.resolve(new global.Response('', { status: 200 })));
         httpLoader.load({ request: { checkExistenceOnly: true, responseType: 'arraybuffer', type: HTTPRequest.MEDIA_SEGMENT_TYPE }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError });
@@ -225,7 +231,8 @@ describe('HTTPLoader', function () {
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,
-            useFetch: true
+            useFetch: true,
+            errors: Errors
         });
         // Creating stream
         const stream = new Stream.Readable();
@@ -256,6 +263,7 @@ describe('HTTPLoader', function () {
         mediaPlayerModelMock.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE ] = 0;
         httpLoader = HTTPLoader(context).create({
             errHandler: errHandler,
+            errors: Errors,
             dashMetrics: dashMetrics,
             requestModifier: requestModifier,
             mediaPlayerModel: mediaPlayerModelMock,

@@ -46,10 +46,10 @@ define([
         }
         return pos;
     };
-    
+
     var load = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             load: function() {
                 if (!stream.available) this.skip();
@@ -71,7 +71,7 @@ define([
 
     var seek = function(stream) {
         registerSuite({
-            name: NAME,
+            name: utils.testName(NAME, stream),
 
             seek: function() {
                 if (!stream.available) this.skip();

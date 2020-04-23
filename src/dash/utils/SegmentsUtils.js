@@ -149,7 +149,15 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
 
     const segmentTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, segment.presentationStartTime);
     if (segmentTime >= periodRelativeEnd) {
-        return false;
+        if (isDynamic) {
+            // segment is not available in current period, but it may be segment available in another period that current one (in DVR window)
+            // if not (time > segmentAvailabilityRange.end), then return false
+            if ( representation.segmentAvailabilityRange && segment.presentationStartTime >= representation.segmentAvailabilityRange.end) {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     return true;

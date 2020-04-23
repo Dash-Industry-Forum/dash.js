@@ -34,8 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
 import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
-
-import SegmentBaseLoader from '../../dash/SegmentBaseLoader';
+import Events from '../../core/events/Events';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
@@ -45,14 +44,14 @@ export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
 
 function ThumbnailTracks(config) {
     const context = this.context;
-
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const stream = config.stream;
     const timelineConverter = config.timelineConverter;
-    const dashMetrics = config.dashMetrics;
-    const mediaPlayerModel = config.mediaPlayerModel;
-    const errHandler = config.errHandler;
+    const debug = config.debug;
+    const eventBus = config.eventBus;
+    const events = config.events;
+    const dashConstants = config.dashConstants;
 
     const urlUtils = URLUtils(context).getInstance();
 
@@ -61,22 +60,20 @@ function ThumbnailTracks(config) {
         indexHandler,
         currentTrackIndex,
         mediaInfo,
-        loader, segmentBaseLoader, boxParser;
+        loader,
+        boxParser;
 
     function initialize() {
         reset();
         loader = XHRLoader(context).create({});
         boxParser = BoxParser(context).getInstance();
-        segmentBaseLoader = SegmentBaseLoader(context).getInstance();
-        segmentBaseLoader.setConfig({
-            baseURLController: baseURLController,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler
-        });
 
         indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
-                                baseURLController: baseURLController});
+                                baseURLController: baseURLController,
+                                debug: debug,
+                                eventBus: eventBus,
+                                events: events,
+                                dashConstants: dashConstants});
 
         // initialize controllers
         indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);
@@ -176,8 +173,8 @@ function ThumbnailTracks(config) {
         }
 
         if (useSegmentBase) {
-            segmentBaseLoader.loadSegments(representation, Constants.IMAGE, representation.indexRange, {}, function (segments, representation) {
-                var cache = [];
+            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mediaInfo.mimeType, mediaType: Constants.IMAGE, representation: representation, function(segments, representation) {
+                let cache = [];
                 segments = normalizeSegments(segments, representation);
                 track.segmentDuration = segments[0].duration; //assume all segments have the same duration
                 track.readThumbnail = function (time, callback) {
@@ -220,7 +217,7 @@ function ThumbnailTracks(config) {
                         });
                     }
                 };
-            });
+            }});
         } else {
             track.startNumber = representation.startNumber;
             track.segmentDuration = representation.segmentDuration;
