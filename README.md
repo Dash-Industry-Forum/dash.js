@@ -32,6 +32,12 @@ The latest minified files have been hosted on a global CDN and are free to use i
 - [dash.all.min.js](http://cdn.dashjs.org/latest/dash.all.min.js) 
 - [dash.all.debug.js](http://cdn.dashjs.org/latest/dash.all.debug.js) 
 
+In addition, all the releases are available under the following urls. Replace "vx.x.x" with the release version, for instance "v3.1.0". 
+
+- [http://cdn.dashjs.org/vx.x.x/dash.all.min.js](http://cdn.dashjs.org/v3.1.0/dash.all.min.js) 
+- [http://cdn.dashjs.org/vx.x.x/dash.all.debug.js](http://cdn.dashjs.org/v3.1.0/dash.all.debug.js) 
+
+
 
 ## Documentation
 Full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html) is available describing all public methods, interfaces, properties, and events.
