@@ -20,7 +20,7 @@ define([
         for (var j = 0; j < group.submenu.length; j++) {
             var stream = group.submenu[j];
             stream.name = groupName + ' / ' + stream.name;
-            streams.push(stream);    
+            if(stream.browser===undefined || stream.browser.includes(intern.args.browsers)) streams.push(stream);        
         }
     }
 
