@@ -3,7 +3,7 @@ version: 2
 _defaults: &defaults
   working_directory: ~/repo
   docker:
-    - image: circleci/node:10.21.1
+    - image: circleci/node:10.20.1
 
 _steps:
   restore_cache: &restore_cache
