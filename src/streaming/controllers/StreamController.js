@@ -369,7 +369,6 @@ function StreamController() {
 
             if (useSmoothPeriodTransition) {
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
-                activeStream.stopEventController();
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
                 preloading = newStream;
