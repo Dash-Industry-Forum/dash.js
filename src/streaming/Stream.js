@@ -376,7 +376,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(), mediaInfo.type);
+        let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             type: mediaInfo ? mediaInfo.type : null,

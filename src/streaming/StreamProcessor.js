@@ -137,8 +137,7 @@ function StreamProcessor(config) {
             dashConstants: DashConstants,
             events: Events,
             eventBus: eventBus,
-            errors: Errors,
-            streamProcessor: instance
+            errors: Errors
         });
         bufferController.initialize(mediaSource);
         scheduleController.initialize();
