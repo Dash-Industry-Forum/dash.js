@@ -76,6 +76,7 @@ function FetchLoader(cfg) {
         if (typeof window.AbortController === 'function') {
             abortController = new AbortController(); /*jshint ignore:line*/
             httpRequest.abortController = abortController;
+            abortController.signal.onabort = httpRequest.onabort;
         }
 
         const reqOptions = {
