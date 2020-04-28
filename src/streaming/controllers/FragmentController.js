@@ -123,9 +123,8 @@ function FragmentController( config ) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (fragmentModels[e.request.mediaType] !== e.sender) {
-            return;
-        }
+        // Event propagation may have been stopped (see MssHandler)
+        if (!e.sender) return;
 
         const request = e.request;
         const bytes = e.response;

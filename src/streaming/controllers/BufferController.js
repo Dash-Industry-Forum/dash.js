@@ -204,7 +204,7 @@ function BufferController(config) {
             logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
             appendToBuffer(chunk);
         } else {
-            eventBus.trigger(Events.INIT_REQUESTED, { sender: instance });
+            eventBus.trigger(Events.INIT_REQUESTED, { mediaType: type, sender: instance });
         }
     }
 

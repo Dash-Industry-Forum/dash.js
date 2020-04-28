@@ -479,9 +479,8 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (e.sender !== fragmentModel) {
-            return;
-        }
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
+
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ?
             ', Range:' + e.request.range : '');
         if (adapter.getIsTextTrack(type)) {

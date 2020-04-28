@@ -211,7 +211,7 @@ function FragmentModel(config) {
 
     function loadCurrentFragment(request) {
         eventBus.trigger(events.FRAGMENT_LOADING_STARTED, {
-            sender: instance,
+            streamId: streamId,
             request: request
         });
         fragmentLoader.load(request);

@@ -74,7 +74,6 @@ function StreamProcessor(config) {
         bufferController,
         scheduleController,
         representationController,
-        spExternalControllers,
         indexHandler;
 
     function setup() {
@@ -143,30 +142,9 @@ function StreamProcessor(config) {
         scheduleController.initialize();
     }
 
-    function registerExternalController(controller) {
-        spExternalControllers.push(controller);
-    }
-
-    function unregisterExternalController(controller) {
-        var index = spExternalControllers.indexOf(controller);
-
-        if (index !== -1) {
-            spExternalControllers.splice(index, 1);
-        }
-    }
-
-    function getExternalControllers() {
-        return spExternalControllers;
-    }
-
-    function unregisterAllExternalController() {
-        spExternalControllers = [];
-    }
-
     function resetInitialSettings() {
         mediaInfoArr = [];
         mediaInfo = null;
-        unregisterAllExternalController();
     }
 
     function reset(errored, keepBuffers) {
@@ -190,9 +168,6 @@ function StreamProcessor(config) {
         if (abrController) {
             abrController.unRegisterStreamType(type);
         }
-        spExternalControllers.forEach(function (controller) {
-            controller.reset();
-        });
 
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -487,10 +462,6 @@ function StreamProcessor(config) {
         dischargePreBuffer: dischargePreBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        registerExternalController: registerExternalController,
-        unregisterExternalController: unregisterExternalController,
-        getExternalControllers: getExternalControllers,
-        unregisterAllExternalController: unregisterAllExternalController,
         addInbandEvents: addInbandEvents,
         setIndexHandlerTime: setIndexHandlerTime,
         getIndexHandlerTime: getIndexHandlerTime,
