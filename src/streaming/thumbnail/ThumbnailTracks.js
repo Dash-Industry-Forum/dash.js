@@ -68,12 +68,15 @@ function ThumbnailTracks(config) {
         loader = XHRLoader(context).create({});
         boxParser = BoxParser(context).getInstance();
 
-        indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
-                                baseURLController: baseURLController,
-                                debug: debug,
-                                eventBus: eventBus,
-                                events: events,
-                                dashConstants: dashConstants});
+        indexHandler = DashHandler(context).create({
+            timelineConverter: timelineConverter,
+            baseURLController: baseURLController,
+            debug: debug,
+            eventBus: eventBus,
+            events: events,
+            dashConstants: dashConstants,
+            urlUtils: urlUtils
+        });
 
         // initialize controllers
         indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);
