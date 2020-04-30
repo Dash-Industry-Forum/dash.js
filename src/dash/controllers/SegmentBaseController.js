@@ -105,9 +105,9 @@ function SegmentBaseController(config) {
 
     function onSegmentsListSegmentBaseNeeded(e) {
         if (isWebM(e.mimeType)) {
-            webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, e.callback);
+            webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, {}, e.callback);
         } else {
-            segmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, e.callback);
+            segmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, {}, e.callback);
         }
     }
 
