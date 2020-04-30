@@ -115,11 +115,13 @@ function Stream(config) {
     function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
     function unRegisterEvents() {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
     function registerProtectionEvents() {
@@ -364,6 +366,7 @@ function Stream(config) {
         let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
+            streamInfo: streamInfo,
             type: mediaInfo ? mediaInfo.type : null,
             mimeType: mediaInfo ? mediaInfo.mimeType : null,
             timelineConverter: timelineConverter,
@@ -373,7 +376,6 @@ function Stream(config) {
             fragmentModel: fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
-            stream: instance,
             abrController: abrController,
             playbackController: playbackController,
             mediaController: mediaController,
@@ -441,9 +443,9 @@ function Stream(config) {
 
         if (type === Constants.IMAGE) {
             thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
-                stream: instance,
                 timelineConverter: config.timelineConverter,
                 debug: debug,
                 eventBus: eventBus,
@@ -656,6 +658,11 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
+    function onInbandEvents(e) {
+        if (!streamInfo || e.streamInfo.id !== streamInfo.id) return;
+        addInbandEvents(e.events);
+    }
+
     function getProcessorForMediaInfo(mediaInfo) {
         if (!mediaInfo) {
             return null;
@@ -702,6 +709,7 @@ function Stream(config) {
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
+            streamProcessor.updateStreamInfo(streamInfo);
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
             streamProcessor.addMediaInfo(mediaInfo, true);
@@ -857,8 +865,7 @@ function Stream(config) {
         setMediaSource: setMediaSource,
         isMediaCodecCompatible: isMediaCodecCompatible,
         isProtectionCompatible: isProtectionCompatible,
-        getPreloaded: getPreloaded,
-        addInbandEvents: addInbandEvents
+        getPreloaded: getPreloaded
     };
 
     setup();

@@ -51,6 +51,7 @@ function StreamProcessor(config) {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
 
+    let streamInfo = config.streamInfo;
     let type = config.type;
     let errHandler = config.errHandler;
     let mimeType = config.mimeType;
@@ -58,7 +59,6 @@ function StreamProcessor(config) {
     let adapter = config.adapter;
     let manifestModel = config.manifestModel;
     let mediaPlayerModel = config.mediaPlayerModel;
-    let stream = config.stream;
     let fragmentModel = config.fragmentModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
@@ -86,6 +86,7 @@ function StreamProcessor(config) {
 
     function initialize(mediaSource) {
         indexHandler = DashHandler(context).create({
+            streamInfo: streamInfo,
             type: type,
             timelineConverter: timelineConverter,
             dashMetrics: dashMetrics,
@@ -93,7 +94,6 @@ function StreamProcessor(config) {
             baseURLController: config.baseURLController,
             errHandler: errHandler,
             settings: settings,
-            streamInfo: getStreamInfo(),
             boxParser: boxParser,
             events: Events,
             eventBus: eventBus,
@@ -111,7 +111,7 @@ function StreamProcessor(config) {
 
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
-            streamId: getStreamInfo() ? getStreamInfo().id : null,
+            streamId: streamInfo.id,
             type: type,
             mimeType: mimeType,
             adapter: adapter,
@@ -128,7 +128,7 @@ function StreamProcessor(config) {
             settings: settings
         });
         representationController = RepresentationController(context).create({
-            streamId: getStreamInfo() ? getStreamInfo().id : null,
+            streamId: streamInfo.id,
             type: type,
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -177,7 +177,7 @@ function StreamProcessor(config) {
 
         resetInitialSettings();
         type = null;
-        stream = null;
+        streamInfo = null;
     }
 
     function isUpdating() {
@@ -185,9 +185,7 @@ function StreamProcessor(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        const streamInfo = getStreamInfo();
-        const streamInfoId = streamInfo ? streamInfo.id : null;
-        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfoId || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
 
         addDVRMetric();
     }
@@ -201,9 +199,8 @@ function StreamProcessor(config) {
     }
 
     function addDVRMetric() {
-        const streamInfo = getStreamInfo();
-        const manifestInfo = streamInfo ? streamInfo.manifestInfo : null;
-        const isDynamic = manifestInfo ? manifestInfo.isDynamic : null;
+        const manifestInfo = streamInfo.manifestInfo;
+        const isDynamic = manifestInfo.isDynamic;
         const range = timelineConverter.calcSegmentAvailabilityRange(representationController.getCurrentRepresentation(), isDynamic);
         dashMetrics.addDVRInfo(getType(), playbackController.getTime(), manifestInfo, range);
     }
@@ -232,14 +229,12 @@ function StreamProcessor(config) {
         return fragmentModel;
     }
 
-    function getStreamInfo() {
-        return stream ? stream.getStreamInfo() : null;
+    function updateStreamInfo(newStreamInfo) {
+        streamInfo = newStreamInfo;
     }
 
-    function addInbandEvents(events) {
-        if (stream) {
-            stream.addInbandEvents(events);
-        }
+    function getStreamInfo() {
+        return streamInfo;
     }
 
     function selectMediaInfo(newMediaInfo) {
@@ -247,13 +242,12 @@ function StreamProcessor(config) {
             mediaInfo = newMediaInfo;
         }
 
-        const streamInfo = getStreamInfo();
         const newRealAdaptation = adapter.getRealAdaptation(streamInfo, mediaInfo);
         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
         if (representationController) {
             const realAdaptation = representationController.getData();
-            const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo ? streamInfo.id : null);
+            const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
             const minIdx = abrController.getMinAllowedIndexFor(type);
 
             let quality,
@@ -341,8 +335,8 @@ function StreamProcessor(config) {
 
     function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            const streamInfo = getStreamInfo();
             bufferController.switchInitData(streamInfo ? streamInfo.id : null, representationId, bufferResetEnabled);
+            bufferController.switchInitData(streamInfo.id, representationId, bufferResetEnabled);
         }
     }
 
@@ -364,7 +358,7 @@ function StreamProcessor(config) {
 
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
-                streamId: getStreamInfo() ? getStreamInfo().id : null,
+                streamId: streamInfo.id,
                 type: type,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
@@ -382,7 +376,7 @@ function StreamProcessor(config) {
             });
         } else {
             controller = TextBufferController(context).create({
-                streamId: getStreamInfo() ? getStreamInfo().id : null,
+                streamId: streamInfo.id,
                 type: type,
                 mimeType: mimeType,
                 dashMetrics: dashMetrics,
@@ -459,6 +453,7 @@ function StreamProcessor(config) {
         switchInitData: switchInitData,
         isBufferingCompleted: isBufferingCompleted,
         createBuffer: createBuffer,
+        updateStreamInfo: updateStreamInfo,
         getStreamInfo: getStreamInfo,
         selectMediaInfo: selectMediaInfo,
         addMediaInfo: addMediaInfo,
@@ -470,7 +465,6 @@ function StreamProcessor(config) {
         dischargePreBuffer: dischargePreBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        addInbandEvents: addInbandEvents,
         setIndexHandlerTime: setIndexHandlerTime,
         getIndexHandlerTime: getIndexHandlerTime,
         resetIndexHandler: resetIndexHandler,
