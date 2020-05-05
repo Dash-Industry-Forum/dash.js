@@ -43,6 +43,9 @@ function EventController() {
     const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
     const MPD_CALLBACK_VALUE = 1;
 
+    const REFRESH_DELAY = 100;
+    const REMAINING_EVENTS_THRESHOLD = 300;
+
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -52,25 +55,15 @@ function EventController() {
         inbandEvents, // Holds all Inband Events not triggered yet
         activeEvents, // Holds all Events currently running
         eventInterval, // variable holding the setInterval
-        refreshDelay, // refreshTime for the setInterval
         lastEventTimerCall,
         manifestUpdater,
         playbackController,
+        eventHandlingInProgress,
         isStarted;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        resetInitialSettings();
-    }
-
-    function resetInitialSettings() {
-        isStarted = false;
-        inlineEvents = {};
-        inbandEvents = {};
-        activeEvents = {};
-        eventInterval = null;
-        refreshDelay = 100;
-        lastEventTimerCall = Date.now() / 1000;
+        _resetInitialSettings();
     }
 
     function checkConfig() {
@@ -79,20 +72,39 @@ function EventController() {
         }
     }
 
-    function stop() {
-        if (eventInterval !== null && isStarted) {
-            clearInterval(eventInterval);
-            eventInterval = null;
-            isStarted = false;
+    function _resetInitialSettings() {
+        isStarted = false;
+        inlineEvents = {};
+        inbandEvents = {};
+        activeEvents = {};
+        eventInterval = null;
+        eventHandlingInProgress = false;
+        lastEventTimerCall = Date.now() / 1000;
+    }
+
+    function _stop() {
+        try {
+            if (eventInterval !== null && isStarted) {
+                clearInterval(eventInterval);
+                eventInterval = null;
+                isStarted = false;
+                _onStopEventController();
+            }
+        } catch (e) {
+            throw e;
         }
     }
 
     function start() {
-        checkConfig();
-        logger.debug('Start Event Controller');
-        if (!isStarted && !isNaN(refreshDelay)) {
-            isStarted = true;
-            eventInterval = setInterval(onEventTimer, refreshDelay);
+        try {
+            checkConfig();
+            logger.debug('Start Event Controller');
+            if (!isStarted && !isNaN(REFRESH_DELAY)) {
+                isStarted = true;
+                eventInterval = setInterval(_onEventTimer, REFRESH_DELAY);
+            }
+        } catch (e) {
+            throw e;
         }
     }
 
@@ -101,18 +113,20 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInlineEvents(values) {
-        checkConfig();
+        try {
+            checkConfig();
 
-        inlineEvents = {};
-
-        if (values) {
-            for (let i = 0; i < values.length; i++) {
-                let event = values[i];
-                inlineEvents[event.id] = event;
-                logger.debug('Add inline event with id ' + event.id);
+            if (values) {
+                for (let i = 0; i < values.length; i++) {
+                    let event = values[i];
+                    inlineEvents[event.id] = event;
+                    logger.debug('Add inline event with id ' + event.id);
+                }
             }
+            logger.debug(`Added ${values.length} inline events`);
+        } catch (e) {
+            throw e;
         }
-        logger.debug('Added ' + values.length + ' inline events');
     }
 
     /**
@@ -120,152 +134,238 @@ function EventController() {
      * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
-        checkConfig();
+        try {
+            checkConfig();
 
-        for (let i = 0; i < values.length; i++) {
-            let event = values[i];
-            if (!(event.id in inbandEvents)) {
-                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
-                    handleManifestReloadEvent(event);
+            for (let i = 0; i < values.length; i++) {
+                let event = values[i];
+                if (!(event.id in inbandEvents)) {
+                    if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
+                        _handleManifestReloadEvent(event);
+                    }
+                    inbandEvents[event.id] = event;
+                    logger.debug('Add inband event with id ' + event.id);
+                } else {
+                    logger.debug('Repeated event with id ' + event.id);
                 }
-                inbandEvents[event.id] = event;
-                logger.debug('Add inband event with id ' + event.id);
-            } else {
-                logger.debug('Repeated event with id ' + event.id);
             }
+            _onEventTimer();
+        } catch (e) {
+            throw e;
         }
     }
 
-    function handleManifestReloadEvent(event) {
-        if (event.eventStream.value == MPD_RELOAD_VALUE) {
-            const timescale = event.eventStream.timescale || 1;
-            const validUntil = event.presentationTime / timescale;
-            let newDuration;
-            if (event.presentationTime == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
-                newDuration = NaN;
-            } else {
-                newDuration = (event.presentationTime + event.duration) / timescale;
+    function _handleManifestReloadEvent(event) {
+        try {
+            if (event.eventStream.value == MPD_RELOAD_VALUE) {
+                const timescale = event.eventStream.timescale || 1;
+                const validUntil = event.calculatedPresentationTime / timescale;
+                let newDuration;
+                if (event.calculatedPresentationTime == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
+                    newDuration = NaN;
+                } else {
+                    newDuration = (event.calculatedPresentationTime + event.duration) / timescale;
+                }
+                logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+                eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, {
+                    id: event.id,
+                    validUntil: validUntil,
+                    newDuration: newDuration,
+                    newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+                });
             }
-            logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
-            eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, {
-                id: event.id,
-                validUntil: validUntil,
-                newDuration: newDuration,
-                newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
-            });
+        } catch (e) {
         }
     }
 
     /**
-     * Remove events which are over from the list
+     * Remove expired events from the list
      */
-    function removeEvents() {
-        if (activeEvents) {
-            let currentVideoTime = playbackController.getTime();
-            let eventIds = Object.keys(activeEvents);
+    function _removeEvents() {
+        try {
+            if (activeEvents) {
+                let currentVideoTime = playbackController.getTime();
+                let eventIds = Object.keys(activeEvents);
 
-            for (let i = 0; i < eventIds.length; i++) {
-                let eventId = eventIds[i];
-                let curr = activeEvents[eventId];
-                if (curr !== null && (curr.duration + curr.presentationTime) / curr.eventStream.timescale < currentVideoTime) {
-                    logger.debug('Remove Event ' + eventId + ' at time ' + currentVideoTime);
-                    curr = null;
-                    delete activeEvents[eventId];
+                for (let i = 0; i < eventIds.length; i++) {
+                    let eventId = eventIds[i];
+                    let event = activeEvents[eventId];
+                    if (event !== null && (event.duration + event.calculatedPresentationTime) / event.eventStream.timescale < currentVideoTime) {
+                        logger.debug('Remove Event ' + eventId + ' at time ' + currentVideoTime);
+                        event = null;
+                        delete activeEvents[eventId];
+                    }
                 }
             }
+        } catch (e) {
         }
     }
 
     /**
      * Iterate through the eventList and trigger/remove the events
      */
-    function onEventTimer() {
-        var currentVideoTime = playbackController.getTime();
-        var presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
-        lastEventTimerCall = currentVideoTime;
+    function _onEventTimer() {
+        try {
+            if (!eventHandlingInProgress) {
+                const currentVideoTime = playbackController.getTime();
+                let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
 
-        presentationTimeThreshold = Math.max(0,presentationTimeThreshold);
+                // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
+                presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
 
-        triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
-        triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
-        removeEvents();
+                _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
+                _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
+                _removeEvents();
+
+                lastEventTimerCall = currentVideoTime;
+            }
+            eventHandlingInProgress = false;
+        } catch (e) {
+            eventHandlingInProgress = false;
+        }
     }
 
-    function refreshManifest() {
-        checkConfig();
-        manifestUpdater.refreshManifest();
+    function _onStopEventController() {
+        try {
+            // EventController might be stopped before the period is over. Before we stop the event controller we check for events that needs to be triggered at the period boundary.
+            _triggerRemainingEvents(inbandEvents);
+            _triggerRemainingEvents(inlineEvents);
+        } catch (e) {
+
+        }
     }
 
-    function sendCallbackRequest(url) {
-        let loader = XHRLoader(context).create({});
-        loader.load({
-            method: 'get',
-            url: url,
-            request: {
-                responseType: 'arraybuffer'
-            }});
-    }
+    function _triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
+        try {
+            if (events) {
+                let eventIds = Object.keys(events);
 
-    function triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
-        var presentationTime;
+                for (let i = 0; i < eventIds.length; i++) {
+                    let eventId = eventIds[i];
+                    let event = events[eventId];
 
-        /* == Trigger events that are ready == */
-        if (events) {
-            let eventIds = Object.keys(events);
-            for (let i = 0; i < eventIds.length; i++) {
-                let eventId = eventIds[i];
-                let curr = events[eventId];
+                    if (event !== undefined) {
+                        const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
 
-                if (curr !== undefined) {
-                    presentationTime = curr.presentationTime / curr.eventStream.timescale;
-                    if (presentationTime === 0 || (presentationTime <= currentVideoTime && presentationTime + presentationTimeThreshold > currentVideoTime)) {
-                        logger.debug('Start Event ' + eventId + ' at ' + currentVideoTime);
-                        if (curr.duration > 0) {
-                            activeEvents[eventId] = curr;
+                        if (calculatedPresentationTimeInSeconds <= currentVideoTime && calculatedPresentationTimeInSeconds + presentationTimeThreshold >= currentVideoTime) {
+                            _startEvent(eventId, event, events);
+                        } else if (currentVideoTime - presentationTimeThreshold > calculatedPresentationTimeInSeconds) {
+                            delete events[eventId];
                         }
-                        if (curr.eventStream.schemeIdUri == MPD_RELOAD_SCHEME && curr.eventStream.value == MPD_RELOAD_VALUE) {
-                            if (curr.duration !== 0 || curr.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
-                                refreshManifest();
-                            }
-                        } else if (curr.eventStream.schemeIdUri == MPD_CALLBACK_SCHEME && curr.eventStream.value == MPD_CALLBACK_VALUE) {
-                            sendCallbackRequest(curr.messageData);
-                        } else {
-                            eventBus.trigger(curr.eventStream.schemeIdUri, {event: curr});
-                        }
-                        delete events[eventId];
-                    }
-                    else if (presentationTime <= currentVideoTime - presentationTimeThreshold) {
-                        delete events[eventId];
                     }
                 }
             }
+        } catch (e) {
+        }
+    }
+
+    function _triggerRemainingEvents(events) {
+        try {
+            const eventIds = Object.keys(events);
+            const currentTime = playbackController.getTime();
+
+            if (!eventIds || eventIds.length === 0) {
+                return;
+            }
+
+            const periodDuration = events[eventIds[0]].eventStream && events[eventIds[0]].eventStream.period && !isNaN(events[eventIds[0]].eventStream.period.duration) ? events[eventIds[0]].eventStream.period.duration : NaN;
+            const periodStart = events[eventIds[0]].eventStream && events[eventIds[0]].eventStream.period && !isNaN(events[eventIds[0]].eventStream.period.start) ? events[eventIds[0]].eventStream.period.start : NaN;
+
+            if (isNaN(periodDuration) || isNaN(periodStart)) {
+                return;
+            }
+
+            eventIds.forEach((eventId) => {
+                const event = events[eventId];
+                const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
+
+                if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
+                    _startEvent(eventId, event, events);
+                }
+            });
+        } catch (e) {
+
+        }
+    }
+
+    function _startEvent(eventId, event, events) {
+        try {
+            const currentVideoTime = playbackController.getTime();
+
+            if (event.duration > 0) {
+                activeEvents[eventId] = event;
+            }
+
+            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
+                if (event.duration !== 0 || event.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
+                    logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
+                    _refreshManifest();
+                }
+            } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
+                logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
+                _sendCallbackRequest(event.messageData);
+            } else {
+                logger.debug(`Starting event ${eventId} at ${currentVideoTime}`);
+                eventBus.trigger(event.eventStream.schemeIdUri, {event: event});
+            }
+
+            delete events[eventId];
+        } catch (e) {
+        }
+    }
+
+    function _refreshManifest() {
+        try {
+            checkConfig();
+            manifestUpdater.refreshManifest();
+        } catch (e) {
+        }
+    }
+
+    function _sendCallbackRequest(url) {
+        try {
+            let loader = XHRLoader(context).create({});
+            loader.load({
+                method: 'get',
+                url: url,
+                request: {
+                    responseType: 'arraybuffer'
+                }
+            });
+        } catch (e) {
+            throw e;
         }
     }
 
     function setConfig(config) {
-        if (!config) return;
+        try {
+            if (!config) {
+                return;
+            }
 
-        if (config.manifestUpdater) {
-            manifestUpdater = config.manifestUpdater;
-        }
+            if (config.manifestUpdater) {
+                manifestUpdater = config.manifestUpdater;
+            }
 
-        if (config.playbackController) {
-            playbackController = config.playbackController;
+            if (config.playbackController) {
+                playbackController = config.playbackController;
+            }
+        } catch (e) {
+            throw e;
         }
     }
 
     function reset() {
-        stop();
-        resetInitialSettings();
+        _stop();
+        _resetInitialSettings();
     }
 
     instance = {
-        addInlineEvents: addInlineEvents,
-        addInbandEvents: addInbandEvents,
-        stop: stop,
-        start: start,
-        setConfig: setConfig,
-        reset: reset
+        addInlineEvents,
+        addInbandEvents,
+        start,
+        setConfig,
+        reset
     };
 
     setup();
@@ -274,4 +374,4 @@ function EventController() {
 }
 
 EventController.__dashjs_factory_name = 'EventController';
-export default FactoryMaker.getClassFactory(EventController);
+export default FactoryMaker.getSingletonFactory(EventController);

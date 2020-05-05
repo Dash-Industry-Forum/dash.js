@@ -17,7 +17,7 @@ describe('EventController', function () {
 
     const manifestExpiredEventStub = {
         'duration': 0,
-        'presentationTime': 30 * 48000,
+        'calculatedPresentationTime': 30 * 48000,
         'id': 1819112295,
         'messageData': { },
         'eventStream': {
@@ -32,7 +32,7 @@ describe('EventController', function () {
     };
 
     beforeEach(function () {
-        eventController = EventController(context).create();
+        eventController = EventController(context).getInstance();
     });
 
     afterEach(function () {
@@ -70,7 +70,7 @@ describe('EventController', function () {
                     schemeIdUri: schemeIdUri
                 },
                 id: 'event0',
-                presentationTime: 0
+                calculatedPresentationTime: 0
             }];
 
             let onInbandEvent = function (e) {
@@ -93,7 +93,7 @@ describe('EventController', function () {
                     schemeIdUri: schemeIdUri
                 },
                 id: 'event0',
-                presentationTime: 0
+                calculatedPresentationTime: 0
             }];
 
             let onInlineEvent = function (e) {
@@ -111,8 +111,8 @@ describe('EventController', function () {
         it('should fire MANIFEST_VALIDITY_CHANGED events immediately', function (done) {
             const manifestValidityExpiredHandler = function (event) {
                 expect(event.id).to.equal(manifestExpiredEventStub.id);
-                expect(event.validUntil).to.equal(manifestExpiredEventStub.presentationTime / manifestExpiredEventStub.eventStream.timescale);
-                expect(event.newDuration).to.equal((manifestExpiredEventStub.presentationTime + manifestExpiredEventStub.duration) / manifestExpiredEventStub.eventStream.timescale);
+                expect(event.validUntil).to.equal(manifestExpiredEventStub.calculatedPresentationTime / manifestExpiredEventStub.eventStream.timescale);
+                expect(event.newDuration).to.equal((manifestExpiredEventStub.calculatedPresentationTime + manifestExpiredEventStub.duration) / manifestExpiredEventStub.eventStream.timescale);
 
                 eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
                 done();

@@ -47,6 +47,7 @@ import TimeSyncController from './TimeSyncController';
 import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
+import EventController from './EventController';
 
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
@@ -69,6 +70,7 @@ function StreamController() {
         baseURLController,
         abrController,
         mediaController,
+        eventController,
         textController,
         initCache,
         urlUtils,
@@ -127,6 +129,13 @@ function StreamController() {
             settings: settings
         });
         manifestUpdater.initialize();
+
+        eventController = EventController(context).getInstance();
+        eventController.setConfig({
+            manifestUpdater: manifestUpdater,
+            playbackController: playbackController
+        });
+        eventController.start();
 
         registerEvents();
     }
@@ -369,7 +378,6 @@ function StreamController() {
 
             if (useSmoothPeriodTransition) {
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
-                activeStream.stopEventController();
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
                 preloading = newStream;
@@ -478,7 +486,6 @@ function StreamController() {
 
         useSmoothPeriodTransition = false;
         if (oldStream) {
-            oldStream.stopEventController();
             useSmoothPeriodTransition = (activeStream.isProtectionCompatible(newStream) &&
                 (supportsChangeType || activeStream.isMediaCodecCompatible(newStream))) &&
                 !seekTime || newStream.getPreloaded();
@@ -580,7 +587,6 @@ function StreamController() {
             }
         }
 
-        activeStream.startEventController();
         if (autoPlay || !initialPlayback) {
             playbackController.play();
         }
@@ -639,6 +645,7 @@ function StreamController() {
                         baseURLController: baseURLController,
                         abrController: abrController,
                         playbackController: playbackController,
+                        eventController: eventController,
                         mediaController: mediaController,
                         textController: textController,
                         videoModel: videoModel,
@@ -970,6 +977,7 @@ function StreamController() {
 
         baseURLController.reset();
         manifestUpdater.reset();
+        eventController.reset();
         dashMetrics.clearAllCurrentMetrics();
         manifestModel.setValue(null);
         manifestLoader.reset();
