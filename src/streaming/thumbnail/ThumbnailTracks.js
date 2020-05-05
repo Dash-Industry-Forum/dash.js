@@ -68,12 +68,15 @@ function ThumbnailTracks(config) {
         loader = XHRLoader(context).create({});
         boxParser = BoxParser(context).getInstance();
 
-        indexHandler = DashHandler(context).create({timelineConverter: timelineConverter,
-                                baseURLController: baseURLController,
-                                debug: debug,
-                                eventBus: eventBus,
-                                events: events,
-                                dashConstants: dashConstants});
+        indexHandler = DashHandler(context).create({
+            timelineConverter: timelineConverter,
+            baseURLController: baseURLController,
+            debug: debug,
+            eventBus: eventBus,
+            events: events,
+            dashConstants: dashConstants,
+            urlUtils: urlUtils
+        });
 
         // initialize controllers
         indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);
@@ -173,51 +176,56 @@ function ThumbnailTracks(config) {
         }
 
         if (useSegmentBase) {
-            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mediaInfo.mimeType, mediaType: Constants.IMAGE, representation: representation, function(segments, representation) {
-                let cache = [];
-                segments = normalizeSegments(segments, representation);
-                track.segmentDuration = segments[0].duration; //assume all segments have the same duration
-                track.readThumbnail = function (time, callback) {
+            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {
+                mimeType: mediaInfo.mimeType,
+                mediaType: Constants.IMAGE,
+                representation: representation,
+                callback: function (segments, representation) {
+                    let cache = [];
+                    segments = normalizeSegments(segments, representation);
+                    track.segmentDuration = segments[0].duration; //assume all segments have the same duration
+                    track.readThumbnail = function (time, callback) {
 
-                    let cached = null;
-                    cache.some(el => {
-                        if (el.start <= time && el.end > time) {
-                            cached = el.url;
-                            return true;
-                        }
-                    });
-                    if (cached) {
-                        callback(cached);
-                    } else {
-                        segments.some((ss) => {
-                            if (ss.mediaStartTime <= time && ss.mediaStartTime + ss.duration > time) {
-                                const baseURL = baseURLController.resolve(representation.path);
-                                loader.load({
-                                    method: 'get',
-                                    url: baseURL.url,
-                                    request: {
-                                        range: ss.mediaRange,
-                                        responseType: 'arraybuffer'
-                                    },
-                                    onload: function (e) {
-                                        let info = boxParser.getSamplesInfo(e.target.response);
-                                        let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: 'image/jpeg' } );
-                                        let imageUrl = window.URL.createObjectURL( blob );
-                                        cache.push({
-                                            start: ss.mediaStartTime,
-                                            end: ss.mediaStartTime + ss.duration,
-                                            url: imageUrl
-                                        });
-                                        if (callback)
-                                            callback(imageUrl);
-                                    }
-                                });
+                        let cached = null;
+                        cache.some(el => {
+                            if (el.start <= time && el.end > time) {
+                                cached = el.url;
                                 return true;
                             }
                         });
-                    }
-                };
-            }});
+                        if (cached) {
+                            callback(cached);
+                        } else {
+                            segments.some((ss) => {
+                                if (ss.mediaStartTime <= time && ss.mediaStartTime + ss.duration > time) {
+                                    const baseURL = baseURLController.resolve(representation.path);
+                                    loader.load({
+                                        method: 'get',
+                                        url: baseURL.url,
+                                        request: {
+                                            range: ss.mediaRange,
+                                            responseType: 'arraybuffer'
+                                        },
+                                        onload: function (e) {
+                                            let info = boxParser.getSamplesInfo(e.target.response);
+                                            let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: 'image/jpeg' } );
+                                            let imageUrl = window.URL.createObjectURL( blob );
+                                            cache.push({
+                                                start: ss.mediaStartTime,
+                                                end: ss.mediaStartTime + ss.duration,
+                                                url: imageUrl
+                                            });
+                                            if (callback)
+                                                callback(imageUrl);
+                                        }
+                                    });
+                                    return true;
+                                }
+                            });
+                        }
+                    };
+                }
+            });
         } else {
             track.startNumber = representation.startNumber;
             track.segmentDuration = representation.segmentDuration;
