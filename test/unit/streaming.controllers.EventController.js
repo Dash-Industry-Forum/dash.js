@@ -32,7 +32,7 @@ describe('EventController', function () {
     };
 
     beforeEach(function () {
-        eventController = EventController(context).create();
+        eventController = EventController(context).getInstance();
     });
 
     afterEach(function () {

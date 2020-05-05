@@ -44,7 +44,7 @@ function EventController() {
     const MPD_CALLBACK_VALUE = 1;
 
     const REFRESH_DELAY = 100;
-    const REMAINING_EVENTS_THRESHOLD = 500;
+    const REMAINING_EVENTS_THRESHOLD = 300;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -63,10 +63,16 @@ function EventController() {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        resetInitialSettings();
+        _resetInitialSettings();
     }
 
-    function resetInitialSettings() {
+    function checkConfig() {
+        if (!manifestUpdater || !playbackController) {
+            throw new Error('setConfig function has to be called previously');
+        }
+    }
+
+    function _resetInitialSettings() {
         isStarted = false;
         inlineEvents = {};
         inbandEvents = {};
@@ -76,13 +82,7 @@ function EventController() {
         lastEventTimerCall = Date.now() / 1000;
     }
 
-    function checkConfig() {
-        if (!manifestUpdater || !playbackController) {
-            throw new Error('setConfig function has to be called previously');
-        }
-    }
-
-    function stop() {
+    function _stop() {
         try {
             if (eventInterval !== null && isStarted) {
                 clearInterval(eventInterval);
@@ -101,7 +101,6 @@ function EventController() {
             logger.debug('Start Event Controller');
             if (!isStarted && !isNaN(REFRESH_DELAY)) {
                 isStarted = true;
-                _onStartEventController();
                 eventInterval = setInterval(_onEventTimer, REFRESH_DELAY);
             }
         } catch (e) {
@@ -116,8 +115,6 @@ function EventController() {
     function addInlineEvents(values) {
         try {
             checkConfig();
-
-            inlineEvents = {};
 
             if (values) {
                 for (let i = 0; i < values.length; i++) {
@@ -213,9 +210,9 @@ function EventController() {
                 const currentVideoTime = playbackController.getTime();
                 let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
 
+                // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
                 presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
 
-                // For dynamic streams lastEventTimeCall will be huge in the first iteration. Avoid firing all events at once.
                 _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
                 _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
                 _removeEvents();
@@ -228,18 +225,9 @@ function EventController() {
         }
     }
 
-    function _onStartEventController() {
-        try {
-            // Fire events at the period boundary immediately
-            _onEventTimer();
-        } catch (e) {
-
-        }
-    }
-
     function _onStopEventController() {
         try {
-            // Before we stop the event controller we check for events that needs to be triggered at the period boundary.
+            // EventController might be stopped before the period is over. Before we stop the event controller we check for events that needs to be triggered at the period boundary.
             _triggerRemainingEvents(inbandEvents);
             _triggerRemainingEvents(inlineEvents);
         } catch (e) {
@@ -261,7 +249,7 @@ function EventController() {
 
                         if (calculatedPresentationTimeInSeconds <= currentVideoTime && calculatedPresentationTimeInSeconds + presentationTimeThreshold >= currentVideoTime) {
                             _startEvent(eventId, event, events);
-                        } else if (calculatedPresentationTimeInSeconds <= currentVideoTime - presentationTimeThreshold) {
+                        } else if (currentVideoTime - presentationTimeThreshold > calculatedPresentationTimeInSeconds) {
                             delete events[eventId];
                         }
                     }
@@ -287,13 +275,11 @@ function EventController() {
                 return;
             }
 
-            const periodEndTime = periodStart + periodDuration;
-
             eventIds.forEach((eventId) => {
                 const event = events[eventId];
                 const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
 
-                if (calculatedPresentationTimeInSeconds >= currentTime && calculatedPresentationTimeInSeconds <= periodEndTime && Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
+                if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
                     _startEvent(eventId, event, events);
                 }
             });
@@ -353,7 +339,9 @@ function EventController() {
 
     function setConfig(config) {
         try {
-            if (!config) return;
+            if (!config) {
+                return;
+            }
 
             if (config.manifestUpdater) {
                 manifestUpdater = config.manifestUpdater;
@@ -368,17 +356,16 @@ function EventController() {
     }
 
     function reset() {
-        stop();
-        resetInitialSettings();
+        _stop();
+        _resetInitialSettings();
     }
 
     instance = {
-        addInlineEvents: addInlineEvents,
-        addInbandEvents: addInbandEvents,
-        stop: stop,
-        start: start,
-        setConfig: setConfig,
-        reset: reset
+        addInlineEvents,
+        addInbandEvents,
+        start,
+        setConfig,
+        reset
     };
 
     setup();
@@ -387,4 +374,4 @@ function EventController() {
 }
 
 EventController.__dashjs_factory_name = 'EventController';
-export default FactoryMaker.getClassFactory(EventController);
+export default FactoryMaker.getSingletonFactory(EventController);
