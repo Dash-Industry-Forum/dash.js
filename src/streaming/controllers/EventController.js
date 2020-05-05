@@ -249,13 +249,32 @@ function EventController() {
 
                         if (calculatedPresentationTimeInSeconds <= currentVideoTime && calculatedPresentationTimeInSeconds + presentationTimeThreshold >= currentVideoTime) {
                             _startEvent(eventId, event, events);
-                        } else if (currentVideoTime - presentationTimeThreshold > calculatedPresentationTimeInSeconds) {
+                        } else if (_eventHasExpired(currentVideoTime, presentationTimeThreshold, calculatedPresentationTimeInSeconds) || _eventIsInvalid(event)) {
+                            logger.debug(`Deleting event ${eventId} as it is expired or invalid`);
                             delete events[eventId];
                         }
                     }
                 }
             }
         } catch (e) {
+        }
+    }
+
+    function _eventHasExpired(currentVideoTime, presentationTimeThreshold, calculatedPresentationTimeInSeconds) {
+        try {
+            return currentVideoTime - presentationTimeThreshold > calculatedPresentationTimeInSeconds;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function _eventIsInvalid(event) {
+        try {
+            const periodEndTime = event.eventStream.period.start + event.eventStream.period.duration;
+
+            return event.calculatedPresentationTime / 1000 > periodEndTime;
+        } catch (e) {
+            return false;
         }
     }
 
