@@ -356,17 +356,27 @@ module.exports = function (grunt) {
                 }
             }
         },
-        mocha_istanbul: {
+        mochacli: {
+            options: {
+                require: ['mochahook'],
+                flags: ['--exit'],
+                reporter: 'spec',
+                bail: true,
+                colors: true
+            },
+            filesRaw: ['test/unit']
+        },
+        nyc: {
             test: {
-                src: './test/unit',
                 options: {
-                    mask: '*.js',
-                    coverageFolder: './reports',
-                    mochaOptions: ['--compilers', 'js:babel/register'],
-                    print: 'both',
-                    reportFormats: ['lcov'],
-                    root: './src'
-                }
+                    cwd: '.',
+                    include: ['src/**'],
+                    reporter: ['text', 'lcov', 'text-summary'],
+                    reportDir: './reports',
+                    all: true
+                },
+                cmd: false,
+                args: ['grunt', 'mochacli']
             }
         },
         jscs: {
@@ -430,7 +440,7 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['dist', 'test']);
     grunt.registerTask('dist', ['clean', 'jshint', 'jscs', 'browserify:mediaplayer', 'browserify:protection', 'browserify:reporting', 'browserify:mss','browserify:offline', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize', ['exorcise', 'githash', 'uglify']);
-    grunt.registerTask('test', ['mocha_istanbul:test']);
+    grunt.registerTask('test', ['nyc:test']);
     grunt.registerTask('watch', ['browserify:watch']);
     grunt.registerTask('watch-dev', ['browserify:watch_dev']);
     grunt.registerTask('release', ['default', 'jsdoc']);
