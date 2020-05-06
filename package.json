@@ -12,7 +12,6 @@
     "dev": "grunt dev",
     "prepublish": "grunt githooks",
     "prepublishOnly": "grunt prepublish",
-    "debug": "iron-mocha --require mochahook",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha --require mochahook -- test/"
   },
   "devDependencies": {
@@ -45,7 +44,6 @@
     "grunt-string-replace": "^1.3.1",
     "ink-docstrap": "^1.3.2",
     "intern": "3.4.6",
-    "iron-mocha": "^1.0.3",
     "iron-node": "^3.0.23",
     "istanbul": "^0.4.5",
     "jsdoc": "^3.6.2",
