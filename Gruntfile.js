@@ -379,10 +379,10 @@ module.exports = function (grunt) {
                 args: ['grunt', 'mochacli']
             }
         },
-        jscs: {
-            src: ['./src/**/*.js', 'test/unit/mocks/*.js', 'test/unit/*.js', 'Gruntfile.js'],
+        eslint: {
+            target: ['./src/**/*.js', 'test/unit/mocks/*.js', 'test/unit/*.js', 'Gruntfile.js'],
             options: {
-                config: '.jscsrc'
+                configFile: '.eslintrc.json'
             }
         },
         'string-replace': {
@@ -433,14 +433,14 @@ module.exports = function (grunt) {
     require('load-grunt-tasks')(grunt);
     grunt.loadNpmTasks('grunt-string-replace');
     grunt.registerTask('default', ['dist', 'test']);
-    grunt.registerTask('dist', ['clean', 'jshint', 'jscs', 'browserify:mediaplayer', 'browserify:protection', 'browserify:reporting', 'browserify:mss', 'browserify:offline', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
+    grunt.registerTask('dist', ['clean', 'jshint', 'eslint', 'browserify:mediaplayer', 'browserify:protection', 'browserify:reporting', 'browserify:mss', 'browserify:offline', 'browserify:all', 'babel:es5', 'minimize', 'copy:dist']);
     grunt.registerTask('minimize', ['exorcise', 'githash', 'uglify']);
     grunt.registerTask('test', ['nyc:test']);
     grunt.registerTask('watch', ['browserify:watch']);
     grunt.registerTask('watch-dev', ['browserify:watch_dev']);
     grunt.registerTask('release', ['default', 'jsdoc']);
     grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
-    grunt.registerTask('lint', ['jshint', 'jscs']);
+    grunt.registerTask('lint', ['jshint', 'eslint']);
     grunt.registerTask('dev', ['browserSync', 'watch-dev']);
     grunt.registerTask('deploy', ['string-replace', 'ftp_push']);
 };
