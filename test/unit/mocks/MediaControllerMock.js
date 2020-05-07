@@ -8,11 +8,13 @@ class MediaControllerMock {
         this.initialSettings = {};
         this.switchMode = {};
         this.selectionMode = undefined;
-        this.track  = undefined;
+        this.track = undefined;
         this.tracks = [];
     }
 
-    checkInitialMediaSettingsForType() {}
+    checkInitialMediaSettingsForType() {
+        // empty block
+    }
 
     addTrack(track) {
         this.tracks.push(track);

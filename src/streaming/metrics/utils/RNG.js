@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @ignore
-  */
+/**
+ * @ignore
+ */
 function RNG() {
 
     // check whether secure random numbers are available. if not, revert to
