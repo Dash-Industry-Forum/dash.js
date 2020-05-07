@@ -1,7 +1,4 @@
 {
-    "esnext": true,
-    "verbose": true,
-
     "validateIndentation": 4,
     "validateQuoteMarks": "'",
     "disallowMixedSpacesAndTabs": true,
