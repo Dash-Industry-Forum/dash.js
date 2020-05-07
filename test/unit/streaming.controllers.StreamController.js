@@ -116,16 +116,16 @@ describe('StreamController', function () {
 
         beforeEach(function () {
             streamController.setConfig({adapter: adapterMock,
-                                        manifestLoader: manifestLoaderMock,
-                                        timelineConverter: timelineConverterMock,
-                                        manifestModel: manifestModelMock,
-                                        errHandler: errHandlerMock,
-                                        dashMetrics: dashMetricsMock,
-                                        protectionController: protectionControllerMock,
-                                        videoModel: videoModelMock,
-                                        playbackController: playbackControllerMock,
-                                        baseURLController: baseUrlControllerMock,
-                                        settings: settings});
+                manifestLoader: manifestLoaderMock,
+                timelineConverter: timelineConverterMock,
+                manifestModel: manifestModelMock,
+                errHandler: errHandlerMock,
+                dashMetrics: dashMetricsMock,
+                protectionController: protectionControllerMock,
+                videoModel: videoModelMock,
+                playbackController: playbackControllerMock,
+                baseURLController: baseUrlControllerMock,
+                settings: settings});
 
             streamController.initialize(false);
         });

@@ -42,8 +42,8 @@ import DefaultURLUtils from './DefaultURLUtils';
  */
 function URLUtils() {
 
-    let instance;
-    let defaultURLUtils;
+    let instance,
+        defaultURLUtils;
     let regexUtils = [];
     const context = this.context;
 
@@ -194,17 +194,17 @@ function URLUtils() {
 
     setup();
     instance = {
-        registerUrlRegex:   registerUrlRegex,
-        parseBaseUrl:       parseBaseUrl,
-        parseOrigin:        parseOrigin,
-        parseScheme:        parseScheme,
-        isRelative:         isRelative,
-        isPathAbsolute:     isPathAbsolute,
-        isSchemeRelative:   isSchemeRelative,
-        isHTTPURL:          isHTTPURL,
-        isHTTPS:            isHTTPS,
-        removeHostname:     removeHostname,
-        resolve:            resolve
+        registerUrlRegex: registerUrlRegex,
+        parseBaseUrl: parseBaseUrl,
+        parseOrigin: parseOrigin,
+        parseScheme: parseScheme,
+        isRelative: isRelative,
+        isPathAbsolute: isPathAbsolute,
+        isSchemeRelative: isSchemeRelative,
+        isHTTPURL: isHTTPURL,
+        isHTTPS: isHTTPS,
+        removeHostname: removeHostname,
+        resolve: resolve
     };
 
     return instance;

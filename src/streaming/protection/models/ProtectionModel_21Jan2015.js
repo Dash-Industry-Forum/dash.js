@@ -300,7 +300,7 @@ function ProtectionModel_21Jan2015(config) {
             navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                        mediaKeySystemAccess.getConfiguration() : null;
+                    mediaKeySystemAccess.getConfiguration() : null;
                 const keySystemAccess = new KeySystemAccess(keySystem, configuration);
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});

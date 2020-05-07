@@ -65,27 +65,27 @@ function TimeSyncController() {
 
         // a list of known schemeIdUris and a method to call with @value
         handlers = {
-            'urn:mpeg:dash:utc:http-head:2014':     httpHeadHandler,
-            'urn:mpeg:dash:utc:http-xsdate:2014':   httpHandler.bind(null, xsdatetimeDecoder),
-            'urn:mpeg:dash:utc:http-iso:2014':      httpHandler.bind(null, iso8601Decoder),
-            'urn:mpeg:dash:utc:direct:2014':        directHandler,
+            'urn:mpeg:dash:utc:http-head:2014': httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2014': httpHandler.bind(null, xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2014': httpHandler.bind(null, iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2014': directHandler,
 
             // some specs referencing early ISO23009-1 drafts incorrectly use
             // 2012 in the URI, rather than 2014. support these for now.
-            'urn:mpeg:dash:utc:http-head:2012':     httpHeadHandler,
-            'urn:mpeg:dash:utc:http-xsdate:2012':   httpHandler.bind(null, xsdatetimeDecoder),
-            'urn:mpeg:dash:utc:http-iso:2012':      httpHandler.bind(null, iso8601Decoder),
-            'urn:mpeg:dash:utc:direct:2012':        directHandler,
+            'urn:mpeg:dash:utc:http-head:2012': httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2012': httpHandler.bind(null, xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2012': httpHandler.bind(null, iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2012': directHandler,
 
             // it isn't clear how the data returned would be formatted, and
             // no public examples available so http-ntp not supported for now.
             // presumably you would do an arraybuffer type xhr and decode the
             // binary data returned but I would want to see a sample first.
-            'urn:mpeg:dash:utc:http-ntp:2014':      notSupportedHandler,
+            'urn:mpeg:dash:utc:http-ntp:2014': notSupportedHandler,
 
             // not clear how this would be supported in javascript (in browser)
-            'urn:mpeg:dash:utc:ntp:2014':           notSupportedHandler,
-            'urn:mpeg:dash:utc:sntp:2014':          notSupportedHandler
+            'urn:mpeg:dash:utc:ntp:2014': notSupportedHandler,
+            'urn:mpeg:dash:utc:sntp:2014': notSupportedHandler
         };
 
         if (!getIsSynchronizing()) {
@@ -236,8 +236,8 @@ function TimeSyncController() {
 
             if (req.status === 200) {
                 time = isHeadRequest ?
-                        req.getResponseHeader('Date') :
-                        req.response;
+                    req.getResponseHeader('Date') :
+                    req.response;
 
                 result = decoder(time);
 

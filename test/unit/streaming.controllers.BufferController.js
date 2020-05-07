@@ -42,8 +42,8 @@ describe('BufferController', function () {
     const abrControllerMock = new AbrControllerMock();
     const textControllerMock = new TextControllerMock();
     const representationControllerMock = new RepresentationControllerMock();
-    let bufferController;
-    let mediaSourceMock;
+    let bufferController,
+        mediaSourceMock;
     const mediaInfo = [{ codec: 'video/webm; codecs="vp8, vorbis"'}];
 
     beforeEach(function () {

@@ -12,8 +12,8 @@ const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
 
 describe('MediaController', function () {
-    let mediaController;
-    let domStorageMock;
+    let mediaController,
+        domStorageMock;
     const trackType = Constants.AUDIO;
 
     beforeEach(function () {

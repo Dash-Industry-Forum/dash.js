@@ -6,8 +6,8 @@ const sinon = require('sinon');
 
 const context = {};
 
-let requestModifier;
-let xhrLoader;
+let requestModifier,
+    xhrLoader;
 
 describe('XHRLoader', function () {
 

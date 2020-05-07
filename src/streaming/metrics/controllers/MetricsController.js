@@ -88,7 +88,7 @@ function MetricsController(config) {
 
     instance = {
         initialize: initialize,
-        reset:      reset
+        reset: reset
     };
 
     return instance;

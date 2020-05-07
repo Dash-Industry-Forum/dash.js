@@ -260,12 +260,12 @@ function OfflineController(config) {
                 download.initDownload();
                 resolve(id);
             })
-            .catch((e) => {
-                logger.error('Failed to download ' + e);
-                removeDownloadFromId(id).then(function () {
-                    reject(e);
+                .catch((e) => {
+                    logger.error('Failed to download ' + e);
+                    removeDownloadFromId(id).then(function () {
+                        reject(e);
+                    });
                 });
-            });
         });
     }
 

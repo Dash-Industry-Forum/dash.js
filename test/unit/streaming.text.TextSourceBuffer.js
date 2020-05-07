@@ -19,9 +19,9 @@ describe('TextSourceBuffer', function () {
 
     let textSourceBuffer = TextSourceBuffer(context).getInstance();
     textSourceBuffer.setConfig({streamController: streamControllerMock,
-                                adapter: adapterMock,
-                                errHandler: errorHandlerMock,
-                                ttmlParser: ttmlParser});
+        adapter: adapterMock,
+        errHandler: errorHandlerMock,
+        ttmlParser: ttmlParser});
 
     it('call to append function with invalid tttml data should triggered a parse error', function () {
         const buffer = new ArrayBuffer(8);

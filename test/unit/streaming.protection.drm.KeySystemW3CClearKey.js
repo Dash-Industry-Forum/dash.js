@@ -8,9 +8,9 @@ const expect = chai.expect;
 
 describe('KeySystemW3CClearKey', function () {
 
-    let context;
-    let config;
-    let keySystem;
+    let context,
+        config,
+        keySystem;
     let message = new Uint8Array([123,34,107,105,100,115,34,58,91,34,97,75,69,114,88,72,78,71,98,51,103,97,68,98,89,98,95,114,111,99,112,119,34,93,44,34,116,121,112,101,34,58,34,116,101,109,112,111,114,97,114,121,34,125]);
     let debug = new DebugMock();
     const protData = {

@@ -62,10 +62,10 @@ function OfflineUrlUtils() {
 
     setup();
     const instance = {
-        getRegex:           getRegex,
-        isRelative:         isRelative,
-        removeHostname:     removeHostname,
-        resolve:            resolve
+        getRegex: getRegex,
+        isRelative: isRelative,
+        removeHostname: removeHostname,
+        resolve: resolve
     };
     return instance;
 }

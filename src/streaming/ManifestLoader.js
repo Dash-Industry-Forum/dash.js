@@ -172,7 +172,7 @@ function ManifestLoader(config) {
                             error: new DashJSError(
                                 Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
                                 Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
-                           )
+                            )
                         }
                     );
                     return;

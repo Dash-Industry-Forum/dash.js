@@ -233,10 +233,10 @@ function OfflineDownload(config) {
         if (!e.error && manifestId !== null) {
             _status = OfflineConstants.OFFLINE_STATUS_FINISHED;
             offlineStoreController.setDownloadingStatus(manifestId, _status)
-            .then(function () {
-                eventBus.trigger(events.OFFLINE_RECORD_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
-                resetDownload();
-            });
+                .then(function () {
+                    eventBus.trigger(events.OFFLINE_RECORD_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                    resetDownload();
+                });
         } else {
             _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
@@ -262,15 +262,15 @@ function OfflineDownload(config) {
             _indexDBManifestParser.parse(_xmlManifest, _representationsToUpdate).then(function (parsedManifest) {
                 if (parsedManifest !== null && manifestId !== null) {
                     offlineStoreController.getManifestById(manifestId)
-                    .then((item) => {
-                        item.manifest = parsedManifest;
-                        return updateOfflineManifest(item);
-                    })
-                    .then( function () {
-                        for (let i = 0, ln = _streams.length; i < ln; i++) {
-                            _streams[i].startOfflineStreamProcessors();
-                        }
-                    });
+                        .then((item) => {
+                            item.manifest = parsedManifest;
+                            return updateOfflineManifest(item);
+                        })
+                        .then( function () {
+                            for (let i = 0, ln = _streams.length; i < ln; i++) {
+                                _streams[i].startOfflineStreamProcessors();
+                            }
+                        });
                 } else {
                     throw 'falling parsing offline manifest';
                 }
@@ -465,15 +465,15 @@ function OfflineDownload(config) {
             let rep = getSelectedRepresentations(mediaInfos);
 
             offlineStoreController.saveSelectedRepresentations(manifestId, rep)
-            .then(() => {
-                return createFragmentStore(manifestId);
-            })
-            .then(() => {
-                return generateOfflineManifest(rep);
-            })
-            .then(function () {
-                initializeAllMediasInfoList(rep);
-            });
+                .then(() => {
+                    return createFragmentStore(manifestId);
+                })
+                .then(() => {
+                    return generateOfflineManifest(rep);
+                })
+                .then(function () {
+                    initializeAllMediasInfoList(rep);
+                });
         } catch (err) {
             _status = OfflineConstants.OFFLINE_STATUS_ERROR;
             errHandler.error({
@@ -506,12 +506,12 @@ function OfflineDownload(config) {
         return _indexDBManifestParser.parse(_xmlManifest).then(function (parsedManifest) {
             if (parsedManifest !== null) {
                 return offlineStoreController.getManifestById(manifestId)
-                .then((item) => {
-                    item.originalURL = _manifest.url;
-                    item.originalManifest = _xmlManifest;
-                    item.manifest = parsedManifest;
-                    return updateOfflineManifest(item);
-                });
+                    .then((item) => {
+                        item.originalURL = _manifest.url;
+                        item.originalManifest = _xmlManifest;
+                        item.manifest = parsedManifest;
+                        return updateOfflineManifest(item);
+                    });
             } else {
                 return Promise.reject('falling parsing offline manifest');
             }
@@ -571,20 +571,20 @@ function OfflineDownload(config) {
         let selectedRepresentations;
 
         offlineStoreController.getManifestById(manifestId)
-        .then((item) => {
-            let parser = DashParser(context).create({debug: debug});
-            _manifest = parser.parse(item.originalManifest);
+            .then((item) => {
+                let parser = DashParser(context).create({debug: debug});
+                _manifest = parser.parse(item.originalManifest);
 
-            composeStreams(_manifest);
+                composeStreams(_manifest);
 
-            selectedRepresentations = item.selected;
+                selectedRepresentations = item.selected;
 
-            eventBus.trigger(events.STREAMS_COMPOSED);
+                eventBus.trigger(events.STREAMS_COMPOSED);
 
-            return createFragmentStore(manifestId);
-        }). then(() => {
-            initializeAllMediasInfoList(selectedRepresentations);
-        });
+                return createFragmentStore(manifestId);
+            }). then(() => {
+                initializeAllMediasInfoList(selectedRepresentations);
+            });
     }
 
     /**

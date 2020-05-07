@@ -64,8 +64,8 @@ function ReportingController(config) {
 
     instance = {
         initialize: initialize,
-        reset:      reset,
-        report:     report
+        reset: reset,
+        report: report
     };
 
     return instance;

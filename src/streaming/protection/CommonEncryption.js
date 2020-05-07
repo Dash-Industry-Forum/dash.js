@@ -139,7 +139,9 @@ class CommonEncryption {
                 nextBox,
                 version,
                 systemID,
-                psshDataSize;
+                psshDataSize,
+                i,
+                val;
             let boxStart = byteCursor;
 
             if (byteCursor >= dv.buffer.byteLength)
@@ -169,7 +171,6 @@ class CommonEncryption {
 
             // 16-byte UUID/SystemID
             systemID = '';
-            let i, val;
             for (i = 0; i < 4; i++) {
                 val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;

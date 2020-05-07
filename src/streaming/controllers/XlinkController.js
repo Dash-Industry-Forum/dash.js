@@ -86,14 +86,14 @@ function XlinkController(config) {
         let elements;
         // First resolve all periods, so unnecessary requests inside onLoad Periods with Default content are avoided
         converter = new X2JS({
-            escapeMode:         false,
-            attributePrefix:    '',
-            arrayAccessForm:    'property',
-            emptyNodeForm:      'object',
-            stripWhitespaces:   false,
+            escapeMode: false,
+            attributePrefix: '',
+            arrayAccessForm: 'property',
+            emptyNodeForm: 'object',
+            stripWhitespaces: false,
             enableToStringFunc: false,
-            ignoreRoot:         true,
-            matchers:           matchers
+            ignoreRoot: true,
+            matchers: matchers
         });
 
         manifest = mpd;

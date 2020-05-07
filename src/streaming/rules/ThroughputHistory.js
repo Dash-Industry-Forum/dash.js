@@ -63,7 +63,7 @@ function ThroughputHistory(config) {
     function setup() {
         ewmaHalfLife = {
             throughputHalfLife: { fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS, slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS },
-            latencyHalfLife:    { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,      slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
+            latencyHalfLife: { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,      slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
         };
 
         reset();

@@ -60,14 +60,14 @@ function DashParser(config) {
         ];
 
         converter = new X2JS({
-            escapeMode:         false,
-            attributePrefix:    '',
-            arrayAccessForm:    'property',
-            emptyNodeForm:      'object',
-            stripWhitespaces:   false,
+            escapeMode: false,
+            attributePrefix: '',
+            arrayAccessForm: 'property',
+            emptyNodeForm: 'object',
+            stripWhitespaces: false,
             enableToStringFunc: true,
-            ignoreRoot:         true,
-            matchers:           matchers
+            ignoreRoot: true,
+            matchers: matchers
         });
 
         objectIron = ObjectIron(context).create({

@@ -22,8 +22,8 @@ describe('NotFragmentedTextBufferController', function () {
 
     let streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
     let errorHandlerMock = new ErrorHandlerMock();
-    let mediaSourceMock;
-    let notFragmentedTextBufferController;
+    let mediaSourceMock,
+        notFragmentedTextBufferController;
     let mockMediaInfoArr = [{ isText: false, codec: '' }];
 
     beforeEach(function () {

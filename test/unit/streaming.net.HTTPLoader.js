@@ -15,11 +15,11 @@ const Stream = require('stream');
 
 const context = {};
 
-let errHandler;
-let dashMetrics;
-let requestModifier;
-let mediaPlayerModelMock;
-let httpLoader;
+let errHandler,
+    dashMetrics,
+    requestModifier,
+    mediaPlayerModelMock,
+    httpLoader;
 
 describe('HTTPLoader', function () {
 

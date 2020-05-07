@@ -19,7 +19,7 @@ describe('DashParser', function () {
                         return Date.now();
                     }
                 },
-                DOMParser:  new jsdom().window.DOMParser
+                DOMParser: new jsdom().window.DOMParser
             };
         }
     });

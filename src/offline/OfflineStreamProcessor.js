@@ -155,15 +155,15 @@ function OfflineStreamProcessor(config) {
             let suffix = isInit ? 'init' : e.request.index;
             let fragmentName = e.request.representationId + '_' + suffix;
             offlineStoreController.storeFragment(manifestId, fragmentName, e.response)
-            .then(() => {
-                if (!isInit) {
+                .then(() => {
+                    if (!isInit) {
                     // store current index and downloadedSegments number
-                    offlineStoreController.setRepresentationCurrentState(manifestId, e.request.representationId, {
-                        index: e.request.index,
-                        downloaded: downloadedSegments
-                    } );
-                }
-            });
+                        offlineStoreController.setRepresentationCurrentState(manifestId, e.request.representationId, {
+                            index: e.request.index,
+                            downloaded: downloadedSegments
+                        } );
+                    }
+                });
         }
 
         if (e.error && e.request.serviceLocation && !isStopped) {
@@ -241,16 +241,16 @@ function OfflineStreamProcessor(config) {
             isStopped = false;
 
             offlineStoreController.getRepresentationCurrentState(manifestId, representationController.getCurrentRepresentation().id)
-            .then((state) => {
-                if (state) {
-                    indexHandler.setCurrentIndex(state.index);
-                    downloadedSegments = state.downloaded;
-                }
-                download();
-            }).catch(() => {
+                .then((state) => {
+                    if (state) {
+                        indexHandler.setCurrentIndex(state.index);
+                        downloadedSegments = state.downloaded;
+                    }
+                    download();
+                }).catch(() => {
                 // start from beginining
-                download();
-            });
+                    download();
+                });
         }
     }
 

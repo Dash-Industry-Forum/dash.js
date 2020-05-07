@@ -69,8 +69,8 @@ function ReportingFactory(config) {
     }
 
     instance = {
-        create:     create,
-        register:   register,
+        create: create,
+        register: register,
         unregister: unregister
     };
 

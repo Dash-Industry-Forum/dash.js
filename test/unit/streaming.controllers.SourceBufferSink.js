@@ -16,8 +16,8 @@ const eventBus = EventBus(context).getInstance();
 
 describe('SourceBufferSink', function () {
 
-    let sink;
-    let textControllerMock;
+    let sink,
+        textControllerMock;
 
     beforeEach(function () {
         textControllerMock = new TextControllerMock();
@@ -108,8 +108,8 @@ describe('SourceBufferSink', function () {
     });
 
     describe('Method getAllBufferRanges', function () {
-        let sink;
-        let buffer;
+        let sink,
+            buffer;
         beforeEach(function () {
             let mediaInfo = {
                 codec: 'video/webm; codecs="vp8, vorbis"'

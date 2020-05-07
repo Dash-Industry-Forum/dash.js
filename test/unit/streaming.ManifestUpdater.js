@@ -20,7 +20,7 @@ describe('ManifestUpdater', function () {
     const manifestLoaderMock = new ManifestLoaderMock();
     const errHandlerMock = new ErrorHandlerMock();
 
-    const manifestErrorMockText = `Mock Failed detecting manifest type or manifest type unsupported`;
+    const manifestErrorMockText = 'Mock Failed detecting manifest type or manifest type unsupported';
 
     manifestUpdater.setConfig({
         manifestModel: manifestModelMock,

@@ -511,28 +511,28 @@ describe('DashManifestModel', function () {
 
         it('should not return an empty Array when getEventStreamForRepresentation is called and manifest and representation are well defined', () => {
             const manifest = {
-                    Period: [
-                        {
-                            'id': '153199',
-                            AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
-                        },
-                        {
-                            'id': '153202',
-                            AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
-                        }
-                    ],
-                    Period_asArray: [
-                        {
-                            'id': '153199',
-                            AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
-                        },
-                        {
-                            'id': '153202',
-                            AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
-                        }
-                    ],
-                    'type': 'static'
-                };
+                Period: [
+                    {
+                        'id': '153199',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    }
+                ],
+                Period_asArray: [
+                    {
+                        'id': '153199',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    }
+                ],
+                'type': 'static'
+            };
             const representation = {adaptation: {index: 0, period: {index: 0}}, index: 0};
             const eventsStream = dashManifestModel.getEventStreamForRepresentation(manifest, representation);
 

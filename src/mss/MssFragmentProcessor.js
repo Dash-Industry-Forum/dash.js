@@ -138,7 +138,8 @@ function MssFragmentProcessor(config) {
         mssFragmentMoovProcessor = MssFragmentMoovProcessor(context).create({
             protectionController: protectionController,
             constants: config.constants,
-            ISOBoxer: ISOBoxer});
+            ISOBoxer: ISOBoxer
+        });
 
         mssFragmentMoofProcessor = MssFragmentMoofProcessor(context).create({
             dashMetrics: dashMetrics,
