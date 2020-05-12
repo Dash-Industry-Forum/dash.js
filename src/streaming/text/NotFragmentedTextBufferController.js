@@ -171,7 +171,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type != type || (!e.chunk.bytes)) return;
+        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type !== type || (!e.chunk.bytes)) return;
 
         initCache.save(e.chunk);
         buffer.append(e.chunk);
