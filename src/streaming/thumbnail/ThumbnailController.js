@@ -156,4 +156,3 @@ function ThumbnailController(config) {
 
 ThumbnailController.__dashjs_factory_name = 'ThumbnailController';
 export default FactoryMaker.getClassFactory(ThumbnailController);
-

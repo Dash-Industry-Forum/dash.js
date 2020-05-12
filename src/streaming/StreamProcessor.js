@@ -335,7 +335,6 @@ function StreamProcessor(config) {
 
     function switchInitData(representationId, bufferResetEnabled) {
         if (bufferController) {
-            bufferController.switchInitData(streamInfo ? streamInfo.id : null, representationId, bufferResetEnabled);
             bufferController.switchInitData(streamInfo.id, representationId, bufferResetEnabled);
         }
     }
