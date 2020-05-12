@@ -59,12 +59,14 @@ function BufferController(config) {
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
     const errHandler = config.errHandler;
+    const fragmentModel = config.fragmentModel;
     const streamController = config.streamController;
     const mediaController = config.mediaController;
     const adapter = config.adapter;
     const textController = config.textController;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
+    const streamId = config.streamId;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const settings = config.settings;
@@ -187,7 +189,8 @@ function BufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
+        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type !== type) return;
+
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality,  ', data size:', e.chunk.bytes.byteLength);
@@ -201,12 +204,12 @@ function BufferController(config) {
             logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
             appendToBuffer(chunk);
         } else {
-            eventBus.trigger(Events.INIT_REQUESTED, { sender: instance });
+            eventBus.trigger(Events.INIT_REQUESTED, { mediaType: type, sender: instance });
         }
     }
 
     function onMediaFragmentLoaded(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
+        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type !== type) return;
 
         const chunk = e.chunk;
         const bytes = chunk.bytes;
@@ -218,7 +221,7 @@ function BufferController(config) {
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
         if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
-            const request = streamProcessor.getFragmentModel().getRequests({
+            const request = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 quality: quality,
                 index: chunk.index
@@ -369,7 +372,7 @@ function BufferController(config) {
         const currentTime = playbackController.getTime();
         const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
 
-        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+        const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: currentTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -389,7 +392,7 @@ function BufferController(config) {
                 start: 0,
                 end: currentTimeRequest.startTime - STALL_THRESHOLD
             };
-            const prevReq = streamProcessor.getFragmentModel().getRequests({
+            const prevReq = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 time: currentTimeRequest.startTime - (currentTimeRequest.duration / 2),
                 threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -407,7 +410,7 @@ function BufferController(config) {
                 start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 end: endOfBuffer
             };
-            const nextReq = streamProcessor.getFragmentModel().getRequests({
+            const nextReq = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 time: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
                 threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -629,7 +632,7 @@ function BufferController(config) {
             end: currentTime + settings.get().streaming.bufferAheadToKeep
         };
 
-        const currentTimeRequest = streamProcessor.getFragmentModel().getRequests({
+        const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: currentTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
@@ -767,7 +770,7 @@ function BufferController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.fragmentModel !== streamProcessor.getFragmentModel()) return;
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
         lastIndex = e.request.index;
         checkIfBufferingCompleted();
     }

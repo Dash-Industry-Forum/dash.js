@@ -23,7 +23,7 @@ describe('FragmentController', function () {
     Events.extend(MediaPlayerEvents);
 
     it('should create or return model for a given media type', function () {
-        videoFragmentModel = fragmentController.getModel('video');
+        videoFragmentModel = fragmentController.getModel('streamId', 'video');
         expect(videoFragmentModel).to.exist; // jshint ignore:line
     });
 
@@ -31,11 +31,11 @@ describe('FragmentController', function () {
         const context1 = 1;
         const context2 = 2;
 
-        const model1 = fragmentController.getModel(context1);
-        const model2 = fragmentController.getModel(context2);
+        const model1 = fragmentController.getModel('streamId', context1);
+        const model2 = fragmentController.getModel('streamId', context2);
 
-        expect(fragmentController.getModel(context1)).to.be.equal(model1);
-        expect(fragmentController.getModel(context2)).to.be.equal(model2);
+        expect(fragmentController.getModel('streamId', context1)).to.be.equal(model1);
+        expect(fragmentController.getModel('streamId', context2)).to.be.equal(model2);
     });
 
     it('should trigger INIT_FRAGMENT_LOADED event when an init segment download is completed.', function (done) {
@@ -45,7 +45,15 @@ describe('FragmentController', function () {
         };
 
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {response: {}, request: {mediaType: 'video', isInitializationRequest() { return true; }, type: 'InitializationSegment', mediaInfo: {streamInfo: {}}}, sender: videoFragmentModel});
+        eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
+            response: {},
+            request: {
+                mediaType: 'video',
+                isInitializationRequest() { return true; },
+                type: 'InitializationSegment',
+                mediaInfo: {streamInfo: {}}
+            },
+            sender: videoFragmentModel});
     });
 
     it('should trigger SERVICE_LOCATION_BLACKLIST_ADD event when an init segment download is completed with an error.', function (done) {

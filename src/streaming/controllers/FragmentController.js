@@ -61,10 +61,11 @@ function FragmentController( config ) {
         eventBus.on(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, instance);
     }
 
-    function getModel(type) {
+    function getModel(streamId, type) {
         let model = fragmentModels[type];
         if (!model) {
             model = FragmentModel(context).create({
+                streamId: streamId,
                 dashMetrics: dashMetrics,
                 fragmentLoader: FragmentLoader(context).create({
                     dashMetrics: dashMetrics,
@@ -122,9 +123,8 @@ function FragmentController( config ) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (fragmentModels[e.request.mediaType] !== e.sender) {
-            return;
-        }
+        // Event propagation may have been stopped (see MssHandler)
+        if (!e.sender) return;
 
         const request = e.request;
         const bytes = e.response;
@@ -145,7 +145,7 @@ function FragmentController( config ) {
         const chunk = createDataChunk(bytes, request, streamInfo.id, e.type !== Events.FRAGMENT_LOADING_PROGRESS);
         eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {
             chunk: chunk,
-            fragmentModel: e.sender
+            request: request
         });
     }
 

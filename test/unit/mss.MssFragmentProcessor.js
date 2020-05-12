@@ -3,7 +3,6 @@ import PlaybackController from '../../src/streaming/controllers/PlaybackControll
 import EventBus from '../../src/core/EventBus';
 import MssErrors from '../../src/mss/errors/MssErrors';
 import Constants from '../../src/streaming/constants/Constants';
-import MssEvents from '../../src/mss/MssEvents';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
@@ -64,17 +63,6 @@ describe('MssFragmentProcessor', function () {
         mssFragmentProcessor.processFragment(e, streamProcessorMock);
         expect(errorHandlerMock.errorValue).not.to.equal(MssErrors.MSS_NO_TFRF_MESSAGE);
         expect(errorHandlerMock.errorCode).not.to.equal(MssErrors.MSS_NO_TFRF_CODE);
-    });
-
-    it('should trigger FRAGMENT_INFO_LOADING_COMPLETED event when attempting to call processFragment for fragmentInfo request', (done) => {
-        const e = {request: {type: 'FragmentInfoSegment', mediaInfo: {index: 0}}, response: {}};
-        let onFragmentInfoRequest = function () {
-            eventBus.off(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, onFragmentInfoRequest);
-            done();
-        };
-
-        eventBus.on(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, onFragmentInfoRequest, this);
-        mssFragmentProcessor.processFragment(e, streamProcessorMock);
     });
 
     it('should throw an error when attempting to call generateMoov for audio mp4 initialization segment', () => {

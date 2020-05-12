@@ -263,10 +263,6 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getFragmentController() {
-        return fragmentController;
-    }
-
     function getThumbnailController() {
         return thumbnailController;
     }
@@ -364,6 +360,9 @@ function Stream(config) {
     }
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
+
+        let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
+
         let streamProcessor = StreamProcessor(context).create({
             type: mediaInfo ? mediaInfo.type : null,
             mimeType: mediaInfo ? mediaInfo.mimeType : null,
@@ -371,6 +370,7 @@ function Stream(config) {
             adapter: adapter,
             manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,
+            fragmentModel: fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             stream: instance,
@@ -849,7 +849,6 @@ function Stream(config) {
         getId: getId,
         getStreamInfo: getStreamInfo,
         preload: preload,
-        getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
         getBitrateListFor: getBitrateListFor,
         updateData: updateData,

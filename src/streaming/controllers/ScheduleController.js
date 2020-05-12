@@ -50,10 +50,12 @@ function ScheduleController(config) {
     const dashMetrics = config.dashMetrics;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const fragmentModel = config.fragmentModel;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const streamController = config.streamController;
     const textController = config.textController;
+    const streamId = config.streamId;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
@@ -61,7 +63,6 @@ function ScheduleController(config) {
 
     let instance,
         logger,
-        fragmentModel,
         currentRepresentationInfo,
         initialRequest,
         isStopped,
@@ -93,8 +94,6 @@ function ScheduleController(config) {
     }
 
     function initialize() {
-        fragmentModel = streamProcessor.getFragmentModel();
-
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -475,9 +474,7 @@ function ScheduleController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.fragmentModel !== fragmentModel) {
-            return;
-        }
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
 
         stop();
         setFragmentProcessState(false);
@@ -485,9 +482,8 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (e.sender !== fragmentModel) {
-            return;
-        }
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
+
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ?
             ', Range:' + e.request.range : '');
         if (adapter.getIsTextTrack(type)) {
@@ -539,9 +535,8 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamProcessor !== streamProcessor) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type) return;
+
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
         if (!playbackController.isSeeking() && !switchTrack) {
             logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process or switch track call');

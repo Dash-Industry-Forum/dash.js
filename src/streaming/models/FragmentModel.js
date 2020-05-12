@@ -45,10 +45,10 @@ function FragmentModel(config) {
     const dashMetrics = config.dashMetrics;
     const fragmentLoader = config.fragmentLoader;
     const debug = config.debug;
+    const streamId = config.streamId;
 
     let instance,
         logger,
-        streamProcessor,
         executedRequests,
         loadingRequests;
 
@@ -58,14 +58,6 @@ function FragmentModel(config) {
         eventBus.on(events.LOADING_COMPLETED, onLoadingCompleted, instance);
         eventBus.on(events.LOADING_DATA_PROGRESS, onLoadingInProgress, instance);
         eventBus.on(events.LOADING_ABANDONED, onLoadingAborted, instance);
-    }
-
-    function setStreamProcessor(value) {
-        streamProcessor = value;
-    }
-
-    function getStreamProcessor() {
-        return streamProcessor;
     }
 
     function isFragmentLoaded(request) {
@@ -202,10 +194,9 @@ function FragmentModel(config) {
             case FragmentRequest.ACTION_COMPLETE:
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
-                logger.debug('executeRequest trigger STREAM_COMPLETED');
+                logger.debug('STREAM_COMPLETED');
                 eventBus.trigger(events.STREAM_COMPLETED, {
-                    request: request,
-                    fragmentModel: this
+                    request: request
                 });
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:
@@ -220,7 +211,7 @@ function FragmentModel(config) {
 
     function loadCurrentFragment(request) {
         eventBus.trigger(events.FRAGMENT_LOADING_STARTED, {
-            sender: instance,
+            streamId: streamId,
             request: request
         });
         fragmentLoader.load(request);
@@ -310,7 +301,7 @@ function FragmentModel(config) {
     function onLoadingAborted(e) {
         if (e.sender !== fragmentLoader) return;
 
-        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { streamProcessor: this.getStreamProcessor(), request: e.request, mediaType: e.mediaType });
+        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { streamId: streamId, request: e.request, mediaType: e.mediaType });
     }
 
     function resetInitialSettings() {
@@ -334,8 +325,6 @@ function FragmentModel(config) {
     }
 
     instance = {
-        setStreamProcessor: setStreamProcessor,
-        getStreamProcessor: getStreamProcessor,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,

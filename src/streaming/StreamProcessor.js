@@ -59,6 +59,7 @@ function StreamProcessor(config) {
     let manifestModel = config.manifestModel;
     let mediaPlayerModel = config.mediaPlayerModel;
     let stream = config.stream;
+    let fragmentModel = config.fragmentModel;
     let abrController = config.abrController;
     let playbackController = config.playbackController;
     let streamController = config.streamController;
@@ -74,8 +75,6 @@ function StreamProcessor(config) {
         bufferController,
         scheduleController,
         representationController,
-        fragmentModel,
-        spExternalControllers,
         indexHandler;
 
     function setup() {
@@ -110,17 +109,16 @@ function StreamProcessor(config) {
         indexHandler.initialize(playbackController.getIsDynamic());
         abrController.registerStreamType(type, instance);
 
-        fragmentModel = stream.getFragmentController().getModel(type);
-        fragmentModel.setStreamProcessor(instance);
-
         bufferController = createBufferControllerForType(type);
         scheduleController = ScheduleController(context).create({
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
             type: type,
             mimeType: mimeType,
             adapter: adapter,
             dashMetrics: dashMetrics,
             timelineConverter: timelineConverter,
             mediaPlayerModel: mediaPlayerModel,
+            fragmentModel: fragmentModel,
             abrController: abrController,
             playbackController: playbackController,
             streamController: streamController,
@@ -130,13 +128,13 @@ function StreamProcessor(config) {
             settings: settings
         });
         representationController = RepresentationController(context).create({
+            streamId: getStreamInfo() ? getStreamInfo().id : null,
+            type: type,
             abrController: abrController,
             dashMetrics: dashMetrics,
             playbackController: playbackController,
             timelineConverter: timelineConverter,
-            type: type,
             dashConstants: DashConstants,
-            streamId: getStreamInfo() ? getStreamInfo().id : null,
             events: Events,
             eventBus: eventBus,
             errors: Errors
@@ -147,30 +145,9 @@ function StreamProcessor(config) {
         scheduleController.initialize();
     }
 
-    function registerExternalController(controller) {
-        spExternalControllers.push(controller);
-    }
-
-    function unregisterExternalController(controller) {
-        var index = spExternalControllers.indexOf(controller);
-
-        if (index !== -1) {
-            spExternalControllers.splice(index, 1);
-        }
-    }
-
-    function getExternalControllers() {
-        return spExternalControllers;
-    }
-
-    function unregisterAllExternalController() {
-        spExternalControllers = [];
-    }
-
     function resetInitialSettings() {
         mediaInfoArr = [];
         mediaInfo = null;
-        unregisterAllExternalController();
     }
 
     function reset(errored, keepBuffers) {
@@ -194,9 +171,6 @@ function StreamProcessor(config) {
         if (abrController) {
             abrController.unRegisterStreamType(type);
         }
-        spExternalControllers.forEach(function (controller) {
-            controller.reset();
-        });
 
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -390,10 +364,12 @@ function StreamProcessor(config) {
 
         if (type === Constants.VIDEO || type === Constants.AUDIO) {
             controller = BufferController(context).create({
+                streamId: getStreamInfo() ? getStreamInfo().id : null,
                 type: type,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
+                fragmentModel: fragmentModel,
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
@@ -406,11 +382,13 @@ function StreamProcessor(config) {
             });
         } else {
             controller = TextBufferController(context).create({
+                streamId: getStreamInfo() ? getStreamInfo().id : null,
                 type: type,
                 mimeType: mimeType,
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
+                fragmentModel: fragmentModel,
                 errHandler: errHandler,
                 streamController: streamController,
                 mediaController: mediaController,
@@ -492,10 +470,6 @@ function StreamProcessor(config) {
         dischargePreBuffer: dischargePreBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        registerExternalController: registerExternalController,
-        unregisterExternalController: unregisterExternalController,
-        getExternalControllers: getExternalControllers,
-        unregisterAllExternalController: unregisterAllExternalController,
         addInbandEvents: addInbandEvents,
         setIndexHandlerTime: setIndexHandlerTime,
         getIndexHandlerTime: getIndexHandlerTime,
