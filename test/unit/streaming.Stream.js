@@ -47,7 +47,8 @@ describe('Stream', function () {
     const videoModelMock = new VideoModelMock();
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamInfo = {
-        index: 'id'
+        id: 'id',
+        index: 'index'
     };
     Events.extend(ProtectionEvents);
 
@@ -204,6 +205,8 @@ describe('Stream', function () {
         });
 
         it('should return preloaded to true after a call to preload without parameters', () => {
+            stream.initialize(streamInfo, {});
+
             let isPreloaded = stream.getPreloaded();
 
             expect(isPreloaded).to.be.false;                // jshint ignore:line
@@ -216,12 +219,16 @@ describe('Stream', function () {
         });
 
         it('should return undefined when getThumbnailController is called without a call to initializeMediaForType', () => {
+            stream.initialize(streamInfo, {});
+
             const thumbnailController = stream.getThumbnailController();
 
             expect(thumbnailController).to.be.undefined;          // jshint ignore:line
         });
 
         it('should returns an empty array when activate is called', function () {
+            stream.initialize(streamInfo, {});
+
             const buffers = stream.activate();
 
             expect(buffers).to.be.instanceOf(Object); // jshint ignore:line

@@ -9,7 +9,6 @@ import DashMetricsMock from './mocks/DashMetricsMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
-import StreamMock from './mocks/StreamMock';
 import AdapterMock from './mocks/AdapterMock';
 
 const expect = require('chai').expect;
@@ -21,9 +20,15 @@ const manifestModelMock = new ManifestModelMock();
 const timelineConverterMock = objectsHelper.getDummyTimelineConverter();
 const playbackControllerMock = new PlaybackControllerMock();
 const abrControllerMock = new AbrControllerMock();
-const streamMock = new StreamMock();
 const adapterMock = new AdapterMock();
 const eventBus = EventBus(context).getInstance();
+
+const streamInfo = {
+    streamId: 'streamId',
+    manifestInfo: {
+        isDynamic: true
+    }
+};
 
 describe('StreamProcessor', function () {
     it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
@@ -70,14 +75,16 @@ describe('StreamProcessor', function () {
     });
 
     it('when a BUFFER_LEVEL_UPDATED event occurs, should update dvr info metrics', function () {
-        const streamProcessor = StreamProcessor(context).create({type: testType,
-                                                                dashMetrics: dashMetricsMock,
-                                                                manifestModel: manifestModelMock,
-                                                                playbackController: playbackControllerMock,
-                                                                timelineConverter: timelineConverterMock,
-                                                                abrController: abrControllerMock,
-                                                                adapter: adapterMock,
-                                                                stream: streamMock});
+        const streamProcessor = StreamProcessor(context).create({
+            streamInfo: streamInfo,
+            type: testType,
+            dashMetrics: dashMetricsMock,
+            manifestModel: manifestModelMock,
+            playbackController: playbackControllerMock,
+            timelineConverter: timelineConverterMock,
+            abrController: abrControllerMock,
+            adapter: adapterMock
+        });
 
         streamProcessor.initialize();
 

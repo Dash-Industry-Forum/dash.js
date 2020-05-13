@@ -46,7 +46,7 @@ function ThumbnailTracks(config) {
     const context = this.context;
     const adapter = config.adapter;
     const baseURLController = config.baseURLController;
-    const stream = config.stream;
+    const streamInfo = config.streamInfo;
     const timelineConverter = config.timelineConverter;
     const debug = config.debug;
     const eventBus = config.eventBus;
@@ -118,12 +118,7 @@ function ThumbnailTracks(config) {
     }
 
     function addTracks() {
-        if (!stream || !adapter) {
-            return;
-        }
-
-        const streamInfo = stream.getStreamInfo();
-        if (!streamInfo) {
+        if (!streamInfo || !adapter) {
             return;
         }
 

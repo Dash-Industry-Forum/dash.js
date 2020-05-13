@@ -46,9 +46,9 @@ function ThumbnailController(config) {
     function setup() {
         reset();
         thumbnailTracks = ThumbnailTracks(context).create({
+            streamInfo: config.streamInfo,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
-            stream: config.stream,
             timelineConverter: config.timelineConverter,
             debug: config.debug,
             eventBus: config.eventBus,
