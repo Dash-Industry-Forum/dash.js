@@ -64,11 +64,13 @@ function ListSegmentsGetter(config, isDynamic) {
             const s = list.SegmentURL_asArray[index];
 
             segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
-            segment.replacementTime = (start + index - 1) * representation.segmentDuration;
-            segment.media = s.media ? s.media : '';
-            segment.mediaRange = s.mediaRange;
-            segment.index = index;
-            segment.indexRange = s.indexRange;
+            if (segment) {
+                segment.replacementTime = (start + index - 1) * representation.segmentDuration;
+                segment.media = s.media ? s.media : '';
+                segment.mediaRange = s.mediaRange;
+                segment.index = index;
+                segment.indexRange = s.indexRange;
+            }
         }
 
         representation.availableSegmentsNumber = len;
