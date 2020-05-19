@@ -16,6 +16,9 @@
     <script src="js/caster.js"></script>
     <script src="js/CasterController.js"></script>
 
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
+
     <style>
         .dropdown-menu {
             max-height: 250px;
@@ -40,6 +43,12 @@
             display: inline-block;
             vertical-align: middle;
         }
+
+        .cast-button {
+            margin: 0 auto;
+            width: 10em;
+            display: block;
+        }
     </style>
 
     <body ng-controller="CasterController">
@@ -49,6 +58,10 @@
                 src="http://aral.github.com/fork-me-on-github-retina-ribbons/right-cerulean@2x.png"
                 alt="Fork me on GitHub">
         </a>
+
+        <div>
+            <google-cast-launcher class="cast-button"> </google-cast-launcher>
+        </div>
 
         <div ng-switch on="castApiReady">
             <div class="alert alert-danger" ng-switch-default>
@@ -81,19 +94,6 @@
                             <span class="input-group-btn">
                                 <button class="btn btn-primary" type="button" ng-click="doCast()">Cast</button>
                             </span>
-                        </div>
-                    </div>
-
-                    <div class="panel" ng-show="state == 'ready' || state == 'casting'">
-                        <h3 class="text-primary">Receivers</h3>
-                        <div class="list-group">
-                            <a
-                                class="list-group-item"
-                                ng-repeat="rec in receivers"
-                                ng-click="setReceiver(rec)"
-                                ng-class="{active:isReceiverSelected(rec)}">
-                                {{rec.name}}
-                            </a>
                         </div>
                     </div>
 

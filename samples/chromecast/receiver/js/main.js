@@ -21,11 +21,13 @@ function ReceiverController($scope) {
 
     var context,
         player,
+        castPlayer,
         graphUpdateInterval = 999,
 
         getMetricsFor = function (type) {
             var video = document.querySelector(".dash-video-player video"),
                 dashMetrics = player.getDashMetrics(),
+                dashAdapter = player.getDashAdapter(),
                 repSwitch,
                 bufferLevel,
                 httpRequest,
@@ -41,25 +43,21 @@ function ReceiverController($scope) {
 
             if (dashMetrics) {
                 repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
-                bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
+                bufferLengthValue = dashMetrics.getCurrentBufferLevel(type, true);
                 httpRequest = dashMetrics.getCurrentHttpRequest(type, true);
                 droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
 
                 if (repSwitch !== null) {
-                    bitrateIndexValue = dashMetrics.getIndexForRepresentation(repSwitch.to);
-                    bandwidthValue = dashMetrics.getBandwidthForRepresentation(repSwitch.to);
+                    bitrateIndexValue = dashAdapter.getIndexForRepresentation(repSwitch.to);
+                    bandwidthValue = dashAdapter.getBandwidthForRepresentation(repSwitch.to);
                     bandwidthValue = bandwidthValue / 1000;
                     bandwidthValue = Math.round(bandwidthValue);
                 }
 
-                numBitratesValue = dashMetrics.getMaxIndexForBufferType(type);
-
-                if (bufferLevel !== null) {
-                    bufferLengthValue = bufferLevel.level.toPrecision(5);
-                }
+                numBitratesValue = dashAdapter.getMaxIndexForBufferType(type);
 
                 if (httpRequest !== null) {
-                    lastFragmentDuration = httpRequest.mediaduration;
+                    lastFragmentDuration = httpRequest._mediaduration;
                     lastFragmentDownloadTime = httpRequest.tresponse.getTime() - httpRequest.trequest.getTime();
 
                     // convert milliseconds to seconds
@@ -136,157 +134,167 @@ function ReceiverController($scope) {
         'use strict';
 
         // Set up namespace.
-        DashCast.PROTOCOL = "org.dashif.dashjs";
-        DashCast.CHANNEL = "org.dashif.dashjs.channel";
+        // DashService.PROTOCOL = "org.dashif.dashjs";
+        // DashService.CHANNEL = "org.dashif.dashjs.channel";
 
         // Application code.
-        function DashCast() {
-            this.manifest = null;
+        class DashService {
 
-            var startVideo = function(url, isLive) {
-                    console.log("Loading video: " + url, " | is live: " + isLive);
+            constructor () {
+                this.video = document.querySelector(".dash-video-player video");
+            }
 
-                    var video = document.querySelector(".dash-video-player video");
+            startVideo (url, isLive) {
+                console.log("Loading video: " + url, " | is live: " + isLive);
 
-                    player = dashjs.MediaPlayer().create();
-                    player.initialize(video, url, true)
-                    //player.setIsLive(isLive);
-                    $scope.showSpinner = false;
-                    $scope.showVideo = true;
-                    $scope.showStats = true;
+                player = dashjs.MediaPlayer().create();
+                player.initialize(this.video, url, true)
+                //player.setIsLive(isLive);
+                $scope.showSpinner = false;
+                $scope.showVideo = true;
+                $scope.showStats = true;
 
-                    setTimeout(update, graphUpdateInterval);
+                setTimeout(update, graphUpdateInterval);
 
-                    $scope.$apply();
-                },
+                this.video.addEventListener("loadedmetadata", this.onLoadedMetadata.bind(this));
+                this.video.addEventListener("timeupdate", this.onVideoTime.bind(this));
+                this.video.addEventListener("durationchange", this.onVideoDuration.bind(this));
+                this.video.addEventListener("ended", this.onVideoEnded.bind(this));
 
-                endVideo = function () {
-                    $scope.showSpinner = true;
-                    $scope.showVideo = false;
-                    $scope.showStats = false;
-                    $scope.$apply();
-                },
+                $scope.$apply();
+            }
 
-                onVideoTime = function (e) {
-                    var video = document.querySelector(".dash-video-player video"),
-                        scrubber = document.querySelector("scrubber");
+            endVideo () {
+                $scope.showSpinner = true;
+                $scope.showVideo = false;
+                $scope.showStats = false;
+                $scope.$apply();
+            }
 
-                    var w = $("#scrubber").width(),
-                        p = (video.currentTime / video.duration) * 100;
-                    $("#scrubber-content").width(p + "%");
-                    console.log("Set current progress: " + video.currentTime + " / " + video.duration + "(" + p + "%)");
+            onLoadedMetadata (e) {
+                if (e.currentTarget) {
+                    let mediaInfo = castPlayer.getMediaInformation();
+                    mediaInfo.duration = e.currentTarget.duration;
+                    castPlayer.setMediaInformation(mediaInfo);
+                }
+            }
 
-                    console.log("Dispatching time updated: " + video.currentTime);
-                    broadcast.call(this, {
-                        event: 'timeupdate',
-                        value: video.currentTime
-                    });
+            onVideoTime (e) {
+                var video = document.querySelector(".dash-video-player video"),
+                    scrubber = document.querySelector("scrubber");
 
-                    // TODO : Dash.JS doesn't properly dispatch an end event, so fake it.
-                    var t = video.currentTime,
-                        d = video.duration;
-                    if (t === d) {
-                        onVideoEnded.call(this);
-                    }
-                },
+                var w = $("#scrubber").width(),
+                    p = (video.currentTime / video.duration) * 100;
+                $("#scrubber-content").width(p + "%");
+                console.log("Set current progress: " + video.currentTime + " / " + video.duration + "(" + p + "%)");
 
-                onVideoDuration = function (e) {
-                    var video = document.querySelector(".dash-video-player video");
-                    console.log("Dispatching duration changed: " + video.duration);
-                    broadcast.call(this, {
-                        event: 'durationchange',
-                        value: video.duration
-                    });
-                },
+                console.log("Dispatching time updated: " + video.currentTime);
+                /* broadcast.call(this, {
+                    event: 'timeupdate',
+                    value: video.currentTime
+                }); */
 
-                onVideoEnded = function (e) {
-                    endVideo.call(this);
-                    console.log("Dispatching video ended.");
-                    broadcast.call(this, {
-                        event: 'ended'
-                    });
-                },
+                // TODO : Dash.JS doesn't properly dispatch an end event, so fake it.
+                var t = video.currentTime,
+                    d = video.duration;
+                if (t === d) {
+                    onVideoEnded.call(this);
+                }
+            }
 
-                onDashMessage = function (e) {
-                    var message = e.message,
-                        channel = e.target,
-                        video = document.querySelector(".dash-video-player video");
+            onVideoDuration (e) {
+                var video = document.querySelector(".dash-video-player video");
+                console.log("Dispatching duration changed: " + video.duration);
 
-                    console.debug('Message received', JSON.stringify(message));
+                /*broadcast.call(this, {
+                    event: 'durationchange',
+                    value: video.duration
+                });*/
+            }
 
-                    switch (message.command) {
-                        case "load":
-                            startVideo.call(this, message.manifest, message.isLive);
-                            video.addEventListener("timeupdate", onVideoTime.bind(this));
-                            video.addEventListener("durationchange", onVideoDuration.bind(this));
-                            video.addEventListener("ended", onVideoEnded.bind(this));
-                            break;
+            onVideoEnded (e) {
+                endVideo.call(this);
+                console.log("Dispatching video ended.");
+                /* broadcast.call(this, {
+                    event: 'ended'
+                });
+                */
+            }
 
-                        case "play":
-                            video.play();
-                            break;
+            play () {
+                this.video.play();
+            }
 
-                        case "pause":
-                            video.pause();
-                            break;
+            pause () {
+                this.video.pause();
+            }
 
-                        case "seek":
-                            video.currentTime = message.time;
-                            break;
+            reset () {
+                player.reset();
+            }
 
-                        case "setVolume":
-                            video.volume = message.volume;
-                            break;
+            seek (time) {
+                player.seek(time);
+            }
 
-                        case "setMuted":
-                            video.muted = message.muted;
-                            break;
+            getCurrentTime () {
+                return this.video.currentTime;
+            }
 
-                        case "toggleStats":
-                            $scope.showStats = !$scope.showStats;
-                            $scope.$apply();
-                            break;
-                    }
-                },
+            getDuration () {
+                return player.duration();
+            }
 
-                onDashOpen = function (e) {
-                    console.log("Dash channel opened.");
-                },
+            onDashMessage (e) {
+                var message = e.message,
+                    channel = e.target,
+                    video = document.querySelector(".dash-video-player video");
 
-                onDashClose = function (e) {
-                    console.log("Dash channel closed.");
-                },
+                console.debug('Message received', JSON.stringify(message));
 
-                broadcast = function (message) {
-                    message.timestamp = new Date();
-                    this.dashHandler.getChannels().forEach(function (channel) {
-                        channel.send(message);
-                    });
-                };
+                switch (message.command) {
 
-            this.setDashHandler = function (dh) {
-                this.dashHandler = dh;
+                    case "setVolume":
+                        video.volume = message.volume;
+                        break;
 
-                this.dashHandler.addEventListener(cast.receiver.Channel.EventType.MESSAGE, onDashMessage.bind(this));
-                this.dashHandler.addEventListener(cast.receiver.Channel.EventType.OPEN, onDashOpen.bind(this));
-                this.dashHandler.addEventListener(cast.receiver.Channel.EventType.CLOSE, onDashClose.bind(this));
+                    case "setMuted":
+                        video.muted = message.muted;
+                        break;
+
+                    case "toggleStats":
+                        $scope.showStats = !$scope.showStats;
+                        $scope.$apply();
+                        break;
+                }
+            }
+
+            onDashOpen  (e) {
+                console.log("Dash channel opened.");
+            }
+
+            onDashClose (e) {
+                console.log("Dash channel closed.");
+            }
+
+            broadcast (message) {
+                message.timestamp = new Date();
+                this.dashHandler.getChannels().forEach(function (channel) {
+                    channel.send(message);
+                });
             }
         }
-
         // Expose to public.
-        cast.DashCast = DashCast;
+        cast.DashService = DashService;
     })();
 
     window.onload = function onLoad() {
-        var APP_ID = "75215b49-c8b8-45ae-b0fb-afb39599204e",
-            receiver = new cast.receiver.Receiver(APP_ID, [cast.DashCast.PROTOCOL], "", 5);
-
-        var dashCast = new cast.DashCast();
-
-        var dashHandler = new cast.receiver.ChannelHandler(cast.DashCast.PROTOCOL);
-        dashHandler.addChannelFactory(receiver.createChannelFactory(cast.DashCast.PROTOCOL));
-        dashCast.setDashHandler(dashHandler);
-
-        receiver.start();
+        window.mediaElement = document.getElementById('media');
+        window.mediaManager = new cast.receiver.MediaManager(window.mediaElement);
+        window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+        var dashService = new cast.DashService();
+        var dashCastPlayer = new DashCastPlayer(dashService);
+        castPlayer = new cast.receiver.MediaManager(dashCastPlayer);
+        window.castReceiverManager.start();
     }
 }

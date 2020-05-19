@@ -1,34 +1,44 @@
 <!DOCTYPE html>
 <html ng-app lang="en">
-<head>
-    <meta charset="utf-8"/>
-    <title>Baseline Dash JavaScript Player</title>
-    <meta name="description" content="" />
-    <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
+    <head>
+        <meta charset="utf-8"/>
+        <title>Baseline Dash JavaScript Player</title>
+        <meta name="description" content="" />
+        <link rel="icon" type="image/png" href="http://dashpg.com/w/2012/09/dashif.ico" />
 
-    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
-    <link rel="stylesheet" href="receiver/css/style.css">
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css">
+        <link rel="stylesheet" href="receiver/css/style.css">
 
-    <script src="http://code.jquery.com/jquery.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
-    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
+        <script src="http://code.jquery.com/jquery.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+        <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 
-    <!-- Chromecast -->
-    <script src="https://www.gstatic.com/cast/js/receiver/1.0/cast_receiver.js"></script>
+        <!-- Chromecast -->
+        <script src="https://www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>
 
-    <!-- Unminified Dash -->
-    <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+        <!-- Unminified Dash -->
+        <script src="../../dist/dash.all.debug.js"></script>
+        <!--dash.all.min.js should be used in production over dash.all.debug.js
+            Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+        <!--<script src="../../dist/dash.all.min.js"></script>-->
 
-    <script src="receiver/js/main.js"></script>
+        <script src="receiver/js/DashCastPlayer.js"></script>
+        <script src="receiver/js/main.js"></script>
+
+        <style>
+            html, body {
+                background: #000000;
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+    </head>
 
     <body ng-controller="ReceiverController">
         <div class="dash-video-player">
             <div id="loading_spinner" class="loading_spinner" ng-show="showSpinner"></div>
 
-            <video id="vid" ng-show="showVideo"></video>
+            <video id="media" ng-show="showVideo"></video>
         </div>
 
         <div class="stats-holder" ng-show="showStats">

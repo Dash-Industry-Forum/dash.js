@@ -1,4 +1,4 @@
-function CasterController($scope) {
+function CasterController($scope, $window) {
     $scope.availableStreams = [
         {
             name: "4K",
@@ -313,14 +313,6 @@ function CasterController($scope) {
         $scope.selectedItem = item;
     }
 
-    $scope.setReceiver = function (item) {
-        $scope.receiver = item;
-        Caster.doLaunch($scope.receiver);
-    }
-
-    $scope.isReceiverSelected = function (item) {
-        return ($scope.receiver === item);
-    }
 
     // -----------------------------------
     // Casting Methods
@@ -392,46 +384,27 @@ function CasterController($scope) {
     // Initialization
     // -----------------------------------
 
-    $(window).bind("message", function (e) {
-        if (event.source !== window) {
-            return;
-        }
-
-        if (!Caster.isCastInitMessage(event)) {
-            return;
-        }
-
-        if (initialized) {
-            return;
-        }
-
-        initialized = true;
-
-        if (cast === undefined || cast === null) {
-            $scope.errorMessage = "Chromecast API not detected.";
-            $scope.hasError = true;
-            $scope.$apply();
-        }
-        else {
+    $window['__onGCastApiAvailable'] = function(isAvailable) {
+        if (isAvailable && Caster) {
             Caster.initialize(self);
         }
-    });
+    };
+
 
     // -----------------------------------
     // Caster Delegate Methods
     // -----------------------------------
 
-    this.onReceiverList = function (list) {
-        if (list.length === 0) {
-            $scope.errorMessage = "No Chromecast receivers detected for the Dash.JS application.";
+    this.onReady = function (error) {
+        if (error) {
+            $scope.errorMessage = error;
             $scope.hasError = true;
+            $scope.state = STATE_CASTING;
         }
         else {
             $scope.castApiReady = true;
-            $scope.receivers = list;
             $scope.state = STATE_READY;
         }
-
         $scope.$apply();
     }
 

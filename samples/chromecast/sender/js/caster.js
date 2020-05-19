@@ -1,17 +1,38 @@
 Caster = (function () {
     "use strict";
 
-    var APP_ID = "75215b49-c8b8-45ae-b0fb-afb39599204e", // "ChromeCast",
+    let APP_ID = "9885395F", // "To be changed by your own AppId ",
         NAMESPACE = "org.dashif.dashjs",
-        CHANNEL = "org.dashif.dashjs.channel",
         delegate,
         cast_api,
+        castContext,
+        castSession,
+        remotePlayer,
+        remotePlayerController,
         cv_activity,
 
-        onReceiverList = function(list) {
-            if (delegate.onReceiverList !== undefined) {
-                delegate.onReceiverList(list);
+        onReady = function(errorMsg) {
+            if (delegate.onReady !== undefined) {
+                delegate.onReady(errorMsg);
             }
+        },
+
+        addListeners = function() {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.CURRENT_TIME_CHANGED, e => {
+                if (remotePlayer && remotePlayer.isMediaLoaded) {
+                    delegate.onTimeUpdate(remotePlayer.currentTime);
+                }
+            });
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.DURATION_CHANGED, () => {
+                if (remotePlayer && remotePlayer.duration) {
+                    delegate.onDurationChange(remotePlayer.duration);
+                }
+            });
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.MEDIA_INFO_CHANGED, () => {
+                if (remotePlayer && remotePlayer.mediaInfo) {
+                    delegate.onDurationChange(remotePlayer.mediaInfo.duration);
+                }
+            });
         },
 
         onLaunch = function(activity) {
@@ -72,31 +93,32 @@ Caster = (function () {
         };
 
     return {
-        doLaunch: function(receiver) {
-            var request = new cast.LaunchRequest(APP_ID, receiver);
-            cast_api.launch(request, onLaunch);
-        },
-
         loadMedia: function(url, live) {
             console.log("Send load media...");
-            sendMessage("load", {
-                manifest: url,
-                isLive: live
-            }, onMessageSent);
+            var mediaInfo = new chrome.cast.media.MediaInfo(url);
+            var request = new chrome.cast.media.LoadRequest(mediaInfo);
+            castSession.loadMedia(request).then(
+                function() { 
+                    let media = castSession.getMediaSession();
+                    if (media) {
+                        console.info(media);
+                    }
+                 },
+                function(errorCode) { console.log('Error code: ' + errorCode); }
+            );
         },
 
         playMedia: function() {
-            sendMessage("play", {}, onMessageSent);
+            remotePlayerController.playOrPause();
         },
 
         pauseMedia: function () {
-            sendMessage("pause", {}, onMessageSent);
+            remotePlayerController.playOrPause();
         },
 
         seekMedia: function (time) {
-            sendMessage("seek", {
-                time: time
-            }, onMessageSent);
+            remotePlayer.currentTime = time;
+            remotePlayerController.seek();
         },
 
         muteMedia: function () {
@@ -128,8 +150,23 @@ Caster = (function () {
         },
 
         startup: function () {
-            cast_api = new cast.Api();
-            cast_api.addReceiverListener(APP_ID, onReceiverList);
+            castContext = cast.framework.CastContext.getInstance();
+            castContext.setOptions({
+              receiverApplicationId: APP_ID,
+              autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, e => {
+                console.log('[Cast]', e);
+                if (e.castState === cast.framework.CastState.CONNECTED && onReady) {
+                    onReady();
+                    castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+                } else {
+                    onReady(e.castState);
+                }
+            });
+            remotePlayer = new cast.framework.RemotePlayer();
+            remotePlayerController = new cast.framework.RemotePlayerController(remotePlayer);
+            addListeners();
         },
 
         initialize: function (cDelegate) {
