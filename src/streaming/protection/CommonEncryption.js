@@ -139,7 +139,7 @@ class CommonEncryption {
                 nextBox,
                 version,
                 systemID,
-                psshDataSize,
+                // psshDataSize,
                 i,
                 val;
             let boxStart = byteCursor;
@@ -204,7 +204,7 @@ class CommonEncryption {
             systemID = systemID.toLowerCase();
 
             /* PSSH Data Size */
-            psshDataSize = dv.getUint32(byteCursor);
+            // psshDataSize = dv.getUint32(byteCursor);
             byteCursor += 4;
 
             /* PSSH Data */

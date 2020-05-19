@@ -57,13 +57,9 @@ describe('TimelineConverter', function () {
     });
 
     describe('when time sync is complete', function () {
-        let updateCompleted;
-
         beforeEach(function (done) {
-            updateCompleted = false;
             setTimeout(() => {
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {offset: 0});
-                updateCompleted = true;
                 done();
             }, specHelper.getExecutionDelay());
         });

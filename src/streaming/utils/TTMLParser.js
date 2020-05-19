@@ -121,11 +121,12 @@ function TTMLParser() {
         eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
 
         const mediaTimeEvents = imsc1doc.getMediaTimeEvents();
+        const errorHandler = function (error) {
+            errorMsg = error;
+        };
 
         for (i = 0; i < mediaTimeEvents.length; i++) {
-            let isd = generateISD(imsc1doc, mediaTimeEvents[i], function (error) {
-                errorMsg = error;
-            });
+            let isd = generateISD(imsc1doc, mediaTimeEvents[i], errorHandler);
 
             if (isd.contents.some(topLevelContents => topLevelContents.contents.length)) {
                 //be sure that mediaTimeEvents values are in the mp4 segment time ranges.

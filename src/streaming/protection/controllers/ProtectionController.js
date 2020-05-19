@@ -414,35 +414,36 @@ function ProtectionController(config) {
             return indexA - indexB;
         });
 
-        let ksIdx;
         if (keySystem) {
             // We have a key system
-            for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
+
+            // Ensure that we would be granted key system access using the key
+            // system and codec information
+            const onKeySystemAccessComplete = function (ksIdx, event) {
+                eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+                if (event.error) {
+                    if (!fromManifest) {
+                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, { error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error) });
+                    }
+                } else {
+                    logger.info('DRM: KeySystem Access Granted');
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: event.data });
+                    if (supportedKS[ksIdx].sessionId) {
+                        // Load MediaKeySession with sessionId
+                        loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
+                    } else if (supportedKS[ksIdx].initData) {
+                        // Create new MediaKeySession with initData
+                        createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
+                    }
+                }
+            };
+            for (let ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
                 if (keySystem === supportedKS[ksIdx].ks) {
 
                     requestedKeySystems.push({ks: supportedKS[ksIdx].ks, configs: [getKeySystemConfiguration(keySystem)]});
 
-                    // Ensure that we would be granted key system access using the key
-                    // system and codec information
-                    const onKeySystemAccessComplete = function (event) {
-                        eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                        if (event.error) {
-                            if (!fromManifest) {
-                                eventBus.trigger(events.KEY_SYSTEM_SELECTED, {error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)});
-                            }
-                        } else {
-                            logger.info('DRM: KeySystem Access Granted');
-                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
-                            if (supportedKS[ksIdx].sessionId) {
-                                // Load MediaKeySession with sessionId
-                                loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
-                            } else if (supportedKS[ksIdx].initData) {
-                                // Create new MediaKeySession with initData
-                                createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
-                            }
-                        }
-                    };
-                    eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+
+                    eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete.bind(null, ksIdx), self);
                     protectionModel.requestKeySystemAccess(requestedKeySystems);
                     break;
                 }
@@ -463,6 +464,8 @@ function ProtectionController(config) {
                 eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                 if (event.error) {
                     keySystem = undefined;
+                    // TODO: check if this use before define is legitimate
+                    // eslint-disable-next-line no-use-before-define
                     eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                     if (!fromManifest) {
                         eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)});
@@ -488,7 +491,7 @@ function ProtectionController(config) {
                         protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
                     }
                     for (let i = 0; i < pendingNeedKeyData.length; i++) {
-                        for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
+                        for (let ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                             if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
                                 // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
                                 // initData and overwrite possible initData indicated in encrypted event (EME)

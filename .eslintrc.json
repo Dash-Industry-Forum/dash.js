@@ -3,6 +3,35 @@
     "sourceType": "module",
     "ecmaVersion": 2015
   },
+  "env": {
+    "browser": true,
+    "jquery": true,
+    "node": true,
+    "es6": true
+  },
+  "globals": {
+    "it": "readonly",
+    "describe": "readonly",
+    "beforeEach": "readonly",
+    "before": "readonly",
+    "afterEach": "readonly",
+    "after": "readonly",
+    "kendo": "readonly",
+    "utils": "readonly",
+    "MediaPlayer": "readonly",
+    "Dash": "readonly",
+    "WebKitMediaSource": "readonly",
+    "MediaSource": "readonly",
+    "WebKitMediaKeys": "readonly",
+    "MSMediaKeys": "readonly",
+    "MediaKeys": "readonly",
+    "Caster": "readonly",
+    "TextTrackCue": "readonly",
+    "HTMLMediaElement": "readonly",
+    "MediaError": "readonly",
+    "cea608parser": "readonly",
+    "dashjs": "readonly"
+  },
   "rules": {
     "indent": [
       2,
@@ -53,6 +82,17 @@
       {
         "allowEmptyCatch": true
       }
-    ]
+    ],
+    "no-caller": 2,
+    "no-use-before-define": [
+      2,
+      {
+        "functions": false
+      }
+    ],
+    "no-undef": 2,
+    "no-unused-vars": 2,
+    "strict": 0,
+    "no-loop-func": 2
   }
 }

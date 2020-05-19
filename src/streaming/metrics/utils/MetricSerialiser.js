@@ -43,6 +43,14 @@ function MetricSerialiser() {
         let key,
             value;
 
+        // internal helper to remove function declaration in following loop
+        // TODO: the actual implementation here could be improved
+        const elementIterator = function (obj, v) {
+            let isBuiltIn = Object.prototype.toString.call(v).slice(8, -1) !== 'Object';
+
+            obj.push(isBuiltIn ? v : serialise(v));
+        };
+
         // Take each (key, value) pair from the metric entry and create a
         // string consisting of the name of the key, followed by an equals
         // ('=') character, followed by the string representation of the
@@ -67,11 +75,7 @@ function MetricSerialiser() {
 
                     obj = [];
 
-                    value.forEach(function (v) {
-                        let isBuiltIn = Object.prototype.toString.call(v).slice(8, -1) !== 'Object';
-
-                        obj.push(isBuiltIn ? v : serialise(v));
-                    });
+                    value.forEach(elementIterator.bind(null, obj));
 
                     value = obj.map(encodeURIComponent).join(',');
                 } else if (typeof value === 'string') {

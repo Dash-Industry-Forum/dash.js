@@ -115,7 +115,6 @@ function MssParser(config) {
         let segmentTemplate,
             qualityLevels,
             representation,
-            segments,
             i;
 
         const name = streamIndex.getAttribute('Name');
@@ -184,8 +183,6 @@ function MssParser(config) {
 
         // Set SegmentTemplate
         adaptationSet.SegmentTemplate = segmentTemplate;
-
-        segments = segmentTemplate.SegmentTimeline.S_asArray;
 
         return adaptationSet;
     }
@@ -461,8 +458,8 @@ function MssParser(config) {
     }
 
     function getWRMHeaderFromPRHeader(prHeader) {
-        let length,
-            recordCount,
+        let // length,
+            // recordCount,
             recordType,
             recordLength,
             recordValue;
@@ -471,11 +468,11 @@ function MssParser(config) {
         // Parse PlayReady header
 
         // Length - 32 bits (LE format)
-        length = (prHeader[i + 3] << 24) + (prHeader[i + 2] << 16) + (prHeader[i + 1] << 8) + prHeader[i];
+        // length = (prHeader[i + 3] << 24) + (prHeader[i + 2] << 16) + (prHeader[i + 1] << 8) + prHeader[i];
         i += 4;
 
         // Record count - 16 bits (LE format)
-        recordCount = (prHeader[i + 1] << 8) + prHeader[i];
+        // recordCount = (prHeader[i + 1] << 8) + prHeader[i];
         i += 2;
 
         // Parse records
