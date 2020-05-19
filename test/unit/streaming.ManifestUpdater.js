@@ -38,11 +38,11 @@ describe('ManifestUpdater', function () {
             error: {code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE, message: manifestErrorMockText}
         });
 
-        expect(spy).to.have.not.been.called(); // jshint ignore:line
+        expect(spy).to.have.not.been.called();
 
         eventBus.off(Events.MANIFEST_UPDATED, spy);
 
-        expect(errHandlerMock.errorCode).to.equal(undefined); // jshint ignore:line
+        expect(errHandlerMock.errorCode).to.equal(undefined);
     });
 
     it('should not call MANIFEST_UPDATED if a parsing error occurs, errorHandler should send an error', function () {
@@ -53,10 +53,10 @@ describe('ManifestUpdater', function () {
             error: {code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE, message: manifestErrorMockText}
         });
 
-        expect(spy).to.have.not.been.called(); // jshint ignore:line
+        expect(spy).to.have.not.been.called();
 
         eventBus.off(Events.MANIFEST_UPDATED, spy);
 
-        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE); // jshint ignore:line
+        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE);
     });
 });

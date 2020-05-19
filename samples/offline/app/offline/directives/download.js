@@ -17,7 +17,7 @@ angular.module('DashPlayer').
 
                 scope.$watch('download.status', function (newValue) {
                     if (newValue === 'created') {
-                      scope.onCreated(scope);
+                        scope.onCreated(scope);
                     }
                     if (newValue === 'started') {
                         scope.updateDownloadProgression();
@@ -55,7 +55,7 @@ angular.module('DashPlayer').
                 };
 
                 scope.isDownloadEnabled = function () {
-                  return scope.isEnabled;
+                    return scope.isEnabled;
                 };
 
                 scope.canPlay = function () {

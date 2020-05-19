@@ -56,8 +56,8 @@ describe('TimelineSegmentsGetter', () => {
     }, false);
 
     it('should expose segments getter interface', () => {
-        expect(timelineSegmentsGetter.getSegmentByIndex).to.exist; // jshint ignore:line
-        expect(timelineSegmentsGetter.getSegmentByTime).to.exist; // jshint ignore:line
+        expect(timelineSegmentsGetter.getSegmentByIndex).to.exist;
+        expect(timelineSegmentsGetter.getSegmentByTime).to.exist;
     });
 
     describe('Initialization', () => {
@@ -75,7 +75,7 @@ describe('TimelineSegmentsGetter', () => {
             const getter = TimelineSegmentsGetter(context).create({ timelineConverter: timelineConverter });
             const segment = getter.getSegmentByIndex();
 
-            expect(segment).to.be.null; // jshint ignore:line
+            expect(segment).to.be.null;
         });
     });
 
@@ -112,14 +112,14 @@ describe('TimelineSegmentsGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = timelineSegmentsGetter.getSegmentByIndex(representation, 10000, 1000);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
 
         it('should return null if last media time is not provided', () => {
             const representation = createRepresentationMock();
 
             let seg = timelineSegmentsGetter.getSegmentByIndex(representation, 1);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
     });
 
@@ -166,7 +166,7 @@ describe('TimelineSegmentsGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = timelineSegmentsGetter.getSegmentByTime(representation, 102);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
     });
 });

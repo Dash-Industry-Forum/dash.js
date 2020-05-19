@@ -24,7 +24,7 @@ describe('FragmentController', function () {
 
     it('should create or return model for a given media type', function () {
         videoFragmentModel = fragmentController.getModel('streamId', 'video');
-        expect(videoFragmentModel).to.exist; // jshint ignore:line
+        expect(videoFragmentModel).to.exist;
     });
 
     it('should always return the same model for the context', function () {

@@ -49,7 +49,7 @@ describe('MediaPlayer', function () {
 
         // to avoid unwanted log
         const debug = player.getDebug();
-        expect(debug).to.exist; // jshint ignore:line
+        expect(debug).to.exist;
 
         player.setConfig({
             streamController: streamControllerMock,
@@ -71,7 +71,7 @@ describe('MediaPlayer', function () {
         describe('When it is not initialized', function () {
             it('Method isReady should return false', function () {
                 const isReady = player.isReady();
-                expect(isReady).to.be.false; // jshint ignore:line
+                expect(isReady).to.be.false;
             });
         });
 
@@ -81,7 +81,7 @@ describe('MediaPlayer', function () {
                 player.initialize(videoElementMock, dummyUrl, false);
 
                 const isReady = player.isReady();
-                expect(isReady).to.be.false; // jshint ignore:line
+                expect(isReady).to.be.false;
 
                 capaMock.setMediaSourceSupported(true);
             });
@@ -92,7 +92,7 @@ describe('MediaPlayer', function () {
                     player.off('error', playerError);
 
                     const isReady = player.isReady();
-                    expect(isReady).to.be.false; // jshint ignore:line
+                    expect(isReady).to.be.false;
 
                     // reinit mock
                     capaMock.setMediaSourceSupported(true);
@@ -110,7 +110,7 @@ describe('MediaPlayer', function () {
             });
             it('Method isReady should return true', function () {
                 const isReady = player.isReady();
-                expect(isReady).to.be.true; // jshint ignore:line
+                expect(isReady).to.be.true;
             });
         });
     });
@@ -195,74 +195,74 @@ describe('MediaPlayer', function () {
 
             it('Method getDVRWindowSize should return 0', function () {
                 let dvrWindowSize = player.getDVRWindowSize();
-                expect(dvrWindowSize).equal(0); // jshint ignore:line
+                expect(dvrWindowSize).equal(0);
             });
 
             it('Method getDVRSeekOffset should return 0', function () {
                 let dvrSeekOffset = player.getDVRSeekOffset();
-                expect(dvrSeekOffset).equal(0); // jshint ignore:line
+                expect(dvrSeekOffset).equal(0);
             });
 
             it('Method play should start playing', function () {
                 let isPlaying = playbackControllerMock.isPlaying();
-                expect(isPlaying).to.be.false; // jshint ignore:line
+                expect(isPlaying).to.be.false;
 
                 player.play();
 
                 isPlaying = playbackControllerMock.isPlaying();
-                expect(isPlaying).to.be.true; // jshint ignore:line
+                expect(isPlaying).to.be.true;
             });
 
             it('Method pause should pause playback', function () {
                 let paused = playbackControllerMock.isPaused();
-                expect(paused).to.be.false; // jshint ignore:line
+                expect(paused).to.be.false;
 
                 player.pause();
 
                 paused = playbackControllerMock.isPaused();
-                expect(paused).to.be.true; // jshint ignore:line
+                expect(paused).to.be.true;
             });
 
             it('Method isPaused should return pause state', function () {
                 player.play();
 
                 let paused = player.isPaused();
-                expect(paused).to.be.false; // jshint ignore:line
+                expect(paused).to.be.false;
 
                 player.pause();
 
                 paused = player.isPaused();
-                expect(paused).to.be.true; // jshint ignore:line
+                expect(paused).to.be.true;
 
                 player.play();
 
                 paused = player.isPaused();
-                expect(paused).to.be.false; // jshint ignore:line
+                expect(paused).to.be.false;
             });
 
             it('Method seek should throw an exception', function () {
                 let isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.false; // jshint ignore:line
+                expect(isSeeking).to.be.false;
 
                 expect(player.seek).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.false; // jshint ignore:line
+                expect(isSeeking).to.be.false;
 
                 expect(player.seek.bind(player, NaN)).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isSeeking = playbackControllerMock.isSeeking();
-                expect(isSeeking).to.be.false; // jshint ignore:line
+                expect(isSeeking).to.be.false;
             });
 
             it('Method setMute should throw an exception', function () {
                 let isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
 
                 expect(player.setMute.bind(player, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
 
                 isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
             });
 
             it('Method setVolume should throw an exception', function () {
@@ -276,11 +276,11 @@ describe('MediaPlayer', function () {
 
             it('Method isDynamic should get dynamic value', function () {
                 let isDynamic = player.isDynamic();
-                expect(isDynamic).to.be.false; // jshint ignore:line
+                expect(isDynamic).to.be.false;
 
                 playbackControllerMock.setIsDynamic(true);
                 isDynamic = player.isDynamic();
-                expect(isDynamic).to.be.true; // jshint ignore:line
+                expect(isDynamic).to.be.true;
             });
 
             it('Method setPlaybackRate should change playback value of video element', function () {
@@ -301,28 +301,28 @@ describe('MediaPlayer', function () {
 
             it('Method setMute should change mute value of video element', function () {
                 let isMuted = videoElementMock.muted;
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
 
                 player.setMute(true);
                 isMuted = videoElementMock.muted;
-                expect(isMuted).to.be.true; // jshint ignore:line
+                expect(isMuted).to.be.true;
 
                 player.setMute(false);
                 isMuted = videoElementMock.muted;
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
             });
 
             it('Method isMuted should return mute state', function () {
                 let isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
 
                 player.setMute(true);
                 isMuted = player.isMuted();
-                expect(isMuted).to.be.true; // jshint ignore:line
+                expect(isMuted).to.be.true;
 
                 player.setMute(false);
                 isMuted = player.isMuted();
-                expect(isMuted).to.be.false; // jshint ignore:line
+                expect(isMuted).to.be.false;
             });
 
             it('Method setVolume should change volume value of video element', function () {
@@ -386,7 +386,7 @@ describe('MediaPlayer', function () {
         });
         it('should configure MaxAllowedBitrateFor', function () {
             let maxAllowedBitrateFor = player.getSettings().streaming.abr.maxBitrate.audio;
-            expect(maxAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
+            expect(maxAllowedBitrateFor === -1).to.be.true;
 
             player.updateSettings({
                 'streaming': {
@@ -404,7 +404,7 @@ describe('MediaPlayer', function () {
 
         it('should configure MinAllowedBitrateFor', function () {
             let minAllowedBitrateFor = player.getSettings().streaming.abr.minBitrate.audio;
-            expect(minAllowedBitrateFor === -1).to.be.true; // jshint ignore:line
+            expect(minAllowedBitrateFor === -1).to.be.true;
 
             player.updateSettings({
                 'streaming': {
@@ -443,9 +443,9 @@ describe('MediaPlayer', function () {
             let elementWidth = abrControllerMock.getElementWidth();
             let windowResizeEventCalled = abrControllerMock.getWindowResizeEventCalled();
 
-            expect(elementHeight).to.be.undefined; // jshint ignore:line
-            expect(elementWidth).to.be.undefined; // jshint ignore:line
-            expect(windowResizeEventCalled).to.be.false; // jshint ignore:line
+            expect(elementHeight).to.be.undefined;
+            expect(elementWidth).to.be.undefined;
+            expect(windowResizeEventCalled).to.be.false;
 
             player.updatePortalSize();
 
@@ -455,12 +455,12 @@ describe('MediaPlayer', function () {
 
             expect(elementHeight).to.equal(10);
             expect(elementWidth).to.equal(10);
-            expect(windowResizeEventCalled).to.be.true; // jshint ignore:line
+            expect(windowResizeEventCalled).to.be.true;
         });
 
         it('should configure bitrate according to playback area size', function () {
             let limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
-            expect(limitBitrateByPortal).to.be.false; // jshint ignore:line
+            expect(limitBitrateByPortal).to.be.false;
 
             player.updateSettings({
                 'streaming': {
@@ -471,12 +471,12 @@ describe('MediaPlayer', function () {
             });
 
             limitBitrateByPortal = player.getSettings().streaming.abr.limitBitrateByPortal;
-            expect(limitBitrateByPortal).to.be.true; // jshint ignore:line
+            expect(limitBitrateByPortal).to.be.true;
         });
 
         it('should configure usePixelRatioInLimitBitrateByPortal', function () {
             let UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false; // jshint ignore:line
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.false;
 
             player.updateSettings({
                 'streaming': {
@@ -487,12 +487,12 @@ describe('MediaPlayer', function () {
             });
 
             UsePixelRatioInLimitBitrateByPortal = player.getSettings().streaming.abr.usePixelRatioInLimitBitrateByPortal;
-            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true; // jshint ignore:line
+            expect(UsePixelRatioInLimitBitrateByPortal).to.be.true;
         });
 
         it('should configure initialRepresentationRatioFor', function () {
             let initialRepresentationRatioFor = player.getSettings().streaming.abr.initialRepresentationRatio.video;
-            expect(initialRepresentationRatioFor).to.equal(-1); // jshint ignore:line
+            expect(initialRepresentationRatioFor).to.equal(-1);
 
             player.updateSettings({
                 'streaming': {
@@ -510,7 +510,7 @@ describe('MediaPlayer', function () {
 
         it('should not set setAutoSwitchBitrateFor value if it\'s not a boolean type', function () {
             let autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
-            expect(autoSwitchBitrateForVideo).to.be.true; // jshint ignore:line
+            expect(autoSwitchBitrateForVideo).to.be.true;
 
             player.updateSettings({
                 'streaming': {
@@ -524,7 +524,7 @@ describe('MediaPlayer', function () {
 
             autoSwitchBitrateForVideo = player.getSettings().streaming.abr.autoSwitchBitrate.video;
 
-            expect(autoSwitchBitrateForVideo).to.be.false; // jshint ignore:line
+            expect(autoSwitchBitrateForVideo).to.be.false;
         });
 
         it('Method getAverageThroughput should return 0 when throughputHistory is not set up', function () {
@@ -580,7 +580,7 @@ describe('MediaPlayer', function () {
 
             it('Method getTopBitrateInfoFor should return null when type is undefined', function () {
                 const topBitrateInfo = player.getTopBitrateInfoFor();
-                expect(topBitrateInfo).to.be.null; // jshint ignore:line
+                expect(topBitrateInfo).to.be.null;
             });
         });
     });
@@ -593,16 +593,16 @@ describe('MediaPlayer', function () {
 
         it('should configure autoplay', function () {
             let autoplay = player.getAutoPlay();
-            expect(autoplay).to.be.true; // jshint ignore:line
+            expect(autoplay).to.be.true;
 
             player.setAutoPlay(false);
             autoplay = player.getAutoPlay();
-            expect(autoplay).to.be.false; // jshint ignore:line
+            expect(autoplay).to.be.false;
         });
 
         it('should configure LiveDelayFragmentCount', function () {
             let liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
-            expect(liveDelayFragmentCount).to.be.NaN; // jshint ignore:line
+            expect(liveDelayFragmentCount).to.be.NaN;
 
             player.updateSettings({'streaming': { 'liveDelayFragmentCount': 5 }});
 
@@ -612,43 +612,43 @@ describe('MediaPlayer', function () {
 
         it('should configure useSuggestedPresentationDelay', function () {
             let useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
-            expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
+            expect(useSuggestedPresentationDelay).to.be.true;
 
             player.updateSettings({'streaming': { 'useSuggestedPresentationDelay': false }});
 
             useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
-            expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
+            expect(useSuggestedPresentationDelay).to.be.false;
         });
 
         it('should configure scheduleWhilePaused', function () {
             let scheduleWhilePaused = player.getSettings().streaming.scheduleWhilePaused;
-            expect(scheduleWhilePaused).to.be.true; // jshint ignore:line
+            expect(scheduleWhilePaused).to.be.true;
 
             player.updateSettings({'streaming': { 'scheduleWhilePaused': false }});
 
             scheduleWhilePaused = player.getSettings().streaming.scheduleWhilePaused;
-            expect(scheduleWhilePaused).to.be.false; // jshint ignore:line
+            expect(scheduleWhilePaused).to.be.false;
         });
 
         it('should configure fastSwitchEnabled', function () {
             let fastSwitchEnabled = player.getSettings().streaming.fastSwitchEnabled;
-            expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
+            expect(fastSwitchEnabled).to.be.false;
 
             player.updateSettings({'streaming': { 'fastSwitchEnabled': true }});
 
             fastSwitchEnabled = player.getSettings().streaming.fastSwitchEnabled;
-            expect(fastSwitchEnabled).to.be.true; // jshint ignore:line
+            expect(fastSwitchEnabled).to.be.true;
         });
 
         it('should configure useDefaultABRRules', function () {
             let useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.true; // jshint ignore:line
+            expect(useDefaultABRRules).to.be.true;
 
             player.updateSettings({'streaming': { 'abr': { 'useDefaultABRRules': false }}});
 
 
             useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
-            expect(useDefaultABRRules).to.be.false; // jshint ignore:line
+            expect(useDefaultABRRules).to.be.false;
         });
 
         it('should manage custom ABR rules', function () {
@@ -703,12 +703,12 @@ describe('MediaPlayer', function () {
 
         it('should configure useManifestDateHeaderTimeSource', function () {
             let useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
-            expect(useManifestDateHeaderTimeSource).to.be.true; // jshint ignore:line
+            expect(useManifestDateHeaderTimeSource).to.be.true;
 
             player.updateSettings({'streaming': { 'useManifestDateHeaderTimeSource': false }});
 
             useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
-            expect(useManifestDateHeaderTimeSource).to.be.false; // jshint ignore:line
+            expect(useManifestDateHeaderTimeSource).to.be.false;
         });
 
         it('should configure BufferToKeep', function () {
@@ -874,7 +874,7 @@ describe('MediaPlayer', function () {
             });
 
             it('Method getTextDefaultEnabled should return false', function () {
-                expect(player.getTextDefaultEnabled()).to.be.false; // jshint ignore:line
+                expect(player.getTextDefaultEnabled()).to.be.false;
             });
         });
     });
@@ -903,14 +903,14 @@ describe('MediaPlayer', function () {
 
                 const element = player.getVideoElement();
                 const areEquals = objectUtils.areEqual(element, videoElementMock);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
             });
 
             it('should be able to attach view', function () {
                 let element = player.getVideoElement();
                 const objectUtils = ObjectUtils(context).getInstance();
                 let areEquals = objectUtils.areEqual(element, videoElementMock);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
 
                 const myNewView = new VideoElementMock();
 
@@ -919,12 +919,12 @@ describe('MediaPlayer', function () {
                 element = player.getVideoElement();
 
                 areEquals = objectUtils.areEqual(element, myNewView);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
             });
 
             it('should be able to attach TTML renderer div', function () {
                 let ttmlRenderer = player.getTTMLRenderingDiv();
-                expect(ttmlRenderer).to.be.undefined; // jshint ignore:line
+                expect(ttmlRenderer).to.be.undefined;
 
                 const myTTMLRenderer = {
                     style: {}
@@ -934,7 +934,7 @@ describe('MediaPlayer', function () {
 
                 ttmlRenderer = player.getTTMLRenderingDiv();
                 const areEquals = objectUtils.areEqual(ttmlRenderer, myTTMLRenderer);
-                expect(areEquals).to.be.true; // jshint ignore:line
+                expect(areEquals).to.be.true;
             });
 
             it('Method attachView should throw an exception when attaching a view which is not VIDEO or AUDIO DOM element', function () {
@@ -1034,7 +1034,7 @@ describe('MediaPlayer', function () {
 
             it('should configure initial media settings', function () {
                 let initialSettings = player.getInitialMediaSettingsFor('audio');
-                expect(initialSettings).to.not.exist; // jshint ignore:line
+                expect(initialSettings).to.not.exist;
 
                 player.setInitialMediaSettingsFor('audio', 'settings');
 
@@ -1043,7 +1043,7 @@ describe('MediaPlayer', function () {
 
                 player.setInitialMediaSettingsFor('fragmentedText', { lang: 'en', role: 'caption'});
                 initialSettings = player.getInitialMediaSettingsFor('fragmentedText');
-                expect(initialSettings).to.exist; ; // jshint ignore:line
+                expect(initialSettings).to.exist; ;
                 expect(initialSettings.lang).to.equal('en');
                 expect(initialSettings.role).to.equal('caption');
 
@@ -1051,17 +1051,17 @@ describe('MediaPlayer', function () {
 
             it('should set current track', function () {
                 let currentTrack = mediaControllerMock.isCurrentTrack('audio');
-                expect(currentTrack).to.be.false; // jshint ignore:line
+                expect(currentTrack).to.be.false;
 
                 player.setCurrentTrack('audio');
 
                 currentTrack = mediaControllerMock.isCurrentTrack('audio');
-                expect(currentTrack).to.be.true; // jshint ignore:line
+                expect(currentTrack).to.be.true;
             });
 
             it('should configure track switch mode', function () {
                 let trackSwitchMode = player.getTrackSwitchModeFor('audio');
-                expect(trackSwitchMode).to.not.exist; // jshint ignore:line
+                expect(trackSwitchMode).to.not.exist;
 
                 player.setTrackSwitchModeFor('audio', 'switch');
 
@@ -1071,7 +1071,7 @@ describe('MediaPlayer', function () {
 
             it('should configure selection mode for initial track', function () {
                 let selectionMode = player.getSelectionModeForInitialTrack();
-                expect(selectionMode).to.not.exist; // jshint ignore:line
+                expect(selectionMode).to.not.exist;
 
                 player.setSelectionModeForInitialTrack('mode');
 
@@ -1099,22 +1099,22 @@ describe('MediaPlayer', function () {
 
             it('Method getDashMetrics should return dash metrics', function () {
                 const metricsExt = player.getDashMetrics();
-                expect(metricsExt).to.exist; // jshint ignore:line
+                expect(metricsExt).to.exist;
             });
 
             it('Method getBufferLength should return 0 when no type is defined', function () {
                 const bufferLength = player.getBufferLength();
-                expect(bufferLength).to.equals(0); // jshint ignore:line
+                expect(bufferLength).to.equals(0);
             });
 
             it('Method getBufferLength should return NaN when type is Muxed', function () {
                 const bufferLength = player.getBufferLength(Constants.MUXED);
-                expect(bufferLength).to.be.NaN; // jshint ignore:line
+                expect(bufferLength).to.be.NaN;
             });
 
             it('Method getBufferLength should return NaN when type is Video', function () {
                 const bufferLength = player.getBufferLength(Constants.VIDEO);
-                expect(bufferLength).to.be.NaN; // jshint ignore:line
+                expect(bufferLength).to.be.NaN;
             });
         });
     });

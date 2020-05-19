@@ -8,12 +8,12 @@ describe('MapNode', function () {
     it('should return a MapNode with expected defaults', () => {
         const mapNode = new MapNode();
 
-        expect(mapNode).to.be.instanceof(MapNode); // jshint ignore:line
-        expect(mapNode.name).to.equal(''); // jshint ignore:line
-        expect(mapNode.properties).to.be.instanceOf(Array); // jshint ignore:line
-        expect(mapNode.properties).to.be.empty; // jshint ignore:line
-        expect(mapNode.children).to.be.instanceOf(Array); // jshint ignore:line
-        expect(mapNode.children).to.be.empty; // jshint ignore:line
+        expect(mapNode).to.be.instanceof(MapNode);
+        expect(mapNode.name).to.equal('');
+        expect(mapNode.properties).to.be.instanceOf(Array);
+        expect(mapNode.properties).to.be.empty;
+        expect(mapNode.children).to.be.instanceOf(Array);
+        expect(mapNode.children).to.be.empty;
     });
 
     it('should throw an exception if attempting to use setters', () => {
@@ -31,8 +31,8 @@ describe('MapNode', function () {
 
         const mapNode = new MapNode(name, properties);
 
-        expect(mapNode.properties).to.be.instanceOf(Array); // jshint ignore:line
-        expect(mapNode.properties).not.to.be.empty; // jshint ignore:line
-        expect(mapNode.properties[0]).to.be.instanceOf(CommonProperty); // jshint ignore:line
+        expect(mapNode.properties).to.be.instanceOf(Array);
+        expect(mapNode.properties).not.to.be.empty;
+        expect(mapNode.properties[0]).to.be.instanceOf(CommonProperty);
     });
 });

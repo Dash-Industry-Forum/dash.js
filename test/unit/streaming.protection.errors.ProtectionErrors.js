@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 describe('ProtectionErrors', function () {
     it('ProtectionErrors code should exist', () => {
-        expect(ProtectionErrors).to.exist; // jshint ignore:line
+        expect(ProtectionErrors).to.exist;
         expect(ProtectionErrors.MEDIA_KEYERR_CODE).to.equal(100);
         expect(ProtectionErrors.MEDIA_KEYERR_UNKNOWN_CODE).to.equal(101);
         expect(ProtectionErrors.MEDIA_KEYERR_CLIENT_CODE).to.equal(102);
@@ -22,7 +22,7 @@ describe('ProtectionErrors', function () {
     });
 
     it('ProtectionErrors should return the correct error message', () => {
-        expect(ProtectionErrors).to.exist; // jshint ignore:line
+        expect(ProtectionErrors).to.exist;
         expect(ProtectionErrors.MEDIA_KEYERR_UNKNOWN_MESSAGE).to.equal('An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.');
         expect(ProtectionErrors.MEDIA_KEYERR_CLIENT_MESSAGE).to.equal('The Key System could not be installed or updated.');
         expect(ProtectionErrors.MEDIA_KEYERR_SERVICE_MESSAGE).to.equal('The message passed into update indicated an error from the license service.');

@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 describe('Errors', function () {
     it('Errors code should exist', () => {
-        expect(Errors).to.exist; // jshint ignore:line
+        expect(Errors).to.exist;
         expect(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE).to.equal(10);
         expect(Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE).to.equal(11);
         expect(Errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE).to.equal(12);
@@ -34,7 +34,7 @@ describe('Errors', function () {
     });
 
     it('Errors should return the correct error message', () => {
-        expect(Errors).to.exist; // jshint ignore:line
+        expect(Errors).to.exist;
         expect(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE).to.equal('parsing failed for ');
         expect(Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE).to.equal('Failed loading manifest: ');
         expect(Errors.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE).to.equal('Failed loading Xlink element: ');

@@ -116,5 +116,5 @@ function KeySystemW3CClearKey(config) {
 }
 
 KeySystemW3CClearKey.__dashjs_factory_name = 'KeySystemW3CClearKey';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKey); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKey);
 

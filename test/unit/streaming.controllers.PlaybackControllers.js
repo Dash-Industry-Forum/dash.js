@@ -55,14 +55,14 @@ describe('PlaybackController', function () {
     describe('Not initialized', function () {
         it('should initialize', function () {
 
-            expect(playbackController.getIsDynamic()).to.not.exist; // jshint ignore:line
-            expect(playbackController.isPaused()).to.be.null; // jshint ignore:line
-            expect(playbackController.isSeeking()).to.be.null; // jshint ignore:line
-            expect(playbackController.getTime()).to.be.null; // jshint ignore:line
-            expect(playbackController.getPlaybackRate()).to.be.null; // jshint ignore:line
-            expect(playbackController.getPlayedRanges()).to.be.null; // jshint ignore:line
-            expect(playbackController.getEnded()).to.be.null; // jshint ignore:line
-            expect(playbackController.getCurrentLiveLatency()).to.be.NaN; // jshint ignore:line
+            expect(playbackController.getIsDynamic()).to.not.exist;
+            expect(playbackController.isPaused()).to.be.null;
+            expect(playbackController.isSeeking()).to.be.null;
+            expect(playbackController.getTime()).to.be.null;
+            expect(playbackController.getPlaybackRate()).to.be.null;
+            expect(playbackController.getPlayedRanges()).to.be.null;
+            expect(playbackController.getEnded()).to.be.null;
+            expect(playbackController.getCurrentLiveLatency()).to.be.NaN;
 
             let streamInfo = {
                 manifestInfo: {
@@ -94,26 +94,26 @@ describe('PlaybackController', function () {
 
         it('should return NaN when getLiveDelay is called after a call to computeLiveDelay with no parameter', function () {
             expect(playbackController.computeAndSetLiveDelay.bind(playbackController)).not.to.throw();
-            expect(playbackController.getLiveDelay()).to.be.NaN; // jshint ignore:line
+            expect(playbackController.getLiveDelay()).to.be.NaN;
         });
 
         describe('video management', function () {
 
             it('should start playing video', function () {
                 playbackController.play();
-                expect(videoModelMock.isplaying).to.be.true; // jshint ignore:line
+                expect(videoModelMock.isplaying).to.be.true;
             });
 
             it('should pause the video', function () {
                 playbackController.pause();
-                expect(videoModelMock.ispaused).to.be.true; // jshint ignore:line
+                expect(videoModelMock.ispaused).to.be.true;
             });
 
             it('should return if video is paused', function () {
 
-                expect(playbackController.isPaused()).to.be.false; // jshint ignore:line
+                expect(playbackController.isPaused()).to.be.false;
                 playbackController.pause();
-                expect(playbackController.isPaused()).to.be.true; // jshint ignore:line
+                expect(playbackController.isPaused()).to.be.true;
             });
 
             it('should seek the video', function () {
@@ -322,8 +322,8 @@ describe('PlaybackController', function () {
     });
 
     describe('start time', function () {
-        let expectedSeekTime;
-        let doneFn;
+        let expectedSeekTime,
+            doneFn;
 
         let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600 };
         let dynamicStreamInfo = { manifestInfo: { isDynamic: true }, start: 50, duration: Infinity };

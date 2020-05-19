@@ -62,34 +62,34 @@ describe('BoxParser', function () {
         it('should return false when data is null or not defined', () => {
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], null);
 
-            expect(res.found).to.be.false;    // jshint ignore:line
+            expect(res.found).to.be.false;
         });
 
         it('should return false when data is empty', () => {
             const data = new ArrayBuffer();
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data);
 
-            expect(res.found).to.be.false;    // jshint ignore:line
+            expect(res.found).to.be.false;
         });
 
         it('should return false when data length is lower than offset', () => {
             const data = new ArrayBuffer(5);
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data, 10);
 
-            expect(res.found).to.be.false;  // jshint ignore:line
+            expect(res.found).to.be.false;
         });
 
         it('should return false when data to read is lower than 8', () => {
             const data = new ArrayBuffer(16);
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data, 12);
 
-            expect(res.found).to.be.false; // jshint ignore:line
+            expect(res.found).to.be.false;
         });
 
         it('should return null when data is empty', () => {
             const res = boxParser.findInitRange();
 
-            expect(res).to.be.null; // jshint ignore:line
+            expect(res).to.be.null;
         });
     });
 
@@ -98,45 +98,45 @@ describe('BoxParser', function () {
             const data = new Uint8Array(ftypCompleted);
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data.buffer);
 
-            expect(res.found).to.be.true; // jshint ignore:line
+            expect(res.found).to.be.true;
         });
 
         it('should return false when looking for a box that is not completed', () => {
             const data = new Uint8Array(ftypIncompleted);
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data.buffer);
 
-            expect(res.found).to.be.false; // jshint ignore:line
+            expect(res.found).to.be.false;
         });
 
         it('should return true when looking for completed boxes in a buffer with multiple top boxes', () => {
             const data = new Uint8Array(initSegmentCompleted);
             let res = boxParser.findLastTopIsoBoxCompleted(['ftyp'], data.buffer);
-            expect(res.found).to.be.true; // jshint ignore:line
+            expect(res.found).to.be.true;
 
             res = boxParser.findLastTopIsoBoxCompleted(['moov'], data.buffer);
-            expect(res.found).to.be.true; // jshint ignore:line
+            expect(res.found).to.be.true;
         });
 
         it('should return true when looking for completed boxes and using offset values', () => {
             const data = new Uint8Array(initSegmentCompleted);
 
             const res = boxParser.findLastTopIsoBoxCompleted(['ftyp', 'moov'], data.buffer, 132);
-            expect(res.found).to.be.true; // jshint ignore:line
+            expect(res.found).to.be.true;
         });
 
         it('should return offset of the last completed box when the specified box type is not found', () => {
             const data = new Uint8Array(initSegmentIncompleted);
 
             const res = boxParser.findLastTopIsoBoxCompleted(['moov'], data.buffer);
-            expect(res.found).to.be.false; // jshint ignore:line
-            expect(res.lastCompletedOffset).to.equal(36); // jshint ignore:line
+            expect(res.found).to.be.false;
+            expect(res.lastCompletedOffset).to.equal(36);
         });
 
         it('should not return null when looking for init range in a completed init segment', () => {
             const data = new Uint8Array(initSegmentCompleted);
             let res = boxParser.findInitRange(data.buffer);
-            expect(res).not.to.be.null; // jshint ignore:line
-            expect(res).to.equal('0-944'); // jshint ignore:line
+            expect(res).not.to.be.null;
+            expect(res).to.equal('0-944');
         });
     });
 
@@ -144,14 +144,14 @@ describe('BoxParser', function () {
         it('should return an object with an empty array called samplesInfo.sampleList when getSamplesInfo is called and sample is undefined', () => {
             const samplesInfo = boxParser.getSamplesInfo();
 
-            expect(samplesInfo.sampleList).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(samplesInfo.sampleList).to.be.empty;    // jshint ignore:line
+            expect(samplesInfo.sampleList).to.be.instanceOf(Array);
+            expect(samplesInfo.sampleList).to.be.empty;
         });
 
         it('should return NaN when getMediaTimescaleFromMoov is called and sample is undefined', () => {
             const timeScale = boxParser.getMediaTimescaleFromMoov();
 
-            expect(timeScale).to.be.NaN;    // jshint ignore:line
+            expect(timeScale).to.be.NaN;
         });
     });
 });

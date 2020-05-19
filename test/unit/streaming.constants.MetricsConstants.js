@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 describe('MetricsConstants', function () {
     it('MetricsConstants should exist', () => {
-        expect(MetricsConstants).to.exist; // jshint ignore:line
+        expect(MetricsConstants).to.exist;
         expect(MetricsConstants.TCP_CONNECTION).to.equal('TcpList');
         expect(MetricsConstants.HTTP_REQUEST).to.equal('HttpList');
         expect(MetricsConstants.TRACK_SWITCH).to.equal('RepSwitchList');

@@ -40,23 +40,23 @@ describe('BufferLevelRule', function () {
 
     it('should return NaN if type is undefined', function () {
         const result = bufferLevelRule.getBufferTarget();
-        expect(result).to.be.NaN;  // jshint ignore:line
+        expect(result).to.be.NaN;
     });
 
     it('should return NaN if representationInfo is undefined', function () {
         const result = bufferLevelRule.getBufferTarget(testAudioType);
-        expect(result).to.be.NaN;  // jshint ignore:line
+        expect(result).to.be.NaN;
     });
 
     it('should return 0 if streamProcessor is defined and current representation is fragmentedText, and subtitles are disabled', function () {
         const result = bufferLevelRule.getBufferTarget(testFragmentedTextType, representationInfo);
-        expect(result).to.be.equal(0);  // jshint ignore:line
+        expect(result).to.be.equal(0);
     });
 
     it('should return 6 (value returns by currentRepresentationInfo.fragmentDuration) if streamProcessor is defined and current representation is fragmentedText, and subtitles are enabled', function () {
         textControllerMock.enableText(true);
         const result = bufferLevelRule.getBufferTarget(testFragmentedTextType, representationInfo);
-        expect(result).to.be.equal(6);  // jshint ignore:line
+        expect(result).to.be.equal(6);
     });
 
     it('should return 15 (value returns by getCurrentBufferLevel of DashMetricsMock) if streamProcessor is defined and current representation is audio and videoTrackPresent is true', function () {
@@ -71,11 +71,11 @@ describe('BufferLevelRule', function () {
 
     it('should return true if representationInfo is undefined', function () {
         const result = bufferLevelRule.execute();
-        expect(result).to.be.true;  // jshint ignore:line
+        expect(result).to.be.true;
     });
 
     it('should return false if representationInfo is defined', function () {
         const result = bufferLevelRule.execute(testAudioType, representationInfo);
-        expect(result).to.be.false;  // jshint ignore:line
+        expect(result).to.be.false;
     });
 });

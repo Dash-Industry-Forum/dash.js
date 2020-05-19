@@ -87,10 +87,10 @@ describe('Thumbnails', function () {
 
         it('should return null if not initialized', function () {
             thumbnailController.provide(0, (thumbnail) => {
-                expect(thumbnail).to.be.null; // jshint ignore:line
+                expect(thumbnail).to.be.null;
             });
 
-            expect(thumbnailController.getBitrateList()).to.be.empty; // jshint ignore:line
+            expect(thumbnailController.getBitrateList()).to.be.empty;
         });
     });
 
@@ -118,11 +118,11 @@ describe('Thumbnails', function () {
 
         it('should return a thumbnail', function () {
             thumbnailController.provide(undefined, thumbnail => {
-                expect(thumbnail).to.be.null; // jshint ignore:line
+                expect(thumbnail).to.be.null;
             });
 
             thumbnailController.provide(0, thumbnail => {
-                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail).to.be.not.null;
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
                 expect(thumbnail.width).to.equal(320);
@@ -131,7 +131,7 @@ describe('Thumbnails', function () {
             });
 
             thumbnailController.provide(11, thumbnail => {
-                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail).to.be.not.null;
                 expect(thumbnail.x).to.equal(320);
                 expect(thumbnail.y).to.equal(0);
                 expect(thumbnail.width).to.equal(320);
@@ -140,7 +140,7 @@ describe('Thumbnails', function () {
             });
 
             thumbnailController.provide(101, thumbnail => {
-                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail).to.be.not.null;
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
                 expect(thumbnail.width).to.equal(320);
@@ -152,7 +152,7 @@ describe('Thumbnails', function () {
         it('shouldn\'t return any thumbnail after reset', function () {
             thumbnailController.reset();
             thumbnailController.provide(0, thumbnail => {
-                expect(thumbnail).to.be.null; // jshint ignore:line
+                expect(thumbnail).to.be.null;
             });
         });
 
@@ -194,7 +194,7 @@ describe('Thumbnails', function () {
 
         it('should return a thumbnail when using multiple rows sprites ', function () {
             thumbnailController.provide(0, thumbnail => {
-                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail).to.be.not.null;
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
                 expect(thumbnail.width).to.equal(102);
@@ -204,7 +204,7 @@ describe('Thumbnails', function () {
 
 
             thumbnailController.provide(15, thumbnail => {
-                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail).to.be.not.null;
                 expect(thumbnail.x).to.equal(409.6);
                 expect(thumbnail.y).to.equal(0);
                 expect(thumbnail.width).to.equal(102);
@@ -213,7 +213,7 @@ describe('Thumbnails', function () {
             });
 
             thumbnailController.provide(40, thumbnail => {
-                expect(thumbnail).to.be.not.null; // jshint ignore:line
+                expect(thumbnail).to.be.not.null;
                 expect(thumbnail.x).to.equal(204.8);
                 expect(thumbnail.y).to.equal(57.6);
                 expect(thumbnail.width).to.equal(102);
@@ -247,12 +247,12 @@ describe('Thumbnails', function () {
         it('should not select any track when there are no tracks', function () {
             thumbnailTracks.setTrackByIndex(0);
             expect(thumbnailTracks.getCurrentTrackIndex()).to.equal(-1);
-            expect(thumbnailTracks.getCurrentTrack()).to.be.null; // jshint ignore:line
+            expect(thumbnailTracks.getCurrentTrack()).to.be.null;
         });
 
         it('should return an empty array when there are no tracks', function () {
             const tracks = thumbnailTracks.getTracks();
-            expect(tracks).to.be.empty; // jshint ignore:line
+            expect(tracks).to.be.empty;
         });
 
         it('addTracks method doesn\'t add any track if config not set properly', function () {
@@ -264,7 +264,7 @@ describe('Thumbnails', function () {
             });
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
-            expect(tracks).to.be.empty; // jshint ignore:line
+            expect(tracks).to.be.empty;
         });
 
         it('should parse representations without essential properties and generate thumbnail tracks', function () {
@@ -320,7 +320,7 @@ describe('Thumbnails', function () {
             thumbnailTracks.initialize();
             thumbnailTracks.setTrackByIndex(0);
             expect(thumbnailTracks.getCurrentTrackIndex()).to.equal(0);
-            expect(thumbnailTracks.getCurrentTrack()).to.be.not.null; // jshint ignore:line
+            expect(thumbnailTracks.getCurrentTrack()).to.be.not.null;
             thumbnailTracks.setTrackByIndex(-1);
             expect(thumbnailTracks.getCurrentTrackIndex()).to.equal(-1);
             thumbnailTracks.setTrackByIndex(100);

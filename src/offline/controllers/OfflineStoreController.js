@@ -169,4 +169,4 @@ function OfflineStoreController(config) {
 }
 
 OfflineStoreController.__dashjs_factory_name = 'OfflineStoreController';
-export default dashjs.FactoryMaker.getClassFactory(OfflineStoreController); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(OfflineStoreController);

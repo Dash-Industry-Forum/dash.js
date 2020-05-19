@@ -142,7 +142,7 @@ describe('HTTPLoader', function () {
         sinon.assert.notCalled(global.fetch);
         sinon.assert.calledOnce(callbackSucceeded);
         sinon.assert.calledOnce(callbackCompleted);
-        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true;
     });
 
     it('should use XHRLoader and call error and complete callback when load is called with error', () => {
@@ -166,7 +166,7 @@ describe('HTTPLoader', function () {
         sinon.assert.calledOnce(callbackError);
         sinon.assert.calledOnce(callbackCompleted);
         sinon.assert.notCalled(callbackSucceeded);
-        expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+        expect(callbackError.calledBefore(callbackCompleted)).to.be.true;
     });
 
     it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if useFetch is set to true and it is an arraybuffer request', () => {
@@ -215,7 +215,7 @@ describe('HTTPLoader', function () {
             sinon.assert.notCalled(callbackError);
             sinon.assert.calledOnce(callbackSucceeded);
             sinon.assert.calledOnce(callbackCompleted);
-            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true;
             done();
         }, 10);
     });
@@ -249,7 +249,7 @@ describe('HTTPLoader', function () {
             sinon.assert.notCalled(callbackError);
             sinon.assert.calledOnce(callbackSucceeded);
             sinon.assert.calledOnce(callbackCompleted);
-            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true;
             done();
         }, 10);
     });
@@ -277,7 +277,7 @@ describe('HTTPLoader', function () {
             sinon.assert.calledOnce(callbackError);
             sinon.assert.notCalled(callbackSucceeded);
             sinon.assert.calledOnce(callbackCompleted);
-            expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            expect(callbackError.calledBefore(callbackCompleted)).to.be.true;
             done();
         }, 10);
     });

@@ -95,4 +95,4 @@ function ClearKey() {
 }
 
 ClearKey.__dashjs_factory_name = 'ClearKey';
-export default dashjs.FactoryMaker.getSingletonFactory(ClearKey); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(ClearKey);

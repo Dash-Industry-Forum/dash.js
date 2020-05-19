@@ -9,8 +9,8 @@ describe('CommonProperty', function () {
 
         const commonProperty = new CommonProperty(name);
 
-        expect(commonProperty).to.be.instanceof(CommonProperty); // jshint ignore:line
-        expect(commonProperty.name).to.equal(name); // jshint ignore:line
+        expect(commonProperty).to.be.instanceof(CommonProperty);
+        expect(commonProperty.name).to.equal(name);
     });
 
     it('should default merge property to false when not supplied and name is lowercase', () => {
@@ -18,7 +18,7 @@ describe('CommonProperty', function () {
 
         const commonProperty = new CommonProperty(name);
 
-        expect(commonProperty.merge).to.equal(false); // jshint ignore:line
+        expect(commonProperty.merge).to.equal(false);
     });
 
     it('should default merge property to true when not supplied and name is uppercase', () => {
@@ -26,7 +26,7 @@ describe('CommonProperty', function () {
 
         const commonProperty = new CommonProperty(name);
 
-        expect(commonProperty.merge).to.equal(true); // jshint ignore:line
+        expect(commonProperty.merge).to.equal(true);
     });
 
     it('should throw an exception if attempting to use setters', () => {

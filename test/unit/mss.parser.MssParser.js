@@ -40,28 +40,28 @@ describe('MssParser', function () {
             constants: Constants
         });
 
-        expect(mssParser).to.exist; // jshint ignore:line
+        expect(mssParser).to.exist;
     });
 
     it('should parse a smooth streaming manifest', function () {
         let xml = fs.readFileSync(__dirname + '/data/mss/manifest.xml', 'utf8');
         let manifest = mssParser.parse(xml);
-        expect(manifest).to.exist; // jshint ignore:line
+        expect(manifest).to.exist;
         expect(manifest.protocol).to.equal('MSS');
         expect(manifest.Period.AdaptationSet_asArray).to.be.an.instanceof(Array);
 
         let adaptation;
         for (let i = 0; i < manifest.Period.AdaptationSet_asArray.length; i++) {
             adaptation = manifest.Period.AdaptationSet_asArray[i];
-            expect(adaptation.id).to.exist; // jshint ignore:line
-            expect(adaptation.id).not.to.be.empty; // jshint ignore:line
-            expect(adaptation.Representation_asArray).to.exist; // jshint ignore:line
+            expect(adaptation.id).to.exist;
+            expect(adaptation.id).not.to.be.empty;
+            expect(adaptation.Representation_asArray).to.exist;
 
             for (let j = 0; j < adaptation.Representation_asArray.length; j++) {
                 let representation = adaptation.Representation_asArray[j];
 
                 // representation.id should be "type_index", because there is no name in StreamIndex node
-                expect(representation.id).to.exist; // jshint ignore:line
+                expect(representation.id).to.exist;
                 let expectedId = adaptation.id + '_' + j;
                 expect(representation.id).to.equal(expectedId);
             }
@@ -71,7 +71,7 @@ describe('MssParser', function () {
         let xml = fs.readFileSync(__dirname + '/data/mss/manifestFourCCError.xml', 'utf8');
         let manifest = mssParser.parse(xml);
         let adaptations = manifest.Period.AdaptationSet_asArray;
-        expect(manifest).to.exist; // jshint ignore:line
+        expect(manifest).to.exist;
         expect(manifest.protocol).to.equal('MSS');
         expect(adaptations).to.be.an.instanceof(Array);
         expect(adaptations).to.have.lengthOf(1);
@@ -85,7 +85,7 @@ describe('MssParser', function () {
     it('should map mss subtype to dash role', function () {
         let xml = fs.readFileSync(__dirname + '/data/mss/manifestSubtype.xml', 'utf8');
         let manifest = mssParser.parse(xml);
-        expect(manifest).to.exist; // jshint ignore:line
+        expect(manifest).to.exist;
         expect(manifest.protocol).to.equal('MSS');
         expect(manifest.Period.AdaptationSet_asArray).to.be.an.instanceof(Array);
 
@@ -93,7 +93,7 @@ describe('MssParser', function () {
         for (let i = 0; i < manifest.Period.AdaptationSet_asArray.length; i++) {
             adaptation = manifest.Period.AdaptationSet_asArray[i];
             if (adaptation.subType === 'CAPT') {
-                expect(adaptation.Role).to.exist; // jshint ignore:line
+                expect(adaptation.Role).to.exist;
                 expect(adaptation.Role.schemeIdUri).to.equal('urn:mpeg:dash:role:2011');
                 expect(adaptation.Role.value).to.equal('main');
             }

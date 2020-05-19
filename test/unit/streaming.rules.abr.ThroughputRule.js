@@ -14,13 +14,13 @@ describe('ThroughputRule', function () {
     it('should return an empty switchRequest when getMaxIndex function is called with an empty parameter', function () {
         const maxIndexRequest = throughputRule.getMaxIndex();
 
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
+        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an empty switchRequest when getMaxIndex function is called with an malformed parameter', function () {
         const maxIndexRequest = throughputRule.getMaxIndex({});
 
-        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
+        expect(maxIndexRequest.quality).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should throw an exception when attempting to call getMaxIndex While the config attribute has not been set properly', function () {

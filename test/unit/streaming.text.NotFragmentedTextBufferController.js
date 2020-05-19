@@ -54,14 +54,14 @@ describe('NotFragmentedTextBufferController', function () {
             it('should create a sourceBuffer and initialize it', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);
                 const buffer = notFragmentedTextBufferController.getBuffer();
-                expect(buffer).to.exist; // jshint ignore:line
+                expect(buffer).to.exist;
             });
 
             it('should notify error handler if an error occurs', function () {
                 mediaSourceMock.forceError = true;
                 notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);
                 const buffer = notFragmentedTextBufferController.getBuffer();
-                expect(buffer).to.not.exist; // jshint ignore:line
+                expect(buffer).to.not.exist;
                 expect(errorHandlerMock.errorValue).to.equal('Error creating source buffer of type : ' + testType);
             });
         });
@@ -77,7 +77,7 @@ describe('NotFragmentedTextBufferController', function () {
             it('should return created buffer', function () {
                 notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);
                 let buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
-                expect(objectUtils.areEqual(buffer, mediaSourceMock.buffers[0])).to.be.true; // jshint ignore:line
+                expect(objectUtils.areEqual(buffer, mediaSourceMock.buffers[0])).to.be.true;
             });
         });
 
@@ -92,7 +92,7 @@ describe('NotFragmentedTextBufferController', function () {
         describe('Method getIsBufferingCompleted', function () {
             it('should return false', function () {
                 let isBufferingCompleted = notFragmentedTextBufferController.getIsBufferingCompleted();
-                expect(isBufferingCompleted).to.be.false; // jshint ignore:line
+                expect(isBufferingCompleted).to.be.false;
             });
         });
 
@@ -104,24 +104,24 @@ describe('NotFragmentedTextBufferController', function () {
             it('should not abort buffer if there is an error', function () {
                 const buffer = mediaSourceMock.buffers[0];
                 notFragmentedTextBufferController.reset('error');
-                expect(buffer.aborted).to.be.false; // jshint ignore:line
+                expect(buffer.aborted).to.be.false;
             });
 
             it('should abort buffer', function () {
                 const buffer = mediaSourceMock.buffers[0];
                 notFragmentedTextBufferController.reset();
-                expect(buffer.aborted).to.be.true; // jshint ignore:line
+                expect(buffer.aborted).to.be.true;
             });
 
             it('should remove buffer if there is an error', function () {
                 const buffer = mediaSourceMock.buffers[0];
                 notFragmentedTextBufferController.reset('error');
-                expect(buffer.aborted).to.be.false; // jshint ignore:line
+                expect(buffer.aborted).to.be.false;
             });
 
             it('should remove buffer', function () {
                 notFragmentedTextBufferController.reset();
-                expect(mediaSourceMock.buffers[0]).to.not.exist; // jshint ignore:line
+                expect(mediaSourceMock.buffers[0]).to.not.exist;
             });
         });
 
@@ -168,7 +168,7 @@ describe('NotFragmentedTextBufferController', function () {
 
                 let onEvent = function () {
                     eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.chunk).to.not.exist; // jshint ignore:line
+                    expect(buffer.chunk).to.not.exist;
 
                     done();
                 };
@@ -192,7 +192,7 @@ describe('NotFragmentedTextBufferController', function () {
 
                 let onEvent = function () {
                     eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.chunk).to.not.exist; // jshint ignore:line
+                    expect(buffer.chunk).to.not.exist;
 
                     done();
                 };

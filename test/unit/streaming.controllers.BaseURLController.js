@@ -52,6 +52,6 @@ describe('BaseURLController', function () {
 
         const selected = baseURLController.resolve();
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 });

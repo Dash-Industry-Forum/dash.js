@@ -71,7 +71,7 @@ describe('TextTracks', function () {
         it('should return -1 if getTrackIdxForId is called but textTrackQueue is empty', function () {
             const trackId = textTracks.getTrackIdxForId(0);
 
-            expect(trackId).to.equal(-1); // jshint ignore:line
+            expect(trackId).to.equal(-1);
         });
     });
 
@@ -99,7 +99,7 @@ describe('TextTracks', function () {
                 isTTML: true}, 1);
 
             const currrentTrackIdx = textTracks.getCurrentTrackIdx();
-            expect(currrentTrackIdx).to.equal(0); // jshint ignore:line
+            expect(currrentTrackIdx).to.equal(0);
             expect(spyTrackAdded).to.have.been.called();
             expect(spyTracksQueueInit).to.have.been.called();
 

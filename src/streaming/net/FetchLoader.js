@@ -51,7 +51,7 @@ function FetchLoader(cfg) {
         const requestStartTime = new Date();
         const request = httpRequest.request;
 
-        const headers = new Headers(); /*jshint ignore:line*/
+        const headers = new Headers();
         if (request.range) {
             headers.append('Range', 'bytes=' + request.range);
         }
@@ -74,7 +74,7 @@ function FetchLoader(cfg) {
 
         let abortController;
         if (typeof window.AbortController === 'function') {
-            abortController = new AbortController(); /*jshint ignore:line*/
+            abortController = new AbortController();
             httpRequest.abortController = abortController;
             abortController.signal.onabort = httpRequest.onabort;
         }

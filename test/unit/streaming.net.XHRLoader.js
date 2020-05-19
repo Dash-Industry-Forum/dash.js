@@ -57,7 +57,7 @@ describe('XHRLoader', function () {
         sinon.assert.calledOnce(callbackSucceeded);
         sinon.assert.calledOnce(callbackCompleted);
         sinon.assert.notCalled(callbackAbort);
-        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true;
     });
 
     it('should call onload and complete callback when load is called and there is an error response', () => {
@@ -85,7 +85,7 @@ describe('XHRLoader', function () {
         sinon.assert.calledOnce(callbackCompleted);
         sinon.assert.calledOnce(callbackSucceeded);
         sinon.assert.notCalled(callbackAbort);
-        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+        expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true;
     });
 
     it('should call onabort callback when abort is called', () => {
@@ -142,6 +142,6 @@ describe('XHRLoader', function () {
         sinon.assert.calledOnce(callbackCompleted);
         sinon.assert.notCalled(callbackSucceeded);
         sinon.assert.notCalled(callbackAbort);
-        expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+        expect(callbackError.calledBefore(callbackCompleted)).to.be.true;
     });
 });

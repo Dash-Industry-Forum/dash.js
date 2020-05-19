@@ -1,5 +1,3 @@
-/* jshint expr: true */
-
 import KeySystemW3CClearKey from '../../src/streaming/protection/drm/KeySystemW3CClearKey';
 import BASE64 from '../../externals/base64';
 import DebugMock from './mocks/DebugMock';

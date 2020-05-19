@@ -11,21 +11,21 @@ describe('InitCache', function () {
         it('should return null when extract is called and parameters are undefined', () => {
             const extractResult = initCache.extract();
 
-            expect(extractResult).to.be.null;  // jshint ignore:line
+            expect(extractResult).to.be.null;
         });
 
         it('should return null when extract is called and streamId is undefined', () => {
             const representationId = 'video_880k';
             const extractResult = initCache.extract(null, representationId);
 
-            expect(extractResult).to.be.null;  // jshint ignore:line
+            expect(extractResult).to.be.null;
         });
 
         it('should return null when extract is called and representationId is undefined', () => {
             const streamId = 'defauldId';
             const extractResult = initCache.extract(streamId);
 
-            expect(extractResult).to.be.null;  // jshint ignore:line
+            expect(extractResult).to.be.null;
         });
 
         it('should return when extract is called and representationId is undefined', () => {
@@ -36,15 +36,15 @@ describe('InitCache', function () {
 
             let extractResult = initCache.extract(streamId);
 
-            expect(extractResult).to.be.null;  // jshint ignore:line
+            expect(extractResult).to.be.null;
 
             extractResult = initCache.extract(null, representationId);
 
-            expect(extractResult).to.be.null;  // jshint ignore:line
+            expect(extractResult).to.be.null;
 
             extractResult = initCache.extract(streamId, representationId);
 
-            expect(extractResult.dataTest).to.be.equal('videoSegment');  // jshint ignore:line
+            expect(extractResult.dataTest).to.be.equal('videoSegment');
         });
     });
 });

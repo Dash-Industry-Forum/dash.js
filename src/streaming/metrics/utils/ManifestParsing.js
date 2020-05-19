@@ -116,4 +116,4 @@ function ManifestParsing (config) {
 }
 
 ManifestParsing.__dashjs_factory_name = 'ManifestParsing';
-export default dashjs.FactoryMaker.getSingletonFactory(ManifestParsing); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(ManifestParsing);

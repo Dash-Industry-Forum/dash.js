@@ -66,21 +66,21 @@ describe('TextController', function () {
         let textSourceBuffer = textController.getTextSourceBuffer();
         let textSourceBufferSingleton = TextSourceBuffer(context).getInstance();
 
-        expect(objectUtils.areEqual(textSourceBuffer, textSourceBufferSingleton)).to.be.true; // jshint ignore:line
+        expect(objectUtils.areEqual(textSourceBuffer, textSourceBufferSingleton)).to.be.true;
     });
 
     describe('Method setTextDefaultLanguage', function () {
         it('should not set text default language if language is not a string', function () {
             expect(textController.setTextDefaultLanguage.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultLanguage()).to.equal(''); // jshint ignore:line
+            expect(textController.getTextDefaultLanguage()).to.equal('');
 
             expect(textController.setTextDefaultLanguage.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultLanguage()).to.equal(''); // jshint ignore:line
+            expect(textController.getTextDefaultLanguage()).to.equal('');
         });
 
         it('should set text default language if language is a string', function () {
             textController.setTextDefaultLanguage('lang');
-            expect(textController.getTextDefaultLanguage()).to.equal('lang'); // jshint ignore:line
+            expect(textController.getTextDefaultLanguage()).to.equal('lang');
         });
 
     });
@@ -88,18 +88,18 @@ describe('TextController', function () {
     describe('Method setTextDefaultEnabled', function () {
         it('should not set text default enabled if enable is not a boolean', function () {
             expect(textController.setTextDefaultEnabled.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false);
 
             expect(textController.setTextDefaultEnabled.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false);
         });
 
         it('should set text default enabled if enable is a boolean', function () {
             textController.setTextDefaultEnabled(false);
-            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false);
 
             textController.setTextDefaultEnabled(true);
-            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(true);
         });
 
     });
@@ -128,13 +128,13 @@ describe('TextController', function () {
             let textEnabled = textController.isTextEnabled();
 
             expect(textController.enableText.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+            expect(textController.isTextEnabled()).to.equal(textEnabled);
 
             expect(textController.enableText.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+            expect(textController.isTextEnabled()).to.equal(textEnabled);
 
             expect(textController.enableText.bind(textController,'toto')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+            expect(textController.isTextEnabled()).to.equal(textEnabled);
         });
 
         it('should do nothing trying to enable/disbale text if text is already enabled/disbaled', function () {
@@ -142,19 +142,19 @@ describe('TextController', function () {
             let textEnabled = textController.isTextEnabled();
 
             textController.enableText(textEnabled);
-            expect(textController.isTextEnabled()).to.equal(textEnabled); // jshint ignore:line
+            expect(textController.isTextEnabled()).to.equal(textEnabled);
         });
 
         it('should enable/disable text', function () {
 
             let textEnabled = textController.isTextEnabled();
-            expect(textEnabled).to.equal(false); // jshint ignore:line
+            expect(textEnabled).to.equal(false);
 
             textController.enableText(true);
-            expect(textController.isTextEnabled()).to.equal(true); // jshint ignore:line
+            expect(textController.isTextEnabled()).to.equal(true);
 
             textController.enableText(false);
-            expect(textController.isTextEnabled()).to.equal(false); // jshint ignore:line
+            expect(textController.isTextEnabled()).to.equal(false);
         });
     });
 
@@ -186,7 +186,7 @@ describe('TextController', function () {
             }];
 
             textController.setTextTrack(-1);
-            expect(textController.getAllTracksAreDisabled()).to.be.true; // jshint ignore:line
+            expect(textController.getAllTracksAreDisabled()).to.be.true;
         });
 
         it('should set text tracks - one track showing', function () {
@@ -198,7 +198,7 @@ describe('TextController', function () {
             }];
 
             textController.setTextTrack(0);
-            expect(textController.getAllTracksAreDisabled()).to.be.false; // jshint ignore:line
+            expect(textController.getAllTracksAreDisabled()).to.be.false;
         });
     });
 
@@ -241,8 +241,8 @@ describe('TextController', function () {
                 tracks: textTracksQueue
             };
             const onTracksAdded = function (e) {
-                expect(e.index).to.equal(initialIndex); // jshint ignore:line
-                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                expect(e.index).to.equal(initialIndex);
+                expect(e.tracks.length).to.equal(textTracksQueue.length);
 
                 eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
                 done();
@@ -262,8 +262,8 @@ describe('TextController', function () {
                 tracks: textTracksQueue
             };
             const onTracksAdded = function (e) {
-                expect(e.index).to.equal(1); // jshint ignore:line
-                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                expect(e.index).to.equal(1);
+                expect(e.tracks.length).to.equal(textTracksQueue.length);
                 eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
                 done();
             };
@@ -282,8 +282,8 @@ describe('TextController', function () {
                 tracks: textTracksQueue
             };
             const onTracksAdded = function (e) {
-                expect(e.index).to.equal(1); // jshint ignore:line
-                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                expect(e.index).to.equal(1);
+                expect(e.tracks.length).to.equal(textTracksQueue.length);
                 expect(e.enabled).to.equal(false);
                 eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
                 done();
@@ -303,8 +303,8 @@ describe('TextController', function () {
                 tracks: textTracksQueue
             };
             const onTracksAdded = function (e) {
-                expect(e.index).to.equal(2); // jshint ignore:line
-                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
+                expect(e.index).to.equal(2);
+                expect(e.tracks.length).to.equal(textTracksQueue.length);
                 eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
                 done();
             };

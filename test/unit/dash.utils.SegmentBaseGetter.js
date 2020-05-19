@@ -35,8 +35,8 @@ describe('SegmentBaseGetter', () => {
     });
 
     it('should expose segments getter interface', () => {
-        expect(segmentBaseGetter.getSegmentByIndex).to.exist; // jshint ignore:line
-        expect(segmentBaseGetter.getSegmentByTime).to.exist; // jshint ignore:line
+        expect(segmentBaseGetter.getSegmentByIndex).to.exist;
+        expect(segmentBaseGetter.getSegmentByTime).to.exist;
     });
 
     describe('initialization', () => {
@@ -54,7 +54,7 @@ describe('SegmentBaseGetter', () => {
             const getter = SegmentBaseGetter(context).create({ timelineConverter: timelineConverter });
             const segment = getter.getSegmentByIndex();
 
-            expect(segment).to.be.null; // jshint ignore:line
+            expect(segment).to.be.null;
         });
     });
 
@@ -82,7 +82,7 @@ describe('SegmentBaseGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = segmentBaseGetter.getSegmentByIndex(representation, 10);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
     });
 
@@ -110,7 +110,7 @@ describe('SegmentBaseGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = segmentBaseGetter.getSegmentByTime(representation, 110);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
     });
 });

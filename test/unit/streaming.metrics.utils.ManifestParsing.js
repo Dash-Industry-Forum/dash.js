@@ -14,8 +14,8 @@ describe('ManifestParsing', function () {
         it('should return an empty array if no manifest is used', () => {
             const metrics = manifestParsing.getMetrics();
 
-            expect(metrics).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(metrics).to.be.empty;                // jshint ignore:line
+            expect(metrics).to.be.instanceOf(Array);
+            expect(metrics).to.be.empty;
         });
     });
 });

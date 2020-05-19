@@ -25,14 +25,14 @@ describe('BaseURLResolution/BasicSelector', function () {
         const basicSelector = BasicSelector(context).create(defaultConfig);
         const selected = basicSelector.select(undefined);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should return undefined when the input is empty', () => {
         const basicSelector = BasicSelector(context).create(defaultConfig);
         const selected = basicSelector.select([]);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should return undefined when the blacklist contains the requested serviceLocation', () => {
@@ -47,7 +47,7 @@ describe('BaseURLResolution/BasicSelector', function () {
 
         const selected = basicSelector.select([entryA]);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 
     it('should return the first entry in the list when the blacklist does not contain the requested serviceLocation', () => {
@@ -66,7 +66,7 @@ describe('BaseURLResolution/BasicSelector', function () {
             entryB
         ]);
 
-        expect(selected).to.equal(entryA); // jshint ignore:line
+        expect(selected).to.equal(entryA);
     });
 
     it('should return the next entry in the list when the blacklist contains the serviceLocation of the first', () => {
@@ -84,7 +84,7 @@ describe('BaseURLResolution/BasicSelector', function () {
             entryB
         ]);
 
-        expect(selected).to.equal(entryB); // jshint ignore:line
+        expect(selected).to.equal(entryB);
     });
 
     it('should return undefined when the blacklist contains all the serviceLocations', () => {
@@ -102,6 +102,6 @@ describe('BaseURLResolution/BasicSelector', function () {
             entryB
         ]);
 
-        expect(selected).to.be.undefined; // jshint ignore:line
+        expect(selected).to.be.undefined;
     });
 });

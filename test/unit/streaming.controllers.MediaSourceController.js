@@ -46,7 +46,7 @@ describe('MediaSourceController', function () {
 
     describe('Method createMediaSource', function () {
         it('should return null if MediaSource is undefined', function () {
-            expect(mediaSourceController.createMediaSource()).to.not.exist; // jshint ignore:line
+            expect(mediaSourceController.createMediaSource()).to.not.exist;
         });
 
         it('should return null if MediaSource API is MediaSource', function () {
@@ -67,7 +67,7 @@ describe('MediaSourceController', function () {
         it('should attach source to video model', function () {
 
             let videoModel = new VideoModelMock();
-            expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
+            expect(videoModel.getSource()).to.not.exist;
 
             mediaSourceController.attachMediaSource('source', videoModel);
             expect(videoModel.getSource()).to.equal('source');
@@ -76,12 +76,12 @@ describe('MediaSourceController', function () {
         it('should detach source from video model', function () {
 
             let videoModel = new VideoModelMock();
-            expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
+            expect(videoModel.getSource()).to.not.exist;
             videoModel.setSource('source');
             expect(videoModel.getSource()).to.equal('source');
 
             mediaSourceController.detachMediaSource(videoModel);
-            expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
+            expect(videoModel.getSource()).to.not.exist;
         });
 
         it('should update source duration', function () {
@@ -145,7 +145,7 @@ describe('MediaSourceController', function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.false; // jshint ignore:line
+            expect(source.isEndOfStream).to.be.false;
         });
 
         it('should not signal end of stream - one buffer updating', function () {
@@ -168,7 +168,7 @@ describe('MediaSourceController', function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.false; // jshint ignore:line
+            expect(source.isEndOfStream).to.be.false;
         });
 
         it('should not signal end of stream - nothing buffered updating', function () {
@@ -191,7 +191,7 @@ describe('MediaSourceController', function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.false; // jshint ignore:line
+            expect(source.isEndOfStream).to.be.false;
         });
 
         it('should signal end of stream', function () {
@@ -214,7 +214,7 @@ describe('MediaSourceController', function () {
             let source = new FakeSource();
 
             mediaSourceController.signalEndOfStream(source);
-            expect(source.isEndOfStream).to.be.true; // jshint ignore:line
+            expect(source.isEndOfStream).to.be.true;
 
         });
     });

@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 describe('DashConstants', function () {
     it('DashConstants should exist', () => {
-        expect(DashConstants).to.exist; // jshint ignore:line
+        expect(DashConstants).to.exist;
         expect(DashConstants.BASE_URL).to.equal('BaseURL');
         expect(DashConstants.SEGMENT_BASE).to.equal('SegmentBase');
         expect(DashConstants.SEGMENT_TEMPLATE).to.equal('SegmentTemplate');

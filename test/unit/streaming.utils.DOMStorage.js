@@ -40,12 +40,12 @@ describe('DOMStorage', function () {
 
         it('should return NaN when getSavedBitrateSettings is called and config object has been set properly', function () {
             const savedBitrateSettings = domStorage.getSavedBitrateSettings('video');
-            expect(savedBitrateSettings).to.be.NaN; // jshint ignore:line
+            expect(savedBitrateSettings).to.be.NaN;
         });
 
         it('should return null when getSavedMediaSettings is called and config object has been set properly', function () {
             const savedMediaSettings = domStorage.getSavedMediaSettings('video');
-            expect(savedMediaSettings).to.be.null; // jshint ignore:line
+            expect(savedMediaSettings).to.be.null;
         });
     });
 
@@ -76,12 +76,12 @@ describe('DOMStorage', function () {
 
         it('should return NaN when getSavedBitrateSettings is called and config object has been set properly', function () {
             const savedBitrateSettings = domStorage.getSavedBitrateSettings('video');
-            expect(savedBitrateSettings).to.be.NaN; // jshint ignore:line
+            expect(savedBitrateSettings).to.be.NaN;
         });
 
         it('should return null when getSavedMediaSettings is called and config object has been set properly', function () {
             const savedMediaSettings = domStorage.getSavedMediaSettings('video');
-            expect(savedMediaSettings).to.be.undefined; // jshint ignore:line
+            expect(savedMediaSettings).to.be.undefined;
         });
     });
 });
