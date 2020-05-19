@@ -714,11 +714,8 @@ function PlaybackController() {
             earliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
-        const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
-        const hasAudioTrack = streamController.isTrackTypePresent(Constants.AUDIO);
-
         initialStartTime = getStreamStartTime(false);
-        if (hasAudioTrack && hasVideoTrack) {
+        if (streamController.hasVideoTrack() && streamController.hasAudioTrack()) {
             //current stream has audio and video contents
             if (!isNaN(earliestTime[streamInfo.id].audio) && !isNaN(earliestTime[streamInfo.id].video)) {
 
@@ -770,7 +767,7 @@ function PlaybackController() {
 
     function onBufferLevelStateChanged(e) {
         // do not stall playback when get an event from Stream that is not active
-        if (e.streamInfo.id !== streamInfo.id) return;
+        if (e.streamId !== streamInfo.id) return;
 
         if (settings.get().streaming.lowLatencyEnabled) {
             if (e.state === MetricsConstants.BUFFER_EMPTY && !isSeeking()) {

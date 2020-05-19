@@ -90,8 +90,6 @@ function StreamController() {
         mediaPlayerModel,
         isPaused,
         initialPlayback,
-        videoTrackDetected,
-        audioTrackDetected,
         isPeriodSwitchInProgress,
         playbackEndedTimerId,
         prefetchTimerId,
@@ -177,7 +175,7 @@ function StreamController() {
      * Used to determine the time current stream is finished and we should switch to the next stream.
      */
     function onPlaybackTimeUpdated(/*e*/) {
-        if (isTrackTypePresent(Constants.VIDEO)) {
+        if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
@@ -453,8 +451,6 @@ function StreamController() {
     function onEnded() {
         const nextStream = getNextStream();
         if (nextStream) {
-            audioTrackDetected = undefined;
-            videoTrackDetected = undefined;
             switchStream(activeStream, nextStream, NaN);
         } else {
             logger.debug('StreamController no next stream found');
@@ -562,8 +558,6 @@ function StreamController() {
 
     function activateStream(seekTime, keepBuffers) {
         buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
-        audioTrackDetected = checkTrackPresence(Constants.AUDIO);
-        videoTrackDetected = checkTrackPresence(Constants.VIDEO);
 
         // check if change type is supported by the browser
         if (buffers) {
@@ -649,7 +643,6 @@ function StreamController() {
                         mediaController: mediaController,
                         textController: textController,
                         videoModel: videoModel,
-                        streamController: instance,
                         settings: settings
                     });
                     streams.push(stream);
@@ -754,42 +747,19 @@ function StreamController() {
         }
     }
 
-    function isTrackTypePresent(trackType) {
-        let isTrackTypeDetected;
-
-        if (!trackType) {
-            return isTrackTypeDetected;
-        }
-
-        switch (trackType) {
-            case Constants.VIDEO :
-                isTrackTypeDetected = videoTrackDetected;
-                break;
-            case Constants.AUDIO :
-                isTrackTypeDetected = audioTrackDetected;
-                break;
-        }
-        return isTrackTypeDetected;
+    function hasVideoTrack() {
+        return activeStream ? activeStream.getHasVideoTrack() : false;
     }
 
-    function checkTrackPresence(type) {
-        let isDetected = false;
-        getActiveStreamProcessors().forEach(p => {
-            if (p.getMediaInfo().type === type) {
-                isDetected = true;
-            }
-        });
-        return isDetected;
+    function hasAudioTrack() {
+        return activeStream ? activeStream.getHasAudioTrack() : false;
     }
 
     function flushPlaylistMetrics(reason, time) {
         time = time || new Date();
 
         getActiveStreamProcessors().forEach(p => {
-            const ctrlr = p.getScheduleController();
-            if (ctrlr) {
-                ctrlr.finalisePlayList(time, reason);
-            }
+            p.finalisePlayList(time, reason);
         });
         dashMetrics.addPlayList();
     }
@@ -947,8 +917,6 @@ function StreamController() {
         activeStream = null;
         hasMediaError = false;
         hasInitialisationError = false;
-        videoTrackDetected = undefined;
-        audioTrackDetected = undefined;
         initialPlayback = true;
         isPaused = false;
         autoPlay = true;
@@ -1017,7 +985,8 @@ function StreamController() {
     instance = {
         initialize: initialize,
         getActiveStreamInfo: getActiveStreamInfo,
-        isTrackTypePresent: isTrackTypePresent,
+        hasVideoTrack: hasVideoTrack,
+        hasAudioTrack: hasAudioTrack,
         switchToVideoElement: switchToVideoElement,
         getStreamById: getStreamById,
         getStreamForTime: getStreamForTime,

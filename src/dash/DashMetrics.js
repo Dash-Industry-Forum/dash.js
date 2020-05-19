@@ -466,7 +466,7 @@ function DashMetrics(config) {
             playListTraceMetrics.representationid = representationId;
             playListTraceMetrics.start = new Date();
             playListTraceMetrics.mstart = mediaStartTime;
-            playListTraceMetrics.playbackspeed = speed;
+            playListTraceMetrics.playbackspeed = speed !== null ? speed.toString() : null;
         }
     }
 

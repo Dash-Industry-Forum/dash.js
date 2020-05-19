@@ -48,31 +48,30 @@ function TextBufferController(config) {
 
             // in this case, internal buffer ocntroller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
-                streamId: config.streamId,
+                streamInfo: config.streamInfo,
                 type: config.type,
                 dashMetrics: config.dashMetrics,
                 mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
                 fragmentModel: config.fragmentModel,
                 errHandler: config.errHandler,
-                streamController: config.streamController,
                 mediaController: config.mediaController,
+                representationController: config.representationController,
                 adapter: config.adapter,
                 textController: config.textController,
                 abrController: config.abrController,
                 playbackController: config.playbackController,
-                streamProcessor: config.streamProcessor,
                 settings: config.settings
             });
         } else {
 
             // in this case, internal buffer controller is a not fragmented text controller object
             _BufferControllerImpl = NotFragmentedTextBufferController(context).create({
-                streamId: config.streamId,
+                streamInfo: config.streamInfo,
                 type: config.type,
                 mimeType: config.mimeType,
-                errHandler: config.errHandler,
-                streamProcessor: config.streamProcessor
+                fragmentModel: config.fragmentModel,
+                errHandler: config.errHandler
             });
         }
     }
@@ -85,13 +84,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
 
-    /**
-     * @param {MediaInfo }mediaInfo
-     * @returns {Object} SourceBuffer object
-     * @memberof BufferController#
-     */
-    function createBuffer(mediaInfo) {
-        return _BufferControllerImpl.createBuffer(mediaInfo);
+    function createBuffer(mediaInfoArr) {
+        return _BufferControllerImpl.createBuffer(mediaInfoArr);
     }
 
     function getType() {
@@ -114,10 +108,6 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function getStreamProcessor() {
-        _BufferControllerImpl.getStreamProcessor();
-    }
-
     function setSeekStartTime(value) {
         _BufferControllerImpl.setSeekStartTime(value);
     }
@@ -134,8 +124,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsBufferingCompleted();
     }
 
-    function switchInitData(streamId, representationId) {
-        _BufferControllerImpl.switchInitData(streamId, representationId);
+    function switchInitData(representationId) {
+        _BufferControllerImpl.switchInitData(representationId);
     }
 
     function getIsPruningInProgress() {
@@ -162,7 +152,6 @@ function TextBufferController(config) {
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
-        getStreamProcessor: getStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,

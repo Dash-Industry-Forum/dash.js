@@ -71,6 +71,8 @@ function Stream(config) {
         isStreamActivated,
         isMediaInitialized,
         streamInfo,
+        hasVideoTrack,
+        hasAudioTrack,
         updateError,
         isUpdating,
         protectionController,
@@ -225,6 +227,8 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         streamInfo = null;
+        hasVideoTrack = false;
+        hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
     }
@@ -263,6 +267,14 @@ function Stream(config) {
 
     function getStreamInfo() {
         return streamInfo;
+    }
+
+    function getHasAudioTrack () {
+        return hasAudioTrack;
+    }
+
+    function getHasVideoTrack () {
+        return hasVideoTrack;
     }
 
     function getThumbnailController() {
@@ -379,14 +391,13 @@ function Stream(config) {
             abrController: abrController,
             playbackController: playbackController,
             mediaController: mediaController,
-            streamController: config.streamController,
             textController: textController,
             errHandler: errHandler,
             settings: settings,
             boxParser: boxParser
         });
 
-        streamProcessor.initialize(mediaSource);
+        streamProcessor.initialize(mediaSource, hasVideoTrack);
         abrController.updateTopQualityIndex(mediaInfo);
 
         if (optionalSettings) {
@@ -424,6 +435,14 @@ function Stream(config) {
         if (!allMediaForType || allMediaForType.length === 0) {
             logger.info('No ' + type + ' data.');
             return;
+        }
+
+        if (type === Constants.VIDEO) {
+            hasVideoTrack = true;
+        }
+
+        if (type === Constants.AUDIO) {
+            hasAudioTrack = true;
         }
 
         for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
@@ -592,9 +611,7 @@ function Stream(config) {
         if (error) {
             errHandler.error(error);
         } else {
-            eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo: streamInfo
-            });
+            eventBus.trigger(Events.STREAM_INITIALIZED, { streamInfo: streamInfo });
         }
     }
 
@@ -856,6 +873,8 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        getHasAudioTrack: getHasAudioTrack,
+        getHasVideoTrack: getHasVideoTrack,
         preload: preload,
         getThumbnailController: getThumbnailController,
         getBitrateListFor: getBitrateListFor,

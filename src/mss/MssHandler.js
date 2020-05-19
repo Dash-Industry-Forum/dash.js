@@ -36,6 +36,7 @@ import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
 import MssErrors from './errors/MssErrors';
 import DashJSError from '../streaming/vo/DashJSError';
+import InitCache from '../streaming/utils/InitCache';
 
 function MssHandler(config) {
 
@@ -62,10 +63,12 @@ function MssHandler(config) {
     });
     let mssParser,
         fragmentInfoControllers,
+        initCache,
         instance;
 
     function setup() {
         fragmentInfoControllers = [];
+        initCache = InitCache(context).getInstance();
     }
 
     function getStreamProcessor(type) {
@@ -128,7 +131,7 @@ function MssHandler(config) {
         fragmentInfoControllers = [];
     }
 
-    function onInitializationRequested(e) {
+    function onInitFragmentNeeded(e) {
         let streamProcessor = getStreamProcessor(e.mediaType);
         if (!streamProcessor) return;
 
@@ -208,7 +211,7 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_REQUESTED, onInitializationRequested, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
@@ -216,7 +219,7 @@ function MssHandler(config) {
     }
 
     function reset() {
-        eventBus.off(events.INIT_REQUESTED, onInitializationRequested, this);
+        eventBus.off(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, this);
         eventBus.off(events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, this);
