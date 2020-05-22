@@ -284,7 +284,7 @@ function DashAdapter() {
         id = mediaInfo ? mediaInfo.id : null;
 
         if (voPeriods.length > 0 && selectedVoPeriod) {
-            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo.index, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
+            realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo ? mediaInfo.index : null, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
         }
 
         return realAdaptation;
@@ -311,7 +311,7 @@ function DashAdapter() {
         const duration = eventBox.event_duration;
         const id = eventBox.id;
         const messageData = eventBox.message_data;
-        const presentationTime = startTime * timescale + presentationTimeDelta;
+        const calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
 
         if (!eventStreams[schemeIdUri + '/' + value]) return null;
 
@@ -320,7 +320,7 @@ function DashAdapter() {
         event.eventStream.timescale = timescale;
         event.duration = duration;
         event.id = id;
-        event.presentationTime = presentationTime;
+        event.calculatedPresentationTime = calculatedPresentationTime;
         event.messageData = messageData;
         event.presentationTimeDelta = presentationTimeDelta;
 

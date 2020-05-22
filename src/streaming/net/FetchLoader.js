@@ -76,6 +76,7 @@ function FetchLoader(cfg) {
         if (typeof window.AbortController === 'function') {
             abortController = new AbortController(); /*jshint ignore:line*/
             httpRequest.abortController = abortController;
+            abortController.signal.onabort = httpRequest.onabort;
         }
 
         const reqOptions = {
@@ -240,6 +241,7 @@ function FetchLoader(cfg) {
             // For Chrome
             try {
                 request.reader.cancel();
+                request.onabort();
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue

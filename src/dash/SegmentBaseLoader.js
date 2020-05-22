@@ -182,7 +182,7 @@ function SegmentBaseLoader() {
         logger.debug('Perform init search: ' + info.url);
     }
 
-    function loadSegments(representation, type, range, loadingInfo, callback) {
+    function loadSegments(representation, type, range, callback, loadingInfo) {
         checkConfig();
         if (range && (range.start === undefined || range.end === undefined)) {
             const parts = range ? range.toString().split('-') : null;
@@ -232,7 +232,7 @@ function SegmentBaseLoader() {
                         info.range.end += extraBytes;
                     }
                 }
-                loadSegments(representation, type, info.range, info, callback);
+                loadSegments(representation, type, info.range, callback, info);
             } else {
                 const ref = sidx.references;
                 let loadMultiSidx,
@@ -272,7 +272,7 @@ function SegmentBaseLoader() {
                         se = offset + ref[j].referenced_size - 1;
                         offset = offset + ref[j].referenced_size;
                         r = {start: ss, end: se};
-                        loadSegments(representation, null, r, info, tmpCallback);
+                        loadSegments(representation, null, r, tmpCallback, info);
                     }
 
                 } else {

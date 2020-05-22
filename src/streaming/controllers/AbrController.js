@@ -478,13 +478,15 @@ function AbrController() {
     }
 
     function updateTopQualityIndex(mediaInfo) {
-        const type = mediaInfo.type;
-        const streamId = mediaInfo.streamInfo.id;
-        const max = mediaInfo.representationCount - 1;
+        if (mediaInfo) {
+            const type = mediaInfo.type;
+            const streamId = mediaInfo.streamInfo.id;
+            const max = mediaInfo.representationCount - 1;
 
-        setTopQualityIndex(type, streamId, max);
+            setTopQualityIndex(type, streamId, max);
 
-        return max;
+            return max;
+        }
     }
 
     function isPlayingAtTopQuality(streamInfo) {

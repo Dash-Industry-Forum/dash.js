@@ -7,10 +7,13 @@ import Debug from '../../src/core/Debug';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import AdapterMock from './mocks/AdapterMock';
-import StreamMock from './mocks/StreamMock';
 
 const expect = require('chai').expect;
 const context = {};
+
+const streamInfo = {
+    id: 'id'
+};
 
 const sampleRepresentation = {
     id: 'rep_id',
@@ -68,9 +71,9 @@ describe('Thumbnails', function () {
 
         beforeEach(function () {
             thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock(),
                 debug: Debug(context).getInstance(),
                 eventBus: EventBus(context).getInstance(),
                 events: Events,
@@ -98,9 +101,9 @@ describe('Thumbnails', function () {
         beforeEach(function () {
             adapter.setRepresentation(sampleRepresentation);
             thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock(),
                 debug: Debug(context).getInstance(),
                 eventBus: EventBus(context).getInstance(),
                 events: Events,
@@ -173,9 +176,9 @@ describe('Thumbnails', function () {
         beforeEach(function () {
             adapter.setRepresentation(sampleRepresentation2);
             thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock(),
                 debug: Debug(context).getInstance(),
                 eventBus: EventBus(context).getInstance(),
                 events: Events,
@@ -225,9 +228,9 @@ describe('Thumbnails', function () {
 
         beforeEach(function () {
             thumbnailTracks = ThumbnailTracks(context).create({
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock(),
                 debug: Debug(context).getInstance(),
                 eventBus: EventBus(context).getInstance(),
                 events: Events,
@@ -328,9 +331,9 @@ describe('Thumbnails', function () {
 
         beforeEach(function () {
             thumbnailTracks = ThumbnailTracks(context).create({
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock(),
                 debug: Debug(context).getInstance(),
                 eventBus: EventBus(context).getInstance(),
                 events: Events,

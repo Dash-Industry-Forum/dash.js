@@ -30,7 +30,7 @@
  */
 import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
-import { PlayListTrace } from '../vo/metrics/PlayList';
+import {PlayListTrace} from '../vo/metrics/PlayList';
 import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import NextFragmentRequestRule from '../rules/scheduling/NextFragmentRequestRule';
 import FragmentModel from '../models/FragmentModel';
@@ -50,10 +50,12 @@ function ScheduleController(config) {
     const dashMetrics = config.dashMetrics;
     const timelineConverter = config.timelineConverter;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const fragmentModel = config.fragmentModel;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const streamController = config.streamController;
     const textController = config.textController;
+    const streamId = config.streamId;
     const type = config.type;
     const streamProcessor = config.streamProcessor;
     const mediaController = config.mediaController;
@@ -61,7 +63,6 @@ function ScheduleController(config) {
 
     let instance,
         logger,
-        fragmentModel,
         currentRepresentationInfo,
         initialRequest,
         isStopped,
@@ -93,8 +94,6 @@ function ScheduleController(config) {
     }
 
     function initialize() {
-        fragmentModel = streamProcessor.getFragmentModel();
-
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -310,8 +309,8 @@ function ScheduleController(config) {
         getInitRequest(currentRepresentationInfo.quality);
     }
 
-    function setFragmentProcessState (state) {
-        if (isFragmentProcessingInProgress !== state ) {
+    function setFragmentProcessState(state) {
+        if (isFragmentProcessingInProgress !== state) {
             isFragmentProcessingInProgress = state;
         } else {
             logger.debug('isFragmentProcessingInProgress is already equal to', state);
@@ -401,7 +400,10 @@ function ScheduleController(config) {
                 setLiveEdgeSeekTarget();
             } else {
                 setSeekTarget(playbackController.getStreamStartTime(false));
-                streamProcessor.getBufferController().setSeekStartTime(seekTarget);
+                const bufferController = streamProcessor.getBufferController();
+                if (bufferController) {
+                    bufferController.setSeekStartTime(seekTarget);
+                }
             }
         }
 
@@ -413,10 +415,7 @@ function ScheduleController(config) {
     function setLiveEdgeSeekTarget() {
         if (liveEdgeFinder) {
             const liveEdge = liveEdgeFinder.getLiveEdge(streamProcessor.getRepresentationInfo());
-            const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
-            const request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
-                ignoreIsFinished: true
-            });
+            let request = _findRequestForLiveEdge(liveEdge);
 
             if (request) {
                 // When low latency mode is selected but browser doesn't support fetch
@@ -448,10 +447,34 @@ function ScheduleController(config) {
         }
     }
 
-    function onStreamCompleted(e) {
-        if (e.fragmentModel !== fragmentModel) {
-            return;
+    function _findRequestForLiveEdge(liveEdge) {
+        try {
+            let request = null;
+            let liveDelay = playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
+            const dvrWindowSize = !isNaN(currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize) ? currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize : liveDelay;
+
+            // Make sure that we have at least a valid request for the end of the DVR window, otherwise we might try forever
+            if (streamProcessor.getFragmentRequest(currentRepresentationInfo, liveEdge - dvrWindowSize, {
+                ignoreIsFinished: true
+            })) {
+                // Try to find a request as close as possible to the targeted live edge
+                while (!request && liveDelay <= dvrWindowSize) {
+                    let startTime = liveEdge - liveDelay;
+                    request = streamProcessor.getFragmentRequest(currentRepresentationInfo, startTime, {
+                        ignoreIsFinished: true
+                    });
+                    liveDelay += 1; // Increase by one second for each iteration
+                }
+            }
+
+            return request;
+        } catch (e) {
+            return null;
         }
+    }
+
+    function onStreamCompleted(e) {
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
 
         stop();
         setFragmentProcessState(false);
@@ -459,9 +482,8 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (e.sender !== fragmentModel) {
-            return;
-        }
+        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
+
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ?
             ', Range:' + e.request.range : '');
         if (adapter.getIsTextTrack(type)) {
@@ -503,8 +525,7 @@ function ScheduleController(config) {
             const safeBufferLevel = currentRepresentationInfo.fragmentDuration * 1.5;
             if ((currentTime + safeBufferLevel) >= fragEndTime) {
                 startScheduleTimer(0);
-            }
-            else {
+            } else {
                 startScheduleTimer((fragEndTime - (currentTime + safeBufferLevel)) * 1000);
             }
             isReplacementRequest = false;
@@ -514,9 +535,8 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamProcessor !== streamProcessor) {
-            return;
-        }
+        if (e.streamId !== streamId || e.mediaType !== type) return;
+
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
         if (!playbackController.isSeeking() && !switchTrack) {
             logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process or switch track call');

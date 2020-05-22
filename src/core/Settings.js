@@ -71,7 +71,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          lowLatencyEnabled: false,
  *          keepProtectionMediaKeys: false,
  *          useManifestDateHeaderTimeSource: true,
- *          useSuggestedPresentationDelay: false,
+ *          useSuggestedPresentationDelay: true,
  *          useAppendWindowEnd: true,
  *          manifestUpdateRetryInterval: 100,
  *          liveCatchUpMinDrift: 0.02,
@@ -266,7 +266,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * <p>Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection. The
  * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
- * @property {boolean} [useSuggestedPresentationDelay=false]
+ * @property {boolean} [useSuggestedPresentationDelay=true]
  * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
  * @property {boolean} [useAppendWindowEnd=true]
  * Specifies if the appendWindowEnd attribute of the MSE SourceBuffers should be set according to content duration from manifest.

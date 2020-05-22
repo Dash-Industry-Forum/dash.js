@@ -274,6 +274,10 @@ function MediaPlayer() {
             mediaController = MediaController(context).getInstance();
         }
 
+        if (!streamController) {
+            streamController = StreamController(context).getInstance();
+        }
+
         adapter = DashAdapter(context).getInstance();
 
         manifestModel = ManifestModel(context).getInstance();
@@ -2282,6 +2286,7 @@ function MediaPlayer() {
                 dashMetrics: dashMetrics,
                 manifestModel: manifestModel,
                 playbackController: playbackController,
+                streamController: streamController,
                 protectionController: protectionController,
                 baseURLController: baseURLController,
                 errHandler: errHandler,
