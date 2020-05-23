@@ -104,6 +104,10 @@ class CommonEncryption {
      */
     static parseInitDataFromContentProtection(cpData, BASE64) {
         if ('pssh' in cpData) {
+
+            // Remove whitespaces and newlines from pssh text
+            cpData.pssh.__text = cpData.pssh.__text.replace(/\r?\n|\r/g,'').replace(/\s+/g,'');
+
             return BASE64.decodeArray(cpData.pssh.__text).buffer;
         }
         return null;
