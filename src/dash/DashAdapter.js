@@ -586,6 +586,7 @@ function DashAdapter() {
         manifestInfo.duration = dashManifestModel.getDuration(mpd.manifest);
         manifestInfo.isDynamic = dashManifestModel.getIsDynamic(mpd.manifest);
         manifestInfo.serviceDescriptions = dashManifestModel.getServiceDescriptions(mpd.manifest);
+        manifestInfo.protocol = mpd.manifest.protocol;
 
         return manifestInfo;
     }
