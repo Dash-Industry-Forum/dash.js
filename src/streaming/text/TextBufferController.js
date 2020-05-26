@@ -124,8 +124,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsBufferingCompleted();
     }
 
-    function switchInitData(representationId) {
-        _BufferControllerImpl.switchInitData(representationId);
+    function appendInitSegment(representationId) {
+        _BufferControllerImpl.appendInitSegment(representationId);
     }
 
     function getIsPruningInProgress() {
@@ -161,7 +161,7 @@ function TextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         dischargePreBuffer: dischargePreBuffer,
-        switchInitData: switchInitData,
+        appendInitSegment: appendInitSegment,
         getRangeAt: getRangeAt,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset

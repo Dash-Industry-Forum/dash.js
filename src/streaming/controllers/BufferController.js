@@ -89,7 +89,7 @@ function BufferController(config) {
         seekStartTime,
         seekClearedBufferingCompleted,
         pendingPruningRanges,
-        bufferResetInProgress,
+        replacingBuffer,
         mediaChunk;
 
 
@@ -111,7 +111,6 @@ function BufferController(config) {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
-        eventBus.on(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, this);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
@@ -188,11 +187,6 @@ function BufferController(config) {
         }
     }
 
-    function onInitFragmentNeeded(e) {
-        if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== getType()) return;
-        bufferResetInProgress = e.resetBufferNeeded === true ? e.resetBufferNeeded : false;
-    }
-
     function onInitFragmentLoaded(e) {
         if (e.chunk.streamId !== streamInfo.id || e.chunk.mediaInfo.type !== type) return;
 
@@ -202,7 +196,7 @@ function BufferController(config) {
         appendToBuffer(e.chunk);
     }
 
-    function switchInitData(representationId) {
+    function appendInitSegment(representationId) {
         // Get init segment from cache
         const chunk = initCache.extract(streamInfo.id, representationId);
 
@@ -221,7 +215,7 @@ function BufferController(config) {
         const chunk = e.chunk;
         if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type != type) return;
 
-        if (bufferResetInProgress) {
+        if (replacingBuffer) {
             mediaChunk = chunk;
             const ranges = buffer && buffer.getAllBufferRanges();
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
@@ -289,7 +283,7 @@ function BufferController(config) {
             showBufferRanges(ranges);
             onPlaybackProgression();
         } else {
-            if (bufferResetInProgress) {
+            if (replacingBuffer) {
                 const currentTime = playbackController.getTime();
                 logger.debug('AppendToBuffer seek target should be ' + currentTime);
                 triggerEvent(Events.SEEK_TARGET, {time: currentTime});
@@ -426,7 +420,7 @@ function BufferController(config) {
     }
 
     function onPlaybackProgression() {
-        if (!bufferResetInProgress || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
+        if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
             updateBufferLevel();
         }
     }
@@ -665,7 +659,7 @@ function BufferController(config) {
         if (currentTime < range.end) {
             isBufferingCompleted = false;
             maxAppendedIndex = 0;
-            if (!bufferResetInProgress) {
+            if (!replacingBuffer) {
                 triggerEvent(Events.SEEK_TARGET, {time: currentTime});
             }
         }
@@ -693,11 +687,11 @@ function BufferController(config) {
         if (isPruningInProgress) {
             clearNextRange();
         } else {
-            if (!bufferResetInProgress) {
+            if (!replacingBuffer) {
                 logger.debug('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
             } else {
-                bufferResetInProgress = false;
+                replacingBuffer = false;
                 if (mediaChunk) {
                     appendToBuffer(mediaChunk);
                 }
@@ -795,6 +789,10 @@ function BufferController(config) {
         return mediaSource;
     }
 
+    function replaceBuffer() {
+        replacingBuffer = true;
+    }
+
     function getIsBufferingCompleted() {
         return isBufferingCompleted;
     }
@@ -854,16 +852,15 @@ function BufferController(config) {
             buffer = null;
         }
 
-        bufferResetInProgress = false;
+        replacingBuffer = false;
     }
 
     function reset(errored, keepBuffers) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaybackPlaying, this);
         eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
@@ -872,6 +869,7 @@ function BufferController(config) {
         eventBus.off(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.off(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
         resetInitialSettings(errored, keepBuffers);
@@ -891,8 +889,9 @@ function BufferController(config) {
         getRangeAt: getRangeAt,
         setMediaSource: setMediaSource,
         getMediaSource: getMediaSource,
+        appendInitSegment: appendInitSegment,
+        replaceBuffer: replaceBuffer,
         getIsBufferingCompleted: getIsBufferingCompleted,
-        switchInitData: switchInitData,
         getIsPruningInProgress: getIsPruningInProgress,
         reset: reset
     };

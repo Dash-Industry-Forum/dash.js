@@ -72,7 +72,7 @@ function ScheduleController(config) {
         lastInitQuality,
         replaceRequestArray,
         switchTrack,
-        bufferResetInProgress,
+        replacingBuffer,
         mediaRequest,
         checkPlaybackQuality,
         isReplacementRequest;
@@ -169,21 +169,23 @@ function ScheduleController(config) {
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        if (bufferResetInProgress || isNaN(lastInitQuality) || switchTrack || isReplacement ||
+        if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
 
             const getNextFragment = function () {
-                if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!bufferResetInProgress)) {
+                if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
-                        bufferResetInProgress = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE ? true : false;
-                        logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id + ', reset buffer = ' + bufferResetInProgress);
-                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id, resetBufferNeeded: bufferResetInProgress });
+                        logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
+                        replacingBuffer = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
+                        if (replacingBuffer && bufferController.replaceBuffer) {
+                            bufferController.replaceBuffer();
+                        }
                         switchTrack = false;
                     } else {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
-                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id });
                     }
+                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id });
                     lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
                 } else {
@@ -243,7 +245,7 @@ function ScheduleController(config) {
                 replaceRequest(request);
                 isReplacementRequest = true;
                 logger.debug('Reloading outdated fragment at index: ', request.index);
-            } else if (request.quality > currentRepresentationInfo.quality && !bufferResetInProgress) {
+            } else if (request.quality > currentRepresentationInfo.quality && !replacingBuffer) {
                 // The buffer has better quality it in then what we would request so set append point to end of buffer!!
                 setSeekTarget(playbackController.getTime() + bufferLevel);
             }
@@ -346,7 +348,7 @@ function ScheduleController(config) {
             startScheduleTimer(0);
         }
 
-        if (bufferResetInProgress) {
+        if (replacingBuffer) {
             mediaRequest = e.request;
         }
     }
@@ -360,8 +362,8 @@ function ScheduleController(config) {
 
         logger.info('onBytesAppended');
 
-        if (bufferResetInProgress && !isNaN(e.startTime)) {
-            bufferResetInProgress = false;
+        if (replacingBuffer && !isNaN(e.startTime)) {
+            replacingBuffer = false;
             fragmentModel.addExecutedRequest(mediaRequest);
         }
 
@@ -498,7 +500,7 @@ function ScheduleController(config) {
         replaceRequestArray = [];
         isStopped = true;
         switchTrack = false;
-        bufferResetInProgress = false;
+        replacingBuffer = false;
         mediaRequest = null;
         isReplacementRequest = false;
     }
@@ -508,15 +510,16 @@ function ScheduleController(config) {
         eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
-        eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
+        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
 
         stop();
         completeQualityChange(false);

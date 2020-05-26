@@ -433,10 +433,10 @@ function StreamProcessor(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamInfo.id) return;
+        if (!e.sender || e.sender.getType() !== type || e.sender.getStreamId() !== streamInfo.id) return;
 
         if (bufferController && e.representationId) {
-            if (!bufferController.switchInitData(e.representationId)) {
+            if (!bufferController.appendInitSegment(e.representationId)) {
                 // Init segment not in cache, send new request
                 const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
                 scheduleController.processInitRequest(request);

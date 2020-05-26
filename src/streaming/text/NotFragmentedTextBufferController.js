@@ -173,7 +173,7 @@ function NotFragmentedTextBufferController(config) {
         });
     }
 
-    function switchInitData(representationId) {
+    function appendInitSegment(representationId) {
         const chunk = initCache.extract(streamInfo.id, representationId);
 
         if (!chunk) {
@@ -208,7 +208,7 @@ function NotFragmentedTextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         dischargePreBuffer: dischargePreBuffer,
-        switchInitData: switchInitData,
+        appendInitSegment: appendInitSegment,
         getRangeAt: getRangeAt,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset
