@@ -27,8 +27,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
         graphUpdateInterval = 999,
 
         update = function () {
-            var video = document.querySelector(".dash-video-player video"),
-                metrics;
+            var metrics;
 
             metrics = dashPlayer.getMetricsFor("video");
             if (metrics) {

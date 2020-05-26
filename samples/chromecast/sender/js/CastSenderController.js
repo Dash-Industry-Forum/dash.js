@@ -416,6 +416,10 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
         $scope.muted = isMuted;
     }
 
+    this.onVolumeChange = function (level) {
+        $scope.volume = level;
+    }
+
     this.onEnded = function () {
 
     }
@@ -426,7 +430,6 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
             $scope.state = STATE_CASTING;
             $scope.playing = mediaSession.playerState === 'PLAYING';
             $scope.muted = mediaSession.volume.muted;
-            $scope.volume = mediaSession.volume.level;
             $scope.$apply();
         }
     }

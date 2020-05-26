@@ -42,6 +42,11 @@ angular.module('DashCastSenderApp.services', [])
                     delegate.onMutedChange(remotePlayer.isMuted);
                 }
             });
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.VOLUME_LEVEL_CHANGED, () => {
+                if (remotePlayer) {
+                    delegate.onVolumeChange(remotePlayer.volumeLevel);
+                }
+            });
         },
 
         sendMessage = function(command, attrs, callback) {
