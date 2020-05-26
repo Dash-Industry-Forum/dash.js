@@ -247,9 +247,10 @@ function StreamProcessor(config) {
                 bufferController.setSeekStartTime(seekTarget);
                 scheduleController.setCurrentRepresentation(getRepresentationInfo());
                 scheduleController.setSeekTarget(seekTarget);
-                scheduleController.start();
             }
         }
+
+        scheduleController.start();
     }
 
     function onDataUpdateCompleted(e) {
