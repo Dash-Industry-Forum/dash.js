@@ -110,7 +110,7 @@ describe.only('BufferController', function () {
         });
     });
 
-    describe('Method switchInitData', function () {
+    describe('Method appendInitSegment', function () {
         beforeEach(function () {
             bufferController.initialize(mediaSourceMock);
             bufferController.createBuffer(mediaInfo);
@@ -129,14 +129,14 @@ describe.only('BufferController', function () {
 
             initCache.save(chunk);
 
-            bufferController.switchInitData('representationId');
+            bufferController.appendInitSegment('representationId');
             expect(mediaSourceMock.buffers[0].chunk).to.equal(chunk.bytes);
         });
 
         it('should return false if no init data is cached', function () {
             // reset cache
             initCache.reset();
-            expect(bufferController.switchInitData('representationId')).to.equal(false);
+            expect(bufferController.appendInitSegment('representationId')).to.equal(false);
         });
     });
 

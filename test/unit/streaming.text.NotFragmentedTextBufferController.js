@@ -127,7 +127,7 @@ describe('NotFragmentedTextBufferController', function () {
             });
         });
 
-        describe('Method switchInitData', function () {
+        describe('Method appendInitSegment', function () {
             // it('should not append init data to source buffer if data have already been cached', function () {
             //     let chunk = {
             //         bytes: 'initData',
@@ -142,7 +142,7 @@ describe('NotFragmentedTextBufferController', function () {
             //     initCache.save(chunk);
             //     notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);
             //     const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
-            //     notFragmentedTextBufferController.switchInitData(chunk.representationId);
+            //     notFragmentedTextBufferController.appendInitSegment(chunk.representationId);
             //     expect(buffer.chunk).to.equal(null);
             // });
 
@@ -157,7 +157,7 @@ describe('NotFragmentedTextBufferController', function () {
                 };
                 eventBus.on(Events.TIMED_TEXT_REQUESTED, onInitRequest, this);
 
-                notFragmentedTextBufferController.switchInitData('representationId');
+                notFragmentedTextBufferController.appendInitSegment('representationId');
             });
         });
 
