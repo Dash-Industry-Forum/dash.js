@@ -337,16 +337,11 @@ function StreamController() {
     function onTrackBufferingCompleted(e) {
         // In multiperiod situations, as soon as one of the tracks (AUDIO, VIDEO) is finished we should
         // start doing prefetching of the next period
-        if (!e.sender) {
-            return;
-        }
-        if (e.sender.getType() !== Constants.AUDIO && e.sender.getType() !== Constants.VIDEO) {
-            return;
-        }
+        if (e.mediaType !== Constants.AUDIO && e.mediaType !== Constants.VIDEO) return;
 
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && !isLast && playbackEndedTimerId === undefined) {
-            logger.info('[onTrackBufferingCompleted] end of period detected. Track', e.sender.getType(), 'has finished');
+            logger.info('[onTrackBufferingCompleted] end of period detected. Track', e.mediaType, 'has finished');
             isPeriodSwitchInProgress = true;
             if (isPaused === false) {
                 toggleEndPeriodTimer();

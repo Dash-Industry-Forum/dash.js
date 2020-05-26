@@ -402,7 +402,7 @@ function ScheduleController(config) {
     }
 
     function onBufferingCompleted(e) {
-        if (e.sender.getType() !== type || streamId !== e.streamInfo.id) return;
+        if (type !== e.mediaType || streamId !== e.streamId) return;
         stop();
     }
 

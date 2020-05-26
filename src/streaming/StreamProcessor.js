@@ -672,7 +672,7 @@ function StreamProcessor(config) {
     }
 
     function onSeekTarget(e) {
-        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamInfo.id) return;
+        if (e.mediaType !== type || e.streamId !== streamInfo.id) return;
 
         setIndexHandlerTime(e.time);
         scheduleController.setSeekTarget(e.time);
