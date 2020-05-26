@@ -1,4 +1,6 @@
-function CasterController($scope, $window) {
+var app = angular.module('DashCastSenderApp.controllers',[]);
+
+app.controller('CastSenderController', ['$scope', '$window', 'caster', function($scope, $window, caster) {
     $scope.availableStreams = [
         {
             name: "4K",
@@ -320,44 +322,30 @@ function CasterController($scope, $window) {
 
     $scope.doCast = function () {
         $scope.state = STATE_CASTING;
-        Caster.loadMedia($scope.selectedItem.url, $scope.selectedItem.isLive);
+        caster.loadMedia($scope.selectedItem.url, $scope.selectedItem.isLive);
         $scope.playing = true;
     }
 
     $scope.stopCast = function () {
         $scope.state = STATE_READY;
-        Caster.stopPlayback();
+        caster.stopPlayback();
         $scope.playing = false;
     }
 
     $scope.togglePlayback = function () {
-        if ($scope.playing) {
-            Caster.pauseMedia();
-            $scope.playing = false;
-        }
-        else {
-            Caster.playMedia();
-            $scope.playing = true;
-        }
+        caster.playOrPause();
     }
 
     $scope.doSeek = function () {
         var x = event.layerX,
-            w = $("#scrubber").width(),
+            w = document.getElementById("scrubber").offsetWidth,
             p = x / w,
             v = $scope.duration * p;
-        Caster.seekMedia(v);
+        caster.seekMedia(v);
     }
 
     $scope.toggleMute = function () {
-        if ($scope.muted) {
-            Caster.unmuteMedia();
-            $scope.muted = false;
-        }
-        else {
-            Caster.muteMedia();
-            $scope.muted = true;
-        }
+        caster.muteOrUnmute();
     }
 
     $scope.turnVolumeDown = function () {
@@ -365,7 +353,7 @@ function CasterController($scope, $window) {
         if ($scope.volume < 0) {
             $scope.volume = 0;
         }
-        Caster.setMediaVolume($scope.volume);
+        caster.setMediaVolume($scope.volume);
     }
 
     $scope.turnVolumeUp = function () {
@@ -373,11 +361,11 @@ function CasterController($scope, $window) {
         if ($scope.volume > 1) {
             $scope.volume = 1;
         }
-        Caster.setMediaVolume($scope.volume);
+        caster.setMediaVolume($scope.volume);
     }
 
     $scope.toggleStats = function () {
-        Caster.toggleStats();
+        caster.toggleStats();
     }
 
     // -----------------------------------
@@ -385,20 +373,21 @@ function CasterController($scope, $window) {
     // -----------------------------------
 
     $window['__onGCastApiAvailable'] = function(isAvailable) {
-        if (isAvailable && Caster) {
-            Caster.initialize(self);
+        if (isAvailable && caster) {
+            caster.initialize(self);
         }
     };
 
 
     // -----------------------------------
-    // Caster Delegate Methods
+    // CastSender Delegate Methods
     // -----------------------------------
 
     this.onReady = function (error) {
         if (error) {
             $scope.errorMessage = error;
             $scope.hasError = true;
+            $scope.castApiReady = false;
             $scope.state = STATE_CASTING;
         }
         else {
@@ -410,16 +399,24 @@ function CasterController($scope, $window) {
 
     this.onTimeUpdate = function (time) {
         $scope.currentTime = time;
-        var w = $("#scrubber").width(),
-            p = ($scope.currentTime / $scope.duration) * 100;
-        $("#scrubber-content").width(p + "%");
+        var scrubber = document.getElementById("scrubber-content");
+        var p = ($scope.currentTime / $scope.duration) * 100;
+        angular.element(scrubber).width(p + "%");
     }
 
     this.onDurationChange = function (duration) {
         $scope.duration = duration;
     }
 
+    this.onPausedChange = function (isPaused) {
+        $scope.playing = !isPaused;
+    }
+
+    this.onMutedChange = function (isMuted) {
+        $scope.muted = isMuted;
+    }
+
     this.onEnded = function () {
 
     }
-}
+}]);

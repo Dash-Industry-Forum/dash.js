@@ -1,8 +1,7 @@
-Caster = (function () {
-    "use strict";
-
+angular.module('DashCastSenderApp.services', [])
+    .factory('caster', function() {
     let APP_ID = "9885395F", // "To be changed by your own AppId ",
-        NAMESPACE = "org.dashif.dashjs",
+        NAMESPACE = "urn:x-cast:org.dashif.dashjs",
         delegate,
         cast_api,
         castContext,
@@ -33,18 +32,16 @@ Caster = (function () {
                     delegate.onDurationChange(remotePlayer.mediaInfo.duration);
                 }
             });
-        },
-
-        onLaunch = function(activity) {
-            if (activity.status === "running") {
-                console.log("Activity is running.");
-                cv_activity = activity;
-                cast_api.addMessageListener(activity.activityId, NAMESPACE, onMessageReceived);
-            }
-            else if (activity.status === "error") {
-                console.log("Error launching activity.");
-                cv_activity = null;
-            }
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_PAUSED_CHANGED, () => {
+                if (remotePlayer) {
+                    delegate.onPausedChange(remotePlayer.isPaused);
+                }
+            });
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_MUTED_CHANGED, () => {
+                if (remotePlayer) {
+                    delegate.onMutedChange(remotePlayer.isMuted);
+                }
+            });
         },
 
         onLoad = function(status) {
@@ -52,9 +49,15 @@ Caster = (function () {
         },
 
         sendMessage = function(command, attrs, callback) {
-            var msg = $.extend({ command: command }, attrs);
+            if (castSession) {
+                castSession.sendMessage(NAMESPACE, {
+                    type: 'TOGGLE_STATS'
+                });
+            }
+            
+            //var msg = $.extend({ command: command }, attrs);
 
-            cast_api.sendMessage(cv_activity.activityId, NAMESPACE, msg, callback);
+            //cast_api.sendMessage(cv_activity.activityId, NAMESPACE, msg, callback);
         },
 
         onMediaPlay = function (s) {
@@ -97,22 +100,20 @@ Caster = (function () {
             console.log("Send load media...");
             var mediaInfo = new chrome.cast.media.MediaInfo(url);
             var request = new chrome.cast.media.LoadRequest(mediaInfo);
-            castSession.loadMedia(request).then(
-                function() { 
-                    let media = castSession.getMediaSession();
-                    if (media) {
-                        console.info(media);
-                    }
-                 },
-                function(errorCode) { console.log('Error code: ' + errorCode); }
-            );
+            if (castSession) {
+                castSession.loadMedia(request).then(
+                    function() { 
+                        let media = castSession.getMediaSession();
+                        if (media) {
+                            console.info(media);
+                        }
+                    },
+                    function(errorCode) { console.log('Error code: ' + errorCode); }
+                );
+            }
         },
 
-        playMedia: function() {
-            remotePlayerController.playOrPause();
-        },
-
-        pauseMedia: function () {
+        playOrPause: function() {
             remotePlayerController.playOrPause();
         },
 
@@ -121,16 +122,13 @@ Caster = (function () {
             remotePlayerController.seek();
         },
 
-        muteMedia: function () {
-            sendMessage("setMuted", {muted: true}, onMessageSent);
-        },
-
-        unmuteMedia: function () {
-            sendMessage("setMuted", {muted: false}, onMessageSent);
+        muteOrUnmute: function () {
+            remotePlayerController.muteOrUnmute();
         },
 
         setMediaVolume: function (volume) {
-            sendMessage("setVolume", {volume: volume}, onMessageSent);
+            remotePlayer.volumeLevel = volume;
+            remotePlayerController.setVolumeLevel();
         },
 
         stopPlayback: function () {
@@ -174,4 +172,4 @@ Caster = (function () {
             this.startup();
         }
     };
-}());
+});

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app lang="en">
+<html ng-app="DashCastReceiverApp" lang="en">
     <head>
         <meta charset="utf-8"/>
         <title>Baseline Dash JavaScript Player</title>
@@ -10,7 +10,7 @@
         <link rel="stylesheet" href="receiver/css/style.css">
 
         <script src="http://code.jquery.com/jquery.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
         <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 
         <!-- Chromecast -->
@@ -22,8 +22,9 @@
             Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
         <!--<script src="../../dist/dash.all.min.js"></script>-->
 
-        <script src="receiver/js/DashCastPlayer.js"></script>
-        <script src="receiver/js/main.js"></script>
+        <script src="receiver/js/DashPlayerService.js"></script>
+        <script src="receiver/js/CastReceiverController.js"></script>
+        <script src="receiver/js/app.js"></script>
 
         <style>
             html, body {
@@ -34,7 +35,7 @@
         </style>
     </head>
 
-    <body ng-controller="ReceiverController">
+    <body ng-controller="CastReceiverController">
         <div class="dash-video-player">
             <div id="loading_spinner" class="loading_spinner" ng-show="showSpinner"></div>
 
