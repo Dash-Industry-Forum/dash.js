@@ -183,6 +183,11 @@ angular.module('DashCastReceiverApp.services', [])
         player.seek(time);
       },
 
+      setVolume (volume) {
+        videoElt.volume = volume.level;
+        videoElt.muted = volume.muted; 
+      },
+
       unregisterEndedCallback (callback) {
         _endedCallback = noop;
       },

@@ -44,55 +44,21 @@ angular.module('DashCastSenderApp.services', [])
             });
         },
 
-        onLoad = function(status) {
-            console.log("Loaded.");
-        },
-
         sendMessage = function(command, attrs, callback) {
             if (castSession) {
                 castSession.sendMessage(NAMESPACE, {
                     type: 'TOGGLE_STATS'
+                }).then(err => {
+                    onMessageSent(err);
                 });
             }
-            
-            //var msg = $.extend({ command: command }, attrs);
-
-            //cast_api.sendMessage(cv_activity.activityId, NAMESPACE, msg, callback);
         },
 
-        onMediaPlay = function (s) {
-            console.log("Media play.");
-        },
-
-        onMediaPause = function (s) {
-            console.log("Media paused.");
-        },
-
-        onMediaVolumeChanged = function (s) {
-            console.log("Media volume changed.");
-        },
-
-        onMessageReceived = function (e) {
-            console.log("Message received.");
-            console.log(e);
-            switch (e.event) {
-                case "timeupdate":
-                    delegate.onTimeUpdate(e.value);
-                    break;
-
-                case "durationchange":
-                    delegate.onDurationChange(e.value);
-                    break;
-
-                case "ended":
-                    delegate.onEnded();
-                    break;
-            }
-        },
-
-        onMessageSent = function (e) {
+        onMessageSent = function (err) {
             console.log("Message sent.  Result...");
-            console.log(e);
+            if (err) {
+                console.error(err);
+            }
         };
 
     return {
@@ -158,6 +124,19 @@ angular.module('DashCastSenderApp.services', [])
                 if (e.castState === cast.framework.CastState.CONNECTED && onReady) {
                     onReady();
                     castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+                    if (castSession.getSessionState() === cast.framework.SessionState.SESSION_RESUMED) {
+                        let mediaSession = castSession.getMediaSession();
+                        if (mediaSession) {
+                            // call getStatus in order to retrieve data of the media when the session is resumed
+                            mediaSession.getStatus(null, () => {
+                                if (mediaSession.media) {
+                                    delegate.resumeMediaSession(mediaSession);
+                                }
+                            }, (err) => {
+                                console.error('Error getting status', err);
+                            });
+                        }
+                    } 
                 } else {
                     onReady(e.castState);
                 }
