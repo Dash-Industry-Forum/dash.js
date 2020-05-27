@@ -355,7 +355,7 @@ function Stream(config) {
         logger.info('Stream -  Process track changed at current time ' + currentTime);
 
         logger.debug('Stream -  Update stream controller');
-        if (manifest.refreshManifestOnSwitchTrack) {
+        if (manifest.refreshManifestOnSwitchTrack) { // Applies only for MSS streams
             logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
