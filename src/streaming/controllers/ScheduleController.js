@@ -360,8 +360,6 @@ function ScheduleController(config) {
     function onBytesAppended(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
-        logger.info('onBytesAppended');
-
         if (replacingBuffer && !isNaN(e.startTime)) {
             replacingBuffer = false;
             fragmentModel.addExecutedRequest(mediaRequest);
