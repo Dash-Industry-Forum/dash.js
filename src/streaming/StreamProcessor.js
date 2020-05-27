@@ -167,7 +167,7 @@ function StreamProcessor(config) {
             settings: settings
         });
 
-        if (adapter.getIsTextTrack(config.mimeType)) {
+        if (adapter.getIsTextTrack(mimeType)) {
             eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 
@@ -221,7 +221,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, onSeekTarget, instance);
 
-        if (adapter && adapter.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(mimeType)) {
             eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
         }
 

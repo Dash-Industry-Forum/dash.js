@@ -52,6 +52,7 @@ function ScheduleController(config) {
     const textController = config.textController;
     const streamId = config.streamId;
     const type = config.type;
+    const mimeType = config.mimeType;
     const mediaController = config.mediaController;
     const bufferController = config.bufferController;
     const settings = config.settings;
@@ -232,7 +233,7 @@ function ScheduleController(config) {
             threshold: 0
         })[0];
 
-        if (request && replaceRequestArray.indexOf(request) === -1 && !adapter.getIsTextTrack(type)) {
+        if (request && replaceRequestArray.indexOf(request) === -1 && !adapter.getIsTextTrack(mimeType)) {
             const fastSwitchModeEnabled = settings.get().streaming.fastSwitchEnabled;
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
@@ -338,7 +339,7 @@ function ScheduleController(config) {
 
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
 
-        if (adapter.getIsTextTrack(type)) {
+        if (adapter.getIsTextTrack(mimeType)) {
             setFragmentProcessState(false);
         }
 
