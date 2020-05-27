@@ -518,7 +518,7 @@ function StreamProcessor(config) {
     }
 
     function onTimedTextRequested(e) {
-        if (e.sender.getStreamId() !== streamInfo.id) return;
+        if (e.streamId !== streamInfo.id) return;
 
         //if subtitles are disabled, do not download subtitles file.
         if (textController.isTextEnabled()) {

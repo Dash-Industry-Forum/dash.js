@@ -157,6 +157,7 @@ function NotFragmentedTextBufferController(config) {
         if (!chunk) {
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
                 index: 0,
+                streamId: streamInfo.id,
                 sender: e.sender
             }); //TODO make index dynamic if referring to MP?
         }
@@ -180,6 +181,7 @@ function NotFragmentedTextBufferController(config) {
             console.log('trigger TIMED_TEXT_REQUESTED');
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
                 index: 0,
+                streamId: streamInfo.id,
                 sender: instance
             });
         }
