@@ -76,7 +76,8 @@ function ScheduleController(config) {
         replacingBuffer,
         mediaRequest,
         checkPlaybackQuality,
-        isReplacementRequest;
+        isReplacementRequest,
+        isGoogleCast;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -93,6 +94,11 @@ function ScheduleController(config) {
             textController: textController,
             settings: settings
         });
+
+
+        const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+        // Detect safari browser (special behavior for low latency streams)
+        isGoogleCast = /crkey/.test(ua);
 
         //eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
@@ -364,6 +370,11 @@ function ScheduleController(config) {
         if (replacingBuffer && !isNaN(e.startTime)) {
             replacingBuffer = false;
             fragmentModel.addExecutedRequest(mediaRequest);
+            // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
+            // otherwise audio track switch will be effective only once after previous buffered track is consumed
+            if (isGoogleCast) {
+                playbackController.seek(playbackController.getTime() - 0.001, false, true);
+            }
         }
 
         setFragmentProcessState(false);
