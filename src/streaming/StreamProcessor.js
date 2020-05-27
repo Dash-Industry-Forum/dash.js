@@ -254,9 +254,13 @@ function StreamProcessor(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id || !e.error || e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) return;
-        scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
-        addDVRMetric();
+        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id) return;
+
+        if (!e.error) {
+            scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
+        } else if (e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
+            addDVRMetric();
+        }
     }
 
     function onQualityChanged(e) {
@@ -535,6 +539,10 @@ function StreamProcessor(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = getRepresentationInfo(quality);
+
+        // Update current representation info (to update fragmentDuration for example in case of SegmentTimeline)
+        scheduleController.setCurrentRepresentation(currentRepresentation);
+
         const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
         const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
         const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
