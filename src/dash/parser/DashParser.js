@@ -99,6 +99,8 @@ function DashParser() {
         const ironedTime = window.performance.now();
         logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
 
+        manifest.protocol = 'DASH';
+
         return manifest;
     }
 
