@@ -24,6 +24,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
 
     var castPlayer,
         video,
+        caption,
         graphUpdateInterval = 999,
 
         update = function () {
@@ -58,12 +59,36 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
         var castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
         if (dashPlayer) {
             video = document.querySelector(".dash-video-player video");
-            dashPlayer.initialize(this, video);
+            caption = document.getElementById('video-caption');
+            dashPlayer.initialize(this, video, caption);
             castPlayer = new cast.receiver.MediaManager(dashPlayer);
+            // override onLoad to manage protection data sent as mediaInfo.customData
+            castPlayer.onLoad = this.onLoad.bind(this);
+            // implements customizedStatusCallback in order to manage tracks
+            castPlayer.customizedStatusCallback = this.customizedStatusCallback.bind(this);
         }
         var customMessageBus = castReceiverManager.getCastMessageBus(NAMESPACE);
         customMessageBus.onMessage = this.onDashMessage;
         castReceiverManager.start();
+    }
+
+    this.onLoad = function (event) {
+        let data = event.data; //cast.receiver.MediaManager.LoadRequestData;
+        let media = data.media;
+
+        if (!media || !castPlayer) {
+            return;
+        }
+
+        let protData = media.customData && media.customData.protData;
+        dashPlayer.loadMedia(media.contentId, protData);
+    }
+
+    this.customizedStatusCallback = function (mediaStatus) {
+        if (dashPlayer) {
+            mediaStatus.activeTrackIds = dashPlayer.getActiveTrackIds();
+        }
+        return mediaStatus;
     }
     
     // -----------------------------------
@@ -75,7 +100,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
 
         $scope.showSpinner = false;
         $scope.showVideo = true;
-        $scope.showStats = true;
+        $scope.showStats = false;
 
         setTimeout(update, graphUpdateInterval);
 
@@ -83,6 +108,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
     };
 
     this.endVideo = function () {
+        castPlayer.broadcastStatus();
         $scope.showSpinner = true;
         $scope.showVideo = false;
         $scope.showStats = false;
@@ -93,6 +119,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
         if (e.currentTarget) {
             let mediaInfo = castPlayer.getMediaInformation();
             mediaInfo.duration = e.currentTarget.duration;
+            mediaInfo.tracks = dashPlayer.getTracks(); 
             castPlayer.setMediaInformation(mediaInfo);
         }
     };
@@ -109,7 +136,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
         var t = video.currentTime,
             d = video.duration;
         if (t === d) {
-            onVideoEnded.call(this);
+            this.onVideoEnded();
         }
     };
 
@@ -118,7 +145,7 @@ app.controller('CastReceiverController', ['$scope', 'dashPlayer', function($scop
     };
 
     this.onVideoEnded = function (e) {
-        endVideo.call(this);
+        this.endVideo();
         console.log("Dispatching video ended.");
     };
 

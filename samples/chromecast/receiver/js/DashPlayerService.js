@@ -4,18 +4,55 @@ angular.module('DashCastReceiverApp.services', [])
     let _state = null;
     let delegate;
     let videoElt;
+    let captionElt;
     let player;
+    let initialized = false;
 
     const noop = () => {};
     let _loadCallback = noop;
     let _errorCallback = noop;
     let _endedCallback = noop;
 
+    let _convertTrack = function (dashTrack, type) {
+      let track = new cast.receiver.media.Track(dashTrack.index, type);
+      track.trackContentId = dashTrack.index;
+      if (dashTrack.lang) {
+        track.language = dashTrack.lang;
+      }
+      if (dashTrack.roles) {
+        track.roles = [...dashTrack.roles];
+      }
+      if (dashTrack.mimeType) {
+        track.trackContentType = dashTrack.mimeType;
+      }
+      // TODO convert that !!!
+      track.name = track.language;
+      return track;
+    };
+
     return {
 
-      initialize: function (cDelegate, video) {
+      initialize: function (cDelegate, video, caption) {
         delegate = cDelegate;
         videoElt = video;
+        captionElt = caption;
+      },
+
+      loadMedia (url, protData) {
+        initialized = false;
+        _state = cast.receiver.media.PlayerState.BUFFERING;
+        player = dashjs.MediaPlayer().create();
+        player.initialize(videoElt, url, true);
+        player.setProtectionData(protData);
+        initialized = true;
+        player.attachTTMLRenderingDiv(captionElt);
+        videoElt.addEventListener("loadedmetadata", delegate.onLoadedMetadata.bind(delegate));
+        videoElt.addEventListener("timeupdate", delegate.onVideoTime.bind(delegate));
+        videoElt.addEventListener("durationchange", delegate.onVideoDuration.bind(delegate));
+        videoElt.addEventListener("ended", this.onVideoEnded.bind(this));
+        videoElt.addEventListener("player_error", this.onPlayerError.bind(this));
+        delegate.startVideo(url);
+        _state = cast.receiver.media.PlayerState.PLAYING;
       },
 
       getMetricsFor (type) {
@@ -35,7 +72,7 @@ angular.module('DashCastReceiverApp.services', [])
             lastFragmentDownloadTime,
             droppedFramesValue = 0;
 
-        if (dashMetrics) {
+        if (dashMetrics && initialized) {
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             bufferLengthValue = dashMetrics.getCurrentBufferLevel(type, true);
             httpRequest = dashMetrics.getCurrentHttpRequest(type, true);
@@ -96,20 +133,78 @@ angular.module('DashCastReceiverApp.services', [])
         }
       },
 
+      getTracks () {
+        let allTracks = [];
+        if (player && initialized) {
+          let audioTracks = player.getTracksFor('audio');
+          let textTracks = player.getTracksFor('fragmentedText');
+          audioTracks.forEach(track => {
+              allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.AUDIO));
+          });
+          textTracks.forEach(track => {
+              allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.TEXT));
+          });
+        }
+        return allTracks;
+      },
+
+      getActiveTrackIds () {
+        let trackIds = [];
+        if (player && initialized) {
+          let currentAudioTrack = player.getCurrentTrackFor('audio');
+          if (currentAudioTrack) {
+            trackIds.push(currentAudioTrack.index);
+          }
+          let currentTextTrack = player.getCurrentTrackFor('fragmentedText');
+          if (currentTextTrack) {
+            trackIds.push(currentTextTrack.index);
+          }
+        }
+        return trackIds;
+      },
+
       onVideoEnded () {
         delegate.onVideoEnded.bind(delegate);
+        _state = cast.receiver.media.PlayerState.IDLE;
         _endedCallback();
       },
 
       onPlayerError (err) {
         player.stop();
+        _state = cast.receiver.media.PlayerState.IDLE;
         _errorCallback(err);
       },
 
       // Generic Google Cast player interface. see https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Player
 
       editTracksInfo (data) {
-        console.info('editTracksInfo');
+        let activeTrackIds = data.activeTrackIds;
+        let audioTrack;
+        let textTrack;
+
+        if (player && initialized && activeTrackIds) {
+          let textEnable = false;
+          for (let i = 0; i < 2; i++) {
+            if (activeTrackIds[i] !== undefined) {
+              let audioTracks = player.getTracksFor('audio');
+              audioTrack = audioTracks.find(track => track.index === activeTrackIds[i]);
+              if (audioTrack) {
+                player.setCurrentTrack(audioTrack);
+              } else {
+                let textTracks = player.getTracksFor('fragmentedText');
+                textTrack = textTracks.find(track => track.index === activeTrackIds[i]);
+                if (textTrack) {
+                  player.enableText(true);
+                  textEnable = true;
+                  player.setCurrentTrack(textTrack);
+                }
+              }
+            }
+          }
+          if (!textEnable) {
+            player.enableText(false);
+          }
+        }
       },
 
       getCurrentTimeSec () {
@@ -121,7 +216,6 @@ angular.module('DashCastReceiverApp.services', [])
       },
       
       getDurationSec () {
-        console.info('getDurationSec');
         if (player) {
           return player.duration();
         } else {
@@ -134,8 +228,11 @@ angular.module('DashCastReceiverApp.services', [])
       },
 
       load (contentId, autoplay, opt_time, opt_tracksInfo, opt_onlyLoadTracks) {
+        initialized = false;
         player = dashjs.MediaPlayer().create();
-        player.initialize(videoElt, contentId, true);
+        player.initialize(videoElt, contentId, autoplay);
+        initialized = true;
+        player.attachTTMLRenderingDiv(captionElt);
         videoElt.addEventListener("loadedmetadata", delegate.onLoadedMetadata.bind(delegate));
         videoElt.addEventListener("timeupdate", delegate.onVideoTime.bind(delegate));
         videoElt.addEventListener("durationchange", delegate.onVideoDuration.bind(delegate));
@@ -177,6 +274,7 @@ angular.module('DashCastReceiverApp.services', [])
 
       reset () {
         player.reset();
+        initialized = false;
       },
 
       seek (time) {

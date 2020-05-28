@@ -159,6 +159,32 @@ a:hover {
     padding: 4px 10px !important;
 }
 
+input[type=range].volumebar::-webkit-slider-thumb {
+    background: #136bfb;
+}
+
+.btn-cast {
+    padding-top: 6px !important;
+    pointer-events: all;
+}
+
+.btn-cast google-cast-launcher {
+    display: inline-block;
+    width: 25px;
+    --disconnected-color: white;
+    --connected-color: #136bfb;
+}
+
+#cast-msg {
+    color: white;
+    position: absolute;
+    top: 45%;
+    right: 0;
+    left: 0;
+    text-align: center;
+    font-size: 2em;
+}
+
 .cue-image {
     z-index: 2147483648;
     pointer-events: none;
