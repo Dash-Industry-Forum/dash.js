@@ -90,12 +90,12 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
                     buffer.addEventListener('abort', errHandler, false);
 
                 } catch (err) {
-                    // use setInterval to periodically check if updating has been completed
-                    intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+                    // periodically check if updating has been completed
+                    pollHandler(checkIsUpdateEnded, CHECK_INTERVAL);
                 }
             } else {
-                // use setInterval to periodically check if updating has been completed
-                intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+                // periodically check if updating has been completed
+                pollHandler(checkIsUpdateEnded, CHECK_INTERVAL);
             }
         } catch (ex) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
@@ -115,7 +115,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
                 buffer.removeEventListener('error', errHandler, false);
                 buffer.removeEventListener('abort', errHandler, false);
             }
-            clearInterval(intervalId);
+            stopPollHandler();
             buffer.appendWindowEnd = Infinity;
             if (!keepBuffer) {
                 try {
@@ -343,6 +343,18 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
         if (!buffer.updating) {
             executeCallback();
         }
+    }
+
+    function pollHandler(handler, interval) {
+        intervalId = setTimeout(function () {
+            pollHandler(handler, interval);
+            handler();
+        }, interval);
+    }
+
+    function stopPollHandler() {
+        clearTimeout(intervalId);
+        intervalId = null;
     }
 
     instance = {

@@ -38,7 +38,7 @@ function BufferLevelHandler(config) {
         reportingController,
         n,
         name,
-        interval,
+        intervalId,
         lastReportedTime;
 
     let context = this.context;
@@ -80,13 +80,13 @@ function BufferLevelHandler(config) {
             n = handlerHelpers.validateN(n_ms);
             reportingController = rc;
             name = handlerHelpers.reconstructFullMetricName(basename, n_ms);
-            interval = setInterval(intervalCallback, n);
+            pollHandler(intervalCallback, n);
         }
     }
 
     function reset() {
-        clearInterval(interval);
-        interval = null;
+        clearTimeout(intervalId);
+        intervalId = null;
         n = 0;
         reportingController = null;
         lastReportedTime = null;
@@ -96,6 +96,13 @@ function BufferLevelHandler(config) {
         if (metric === metricsConstants.BUFFER_LEVEL) {
             storedVOs[type] = vo;
         }
+    }
+
+    function pollHandler(handler, interval) {
+        intervalId = setTimeout(function () {
+            pollHandler(handler, interval);
+            handler();
+        }, interval);
     }
 
     instance = {

@@ -430,15 +430,23 @@ function PlaybackController() {
     function startUpdatingWallclockTime() {
         if (wallclockTimeIntervalId !== null) return;
 
+        let poll;
         const tick = function () {
             onWallclockTime();
+            if (wallclockTimeIntervalId !== null) {
+                poll();
+            }
         };
 
-        wallclockTimeIntervalId = setInterval(tick, settings.get().streaming.wallclockTimeUpdateInterval);
+        poll = function () {
+            wallclockTimeIntervalId = setTimeout(tick, settings.get().streaming.wallclockTimeUpdateInterval);
+        };
+
+        poll();
     }
 
     function stopUpdatingWallclockTime() {
-        clearInterval(wallclockTimeIntervalId);
+        clearTimeout(wallclockTimeIntervalId);
         wallclockTimeIntervalId = null;
     }
 

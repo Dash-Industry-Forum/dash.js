@@ -108,7 +108,8 @@ function loadHandler() {
 
 function loadIntervalHandler() {
     if (window.dashjs) {
-        window.clearInterval(loadInterval);
+        clearTimeout(loadInterval);
+        loadInterval = null;
         instance.createAll();
     }
 }
@@ -121,11 +122,18 @@ if (!avoidAutoCreate && typeof window !== 'undefined' && window && window.addEve
             instance.createAll();
         } else {
             // If loaded asynchronously, window.readyState may be 'complete' even if dashjs hasn't loaded yet
-            loadInterval = window.setInterval(loadIntervalHandler, 500);
+            pollLoadHandler();
         }
     } else {
         window.addEventListener('load', loadHandler);
     }
+}
+
+function pollLoadHandler() {
+    loadInterval = window.setTimeout(function () {
+        pollLoadHandler();
+        loadIntervalHandler();
+    }, 500);
 }
 
 export default instance;

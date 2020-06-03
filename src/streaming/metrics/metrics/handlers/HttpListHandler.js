@@ -39,7 +39,7 @@ function HttpListHandler(config) {
         n,
         type,
         name,
-        interval;
+        intervalId;
 
     let storedVos = [];
 
@@ -78,17 +78,24 @@ function HttpListHandler(config) {
                 requestType
             );
 
-            interval = setInterval(intervalCallback, n);
+            pollHandler(intervalCallback, n);
         }
     }
 
     function reset() {
-        clearInterval(interval);
-        interval = null;
+        clearTimeout(intervalId);
+        intervalId = null;
         n = null;
         type = null;
         storedVos = [];
         reportingController = null;
+    }
+
+    function pollHandler(handler, interval) {
+        intervalId = setTimeout(function () {
+            pollHandler(handler, interval);
+            handler();
+        }, interval);
     }
 
     function handleNewMetric(metric, vo) {

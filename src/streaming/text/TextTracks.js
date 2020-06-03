@@ -531,13 +531,12 @@ function TextTracks() {
         setCueStyleOnTrack.call(this, track);
 
         if (videoSizeCheckInterval) {
-            clearInterval(videoSizeCheckInterval);
-            videoSizeCheckInterval = null;
+            stopPollHandler();
         }
 
         if (track && track.renderingType === 'html') {
             checkVideoSize.call(this, track, true);
-            videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+            pollHandler(checkVideoSize.bind(this, track), 500);
         }
     }
 
@@ -590,8 +589,7 @@ function TextTracks() {
         trackElementArr = [];
         textTrackQueue = [];
         if (videoSizeCheckInterval) {
-            clearInterval(videoSizeCheckInterval);
-            videoSizeCheckInterval = null;
+            stopPollHandler();
         }
         currentTrackIdx = -1;
         clearCaptionContainer.call(this);
@@ -663,6 +661,19 @@ function TextTracks() {
 
     function getCurrentTrackInfo() {
         return textTrackQueue[currentTrackIdx];
+    }
+
+    function pollHandler(handler, interval) {
+        stopPollHandler();
+        videoSizeCheckInterval = setTimeout(function () {
+            pollHandler(handler, interval);
+            handler();
+        }, interval);
+    }
+
+    function stopPollHandler() {
+        clearTimeout(videoSizeCheckInterval);
+        videoSizeCheckInterval = null;
     }
 
     instance = {
