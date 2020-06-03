@@ -14,19 +14,19 @@ class OfflineEvents extends EventsBase {
         this.OFFLINE_RECORD_LOADEDMETADATA = 'public_offlineRecordLoadedmetadata';
 
         /**
-        * Triggered when record is initialized and download is started
+        * Triggered when a record is initialized and download is started
         * @event OfflineEvents#OFFLINE_RECORD_STARTED
         */
         this.OFFLINE_RECORD_STARTED = 'public_offlineRecordStarted';
 
         /**
-        * Triggered when the user stop current downloading
+        * Triggered when the user stop downloading a record
         * @event OfflineEvents#OFFLINE_RECORD_STOPPED
         */
         this.OFFLINE_RECORD_STOPPED = 'public_offlineRecordStopped';
 
         /**
-        * Triggered when all fragments has been downloaded
+        * Triggered when all record has been downloaded
         * @event OfflineEvents#OFFLINE_RECORD_FINISHED
         */
         this.OFFLINE_RECORD_FINISHED = 'public_offlineRecordFinished';
