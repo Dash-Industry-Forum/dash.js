@@ -50,7 +50,6 @@ function TextBufferController(config) {
             _BufferControllerImpl = BufferController(context).create({
                 streamInfo: config.streamInfo,
                 type: config.type,
-                dashMetrics: config.dashMetrics,
                 mediaPlayerModel: config.mediaPlayerModel,
                 manifestModel: config.manifestModel,
                 fragmentModel: config.fragmentModel,

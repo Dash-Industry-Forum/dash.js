@@ -56,7 +56,6 @@ function BufferController(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const dashMetrics = config.dashMetrics;
     const errHandler = config.errHandler;
     const fragmentModel = config.fragmentModel;
     const representationController = config.representationController;
@@ -503,7 +502,6 @@ function BufferController(config) {
     function updateBufferLevel() {
         if (playbackController) {
             bufferLevel = getBufferLength(getWorkingTime() || 0);
-            dashMetrics.addBufferLevel(type, new Date(), bufferLevel * 1000);
             triggerEvent(Events.BUFFER_LEVEL_UPDATED, { bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }

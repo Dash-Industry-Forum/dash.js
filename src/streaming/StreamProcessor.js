@@ -274,6 +274,8 @@ function StreamProcessor(config) {
     function onBufferLevelUpdated(e) {
         if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
 
+        dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
+
         if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated) {
             addDVRMetric();
         }
@@ -604,7 +606,6 @@ function StreamProcessor(config) {
             controller = BufferController(context).create({
                 streamInfo: streamInfo,
                 type: type,
-                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 fragmentModel: fragmentModel,
@@ -622,7 +623,6 @@ function StreamProcessor(config) {
                 streamInfo: streamInfo,
                 type: type,
                 mimeType: mimeType,
-                dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 manifestModel: manifestModel,
                 fragmentModel: fragmentModel,
