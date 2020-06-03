@@ -83,8 +83,8 @@ function ScheduleController(config) {
         resetInitialSettings();
     }
 
-    function initialize(hasVideoTrack) {
-        hasVideoTrack = hasVideoTrack;
+    function initialize(_hasVideoTrack) {
+        hasVideoTrack = _hasVideoTrack;
 
         bufferLevelRule = BufferLevelRule(context).create({
             abrController: abrController,
