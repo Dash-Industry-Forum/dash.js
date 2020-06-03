@@ -32,7 +32,7 @@ const localforage = require('localforage');
 const entities = require('html-entities').XmlEntities;
 
 /**
- * IndexedDB Access
+ * @ignore
  */
 function IndexDBStore() {
 
