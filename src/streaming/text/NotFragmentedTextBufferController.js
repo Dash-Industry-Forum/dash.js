@@ -42,15 +42,15 @@ const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 function NotFragmentedTextBufferController(config) {
 
     config = config || {};
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
     const textController = TextController(context).getInstance();
 
-    let errHandler = config.errHandler;
-    let streamId = config.streamId;
-    let type = config.type;
-    let mimeType = config.mimeType;
-    let streamProcessor = config.streamProcessor;
+    const errHandler = config.errHandler;
+    const streamInfo = config.streamInfo;
+    const type = config.type;
+    const mimeType = config.mimeType;
+    const fragmentModel = config.fragmentModel;
 
     let instance,
         isBufferingCompleted,
@@ -77,17 +77,14 @@ function NotFragmentedTextBufferController(config) {
         initCache = InitCache(context).getInstance();
     }
 
-    /**
-     * @param {MediaInfo }mediaInfo
-     * @memberof BufferController#
-     */
-    function createBuffer(mediaInfo) {
+    function createBuffer(mediaInfoArr) {
+        const mediaInfo = mediaInfoArr[0];
         try {
             buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
             if (!initialized) {
                 const textBuffer = buffer.getBuffer();
                 if (textBuffer.hasOwnProperty(Constants.INITIALIZE)) {
-                    textBuffer.initialize(mimeType, streamProcessor);
+                    textBuffer.initialize(mimeType, streamInfo, mediaInfoArr, fragmentModel);
                 }
                 initialized = true;
             }
@@ -121,10 +118,6 @@ function NotFragmentedTextBufferController(config) {
         return mediaSource;
     }
 
-    function getStreamProcessor() {
-        return streamProcessor;
-    }
-
     function getIsPruningInProgress() {
         return false;
     }
@@ -155,23 +148,23 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== streamProcessor.getType() || e.error) return;
+        if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type || e.error) return;
 
-        const streamId = e.sender.getStreamId();
         const currentRepresentation = e.sender.getCurrentRepresentation();
 
-        const chunk = initCache.extract(streamId, currentRepresentation ? currentRepresentation.id : null);
+        const chunk = initCache.extract(streamInfo.id, currentRepresentation ? currentRepresentation.id : null);
 
         if (!chunk) {
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
                 index: 0,
+                streamId: streamInfo.id,
                 sender: e.sender
             }); //TODO make index dynamic if referring to MP?
         }
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type !== type || (!e.chunk.bytes)) return;
+        if (e.chunk.streamId !== streamInfo.id || e.chunk.mediaInfo.type !== type || (!e.chunk.bytes)) return;
 
         initCache.save(e.chunk);
         buffer.append(e.chunk);
@@ -181,12 +174,14 @@ function NotFragmentedTextBufferController(config) {
         });
     }
 
-    function switchInitData(streamId, representationId) {
-        const chunk = initCache.extract(streamId, representationId);
+    function appendInitSegment(representationId) {
+        const chunk = initCache.extract(streamInfo.id, representationId);
 
         if (!chunk) {
+            console.log('trigger TIMED_TEXT_REQUESTED');
             eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
                 index: 0,
+                streamId: streamInfo.id,
                 sender: instance
             });
         }
@@ -207,7 +202,6 @@ function NotFragmentedTextBufferController(config) {
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
-        getStreamProcessor: getStreamProcessor,
         setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,
@@ -216,7 +210,7 @@ function NotFragmentedTextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         dischargePreBuffer: dischargePreBuffer,
-        switchInitData: switchInitData,
+        appendInitSegment: appendInitSegment,
         getRangeAt: getRangeAt,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset

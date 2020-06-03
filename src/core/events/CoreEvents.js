@@ -52,7 +52,7 @@ class CoreEvents extends EventsBase {
         this.INBAND_EVENTS = 'inbandEvents';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
-        this.INIT_REQUESTED = 'initRequested';
+        this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
         this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
         this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
@@ -62,6 +62,7 @@ class CoreEvents extends EventsBase {
         this.LOADING_ABANDONED = 'loadingAborted';
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
+        this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.REPRESENTATION_UPDATE_STARTED = 'representationUpdateStarted';
         this.REPRESENTATION_UPDATE_COMPLETED = 'representationUpdateCompleted';
@@ -82,6 +83,7 @@ class CoreEvents extends EventsBase {
         this.XLINK_READY = 'xlinkReady';
         this.SEGMENTBASE_INIT_REQUEST_NEEDED = 'segmentBaseInitRequestNeeded';
         this.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED = 'segmentBaseSegmentsListRequestNeeded';
+        this.SEEK_TARGET = 'seekTarget';
     }
 }
 

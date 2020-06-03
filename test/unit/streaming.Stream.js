@@ -48,25 +48,29 @@ describe('Stream', function () {
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamInfo = {
         id: 'id',
-        index: 'index'
+        index: 'index',
+        manifestInfo: {
+            isDynamic: false
+        }
     };
     Events.extend(ProtectionEvents);
 
     describe('Well initialized', function () {
         beforeEach(function () {
-            stream = Stream(context).create({errHandler: errHandlerMock,
-                                             manifestModel: manifestModelMock,
-                                             adapter: adapterMock,
-                                             abrController: abrControllerMock,
-                                             manifestUpdater: manifestUpdaterMock,
-                                             playbackController: playbackControllerMock,
-                                             capabilities: capabilitiesMock,
-                                             mediaController: mediaControllerMock,
-                                             timelineConverter: timelineConverter,
-                                             dashMetrics: dashMetricsMock,
-                                             textController: textControllerMock,
-                                             videoModel: videoModelMock,
-                                             settings: settings});
+            stream = Stream(context).create({
+                errHandler: errHandlerMock,
+                manifestModel: manifestModelMock,
+                adapter: adapterMock,
+                abrController: abrControllerMock,
+                manifestUpdater: manifestUpdaterMock,
+                playbackController: playbackControllerMock,
+                capabilities: capabilitiesMock,
+                mediaController: mediaControllerMock,
+                timelineConverter: timelineConverter,
+                dashMetrics: dashMetricsMock,
+                textController: textControllerMock,
+                videoModel: videoModelMock,
+                settings: settings});
         });
 
         afterEach(function () {
@@ -76,14 +80,14 @@ describe('Stream', function () {
         it('should return false when isActive is called', () => {
             const isActive = stream.isActive();
 
-            expect(isActive).to.be.false;            // jshint ignore:line
+            expect(isActive).to.be.false; // jshint ignore:line
         });
 
         it('should return an empty array when getProcessors is called but streamProcessors attribute is an empty array', () => {
             const processors = stream.getProcessors();
 
             expect(processors).to.be.instanceOf(Array); // jshint ignore:line
-            expect(processors).to.be.empty;            // jshint ignore:line
+            expect(processors).to.be.empty; // jshint ignore:line
         });
 
         it('should trigger MANIFEST_ERROR_ID_NOSTREAMS_CODE error when setMediaSource is called but streamProcessors array is empty', () => {
@@ -100,51 +104,51 @@ describe('Stream', function () {
         it('should return an NaN when getStartTime is called but streamInfo attribute is null or undefined', () => {
             const startTime = stream.getStartTime();
 
-            expect(startTime).to.be.NaN;                // jshint ignore:line
+            expect(startTime).to.be.NaN; // jshint ignore:line
         });
 
         it('should return an NaN when getDuration is called but streamInfo attribute is null or undefined', () => {
             const duration = stream.getDuration();
 
-            expect(duration).to.be.NaN;                // jshint ignore:line
+            expect(duration).to.be.NaN; // jshint ignore:line
         });
 
         it('should return null false isMediaCodecCompatible is called but stream attribute is undefined', () => {
             const isCompatible = stream.isMediaCodecCompatible();
 
-            expect(isCompatible).to.be.false;                // jshint ignore:line
+            expect(isCompatible).to.be.false; // jshint ignore:line
         });
 
         it('should return false when isMediaCodecCompatible is called but stream attribute is an empty object', () => {
             const isCompatible = stream.isMediaCodecCompatible({});
 
-            expect(isCompatible).to.be.false;                // jshint ignore:line
+            expect(isCompatible).to.be.false; // jshint ignore:line
         });
 
         it('should return false when isMediaCodecCompatible is called with a correct stream attribute', () => {
             const isCompatible = stream.isMediaCodecCompatible(new StreamMock());
 
-            expect(isCompatible).to.be.false;                // jshint ignore:line
+            expect(isCompatible).to.be.false; // jshint ignore:line
         });
 
         it('should return null when isProtectionCompatible is called but stream attribute is undefined', () => {
             const isCompatible = stream.isProtectionCompatible();
 
-            expect(isCompatible).to.be.false;                // jshint ignore:line
+            expect(isCompatible).to.be.false; // jshint ignore:line
         });
 
         it('should return an empty array when getBitrateListFor is called but no stream processor is defined', () => {
             const bitrateList = stream.getBitrateListFor('');
 
             expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
-            expect(bitrateList).to.be.empty;            // jshint ignore:line
+            expect(bitrateList).to.be.empty; // jshint ignore:line
         });
 
         it('should return an empty array when getBitrateListFor, for image type, is called but thumbnailController is not defined', () => {
             const bitrateList = stream.getBitrateListFor(Constants.IMAGE);
 
             expect(bitrateList).to.be.instanceOf(Array); // jshint ignore:line
-            expect(bitrateList).to.be.empty;            // jshint ignore:line
+            expect(bitrateList).to.be.empty; // jshint ignore:line
         });
 
         it('should not call STREAM_INITIALIZED event if initializeMedia has not been called when updateData is called', () => {
@@ -154,7 +158,7 @@ describe('Stream', function () {
 
             stream.updateData(streamInfo);
 
-            expect(spy.notCalled).to.be.true;                // jshint ignore:line
+            expect(spy.notCalled).to.be.true; // jshint ignore:line
 
             eventBus.off(Events.STREAM_INITIALIZED, spy);
         });
@@ -209,13 +213,13 @@ describe('Stream', function () {
 
             let isPreloaded = stream.getPreloaded();
 
-            expect(isPreloaded).to.be.false;                // jshint ignore:line
+            expect(isPreloaded).to.be.false; // jshint ignore:line
 
             stream.preload();
 
             isPreloaded = stream.getPreloaded();
 
-            expect(isPreloaded).to.be.true;                // jshint ignore:line
+            expect(isPreloaded).to.be.true; // jshint ignore:line
         });
 
         it('should return undefined when getThumbnailController is called without a call to initializeMediaForType', () => {
@@ -223,17 +227,17 @@ describe('Stream', function () {
 
             const thumbnailController = stream.getThumbnailController();
 
-            expect(thumbnailController).to.be.undefined;          // jshint ignore:line
+            expect(thumbnailController).to.be.undefined; // jshint ignore:line
         });
 
-        it('should returns an empty array when activate is called', function () {
-            stream.initialize(streamInfo, {});
+        // it('should returns an array of buffers when activate is called', function () {
+        //     stream.initialize(streamInfo, {});
 
-            const buffers = stream.activate();
+        //     const buffers = stream.activate();
 
-            expect(buffers).to.be.instanceOf(Object); // jshint ignore:line
-            expect(buffers).to.not.equal({});     // jshint ignore:line
-        });
+        //     expect(buffers).to.be.instanceOf(Object); // jshint ignore:line
+        //     expect(buffers).to.not.equal({}); // jshint ignore:line
+        // });
     });
 
     describe('Not well initialized with no config parameter', function () {
