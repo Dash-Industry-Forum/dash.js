@@ -28,7 +28,7 @@ const eventBus = EventBus(context).getInstance();
 // const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
-describe.only('BufferController', function () {
+describe('BufferController', function () {
     // disable log
     let settings = Settings(context).getInstance();
     // const streamProcessor = new StreamProcessorMock(testType, streamInfo);
