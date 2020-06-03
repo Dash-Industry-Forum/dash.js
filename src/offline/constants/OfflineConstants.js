@@ -37,8 +37,8 @@
 class OfflineConstants {
 
   init() {
-      this.OFFLINE_SCHEME = 'offline_indexdb';
-      this.OFFLINE_URL_REGEX = /^offline_indexdb:\/\//i;
+      this.OFFLINE_SCHEME = 'offline_indexeddb';
+      this.OFFLINE_URL_REGEX = /^offline_indexeddb:\/\//i;
       this.OFFLINE_STATUS_CREATED = 'created';
       this.OFFLINE_STATUS_STARTED = 'started';
       this.OFFLINE_STATUS_STOPPED = 'stopped';

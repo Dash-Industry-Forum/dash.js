@@ -30,7 +30,7 @@
  */
 
 const Entities = require('html-entities').XmlEntities;
-const OFFLINE_BASE_URL = 'offline_indexdb://';
+const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
 function OfflineIndexDBManifestParser(config) {
 
