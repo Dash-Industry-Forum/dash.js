@@ -5,44 +5,45 @@ angular.module('DashPlayer').
 service('DownloadService', function () {
 
     player = undefined;
-    var downloads = [];
+    offlineController = undefined;
+    var records = [];
 
-    this.getDownload = function (id) {
-        let element = downloads.find((download) => {
-            return download.id === id;
+    this.getRecord = function (id) {
+        let element = records.find((record) => {
+            return record.id === id;
         });
 
         return element;
     };
 
     this.getDownloads = function () {
-        return downloads;
+        return records;
     };
 
     this.init = function (playerInstance) {
         player = playerInstance;
+        offlineController = player.getOfflineController();
 
-        player.on(dashjs.MediaPlayer.events.DOWNLOADING_STARTED, (e) => {
-            let download = this.getDownload(e.id);
-            if (download) {
-                download.status = 'started';
+        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STARTED, (e) => {
+            let record = this.getRecord(e.id);
+            if (record) {
+                record.status = 'started';
             }
         }, this);
 
-        player.on(dashjs.MediaPlayer.events.DOWNLOADING_FINISHED, (e) => {
-            let download = this.getDownload(e.id);
-            if (download) {
-                download.status = 'finished';
+        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_FINISHED, (e) => {
+            let record = this.getRecord(e.id);
+            if (record) {
+                record.status = 'finished';
             }
         }, this);
 
-        player.on(dashjs.MediaPlayer.events.DOWNLOADING_STOPPED, (e) => {
-            let download = this.getDownload(e.id);
-            if (download) {
-                download.status = 'stopped';
+        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STOPPED, (e) => {
+            let record = this.getRecord(e.id);
+            if (record) {
+                record.status = 'stopped';
             }
         }, this);
-
 
         player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
             switch (e.error.code) {
@@ -68,50 +69,48 @@ service('DownloadService', function () {
             }
         }, this);
 
-        player.loadDownloadsFromStorage().then(() => {
-            this.getAllDownloads();
+        offlineController.loadRecordsFromStorage().then(() => {
+            this.getAllRecords();
         });
     };
 
-    this.getAllDownloads = function () {
-        downloads.splice(0, downloads.length);
-        player.getAllDownloads().forEach(element => {
-            downloads.push(element);
+    this.getAllRecords = function () {
+        records.splice(0, records.length);
+        offlineController.getAllRecords().forEach(element => {
+            records.push(element);
         });
     };
 
     this.doDownload = function (url) {
-        player.createDownload(url).then((id) => {
+        offlineController.createRecord(url).then((id) => {
             id = id;
-            // new download has been created, let's refresh download list
-            this.getAllDownloads();
-            // init download
-            player.initDownload(id);
+            // new record has been created, let's refresh record list
+            this.getAllRecords();
         });
     };
 
-    this.doDeleteDownload = function (id) {
-        player.deleteDownload(id).then(() => {
-            this.getAllDownloads();
+    this.doDeleteRecord = function (id) {
+        offlineController.deleteRecord(id).then(() => {
+            this.getAllRecords();
         });
     };
 
-    this.doStopDownload = function (id) {
-        player.stopDownload(id);
+    this.doStopRecord = function (id) {
+        offlineController.stopRecord(id);
     };
 
-    this.doResumeDownload = function (id) {
-        player.resumeDownload(id);
+    this.doResumeRecord = function (id) {
+        offlineController.resumeRecord(id);
     };
 
     this.getDownloadProgression = function (id) {
-        return player.getDownloadProgression(id);
+        return offlineController.getRecordProgression(id);
     };
 
     this.onError = function (error) {
-        let download = this.getDownload(error.data.id);
-        if (download) {
-            download.status = `error - ${error.message}`;
+        let record = this.getRecord(error.data.id);
+        if (record) {
+            record.status = `error - ${error.message}`;
         }
     };
 

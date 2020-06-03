@@ -263,8 +263,8 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             if ($scope.player) {
                 $scope.player.updateSettings(config);
             }
-            if ($scope.downloader) {
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
+            if ($scope.offlinePlayer) {
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
             }
         } else {
             // Set default initial configuration
@@ -283,7 +283,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
                 }
             };
             $scope.player.updateSettings(initialConfig);
-            $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
+            $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
         }
     };
     reqConfig.open('GET', 'dashjs_config.json', true);
@@ -339,7 +339,6 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             $('#errorModal').modal('show');
         }
     }, $scope);
-
 
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
 
@@ -438,16 +437,16 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     // Download setup
     //
     ////////////////////////////////////////
-    $scope.downloader = dashjs.MediaPlayer().create(); /* jshint ignore:line */
-    $scope.downloader.initialize($scope.video, null, $scope.autoPlaySelected);
+    $scope.offlinePlayer = dashjs.MediaPlayer().create(); /* jshint ignore:line */
+    $scope.offlinePlayer.initialize($scope.video, null, $scope.autoPlaySelected);
 
     $scope.downloads = DownloadService.getDownloads();
-    DownloadService.init($scope.downloader);
+    DownloadService.init($scope.offlinePlayer);
 
-    $scope.downloader.on(dashjs.MediaPlayer.events.DOWNLOADABLE_REPRESENTATIONS_LOADED, function (e) { /* jshint ignore:line */
-        console.log(JSON.stringify(e.data));
-        $scope.downloadableRepresentations = e.data.downloadableRepresentations;
-        $scope.manifestId = e.data.id;
+    $scope.offlinePlayer.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_LOADEDMETADATA, function (e) { /* jshint ignore:line */
+        console.log(JSON.stringify(e));
+        $scope.mediaInfos = e.mediaInfos;
+        $scope.manifestId = e.id;
         $scope.showRepresentationModal();
     }, $scope);
 
@@ -670,32 +669,32 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         switch (level) {
             case 'none':
                 $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
                 break;
 
             case 'fatal':
                 $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL } });
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL } });
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL } });
                 break;
 
             case 'error':
                 $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR } });
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR } });
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR } });
                 break;
 
             case 'warning':
                 $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
                 break;
 
             case 'info':
                 $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
                 break;
 
             default:
                 $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
-                $scope.downloader.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
+                $scope.offlinePlayer.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
         }
     };
 
@@ -1028,7 +1027,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     //
     ////////////////////////////////////////
 
-    $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_STARTED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STARTED, function (e) { /* jshint ignore:line */
         $scope.successMessage = e.message;
         $('.alert.alert-success').show();
         $('.alert.alert-success').fadeTo(2500, 500).slideUp(500, function () {
@@ -1036,7 +1035,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         });
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_FINISHED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_FINISHED, function (e) { /* jshint ignore:line */
         $scope.successMessage = e.message;
         $('.alert.alert-success').show();
         $('.alert.alert-success').fadeTo(2500, 500).slideUp(500, function () {
@@ -1044,7 +1043,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         });
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.DOWNLOADING_STOPPED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STOPPED, function (e) { /* jshint ignore:line */
         $scope.warningMessage = e.message;
         $('.alert.alert-warning').show();
         $('.alert.alert-warning').fadeTo(2500, 500).slideUp(500, function () {
@@ -1058,7 +1057,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
     $scope.hideRepresentationModal = function () {
         $scope.manifestId = undefined;
-        $scope.downloadableRepresentations = null;
+        $scope.mediaInfos = null;
         $('#representationModal').modal('hide');
     };
 
@@ -1092,13 +1091,31 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         return representations;
     };
 
-    $scope.onStartDownload = function () {
-        let selectedRepresentation = $scope.getSelectedRepresentations();
+    $scope.getSelectedMediaInfos = function () {
+        let mediaInfos = [];
+        $scope.mediaInfos.forEach(mediaInfo => {
+            let selected = false;
+            mediaInfo.bitrateList = mediaInfo.bitrateList.filter(bitrate => {
+                selected = selected || bitrate.selected;
+                return bitrate.selected;
+            });
+            if (selected) {
+                mediaInfos.push(mediaInfo);
+            }
+        });
+        return mediaInfos;
+    }
 
-        if (selectedRepresentation.video.length >= 1 ||
-            selectedRepresentation.audio.length >= 1 ||
-            selectedRepresentation.text.length >= 1) {
-            $scope.downloader.startDownload($scope.manifestId, selectedRepresentation);
+    $scope.onStartDownload = function () {
+        // let selectedRepresentation = $scope.getSelectedRepresentations();
+        let mediaInfos = $scope.getSelectedMediaInfos();
+
+        // if (selectedRepresentation.video.length >= 1 ||
+        //     selectedRepresentation.audio.length >= 1 ||
+        //     selectedRepresentation.text.length >= 1) {
+        if (mediaInfos.length) {
+            // $scope.offlinePlayer.getOfflineController().startRecord($scope.manifestId, selectedRepresentation);
+            $scope.offlinePlayer.getOfflineController().startRecord($scope.manifestId, mediaInfos);
             $scope.hideRepresentationModal();
         } else {
             alert('You must select at least 1 quality !');

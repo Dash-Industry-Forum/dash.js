@@ -28,12 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ErrorsBase from '../../core/errors/ErrorsBase';
 /**
  * Offline Errors declaration
  * @class
  */
-class Errors {
+class OfflineErrors extends ErrorsBase {
     constructor () {
+
+        super();
+
         /**
          * Error code returned when an error occurs in offline module
          */
@@ -56,5 +60,5 @@ class Errors {
     }
 }
 
-let errors = new Errors();
-export default errors;
+let offlineErrors = new OfflineErrors();
+export default offlineErrors;

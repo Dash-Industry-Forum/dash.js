@@ -33,27 +33,30 @@ import OfflineStream from './OfflineStream';
 import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser';
 import OfflineErrors from './errors/OfflineErrors';
 
-/**
- * @class OfflineDownload
- */
 function OfflineDownload(config) {
     config = config || {};
 
+    const context = this.context;
     const manifestLoader = config.manifestLoader;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const abrController = config.abrController;
+    const playbackController = config.playbackController;
     const adapter = config.adapter;
+    const dashMetrics = config.dashMetrics;
+    const timelineConverter = config.timelineConverter;
     const offlineStoreController = config.offlineStoreController;
     const manifestId = config.id;
     const eventBus = config.eventBus;
     const errHandler = config.errHandler;
     const events = config.events;
+    const errors = config.errors;
+    const settings = config.settings;
     const debug = config.debug;
     const manifestUpdater = config.manifestUpdater;
     const baseURLController = config.baseURLController;
     const constants = config.constants;
     const dashConstants = config.dashConstants;
     const urlUtils = config.urlUtils;
-
-    const context = this.context;
 
     let instance,
         logger,
@@ -172,7 +175,7 @@ function OfflineDownload(config) {
         if (!e.error && manifestId !== null) {
             _status = OfflineConstants.OFFLINE_STATUS_STARTED;
             offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
-                eventBus.trigger(events.DOWNLOADING_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
+                eventBus.trigger(events.OFFLINE_RECORD_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
             });
         } else {
             _status = OfflineConstants.OFFLINE_STATUS_ERROR;
@@ -230,7 +233,7 @@ function OfflineDownload(config) {
             _status = OfflineConstants.OFFLINE_STATUS_FINISHED;
             offlineStoreController.setDownloadingStatus(manifestId, _status)
             .then(function () {
-                eventBus.trigger(events.DOWNLOADING_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                eventBus.trigger(events.OFFLINE_RECORD_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
                 resetDownload();
             });
         } else {
@@ -303,9 +306,19 @@ function OfflineDownload(config) {
                         updateManifestNeeded: onManifestUpdateNeeded
                     },
                     constants: constants,
+                    dashConstants: dashConstants,
                     eventBus: eventBus,
                     events: events,
+                    errors: errors,
+                    settings: settings,
                     debug: debug,
+                    errHandler: errHandler,
+                    mediaPlayerModel: mediaPlayerModel,
+                    abrController: abrController,
+                    playbackController: playbackController,
+                    dashMetrics: dashMetrics,
+                    baseURLController: baseURLController,
+                    timelineConverter: timelineConverter,
                     adapter: adapter,
                     offlineStoreController: offlineStoreController
                 });
@@ -331,9 +344,9 @@ function OfflineDownload(config) {
         }
     }
 
-    function getDownloadableRepresentations() {
+    function getMediaInfos() {
         _streams.forEach(stream => {
-            stream.getDownloadableRepresentations();
+            stream.getMediaInfos();
         });
     }
 
@@ -409,8 +422,8 @@ function OfflineDownload(config) {
         // initialise offline streams
         composeStreams(_manifest);
 
-        // get downloadable representations
-        getDownloadableRepresentations();
+        // get MediaInfos
+        getMediaInfos();
 
         eventBus.trigger(events.STREAMS_COMPOSED);
     }
@@ -421,30 +434,34 @@ function OfflineDownload(config) {
         }
     }
 
-    function formatSelectedRepresentations(selectedRepresentations) {
-        let ret = {
-        };
+    function getSelectedRepresentations(mediaInfos) {
+        let rep = {};
+        rep[constants.VIDEO] = [];
+        rep[constants.AUDIO] = [];
+        rep[constants.TEXT] = [];
+        rep[constants.FRAGMENTED_TEXT] = [];
 
-        ret[constants.VIDEO] = [];
-        ret[constants.AUDIO] = [];
-        ret[constants.TEXT] = [];
-        ret[constants.FRAGMENTED_TEXT] = [];
-        selectedRepresentations.video.forEach(item => {
-            ret[constants.VIDEO].push(item.id);
-        });
-        selectedRepresentations.audio.forEach(item => {
-            ret[constants.AUDIO].push(item.id);
-        });
-        selectedRepresentations.text.forEach(item => {
-            ret[item.type].push(item.id);
-        });
+        // selectedRepresentations.video.forEach(item => {
+        //     ret[constants.VIDEO].push(item.id);
+        // });
+        // selectedRepresentations.audio.forEach(item => {
+        //     ret[constants.AUDIO].push(item.id);
+        // });
+        // selectedRepresentations.text.forEach(item => {
+        //     ret[item.type].push(item.id);
+        // });
 
-        return ret;
+        mediaInfos.forEach(mediaInfo => {
+            mediaInfo.bitrateList.forEach(bitrate => {
+                rep[mediaInfo.type].push(bitrate.id);
+            });
+        });
+        return rep;
     }
 
-    function startDownload(selectedRepresentations) {
+    function startDownload(mediaInfos) {
         try {
-            let rep = formatSelectedRepresentations(selectedRepresentations);
+            let rep = getSelectedRepresentations(mediaInfos);
 
             offlineStoreController.saveSelectedRepresentations(manifestId, rep)
             .then(() => {
@@ -522,7 +539,7 @@ function OfflineDownload(config) {
             _status = OfflineConstants.OFFLINE_STATUS_STOPPED;
             // update status
             offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
-                eventBus.trigger(events.DOWNLOADING_STOPPED, {
+                eventBus.trigger(events.OFFLINE_RECORD_STOPPED, {
                     sender: this,
                     id: manifestId,
                     status: _status,

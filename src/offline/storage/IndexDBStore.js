@@ -32,8 +32,7 @@ const localforage = require('localforage');
 const entities = require('html-entities').XmlEntities;
 
 /**
- * @module  IndexDBStore
- * @description IndexedDB Access
+ * IndexedDB Access
  */
 function IndexDBStore() {
 
@@ -70,7 +69,6 @@ function IndexDBStore() {
     /**
      * Creates an instance of localforage to store fragments in indexed db
      * @param {string} storeName
-     * @memberof module:IndexDBStore
      * @instance
      */
     function createFragmentStore(storeName) {
@@ -89,7 +87,6 @@ function IndexDBStore() {
 
     /**
      * Update download status
-     * @memberof module:IndexDBStore
      * @param {number} manifestId
      * @param {string} newStatus
      * @returns {Promise} promise
@@ -108,7 +105,6 @@ function IndexDBStore() {
 
     /**
      * Updat last downloaded fragment index for representationId
-     * @memberof module:IndexDBStore
      * @param {number} manifestId - manifest id
       * @param {string} representationId - representation
      * @param {number} state - representation state
@@ -139,7 +135,6 @@ function IndexDBStore() {
 
     /**
      * Returns current downloaded segment index for representation
-     * @memberof module:IndexDBStore
      * @param {number} manifestId - manifest id
      * @param {string} representationId - representation
      * @returns {Promise} promise
@@ -162,7 +157,6 @@ function IndexDBStore() {
 
     /**
      * Returns a fragment from its key
-     * @memberof module:IndexDBStore
      * @param {number} manifestId
      * @param {number} key
      * @returns {Promise} fragment
@@ -185,7 +179,6 @@ function IndexDBStore() {
 
     /**
      * Returns a manifest from its identifier
-     * @memberof module:IndexDBStore
      * @param {number} id
      * @returns {Promise} {Object[]} manifests
      * @instance
@@ -215,7 +208,6 @@ function IndexDBStore() {
 
     /**
      * Returns all offline manifests
-     * @memberof module:IndexDBStore
      * @returns {Promise} {Object[]} manifests
      * @instance
      */
@@ -231,7 +223,6 @@ function IndexDBStore() {
 
     /**
      * Return higher manifest id
-     * @memberof module:IndexDBStore
      * @returns {Promise} number
      * @instance
      */
@@ -255,7 +246,6 @@ function IndexDBStore() {
 
     /**
      * Update manifest
-     * @memberof module:IndexDBStore
      * @param {Object} manifest updated manifest
      * @returns {Promise} promise asynchronously resolved
      * @instance
@@ -277,7 +267,6 @@ function IndexDBStore() {
 
     /**
      * save selected representation by user
-     * @memberof module:IndexDBStore
      * @param {Object} manifest updated manifest
      * @param {Object} selected selected representations
      * @returns {Promise} promise asynchronously resolved
@@ -300,7 +289,6 @@ function IndexDBStore() {
 
     /**
      * Store a manifest in manifest array
-     * @memberof module:IndexDBStore
      * @param {Object} manifest
      * @instance
      */
@@ -316,7 +304,6 @@ function IndexDBStore() {
 
     /**
      * Store a fragment in fragment store
-     * @memberof module:IndexDBStore
      * @param {number} manifestId
      * @param {number} fragmentId
      * @param {Object} fragmentData
@@ -345,7 +332,6 @@ function IndexDBStore() {
 
     /**
      * Remove all manifest and fragment store
-     * @memberof module:IndexDBStore
      * @returns {Promise} promise asynchronously resolved
      * @instance
      */
@@ -360,7 +346,6 @@ function IndexDBStore() {
     /**
      * Remove framgent store given its name
      * @param {string} storeName
-     * @memberof module:IndexDBStore
      * @instance
      */
     function dropFragmentStore(storeName) {
@@ -379,7 +364,6 @@ function IndexDBStore() {
 
     /**
      * Remove download given its id (fragmentStore + manifest entry in manifest array)
-     * @memberof module:IndexDBStore
      * @param {number} manifestId
      * @returns {Promise} promise asynchronously resolved
      * @instance
@@ -409,7 +393,6 @@ function IndexDBStore() {
 
     /**
      * Remove fragment store
-     * @memberof module:IndexDBStore
      * @param {string} storeName
      * @returns {Promise} promise asynchronously resolved
      * @instance
