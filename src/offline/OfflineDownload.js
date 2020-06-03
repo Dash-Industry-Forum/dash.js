@@ -32,6 +32,7 @@ import OfflineConstants from './constants/OfflineConstants';
 import OfflineStream from './OfflineStream';
 import OfflineIndexDBManifestParser from './utils/OfflineIndexDBManifestParser';
 import OfflineErrors from './errors/OfflineErrors';
+import DashParser from '../dash/parser/DashParser';
 
 function OfflineDownload(config) {
     config = config || {};
@@ -468,7 +469,7 @@ function OfflineDownload(config) {
                 return createFragmentStore(manifestId);
             })
             .then(() => {
-                return generateOfflineManifest(_xmlManifest, rep, manifestId);
+                return generateOfflineManifest(rep);
             })
             .then(function () {
                 initializeAllMediasInfoList(rep);
@@ -489,12 +490,10 @@ function OfflineDownload(config) {
     /**
      * Create the parser used to convert original manifest in offline manifest
      * Creates a JSON object that will be stored in database
-     * @param {string} XMLManifest
      * @param {Object[]} selectedRepresentations
-     * @param {number} manifestId
      * @instance
      */
-    function generateOfflineManifest(XMLManifest, selectedRepresentations, manifestId) {
+    function generateOfflineManifest(selectedRepresentations) {
         _indexDBManifestParser = OfflineIndexDBManifestParser(context).create({
             manifestId: manifestId,
             allMediaInfos: selectedRepresentations,
@@ -504,12 +503,12 @@ function OfflineDownload(config) {
             urlUtils: urlUtils
         });
 
-        return _indexDBManifestParser.parse(XMLManifest).then(function (parsedManifest) {
-            if (parsedManifest !== null && manifestId !== null) {
+        return _indexDBManifestParser.parse(_xmlManifest).then(function (parsedManifest) {
+            if (parsedManifest !== null) {
                 return offlineStoreController.getManifestById(manifestId)
                 .then((item) => {
                     item.originalURL = _manifest.url;
-                    item.originalManifest = _manifest;
+                    item.originalManifest = _xmlManifest;
                     item.manifest = parsedManifest;
                     return updateOfflineManifest(item);
                 });
@@ -563,24 +562,29 @@ function OfflineDownload(config) {
      * @instance
      */
     function resumeDownload() {
-        if (!isDownloading()) {
-            _isDownloadingStatus = true;
-
-            let selectedRepresentation;
-
-            offlineStoreController.getManifestById(manifestId)
-            .then((item) => {
-                _manifest = item.originalManifest;
-                selectedRepresentation = item.selected;
-
-                composeStreams(_manifest);
-                eventBus.trigger(events.STREAMS_COMPOSED);
-
-                return createFragmentStore(manifestId);
-            }). then(() => {
-                initializeAllMediasInfoList(selectedRepresentation);
-            });
+        if (isDownloading()) {
+            return;
         }
+
+        _isDownloadingStatus = true;
+
+        let selectedRepresentations;
+
+        offlineStoreController.getManifestById(manifestId)
+        .then((item) => {
+            let parser = DashParser(context).create({debug: debug});
+            _manifest = parser.parse(item.originalManifest);
+
+            composeStreams(_manifest);
+
+            selectedRepresentations = item.selected;
+
+            eventBus.trigger(events.STREAMS_COMPOSED);
+
+            return createFragmentStore(manifestId);
+        }). then(() => {
+            initializeAllMediasInfoList(selectedRepresentations);
+        });
     }
 
     /**

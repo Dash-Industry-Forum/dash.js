@@ -1984,6 +1984,7 @@ function MediaPlayer() {
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
+            debug: debug,
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
