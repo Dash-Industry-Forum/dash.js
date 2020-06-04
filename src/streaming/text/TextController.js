@@ -242,7 +242,7 @@ function TextController() {
         return enabled;
     }
 
-    // when set to true NextFragmentRequestRule will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
+    // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
         checkParameterType(enable,'boolean');
         forceTextStreaming = enable;
