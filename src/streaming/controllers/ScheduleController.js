@@ -95,7 +95,6 @@ function ScheduleController(config) {
             settings: settings
         });
 
-
         const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
         // Detect safari browser (special behavior for low latency streams)
         isGoogleCast = /crkey/.test(ua);
