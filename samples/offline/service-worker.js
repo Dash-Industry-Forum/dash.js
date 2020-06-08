@@ -47,7 +47,7 @@ let urlsToCache = [
     'app/rules/ThroughputRule.js',
     'app/contributors.json',
     'app/main.js',
-    'app/sources.json',
+    '../dash-if-reference-player/app/sources.json',
     '../../contrib/akamai/controlbar/controlbar.css',
     '../../contrib/akamai/controlbar/ControlBar.js',
     '../../contrib/akamai/controlbar/icomoon.ttf',

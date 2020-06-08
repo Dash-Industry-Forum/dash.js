@@ -18,7 +18,7 @@ $(document).ready(function () {
 });
 
 angular.module('DashSourcesService', ['ngResource']).factory('sources', function ($resource) { /* jshint ignore:line */
-    return $resource('app/sources.json', {}, {
+    return $resource('../dash-if-reference-player/app/sources.json', {}, {
         query: {
             method: 'GET',
             isArray: false
