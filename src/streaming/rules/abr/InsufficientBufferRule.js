@@ -28,25 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-<<<<<<< HEAD
-||||||| merged common ancestors
-import BufferController from '../../controllers/BufferController';
-=======
-import Constants from '../../constants/Constants';
-import BufferController from '../../controllers/BufferController';
->>>>>>> Make InsufficientBufferRule have no side effects; clear seek reset on fragments loaded, make fragment loaded count 2, for close to segment boundary seeks
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import FactoryMaker from '../../../core/FactoryMaker';
 import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
-<<<<<<< HEAD
 import Constants from '../../constants/Constants';
 import MetricsConstants from '../../constants/MetricsConstants';
-||||||| merged common ancestors
-import Constants from '../../constants/Constants';
-=======
->>>>>>> Make InsufficientBufferRule have no side effects; clear seek reset on fragments loaded, make fragment loaded count 2, for close to segment boundary seeks
 
 function InsufficientBufferRule(config) {
 
@@ -99,7 +87,7 @@ function InsufficientBufferRule(config) {
         const fragmentDuration = representationInfo.fragmentDuration;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-        if (!lastBufferStateVO || shouldIgnore(mediaType) || !fragmentDuration) {
+        if (shouldIgnore(mediaType) || !fragmentDuration) {
             return switchRequest;
         }
 
