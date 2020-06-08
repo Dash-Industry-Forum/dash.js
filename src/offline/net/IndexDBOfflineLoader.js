@@ -30,11 +30,6 @@
  */
 import IndexDBStore from '../storage/IndexDBStore';
 
-/**
- * @module
- * @description Load Offline resources
- * @param {Object} config - dependences
- */
 function IndexDBOfflineLoader(config) {
     config = config || {};
     const context = this.context;
@@ -57,8 +52,6 @@ function IndexDBOfflineLoader(config) {
     /**
      * Load manifest or fragment from indexeddb database
      * @param {object} config configuration of request
-     * @memberof module:offline
-     * @instance
      */
     function load(config) {
         if (config.request) {
