@@ -124,13 +124,8 @@ describe('InsufficientBufferRule', function () {
         };
         const representationInfo = { fragmentDuration: 4 };
         const dashMetricsMock = new DashMetricsMock();
-        const metricsModelMockBuffer = {
-            getReadOnlyMetricsFor: function () {
-                return {
-                    BufferState: [bufferState]
-                };
-            }
-        };
+        dashMetricsMock.addBufferState('video', bufferState);
+
         const rulesContextMock = {
             getMediaInfo: function () {},
             getMediaType: function () { return 'video'; },
@@ -139,7 +134,6 @@ describe('InsufficientBufferRule', function () {
         };
 
         const rule = InsufficientBufferRule(context).create({
-            metricsModel: metricsModelMockBuffer,
             dashMetrics: dashMetricsMock
         });
 
