@@ -87,7 +87,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 1000,
  *              MediaSegment: 1000,
  *              BitstreamSwitchingSegment: 1000,
- *              other: 1000
+ *              other: 1000,
+ *              lowLatencyReductionFactor: 10
  *          },
  *          retryAttempts: {
  *              MPD: 3,
@@ -96,7 +97,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 3,
  *              MediaSegment: 3,
  *              BitstreamSwitchingSegment: 3,
- *              other: 3
+ *              other: 3,
+ *              lowLatencyMultiplyFactor: 5
  *          },
  *          abr: {
  *              movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
@@ -316,8 +318,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment
  * request is coming from browser cache or not.
- * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt.
- * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails.
+ * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt. For low latency mode these values are divided by lowLatencyReductionFactor.
+ * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails. For low latency mode these values are multiplied by lowLatencyMultiplyFactor.
  * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
  */
@@ -406,7 +408,8 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
-                [HTTPRequest.OTHER_TYPE]: 1000
+                [HTTPRequest.OTHER_TYPE]: 1000,
+                lowLatencyReductionFactor: 10
             },
             retryAttempts: {
                 [HTTPRequest.MPD_TYPE]: 3,
@@ -415,7 +418,8 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 3,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
-                [HTTPRequest.OTHER_TYPE]: 3
+                [HTTPRequest.OTHER_TYPE]: 3,
+                lowLatencyMultiplyFactor: 5
             },
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
