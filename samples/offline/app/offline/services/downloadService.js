@@ -5,8 +5,8 @@ angular.module('DashPlayer').
 service('DownloadService', function () {
 
     player = undefined;
-    offlineController = undefined;
-    var records = [];
+    let offlineController = undefined;
+    let records = [];
 
     this.getRecord = function (id) {
         let element = records.find((record) => {
