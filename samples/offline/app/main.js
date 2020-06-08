@@ -1104,17 +1104,12 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             }
         });
         return mediaInfos;
-    }
+    };
 
     $scope.onStartDownload = function () {
-        // let selectedRepresentation = $scope.getSelectedRepresentations();
         let mediaInfos = $scope.getSelectedMediaInfos();
 
-        // if (selectedRepresentation.video.length >= 1 ||
-        //     selectedRepresentation.audio.length >= 1 ||
-        //     selectedRepresentation.text.length >= 1) {
         if (mediaInfos.length) {
-            // $scope.offlinePlayer.getOfflineController().startRecord($scope.manifestId, selectedRepresentation);
             $scope.offlinePlayer.getOfflineController().startRecord($scope.manifestId, mediaInfos);
             $scope.hideRepresentationModal();
         } else {
