@@ -88,10 +88,10 @@ describe('TextController', function () {
     describe('Method setTextDefaultEnabled', function () {
         it('should not set text default enabled if enable is not a boolean', function () {
             expect(textController.setTextDefaultEnabled.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
 
             expect(textController.setTextDefaultEnabled.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
         });
 
         it('should set text default enabled if enable is a boolean', function () {

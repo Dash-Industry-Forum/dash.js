@@ -873,8 +873,8 @@ describe('MediaPlayer', function () {
                 expect(player.setTextDefaultEnabled).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
-            it('Method getTextDefaultEnabled should return true', function () {
-                expect(player.getTextDefaultEnabled()).to.be.true; // jshint ignore:line
+            it('Method getTextDefaultEnabled should return false', function () {
+                expect(player.getTextDefaultEnabled()).to.be.false; // jshint ignore:line
             });
         });
     });
