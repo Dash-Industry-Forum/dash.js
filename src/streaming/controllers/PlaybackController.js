@@ -211,7 +211,7 @@ function PlaybackController() {
 
     function setLiveStartTime(value) {
         if (liveStartTime !== streamInfo.start) {
-            // Consider only 1st live start time (set by video stream or audio if audio nly)
+            // Consider only 1st live start time (set by video stream or audio if audio only)
             return;
         }
         logger.info('Set live start time: ' + value);
