@@ -625,7 +625,9 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                     lang: $scope.initialSettings.text
                 });
             } else {
-                $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
+                $scope.player.setInitialMediaSettingsFor('fragmentedText', {
+                    lang: $scope.initialSettings.text
+                });
             }
         }
         $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
