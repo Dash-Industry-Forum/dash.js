@@ -1,6 +1,6 @@
 angular.module('DashCastSenderApp.services', [])
     .factory('caster', function() {
-    let APP_ID = "9885395F", // "To be changed by your own AppId ",
+    let APP_ID = "9210B4FF", // "App id example of receiver. To be changed by your own AppId ",
         NAMESPACE = "urn:x-cast:org.dashif.dashjs",
         delegate,
         cast_api,

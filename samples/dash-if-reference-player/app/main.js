@@ -1002,7 +1002,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     //
     ////////////////////////////////////////
 
-    const CAST_APP_ID = '9885395F';
+    const CAST_APP_ID = '9210B4FF';
     let castContext;
     let castSession;
     let remotePlayer;
