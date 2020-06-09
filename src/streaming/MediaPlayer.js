@@ -1142,12 +1142,13 @@ function MediaPlayer() {
      * @param {string} lang - default language
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated will be removed in version 3.2.0. Please use setInitialMediaSettingsFor("fragmentedText", { lang: lang }) instead
      */
     function setTextDefaultLanguage(lang) {
+        logger.warn('setTextDefaultLanguage is deprecated and will be removed in version 3.2.0. Please use setInitialMediaSettingsFor("fragmentedText", { lang: lang }) instead');
         if (textController === undefined) {
             textController = TextController(context).getInstance();
         }
-
         textController.setTextDefaultLanguage(lang);
     }
 
@@ -1157,8 +1158,10 @@ function MediaPlayer() {
      * @return {string} the default language if it has been set using setTextDefaultLanguage
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated will be removed in version 3.2.0. Please use getInitialMediaSettingsFor("fragmentedText").lang instead
      */
     function getTextDefaultLanguage() {
+        logger.warn('getTextDefaultLanguage is deprecated and will be removed in version 3.2.0. Please use getInitialMediaSettingsFor("fragmentedText").lang instead');
         if (textController === undefined) {
             textController = TextController(context).getInstance();
         }
@@ -1473,11 +1476,14 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
-    function setQualityForSettingsFor(type, value) {
+    function setInitialMediaSettingsFor(type, value) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
         mediaController.setInitialSettings(type, value);
+        if (type === Constants.FRAGMENTED_TEXT) {
+            textController.setInitialSettings(value);
+        }
     }
 
     /**
@@ -2241,7 +2247,7 @@ function MediaPlayer() {
         getTracksFor: getTracksFor,
         getTracksForTypeFromManifest: getTracksForTypeFromManifest,
         getCurrentTrackFor: getCurrentTrackFor,
-        setInitialMediaSettingsFor: setQualityForSettingsFor,
+        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
         getInitialMediaSettingsFor: getInitialMediaSettingsFor,
         setCurrentTrack: setCurrentTrack,
         getTrackSwitchModeFor: getTrackSwitchModeFor,
