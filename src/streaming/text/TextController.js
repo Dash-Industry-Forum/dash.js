@@ -65,7 +65,7 @@ function TextController() {
 
         defaultSettings = {};
         lastEnabledIndex = -1;
-        textDefaultEnabled = true;
+        textDefaultEnabled = false;
         forceTextStreaming = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
