@@ -28,12 +28,9 @@
 
             player = dashjs.MediaPlayer().create();
             player.initialize(videoElement, url, true);
-            /* player.setInitialMediaSettingsFor('fragmentedText', { 
-                lang: 'eng',
-                role: 'caption'
+            player.setInitialMediaSettingsFor('fragmentedText', { 
+                lang: 'swe'
             });
-            */
-            // player.setTextDefaultLanguage('swe');
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();
