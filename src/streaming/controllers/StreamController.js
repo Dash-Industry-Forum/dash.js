@@ -660,9 +660,10 @@ function StreamController() {
                 // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
                 if (!initialStream && adapter.getIsDynamic() && streams.length) {
                     logger.debug('Dynamic multi-period stream: Trying to find the correct starting period');
-                    const manifestInfo = adapter.getStreamsInfo(undefined, 1)[0].manifestInfo;
+                    const streamInfos = adapter.getStreamsInfo(undefined);
+                    const manifestInfo = streamInfos[0].manifestInfo;
                     const liveEdge = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
-                    const targetDelay = playbackController.computeLiveDelay(NaN, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+                    const targetDelay = playbackController.computeLiveDelay(manifestInfo.maxFragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
                     const targetTime = liveEdge - targetDelay;
                     initialStream = getStreamForTime(targetTime);
                 }

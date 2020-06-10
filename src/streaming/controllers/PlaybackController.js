@@ -230,13 +230,14 @@ function PlaybackController() {
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime = NaN) {
+    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime) {
         let delay,
             ret,
             startTime;
         const END_OF_PLAYLIST_PADDING = 10;
         const MIN_BUFFER_TIME_FACTOR = 4;
         const FRAGMENT_DURATION_FACTOR = 4;
+        const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
@@ -244,12 +245,12 @@ function PlaybackController() {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(fragmentDuration)) {
-            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
+        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else if (settings.get().streaming.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
-        } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * FRAGMENT_DURATION_FACTOR;
+        } else if (!isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
         } else {
             delay = !isNaN(minBufferTime) ? minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
@@ -275,6 +276,14 @@ function PlaybackController() {
 
     function getLiveDelay() {
         return liveDelay;
+    }
+
+    function setLiveDelay(value, useMaxValue = false) {
+        if (useMaxValue && value < liveDelay) {
+            return;
+        }
+
+        liveDelay = value;
     }
 
     function getCurrentLiveLatency() {
@@ -878,6 +887,7 @@ function PlaybackController() {
         getLiveStartTime: getLiveStartTime,
         computeLiveDelay: computeLiveDelay,
         getLiveDelay: getLiveDelay,
+        setLiveDelay: setLiveDelay,
         getCurrentLiveLatency: getCurrentLiveLatency,
         play: play,
         isPaused: isPaused,

@@ -38,7 +38,7 @@ import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import FactoryMaker from '../core/FactoryMaker';
-import { checkInteger } from './utils/SupervisorTools';
+import {checkInteger} from './utils/SupervisorTools';
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
 import DashHandler from '../dash/DashHandler';
@@ -49,7 +49,7 @@ import RequestModifier from './utils/RequestModifier';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import FragmentRequest from './vo/FragmentRequest';
-import { PlayListTrace } from './vo/metrics/PlayList';
+import {PlayListTrace} from './vo/metrics/PlayList';
 
 function StreamProcessor(config) {
 
@@ -512,8 +512,8 @@ function StreamProcessor(config) {
             // Use time just whenever is strictly needed
             request = getFragmentRequest(representationInfo,
                 hasSeekTarget || bufferIsDivided ? time : undefined, {
-                keepIdx: !hasSeekTarget && !bufferIsDivided
-            });
+                    keepIdx: !hasSeekTarget && !bufferIsDivided
+                });
 
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
@@ -559,7 +559,7 @@ function StreamProcessor(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.ADD_INBAND_EVENTS_REQUESTED, { sender: instance, events: events });
+            eventBus.trigger(Events.ADD_INBAND_EVENTS_REQUESTED, {sender: instance, events: events});
         }
     }
 
@@ -647,12 +647,7 @@ function StreamProcessor(config) {
 
         const currentRepresentationInfo = getRepresentationInfo();
         const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
-        const liveDelay = playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
-        const startTime = liveEdge - liveDelay;
-        logger.debug('live edge: ' + liveEdge + ', live delay: ' + liveDelay + ', live target: ' + startTime);
-        const request = getFragmentRequest(currentRepresentationInfo, startTime, {
-            ignoreIsFinished: true
-        });
+        const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
 
         if (request) {
             // When low latency mode is selected but browser doesn't support fetch
@@ -682,6 +677,39 @@ function StreamProcessor(config) {
             latency: liveEdge - seekTarget,
             clientTimeOffset: timelineConverter.getClientTimeOffset()
         });
+    }
+
+    function findRequestForLiveEdge(liveEdge, currentRepresentationInfo) {
+        try {
+            let request = null;
+            let liveDelay = playbackController.getLiveDelay();
+            const dvrWindowSize = !isNaN(streamInfo.manifestInfo.DVRWindowSize) ? streamInfo.manifestInfo.DVRWindowSize : liveDelay;
+            const dvrWindowSafetyMargin = 0.1 * dvrWindowSize;
+            let startTime;
+
+            // Make sure that we have at least a valid request for the end of the DVR window, otherwise we might try forever
+            if (getFragmentRequest(currentRepresentationInfo, liveEdge - dvrWindowSize + dvrWindowSafetyMargin, {
+                ignoreIsFinished: true
+            })) {
+
+                // Try to find a request as close as possible to the targeted live edge
+                while (!request && liveDelay <= dvrWindowSize) {
+                    startTime = liveEdge - liveDelay;
+                    request = getFragmentRequest(currentRepresentationInfo, startTime, {
+                        ignoreIsFinished: true
+                    });
+                    liveDelay += 1; // Increase by one second for each iteration
+                }
+            }
+
+            if (request) {
+                playbackController.setLiveDelay(liveDelay, true);
+            }
+            logger.debug('live edge: ' + liveEdge + ', live delay: ' + liveDelay + ', live target: ' + startTime);
+            return request;
+        } catch (e) {
+            return null;
+        }
     }
 
     function onSeekTarget(e) {
@@ -772,5 +800,6 @@ function StreamProcessor(config) {
 
     return instance;
 }
+
 StreamProcessor.__dashjs_factory_name = 'StreamProcessor';
 export default FactoryMaker.getClassFactory(StreamProcessor);
