@@ -75,6 +75,7 @@ function StreamProcessor(config) {
     let boxParser = config.boxParser;
 
     let instance,
+        logger,
         isDynamic,
         mediaInfo,
         mediaInfoArr,
@@ -86,6 +87,7 @@ function StreamProcessor(config) {
         streamInitialized;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
         eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
@@ -645,7 +647,9 @@ function StreamProcessor(config) {
 
         const currentRepresentationInfo = getRepresentationInfo();
         const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
-        const startTime = liveEdge - playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
+        const liveDelay = playbackController.computeLiveDelay(currentRepresentationInfo.fragmentDuration, currentRepresentationInfo.mediaInfo.streamInfo.manifestInfo.DVRWindowSize);
+        const startTime = liveEdge - liveDelay;
+        logger.debug('live edge: ' + liveEdge + ', live delay: ' + liveDelay + ', live target: ' + startTime);
         const request = getFragmentRequest(currentRepresentationInfo, startTime, {
             ignoreIsFinished: true
         });
