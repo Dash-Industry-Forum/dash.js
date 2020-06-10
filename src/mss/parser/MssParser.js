@@ -79,7 +79,8 @@ function MssParser(config) {
     };
 
     let instance,
-        logger;
+        logger,
+        initialBufferSettings;
 
 
     function setup() {
@@ -722,6 +723,17 @@ function MssParser(config) {
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
             // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
             let bufferTime = liveDelay - segmentDuration;
+
+            // Store initial buffer settings
+            initialBufferSettings = {
+                'streaming': {
+                    'liveDelay': settings.get().streaming.liveDelay,
+                    'stableBufferTime': settings.get().streaming.stableBufferTime,
+                    'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
+                    'bufferTimeAtTopQualityLongForm': settings.get().streaming.bufferTimeAtTopQualityLongForm
+                }
+            };
+
             settings.update({
                 'streaming': {
                     'liveDelay': liveDelay,
@@ -836,10 +848,18 @@ function MssParser(config) {
         return manifest;
     }
 
+    function reset() {
+        // Restore initial buffer settings
+        if (initialBufferSettings) {
+            settings.update(initialBufferSettings);
+        }
+    }
+
     instance = {
         parse: internalParse,
         getMatchers: getMatchers,
-        getIron: getIron
+        getIron: getIron,
+        reset: reset
     };
 
     setup();
