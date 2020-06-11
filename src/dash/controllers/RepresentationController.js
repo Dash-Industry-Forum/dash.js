@@ -38,6 +38,7 @@ function RepresentationController(config) {
     const eventBus = config.eventBus;
     const events = config.events;
     const errors = config.errors;
+    const indexHandler = config.indexHandler;
     const abrController = config.abrController;
     const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
@@ -111,6 +112,12 @@ function RepresentationController(config) {
         voAvailableRepresentations = availableRepresentations;
 
         currentVoRepresentation = getRepresentationForQuality(quality);
+
+        // In case segmentDuration is not set (ex. SegmentTimeline), request a segment to determine the segmentDuration
+        if (currentVoRepresentation && isNaN(currentVoRepresentation.segmentDuration)) {
+            indexHandler.getSegmentRequestForTime(null, currentVoRepresentation, 0);
+        }
+
         realAdaptation = newRealAdaptation;
 
         if (type !== Constants.VIDEO && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
@@ -158,6 +165,10 @@ function RepresentationController(config) {
     }
 
     function updateRepresentation(representation, isDynamic) {
+        // In case segmentDuration is not set (ex. SegmentTimeline), request a segment to determine the segmentDuration
+        if (isNaN(representation.segmentDuration)) {
+            indexHandler.getSegmentRequestForTime(null, representation, 0);
+        }
         representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
         if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {

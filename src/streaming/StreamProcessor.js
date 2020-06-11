@@ -138,6 +138,7 @@ function StreamProcessor(config) {
         representationController = RepresentationController(context).create({
             streamId: streamInfo.id,
             type: type,
+            indexHandler: indexHandler,
             abrController: abrController,
             dashMetrics: dashMetrics,
             playbackController: playbackController,
@@ -543,9 +544,6 @@ function StreamProcessor(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = getRepresentationInfo(quality);
-
-        // Update current representation info (to update fragmentDuration for example in case of SegmentTimeline)
-        scheduleController.setCurrentRepresentation(currentRepresentation);
 
         const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
         const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
