@@ -59,6 +59,8 @@ function TextController() {
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
         forceTextStreaming,
+        textTracksAdded,
+        disableTextBeforeTextTracksAdded,
         previousPeriodSelectedTrack;
 
     function setup() {
@@ -67,6 +69,8 @@ function TextController() {
         lastEnabledIndex = -1;
         textDefaultEnabled = false;
         forceTextStreaming = false;
+        textTracksAdded = false;
+        disableTextBeforeTextTracksAdded = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
@@ -196,7 +200,7 @@ function TextController() {
             });
         }
 
-        if (!textDefaultEnabled) {
+        if (!textDefaultEnabled || disableTextBeforeTextTracksAdded) {
             // disable text at startup
             this.setTextTrack(-1);
         }
@@ -207,6 +211,7 @@ function TextController() {
             index: index,
             tracks: tracks
         });
+        textTracksAdded = true;
     }
 
     function setTextDefaultEnabled(enable) {
@@ -216,6 +221,8 @@ function TextController() {
         if (!textDefaultEnabled) {
             // disable text at startup
             this.setTextTrack(-1);
+        } else {
+            allTracksAreDisabled = false;
         }
     }
 
@@ -225,18 +232,24 @@ function TextController() {
 
     function enableText(enable) {
         checkParameterType(enable,'boolean');
-
+        if (!textDefaultEnabled && enable) {
+            textDefaultEnabled = true;
+        }
         if (isTextEnabled() !== enable) {
             // change track selection
             if (enable) {
-                // apply last enabled tractk
+                // apply last enabled track
                 this.setTextTrack(lastEnabledIndex);
             }
 
             if (!enable) {
                 // keep last index and disable text track
                 lastEnabledIndex = this.getCurrentTrackIdx();
-                this.setTextTrack(-1);
+                if (!textTracksAdded) {
+                    disableTextBeforeTextTracksAdded = true;
+                } else {
+                    this.setTextTrack(-1);
+                }
             }
         }
     }
@@ -331,7 +344,9 @@ function TextController() {
     }
 
     function resetInitialSettings() {
-        allTracksAreDisabled = false;
+        allTracksAreDisabled = true;
+        textTracksAdded = false;
+        disableTextBeforeTextTracksAdded = false;
     }
 
     function reset() {
