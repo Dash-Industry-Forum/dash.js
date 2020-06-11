@@ -112,6 +112,8 @@ function RepresentationController(config) {
         voAvailableRepresentations = availableRepresentations;
 
         currentVoRepresentation = getRepresentationForQuality(quality);
+
+        // In case segmentDuration is not set (ex. SegmentTimeline), request a segment to determine the segmentDuration
         if (currentVoRepresentation && isNaN(currentVoRepresentation.segmentDuration)) {
             indexHandler.getSegmentRequestForTime(null, currentVoRepresentation, 0);
         }
@@ -163,6 +165,7 @@ function RepresentationController(config) {
     }
 
     function updateRepresentation(representation, isDynamic) {
+        // In case segmentDuration is not set (ex. SegmentTimeline), request a segment to determine the segmentDuration
         if (isNaN(representation.segmentDuration)) {
             indexHandler.getSegmentRequestForTime(null, representation, 0);
         }
