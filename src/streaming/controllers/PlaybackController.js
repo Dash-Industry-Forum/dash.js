@@ -230,7 +230,7 @@ function PlaybackController() {
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime) {
+    function computeAndSetLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime) {
         let delay,
             ret,
             startTime;
@@ -885,7 +885,7 @@ function PlaybackController() {
         getStreamController: getStreamController,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
-        computeLiveDelay: computeLiveDelay,
+        computeAndSetLiveDelay: computeAndSetLiveDelay,
         getLiveDelay: getLiveDelay,
         setLiveDelay: setLiveDelay,
         getCurrentLiveLatency: getCurrentLiveLatency,

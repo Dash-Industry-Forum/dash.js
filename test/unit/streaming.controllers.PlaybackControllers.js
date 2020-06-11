@@ -95,7 +95,7 @@ describe('PlaybackController', function () {
         });
 
         it('should return NaN when getLiveDelay is called after a call to computeLiveDelay with no parameter', function () {
-            expect(playbackController.computeLiveDelay.bind(playbackController)).not.to.throw();
+            expect(playbackController.computeAndSetLiveDelay.bind(playbackController)).not.to.throw();
             expect(playbackController.getLiveDelay()).to.be.NaN; // jshint ignore:line
         });
 
