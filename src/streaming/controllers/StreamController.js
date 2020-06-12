@@ -660,11 +660,7 @@ function StreamController() {
                 // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
                 if (!initialStream && adapter.getIsDynamic() && streams.length) {
                     logger.debug('Dynamic multi-period stream: Trying to find the correct starting period');
-                    const manifestInfo = adapter.getStreamsInfo(undefined, 1)[0].manifestInfo;
-                    const liveEdge = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
-                    const targetDelay = playbackController.computeLiveDelay(NaN, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
-                    const targetTime = liveEdge - targetDelay;
-                    initialStream = getStreamForTime(targetTime);
+                    initialStream = getInitialStream();
                 }
                 switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
             }
@@ -675,6 +671,78 @@ function StreamController() {
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
             hasInitialisationError = true;
             reset();
+        }
+    }
+
+    function getInitialStream() {
+        try {
+            const streamInfos = adapter.getStreamsInfo(undefined);
+            const manifestInfo = streamInfos[0].manifestInfo;
+            const liveEdge = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
+            const fragmentDuration = getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo);
+            const targetDelay = playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+            const targetTime = liveEdge - targetDelay;
+
+            return getStreamForTime(targetTime);
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
+        try {
+            let fragmentDuration = NaN;
+
+            // For multiperiod manifests we use the maxFragmentDuration attribute as we do not know the correct starting period
+            if (streamInfos && streamInfos.length > 1) {
+                fragmentDuration = manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
+            }
+
+            // For single period manifests we iterate over all AS and use the maximum segment length
+            else if (streamInfos && streamInfos.length === 1) {
+                const streamInfo = streamInfos[0];
+                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
+
+
+                const fragmentDurations = mediaTypes
+                    .reduce((acc, mediaType) => {
+                        const mediaInfo = adapter.getMediaInfoForType(streamInfo, mediaType);
+
+                        if (mediaInfo) {
+                            acc.push(mediaInfo);
+                        }
+
+                        return acc;
+                    }, [])
+                    .reduce((acc, mediaInfo) => {
+                        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+
+                        if (voRepresentations && voRepresentations.length > 0) {
+                            voRepresentations.forEach((voRepresentation) => {
+                                if (voRepresentation) {
+                                    acc.push(voRepresentation);
+                                }
+                            });
+                        }
+
+                        return acc;
+                    }, [])
+                    .reduce((acc, voRepresentation) => {
+                        const representation = adapter.convertDataToRepresentationInfo(voRepresentation);
+
+                        if (representation && representation.fragmentDuration && !isNaN(representation.fragmentDuration)) {
+                            acc.push(representation.fragmentDuration);
+                        }
+
+                        return acc;
+                    }, []);
+
+                fragmentDuration = Math.max(...fragmentDurations);
+            }
+
+            return isFinite(fragmentDuration) ? fragmentDuration : NaN;
+        } catch (e) {
+            return NaN;
         }
     }
 

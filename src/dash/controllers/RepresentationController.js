@@ -239,7 +239,7 @@ function RepresentationController(config) {
         if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod) {
             let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            let liveDelay = playbackController.computeLiveDelay(currentVoRepresentation.segmentDuration, streamInfo.manifestInfo.DVRWindowSize);
+            let liveDelay = playbackController.getLiveDelay();
             postponeTimePeriod = (liveDelay - segmentAvailabilityTimePeriod) * 1000;
         }
 
