@@ -138,7 +138,6 @@ function StreamProcessor(config) {
         representationController = RepresentationController(context).create({
             streamId: streamInfo.id,
             type: type,
-            indexHandler: indexHandler,
             abrController: abrController,
             dashMetrics: dashMetrics,
             playbackController: playbackController,
