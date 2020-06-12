@@ -148,13 +148,13 @@ describe('TextController', function () {
         it('should enable/disable text', function () {
 
             let textEnabled = textController.isTextEnabled();
-            expect(textEnabled).to.equal(true); // jshint ignore:line
-
-            textController.enableText(false);
-            expect(textController.isTextEnabled()).to.equal(false); // jshint ignore:line
+            expect(textEnabled).to.equal(false); // jshint ignore:line
 
             textController.enableText(true);
             expect(textController.isTextEnabled()).to.equal(true); // jshint ignore:line
+
+            textController.enableText(false);
+            expect(textController.isTextEnabled()).to.equal(false); // jshint ignore:line
         });
     });
 
