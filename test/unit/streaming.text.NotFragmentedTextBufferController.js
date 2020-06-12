@@ -2,7 +2,6 @@ import NotFragmentedTextBufferController from '../../src/streaming/text/NotFragm
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
-import InitCache from '../../src/streaming/utils/InitCache';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
@@ -18,7 +17,6 @@ const streamInfo = {
 };
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
-const initCache = InitCache(context).getInstance();
 
 describe('NotFragmentedTextBufferController', function () {
 
@@ -127,57 +125,26 @@ describe('NotFragmentedTextBufferController', function () {
             });
         });
 
-        describe('Method appendInitSegment', function () {
-            // it('should not append init data to source buffer if data have already been cached', function () {
-            //     let chunk = {
-            //         bytes: 'initData',
-            //         quality: 2,
-            //         mediaInfo: {
-            //             type: testType
-            //         },
-            //         streamId: 'streamId',
-            //         representationId: 'representationId'
-            //     };
-
-            //     initCache.save(chunk);
-            //     notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);
-            //     const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
-            //     notFragmentedTextBufferController.appendInitSegment(chunk.representationId);
-            //     expect(buffer.chunk).to.equal(null);
-            // });
-
-            it('should trigger TIMED_TEXT_REQUESTED if no init data is cached', function (done) {
-
-                // reset cache
-                initCache.reset();
-
-                let onInitRequest = function () {
-                    eventBus.off(Events.TIMED_TEXT_REQUESTED, onInitRequest);
-                    done();
-                };
-                eventBus.on(Events.TIMED_TEXT_REQUESTED, onInitRequest, this);
-
-                notFragmentedTextBufferController.appendInitSegment('representationId');
-            });
-        });
-
         describe('Event DATA_UPDATE_COMPLETED Handler', function () {
 
-            it('should trigger TIMED_TEXT_REQUESTED', function (done) {
+            it('should trigger INIT_FRAGMENT_NEEDED', function (done) {
 
                 let event = {
                     sender: {
                         getType: function () { return testType; },
                         getStreamId: function () { return streamInfo.id; },
                         getCurrentRepresentation: function () { return { id: 0}; }
-                    }
+                    },
+                    streamId: streamInfo.id,
+                    mediaType: testType,
+                    currentRepresentation: { id: 0}
                 };
 
                 let onEvent = function () {
-                    eventBus.off(Events.TIMED_TEXT_REQUESTED, onEvent);
+                    eventBus.off(Events.INIT_FRAGMENT_NEEDED, onEvent);
                     done();
                 };
-                eventBus.on(Events.TIMED_TEXT_REQUESTED, onEvent, this);
+                eventBus.on(Events.INIT_FRAGMENT_NEEDED, onEvent, this);
                 eventBus.trigger(Events.DATA_UPDATE_COMPLETED, event);
             });
         });

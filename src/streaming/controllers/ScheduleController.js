@@ -157,13 +157,9 @@ function ScheduleController(config) {
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress ||
             (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
-            ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled())) {
-            logger.debug('Schedule stop!');
-            return;
-        }
-
-        if (bufferController.getIsBufferingCompleted()) {
-            logger.debug('Schedule stop because buffering is completed!');
+            ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()) ||
+            bufferController.getIsBufferingCompleted()) {
+            stop();
             return;
         }
 
@@ -186,7 +182,12 @@ function ScheduleController(config) {
                     } else {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     }
-                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id });
+                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
+                        sender: instance,
+                        streamId: streamId,
+                        mediaType: type,
+                        representationId: currentRepresentationInfo.id
+                    });
                     lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
                 } else {
@@ -194,10 +195,21 @@ function ScheduleController(config) {
 
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
-                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: replacement.representationId });
+                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
+                            sender: instance,
+                            streamId: streamId,
+                            mediaType: type,
+                            representationId: replacement.representationId
+                        });
                         checkPlaybackQuality = false;
                     } else {
-                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, { sender: instance, seekTarget: seekTarget, replacement: replacement });
+                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {
+                            sender: instance,
+                            streamId: streamId,
+                            mediaType: type,
+                            seekTarget: seekTarget,
+                            replacement: replacement
+                        });
                         checkPlaybackQuality = true;
                     }
                 }
