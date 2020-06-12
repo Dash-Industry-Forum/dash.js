@@ -695,7 +695,9 @@ function StreamProcessor(config) {
                     request = getFragmentRequest(currentRepresentationInfo, startTime, {
                         ignoreIsFinished: true
                     });
-                    liveDelay += 1; // Increase by one second for each iteration
+                    if (!request) {
+                        liveDelay += 1; // Increase by one second for each iteration
+                    }
                 }
             }
 
