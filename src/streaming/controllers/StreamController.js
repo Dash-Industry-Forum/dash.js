@@ -693,13 +693,13 @@ function StreamController() {
         try {
             let fragmentDuration = NaN;
 
-            // For multiperiod manifests we use the maxFragmentDuration attribute as we do not know the correct starting period
-            if (streamInfos && streamInfos.length > 1) {
-                fragmentDuration = manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
+            //  We use the maxFragmentDuration attribute if present
+            if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration)) {
+                return isFinite(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
             }
 
-            // For single period manifests we iterate over all AS and use the maximum segment length
-            else if (streamInfos && streamInfos.length === 1) {
+            // For single period manifests we can iterate over all AS and use the maximum segment length
+            if (streamInfos && streamInfos.length === 1) {
                 const streamInfo = streamInfos[0];
                 const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
 
