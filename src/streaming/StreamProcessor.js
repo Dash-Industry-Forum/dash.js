@@ -169,10 +169,6 @@ function StreamProcessor(config) {
             settings: settings
         });
 
-        if (adapter && adapter.getIsTextTrack(mimeType)) {
-            eventBus.on(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
-        }
-
         scheduleController.initialize(hasVideoTrack);
 
         streamInitialized = false;
@@ -222,10 +218,6 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, onSeekTarget, instance);
-
-        if (adapter && adapter.getIsTextTrack(mimeType)) {
-            eventBus.off(Events.TIMED_TEXT_REQUESTED, onTimedTextRequested, this);
-        }
 
         resetInitialSettings();
         type = null;
@@ -442,7 +434,9 @@ function StreamProcessor(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        if (!e.sender || e.sender.getType() !== type || e.sender.getStreamId() !== streamInfo.id) return;
+        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) return;
+
+        if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegment(e.representationId)) {
@@ -454,7 +448,7 @@ function StreamProcessor(config) {
     }
 
     function onMediaFragmentNeeded(e) {
-        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamInfo.id) return;
+        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) return;
 
         let request;
 
@@ -523,17 +517,6 @@ function StreamProcessor(config) {
         }
 
         return request;
-    }
-
-    function onTimedTextRequested(e) {
-        if (e.streamId !== streamInfo.id) return;
-
-        //if subtitles are disabled, do not download subtitles file.
-        if (textController.isTextEnabled()) {
-            const representation = representationController ? representationController.getRepresentationForQuality(e.index) : null;
-            const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representation) : null;
-            scheduleController.processInitRequest(request);
-        }
     }
 
     function onMediaFragmentLoaded(e) {
