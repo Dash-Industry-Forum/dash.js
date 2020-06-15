@@ -113,6 +113,8 @@ class MediaControllerMock {
 
     setConfig() {}
 
+    saveTextSettingsDisabled() {}
+
     reset() {
         this.setup();
     }
