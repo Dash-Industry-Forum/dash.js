@@ -694,8 +694,8 @@ function StreamController() {
             let fragmentDuration = NaN;
 
             //  We use the maxFragmentDuration attribute if present
-            if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration)) {
-                return isFinite(manifestInfo.maxFragmentDuration) ? manifestInfo.maxFragmentDuration : NaN;
+            if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) && isFinite(manifestInfo.maxFragmentDuration)) {
+                return manifestInfo.maxFragmentDuration;
             }
 
             // For single period manifests we can iterate over all AS and use the maximum segment length
