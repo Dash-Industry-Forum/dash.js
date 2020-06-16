@@ -283,7 +283,7 @@ declare namespace dashjs {
         setTextDefaultLanguage(lang: string): void;
         getTextDefaultEnabled(): boolean | undefined;
         setTextDefaultEnabled(enable: boolean): void;
-        getThumbnail(time: number): Thumbnail;
+        provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
         getBitrateInfoListFor(type: MediaType): BitrateInfo[];
         getStreamsFromManifest(manifest: object): StreamInfo[];
         getTracksFor(type: MediaType): MediaInfo[];
@@ -803,7 +803,7 @@ declare namespace dashjs {
     }
 
     export class BitrateInfo {
-        mediaType: 'video' | 'audio';
+        mediaType: 'video' | 'audio' | 'image';
         bitrate: number;
         width: number;
         height: number;

@@ -57,12 +57,18 @@ function ThumbnailController(config) {
         });
     }
 
-    function getThumbnail(time, callback) {
+    function provideThumbnail(time, callback) {
+
+        if (!callback) {
+            //callback is not defined, no need to continue
+            return;
+        }
         const track = thumbnailTracks.getCurrentTrack();
         let offset,
             request;
         if (!track || track.segmentDuration <= 0 || time === undefined || time === null) {
-            return null;
+            callback(null);
+            return;
         }
 
         // Calculate index of the sprite given a time
@@ -87,8 +93,7 @@ function ThumbnailController(config) {
         if ('readThumbnail' in track) {
             return track.readThumbnail(time, (url) => {
                 thumbnail.url = url;
-                if (callback)
-                    callback(thumbnail);
+                callback(thumbnail);
             });
         } else {
             if (!request) {
@@ -98,9 +103,7 @@ function ThumbnailController(config) {
                 thumbnail.url = request.url;
                 track.segmentDuration = NaN;
             }
-            if (callback)
-                callback(thumbnail);
-            return thumbnail;
+            callback(thumbnail);
         }
     }
 
@@ -142,7 +145,7 @@ function ThumbnailController(config) {
     }
 
     instance = {
-        get: getThumbnail,
+        provide: provideThumbnail,
         setTrackByIndex: setTrackByIndex,
         getCurrentTrackIndex: getCurrentTrackIndex,
         getBitrateList: getBitrateList,
