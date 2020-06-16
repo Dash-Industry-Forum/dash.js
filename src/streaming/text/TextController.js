@@ -364,6 +364,7 @@ function TextController() {
     }
 
     function resetInitialSettings() {
+        defaultSettings = null;
         allTracksAreDisabled = true;
         textTracksAdded = false;
         disableTextBeforeTextTracksAdded = false;
