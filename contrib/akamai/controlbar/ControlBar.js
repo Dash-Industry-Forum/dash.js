@@ -489,6 +489,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             menuHandlersList.push(func);
             captionBtn.addEventListener('click', func);
             captionBtn.classList.remove('hide');
+        } else {
+            setMenuItemsState(e.index + 1, 'caption-list');
         }
     };
 

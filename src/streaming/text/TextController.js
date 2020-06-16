@@ -55,6 +55,7 @@ function TextController() {
         ttmlParser,
         eventBus,
         defaultSettings,
+        initialSettingsSet,
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
@@ -69,6 +70,7 @@ function TextController() {
         lastEnabledIndex = -1;
         forceTextStreaming = false;
         textTracksAdded = false;
+        initialSettingsSet = false;
         disableTextBeforeTextTracksAdded = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
@@ -78,7 +80,7 @@ function TextController() {
 
         textTracks.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onSetSettings, instance);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
 
         /*
         * register those event callbacks in order to detect switch of periods and set
@@ -178,10 +180,12 @@ function TextController() {
             defaultSettings = {};
         }
         defaultSettings.lang = lang;
+        initialSettingsSet = true;
     }
 
     function setInitialSettings(settings) {
         defaultSettings = settings;
+        initialSettingsSet = true;
     }
 
     function getTextDefaultLanguage() {
@@ -217,8 +221,8 @@ function TextController() {
         textTracksAdded = true;
     }
 
-    function onSetSettings(event) {
-        if (!defaultSettings && event && event.newMediaInfo) {
+    function onCurrentTrackChanged(event) {
+        if (!initialSettingsSet && event && event.newMediaInfo) {
             let mediaInfo = event.newMediaInfo;
             if (mediaInfo.type === Constants.FRAGMENTED_TEXT) {
                 defaultSettings = {
@@ -364,7 +368,6 @@ function TextController() {
     }
 
     function resetInitialSettings() {
-        defaultSettings = null;
         allTracksAreDisabled = true;
         textTracksAdded = false;
         disableTextBeforeTextTracksAdded = false;

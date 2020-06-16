@@ -34,6 +34,7 @@
             controlbar.initialize();
             var checkbox = document.getElementById("textDefaultEnabled");
             checkbox.indeterminate = true;
+            document.getElementById("lastMediaSettingsCachingInfoEnabled").checked = player.getSettings().streaming.lastMediaSettingsCachingInfo.enabled;
             showDomStorage();
         }
 
@@ -76,6 +77,20 @@
             }
         }
 
+        function setLastMediaSettingsCachingInfoEnabled() {
+            var checkbox = document.getElementById("lastMediaSettingsCachingInfoEnabled");
+            player.updateSettings({
+                streaming: {
+                    lastMediaSettingsCachingInfo: { enabled: checkbox.checked }
+                }
+            })
+        }
+
+        function clearDomStorage() {
+            localStorage.removeItem('dashjs_fragmentedText_settings');
+            showDomStorage();
+        }
+
     </script>
 
     <style>
@@ -92,6 +107,11 @@
         }
         .settings>div {
             padding: 5px 0;
+        }
+
+        label {
+            font-size: 1.1em;
+            display: block;
         }
 
     </style>
@@ -134,6 +154,9 @@
             </div>
             <div class="settings">
                 <div>
+                    <button onclick="play()">play</button>
+                </div>
+                <div>
                     <label>textDefaultEnabled</label>
                     <input type="checkbox" id="textDefaultEnabled" onchange="setTextDefaultEnabled()"/> <span id="textDefaultEnabledValue">undefined</span>
                 </div>
@@ -149,11 +172,13 @@
                     </select>
                 </div>
                 <div>
-                    <button onclick="play()">play</button>
+                    <label>streaming.lastMediaSettingsCachingInfo.enabled</label>
+                    <input type="checkbox" id="lastMediaSettingsCachingInfoEnabled" onchange="setLastMediaSettingsCachingInfoEnabled()"/>
                 </div>
                 <div>
-                    <label>DOMstorage content</label>
+                    <label>localStorage content</label>
                     <div id="domStorage"></div>
+                    <button onclick="clearDomStorage()">Clear localStorage</button>
                 </div>
             </div>
         </div>
