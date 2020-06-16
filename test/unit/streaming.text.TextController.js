@@ -40,7 +40,7 @@ describe('TextController', function () {
     });
 
     afterEach(function () {
-        if (global !== window) {
+        if (typeof window !== 'undefined' && global !== window) {
             delete global.document;
         }
     });
