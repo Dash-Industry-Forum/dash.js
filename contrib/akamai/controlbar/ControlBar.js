@@ -433,7 +433,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         window.removeEventListener('mousemove', onFullScreenMouseMove);
         clearFullscreenState();
 
-        if (document.exitFullscreen) {
+        if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
