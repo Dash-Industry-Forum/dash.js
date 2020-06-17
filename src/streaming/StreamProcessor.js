@@ -668,7 +668,7 @@ function StreamProcessor(config) {
             let startTime;
 
             // Make sure that we have at least a valid request for the end of the DVR window, otherwise we might try forever
-            if (getFragmentRequest(currentRepresentationInfo, liveEdge - dvrWindowSize + dvrWindowSafetyMargin, {
+            if (!isFinite(dvrWindowSize) || getFragmentRequest(currentRepresentationInfo, liveEdge - dvrWindowSize + dvrWindowSafetyMargin, {
                 ignoreIsFinished: true
             })) {
 
