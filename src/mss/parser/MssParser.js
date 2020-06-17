@@ -688,8 +688,8 @@ function MssParser(config) {
             if (adaptations[i].contentType === 'video') {
                 // Get video segment duration
                 segmentDuration = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale;
-                // Set minBufferTime
-                manifest.minBufferTime = segmentDuration * 2;
+                // Set minBufferTime to one segment duration
+                manifest.minBufferTime = segmentDuration;
 
                 if (manifest.type === 'dynamic' ) {
                     // Set availabilityStartTime
