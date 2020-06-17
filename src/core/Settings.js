@@ -58,6 +58,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          liveDelay: null,
  *          scheduleWhilePaused: true,
  *          fastSwitchEnabled: false,
+ *          flushBufferAtTrackSwitch: false,
  *          bufferPruningInterval: 10,
  *          bufferToKeep: 20,
  *          bufferAheadToKeep: 80,
@@ -231,6 +232,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the
  * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
  * or stall in playback.
+ * @property {boolean} [flushBufferAtTrackSwitch=false]
+ * When enabled, after a track switch and in case buffer is being replaced (see MEdiaPlayer.setTrackSwitchModeFor(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE)),
+ * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
+ * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
+ * buffered track is fully consumed.
  * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
@@ -377,6 +383,7 @@ function Settings() {
             liveDelay: null,
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
+            flushBufferAtTrackSwitch: false,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
             bufferAheadToKeep: 80,
