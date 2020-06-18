@@ -625,7 +625,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     };
 
-    var getMenuContent = function (type, arr, contentFunc, autoswitch = true) {
+    var getMenuContent = function (type, arr, contentFunc, autoswitch) {
+        autoswitch = (autoswitch !== undefined) ? autoswitch : true;
+
         var content = [];
         arr.forEach(function (element, index) {
             content.push(contentFunc(element, index));
