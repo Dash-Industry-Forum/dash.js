@@ -579,7 +579,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     el = createMenuContent(el, getMenuContent(menuType, info.audio, contentFunc), 'audio', 'audio-' + menuType + '-list');
                     setMenuItemsState(getMenuInitialIndex(info.audio, menuType, 'audio'), 'audio-' + menuType + '-list');
                 }
-                if (info.images.length > 1) {
+                if (info.images && info.images.length > 1) {
                     el.appendChild(createMediaTypeMenu('image'));
                     el = createMenuContent(el, getMenuContent(menuType, info.images, contentFunc, false), 'image', 'image-' + menuType + '-list');
                     setMenuItemsState(getMenuInitialIndex(info.images, menuType, 'image'), 'image-' + menuType + '-list');

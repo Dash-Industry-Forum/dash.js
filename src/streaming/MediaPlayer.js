@@ -1665,16 +1665,19 @@ function MediaPlayer() {
         }
         if (time < 0) {
             callback(null);
+            return;
         }
         const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
         const stream = streamController.getStreamForTime(s);
         if (stream === null) {
             callback(null);
+            return;
         }
 
         const thumbnailController = stream.getThumbnailController();
         if (!thumbnailController) {
             callback(null);
+            return;
         }
 
         const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
