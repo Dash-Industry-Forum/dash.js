@@ -1660,7 +1660,7 @@ function MediaPlayer() {
      * @instance
      */
     function provideThumbnail(time, callback) {
-        if (!callback) {
+        if (typeof callback !== 'function') {
             return;
         }
         if (time < 0) {

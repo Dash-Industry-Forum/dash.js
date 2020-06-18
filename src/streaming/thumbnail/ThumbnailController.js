@@ -59,8 +59,7 @@ function ThumbnailController(config) {
 
     function provideThumbnail(time, callback) {
 
-        if (!callback) {
-            //callback is not defined, no need to continue
+        if (typeof callback !== 'function') {
             return;
         }
         const track = thumbnailTracks.getCurrentTrack();
