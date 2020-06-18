@@ -1652,31 +1652,33 @@ function MediaPlayer() {
     */
 
     /**
-     * Return the thumbnail at time position.
-     * @returns {Thumbnail|null} - Thumbnail for the given time position. It returns null in case there are is not a thumbnails representation or
-     * if it doesn't contain a thumbnail for the given time position.
+     * Provide the thumbnail at time position. This can be asynchronous, so you must provide a callback ro retrieve thumbnails informations
      * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
-     * @param {function} callback - A Callback function provided when retrieving thumbnail
+     * @param {function} callback - A Callback function provided when retrieving thumbnail the given time position. Thumbnail object is null in case there are is not a thumbnails representation or
+     * if it doesn't contain a thumbnail for the given time position.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getThumbnail(time, callback) {
+    function provideThumbnail(time, callback) {
+        if (typeof callback !== 'function') {
+            return;
+        }
         if (time < 0) {
-            return null;
+            callback(null);
         }
         const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
         const stream = streamController.getStreamForTime(s);
         if (stream === null) {
-            return null;
+            callback(null);
         }
 
         const thumbnailController = stream.getThumbnailController();
         if (!thumbnailController) {
-            return null;
+            callback(null);
         }
 
         const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
-        return thumbnailController.get(timeInPeriod, callback);
+        return thumbnailController.provide(timeInPeriod, callback);
     }
 
     /*
@@ -2271,7 +2273,7 @@ function MediaPlayer() {
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
-        getThumbnail: getThumbnail,
+        provideThumbnail: provideThumbnail,
         getDashAdapter: getDashAdapter,
         getOfflineController: getOfflineController,
         getSettings: getSettings,
