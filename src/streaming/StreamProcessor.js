@@ -455,13 +455,15 @@ function StreamProcessor(config) {
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
             request = findNextRequest(e.seekTarget, e.replacement);
-            scheduleController.setSeekTarget(NaN);
-            if (request && !e.replacement) {
-                if (!isNaN(request.startTime + request.duration)) {
-                    setIndexHandlerTime(request.startTime + request.duration);
+            if (request) {
+                scheduleController.setSeekTarget(NaN);
+                if (!e.replacement) {
+                    if (!isNaN(request.startTime + request.duration)) {
+                        setIndexHandlerTime(request.startTime + request.duration);
+                    }
+                    request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+                    scheduleController.setTimeToLoadDelay(0);
                 }
-                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-                scheduleController.setTimeToLoadDelay(0);
             }
         }
 
