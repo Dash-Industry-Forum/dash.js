@@ -488,6 +488,11 @@ function BufferController(config) {
         let range,
             length;
 
+        // Consider gap/discontinuity limit as tolerance
+        if (settings.get().streaming.jumpGaps) {
+            tolerance = settings.get().streaming.smallGapLimit;
+        }
+
         range = getRangeAt(time, tolerance);
 
         if (range === null) {
