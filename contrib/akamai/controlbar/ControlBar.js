@@ -435,6 +435,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         if (document.fullscreenElement) {
             document.exitFullscreen();
+        } else if (document.exitFullscreen) {
+           document.exitFullscreen(); 
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {
