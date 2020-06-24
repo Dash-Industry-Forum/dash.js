@@ -283,8 +283,10 @@ function BufferController(config) {
             onPlaybackProgression();
 
             // If seeking, seek video model to range start in case appended segment starts beyond seek target
-            if (!isNaN(seekTarget) && (seekTarget < ranges.start(0) || playbackController.getTime() === 0)) {
+            if (!isNaN(seekTarget) &&
+                (playbackController.getTime() === 0 || playbackController.getTime() < ranges.start(0))) {
                 playbackController.seek(ranges.start(0), true, true);
+                seekTarget = NaN;
             }
         } else {
             if (replacingBuffer) {
