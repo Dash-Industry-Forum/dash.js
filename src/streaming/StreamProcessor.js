@@ -90,8 +90,7 @@ function StreamProcessor(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance, EventBus.EVENT_PRIORITY_HIGH); // High priority to be notified before Stream
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, onMediaFragmentNeeded, instance);
@@ -208,7 +207,6 @@ function StreamProcessor(config) {
             abrController.unRegisterStreamType(type);
         }
 
-        eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance);
@@ -228,27 +226,10 @@ function StreamProcessor(config) {
         return representationController ? representationController.isUpdating() : false;
     }
 
-    function onStreamInitialized(e) {
-        if (!e.streamInfo || streamInfo.id !== e.streamInfo.id) return;
-
-        if (!streamInitialized) {
-            streamInitialized = true;
-            if (isDynamic) {
-                timelineConverter.setTimeSyncCompleted(true);
-                setLiveEdgeSeekTarget();
-            } else {
-                const seekTarget = playbackController.getStreamStartTime(false);
-                bufferController.setSeekStartTime(seekTarget);
-                scheduleController.setCurrentRepresentation(getRepresentationInfo());
-                scheduleController.setSeekTarget(seekTarget);
-            }
-        }
-
-        scheduleController.start();
-    }
 
     function onDataUpdateCompleted(e) {
         if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id) return;
+        logger.info('DataUpdateCompleted');
 
         if (!e.error) {
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
@@ -624,9 +605,12 @@ function StreamProcessor(config) {
         return controller;
     }
 
-    function setLiveEdgeSeekTarget() {
-        if (!liveEdgeFinder) return;
 
+    function getLiveStartTime() {
+        if (!isDynamic) return NaN;
+        if (!liveEdgeFinder) return NaN;
+
+        let liveStartTime = NaN;
         const currentRepresentationInfo = getRepresentationInfo();
         const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
         const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
@@ -635,31 +619,51 @@ function StreamProcessor(config) {
             // When low latency mode is selected but browser doesn't support fetch
             // start at the beginning of the segment to avoid consuming the whole buffer
             if (settings.get().streaming.lowLatencyEnabled) {
-                const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
-                playbackController.setLiveStartTime(liveStartTime);
+                liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
             } else {
-                playbackController.setLiveStartTime(request.startTime);
+                liveStartTime = request.startTime;
             }
         }
 
-        const seekTarget = playbackController.getStreamStartTime(false, liveEdge);
-        bufferController.setSeekStartTime(seekTarget);
-        scheduleController.setCurrentRepresentation(currentRepresentationInfo);
-        scheduleController.setSeekTarget(seekTarget);
-        scheduleController.start();
-
-        // For multi periods stream, if the startTime is beyond current period then seek to corresponding period (see StreamController::onPlaybackSeeking)
-        if (seekTarget > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
-            playbackController.seek(seekTarget);
-        }
-
-        dashMetrics.updateManifestUpdateInfo({
-            currentTime: seekTarget,
-            presentationStartTime: liveEdge,
-            latency: liveEdge - seekTarget,
-            clientTimeOffset: timelineConverter.getClientTimeOffset()
-        });
+        return liveStartTime;
     }
+
+    // function setLiveEdgeSeekTarget() {
+    //     if (!liveEdgeFinder) return;
+
+    //     const currentRepresentationInfo = getRepresentationInfo();
+    //     const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
+    //     const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
+
+    //     if (request) {
+    //         // When low latency mode is selected but browser doesn't support fetch
+    //         // start at the beginning of the segment to avoid consuming the whole buffer
+    //         if (settings.get().streaming.lowLatencyEnabled) {
+    //             const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
+    //             playbackController.setLiveStartTime(liveStartTime);
+    //         } else {
+    //             playbackController.setLiveStartTime(request.startTime);
+    //         }
+    //     }
+
+    //     const seekTarget = playbackController.getStreamStartTime(false, liveEdge);
+    //     bufferController.setSeekStartTime(seekTarget);
+    //     scheduleController.setCurrentRepresentation(currentRepresentationInfo);
+    //     scheduleController.setSeekTarget(seekTarget);
+    //     scheduleController.start();
+
+    //     // For multi periods stream, if the startTime is beyond current period then seek to corresponding period (see StreamController::onPlaybackSeeking)
+    //     if (seekTarget > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
+    //         playbackController.seek(seekTarget);
+    //     }
+
+    //     dashMetrics.updateManifestUpdateInfo({
+    //         currentTime: seekTarget,
+    //         presentationStartTime: liveEdge,
+    //         latency: liveEdge - seekTarget,
+    //         clientTimeOffset: timelineConverter.getClientTimeOffset()
+    //     });
+    // }
 
     function findRequestForLiveEdge(liveEdge, currentRepresentationInfo) {
         try {
@@ -763,6 +767,7 @@ function StreamProcessor(config) {
         getStreamInfo: getStreamInfo,
         selectMediaInfo: selectMediaInfo,
         addMediaInfo: addMediaInfo,
+        getLiveStartTime: getLiveStartTime,
         switchTrackAsked: switchTrackAsked,
         getMediaInfoArr: getMediaInfoArr,
         getMediaInfo: getMediaInfo,

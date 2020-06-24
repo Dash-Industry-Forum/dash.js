@@ -56,7 +56,6 @@ describe('PlaybackController', function () {
         it('should initialize', function () {
 
             expect(playbackController.getIsDynamic()).to.not.exist; // jshint ignore:line
-            expect(playbackController.getLiveStartTime()).to.be.NaN; // jshint ignore:line
             expect(playbackController.isPaused()).to.be.null; // jshint ignore:line
             expect(playbackController.isSeeking()).to.be.null; // jshint ignore:line
             expect(playbackController.getTime()).to.be.null; // jshint ignore:line
@@ -74,9 +73,7 @@ describe('PlaybackController', function () {
 
             playbackController.initialize(streamInfo);
 
-
             expect(playbackController.getIsDynamic()).to.equal(true);
-            expect(playbackController.getLiveStartTime()).to.equal(10);
         });
     });
 

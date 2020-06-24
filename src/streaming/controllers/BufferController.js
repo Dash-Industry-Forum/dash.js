@@ -85,7 +85,7 @@ function BufferController(config) {
         isPruningInProgress,
         isQuotaExceeded,
         initCache,
-        seekStartTime,
+        seekTarget,
         seekClearedBufferingCompleted,
         pendingPruningRanges,
         replacingBuffer,
@@ -281,6 +281,11 @@ function BufferController(config) {
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             showBufferRanges(ranges);
             onPlaybackProgression();
+
+            // If seeking, seek video model to range start in case appended segment starts beyond seek target
+            if (!isNaN(seekTarget) && (seekTarget < ranges.start(0) || playbackController.getTime() === 0)) {
+                playbackController.seek(ranges.start(0), true, true);
+            }
         } else {
             if (replacingBuffer) {
                 const currentTime = playbackController.getTime();
@@ -309,7 +314,8 @@ function BufferController(config) {
     //**********************************************************************
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
-    function onPlaybackSeeking(/*e*/) {
+    function onPlaybackSeeking(e) {
+        seekTarget = e.seekTime;
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
             isBufferingCompleted = false;
@@ -325,7 +331,7 @@ function BufferController(config) {
     }
 
     function onPlaybackSeeked() {
-        setSeekStartTime(undefined);
+        seekTarget = NaN;
     }
 
     // Prune full buffer but what is around current time position
@@ -405,17 +411,7 @@ function BufferController(config) {
     }
 
     function getWorkingTime() {
-        // This function returns current working time for buffer (either start time or current time if playback has started)
-        let ret = playbackController.getTime();
-
-        if (seekStartTime) {
-            // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
-            let ranges = buffer.getAllBufferRanges();
-            if (ranges && ranges.length) {
-                ret = Math.max(ranges.start(0), seekStartTime);
-            }
-        }
-        return ret;
+        return isNaN(seekTarget) ? playbackController.getTime() : seekTarget;
     }
 
     function onPlaybackProgression() {
@@ -429,9 +425,7 @@ function BufferController(config) {
     }
 
     function onPlaybackPlaying() {
-        if (seekStartTime !== undefined) {
-            setSeekStartTime(undefined);
-        }
+        seekTarget = NaN;
         checkIfSufficientBuffer();
     }
 
@@ -762,10 +756,6 @@ function BufferController(config) {
         return type;
     }
 
-    function setSeekStartTime(value) {
-        seekStartTime = value;
-    }
-
     function getBuffer() {
         return buffer;
     }
@@ -846,6 +836,7 @@ function BufferController(config) {
         bufferLevel = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
+        seekTarget = NaN;
 
         if (buffer) {
             if (!errored) {
@@ -885,7 +876,6 @@ function BufferController(config) {
         createBuffer: createBuffer,
         dischargePreBuffer: dischargePreBuffer,
         getType: getType,
-        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,

@@ -411,7 +411,7 @@ function ScheduleController(config) {
 
     function onDataUpdateStarted(e) {
         if (e.sender.getType() !== type || e.sender.getStreamId() !== streamId) return;
-        stop();
+        // stop();
     }
 
     function onBufferingCompleted(e) {

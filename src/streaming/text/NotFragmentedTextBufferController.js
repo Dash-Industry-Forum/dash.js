@@ -125,9 +125,6 @@ function NotFragmentedTextBufferController(config) {
     function dischargePreBuffer() {
     }
 
-    function setSeekStartTime() { //Unused - TODO Remove need for stub function
-    }
-
     function getBufferLevel() {
         return 0;
     }
@@ -199,7 +196,6 @@ function NotFragmentedTextBufferController(config) {
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
-        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,
         setMediaSource: setMediaSource,
