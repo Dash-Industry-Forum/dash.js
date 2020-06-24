@@ -362,13 +362,13 @@ function StreamController() {
         if (mediaSource && !isLast) {
             const newStream = getNextStream();
 
-            // Smooth period transition allowed only if both of these conditions are true:
-            // 1.- None of the periods uses contentProtection.
-            // 2.- changeType method implemented by browser or periods use the same codec.
-            let smoothPeriodSwitch = activeStream.isProtectionCompatible(newStream) &&
+            // Seamless period switch allowed only if:
+            // - none of the periods uses contentProtection.
+            // - AND changeType method implemented by browser or periods use the same codec.
+            let seamlessPeriodSwitch = activeStream.isProtectionCompatible(newStream) &&
                 (supportsChangeType || activeStream.isMediaCodecCompatible(newStream));
 
-            if (smoothPeriodSwitch) {
+            if (seamlessPeriodSwitch) {
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
