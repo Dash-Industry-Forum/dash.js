@@ -116,12 +116,14 @@ function PlaybackController() {
             if (startTime === videoModel.getTime()) return;
         }
 
-        // Trigger PLAYBACK_SEEKING event for controllers
-        eventBus.trigger(Events.PLAYBACK_SEEKING, {
-            seekTime: startTime
-        });
-        // Seek video model
-        seek(startTime, false, true);
+        if (!isNaN(startTime)) {
+            // Trigger PLAYBACK_SEEKING event for controllers
+            eventBus.trigger(Events.PLAYBACK_SEEKING, {
+                seekTime: startTime
+            });
+            // Seek video model
+            seek(startTime, false, true);
+        }
     }
 
     function getTimeToStreamEnd() {
