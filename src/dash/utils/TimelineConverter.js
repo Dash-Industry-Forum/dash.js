@@ -31,16 +31,24 @@
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
+import DashConstants from '../constants/DashConstants';
+import DashManifestModel from '../models/DashManifestModel';
 
 function TimelineConverter() {
 
-    let context = this.context;
-    let eventBus = EventBus(context).getInstance();
+    const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     let instance,
+        dashManifestModel,
         clientServerTimeShift,
         isClientServerTimeSyncCompleted,
         expectedLiveEdge;
+
+    function setup() {
+        dashManifestModel = DashManifestModel(context).getInstance();
+        reset();
+    }
 
     function initialize() {
         resetInitialSettings();
@@ -147,6 +155,12 @@ function TimelineConverter() {
 
         // Dynamic Range Finder
         const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
+
+        // Specific use case of SegmentTimeline without timeShiftBufferDepth
+        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && voPeriod.mpd.timeShiftBufferDepth === Number.POSITIVE_INFINITY) {
+            return calcSegmentAvailabilityRangeFromTimeline(voRepresentation);
+        }
+
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const periodEnd = voPeriod.start + voPeriod.duration;
         range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
@@ -155,6 +169,36 @@ function TimelineConverter() {
             voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
 
         range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
+
+        return range;
+    }
+
+    function calcSegmentAvailabilityRangeFromTimeline(voRepresentation) {
+        const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
+        const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
+
+        const timeline = representation.SegmentTemplate.SegmentTimeline;
+        const timescale = representation.SegmentTemplate.timescale;
+        const segments = timeline.S_asArray;
+        const range = { start: 0, end: 0 };
+        let d = 0;
+        let segment,
+            repeat,
+            i,
+            len;
+
+        range.start = segments[0].t / timescale;
+
+        for (i = 0, len = segments.length; i < len; i++) {
+            segment = segments[i];
+            repeat = 0;
+            if (segment.hasOwnProperty('r')) {
+                repeat = segment.r;
+            }
+            d += (segment.d / timescale)  * (1 + repeat);
+        }
+
+        range.end = range.start + d;
 
         return range;
     }
@@ -232,6 +276,7 @@ function TimelineConverter() {
         reset: reset
     };
 
+    setup();
     return instance;
 }
 
