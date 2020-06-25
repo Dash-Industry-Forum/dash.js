@@ -556,17 +556,6 @@ function PlaybackController() {
         }
     }
 
-    // function checkTimeInRanges(time, ranges) {
-    //     if (ranges && ranges.length > 0) {
-    //         for (let i = 0, len = ranges.length; i < len; i++) {
-    //             if (time >= ranges.start(i) && time < ranges.end(i)) {
-    //                 return true;
-    //             }
-    //         }
-    //     }
-    //     return false;
-    // }
-
     function onPlaybackProgression() {
         if (
             isDynamic &&
