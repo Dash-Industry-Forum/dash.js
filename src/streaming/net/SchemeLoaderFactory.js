@@ -34,7 +34,7 @@ import HTTPLoader from '../../streaming/net/HTTPLoader';
 /**
  * @module
  * @description Choose right url loader for scheme
-
+ * @ignore
  */
 function SchemeLoaderFactory() {
 

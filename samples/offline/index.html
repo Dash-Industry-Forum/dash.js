@@ -313,7 +313,7 @@
             <div class="container col-md-4">
                 <!-- DOWNLOAD SECTION -->
                 <div class="download-list">
-                    <h2>Downloads</h2>
+                    <h2>Records</h2>
                     <h4 ng-if="downloads.length ===0">No available offline streams</h4>
                     <div ng-repeat="download in downloads">
                         <dash-download download="download" on-load="onLoadDownload" on-created="onCreated"></dash-download>
@@ -340,20 +340,33 @@
                     <div class="modal-body">
                         <form>
                             <div class="form-group" >
-                                <div class="qualityLabelTitle">Video :</div>
-                                <div ng-repeat="media in downloadableRepresentations.video">
-                                    <input type="checkbox" name="video" value="{{media.id}}" ng-model="media.selected"/>
-                                    {{media.id}} ({{media.width}} x {{media.height}}) : {{media.bandwidth}} bits
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'video' }">
+                                    <div class="qualityLabelTitle">Video {{media.id}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="video" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.width}}x{{bitrate.height}}@{{bitrate.bandwidth}}bps
+                                    </div>
                                 </div>
-                                <div class="qualityLabelTitle">Audio :</div>
-                                <div ng-repeat="media in downloadableRepresentations.audio">
-                                    <input type="checkbox" name="audio" value="{{media.id}}" ng-model="media.selected"/>
-                                    {{media.id}} ({{media.lang}}) : {{media.bandwidth}} bits
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'audio' }">
+                                    <div class="qualityLabelTitle">Audio {{media.id}}, {{media.lang}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="audio" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.bandwidth}}bps
+                                    </div>
                                 </div>
-                                <div class="qualityLabelTitle">Text :</div>
-                                <div ng-repeat="media in downloadableRepresentations.text">
-                                    <input type="checkbox" name="text" value="{{media.id}}" ng-model="media.selected"/>
-                                    {{media.id}} ({{media.lang}}) : {{media.kind}} ({{media.type}})
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'text' }">
+                                    <div class="qualityLabelTitle">Text {{media.id}}, {{media.lang}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="text" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.bandwidth}}bps
+                                    </div>
+                                </div>
+                                <div ng-repeat="media in mediaInfos | filter:{ type: 'fragmentedText' }">
+                                    <div class="qualityLabelTitle">Text {{media.id}}, {{media.lang}} ({{media.codec}}):</div>
+                                    <div ng-repeat="bitrate in media.bitrateList">
+                                        <input type="checkbox" name="fragmentedText" value="{{bitrate.id}}" ng-model="bitrate.selected"/>
+                                        {{bitrate.bandwidth}}bps
+                                    </div>
                                 </div>
                             </div>
                         </form>

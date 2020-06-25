@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
 import ObjectIron from './objectiron';
 import X2JS from '../../../externals/xml2json';
 import StringMatcher from './matchers/StringMatcher';
@@ -39,9 +38,11 @@ import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
 
-function DashParser() {
+function DashParser(config) {
 
+    config = config || {};
     const context = this.context;
+    const debug = config.debug;
 
     let instance,
         logger,
@@ -50,7 +51,7 @@ function DashParser() {
         objectIron;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = debug.getLogger(instance);
         matchers = [
             new DurationMatcher(),
             new DateTimeMatcher(),
@@ -98,6 +99,8 @@ function DashParser() {
 
         const ironedTime = window.performance.now();
         logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
+
+        manifest.protocol = 'DASH';
 
         return manifest;
     }

@@ -244,6 +244,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             let config = JSON.parse(reqConfig.responseText);
             if ($scope.player) {
                 $scope.player.updateSettings(config);
+                setLatencyAttributes();
             }
         } else {
             // Set default initial configuration
@@ -260,8 +261,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         }
                     }
                 }
-            }
+            };
             $scope.player.updateSettings(initialConfig);
+            setLatencyAttributes();
         }
     };
 
@@ -319,14 +321,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     if (doesTimeMarchesOn()) {
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
     }
-
-    // get buffer default value
-    var currentConfig = $scope.player.getSettings();
-    $scope.defaultLiveDelay = currentConfig.streaming.liveDelay;
-    $scope.defaultStableBufferDelay = currentConfig.streaming.stableBufferTime;
-    $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.bufferTimeAtTopQuality;
-    $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.bufferTimeAtTopQualityLongForm;
-    $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
 
     var initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
     var initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
@@ -627,7 +621,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             });
         }
         if ($scope.initialSettings.text) {
-            $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
+            if ($scope.initialSettings.textRole) {
+                $scope.player.setInitialMediaSettingsFor('fragmentedText', {
+                    role: $scope.initialSettings.textRole,
+                    lang: $scope.initialSettings.text
+                });
+            } else {
+                $scope.player.setInitialMediaSettingsFor('fragmentedText', {
+                    lang: $scope.initialSettings.text
+                });
+            }
         }
         $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
@@ -931,6 +934,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 return true;
             }
         }
+    }
+
+    function setLatencyAttributes() {
+        // get buffer default value
+        var currentConfig = $scope.player.getSettings();
+        $scope.defaultLiveDelay = currentConfig.streaming.liveDelay;
+        $scope.defaultStableBufferDelay = currentConfig.streaming.stableBufferTime;
+        $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.bufferTimeAtTopQuality;
+        $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.bufferTimeAtTopQualityLongForm;
+        $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
     }
 
 

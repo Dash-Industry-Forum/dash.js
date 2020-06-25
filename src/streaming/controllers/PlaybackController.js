@@ -210,6 +210,11 @@ function PlaybackController() {
     }
 
     function setLiveStartTime(value) {
+        if (liveStartTime !== streamInfo.start) {
+            // Consider only 1st live start time (set by video stream or audio if audio only)
+            return;
+        }
+        logger.info('Set live start time: ' + value);
         liveStartTime = value;
     }
 
@@ -225,20 +230,14 @@ function PlaybackController() {
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime = NaN) {
+    function computeAndSetLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime) {
         let delay,
             ret,
-            r,
             startTime;
         const END_OF_PLAYLIST_PADDING = 10;
         const MIN_BUFFER_TIME_FACTOR = 4;
         const FRAGMENT_DURATION_FACTOR = 4;
-
-        let uriParameters = uriFragmentModel.getURIFragmentData();
-
-        if (uriParameters) {
-            r = parseInt(uriParameters.r, 10);
-        }
+        const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
@@ -246,14 +245,12 @@ function PlaybackController() {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(fragmentDuration)) {
-            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
-        } else if (r) {
-            delay = r;
+        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else if (settings.get().streaming.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
-        } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * FRAGMENT_DURATION_FACTOR;
+        } else if (!isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
         } else {
             delay = !isNaN(minBufferTime) ? minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
@@ -279,6 +276,14 @@ function PlaybackController() {
 
     function getLiveDelay() {
         return liveDelay;
+    }
+
+    function setLiveDelay(value, useMaxValue = false) {
+        if (useMaxValue && value < liveDelay) {
+            return;
+        }
+
+        liveDelay = value;
     }
 
     function getCurrentLiveLatency() {
@@ -697,7 +702,7 @@ function PlaybackController() {
             return;
         }
 
-        const type = e.sender.getType();
+        const type = e.mediaType;
 
         if (bufferedRange[streamInfo.id] === undefined) {
             bufferedRange[streamInfo.id] = [];
@@ -714,11 +719,8 @@ function PlaybackController() {
             earliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
         }
 
-        const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
-        const hasAudioTrack = streamController.isTrackTypePresent(Constants.AUDIO);
-
         initialStartTime = getStreamStartTime(false);
-        if (hasAudioTrack && hasVideoTrack) {
+        if (streamController.hasVideoTrack() && streamController.hasAudioTrack()) {
             //current stream has audio and video contents
             if (!isNaN(earliestTime[streamInfo.id].audio) && !isNaN(earliestTime[streamInfo.id].video)) {
 
@@ -770,7 +772,7 @@ function PlaybackController() {
 
     function onBufferLevelStateChanged(e) {
         // do not stall playback when get an event from Stream that is not active
-        if (e.streamInfo.id !== streamInfo.id) return;
+        if (e.streamId !== streamInfo.id) return;
 
         if (settings.get().streaming.lowLatencyEnabled) {
             if (e.state === MetricsConstants.BUFFER_EMPTY && !isSeeking()) {
@@ -883,8 +885,9 @@ function PlaybackController() {
         getStreamController: getStreamController,
         setLiveStartTime: setLiveStartTime,
         getLiveStartTime: getLiveStartTime,
-        computeLiveDelay: computeLiveDelay,
+        computeAndSetLiveDelay: computeAndSetLiveDelay,
         getLiveDelay: getLiveDelay,
+        setLiveDelay: setLiveDelay,
         getCurrentLiveLatency: getCurrentLiveLatency,
         play: play,
         isPaused: isPaused,

@@ -159,7 +159,7 @@ function ThroughputHistory(config) {
         } else if (isThroughput) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
-                const ratio = arr[i] / arr[i - 1];
+                const ratio = arr[arr.length - i] / arr[arr.length - i - 1];
                 if (ratio >= THROUGHPUT_INCREASE_SCALE || ratio <= 1 / THROUGHPUT_DECREASE_SCALE) {
                     sampleSize += 1;
                     if (sampleSize === arr.length) { // cannot increase sampleSize beyond arr.length

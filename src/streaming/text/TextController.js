@@ -54,19 +54,23 @@ function TextController() {
         vttParser,
         ttmlParser,
         eventBus,
-        defaultLanguage,
+        defaultSettings,
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
         forceTextStreaming,
+        textTracksAdded,
+        disableTextBeforeTextTracksAdded,
         previousPeriodSelectedTrack;
 
     function setup() {
 
-        defaultLanguage = '';
+        defaultSettings = {};
         lastEnabledIndex = -1;
-        textDefaultEnabled = true;
+        textDefaultEnabled = false;
         forceTextStreaming = false;
+        textTracksAdded = false;
+        disableTextBeforeTextTracksAdded = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
@@ -170,26 +174,33 @@ function TextController() {
 
     function setTextDefaultLanguage(lang) {
         checkParameterType(lang, 'string');
-        defaultLanguage = lang;
+        defaultSettings.lang = lang;
+    }
+
+    function setInitialSettings(settings) {
+        defaultSettings = settings;
     }
 
     function getTextDefaultLanguage() {
-        return defaultLanguage;
+        return defaultSettings.lang || '';
     }
 
     function onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
 
-        tracks.some((item, idx) => {
-            if (item.lang === defaultLanguage) {
-                this.setTextTrack(idx);
-                index = idx;
-                return true;
-            }
-        });
+        if (defaultSettings) {
+            tracks.some((item, idx) => {
+                // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
+                if (mediaController.matchSettings(defaultSettings, item)) {
+                    this.setTextTrack(idx);
+                    index = idx;
+                    return true;
+                }
+            });
+        }
 
-        if (!textDefaultEnabled) {
+        if (!textDefaultEnabled || disableTextBeforeTextTracksAdded) {
             // disable text at startup
             this.setTextTrack(-1);
         }
@@ -200,6 +211,7 @@ function TextController() {
             index: index,
             tracks: tracks
         });
+        textTracksAdded = true;
     }
 
     function setTextDefaultEnabled(enable) {
@@ -209,6 +221,8 @@ function TextController() {
         if (!textDefaultEnabled) {
             // disable text at startup
             this.setTextTrack(-1);
+        } else {
+            allTracksAreDisabled = false;
         }
     }
 
@@ -218,18 +232,24 @@ function TextController() {
 
     function enableText(enable) {
         checkParameterType(enable,'boolean');
-
+        if (!textDefaultEnabled && enable) {
+            textDefaultEnabled = true;
+        }
         if (isTextEnabled() !== enable) {
             // change track selection
             if (enable) {
-                // apply last enabled tractk
+                // apply last enabled track
                 this.setTextTrack(lastEnabledIndex);
             }
 
             if (!enable) {
                 // keep last index and disable text track
                 lastEnabledIndex = this.getCurrentTrackIdx();
-                this.setTextTrack(-1);
+                if (!textTracksAdded) {
+                    disableTextBeforeTextTracksAdded = true;
+                } else {
+                    this.setTextTrack(-1);
+                }
             }
         }
     }
@@ -242,14 +262,14 @@ function TextController() {
         return enabled;
     }
 
-    // when set to true NextFragmentRequestRule will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
+    // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
         checkParameterType(enable,'boolean');
         forceTextStreaming = enable;
     }
 
     function setTextTrack(idx) {
-        //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+        //For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
@@ -324,7 +344,9 @@ function TextController() {
     }
 
     function resetInitialSettings() {
-        allTracksAreDisabled = false;
+        allTracksAreDisabled = true;
+        textTracksAdded = false;
+        disableTextBeforeTextTracksAdded = false;
     }
 
     function reset() {
@@ -342,6 +364,7 @@ function TextController() {
         setTextDefaultLanguage: setTextDefaultLanguage,
         setTextDefaultEnabled: setTextDefaultEnabled,
         getTextDefaultEnabled: getTextDefaultEnabled,
+        setInitialSettings: setInitialSettings,
         enableText: enableText,
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,

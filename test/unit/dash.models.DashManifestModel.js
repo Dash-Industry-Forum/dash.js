@@ -738,7 +738,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
-            const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
+            const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{d: 2, r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
             const representationArray = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
 
             expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line

@@ -98,7 +98,7 @@ function TextSourceBuffer() {
         parser = null;
     }
 
-    function initialize(mimeType, streamProcessor) {
+    function initialize(mimeType, streamInfo, mediaInfoArr, fragmentModel) {
         if (!embeddedInitialized) {
             initEmbedded();
         }
@@ -112,30 +112,29 @@ function TextSourceBuffer() {
             boxParser = BoxParser(context).getInstance();
         }
 
-        addMediaInfos(mimeType, streamProcessor);
+        addMediaInfos(mimeType, streamInfo, mediaInfoArr, fragmentModel);
     }
 
-    function addMediaInfos(mimeType, streamProcessor) {
+    function addMediaInfos(mimeType, streamInfo, mediaInfoArr, fragmentModel) {
         const isFragmented = !adapter.getIsTextTrack(mimeType);
-        if (streamProcessor) {
-            mediaInfos = mediaInfos.concat(streamProcessor.getMediaInfoArr());
 
-            if (isFragmented) {
-                fragmentedFragmentModel = streamProcessor.getFragmentModel();
-                instance.buffered = CustomTimeRanges(context).create();
-                fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamProcessor.getStreamInfo());
-                const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamProcessor.getStreamInfo());
-                for (let i = 0; i < fragmentedTracks.length; i++) {
-                    if (fragmentedTracks[i] === currFragTrack) {
-                        setCurrentFragmentedTrackIdx(i);
-                        break;
-                    }
+        mediaInfos = mediaInfos.concat(mediaInfoArr);
+
+        if (isFragmented) {
+            fragmentedFragmentModel = fragmentModel;
+            instance.buffered = CustomTimeRanges(context).create();
+            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo);
+            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo);
+            for (let i = 0; i < fragmentedTracks.length; i++) {
+                if (fragmentedTracks[i] === currFragTrack) {
+                    setCurrentFragmentedTrackIdx(i);
+                    break;
                 }
             }
+        }
 
-            for (let i = 0; i < mediaInfos.length; i++) {
-                createTextTrackFromMediaInfo(null, mediaInfos[i]);
-            }
+        for (let i = 0; i < mediaInfos.length; i++) {
+            createTextTrackFromMediaInfo(null, mediaInfos[i]);
         }
     }
 

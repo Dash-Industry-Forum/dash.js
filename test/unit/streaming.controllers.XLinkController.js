@@ -5,6 +5,7 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
+import DebugMock from './mocks/DebugMock';
 
 const fs = require('fs');
 const jsdom = require('jsdom').JSDOM;
@@ -23,6 +24,7 @@ describe('XlinkController', function () {
         let urlUtils = URLUtils(context).getInstance();
         let baseUri = urlUtils.parseBaseUrl(url);
         let parser = DashParser(context).create({
+            debug: new DebugMock(),
             errorHandler: errorHandlerMock
         });
         const manifest = parser.parse(xml, xlinkController);

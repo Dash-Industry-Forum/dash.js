@@ -24,52 +24,48 @@ const adapterMock = new AdapterMock();
 const eventBus = EventBus(context).getInstance();
 
 const streamInfo = {
-    streamId: 'streamId',
+    id: 'streamId',
     manifestInfo: {
         isDynamic: true
     }
 };
 
 describe('StreamProcessor', function () {
-    it('should return NaN when getIndexHandlerTime is called and streamProcessor is defined, without its attributes', function () {
-        const streamProcessor = StreamProcessor(context).create({});
-        const time = streamProcessor.getIndexHandlerTime();
+    describe('StreamProcessor not initialized', function () {
+        let streamProcessor = null;
 
-        expect(time).to.be.NaN; // jshint ignore:line
-    });
+        beforeEach(function () {
+            streamProcessor = StreamProcessor(context).create({});
+        });
 
-    it('should not throw an error when setIndexHandlerTime is called and indexHandler is undefined', function () {
-        const streamProcessor = StreamProcessor(context).create({});
+        afterEach(function () {
+            streamProcessor.reset();
+        });
 
-        expect(streamProcessor.setIndexHandlerTime.bind(streamProcessor)).to.not.throw();
-    });
+        it('getIndexHandlerTime should return NaN', function () {
+            const time = streamProcessor.getIndexHandlerTime();
+            expect(time).to.be.NaN; // jshint ignore:line
+        });
 
-    it('should return null when getInitRequest is called and indexHandler is undefined', function () {
-        const streamProcessor = StreamProcessor(context).create({});
+        it('setIndexHandlerTime should not throw an error', function () {
+            expect(streamProcessor.setIndexHandlerTime.bind(streamProcessor)).to.not.throw();
+        });
 
-        const initRequest = streamProcessor.getInitRequest(0);
+        it('getInitRequest should return null', function () {
+            const initRequest = streamProcessor.getInitRequest(0);
+            expect(initRequest).to.be.null; // jshint ignore:line
+        });
 
-        expect(initRequest).to.be.null;                // jshint ignore:line
-    });
+        it('getInitRequest should throw an error when quality is not a number', function () {
+            expect(streamProcessor.getInitRequest.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
+        });
 
-    it('should throw an error when getInitRequest is called and streamProcessor is defined, but quality is not a number', function () {
-        const streamProcessor = StreamProcessor(context).create({});
+        it('getFragmentRequest should return null', function () {
+            const nextFragRequest = streamProcessor.getFragmentRequest();
+            expect(nextFragRequest).to.be.null; // jshint ignore:line
+        });
 
-        expect(streamProcessor.getInitRequest.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
-    });
-
-    it('should return null when getFragmentRequest is called and without parameters', function () {
-        const streamProcessor = StreamProcessor(context).create({});
-
-        const nextFragRequest = streamProcessor.getFragmentRequest();
-
-        expect(nextFragRequest).to.be.null;                // jshint ignore:line
-    });
-
-    describe('representationController parameter is properly defined, without its attributes', () => {
-        const streamProcessor = StreamProcessor(context).create({});
-
-        it('should throw an error when getRepresentationInfo is called and representationController parameter is defined, but quality is not a number', function () {
+        it('getRepresentationInfo should throw an error when quality is not a number', function () {
             expect(streamProcessor.getRepresentationInfo.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
         });
     });
@@ -91,7 +87,7 @@ describe('StreamProcessor', function () {
         let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
         expect(dvrInfo).to.be.null; // jshint ignore:line
 
-        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: { getStreamProcessor() { return streamProcessor;}}, bufferLevel: 50 });
+        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { streamId: streamInfo.id, mediaType: testType, bufferLevel: 50 });
 
         dvrInfo = dashMetricsMock.getCurrentDVRInfo();
         expect(dvrInfo).not.to.be.null; // jshint ignore:line

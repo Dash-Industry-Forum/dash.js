@@ -103,6 +103,7 @@ class DashConstants {
         this.CONTENTPROTECTION_ASARRAY = 'ContentProtection_asArray';
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
+        this.STATIC = 'static';
         this.MEDIA_PRESENTATION_DURATION = 'mediaPresentationDuration';
         this.MINIMUM_UPDATE_PERIOD = 'minimumUpdatePeriod';
         this.CODEC_PRIVATE_DATA = 'codecPrivateData';

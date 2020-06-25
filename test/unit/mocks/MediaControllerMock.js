@@ -104,6 +104,13 @@ class MediaControllerMock {
         return (mediaInfoForType.lang === 'deu');
     }
 
+    matchSettings(settings, track) {
+        const matchRole = !settings.role || !!track.roles.filter(function (item) {
+            return item === settings.role;
+        })[0];
+        return settings.lang === track.lang && matchRole;
+    }
+
     setConfig() {}
 
     reset() {
