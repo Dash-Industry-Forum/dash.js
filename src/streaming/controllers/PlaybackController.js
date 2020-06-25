@@ -369,52 +369,6 @@ function PlaybackController() {
         return start;
     }
 
-    /**
-     * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
-     * @param {number} liveEdge - liveEdge value
-     * @returns {number} object
-     * @memberof PlaybackController#
-     */
-    // function getStreamStartTime(ignoreStartOffset, liveEdge) {
-    //     let presentationStartTime;
-    //     let startTimeOffset = NaN;
-
-    //     if (!ignoreStartOffset) {
-    //         const uriParameters = getStartTimeFromUriParameters();
-    //         if (uriParameters) {
-    //             startTimeOffset = !isNaN(uriParameters.fragS) ? uriParameters.fragS : uriParameters.fragT;
-    //         } else {
-    //             startTimeOffset = 0;
-    //         }
-    //     } else {
-    //         startTimeOffset = streamInfo ? streamInfo.start : startTimeOffset;
-    //     }
-
-    //     if (isDynamic) {
-    //         if (!isNaN(startTimeOffset) && streamInfo) {
-    //             presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime() / 1000);
-
-    //             if (presentationStartTime > liveStartTime ||
-    //                 presentationStartTime < (!isNaN(liveEdge) ? (liveEdge - streamInfo.manifestInfo.DVRWindowSize) : NaN)) {
-    //                 presentationStartTime = null;
-    //             }
-    //         }
-    //         presentationStartTime = presentationStartTime || liveStartTime;
-
-    //     } else {
-    //         if (streamInfo) {
-    //             if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
-    //                 presentationStartTime = startTimeOffset;
-    //             } else {
-    //                 let currentEarliestTime = earliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-    //                 presentationStartTime = currentEarliestTime !== undefined ? Math.max(currentEarliestTime.audio !== undefined ? currentEarliestTime.audio : 0, currentEarliestTime.video !== undefined ? currentEarliestTime.video : 0, streamInfo.start) : streamInfo.start;
-    //             }
-    //         }
-    //     }
-
-    //     return presentationStartTime;
-    // }
-
     function getActualPresentationTime(currentTime) {
         const DVRMetrics = dashMetrics.getCurrentDVRInfo();
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
@@ -808,7 +762,6 @@ function PlaybackController() {
         initialize: initialize,
         setConfig: setConfig,
         getStartTimeFromUriParameters: getStartTimeFromUriParameters,
-        // getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,
         getNormalizedTime: getNormalizedTime,

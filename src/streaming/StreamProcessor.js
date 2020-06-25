@@ -628,43 +628,6 @@ function StreamProcessor(config) {
         return liveStartTime;
     }
 
-    // function setLiveEdgeSeekTarget() {
-    //     if (!liveEdgeFinder) return;
-
-    //     const currentRepresentationInfo = getRepresentationInfo();
-    //     const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
-    //     const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
-
-    //     if (request) {
-    //         // When low latency mode is selected but browser doesn't support fetch
-    //         // start at the beginning of the segment to avoid consuming the whole buffer
-    //         if (settings.get().streaming.lowLatencyEnabled) {
-    //             const liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
-    //             playbackController.setLiveStartTime(liveStartTime);
-    //         } else {
-    //             playbackController.setLiveStartTime(request.startTime);
-    //         }
-    //     }
-
-    //     const seekTarget = playbackController.getStreamStartTime(false, liveEdge);
-    //     bufferController.setSeekStartTime(seekTarget);
-    //     scheduleController.setCurrentRepresentation(currentRepresentationInfo);
-    //     scheduleController.setSeekTarget(seekTarget);
-    //     scheduleController.start();
-
-    //     // For multi periods stream, if the startTime is beyond current period then seek to corresponding period (see StreamController::onPlaybackSeeking)
-    //     if (seekTarget > (currentRepresentationInfo.mediaInfo.streamInfo.start + currentRepresentationInfo.mediaInfo.streamInfo.duration)) {
-    //         playbackController.seek(seekTarget);
-    //     }
-
-    //     dashMetrics.updateManifestUpdateInfo({
-    //         currentTime: seekTarget,
-    //         presentationStartTime: liveEdge,
-    //         latency: liveEdge - seekTarget,
-    //         clientTimeOffset: timelineConverter.getClientTimeOffset()
-    //     });
-    // }
-
     function findRequestForLiveEdge(liveEdge, currentRepresentationInfo) {
         try {
             let request = null;
