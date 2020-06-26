@@ -666,7 +666,7 @@ function StreamController() {
                 }
                 // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
                 if (!initialStream && adapter.getIsDynamic() && streams.length) {
-                    logger.debug('Dynamic multi-period stream: Trying to find the correct starting period');
+                    logger.debug('Dynamic stream: Trying to find the correct starting period');
                     initialStream = getInitialStream();
                 }
                 switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
