@@ -650,6 +650,13 @@ function StreamController() {
             }
 
             if (!activeStream) {
+                if (adapter.getIsDynamic() && streams.length) {
+                    // Compute and set live delay
+                    const manifestInfo = streamsInfo[0].manifestInfo;
+                    const fragmentDuration = getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+                    playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+                }
+
                 // we need to figure out what the correct starting period is
                 const startTimeFormUriParameters = playbackController.getStartTimeFromUriParameters();
                 let initialStream = null;
@@ -676,11 +683,8 @@ function StreamController() {
 
     function getInitialStream() {
         try {
-            const streamInfos = adapter.getStreamsInfo(undefined);
-            const manifestInfo = streamInfos[0].manifestInfo;
             const liveEdge = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
-            const fragmentDuration = getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo);
-            const targetDelay = playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+            const targetDelay = playbackController.getLiveDelay();
             const targetTime = liveEdge - targetDelay;
 
             return getStreamForTime(targetTime);
