@@ -644,8 +644,12 @@ function PlaybackController() {
     }
 
     function needToCatchUp() {
-        return settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
-            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > settings.get().streaming.liveCatchUpMinDrift;
+        const currentLiveLatency = getCurrentLiveLatency();
+        const latencyDrift = Math.abs(currentLiveLatency - mediaPlayerModel.getLiveDelay());
+        const liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+
+        return settings.get().streaming.lowLatencyEnabled && settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
+            latencyDrift > settings.get().streaming.liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold ) ;
     }
 
     function startPlaybackCatchUp() {

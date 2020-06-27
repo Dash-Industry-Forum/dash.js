@@ -296,11 +296,19 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [liveCatchUpPlaybackRate=0.5]
- * Use this method to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
+ * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
  * when measured latency is higher/lower than the target one,
  * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
  * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [liveCatchupLatencyThreshold=NaN]
+ * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
+ * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
+ * of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified this will be twice the target delay.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
@@ -398,6 +406,7 @@ function Settings() {
             liveCatchUpMinDrift: 0.02,
             liveCatchUpMaxDrift: 0,
             liveCatchUpPlaybackRate: 0.5,
+            liveCatchupLatencyThreshold: NaN,
             lastBitrateCachingInfo: {enabled: true, ttl: 360000},
             lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
             cacheLoadThresholds: {video: 50, audio: 5},
