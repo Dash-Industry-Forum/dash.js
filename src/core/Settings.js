@@ -308,7 +308,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
  * of the playback rate if the user seeks within the DVR window.
  *
- * If no value is specified this will be twice the target delay.
+ * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
+ * maximumLiveDelay = targetDelay + liveCatchupMinDrift
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
