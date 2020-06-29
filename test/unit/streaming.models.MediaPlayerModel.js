@@ -138,4 +138,24 @@ describe('MediaPlayerModel', function () {
         expect(StableBufferTime).to.equal(50);
     });
 
+    it('should configure liveCatchupLatencyThreshold', function () {
+        let liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+        expect(liveCatchupLatencyThreshold).to.be.NaN; // jshint ignore:line
+
+        settings.update({streaming: {lowLatencyEnabled: true, liveDelay: 3, liveCatchUpMinDrift: 3}});
+
+        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+        expect(liveCatchupLatencyThreshold).to.equal(12);
+
+        settings.update({streaming: {liveCatchUpMinDrift: NaN}});
+
+        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+        expect(liveCatchupLatencyThreshold).to.equal(6);
+
+        settings.update({streaming: {liveCatchupLatencyThreshold: 50}});
+
+        liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+        expect(liveCatchupLatencyThreshold).to.equal(50);
+    });
+
 });

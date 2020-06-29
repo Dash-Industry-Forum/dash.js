@@ -33,7 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../constants/Constants';
 import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
 import Settings from '../../core/Settings';
-import { checkParameterType} from '../utils/SupervisorTools';
+import {checkParameterType} from '../utils/SupervisorTools';
 
 
 const DEFAULT_MIN_BUFFER_TIME = 12;
@@ -42,6 +42,7 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
+const DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR = 2;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -53,9 +54,9 @@ function MediaPlayerModel() {
         customABRRule;
 
     const DEFAULT_UTC_TIMING_SOURCE = {
-            scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-            value: 'http://time.akamai.com/?iso&ms'
-        };
+        scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+        value: 'http://time.akamai.com/?iso&ms'
+    };
     const context = this.context;
     const settings = Settings(context).getInstance();
 
@@ -144,6 +145,29 @@ function MediaPlayerModel() {
         return settings.get().streaming.liveDelay;
     }
 
+    function getLiveCatchupLatencyThreshold() {
+        try {
+            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchupLatencyThreshold;
+
+            if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
+                return liveCatchupLatencyThreshold;
+            }
+
+            const liveDelay = getLiveDelay();
+            const liveCatchupMinDrift = settings.get().streaming.liveCatchUpMinDrift;
+            const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchUpMinDrift + getLiveDelay() : getLiveDelay() : NaN;
+
+            if (maximumLiveDelay && !isNaN(maximumLiveDelay)) {
+                return maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR;
+            }
+
+            return NaN;
+
+        } catch (e) {
+            return NaN;
+        }
+    }
+
     function addUTCTimingSource(schemeIdUri, value) {
         removeUTCTimingSource(schemeIdUri, value); //check if it already exists and remove if so.
         let vo = new UTCTiming();
@@ -200,22 +224,23 @@ function MediaPlayerModel() {
     }
 
     instance = {
-        getABRCustomRules: getABRCustomRules,
-        addABRCustomRule: addABRCustomRule,
-        removeABRCustomRule: removeABRCustomRule,
-        getStableBufferTime: getStableBufferTime,
-        getRetryAttemptsForType: getRetryAttemptsForType,
-        getRetryIntervalsForType: getRetryIntervalsForType,
-        getLiveDelay: getLiveDelay,
-        addUTCTimingSource: addUTCTimingSource,
-        removeUTCTimingSource: removeUTCTimingSource,
-        getUTCTimingSources: getUTCTimingSources,
-        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
-        setXHRWithCredentialsForType: setXHRWithCredentialsForType,
-        getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        getDefaultUtcTimingSource: getDefaultUtcTimingSource,
-        reset: reset
+        getABRCustomRules,
+        addABRCustomRule,
+        removeABRCustomRule,
+        getStableBufferTime,
+        getRetryAttemptsForType,
+        getRetryIntervalsForType,
+        getLiveDelay,
+        getLiveCatchupLatencyThreshold,
+        addUTCTimingSource,
+        removeUTCTimingSource,
+        getUTCTimingSources,
+        clearDefaultUTCTimingSources,
+        restoreDefaultUTCTimingSources,
+        setXHRWithCredentialsForType,
+        getXHRWithCredentialsForType,
+        getDefaultUtcTimingSource,
+        reset
     };
 
     setup();
