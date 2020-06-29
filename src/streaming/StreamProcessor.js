@@ -233,7 +233,9 @@ function StreamProcessor(config) {
 
         if (!e.error) {
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
-        } else if (e.error.code !== Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
+        }
+        if (!e.error || e.error.code === Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
+            // Update has been postponed, we nevertheless update DVR info
             addDVRMetric();
         }
     }
