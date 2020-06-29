@@ -371,7 +371,7 @@ function PlaybackController() {
         }
     }
 
-    function getStartTimeFromUriParameters(periodStart) {
+    function getStartTimeFromUriParameters(rangeStart) {
         const fragData = uriFragmentModel.getURIFragmentData();
         if (!fragData || !fragData.t) {
             return NaN;
@@ -380,12 +380,12 @@ function PlaybackController() {
         let startTime = NaN;
 
         // Consider only start time of MediaRange
-        // TODO: consider end time of MediaRange  to stop playback at provided end time
+        // TODO: consider end time of MediaRange to stop playback at provided end time
         fragData.t = fragData.t.split(',')[0];
 
-        // t is relative to period start
-        // posix notation (t=posix:xxx) = absolute time range as number of seconds since 01-01-1970
-        startTime = (fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (periodStart + parseInt(fragData.t));
+        // "t=<time>" : time is relative to period start (for static streams) or DVR window range start (for dynamic streams)
+        // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
+        startTime = (fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (rangeStart + parseInt(fragData.t));
 
         return startTime;
     }
