@@ -106,13 +106,36 @@ function PlaybackController() {
         if (streamSwitch && isNaN(streamSeekTime)) return;
 
         // Seek new stream in priority order:
-        // - at seek time (streamSeekTime) that required period switch
+        // - at seek time (streamSeekTime) when switching period
         // - at start time provided in URI parameters
         // - at stream/period start time (for static streams) or live start time (for dynamic streams)
         let startTime = streamSeekTime;
         if (isNaN(startTime)) {
-            startTime = isDynamic ? e.liveStartTime : e.streamInfo.start;
-            startTime = Math.max(startTime, getStartTimeFromUri());
+            if (isDynamic) {
+                // For dynamic stream, start by default at (live edge - live delay)
+                startTime = e.liveStartTime;
+                // If start time in URI, take min value between live edge time and time from URI (if in DVR window range)
+                const dvrInfo = dashMetrics.getCurrentDVRInfo();
+                const dvrWindow = dvrInfo ? dvrInfo.range : null;
+                if (dvrWindow) {
+                    const startTimeFromUri = getStartTimeFromUriParameters(dvrWindow.start);
+                    if (!isNaN(startTimeFromUri) && startTimeFromUri >= dvrWindow.start) {
+                        logger.info('Start time from URI parameters: ' + startTimeFromUri);
+                        startTime = Math.min(startTime, startTimeFromUri);
+                    }
+                }
+            } else {
+                // For static stream, start by default at period start
+                startTime = streamInfo.start;
+                // If start time in URI, take max value between period start and time from URI (if in period range)
+                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start);
+                if (!isNaN(startTimeFromUri) && startTimeFromUri < (startTime + streamInfo.duration)) {
+                    logger.info('Start time from URI parameters: ' + startTimeFromUri);
+                    startTime = Math.max(startTime, startTimeFromUri);
+                }
+            }
+
+            // Check if not seeking at current time
             if (startTime === videoModel.getTime()) return;
         }
 
@@ -348,25 +371,23 @@ function PlaybackController() {
         }
     }
 
-    function getStartTimeFromUriParameters() {
+    function getStartTimeFromUriParameters(periodStart) {
         const fragData = uriFragmentModel.getURIFragmentData();
-        let uriParameters;
-        if (fragData) {
-            uriParameters = {};
-            const r = parseInt(fragData.r, 10);
-            if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
-                fragData.t = Math.max(Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize, (streamInfo.manifestInfo.availableFrom.getTime() / 1000) + streamInfo.start) + r;
-            }
-            uriParameters.fragS = parseFloat(fragData.s);
-            uriParameters.fragT = parseFloat(fragData.t);
+        if (!fragData || !fragData.t) {
+            return NaN;
         }
-        return uriParameters;
-    }
 
-    function getStartTimeFromUri() {
-        const uriParameters = getStartTimeFromUriParameters();
-        let start = !isNaN(uriParameters.fragS) ? uriParameters.fragS : (!isNaN(uriParameters.fragT) ? uriParameters.fragT : -1);
-        return start;
+        let startTime = NaN;
+
+        // Consider only start time of MediaRange
+        // TODO: consider end time of MediaRange  to stop playback at provided end time
+        fragData.t = fragData.t.split(',')[0];
+
+        // t is relative to period start
+        // posix notation (t=posix:xxx) = absolute time range as number of seconds since 01-01-1970
+        startTime = (fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (periodStart + parseInt(fragData.t));
+
+        return startTime;
     }
 
     function getActualPresentationTime(currentTime) {

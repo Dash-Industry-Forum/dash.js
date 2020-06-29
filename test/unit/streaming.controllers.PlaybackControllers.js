@@ -85,7 +85,8 @@ describe('PlaybackController', function () {
                     isDynamic: true,
                     availableFrom: new Date()
                 },
-                start: 10
+                start: 10,
+                duration: 600
             };
 
             playbackController.initialize(streamInfo);
@@ -159,13 +160,6 @@ describe('PlaybackController', function () {
             it('should return video ended ', function () {
                 videoModelMock.ended = true;
                 expect(playbackController.getEnded()).to.equal(videoModelMock.ended);
-            });
-
-            it('getStartTimeFromUriParameters should return the expected value', function () {
-                uriFragmentModelMock.setURIFragmentData({t: 18.2});
-                const uriParameters = playbackController.getStartTimeFromUriParameters();
-                expect(uriParameters.fragT).to.exist; // jshint ignore:line
-                expect(uriParameters.fragT).to.equal(18.2);
             });
         });
 
@@ -325,6 +319,125 @@ describe('PlaybackController', function () {
                 videoModelMock.fireEvent('waiting');
             });
         });
+    });
 
+    describe('start time', function () {
+        let expectedSeekTime;
+        let doneFn;
+
+        let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600 };
+        let dynamicStreamInfo = { manifestInfo: { isDynamic: true }, start: 0, duration: Infinity };
+        let dvrWindowRange = { start: 10, end: 90 };
+
+        let onPlaybackSeeking = function (e) {
+            eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking);
+            expect(e.seekTime).to.equal(expectedSeekTime);
+            doneFn();
+        };
+
+        beforeEach(function () {
+            videoModelMock.time = -1;
+            eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        });
+
+        it('should start static stream at period start', function (done) {
+            doneFn = done;
+
+            expectedSeekTime = staticStreamInfo.start;
+
+            playbackController.initialize(staticStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {});
+        });
+
+        it('should start static stream at #t', function (done) {
+            doneFn = done;
+
+            let uriStartTime = 10;
+            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
+
+            expectedSeekTime = staticStreamInfo.start + uriStartTime;
+
+            playbackController.initialize(staticStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {});
+        });
+
+        it('should start static stream at period start if #t is beyond period end', function (done) {
+            doneFn = done;
+
+            let uriStartTime = 700;
+            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
+
+            expectedSeekTime = staticStreamInfo.start;
+
+            playbackController.initialize(staticStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {});
+        });
+
+        it('should start dynamic stream at live start time', function (done) {
+            doneFn = done;
+
+            let liveStartTime = 90;
+
+            expectedSeekTime = liveStartTime;
+
+            playbackController.initialize(dynamicStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
+        });
+
+        it('should start dynamic stream at #t', function (done) {
+            doneFn = done;
+
+            let liveStartTime = 70;
+            dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+            let uriStartTime = 50;
+            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
+
+            expectedSeekTime = dvrWindowRange.start + uriStartTime;
+
+            playbackController.initialize(dynamicStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
+        });
+
+        it('should start dynamic stream at #t=posix:', function (done) {
+            doneFn = done;
+
+            let liveStartTime = 70;
+            dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+            let uriStartTime = 50;
+            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
+
+            expectedSeekTime = uriStartTime;
+
+            playbackController.initialize(dynamicStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
+        });
+
+        it('should start dynamic stream at live start time if #t=posix is before DVR window range', function (done) {
+            doneFn = done;
+
+            let liveStartTime = 70;
+            dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+            let uriStartTime = 0;
+            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
+
+            expectedSeekTime = liveStartTime;
+
+            playbackController.initialize(dynamicStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
+        });
+
+        it('should start dynamic stream at live start time if #t=posix is beyond live start time', function (done) {
+            doneFn = done;
+
+            let liveStartTime = 70;
+            dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+            let uriStartTime = 80;
+            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
+
+            expectedSeekTime = liveStartTime;
+
+            playbackController.initialize(dynamicStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
+        });
     });
 });
