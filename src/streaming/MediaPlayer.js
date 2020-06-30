@@ -2098,7 +2098,7 @@ function MediaPlayer() {
         }
 
         // do not require Offline as dependencies as this is optional and intended to be loaded separately
-        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
+        let OfflineController = dashjs.OfflineController;
 
         if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
             Events.extend(OfflineController.events);
