@@ -95,7 +95,6 @@ function StreamController() {
         prefetchTimerId,
         wallclockTicked,
         buffers,
-        useSmoothPeriodTransition,
         preloading,
         lastPlaybackTime,
         supportsChangeType,
@@ -271,7 +270,7 @@ function StreamController() {
         if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
             // If we're preloading other stream, the active one was deactivated and we need to switch back
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
-            switchStream(activeStream, seekingStream, e.seekTime);
+            switchStream(seekingStream, activeStream, e.seekTime);
         } else {
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
@@ -363,13 +362,13 @@ function StreamController() {
         if (mediaSource && !isLast) {
             const newStream = getNextStream();
 
-            // Smooth period transition allowed only if both of these conditions are true:
-            // 1.- None of the periods uses contentProtection.
-            // 2.- changeType method implemented by browser or periods use the same codec.
-            useSmoothPeriodTransition = activeStream.isProtectionCompatible(newStream) &&
+            // Seamless period switch allowed only if:
+            // - none of the periods uses contentProtection.
+            // - AND changeType method implemented by browser or periods use the same codec.
+            let seamlessPeriodSwitch = activeStream.isProtectionCompatible(newStream) &&
                 (supportsChangeType || activeStream.isMediaCodecCompatible(newStream));
 
-            if (useSmoothPeriodTransition) {
+            if (seamlessPeriodSwitch) {
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
                 activeStream.deactivate(true);
                 newStream.preload(mediaSource, buffers);
@@ -446,7 +445,7 @@ function StreamController() {
     function onEnded() {
         const nextStream = getNextStream();
         if (nextStream) {
-            switchStream(activeStream, nextStream, NaN);
+            switchStream(nextStream, activeStream, NaN);
         } else {
             logger.debug('StreamController no next stream found');
         }
@@ -466,46 +465,49 @@ function StreamController() {
         }
     }
 
-    function switchStream(oldStream, newStream, seekTime) {
-        if (isStreamSwitchingInProgress || !newStream || (oldStream === newStream && newStream.isActive())) return;
+    function switchStream(stream, previousStream, seekTime) {
+        logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
+
+        if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
         isStreamSwitchingInProgress = true;
 
         eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
-            fromStreamInfo: oldStream ? oldStream.getStreamInfo() : null,
-            toStreamInfo: newStream.getStreamInfo()
+            fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
+            toStreamInfo: stream.getStreamInfo()
         });
 
-        useSmoothPeriodTransition = false;
-        if (oldStream) {
-            useSmoothPeriodTransition = (activeStream.isProtectionCompatible(newStream) &&
-                (supportsChangeType || activeStream.isMediaCodecCompatible(newStream))) &&
-                !seekTime || newStream.getPreloaded();
-            oldStream.deactivate(useSmoothPeriodTransition);
+        let seamlessPeriodSwitch = false;
+        if (previousStream) {
+            seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(stream))) &&
+                !seekTime || stream.getPreloaded();
+            previousStream.deactivate(seamlessPeriodSwitch);
         }
 
-        activeStream = newStream;
+        // Determine seek time when switching to new period
+        // - seek at given seek time
+        // - or seek at period start if seamless period switching
+        seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
+
+        activeStream = stream;
         preloading = false;
-        playbackController.initialize(getActiveStreamInfo(), useSmoothPeriodTransition);
+        playbackController.initialize(getActiveStreamInfo(), !!previousStream, seekTime);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
-            openMediaSource(seekTime, oldStream, false, useSmoothPeriodTransition);
+            openMediaSource(seekTime, (previousStream === null), false, seamlessPeriodSwitch);
         } else {
-            preloadStream(seekTime);
+            activateStream(seekTime, seamlessPeriodSwitch);
         }
-    }
-
-    function preloadStream(seekTime) {
-        activateStream(seekTime, useSmoothPeriodTransition);
     }
 
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
-            openMediaSource(seekTime, null, true, false);
+            openMediaSource(seekTime, false, true, false);
         }
     }
 
-    function openMediaSource(seekTime, oldStream, streamActivated, keepBuffers) {
+    function openMediaSource(seekTime, sourceInitialized, streamActivated, keepBuffers) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -518,7 +520,7 @@ function StreamController() {
             mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
             setMediaDuration();
 
-            if (!oldStream) {
+            if (!sourceInitialized) {
                 eventBus.trigger(Events.SOURCE_INITIALIZED);
             }
 
@@ -538,7 +540,7 @@ function StreamController() {
         } else {
             if (keepBuffers) {
                 activateStream(seekTime, keepBuffers);
-                if (!oldStream) {
+                if (!sourceInitialized) {
                     eventBus.trigger(Events.SOURCE_INITIALIZED);
                 }
             } else {
@@ -567,12 +569,12 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
             } else {
-                let startTime = playbackController.getStreamStartTime(true);
-                if (!keepBuffers) {
-                    getActiveStreamProcessors().forEach(p => {
-                        p.setIndexHandlerTime(startTime);
-                    });
-                }
+                // let startTime = playbackController.getStreamStartTime(true);
+                // if (!keepBuffers) {
+                //     getActiveStreamProcessors().forEach(p => {
+                //         p.setIndexHandlerTime(startTime);
+                //     });
+                // }
             }
         }
 
@@ -658,18 +660,17 @@ function StreamController() {
                 }
 
                 // we need to figure out what the correct starting period is
-                const startTimeFormUriParameters = playbackController.getStartTimeFromUriParameters();
                 let initialStream = null;
-                if (startTimeFormUriParameters) {
-                    const initialTime = !isNaN(startTimeFormUriParameters.fragS) ? startTimeFormUriParameters.fragS : startTimeFormUriParameters.fragT;
-                    initialStream = getStreamForTime(initialTime);
+                const startTimeFormUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
+                if (!isNaN(startTimeFormUri)) {
+                    initialStream = getStreamForTime(startTimeFormUri);
                 }
                 // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
                 if (!initialStream && adapter.getIsDynamic() && streams.length) {
                     logger.debug('Dynamic stream: Trying to find the correct starting period');
                     initialStream = getInitialStream();
                 }
-                switchStream(null, initialStream !== null ? initialStream : streams[0], NaN);
+                switchStream(initialStream !== null ? initialStream : streams[0], null, NaN);
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);

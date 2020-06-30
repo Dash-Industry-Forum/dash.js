@@ -67,10 +67,11 @@ function Stream(config) {
 
     let instance,
         logger,
+        streamInfo,
         streamProcessors,
+        isStreamInitialized,
         isStreamActivated,
         isMediaInitialized,
-        streamInfo,
         hasVideoTrack,
         hasAudioTrack,
         updateError,
@@ -227,6 +228,7 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         streamInfo = null;
+        isStreamInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
         updateError = {};
@@ -259,6 +261,19 @@ function Stream(config) {
 
     function getStartTime() {
         return streamInfo ? streamInfo.start : NaN;
+    }
+
+    function getLiveStartTime() {
+        if (!streamInfo.manifestInfo.isDynamic) return NaN;
+        // Get live start time of the video stream (1st in array of streams)
+        // or audio if no video stream
+        for (let i = 0; i < streamProcessors.length; i++) {
+            if (streamProcessors[i].getType() === Constants.AUDIO ||
+                streamProcessors[i].getType() === Constants.VIDEO) {
+                return streamProcessors[i].getLiveStartTime();
+            }
+        }
+        return NaN;
     }
 
     function getId() {
@@ -610,8 +625,14 @@ function Stream(config) {
 
         if (error) {
             errHandler.error(error);
-        } else {
-            eventBus.trigger(Events.STREAM_INITIALIZED, { streamInfo: streamInfo });
+        } else if (!isStreamInitialized) {
+            isStreamInitialized = true;
+            timelineConverter.setTimeSyncCompleted(true);
+
+            eventBus.trigger(Events.STREAM_INITIALIZED, {
+                streamInfo: streamInfo,
+                liveStartTime: getLiveStartTime()
+            });
         }
     }
 

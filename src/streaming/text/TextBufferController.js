@@ -107,10 +107,6 @@ function TextBufferController(config) {
         _BufferControllerImpl.setMediaSource(value);
     }
 
-    function setSeekStartTime(value) {
-        _BufferControllerImpl.setSeekStartTime(value);
-    }
-
     function getBufferLevel() {
         return _BufferControllerImpl.getBufferLevel();
     }
@@ -151,7 +147,6 @@ function TextBufferController(config) {
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
-        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
         getBufferLevel: getBufferLevel,
