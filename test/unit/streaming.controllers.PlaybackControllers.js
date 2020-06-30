@@ -373,6 +373,18 @@ describe('PlaybackController', function () {
             eventBus.trigger(Events.STREAM_INITIALIZED, {});
         });
 
+        it('should start static stream at period start if #t=posix: notation is used', function (done) {
+            doneFn = done;
+
+            let uriStartTime = 30;
+            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
+
+            expectedSeekTime = staticStreamInfo.start;
+
+            playbackController.initialize(staticStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {});
+        });
+
         it('should start dynamic stream at live start time', function (done) {
             doneFn = done;
 

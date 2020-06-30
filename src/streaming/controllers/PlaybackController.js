@@ -118,7 +118,7 @@ function PlaybackController() {
                 const dvrInfo = dashMetrics.getCurrentDVRInfo();
                 const dvrWindow = dvrInfo ? dvrInfo.range : null;
                 if (dvrWindow) {
-                    const startTimeFromUri = getStartTimeFromUriParameters(dvrWindow.start);
+                    const startTimeFromUri = getStartTimeFromUriParameters(dvrWindow.start, true);
                     if (!isNaN(startTimeFromUri)) {
                         logger.info('Start time from URI parameters: ' + startTimeFromUri);
                         startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
@@ -128,7 +128,7 @@ function PlaybackController() {
                 // For static stream, start by default at period start
                 startTime = streamInfo.start;
                 // If start time in URI, take max value between period start and time from URI (if in period range)
-                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start);
+                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, false);
                 if (!isNaN(startTimeFromUri) && startTimeFromUri < (startTime + streamInfo.duration)) {
                     logger.info('Start time from URI parameters: ' + startTimeFromUri);
                     startTime = Math.max(startTime, startTimeFromUri);
@@ -371,7 +371,7 @@ function PlaybackController() {
         }
     }
 
-    function getStartTimeFromUriParameters(rangeStart) {
+    function getStartTimeFromUriParameters(rangeStart, isDynamic) {
         const fragData = uriFragmentModel.getURIFragmentData();
         if (!fragData || !fragData.t) {
             return NaN;
@@ -385,7 +385,7 @@ function PlaybackController() {
 
         // "t=<time>" : time is relative to period start (for static streams) or DVR window range start (for dynamic streams)
         // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
-        startTime = (fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (rangeStart + parseInt(fragData.t));
+        startTime = (isDynamic && fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (rangeStart + parseInt(fragData.t));
 
         return startTime;
     }

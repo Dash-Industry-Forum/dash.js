@@ -661,7 +661,7 @@ function StreamController() {
 
                 // we need to figure out what the correct starting period is
                 let initialStream = null;
-                const startTimeFormUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start);
+                const startTimeFormUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
                 if (!isNaN(startTimeFormUri)) {
                     initialStream = getStreamForTime(startTimeFormUri);
                 }
