@@ -41,7 +41,6 @@ import {
 
 /**
  * @module DashMetrics
- * @ignore
  * @param {object} config
  */
 
