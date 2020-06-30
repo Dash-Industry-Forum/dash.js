@@ -232,10 +232,11 @@ function StreamProcessor(config) {
         logger.info('DataUpdateCompleted');
 
         if (!e.error) {
+            // Update representation if no error
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
         }
         if (!e.error || e.error.code === Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
-            // Update has been postponed, we nevertheless update DVR info
+            // Update has been postponed, update nevertheless DVR info
             addDVRMetric();
         }
     }

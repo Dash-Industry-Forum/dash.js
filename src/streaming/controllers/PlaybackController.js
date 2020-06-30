@@ -114,14 +114,14 @@ function PlaybackController() {
             if (isDynamic) {
                 // For dynamic stream, start by default at (live edge - live delay)
                 startTime = e.liveStartTime;
-                // If start time in URI, take min value between live edge time and time from URI (if in DVR window range)
+                // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
                 const dvrInfo = dashMetrics.getCurrentDVRInfo();
                 const dvrWindow = dvrInfo ? dvrInfo.range : null;
                 if (dvrWindow) {
                     const startTimeFromUri = getStartTimeFromUriParameters(dvrWindow.start);
-                    if (!isNaN(startTimeFromUri) && startTimeFromUri >= dvrWindow.start) {
+                    if (!isNaN(startTimeFromUri)) {
                         logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                        startTime = Math.min(startTime, startTimeFromUri);
+                        startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
                     }
                 }
             } else {

@@ -420,7 +420,7 @@ describe('PlaybackController', function () {
             let uriStartTime = 0;
             uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
 
-            expectedSeekTime = liveStartTime;
+            expectedSeekTime = dvrWindowRange.start;
 
             playbackController.initialize(dynamicStreamInfo);
             eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
