@@ -36,7 +36,6 @@ import MssFragmentProcessor from './MssFragmentProcessor';
 import MssParser from './parser/MssParser';
 import MssErrors from './errors/MssErrors';
 import DashJSError from '../streaming/vo/DashJSError';
-import InitCache from '../streaming/utils/InitCache';
 
 function MssHandler(config) {
 
@@ -63,12 +62,10 @@ function MssHandler(config) {
     });
     let mssParser,
         fragmentInfoControllers,
-        initCache,
         instance;
 
     function setup() {
         fragmentInfoControllers = [];
-        initCache = InitCache(context).getInstance();
     }
 
     function getStreamProcessor(type) {

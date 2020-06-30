@@ -83,8 +83,7 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         liveEdgeFinder,
-        indexHandler,
-        streamInitialized;
+        indexHandler;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -169,8 +168,6 @@ function StreamProcessor(config) {
         });
 
         scheduleController.initialize(hasVideoTrack);
-
-        streamInitialized = false;
     }
 
     function resetInitialSettings() {
