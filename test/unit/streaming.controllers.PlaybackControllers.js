@@ -326,8 +326,8 @@ describe('PlaybackController', function () {
         let doneFn;
 
         let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600 };
-        let dynamicStreamInfo = { manifestInfo: { isDynamic: true }, start: 0, duration: Infinity };
-        let dvrWindowRange = { start: 10, end: 90 };
+        let dynamicStreamInfo = { manifestInfo: { isDynamic: true }, start: 50, duration: Infinity };
+        let dvrWindowRange = { start: 70, end: 100 };
 
         let onPlaybackSeeking = function (e) {
             eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking);
@@ -388,7 +388,7 @@ describe('PlaybackController', function () {
         it('should start dynamic stream at live start time', function (done) {
             doneFn = done;
 
-            let liveStartTime = 90;
+            let liveStartTime = 80;
 
             expectedSeekTime = liveStartTime;
 
@@ -399,23 +399,23 @@ describe('PlaybackController', function () {
         it('should start dynamic stream at #t', function (done) {
             doneFn = done;
 
-            let liveStartTime = 70;
+            let liveStartTime = 80;
             dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
-            let uriStartTime = 50;
+            let uriStartTime = 25;
             uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
 
-            expectedSeekTime = dvrWindowRange.start + uriStartTime;
+            expectedSeekTime = dynamicStreamInfo.start + uriStartTime;
 
             playbackController.initialize(dynamicStreamInfo);
             eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
         });
 
-        it('should start dynamic stream at #t=posix:', function (done) {
+        it('should start dynamic stream at #t=posix', function (done) {
             doneFn = done;
 
-            let liveStartTime = 70;
+            let liveStartTime = 80;
             dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
-            let uriStartTime = 50;
+            let uriStartTime = 75;
             uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
 
             expectedSeekTime = uriStartTime;
@@ -424,10 +424,24 @@ describe('PlaybackController', function () {
             eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
         });
 
+        it('should start dynamic stream at live start time if #t is before DVR window range', function (done) {
+            doneFn = done;
+
+            let liveStartTime = 80;
+            dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+            let uriStartTime = 0;
+            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
+
+            expectedSeekTime = dvrWindowRange.start;
+
+            playbackController.initialize(dynamicStreamInfo);
+            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
+        });
+
         it('should start dynamic stream at live start time if #t=posix is before DVR window range', function (done) {
             doneFn = done;
 
-            let liveStartTime = 70;
+            let liveStartTime = 80;
             dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
             let uriStartTime = 0;
             uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
@@ -441,9 +455,9 @@ describe('PlaybackController', function () {
         it('should start dynamic stream at live start time if #t=posix is beyond live start time', function (done) {
             doneFn = done;
 
-            let liveStartTime = 70;
+            let liveStartTime = 80;
             dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
-            let uriStartTime = 80;
+            let uriStartTime = 110;
             uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
 
             expectedSeekTime = liveStartTime;

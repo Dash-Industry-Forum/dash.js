@@ -118,7 +118,8 @@ function PlaybackController() {
                 const dvrInfo = dashMetrics.getCurrentDVRInfo();
                 const dvrWindow = dvrInfo ? dvrInfo.range : null;
                 if (dvrWindow) {
-                    const startTimeFromUri = getStartTimeFromUriParameters(dvrWindow.start, true);
+                    // #t shall be relative to period start
+                    const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, true);
                     if (!isNaN(startTimeFromUri)) {
                         logger.info('Start time from URI parameters: ' + startTimeFromUri);
                         startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
