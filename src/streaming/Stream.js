@@ -633,11 +633,13 @@ function Stream(config) {
                 streamInfo: streamInfo,
                 liveStartTime: getLiveStartTime()
             });
+        }
 
-            // Start ScheduleController in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
-            for (let i = 0; i < ln && streamProcessors[i]; i++) {
-                streamProcessors[i].getScheduleController().start();
-            }
+        // (Re)start ScheduleController:
+        // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
+        // - in case stream is complete but a track switch has been requested
+        for (let i = 0; i < ln && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
         }
     }
 
