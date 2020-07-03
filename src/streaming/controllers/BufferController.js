@@ -282,6 +282,12 @@ function BufferController(config) {
             showBufferRanges(ranges);
             onPlaybackProgression();
             adjustSeekTarget();
+        } else if (replacingBuffer) {
+            // When replacing buffer due to switch track, and once new initialization segment has been appended
+            // (and previous buffered data removed) then seek stream to current time
+            const currentTime = playbackController.getTime();
+            logger.debug('AppendToBuffer seek target should be ' + currentTime);
+            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
         if (appendedBytesInfo) {
