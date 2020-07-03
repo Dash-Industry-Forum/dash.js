@@ -179,21 +179,22 @@ function PlaybackController() {
     }
 
     function seek(time, stickToBuffered, internalSeek) {
-        if (streamInfo && videoModel) {
-            if (internalSeek === true) {
-                if (time !== videoModel.getTime()) {
-                    // Internal seek = seek video model only (disable 'seeking' listener),
-                    // buffer(s) are already appended at given time (see onBytesAppended())
-                    videoModel.removeEventListener('seeking', onPlaybackSeeking);
-                    logger.info('Requesting internal seek to time: ' + time);
-                    videoModel.setCurrentTime(time, stickToBuffered);
-                }
-            } else {
-                seekTarget = time;
-                eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-                logger.info('Requesting seek to time: ' + time);
-                videoModel.setCurrentTime(time, stickToBuffered);
-            }
+        if (!streamInfo || !videoModel) return;
+
+        let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
+        if (time === currentTime) return;
+
+        if (internalSeek === true) {
+            // Internal seek = seek video model only (disable 'seeking' listener)
+            // buffer(s) are already appended at requested time
+            videoModel.removeEventListener('seeking', onPlaybackSeeking);
+            logger.info('Requesting internal seek to time: ' + time);
+            videoModel.setCurrentTime(time, stickToBuffered);
+        } else {
+            seekTarget = time;
+            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+            logger.info('Requesting seek to time: ' + time);
+            videoModel.setCurrentTime(time, stickToBuffered);
         }
     }
 
