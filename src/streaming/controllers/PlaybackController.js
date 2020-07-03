@@ -135,12 +135,9 @@ function PlaybackController() {
                     startTime = Math.max(startTime, startTimeFromUri);
                 }
             }
-
-            // Check if not seeking at current time
-            if (startTime === videoModel.getTime()) return;
         }
 
-        if (!isNaN(startTime)) {
+        if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
             // Trigger PLAYBACK_SEEKING event for controllers
             eventBus.trigger(Events.PLAYBACK_SEEKING, {
                 seekTime: startTime
