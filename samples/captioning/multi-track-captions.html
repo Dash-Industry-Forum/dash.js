@@ -54,8 +54,8 @@
         function setTextDefaultEnabled() {
             var checkbox = document.getElementById("textDefaultEnabled");
             if (!checkbox.indeterminate) {
-                player.setTextDefaultEnabled(checkbox.checked);
                 document.getElementById("textDefaultEnabledValue").innerHTML = checkbox.checked;
+                player.setTextDefaultEnabled(checkbox.checked);
             } else {
                 document.getElementById("textDefaultEnabledValue").innerHTML = 'undefined';
             }

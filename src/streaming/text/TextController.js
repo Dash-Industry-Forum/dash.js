@@ -300,12 +300,11 @@ function TextController() {
 
         allTracksAreDisabled = idx === -1 ? true : false;
 
-        if (allTracksAreDisabled) {
-            mediaController.saveTextSettingsDisabled();
-        }
-
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
         if (oldTrackIdx !== idx) {
+            if (allTracksAreDisabled && mediaController) {
+                mediaController.saveTextSettingsDisabled();
+            }
             textTracks.setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
             textTracks.setCurrentTrackIdx(idx);
             textTracks.setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
