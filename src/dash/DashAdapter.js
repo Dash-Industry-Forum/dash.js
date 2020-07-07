@@ -307,11 +307,18 @@ function DashAdapter() {
         const schemeIdUri = eventBox.scheme_id_uri;
         const value = eventBox.value;
         const timescale = eventBox.timescale;
-        const presentationTimeDelta = eventBox.presentation_time_delta;
+        let presentationTimeDelta;
+        let calculatedPresentationTime;
+        if (eventBox.version === 0) {
+            presentationTimeDelta = eventBox.presentation_time_delta;
+            calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
+        } else {
+            presentationTimeDelta = 0;
+            calculatedPresentationTime = eventBox.presentation_time_delta;
+        }
         const duration = eventBox.event_duration;
         const id = eventBox.id;
         const messageData = eventBox.message_data;
-        const calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
 
         if (!eventStreams[schemeIdUri + '/' + value]) return null;
 
@@ -460,6 +467,7 @@ function DashAdapter() {
         voAdaptations = {};
         currentMediaInfo = {};
     }
+
     // #endregion PUBLIC FUNCTIONS
 
     // #region PRIVATE FUNCTIONS
@@ -521,7 +529,7 @@ function DashAdapter() {
             return audioChannelConfiguration.value;
         });
 
-        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0 ) {
+        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
             mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
@@ -655,6 +663,7 @@ function DashAdapter() {
 
         return -1;
     }
+
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
