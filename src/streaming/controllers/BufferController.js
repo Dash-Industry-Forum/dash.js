@@ -301,10 +301,18 @@ function BufferController(config) {
     }
 
     function adjustSeekTarget () {
+        // Check buffered data only for audio and video
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
         if (isNaN(seekTarget)) return;
 
         const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
-        const range = getRangeAt(seekTarget, segmentDuration);
+
+        // Check if current buffered range already contains seek target
+        let range = getRangeAt(seekTarget, 0);
+        if (range) return;
+
+        // Get range corresponding to to seek target
+        range = getRangeAt(seekTarget, segmentDuration);
         if (!range) return;
 
         const currentTime = playbackController.getTime();
@@ -455,7 +463,7 @@ function BufferController(config) {
         let len,
             i;
 
-        const toler = (tolerance || 0.15);
+        const toler = !isNaN(tolerance) ? tolerance : 0.15;
 
         if (ranges !== null && ranges !== undefined) {
             for (i = 0, len = ranges.length; i < len; i++) {
