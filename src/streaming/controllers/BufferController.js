@@ -306,20 +306,20 @@ function BufferController(config) {
         if (isNaN(seekTarget)) return;
 
         const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
+        const currentTime = playbackController.getTime();
 
-        // Check if current buffered range already contains seek target
+        // Check if current buffered range already contains seek target (and current video element time)
         let range = getRangeAt(seekTarget, 0);
-        if (range) return;
+        if (currentTime === seekTarget && range) return;
 
-        // Get range corresponding to to seek target
+        // Get buffered range corresponding to the seek target
         range = getRangeAt(seekTarget, segmentDuration);
         if (!range) return;
 
-        const currentTime = playbackController.getTime();
-        if (Math.abs(currentTime - range.start) > segmentDuration) {
-            // If current video model time is decorrelated from seek target / appended buffer then seek video element to seek target
+        if (Math.abs(currentTime - seekTarget) > segmentDuration) {
+            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element to seek target
             // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
-            playbackController.seek(seekTarget, false, true);
+            playbackController.seek(Math.max(seekTarget, range.start), false, true);
             seekTarget = NaN;
         } else if (currentTime < range.start) {
             // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
