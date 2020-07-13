@@ -81,7 +81,9 @@ function TTMLParser() {
         let metadataHandler = {
 
             onOpenTag: function (ns, name, attrs) {
-                if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
+                if (name === 'image' &&
+                (ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt' ||
+                 ns === 'http://www.smpte-ra.org/schemas/2052-1/2013/smpte-tt')) {
                     if (!attrs[' imageType'] || attrs[' imageType'].value !== 'PNG') {
                         logger.warn('smpte-tt imageType != PNG. Discarded');
                         return;
