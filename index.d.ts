@@ -56,7 +56,7 @@ declare namespace dashjs {
         loadRecordsFromStorage(): Promise<void>;
         getAllRecords(): OfflineRecord[];
         createRecord(manifestURL: string): Promise<string>;
-        startRecord(id: string, mediaInfos: MediaInfo[]);
+        startRecord(id: string, mediaInfos: MediaInfo[]): void;
         stopRecord(id: string): void;
         resumeRecord(id: string): void;
         deleteRecord(id: string): void;
