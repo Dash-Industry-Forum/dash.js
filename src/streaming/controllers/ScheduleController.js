@@ -424,7 +424,6 @@ function ScheduleController(config) {
 
         // (Re)start schedule once buffer has been pruned after a QuotaExceededError
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
-            logger.debug('Buffer cleared since quota exceeeded, restart scheduler');
             start();
         }
     }
@@ -432,8 +431,7 @@ function ScheduleController(config) {
     function onQuotaExceeded(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
-        // Abort current request and stop scheduler (will be restarted once buffer is pruned)
-        fragmentModel.abortRequests();
+        // Stop scheduler (will be restarted once buffer is pruned)
         stop();
         setFragmentProcessState(false);
     }
