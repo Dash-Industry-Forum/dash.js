@@ -422,7 +422,9 @@ function ScheduleController(config) {
     function onBufferCleared(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && isStopped) {
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
+            logger.debug('Buffer cleared since quota exceeeded, restart scheduler');
             start();
         }
     }
@@ -430,6 +432,8 @@ function ScheduleController(config) {
     function onQuotaExceeded(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
+        // Abort current request and stop scheduler (will be restarted once buffer is pruned)
+        fragmentModel.abortRequests();
         stop();
         setFragmentProcessState(false);
     }
@@ -459,11 +463,10 @@ function ScheduleController(config) {
         });
 
         if (!isFragmentProcessingInProgress) {
-            // Restart scheduler if in pending state
+            // No pending request, request next segment at seek target
             startScheduleTimer(0);
         } else {
-            // Abort current requests
-            logger.debug('Abort requests');
+            // Abort current request
             fragmentModel.abortRequests();
         }
     }

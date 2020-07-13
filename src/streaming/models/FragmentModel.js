@@ -185,6 +185,7 @@ function FragmentModel(config) {
     }
 
     function abortRequests() {
+        logger.debug('abort requests');
         fragmentLoader.abort();
         loadingRequests = [];
     }
