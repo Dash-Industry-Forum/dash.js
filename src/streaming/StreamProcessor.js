@@ -84,7 +84,7 @@ function StreamProcessor(config) {
         representationController,
         liveEdgeFinder,
         indexHandler,
-        streamInitialized;
+        bufferPruned;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -170,7 +170,7 @@ function StreamProcessor(config) {
 
         scheduleController.initialize(hasVideoTrack);
 
-        streamInitialized = false;
+        bufferPruned = false;
     }
 
     function resetInitialSettings() {
@@ -271,13 +271,15 @@ function StreamProcessor(config) {
     function onBufferCleared(e) {
         if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
 
-        if (e.unintended) {
-            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-            fragmentModel.removeExecutedRequestsAfterTime(e.from);
-        } else {
-            fragmentModel.syncExecutedRequestsWithBufferedRange(
-                bufferController.getBuffer().getAllBufferRanges(),
-                streamInfo.duration);
+        // Remove executed requests not buffered anymore
+        fragmentModel.syncExecutedRequestsWithBufferedRange(
+            bufferController.getBuffer().getAllBufferRanges(),
+            streamInfo.duration);
+
+        // If buffer removed ahead current time (QuotaExceededError or automatic buffer pruning) then adjust current index handler time
+        if (e.from > playbackController.getTime()) {
+            setIndexHandlerTime(e.from);
+            bufferPruned = true;
         }
     }
 
@@ -494,10 +496,12 @@ function StreamProcessor(config) {
             });
         } else {
             // Use time just whenever is strictly needed
+            const useTime = hasSeekTarget || bufferPruned || bufferIsDivided;
             request = getFragmentRequest(representationInfo,
-                hasSeekTarget || bufferIsDivided ? time : undefined, {
-                    keepIdx: !hasSeekTarget && !bufferIsDivided
+                useTime ? time : undefined, {
+                    keepIdx: !useTime
                 });
+            bufferPruned = false;
 
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
