@@ -313,6 +313,12 @@ describe('DashManifestModel', function () {
             expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
         });
 
+        it('should return correct codec without the mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
+            const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4 profiles="cmfc,cfhd"', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, false);
+
+            expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
+        });
+
         it('should return null when getMimeType is called and adaptation is undefined', () => {
             const mimeType = dashManifestModel.getMimeType();
 
