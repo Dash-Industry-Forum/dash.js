@@ -277,6 +277,11 @@ function DashManifestModel() {
             }
         }
 
+        // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+        if (codec) {
+            codec = codec.replace(/\sprofiles=[^;]*/g, '');
+        }
+
         return codec;
     }
 
