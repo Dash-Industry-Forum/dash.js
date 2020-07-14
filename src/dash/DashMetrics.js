@@ -95,6 +95,7 @@ function DashMetrics(config) {
     /**
      * @param {MediaType} type
      * @returns {number}
+     * @memberof module:DashMetrics
      * @instance
      */
     function getCurrentBufferState(type) {
