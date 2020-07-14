@@ -57,6 +57,18 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
                 submenu: data.items
             });
         });
+
+        // Add provider to beginning of each Vector
+        var provider = data.provider;
+        $scope.availableStreams.forEach(function (item) {
+            if(item && item.submenu && item.submenu.length > 0) {
+                item.submenu.forEach(function (subitem) {
+                   if(subitem && subitem.name && subitem.provider && provider[subitem.provider] && provider[subitem.provider].acronym) {
+                       subitem.name = '[' + provider[subitem.provider].acronym + '] ' + subitem.name;
+                   }
+                });
+            }
+        });
     });
 
     contributors.query(function (data) {
