@@ -55,6 +55,7 @@ function TextController() {
         ttmlParser,
         eventBus,
         defaultSettings,
+        initialSettingsSet,
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
@@ -65,11 +66,11 @@ function TextController() {
 
     function setup() {
 
-        defaultSettings = {};
+        defaultSettings = null;
         lastEnabledIndex = -1;
-        textDefaultEnabled = false;
         forceTextStreaming = false;
         textTracksAdded = false;
+        initialSettingsSet = false;
         disableTextBeforeTextTracksAdded = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
@@ -79,6 +80,7 @@ function TextController() {
 
         textTracks.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
 
         /*
         * register those event callbacks in order to detect switch of periods and set
@@ -174,15 +176,20 @@ function TextController() {
 
     function setTextDefaultLanguage(lang) {
         checkParameterType(lang, 'string');
+        if (!defaultSettings) {
+            defaultSettings = {};
+        }
         defaultSettings.lang = lang;
+        initialSettingsSet = true;
     }
 
     function setInitialSettings(settings) {
         defaultSettings = settings;
+        initialSettingsSet = true;
     }
 
     function getTextDefaultLanguage() {
-        return defaultSettings.lang || '';
+        return defaultSettings && defaultSettings.lang || '';
     }
 
     function onTextTracksAdded(e) {
@@ -200,8 +207,8 @@ function TextController() {
             });
         }
 
-        if (!textDefaultEnabled || disableTextBeforeTextTracksAdded) {
-            // disable text at startup
+        if (textDefaultEnabled === false || ( textDefaultEnabled === undefined && !defaultSettings ) || disableTextBeforeTextTracksAdded) {
+            // disable text at startup if explicitely configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             this.setTextTrack(-1);
         }
 
@@ -212,6 +219,19 @@ function TextController() {
             tracks: tracks
         });
         textTracksAdded = true;
+    }
+
+    function onCurrentTrackChanged(event) {
+        if (!initialSettingsSet && event && event.newMediaInfo) {
+            let mediaInfo = event.newMediaInfo;
+            if (mediaInfo.type === Constants.FRAGMENTED_TEXT) {
+                defaultSettings = {
+                    lang: mediaInfo.lang,
+                    role: mediaInfo.roles[0],
+                    accessibility: mediaInfo.accessibility[0]
+                };
+            }
+        }
     }
 
     function setTextDefaultEnabled(enable) {
@@ -227,7 +247,7 @@ function TextController() {
     }
 
     function getTextDefaultEnabled() {
-        return textDefaultEnabled;
+        return textDefaultEnabled === undefined ? false : textDefaultEnabled;
     }
 
     function enableText(enable) {
@@ -282,6 +302,9 @@ function TextController() {
 
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
         if (oldTrackIdx !== idx) {
+            if (allTracksAreDisabled && mediaController) {
+                mediaController.saveTextSettingsDisabled();
+            }
             textTracks.setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
             textTracks.setCurrentTrackIdx(idx);
             textTracks.setModeForTrackIdx(idx, Constants.TEXT_SHOWING);

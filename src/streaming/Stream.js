@@ -489,14 +489,9 @@ function Stream(config) {
             return;
         }
 
-        if (type !== Constants.FRAGMENTED_TEXT || (type === Constants.FRAGMENTED_TEXT && textController.getTextDefaultEnabled())) {
-            mediaController.checkInitialMediaSettingsForType(type, streamInfo);
-            initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
-        }
 
-        if (type === Constants.FRAGMENTED_TEXT && !textController.getTextDefaultEnabled()) {
-            initialMediaInfo = mediaController.getTracksFor(type, streamInfo)[0];
-        }
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         eventBus.trigger(Events.STREAM_INITIALIZING, {
             streamInfo: streamInfo,
