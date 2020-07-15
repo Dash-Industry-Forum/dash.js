@@ -301,7 +301,8 @@ function BufferController(config) {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,
-                bufferedRanges: ranges
+                bufferedRanges: ranges,
+                mediaType: type
             });
         }
     }
