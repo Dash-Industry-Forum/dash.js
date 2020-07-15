@@ -11,7 +11,9 @@ class PlaybackControllerMock {
         this.isDynamic = false;
     }
 
-    initialize() {}
+    initialize() {
+        // empty block
+    }
 
     getTimeToStreamEnd() {
         return 0;
@@ -96,6 +98,7 @@ class PlaybackControllerMock {
     }
 
     setConfig() {
+        // empty block
     }
 
     getStreamStartTime() {

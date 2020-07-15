@@ -13,14 +13,14 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isHTTPURL(httpUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return true for an url with https scheme', () => {
             const httpsUrl = 'https://www.example.com';
             const result = urlUtils.isHTTPURL(httpsUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return false for a non-HTTP-URL url', () => {
@@ -28,7 +28,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isHTTPURL(ftpUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
     });
 
@@ -38,7 +38,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isRelative(relativeUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return false for an absolute url', () => {
@@ -46,7 +46,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isRelative(absoluteUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
 
         it('should return true for a path-absolute url', () => {
@@ -54,7 +54,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isRelative(pathAbsoluteUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return true for a protocol-relative url', () => {
@@ -62,7 +62,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isRelative(protocolRelativeUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
     });
 
@@ -72,7 +72,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isSchemeRelative(absoluteUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
 
         it('should return true for a protocol-relative url', () => {
@@ -80,7 +80,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isSchemeRelative(protocolRelativeUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
     });
 
@@ -90,7 +90,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isPathAbsolute(pathAbsoluteUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return false for a relative url', () => {
@@ -98,7 +98,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isPathAbsolute(relativeUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
 
         it('should return false for an absolute url', () => {
@@ -106,7 +106,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isPathAbsolute(absoluteUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
     });
 
@@ -118,7 +118,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseBaseUrl(url);
 
-            expect(result).to.equal(baseUrl); // jshint ignore:line
+            expect(result).to.equal(baseUrl);
         });
 
         it('should return the base url if no relative portion', () => {
@@ -126,7 +126,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseBaseUrl(baseUrl);
 
-            expect(result).to.equal(baseUrl); // jshint ignore:line
+            expect(result).to.equal(baseUrl);
         });
 
         it('should return the base url ignoring any query string', () => {
@@ -137,7 +137,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseBaseUrl(url);
 
-            expect(result).to.equal(baseUrl); // jshint ignore:line
+            expect(result).to.equal(baseUrl);
         });
 
         it('should return the base url if scheme-relative and origin only', () => {
@@ -147,7 +147,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseBaseUrl(url);
 
-            expect(result).to.equal(baseUrl); // jshint ignore:line
+            expect(result).to.equal(baseUrl);
         });
 
         it('should return an empty string if argument is not a url', () => {
@@ -155,7 +155,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseBaseUrl(arg);
 
-            expect(result).to.be.empty; // jshint ignore:line
+            expect(result).to.be.empty;
         });
     });
 
@@ -167,7 +167,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(url);
 
-            expect(result).to.equal(schemeAndOrigin); // jshint ignore:line
+            expect(result).to.equal(schemeAndOrigin);
         });
 
         it('should return the scheme and origin url if no relative portion', () => {
@@ -177,7 +177,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(url);
 
-            expect(result).to.equal(baseUrl); // jshint ignore:line
+            expect(result).to.equal(baseUrl);
         });
 
         it('should return the original url if scheme and origin only', () => {
@@ -185,7 +185,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(baseUrl);
 
-            expect(result).to.equal(baseUrl); // jshint ignore:line
+            expect(result).to.equal(baseUrl);
         });
 
         it('should return an empty string if url is scheme-relative', () => {
@@ -193,7 +193,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(baseUrl);
 
-            expect(result).to.be.empty; // jshint ignore:line
+            expect(result).to.be.empty;
         });
 
         it('should return an empty string if argument is not a url', () => {
@@ -201,7 +201,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(arg);
 
-            expect(result).to.be.empty; // jshint ignore:line
+            expect(result).to.be.empty;
         });
     });
 
@@ -212,7 +212,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseScheme(scheme + origin);
 
-            expect(result).to.equal(scheme); // jshint ignore:line
+            expect(result).to.equal(scheme);
         });
 
         it('should return an empty string if url is scheme-relative', () => {
@@ -220,7 +220,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(baseUrl);
 
-            expect(result).to.be.empty; // jshint ignore:line
+            expect(result).to.be.empty;
         });
 
         it('should return an empty string if argument is not a url', () => {
@@ -228,7 +228,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.parseOrigin(arg);
 
-            expect(result).to.be.empty; // jshint ignore:line
+            expect(result).to.be.empty;
         });
     });
 
@@ -240,7 +240,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(url, baseUrl);
 
-            expect(result).to.equal(expected); // jshint ignore:line
+            expect(result).to.equal(expected);
         });
 
         it('should resolve a baseurl and relative url (2)', () => {
@@ -250,7 +250,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(url, baseUrl);
 
-            expect(result).to.equal(expected); // jshint ignore:line
+            expect(result).to.equal(expected);
         });
 
         it('should resolve a baseurl and path absolute url', () => {
@@ -260,7 +260,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(url, baseUrl);
 
-            expect(result).to.equal(expected); // jshint ignore:line
+            expect(result).to.equal(expected);
         });
 
         it('should just return url if absolute', () => {
@@ -269,7 +269,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(absoluteUrl, baseUrl);
 
-            expect(result).to.equal(absoluteUrl); // jshint ignore:line
+            expect(result).to.equal(absoluteUrl);
         });
 
         it('should resolve a baseurl with no slash and relative url', () => {
@@ -279,7 +279,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(url, baseUrl);
 
-            expect(result).to.equal(expected); // jshint ignore:line
+            expect(result).to.equal(expected);
         });
 
         it('should return url if baseurl is undefined', () => {
@@ -287,7 +287,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(url);
 
-            expect(result).to.equal(url); // jshint ignore:line
+            expect(result).to.equal(url);
         });
 
         it('should resolve a baseurl and scheme-relative url', () => {
@@ -297,7 +297,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.resolve(url, baseUrl);
 
-            expect(result).to.equal(expected); // jshint ignore:line
+            expect(result).to.equal(expected);
         });
     });
 
@@ -333,7 +333,7 @@ describe('URLUtils', function () {
             const url = 'test/index.html';
             const result = instance.resolve(url);
 
-            expect(result).to.equal(url); // jshint ignore:line
+            expect(result).to.equal(url);
         });
 
         it('should resolve correctly when input is valid', () => {
@@ -343,7 +343,7 @@ describe('URLUtils', function () {
 
             const result = instance.resolve(url, baseUrl);
 
-            expect(result).to.equal(expected); // jshint ignore:line
+            expect(result).to.equal(expected);
         });
     });
 
@@ -353,14 +353,14 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isHTTPS(httpUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
 
         it('should return true for an url with https scheme', () => {
             const httpsUrl = 'https://www.example.com';
             const result = urlUtils.isHTTPS(httpsUrl);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return false for a non-HTTP-URL url', () => {
@@ -368,7 +368,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isHTTPS(ftpUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
 
         it('should return false for a relative url', () => {
@@ -376,7 +376,7 @@ describe('URLUtils', function () {
 
             const result = urlUtils.isHTTPS(relativeUrl);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
     });
 });

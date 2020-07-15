@@ -64,12 +64,12 @@ function ReportingController(config) {
 
     instance = {
         initialize: initialize,
-        reset:      reset,
-        report:     report
+        reset: reset,
+        report: report
     };
 
     return instance;
 }
 
 ReportingController.__dashjs_factory_name = 'ReportingController';
-export default dashjs.FactoryMaker.getClassFactory(ReportingController); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(ReportingController);

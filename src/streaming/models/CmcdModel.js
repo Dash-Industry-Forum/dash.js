@@ -31,7 +31,6 @@
 import EventBus from '../../core/EventBus';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
@@ -66,8 +65,7 @@ const STREAM_TYPES = {
 
 function CmcdModel() {
 
-    let logger,
-        dashManifestModel,
+    let dashManifestModel,
         instance,
         internalData,
         abrController,
@@ -79,7 +77,6 @@ function CmcdModel() {
     let settings = Settings(context).getInstance();
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
         dashManifestModel = DashManifestModel(context).getInstance();
 
         _resetInitialSettings();

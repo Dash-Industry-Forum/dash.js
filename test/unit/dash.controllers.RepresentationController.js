@@ -63,7 +63,7 @@ describe('RepresentationController', function () {
             const data = representationController.getData();
 
             // Assert
-            expect(data).not.exist; // jshint ignore:line
+            expect(data).not.exist;
         });
 
         it('should throw an exception when attempting to call updateData while setConfig has not been called properly', function () {
@@ -141,17 +141,17 @@ describe('RepresentationController', function () {
 
             it('when a MANIFEST_VALIDITY_CHANGED event occurs, should update current representation', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.adaptation.period.duration).to.equal(100); // jshint ignore:line
+                expect(currentRepresentation.adaptation.period.duration).to.equal(100);
                 eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: {}, newDuration: 150 });
 
-                expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
+                expect(currentRepresentation.adaptation.period.duration).to.equal(150);
             });
 
             it('when a WALLCLOCK_TIME_UPDATED event occurs, should update availability window for dynamic content', function () {
                 const firstRepresentation = representationController.getRepresentationForQuality(0);
 
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined); // jshint ignore:line
+                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined);
+                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined);
 
                 timelineConverter.setRange({start: 0, end: 4});
 
@@ -160,18 +160,18 @@ describe('RepresentationController', function () {
                     time: new Date()
                 });
 
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(0); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(4); // jshint ignore:line
+                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(0);
+                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(4);
             });
 
             it('when a QUALITY_CHANGE_REQUESTED event occurs, should update current representation', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
+                expect(currentRepresentation.index).to.equal(0);
 
                 eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: testType, streamInfo: streamProcessor.getStreamInfo(), oldQuality: 0, newQuality: 1});
 
                 currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
+                expect(currentRepresentation.index).to.equal(1);
             });
 
             it('when a REPRESENTATION_UPDATE_COMPLETED event occurs, should notify data update completed', function () {
@@ -190,7 +190,7 @@ describe('RepresentationController', function () {
                 const data = representationController.getData();
 
                 // Assert
-                expect(data).not.exist; // jshint ignore:line
+                expect(data).not.exist;
             });
         });
     });

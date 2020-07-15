@@ -44,7 +44,7 @@ describe('StreamProcessor', function () {
 
         it('getIndexHandlerTime should return NaN', function () {
             const time = streamProcessor.getIndexHandlerTime();
-            expect(time).to.be.NaN; // jshint ignore:line
+            expect(time).to.be.NaN;
         });
 
         it('setIndexHandlerTime should not throw an error', function () {
@@ -53,7 +53,7 @@ describe('StreamProcessor', function () {
 
         it('getInitRequest should return null', function () {
             const initRequest = streamProcessor.getInitRequest(0);
-            expect(initRequest).to.be.null; // jshint ignore:line
+            expect(initRequest).to.be.null;
         });
 
         it('getInitRequest should throw an error when quality is not a number', function () {
@@ -62,7 +62,7 @@ describe('StreamProcessor', function () {
 
         it('getFragmentRequest should return null', function () {
             const nextFragRequest = streamProcessor.getFragmentRequest();
-            expect(nextFragRequest).to.be.null; // jshint ignore:line
+            expect(nextFragRequest).to.be.null;
         });
 
         it('getRepresentationInfo should throw an error when quality is not a number', function () {
@@ -85,12 +85,12 @@ describe('StreamProcessor', function () {
         streamProcessor.initialize();
 
         let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
-        expect(dvrInfo).to.be.null; // jshint ignore:line
+        expect(dvrInfo).to.be.null;
 
         eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { streamId: streamInfo.id, mediaType: testType, bufferLevel: 50 });
 
         dvrInfo = dashMetricsMock.getCurrentDVRInfo();
-        expect(dvrInfo).not.to.be.null; // jshint ignore:line
-        expect(dvrInfo.type).to.equal(testType); // jshint ignore:line
+        expect(dvrInfo).not.to.be.null;
+        expect(dvrInfo.type).to.equal(testType);
     });
 });

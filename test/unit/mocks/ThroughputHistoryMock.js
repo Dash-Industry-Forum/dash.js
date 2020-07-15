@@ -1,12 +1,15 @@
 class ThroughputHistoryMock {
-	constructor() {
+    constructor() {
         this.setup();
     }
 
     setup() {
+        // empty block
     }
 
-	getAverageThroughput() {}
+    getAverageThroughput() {
+        // empty block
+    }
 }
 
 export default ThroughputHistoryMock;

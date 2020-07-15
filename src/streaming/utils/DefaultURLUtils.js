@@ -103,14 +103,14 @@ function DefaultURLUtils() {
         const joinChar =
               base.charAt(base.length - 1) !== '/' &&
               url.charAt(0) !== '/' ?
-              '/' : '';
+                  '/' : '';
 
         return [base, url].join(joinChar);
     };
 
     function setup() {
         try {
-            const u = new window.URL('x', 'http://y'); //jshint ignore:line
+            new window.URL('x', 'http://y');
             resolveFunction = nativeURLResolver;
         } catch (e) {
             // must be IE11/Node etc
@@ -265,16 +265,16 @@ function DefaultURLUtils() {
     setup();
 
     const instance = {
-        parseBaseUrl:       parseBaseUrl,
-        parseOrigin:        parseOrigin,
-        parseScheme:        parseScheme,
-        isRelative:         isRelative,
-        isPathAbsolute:     isPathAbsolute,
-        isSchemeRelative:   isSchemeRelative,
-        isHTTPURL:          isHTTPURL,
-        isHTTPS:            isHTTPS,
-        removeHostname:     removeHostname,
-        resolve:            resolve
+        parseBaseUrl: parseBaseUrl,
+        parseOrigin: parseOrigin,
+        parseScheme: parseScheme,
+        isRelative: isRelative,
+        isPathAbsolute: isPathAbsolute,
+        isSchemeRelative: isSchemeRelative,
+        isHTTPURL: isHTTPURL,
+        isHTTPS: isHTTPS,
+        removeHostname: removeHostname,
+        resolve: resolve
     };
 
     return instance;

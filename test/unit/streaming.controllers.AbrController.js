@@ -52,17 +52,17 @@ describe('AbrController', function () {
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
         const state = abrCtrl.getAbandonmentStateFor(Constants.AUDIO);
-        expect(state).to.be.null;    // jshint ignore:line
+        expect(state).to.be.null;
     });
 
     it('should return 0 when calling getQualityForBitrate with no mediaInfo', function () {
         const quality = abrCtrl.getQualityForBitrate(undefined, undefined, true);
-        expect(quality).to.be.equal(0);    // jshint ignore:line
+        expect(quality).to.be.equal(0);
     });
 
     it('should return true if isPlayingAtTopQuality function is called without parameter', function () {
         let isPlayingTopQuality = abrCtrl.isPlayingAtTopQuality();
-        expect(isPlayingTopQuality).to.be.true; // jshint ignore:line
+        expect(isPlayingTopQuality).to.be.true;
     });
 
     it('should update top quality index', function () {
@@ -244,7 +244,7 @@ describe('AbrController', function () {
 
     it('should configure initial bitrate for fragmented text type', function () {
         let initialBitrateFor = abrCtrl.getInitialBitrateFor(Constants.FRAGMENTED_TEXT);
-        expect(initialBitrateFor).to.be.NaN; // jshint ignore:line
+        expect(initialBitrateFor).to.be.NaN;
     });
 
     it('should return an appropriate BitrateInfo when calling getTopBitrateInfoFor', function () {

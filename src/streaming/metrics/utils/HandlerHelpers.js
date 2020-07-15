@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @ignore
-  */
+/**
+ * @ignore
+ */
 function HandlerHelpers() {
     return {
         reconstructFullMetricName: function (key, n, type) {
@@ -71,4 +71,4 @@ function HandlerHelpers() {
 }
 
 HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
-export default dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers);

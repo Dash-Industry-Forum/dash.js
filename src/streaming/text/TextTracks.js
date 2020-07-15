@@ -131,9 +131,6 @@ function TextTracks() {
                 trackElementArr.push(track); //used to remove tracks from video element when added manually
 
                 if (textTrackQueue[i].defaultTrack) {
-                    // track.default is an object property identifier that is a reserved word
-                    // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-                    /*jshint -W024 */
                     track.default = true;
                     defaultIndex = i;
                 }
@@ -410,6 +407,38 @@ function TextTracks() {
             return;
         }
 
+        const onenterHandlerHtml = function () {
+            if (track.mode === Constants.TEXT_SHOWING) {
+                if (this.isd) {
+                    renderCaption(this);
+                    logger.debug('Cue enter id:' + this.cueID);
+                } else {
+                    captionContainer.appendChild(this.cueHTMLElement);
+                    scaleCue.call(self, this);
+                    eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: this.cueHTMLElement, currentTrackIdx });
+                }
+            }
+        };
+
+        const onexitHandlerHtml = function () {
+            if (captionContainer) {
+                const divs = captionContainer.childNodes;
+                for (let i = 0; i < divs.length; ++i) {
+                    if (divs[i].id === this.cueID) {
+                        logger.debug('Cue exit id:' + divs[i].id);
+                        captionContainer.removeChild(divs[i]);
+                        --i;
+                    }
+                }
+            }
+        };
+
+        const onenterHandler = function () {
+            if (track.mode === Constants.TEXT_SHOWING) {
+                eventBus.trigger(Events.CAPTION_RENDERED, { currentTrackIdx });
+            }
+        };
+
         for (let item = 0; item < captionData.length; item++) {
             let cue;
             const currentItem = captionData[item];
@@ -436,31 +465,8 @@ function TextTracks() {
                 captionContainer.style.width = actualVideoWidth + 'px';
                 captionContainer.style.height = actualVideoHeight + 'px';
 
-                cue.onenter = function () {
-                    if (track.mode === Constants.TEXT_SHOWING) {
-                        if (this.isd) {
-                            renderCaption(this);
-                            logger.debug('Cue enter id:' + this.cueID);
-                        } else {
-                            captionContainer.appendChild(this.cueHTMLElement);
-                            scaleCue.call(self, this);
-                            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: this.cueHTMLElement, currentTrackIdx});
-                        }
-                    }
-                };
-
-                cue.onexit = function () {
-                    if (captionContainer) {
-                        const divs = captionContainer.childNodes;
-                        for (let i = 0; i < divs.length; ++i) {
-                            if (divs[i].id === this.cueID) {
-                                logger.debug('Cue exit id:' + divs[i].id);
-                                captionContainer.removeChild(divs[i]);
-                                --i;
-                            }
-                        }
-                    }
-                };
+                cue.onenter = onenterHandlerHtml;
+                cue.onexit = onexitHandlerHtml;
             } else {
                 if (currentItem.data) {
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
@@ -478,11 +484,7 @@ function TextTracks() {
                             cue.size = currentItem.styles.size;
                         }
                     }
-                    cue.onenter = function () {
-                        if (track.mode === Constants.TEXT_SHOWING) {
-                            eventBus.trigger(Events.CAPTION_RENDERED, {currentTrackIdx});
-                        }
-                    };
+                    cue.onenter = onenterHandler;
                 }
             }
             try {

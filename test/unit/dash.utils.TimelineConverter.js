@@ -57,19 +57,15 @@ describe('TimelineConverter', function () {
     });
 
     describe('when time sync is complete', function () {
-        let updateCompleted;
-
         beforeEach(function (done) {
-            updateCompleted = false;
             setTimeout(() => {
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {offset: 0});
-                updateCompleted = true;
                 done();
             }, specHelper.getExecutionDelay());
         });
 
         it('should set isTimeSyncCompleted', function () {
-            expect(timelineConverter.isTimeSyncCompleted()).to.be.ok; // jshint ignore:line
+            expect(timelineConverter.isTimeSyncCompleted()).to.be.ok;
         });
 
         it('should calculate availability window for dynamic mpd', function () {

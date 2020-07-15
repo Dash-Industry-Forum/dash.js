@@ -118,11 +118,11 @@ function MetricsHandlersController(config) {
 
     instance = {
         initialize: initialize,
-        reset:      reset
+        reset: reset
     };
 
     return instance;
 }
 
 MetricsHandlersController.__dashjs_factory_name = 'MetricsHandlersController';
-export default dashjs.FactoryMaker.getClassFactory(MetricsHandlersController); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(MetricsHandlersController);

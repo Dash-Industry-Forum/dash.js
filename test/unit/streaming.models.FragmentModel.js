@@ -40,14 +40,14 @@ describe('FragmentModel', function () {
     it('should return false when isFragmentLoaded is called and request is undefined', () => {
         const isFragmentLoaded = fragmentModel.isFragmentLoaded();
 
-        expect(isFragmentLoaded).to.be.false;  // jshint ignore:line
+        expect(isFragmentLoaded).to.be.false;
     });
 
     it('should return false when isFragmentLoaded is called and request is undefined but executedRequests is not empty', () => {
         fragmentModel.executeRequest(completeInitRequest);
         const isFragmentLoaded = fragmentModel.isFragmentLoaded();
 
-        expect(isFragmentLoaded).to.be.false;  // jshint ignore:line
+        expect(isFragmentLoaded).to.be.false;
         fragmentModel.reset();
     });
 

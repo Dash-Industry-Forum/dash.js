@@ -21,7 +21,7 @@ describe('ObjectUtils', function () {
 
             const result = objectUtils.areEqual(obj1,obj2);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return true if object are equals - declared parameters in different order', () => {
@@ -37,7 +37,7 @@ describe('ObjectUtils', function () {
 
             const result = objectUtils.areEqual(obj1,obj2);
 
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.true;
         });
 
         it('should return false if object are different', () => {
@@ -53,7 +53,7 @@ describe('ObjectUtils', function () {
 
             const result = objectUtils.areEqual(obj1,obj2);
 
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.be.false;
         });
     });
 });

@@ -62,13 +62,13 @@ function OfflineUrlUtils() {
 
     setup();
     const instance = {
-        getRegex:           getRegex,
-        isRelative:         isRelative,
-        removeHostname:     removeHostname,
-        resolve:            resolve
+        getRegex: getRegex,
+        isRelative: isRelative,
+        removeHostname: removeHostname,
+        resolve: resolve
     };
     return instance;
 }
 
 OfflineUrlUtils.__dashjs_factory_name = 'OfflineUrlUtils';
-export default dashjs.FactoryMaker.getSingletonFactory(OfflineUrlUtils); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(OfflineUrlUtils);

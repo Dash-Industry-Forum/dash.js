@@ -38,9 +38,9 @@ import HTTPLoader from '../../streaming/net/HTTPLoader';
  */
 function SchemeLoaderFactory() {
 
-    let instance;
+    let instance,
 
-    let schemeLoaderMap;
+        schemeLoaderMap;
 
     function registerLoader(scheme, loader) {
         schemeLoaderMap[scheme] = loader;

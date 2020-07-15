@@ -16,8 +16,8 @@ describe('TemplateSegmentsGetter', () => {
     });
 
     it('should expose segments getter interface', () => {
-        expect(templateSegmentsGetter.getSegmentByIndex).to.exist; // jshint ignore:line
-        expect(templateSegmentsGetter.getSegmentByTime).to.exist; // jshint ignore:line
+        expect(templateSegmentsGetter.getSegmentByIndex).to.exist;
+        expect(templateSegmentsGetter.getSegmentByTime).to.exist;
     });
 
     describe('initialization', () => {
@@ -35,7 +35,7 @@ describe('TemplateSegmentsGetter', () => {
             const getter = TemplateSegmentsGetter(context).create({timelineConverter: timelineConverter});
             const segment = getter.getSegmentByIndex();
 
-            expect(segment).to.be.null; // jshint ignore:line
+            expect(segment).to.be.null;
         });
     });
 
@@ -87,7 +87,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 1 + 100 / 5);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
     });
 
@@ -98,7 +98,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentDuration = undefined;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 0);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
 
         it('should return segment by time', () => {
@@ -133,7 +133,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 110);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         });
     });
 });

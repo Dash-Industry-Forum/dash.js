@@ -3,8 +3,8 @@ import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
 function switchRequestHistoryMock() {
     this.getSwitchRequests = function () {
         return [{drops: 7,
-                noDrops: 0,
-                dropSize: 4}];
+            noDrops: 0,
+            dropSize: 4}];
     };
 }
 

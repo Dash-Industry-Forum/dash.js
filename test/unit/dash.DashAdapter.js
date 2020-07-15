@@ -33,21 +33,21 @@ describe('DashAdapter', function () {
             dashAdapter.reset();
             const eventsArray = dashAdapter.getEventsFor();
 
-            expect(eventsArray).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(eventsArray).to.be.empty;                // jshint ignore:line
+            expect(eventsArray).to.be.instanceOf(Array);
+            expect(eventsArray).to.be.empty;
         });
 
         it('should return an empty array when getAllMediaInfoForType is called and voPeriods is an empty array', function () {
             const mediaInfoArray = dashAdapter.getAllMediaInfoForType();
 
-            expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
+            expect(mediaInfoArray).to.be.instanceOf(Array);
+            expect(mediaInfoArray).to.be.empty;
         });
 
         it('should return null when updatePeriods is called and newManifest is undefined', function () {
             const returnValue = dashAdapter.updatePeriods();
 
-            expect(returnValue).to.be.null;                // jshint ignore:line
+            expect(returnValue).to.be.null;
         });
 
         it('should throw an error when updatePeriods is called and newManifest parameter is defined, while setConfig has not been called', function () {
@@ -57,37 +57,37 @@ describe('DashAdapter', function () {
         it('should return null when getMediaInfoForType is called and voPeriods is an empty array', function () {
             const mediaInfo = dashAdapter.getMediaInfoForType();
 
-            expect(mediaInfo).to.be.null;                // jshint ignore:line
+            expect(mediaInfo).to.be.null;
         });
 
         it('should return null when getDataForMedia is called and voPeriods is an empty array, mediaInfo parameter is undefined', function () {
             const adaptation = dashAdapter.getDataForMedia();
 
-            expect(adaptation).to.be.null;                // jshint ignore:line
+            expect(adaptation).to.be.null;
         });
 
         it('should return null when getDataForMedia is called and voPeriods is an empty array, mediaInfo parameter is an empty object', function () {
             const adaptation = dashAdapter.getDataForMedia({});
 
-            expect(adaptation).to.be.null;                // jshint ignore:line
+            expect(adaptation).to.be.null;
         });
 
         it('should return null when getEvent is called and no parameter is set', function () {
             const event = dashAdapter.getEvent();
 
-            expect(event).to.be.null;                // jshint ignore:line
+            expect(event).to.be.null;
         });
 
         it('should return null when getEvent is called and an empty eventBox parameter is set and eventStreams is undefined', function () {
             const event = dashAdapter.getEvent({});
 
-            expect(event).to.be.null;                // jshint ignore:line
+            expect(event).to.be.null;
         });
 
         it('should return null when getEvent is called and an empty eventBox and eventStreams parameters are set', function () {
             const event = dashAdapter.getEvent({}, []);
 
-            expect(event).to.be.null;                // jshint ignore:line
+            expect(event).to.be.null;
         });
 
         it('should return an empty event object when getEvent is called and eventBox and eventStreams parameters are set', function () {
@@ -99,51 +99,51 @@ describe('DashAdapter', function () {
         it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
             const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo(Constants.VIDEO));
 
-            expect(realAdaptation).to.be.undefined; // jshint ignore:line
+            expect(realAdaptation).to.be.undefined;
         });
 
         it('should return undefined when getRealAdaptation is called and mediaInfo parameter is null or undefined', function () {
             const realAdaptation = dashAdapter.getRealAdaptation(voHelper.getDummyStreamInfo(), null);
 
-            expect(realAdaptation).to.be.undefined; // jshint ignore:line
+            expect(realAdaptation).to.be.undefined;
         });
 
         it('should return empty array when getUTCTimingSources is called and no period is defined', function () {
             const timingSources = dashAdapter.getUTCTimingSources();
 
-            expect(timingSources).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(timingSources).to.be.empty;                // jshint ignore:line
+            expect(timingSources).to.be.instanceOf(Array);
+            expect(timingSources).to.be.empty;
         });
 
         it('should return null when getSuggestedPresentationDelay is called and no period is defined', function () {
             const suggestedPresentationDelay = dashAdapter.getSuggestedPresentationDelay();
 
-            expect(suggestedPresentationDelay).to.be.null;   // jshint ignore:line
+            expect(suggestedPresentationDelay).to.be.null;
         });
 
         it('should return false when getIsDynamic is called and no period is defined', function () {
             const isDynamic = dashAdapter.getIsDynamic();
 
-            expect(isDynamic).to.be.false;   // jshint ignore:line
+            expect(isDynamic).to.be.false;
         });
 
         it('should return Number.MAX_SAFE_INTEGER || Number.MAX_VALUE when getDuration is called and no period is defined', function () {
             const duration = dashAdapter.getDuration();
 
-            expect(duration).to.equal(Number.MAX_SAFE_INTEGER || Number.MAX_VALUE); // jshint ignore:line
+            expect(duration).to.equal(Number.MAX_SAFE_INTEGER || Number.MAX_VALUE);
         });
 
         it('should return null when getAvailabilityStartTime is called and no period is defined', function () {
             const availabilityStartTime = dashAdapter.getAvailabilityStartTime();
 
-            expect(availabilityStartTime).to.be.null; // jshint ignore:line
+            expect(availabilityStartTime).to.be.null;
         });
 
         it('should return empty array when getRegularPeriods is called and no period is defined', function () {
             const regularPeriods = dashAdapter.getRegularPeriods();
 
-            expect(regularPeriods).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(regularPeriods).to.be.empty;                // jshint ignore:line
+            expect(regularPeriods).to.be.instanceOf(Array);
+            expect(regularPeriods).to.be.empty;
         });
     });
 
@@ -159,22 +159,22 @@ describe('DashAdapter', function () {
         it('should return null when convertDataToRepresentationInfo is called and voRepresentation parameter is null or undefined', function () {
             const representationInfo = dashAdapter.convertDataToRepresentationInfo();
 
-            expect(representationInfo).to.be.null;                // jshint ignore:line
+            expect(representationInfo).to.be.null;
         });
 
         it('should return correct representationInfo when convertDataToRepresentationInfo is called and voRepresentation parameter is well defined', function () {
             const voRepresentation = voHelper.getDummyRepresentation(Constants.VIDEO, 0);
             const representationInfo = dashAdapter.convertDataToRepresentationInfo(voRepresentation);
 
-            expect(representationInfo).not.to.be.null;            // jshint ignore:line
-            expect(representationInfo.quality).to.equal(0);         // jshint ignore:line
+            expect(representationInfo).not.to.be.null;
+            expect(representationInfo.quality).to.equal(0);
         });
 
         it('should return undefined when getVoRepresentations is called and mediaInfo parameter is null or undefined', function () {
             const voRepresentations = dashAdapter.getVoRepresentations();
 
-            expect(voRepresentations).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(voRepresentations).to.be.empty;                // jshint ignore:line
+            expect(voRepresentations).to.be.instanceOf(Array);
+            expect(voRepresentations).to.be.empty;
         });
 
         it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
@@ -182,21 +182,21 @@ describe('DashAdapter', function () {
             dashAdapter.updatePeriods(manifest_with_video);
             const adaptation = dashAdapter.getAdaptationForType(0, Constants.VIDEO);
 
-            expect(adaptation.id).to.equal(0); // jshint ignore:line
+            expect(adaptation.id).to.equal(0);
         });
 
         it('should return an empty array getStreamsInfo externalManifest is an empty object and maxStreamsInfo is undefined', function () {
             const streamInfos = dashAdapter.getStreamsInfo({});
 
-            expect(streamInfos).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(streamInfos).to.be.empty;                // jshint ignore:line
+            expect(streamInfos).to.be.instanceOf(Array);
+            expect(streamInfos).to.be.empty;
         });
 
         it('should return an empty array getStreamsInfo externalManifest is not an empty object and maxStreamsInfo is defined', function () {
             const streamInfos = dashAdapter.getStreamsInfo(manifest_with_audio, 10);
 
-            expect(streamInfos).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(streamInfos.length).to.equal(1);                // jshint ignore:line
+            expect(streamInfos).to.be.instanceOf(Array);
+            expect(streamInfos.length).to.equal(1);
         });
 
         describe('updatePeriods previously called', function () {
@@ -211,7 +211,7 @@ describe('DashAdapter', function () {
             it('should return null when getMediaInfoForType is called and voPeriods is not an empty array, but streamInfo is undefined', function () {
                 const mediaInfo = dashAdapter.getMediaInfoForType();
 
-                expect(mediaInfo).to.be.null;  // jshint ignore:line
+                expect(mediaInfo).to.be.null;
             });
 
             it('should return null when getMediaInfoForType is called and voPeriods is not an empty array, and streamInfo is defined but not in the current manifest', function () {
@@ -220,7 +220,7 @@ describe('DashAdapter', function () {
                 streamInfo.index = 0;
                 const mediaInfo = dashAdapter.getMediaInfoForType(streamInfo, Constants.AUDIO);
 
-                expect(mediaInfo).to.be.null;  // jshint ignore:line
+                expect(mediaInfo).to.be.null;
             });
 
             it('should return null when getMediaInfoForType is called and voPeriods is not an empty array, and streamInfo is defined', function () {
@@ -230,31 +230,31 @@ describe('DashAdapter', function () {
                 streamInfo.index = 0;
                 const mediaInfo = dashAdapter.getMediaInfoForType(streamInfo, Constants.AUDIO);
 
-                expect(mediaInfo).not.to.be.null;  // jshint ignore:line
+                expect(mediaInfo).not.to.be.null;
             });
 
             it('should return null when getBandwidthForRepresentation is called and representationId and periodId are undefined', () => {
                 const bdwth = dashAdapter.getBandwidthForRepresentation();
 
-                expect(bdwth).to.be.null;  // jshint ignore:line
+                expect(bdwth).to.be.null;
             });
 
             it('should return -1 when getIndexForRepresentation is called and representationId and periodIdx are undefined', () => {
                 const index = dashAdapter.getIndexForRepresentation();
 
-                expect(index).to.be.equal(-1);  // jshint ignore:line
+                expect(index).to.be.equal(-1);
             });
 
             it('should return -1 when getMaxIndexForBufferType is called and bufferType and periodIdx are undefined', () => {
                 const index = dashAdapter.getMaxIndexForBufferType();
 
-                expect(index).to.be.equal(-1);  // jshint ignore:line
+                expect(index).to.be.equal(-1);
             });
 
             it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
                 const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo(Constants.VIDEO));
 
-                expect(realAdaptation).to.be.undefined; // jshint ignore:line
+                expect(realAdaptation).to.be.undefined;
             });
 
             it('should return the correct adaptation when getAdaptationForType is called', () => {
@@ -276,70 +276,70 @@ describe('DashAdapter', function () {
                 dashAdapter.setCurrentMediaInfo(streamInfo.id, Constants.AUDIO, track);
                 const adaptation = dashAdapter.getAdaptationForType(0, Constants.AUDIO, streamInfo);
 
-                expect(adaptation.lang).to.equal('eng'); // jshint ignore:line
+                expect(adaptation.lang).to.equal('eng');
             });
 
             it('should return an empty array when getEventsFor is called and info parameter is undefined', function () {
                 const eventsArray = dashAdapter.getEventsFor();
 
-                expect(eventsArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(eventsArray).to.be.empty;                // jshint ignore:line
+                expect(eventsArray).to.be.instanceOf(Array);
+                expect(eventsArray).to.be.empty;
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and voPeriods is not an empty array', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType();
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
+                expect(mediaInfoArray).to.be.instanceOf(Array);
+                expect(mediaInfoArray).to.be.empty;
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and voPeriods is not an empty array, and streamInfo parameter is set', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.AUDIO);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray).to.not.be.empty;                // jshint ignore:line
+                expect(mediaInfoArray).to.be.instanceOf(Array);
+                expect(mediaInfoArray).to.not.be.empty;
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and externalManifest is set', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType(null, null, manifest_with_audio);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
+                expect(mediaInfoArray).to.be.instanceOf(Array);
+                expect(mediaInfoArray).to.be.empty;
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and, embeddedText type and externalManifest are set', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.EMBEDDED_TEXT, manifest_with_video_with_embedded_subtitles);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
+                expect(mediaInfoArray).to.be.instanceOf(Array);
+                expect(mediaInfoArray.length).equals(2);
             });
 
             it('should read service description attributes', function () {
                 const streamInfos = dashAdapter.getStreamsInfo(manifest_with_ll_service_description, 10);
 
-                expect(streamInfos).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(streamInfos.length).equals(1);           // jshint ignore:line
+                expect(streamInfos).to.be.instanceOf(Array);
+                expect(streamInfos.length).equals(1);
 
-                expect(streamInfos[0].manifestInfo).not.to.be.null; ;    // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions.length).equals(1);           // jshint ignore:line
+                expect(streamInfos[0].manifestInfo).not.to.be.null; ;
+                expect(streamInfos[0].manifestInfo.serviceDescriptions).to.be.instanceOf(Array);
+                expect(streamInfos[0].manifestInfo.serviceDescriptions.length).equals(1);
 
-                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].schemeIdUri).equals('urn:dvb:dash:lowlatency:scope:2019');           // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.target).equals(3000);        // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.max).equals(5000);           // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.min).equals(2000);           // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.max).equals(1.5);       // jshint ignore:line
-                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.min).equals(0.5);       // jshint ignore:line
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].schemeIdUri).equals('urn:dvb:dash:lowlatency:scope:2019');
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.target).equals(3000);
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.max).equals(5000);
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].latency.min).equals(2000);
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.max).equals(1.5);
+                expect(streamInfos[0].manifestInfo.serviceDescriptions[0].playbackRate.min).equals(0.5);
             });
 
             it('supplemental properties should be empty if not defined', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.VIDEO, manifest_without_supplemental_properties);
 
-                expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
-                expect(mediaInfoArray.length).equals(1);           // jshint ignore:line
+                expect(mediaInfoArray).to.be.instanceOf(Array);
+                expect(mediaInfoArray.length).equals(1);
 
-                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
-                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+                expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;
+                expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);
             });
         });
     });

@@ -1,12 +1,14 @@
-function StreamMock () {
+function StreamMock() {
     this.getStreamInfo = function () {
         return {};
     };
 
     this.getFragmentController = function () {
-        return { getModel: () => {
-            return { setStreamProcessor: () => {} };
-        } };
+        return {
+            getModel: () => {
+                return { setStreamProcessor: () => { } };
+            }
+        };
     };
 }
 

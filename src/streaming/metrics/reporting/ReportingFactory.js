@@ -69,8 +69,8 @@ function ReportingFactory(config) {
     }
 
     instance = {
-        create:     create,
-        register:   register,
+        create: create,
+        register: register,
         unregister: unregister
     };
 
@@ -78,4 +78,4 @@ function ReportingFactory(config) {
 }
 
 ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
-export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory);

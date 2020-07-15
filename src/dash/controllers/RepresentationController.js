@@ -177,7 +177,7 @@ function RepresentationController(config) {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             updateRepresentation(voAvailableRepresentations[i], isDynamic);
             if (notifyUpdate) {
-                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
+                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation: voAvailableRepresentations[i]});
             }
         }
     }

@@ -55,7 +55,7 @@ describe('DashHandler', function () {
         const initRequest = dashHandler.getInitRequest(streamProcessor.getMediaInfo(), representation);
 
         // Assert
-        expect(initRequest).to.exist; // jshint ignore:line
+        expect(initRequest).to.exist;
     });
 
     it('should return null when trying to get an init request with no representation', () => {
@@ -63,30 +63,30 @@ describe('DashHandler', function () {
         const initRequest = dashHandler.getInitRequest();
 
         // Assert
-        expect(initRequest).to.be.null; // jshint ignore:line
+        expect(initRequest).to.be.null;
     });
 
     it('should return null when trying to get a media segment with no representation', () => {
         const mediaSegment = dashHandler.getSegmentRequestForTime();
 
-        expect(mediaSegment).to.be.null; // jshint ignore:line
+        expect(mediaSegment).to.be.null;
     });
 
     it('should return null when trying to get a media segment with an empty representation parameter', () => {
         const mediaSegment = dashHandler.getSegmentRequestForTime({});
 
-        expect(mediaSegment).to.be.null; // jshint ignore:line
+        expect(mediaSegment).to.be.null;
     });
 
     it('should return ??? when trying to get a media segment with conform representation parameter', () => {
         const mediaSegment = dashHandler.getSegmentRequestForTime({segmentInfoType: DashConstants.SEGMENT_BASE});
 
-        expect(mediaSegment).to.be.null; // jshint ignore:line
+        expect(mediaSegment).to.be.null;
     });
 
     it('should return null when trying to get next a media segment with no representation', () => {
         const mediaSegment = dashHandler.getNextSegmentRequest();
 
-        expect(mediaSegment).to.be.null; // jshint ignore:line
+        expect(mediaSegment).to.be.null;
     });
 });

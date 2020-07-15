@@ -45,7 +45,7 @@ function EmbeddedTextHtmlRender() {
         }
 
         const l = line.length;
-        const ll = line.replace(/^\s+/,'').length;
+        const ll = line.replace(/^\s+/, '').length;
         return l - ll;
     }
 
@@ -96,7 +96,7 @@ function EmbeddedTextHtmlRender() {
         let existingRegion = null;
         let lastRowHasText = false;
         let lastRowIndentL = -1;
-        let currP = {start: startTime, end: endTime, spans: []};
+        let currP = { start: startTime, end: endTime, spans: [] };
         let currentStyle = 'style_cea608_white_black';
         const seenRegions = {};
         const styleStates = {};
@@ -291,17 +291,18 @@ function EmbeddedTextHtmlRender() {
                 }
             }
 
-            captionsArray.push({ type: 'html',
-                                start: startTime,
-                                end: endTime,
-                                cueHTMLElement: finalDiv,
-                                cueID: cueID,
-                                cellResolution: [32, 15],
-                                isFromCEA608: true,
-                                fontSize: fontSize,
-                                lineHeight: {},
-                                linePadding: {}
-                               });
+            captionsArray.push({
+                type: 'html',
+                start: startTime,
+                end: endTime,
+                cueHTMLElement: finalDiv,
+                cueID: cueID,
+                cellResolution: [32, 15],
+                isFromCEA608: true,
+                fontSize: fontSize,
+                lineHeight: {},
+                linePadding: {}
+            });
         }
         return captionsArray;
     }

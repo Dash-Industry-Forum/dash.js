@@ -81,12 +81,12 @@ function DVBErrorsHandler(config) {
     }
 
     instance = {
-        initialize:         initialize,
-        reset:              reset,
-        handleNewMetric:    handleNewMetric
+        initialize: initialize,
+        reset: reset,
+        handleNewMetric: handleNewMetric
     };
 
     return instance;
 }
 
-export default dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler);

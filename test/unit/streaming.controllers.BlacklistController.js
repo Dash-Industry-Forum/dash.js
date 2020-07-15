@@ -21,7 +21,7 @@ describe('BlacklistController', function () {
 
         const contains = blacklistController.contains('test');
 
-        expect(contains).to.be.false; // jshint ignore:line
+        expect(contains).to.be.false;
     });
 
     it('should return false when calling contains with undefined', () => {
@@ -29,7 +29,7 @@ describe('BlacklistController', function () {
 
         const contains = blacklistController.contains(undefined);
 
-        expect(contains).to.be.false; // jshint ignore:line
+        expect(contains).to.be.false;
     });
 
     it('should return false when calling contains with zero-length string', () => {
@@ -37,7 +37,7 @@ describe('BlacklistController', function () {
 
         const contains = blacklistController.contains('');
 
-        expect(contains).to.be.false; // jshint ignore:line
+        expect(contains).to.be.false;
     });
 
     it('should return true when calling contains after calling add with same string', () => {
@@ -47,7 +47,7 @@ describe('BlacklistController', function () {
 
         const contains = blacklistController.contains(SERVICE_LOCATION);
 
-        expect(contains).to.be.true; // jshint ignore:line
+        expect(contains).to.be.true;
     });
 
     it('should trigger an update event after calling add', () => {
@@ -59,7 +59,7 @@ describe('BlacklistController', function () {
 
         blacklistController.add(SERVICE_LOCATION);
 
-        expect(spy).to.have.been.called.once; // jshint ignore:line
+        expect(spy).to.have.been.called.once;
 
         eventBus.off(EVENT_NAME, spy);
     });
@@ -77,7 +77,7 @@ describe('BlacklistController', function () {
 
         const contains = blacklistController.contains(SERVICE_LOCATION);
 
-        expect(contains).to.be.true; // jshint ignore:line
+        expect(contains).to.be.true;
     });
 
     it('should not trigger an update event if a duplicate entry is added', () => {
@@ -90,7 +90,7 @@ describe('BlacklistController', function () {
         blacklistController.add(SERVICE_LOCATION);
         blacklistController.add(SERVICE_LOCATION);
 
-        expect(spy).to.have.been.called.once; // jshint ignore:line
+        expect(spy).to.have.been.called.once;
 
         eventBus.off(EVENT_NAME, spy);
     });
@@ -104,7 +104,7 @@ describe('BlacklistController', function () {
         blacklistController.reset();
         const containsAfterReset = blacklistController.contains(SERVICE_LOCATION);
 
-        expect(containsBeforeReset).to.be.true; // jshint ignore:line
-        expect(containsAfterReset).to.be.false; // jshint ignore:line
+        expect(containsBeforeReset).to.be.true;
+        expect(containsAfterReset).to.be.false;
     });
 });

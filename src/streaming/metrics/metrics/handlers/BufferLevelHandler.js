@@ -99,13 +99,13 @@ function BufferLevelHandler(config) {
     }
 
     instance = {
-        initialize:         initialize,
-        reset:              reset,
-        handleNewMetric:    handleNewMetric
+        initialize: initialize,
+        reset: reset,
+        handleNewMetric: handleNewMetric
     };
 
     return instance;
 }
 
 BufferLevelHandler.__dashjs_factory_name = 'BufferLevelHandler';
-export default dashjs.FactoryMaker.getClassFactory(BufferLevelHandler); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(BufferLevelHandler);

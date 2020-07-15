@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @class
-  * @ignore
-  */
+/**
+ * @class
+ * @ignore
+ */
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
@@ -47,7 +47,7 @@ class CommonEncryption {
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
             if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
-                    cp.value.toLowerCase() === 'cenc')
+                cp.value.toLowerCase() === 'cenc')
                 retVal = cp;
         }
         return retVal;
@@ -139,7 +139,9 @@ class CommonEncryption {
                 nextBox,
                 version,
                 systemID,
-                psshDataSize;
+                // psshDataSize,
+                i,
+                val;
             let boxStart = byteCursor;
 
             if (byteCursor >= dv.buffer.byteLength)
@@ -169,7 +171,6 @@ class CommonEncryption {
 
             // 16-byte UUID/SystemID
             systemID = '';
-            let i, val;
             for (i = 0; i < 4; i++) {
                 val = dv.getUint8(byteCursor + i).toString(16);
                 systemID += (val.length === 1) ? '0' + val : val;
@@ -203,7 +204,7 @@ class CommonEncryption {
             systemID = systemID.toLowerCase();
 
             /* PSSH Data Size */
-            psshDataSize = dv.getUint32(byteCursor);
+            // psshDataSize = dv.getUint32(byteCursor);
             byteCursor += 4;
 
             /* PSSH Data */

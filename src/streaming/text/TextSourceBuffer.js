@@ -452,13 +452,11 @@ function TextSourceBuffer() {
 
                 if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                     // Time to setup the CEA-608 parsing
-                    let field, handler, trackIdx;
+                    let handler, trackIdx;
                     for (i = 0; i < embeddedTracks.length; i++) {
                         if (embeddedTracks[i].id === Constants.CC1) {
-                            field = 0;
                             trackIdx = textTracks.getTrackIdxForId(Constants.CC1);
                         } else if (embeddedTracks[i].id === Constants.CC3) {
-                            field = 1;
                             trackIdx = textTracks.getTrackIdxForId(Constants.CC3);
                         }
                         if (trackIdx === -1) {

@@ -440,4 +440,4 @@ function IndexDBStore() {
 }
 
 IndexDBStore.__dashjs_factory_name = 'IndexDBStore';
-export default dashjs.FactoryMaker.getSingletonFactory(IndexDBStore); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(IndexDBStore);

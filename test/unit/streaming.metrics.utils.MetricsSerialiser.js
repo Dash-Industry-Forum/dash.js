@@ -14,7 +14,7 @@ describe('MetricSerialiser', function () {
 
             const actual = metricSerialiser.serialise(list);
 
-            expect(actual).to.equal(expected); // jshint ignore:line
+            expect(actual).to.equal(expected);
         });
 
         it('should not serialise keys starting with _', () => {
@@ -23,7 +23,7 @@ describe('MetricSerialiser', function () {
 
             const actual = metricSerialiser.serialise(entry);
 
-            expect(actual).to.equal(expected); // jshint ignore:line
+            expect(actual).to.equal(expected);
         });
     });
 });

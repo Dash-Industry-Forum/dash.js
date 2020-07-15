@@ -19,7 +19,7 @@ describe('SegmentUtils', function () {
     describe('unescapeDollarsInTemplate', function () {
         it('should return undefined when unescapeDollarsInTemplate is called with an undefined url', function () {
             const result = unescapeDollarsInTemplate();
-            expect(result).to.be.undefined;  // jshint ignore:line
+            expect(result).to.be.undefined;
         });
 
         it('should unescape $$', function () {
@@ -31,7 +31,7 @@ describe('SegmentUtils', function () {
     describe('replaceIDForTemplate', function () {
         it('should return undefined when replaceIDForTemplate is called with an undefined url', function () {
             const result = replaceIDForTemplate();
-            expect(result).to.be.undefined;  // jshint ignore:line
+            expect(result).to.be.undefined;
         });
 
         it('should return url when replaceIDForTemplate is called with an undefined value', function () {
@@ -53,7 +53,7 @@ describe('SegmentUtils', function () {
     describe('replaceTokenForTemplate', function () {
         it('should return undefined when no url is provided', function () {
             const result = replaceTokenForTemplate(undefined, 'Number', 1);
-            expect(result).to.be.undefined;  // jshint ignore:line
+            expect(result).to.be.undefined;
         });
 
         it('should replace tokens', function () {

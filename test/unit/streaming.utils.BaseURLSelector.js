@@ -14,6 +14,6 @@ describe('BaseURLSelector', function () {
     it('should return an undefined selector when select is called with no data parameter', function () {
         const selector = baseURLSelector.select();
 
-        expect(selector).to.be.undefined; // jshint ignore:line
+        expect(selector).to.be.undefined;
     });
 });

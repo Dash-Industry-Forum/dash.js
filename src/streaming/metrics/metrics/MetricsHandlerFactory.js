@@ -45,12 +45,12 @@ function MetricsHandlerFactory(config) {
 
     const context = this.context;
     let knownFactoryProducts = {
-        BufferLevel:    BufferLevel,
-        DVBErrors:      DVBErrors,
-        HttpList:       HttpList,
-        PlayList:       GenericMetricHandler,
-        RepSwitchList:  GenericMetricHandler,
-        TcpList:        GenericMetricHandler
+        BufferLevel: BufferLevel,
+        DVBErrors: DVBErrors,
+        HttpList: HttpList,
+        PlayList: GenericMetricHandler,
+        RepSwitchList: GenericMetricHandler,
+        TcpList: GenericMetricHandler
     };
 
     function create(listType, reportingController) {
@@ -90,8 +90,8 @@ function MetricsHandlerFactory(config) {
     }
 
     instance = {
-        create:     create,
-        register:   register,
+        create: create,
+        register: register,
         unregister: unregister
     };
 
@@ -99,4 +99,4 @@ function MetricsHandlerFactory(config) {
 }
 
 MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
-export default dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory);

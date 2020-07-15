@@ -117,18 +117,18 @@
  * @returns {?string} The license server URL or null if URL is not available in initData
  */
 
- /**
- * Returns specific CDM (custom) data.
- *
- * @function
- * @name MediaPlayer.dependencies.protection.KeySystem#getCDMData
- * @returns {ArrayBuffer} the CDM (custom) data
- */
+/**
+* Returns specific CDM (custom) data.
+*
+* @function
+* @name MediaPlayer.dependencies.protection.KeySystem#getCDMData
+* @returns {ArrayBuffer} the CDM (custom) data
+*/
 
- /**
- * Returns MediaKeySession session ID.
- *
- * @function
- * @name MediaPlayer.dependencies.protection.KeySystem#getSessionId
- * @returns {String} the MediaKeySession session ID
- */
+/**
+* Returns MediaKeySession session ID.
+*
+* @function
+* @name MediaPlayer.dependencies.protection.KeySystem#getSessionId
+* @returns {String} the MediaKeySession session ID
+*/

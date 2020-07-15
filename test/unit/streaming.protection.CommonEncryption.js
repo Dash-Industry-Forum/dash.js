@@ -23,7 +23,7 @@ describe('CommonEncryption',  () => {
             cpData = {};
             const result = CommonEncryption.parseInitDataFromContentProtection(cpData,Base64);
 
-            expect(result).to.be.null; // jshint ignore:line
+            expect(result).to.be.null;
         });
 
         it('should return base64 decoded string if init data is available in the ContentProtection element', () => {

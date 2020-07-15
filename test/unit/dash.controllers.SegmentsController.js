@@ -51,7 +51,7 @@ describe('SegmentsController', function () {
         let s = segmentsController.getSegmentByIndex(representation, 0, 0);
 
         // Assert
-        expect(s).to.be.null; // jshint ignore:line
+        expect(s).to.be.null;
     });
 
     it('getSegmentByTime should return null if representation type is unknown', function () {
@@ -63,7 +63,7 @@ describe('SegmentsController', function () {
         let s = segmentsController.getSegmentByTime(representation, 0, 0);
 
         // Assert
-        expect(s).to.be.null; // jshint ignore:line
+        expect(s).to.be.null;
     });
 
     it('update should not throw an error even if no parameter is defined', function () {

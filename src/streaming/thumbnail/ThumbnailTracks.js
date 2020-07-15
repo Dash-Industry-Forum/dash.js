@@ -40,7 +40,7 @@ import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
 
 export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
-                                   'http://dashif.org/guidelines/thumbnail_tile'];
+    'http://dashif.org/guidelines/thumbnail_tile'];
 
 function ThumbnailTracks(config) {
     const context = this.context;

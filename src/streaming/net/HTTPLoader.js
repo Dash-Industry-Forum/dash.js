@@ -87,7 +87,8 @@ function HTTPLoader(cfg) {
         let requestStartTime = new Date();
         let lastTraceTime = requestStartTime;
         let lastTraceReceivedCount = 0;
-        let httpRequest;
+        let httpRequest,
+            loader;
 
         if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
@@ -204,7 +205,6 @@ function HTTPLoader(cfg) {
             }
         };
 
-        let loader;
         if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
                 requestModifier: requestModifier,

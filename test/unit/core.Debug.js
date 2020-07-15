@@ -65,15 +65,15 @@ describe('Debug', function () {
             const s = { debug: { logLevel: Debug.LOG_LEVEL_NONE }};
             settings.update(s);
             logger.fatal('Fatal error');
-            expect(global.window.console.error).not.to.have.been.called; // jshint ignore:line
+            expect(global.window.console.error).not.to.have.been.called;
             logger.error('Error');
-            expect(global.window.console.error).not.to.have.been.called; // jshint ignore:line
+            expect(global.window.console.error).not.to.have.been.called;
             logger.warn('Warning');
-            expect(global.window.console.warn).not.to.have.been.called; // jshint ignore:line
+            expect(global.window.console.warn).not.to.have.been.called;
             logger.info('Info');
-            expect(global.window.console.info).not.to.have.been.called; // jshint ignore:line
+            expect(global.window.console.info).not.to.have.been.called;
             logger.debug('debug');
-            expect(global.window.console.debug).not.to.have.been.called; // jshint ignore:line
+            expect(global.window.console.debug).not.to.have.been.called;
         });
 
         it('should manage log levels correctly', function () {
@@ -83,23 +83,23 @@ describe('Debug', function () {
             settings.update(s);
 
             logger.debug('debug message');
-            expect(global.window.console.debug).to.have.been.called.once; // jshint ignore:line
+            expect(global.window.console.debug).to.have.been.called.once;
 
             logger.fatal('Fatal error');
-            expect(global.window.console.error).to.have.been.called.once; // jshint ignore:line
+            expect(global.window.console.error).to.have.been.called.once;
 
             // Warning
             s = { debug: { logLevel: Debug.LOG_LEVEL_WARNING }};
             settings.update(s);
 
             logger.debug('debug');
-            expect(global.window.console.debug).not.to.have.been.called; // jshint ignore:line
+            expect(global.window.console.debug).not.to.have.been.called;
 
             logger.warn('Warning');
-            expect(global.window.console.warn).to.have.been.called.once; // jshint ignore:line
+            expect(global.window.console.warn).to.have.been.called.once;
 
             logger.error('Error');
-            expect(global.window.console.warn).to.have.been.called.once; // jshint ignore:line
+            expect(global.window.console.warn).to.have.been.called.once;
         });
     });
 });

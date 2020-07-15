@@ -10,7 +10,7 @@ describe('PlayReady', function () {
     const context = {};
 
     it('PlayReady should exist', () => {
-        expect(PlayReady).to.exist; // jshint ignore:line
+        expect(PlayReady).to.exist;
     });
 
     describe('Response', function () {

@@ -1,18 +1,22 @@
 class StreamControllerMock {
 
-    initialize() {}
+    initialize() {
+        // empty block
+    }
 
     getActiveStreamCommonEarliestTime() {
         return 0;
     }
 
-    getTimeRelativeToStreamId() {}
+    getTimeRelativeToStreamId() {
+        // empty block
+    }
 
-    isTrackTypePresent (trackType) {
+    isTrackTypePresent(trackType) {
         let value;
 
         switch (trackType) {
-            case 'video' :
+            case 'video':
                 value = true;
                 break;
         }
@@ -21,7 +25,7 @@ class StreamControllerMock {
     }
 
     switchToVideoElement() {
-
+        // empty block
     }
 
     getAutoPlay() {
@@ -47,15 +51,23 @@ class StreamControllerMock {
         };
     }
 
-    load() {}
+    load() {
+        // empty block
+    }
 
-    loadWithManifest() {}
+    loadWithManifest() {
+        // empty block
+    }
 
-    setConfig() {}
+    setConfig() {
+        // empty block
+    }
 
-    reset() {}
+    reset() {
+        // empty block
+    }
 
-    getActiveStreamProcessors() { return [];}
+    getActiveStreamProcessors() { return []; }
 }
 
 export default StreamControllerMock;

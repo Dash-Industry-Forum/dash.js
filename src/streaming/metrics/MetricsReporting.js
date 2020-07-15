@@ -38,8 +38,7 @@ import ReportingFactory from './reporting/ReportingFactory';
 function MetricsReporting() {
 
     let context = this.context;
-    let instance,
-        dvbErrorsTranslator;
+    let instance;
 
     /**
      * Create a MetricsCollectionController, and a DVBErrorsTranslator
@@ -47,7 +46,7 @@ function MetricsReporting() {
      * @return {MetricsCollectionController} Metrics Collection Controller
      */
     function createMetricsReporting(config) {
-        dvbErrorsTranslator = DVBErrorsTranslator(context).getInstance({
+        DVBErrorsTranslator(context).getInstance({
             eventBus: config.eventBus,
             dashMetrics: config.dashMetrics,
             metricsConstants: config.metricsConstants,
@@ -74,16 +73,16 @@ function MetricsReporting() {
     }
 
     instance = {
-        createMetricsReporting:     createMetricsReporting,
-        getReportingFactory:        getReportingFactory,
-        getMetricsHandlerFactory:   getMetricsHandlerFactory
+        createMetricsReporting: createMetricsReporting,
+        getReportingFactory: getReportingFactory,
+        getMetricsHandlerFactory: getMetricsHandlerFactory
     };
 
     return instance;
 }
 
 MetricsReporting.__dashjs_factory_name = 'MetricsReporting';
-const factory = dashjs.FactoryMaker.getClassFactory(MetricsReporting); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(MetricsReporting);
 factory.events = MetricsReportingEvents;
-dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory); /* jshint ignore:line */
+dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory);
 export default factory;

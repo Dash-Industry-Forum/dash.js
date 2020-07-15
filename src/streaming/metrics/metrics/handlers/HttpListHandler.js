@@ -100,13 +100,13 @@ function HttpListHandler(config) {
     }
 
     instance = {
-        initialize:         initialize,
-        reset:              reset,
-        handleNewMetric:    handleNewMetric
+        initialize: initialize,
+        reset: reset,
+        handleNewMetric: handleNewMetric
     };
 
     return instance;
 }
 
 HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-export default dashjs.FactoryMaker.getClassFactory(HttpListHandler); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(HttpListHandler);

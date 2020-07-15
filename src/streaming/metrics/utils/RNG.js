@@ -29,9 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @ignore
-  */
+/**
+ * @ignore
+ */
 function RNG() {
 
     // check whether secure random numbers are available. if not, revert to
@@ -96,4 +96,4 @@ function RNG() {
 }
 
 RNG.__dashjs_factory_name = 'RNG';
-export default dashjs.FactoryMaker.getSingletonFactory(RNG); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(RNG);

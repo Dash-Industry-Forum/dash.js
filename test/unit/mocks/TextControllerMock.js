@@ -17,7 +17,9 @@ class TextControllerMock {
     getTextDefaultEnabled() {
         return true;
     }
-    addEmbeddedTrack() {}
+    addEmbeddedTrack() {
+        // empty block
+    }
 }
 
 export default TextControllerMock;

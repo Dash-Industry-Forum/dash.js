@@ -40,14 +40,13 @@ import Events from '../../core/events/Events';
 function BaseURLController() {
 
     let instance,
-        adapter;
+        adapter,
+        baseURLTreeModel,
+        baseURLSelector;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
-
-    let baseURLTreeModel,
-        baseURLSelector;
 
     function onBlackListChanged(e) {
         baseURLTreeModel.invalidateSelectedIndexes(e.entry);

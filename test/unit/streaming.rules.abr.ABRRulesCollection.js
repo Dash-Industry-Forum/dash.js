@@ -28,12 +28,12 @@ describe('ABRRulesCollection', function () {
     it('should return an empty SwitchRequest when getMaxQuality function is called and rulesContext is undefined', function () {
         const maxQuality = abrRulesCollection.getMaxQuality();
 
-        expect(maxQuality.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
+        expect(maxQuality.quality).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 
     it('should return an empty SwitchRequest when shouldAbandonFragment function is called and rulesContext is undefined', function () {
         const shouldAbandonFragment = abrRulesCollection.shouldAbandonFragment();
 
-        expect(shouldAbandonFragment.quality).to.be.equal(SwitchRequest.NO_CHANGE);  // jshint ignore:line
+        expect(shouldAbandonFragment.quality).to.be.equal(SwitchRequest.NO_CHANGE);
     });
 });

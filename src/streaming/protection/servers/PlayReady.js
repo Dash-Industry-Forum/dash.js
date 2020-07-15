@@ -145,4 +145,4 @@ function PlayReady() {
 }
 
 PlayReady.__dashjs_factory_name = 'PlayReady';
-export default dashjs.FactoryMaker.getSingletonFactory(PlayReady); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(PlayReady);

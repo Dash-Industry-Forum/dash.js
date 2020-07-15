@@ -34,16 +34,15 @@ import RNG from '../../utils/RNG';
 
 function DVBReporting(config) {
     config = config || {};
-    let instance;
-
-    let context = this.context;
-    let metricSerialiser,
+    let instance,
+        metricSerialiser,
         randomNumberGenerator,
         reportingPlayerStatusDecided,
         isReportingPlayer,
         reportingUrl,
         rangeController;
 
+    let context = this.context;
     let USE_DRAFT_DVB_SPEC = true;
     let allowPendingRequestsToCompleteOnReset = true;
     let pendingRequests = [];
@@ -183,9 +182,9 @@ function DVBReporting(config) {
     }
 
     instance = {
-        report:     report,
+        report: report,
         initialize: initialize,
-        reset:      reset
+        reset: reset
     };
 
     setup();
@@ -194,4 +193,4 @@ function DVBReporting(config) {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-export default dashjs.FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(DVBReporting);

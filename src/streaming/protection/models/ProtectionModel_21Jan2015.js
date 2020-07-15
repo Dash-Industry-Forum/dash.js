@@ -74,7 +74,6 @@ function ProtectionModel_21Jan2015(config) {
 
     function reset() {
         const numSessions = sessions.length;
-        let session;
 
         if (numSessions !== 0) {
             // Called when we are done closing a session.  Success or fail
@@ -91,20 +90,19 @@ function ProtectionModel_21Jan2015(config) {
                     }
                 }
             };
+            const processSession = function (session) {
+                // Override closed promise resolver
+                session.session.closed.then(function () {
+                    done(session);
+                });
+                // Close the session and handle errors, otherwise promise
+                // resolver above will be called
+                closeKeySessionInternal(session).catch(function () {
+                    done(session);
+                });
+            };
             for (let i = 0; i < numSessions; i++) {
-                session = sessions[i];
-                (function (s) {
-                    // Override closed promise resolver
-                    session.session.closed.then(function () {
-                        done(s);
-                    });
-                    // Close the session and handle errors, otherwise promise
-                    // resolver above will be called
-                    closeKeySessionInternal(session).catch(function () {
-                        done(s);
-                    });
-
-                })(session);
+                processSession(sessions[i]);
             }
         } else {
             eventBus.trigger(events.TEARDOWN_COMPLETE);
@@ -117,9 +115,7 @@ function ProtectionModel_21Jan2015(config) {
         for (let i = 0; i < sessions.length; i++) {
             session = sessions[i];
             if (!session.getUsable()) {
-                closeKeySessionInternal(session).catch(function () {
-                    removeSession(session);
-                });
+                closeKeySessionInternal(session).catch(removeSession.bind(null, session));
             }
         }
     }
@@ -300,7 +296,7 @@ function ProtectionModel_21Jan2015(config) {
             navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                        mediaKeySystemAccess.getConfiguration() : null;
+                    mediaKeySystemAccess.getConfiguration() : null;
                 const keySystemAccess = new KeySystemAccess(keySystem, configuration);
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
@@ -482,4 +478,4 @@ function ProtectionModel_21Jan2015(config) {
 }
 
 ProtectionModel_21Jan2015.__dashjs_factory_name = 'ProtectionModel_21Jan2015';
-export default dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan2015); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan2015);

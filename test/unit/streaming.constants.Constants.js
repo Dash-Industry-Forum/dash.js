@@ -4,7 +4,7 @@ const expect = require('chai').expect;
 
 describe('Constants', function () {
     it('Constants should exist', () => {
-        expect(Constants).to.exist; // jshint ignore:line
+        expect(Constants).to.exist;
         expect(Constants.STREAM).to.equal('stream');
         expect(Constants.VIDEO).to.equal('video');
         expect(Constants.AUDIO).to.equal('audio');
