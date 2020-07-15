@@ -148,12 +148,13 @@ function MediaPlayerModel() {
     function getLiveCatchupLatencyThreshold() {
         try {
             const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchupLatencyThreshold;
+            const liveDelay = getLiveDelay();
 
             if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
-                return liveCatchupLatencyThreshold;
+                return Math.max(liveCatchupLatencyThreshold, liveDelay);
             }
 
-            const liveDelay = getLiveDelay();
+
             const liveCatchupMinDrift = settings.get().streaming.liveCatchUpMinDrift;
             const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchUpMinDrift + getLiveDelay() : getLiveDelay() : NaN;
 
