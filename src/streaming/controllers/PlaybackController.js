@@ -670,26 +670,6 @@ function PlaybackController() {
         }
     }
 
-    function getRepresentationUpdatePostponeTimePeriod(representation, streamInfo) {
-        try {
-            const streamController = getStreamController();
-            const activeStreamInfo = streamController.getActiveStreamInfo();
-            let startTimeAnchor = representation.segmentAvailabilityRange.start;
-
-            if (activeStreamInfo && activeStreamInfo.id && activeStreamInfo.id !== streamInfo.id) {
-                // We need to consider the currently playing period if a period switch is performed.
-                startTimeAnchor = Math.min(getTime(), startTimeAnchor);
-            }
-
-            let segmentAvailabilityTimePeriod = representation.segmentAvailabilityRange.end - startTimeAnchor;
-            let liveDelay = getLiveDelay();
-
-            return (liveDelay - segmentAvailabilityTimePeriod) * 1000;
-        } catch (e) {
-            return 0;
-        }
-    }
-
     function onFragmentLoadProgress(e) {
         // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
         if (e.stream === false && settings.get().streaming.lowLatencyEnabled && !isNaN(e.request.duration)) {
@@ -823,8 +803,7 @@ function PlaybackController() {
         pause: pause,
         isSeeking: isSeeking,
         seek: seek,
-        reset: reset,
-        getRepresentationUpdatePostponeTimePeriod
+        reset: reset
     };
 
     setup();

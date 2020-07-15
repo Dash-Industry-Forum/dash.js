@@ -241,7 +241,7 @@ function RepresentationController(config) {
 
         if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod) {
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            postponeTimePeriod = playbackController.getRepresentationUpdatePostponeTimePeriod(r, streamInfo);
+            postponeTimePeriod = getRepresentationUpdatePostponeTimePeriod(r, streamInfo);
         }
 
         if (postponeTimePeriod > 0) {
@@ -275,6 +275,26 @@ function RepresentationController(config) {
                 addRepresentationSwitch();
             }
             endDataUpdate();
+        }
+    }
+
+    function getRepresentationUpdatePostponeTimePeriod(representation, streamInfo) {
+        try {
+            const streamController = playbackController.getStreamController();
+            const activeStreamInfo = streamController.getActiveStreamInfo();
+            let startTimeAnchor = representation.segmentAvailabilityRange.start;
+
+            if (activeStreamInfo && activeStreamInfo.id && activeStreamInfo.id !== streamInfo.id) {
+                // We need to consider the currently playing period if a period switch is performed.
+                startTimeAnchor = Math.min(playbackController.getTime(), startTimeAnchor);
+            }
+
+            let segmentAvailabilityTimePeriod = representation.segmentAvailabilityRange.end - startTimeAnchor;
+            let liveDelay = playbackController.getLiveDelay();
+
+            return (liveDelay - segmentAvailabilityTimePeriod) * 1000;
+        } catch (e) {
+            return 0;
         }
     }
 
