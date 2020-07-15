@@ -38,6 +38,21 @@
             "acronym": "Axinom",
             "name": "Axinom",
             "url": "https://drm.axinom.com/"
+        },
+        "microsoft": {
+            "acronym": "Microsoft",
+            "name": "Microsoft",
+            "url": "https://www.microsoft.com/de-de/"    
+        },
+        "streamroot": {
+            "acronym": "Streamroot",
+            "name": "Streamroot",
+            "url": "https://streamroot.io/"
+        },
+        "wowza": {
+            "acronym": "Wowza",
+            "name": "Wowza",
+            "url": "https://www.wowza.com/"
         }
     },
     "items": [
@@ -109,6 +124,26 @@
                     "url": "https://media.axprod.net/TestVectors/v8-MultiContent/Clear/Manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
                     "provider": "axinom"
+                },
+                {
+                    "name": "4K SegmentBase ",
+                    "url": "https://dash.akamaized.net/akamai/streamroot/050714/Spring_4Ktest.mpd",
+                    "provider": "streamroot"
+                },
+                {
+                    "name": "Clear Static SegmentTimeline",
+                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd",
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Clear Static SegmentTemplate",
+                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd",
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Clear Static SegmentList",
+                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
+                    "provider": "wowza"
                 }
             ]
         },
@@ -177,6 +212,21 @@
                         "liveDelay": 3
                     },
                     "provider": "akamai"
+                },
+                {
+                    "name": "Clear Dynamic SegmentTimeline",
+                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Clear Dynamic SegmentTemplate",
+                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Clear Dynamic SegmentList",
+                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
+                    "provider": "wowza"
                 }
             ]
         },
@@ -238,6 +288,12 @@
                 {
                     "name": "TTML Segmented 'snaking' subtitles (with random text) (Ondemand)",
                     "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-snake.mpd",
+                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/",
+                    "provider": "bbc"
+                },
+                {
+                    "name": "BBC R&D EBU-TT-D Subtitling Test",
+                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
                     "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/",
                     "provider": "bbc"
                 },
@@ -632,83 +688,123 @@
                             "httpTimeout": 5000
                         }
                     }
+                },
+                {
+                    "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0",
+                    "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
+                    "protData": {
+                        "com.microsoft.playready": {
+                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
+                        }
+                    },
+                    "provider": "microsoft"
+                },
+                {
+                    "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0 (persistent)",
+                    "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
+                    "protData": {
+                        "com.microsoft.playready": {
+                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
+                            "sessionType": "persistent-license"
+                        }
+                    },
+                    "provider": "microsoft"
+                },
+                {
+                    "name": "Source: XBox One commercial video",
+                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
+                    "protData": {
+                        "com.microsoft.playready": {
+                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
+                        }
+                    },
+                    "provider": "microsoft"
+                },
+                {
+                    "name": "AZURE MEDIA SERVICES LIVE PLAYREADY 2.0",
+                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
+                    "protData": {
+                        "com.microsoft.playready": {
+                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
+                        }
+                    },
+                    "provider": "microsoft"
+                },
+                {
+                    "name": "Unified Streaming (Widevine, persistent)",
+                    "url": "//demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
+                            "sessionType": "persistent-license"
+                        }
+                    },
+                    "provider": "unified"
+                },
+                {
+                    "name": "Widevine Dynamic SegmentTimeline",
+                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                        }
+                    },
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Widevine Dynamic SegmentTemplate",
+                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                        }
+                    },
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Widevine Dynamic SegmentList",
+                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                        }
+                    },
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Widevine Static SegmentTimeline",
+                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                        }
+                    },
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Widevine Static SegmentTemplate",
+                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                        }
+                    },
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Widevine Static SegmentList",
+                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                        }
+                    },
+                    "provider": "wowza"
                 }
             ]
         },
         {
-            "name": "Thumbnails",
-            "submenu": [
-                {
-                    "name": "Single adaption set, 7 tiles at 10x1, each thumb 320x180",
-                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd"
-                },
-                {
-                    "name": "Single adaption set, 4 tiles at 10x1, each thumb 205x115",
-                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_4_tiles_thumbnails.mpd"
-                },
-                {
-                    "name": "Single adaption set, 1 tile at 10x20, each thumb 102x58",
-                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails_2.mpd"
-                },
-                {
-                    "name": "Two adaption sets with different thumb resolutions",
-                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd"
-                },
-                {
-                    "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
-                    "url": "//livesim.dashif.org/livesim/testpic_2s/Manifest_thumbs.mpd"
-                },
-                {
-                    "name": "SegmentBase, Single adaption set, 3x4 tiles",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-static.mpd"
-                },
-                {
-                    "name": "SegmentTemplate with SegmentTimeline",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd"
-                },
-                {
-                    "name": "SegmentNumber",
-                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd"
-                }
-            ]
-        },
-        {
-            "name": "Audio-only",
-            "submenu": [
-                {
-                    "name": "48k AAC-LC Stereo Beeps (Live)",
-                    "url": "https://livesim.dashif.org/livesim/testpic_2s/audio.mpd"
-                },
-                {
-                    "name": "48k AAC-LC Stereo Beeps (Ondemand)",
-                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/audio.mpd"
-                },
-                {
-                    "name": "128k AAC-LC Stereo 1kHz Tone (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
-                },
-                {
-                    "name": "128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
-                },
-                {
-                    "name": "Audio without encryption",
-                    "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
-                },
-                {
-                    "name": "Multi-period audio without encryption",
-                    "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
-                }
-            ]
-        },
-        {
-            "name": "Axinom Test Content (conservative/legacy)",
+            "name": "DRM Content (conservative/legacy)",
             "submenu": [
                 {
                     "name": "1080p with PlayReady and Widevine DRM, single key",
@@ -730,7 +826,8 @@
                             }
                         }
                     },
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative",
+                    "provider": "axinom"
                 },
                 {
                     "name": "1080p with PlayReady and Widevine DRM, multiple keys",
@@ -751,12 +848,8 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-                },
-                {
-                    "name": "1080p without encryption",
-                    "url": "https://media.axprod.net/TestVectors/v6.1-Clear/Manifest_1080p.mpd",
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative",
+                    "provider": "axinom"
                 },
                 {
                     "name": "2160p with PlayReady and Widevine DRM, single key",
@@ -777,7 +870,8 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative",
+                    "provider": "axinom"
                 },
                 {
                     "name": "2160p with PlayReady and Widevine DRM, multiple keys",
@@ -798,12 +892,8 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-                },
-                {
-                    "name": "2160p without encryption",
-                    "url": "https://media.axprod.net/TestVectors/v6.1-Clear/Manifest.mpd",
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative",
+                    "provider": "axinom"
                 },
                 {
                     "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
@@ -824,12 +914,8 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-                },
-                {
-                    "name": "Multi-period 1080p without encryption",
-                    "url": "https://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest_1080p.mpd",
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative",
+                    "provider": "axinom"
                 },
                 {
                     "name": "Multi-period 2160p with PlayReady and Widevine DRM, multiple keys",
@@ -850,171 +936,92 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
-                },
-                {
-                    "name": "Multi-period 2160p without encryption",
-                    "url": "https://media.axprod.net/TestVectors/v6.1-Clear/MultiPeriod_Manifest.mpd",
-                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative"
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors/tree/conservative",
+                    "provider": "axinom"
                 }
             ]
         },
         {
-            "name": "BBC R&D Test Content",
+            "name": "Thumbnails",
             "submenu": [
                 {
-                    "name": "BBC R&D Testcard",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-events.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/"
+                    "name": "Single adaption set, 7 tiles at 10x1, each thumb 320x180",
+                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd",
+                    "provider": "dashif"
                 },
                 {
-                    "name": "BBC R&D EBU-TT-D Subtitling Test",
-                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
-                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/"
+                    "name": "Single adaption set, 4 tiles at 10x1, each thumb 205x115",
+                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_4_tiles_thumbnails.mpd",
+                    "provider": "dashif"
+                },
+                {
+                    "name": "Single adaption set, 1 tile at 10x20, each thumb 102x58",
+                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails_2.mpd",
+                    "provider": "dashif"
+                },
+                {
+                    "name": "Two adaption sets with different thumb resolutions",
+                    "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
+                    "provider": "dashif"
+                },
+                {
+                    "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
+                    "url": "//livesim.dashif.org/livesim/testpic_2s/Manifest_thumbs.mpd",
+                    "provider": "dashif"
+                },
+                {
+                    "name": "SegmentBase, Single adaption set, 3x4 tiles",
+                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-static.mpd",
+                    "provider": "unified"
+                },
+                {
+                    "name": "SegmentTemplate with SegmentTimeline",
+                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd",
+                    "provider": "unified"
+                },
+                {
+                    "name": "SegmentNumber",
+                    "url": "https://demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd",
+                    "provider": "unified"
                 }
             ]
         },
         {
-            "name": "Microsoft Test Content",
+            "name": "Audio-only",
             "submenu": [
                 {
-                    "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
-                        }
-                    }
+                    "name": "48k AAC-LC Stereo Beeps (Live)",
+                    "url": "https://livesim.dashif.org/livesim/testpic_2s/audio.mpd",
+                    "provider": "dashif"
                 },
                 {
-                    "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0 (persistent)",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
-                            "sessionType": "persistent-license"
-                        }
-                    }
+                    "name": "48k AAC-LC Stereo Beeps (Ondemand)",
+                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/audio.mpd",
+                    "provider": "dashif"
                 },
                 {
-                    "name": "Source: XBox One commercial video",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
-                        }
-                    }
+                    "name": "128k AAC-LC Stereo 1kHz Tone (Ondemand)",
+                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio-1kHz.mpd",
+                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "provider": "bbc"
                 },
                 {
-                    "name": "AZURE MEDIA SERVICES LIVE PLAYREADY 2.0",
-                    "url": "https://profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest(format=mpd-time-csf)",
-                    "protData": {
-                        "com.microsoft.playready": {
-                            "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Wowza Test Content",
-            "submenu": [
-                {
-                    "name": "Clear Dynamic SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd"
+                    "name": "128k/320k AAC-LC Stereo/5.1 'Testcard' (Ondemand)",
+                    "url": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/1/client_manifest-audio.mpd",
+                    "moreInfo": "http://rdmedia.bbc.co.uk/dash/ondemand/testcard/",
+                    "provider": "bbc"
                 },
                 {
-                    "name": "Clear Dynamic SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd"
+                    "name": "Audio without encryption",
+                    "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+                    "provider": "axinom"
                 },
                 {
-                    "name": "Clear Dynamic SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd"
-                },
-                {
-                    "name": "Clear Static SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd"
-                },
-                {
-                    "name": "Clear Static SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd"
-                },
-                {
-                    "name": "Clear Static SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd"
-                },
-                {
-                    "name": "Widevine Dynamic SegmentTimeline",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    }
-                },
-                {
-                    "name": "Widevine Dynamic SegmentTemplate",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    }
-                },
-                {
-                    "name": "Widevine Dynamic SegmentList",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    }
-                },
-                {
-                    "name": "Widevine Static SegmentTimeline",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    }
-                },
-                {
-                    "name": "Widevine Static SegmentTemplate",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    }
-                },
-                {
-                    "name": "Widevine Static SegmentList",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "Other samples",
-            "submenu": [
-                {
-                    "name": "4K",
-                    "url": "https://dash.akamaized.net/akamai/streamroot/050714/Spring_4Ktest.mpd"
-                },
-                {
-                    "name": "Unified Streaming (Widevine, persistent)",
-                    "url": "//demo.unified-streaming.com/video/tears-of-steel/tears-of-steel-dash-widevine.ism/.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth",
-                            "sessionType": "persistent-license"
-                        }
-                    }
+                    "name": "Multi-period audio without encryption",
+                    "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+                    "provider": "axinom"
                 }
             ]
         },
@@ -1023,7 +1030,8 @@
             "submenu": [
                 {
                     "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
-                    "name": "Super Speedway"
+                    "name": "Super Speedway",
+                    "provider": "microsoft"
                 },
                 {
                     "url": "http://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
@@ -1031,7 +1039,8 @@
                     "protData": {
                         "com.microsoft.playready": {
                         }
-                    }
+                    },
+                    "provider": "microsoft"
                 },
                 {
                     "url": "http://test.playready.microsoft.com/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
@@ -1041,7 +1050,8 @@
                             "serverURL": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)",
                             "sessionType": "persistent-license"
                         }
-                    }
+                    },
+                    "provider": "microsoft"
                 }
             ]
         }
