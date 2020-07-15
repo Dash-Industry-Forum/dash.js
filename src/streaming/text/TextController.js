@@ -208,7 +208,7 @@ function TextController() {
         }
 
         if (textDefaultEnabled === false || ( textDefaultEnabled === undefined && !defaultSettings ) || disableTextBeforeTextTracksAdded) {
-            // disable text at startup if explicitely configured with setTextDefaultEnanled(false) or if there is no defaultSettings (configuration or from domStorage)
+            // disable text at startup if explicitely configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             this.setTextTrack(-1);
         }
 
