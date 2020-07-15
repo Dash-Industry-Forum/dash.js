@@ -458,11 +458,12 @@ function ScheduleController(config) {
             latency: latency
         });
 
-        //if, during the seek command, the scheduleController is waiting : stop waiting, request chunk as soon as possible
         if (!isFragmentProcessingInProgress) {
+            // Restart scheduler if in pending state
             startScheduleTimer(0);
         } else {
-            logger.debug('onPlaybackSeeking, call fragmentModel.abortRequests in order to seek quicker');
+            // Abort current requests
+            logger.debug('Abort requests');
             fragmentModel.abortRequests();
         }
     }

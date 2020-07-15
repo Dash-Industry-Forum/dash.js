@@ -241,7 +241,7 @@ function BufferController(config) {
     function showBufferRanges(ranges) {
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
-                logger.debug('Buffered Range', ranges.start(i), ' - ', ranges.end(i), ' currentTime = ', playbackController.getTime());
+                logger.debug('Buffered range: ' + ranges.start(i) + ' - ' + ranges.end(i) + ', currentTime = ', playbackController.getTime());
             }
         }
     }
@@ -281,19 +281,13 @@ function BufferController(config) {
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             showBufferRanges(ranges);
             onPlaybackProgression();
-
-            // If seeking, seek video model to range start in case appended segment starts beyond seek target
-            if (!isNaN(seekTarget) &&
-                (playbackController.getTime() === 0 || playbackController.getTime() < ranges.start(0))) {
-                playbackController.seek(ranges.start(0), true, true);
-                seekTarget = NaN;
-            }
-        } else {
-            if (replacingBuffer) {
-                const currentTime = playbackController.getTime();
-                logger.debug('AppendToBuffer seek target should be ' + currentTime);
-                triggerEvent(Events.SEEK_TARGET, {time: currentTime});
-            }
+            adjustSeekTarget();
+        } else if (replacingBuffer) {
+            // When replacing buffer due to switch track, and once new initialization segment has been appended
+            // (and previous buffered data removed) then seek stream to current time
+            const currentTime = playbackController.getTime();
+            logger.debug('AppendToBuffer seek target should be ' + currentTime);
+            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
         if (appendedBytesInfo) {
@@ -304,6 +298,38 @@ function BufferController(config) {
                 bufferedRanges: ranges,
                 mediaType: type
             });
+        }
+    }
+
+    function adjustSeekTarget () {
+        // Check buffered data only for audio and video
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
+        if (isNaN(seekTarget)) return;
+
+        // Check if current buffered range already contains seek target (and current video element time)
+        const currentTime = playbackController.getTime();
+        let range = getRangeAt(seekTarget, 0);
+        if (currentTime === seekTarget && range) return;
+
+        // Get buffered range corresponding to the seek target
+        const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
+        range = getRangeAt(seekTarget, segmentDuration);
+        if (!range) return;
+
+        if (Math.abs(currentTime - seekTarget) > segmentDuration) {
+            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
+            // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
+
+            // Check if appended segment is not anterior from seek target (segments timeline/template tolerance)
+            if (seekTarget <= range.end) {
+                // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
+                playbackController.seek(Math.max(seekTarget, range.start), false, true);
+                seekTarget = NaN;
+            }
+        } else if (currentTime < range.start) {
+            // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
+            playbackController.seek(range.start, false, true);
+            seekTarget = NaN;
         }
     }
 
@@ -442,7 +468,7 @@ function BufferController(config) {
         let len,
             i;
 
-        const toler = (tolerance || 0.15);
+        const toler = !isNaN(tolerance) ? tolerance : 0.15;
 
         if (ranges !== null && ranges !== undefined) {
             for (i = 0, len = ranges.length; i < len; i++) {
@@ -654,9 +680,6 @@ function BufferController(config) {
         if (currentTime < range.end) {
             isBufferingCompleted = false;
             maxAppendedIndex = 0;
-            if (!replacingBuffer) {
-                triggerEvent(Events.SEEK_TARGET, {time: currentTime});
-            }
         }
 
         buffer.remove(range.start, range.end, range.force);
@@ -683,7 +706,6 @@ function BufferController(config) {
             clearNextRange();
         } else {
             if (!replacingBuffer) {
-                logger.debug('onRemoved : call updateBufferLevel');
                 updateBufferLevel();
             } else {
                 replacingBuffer = false;

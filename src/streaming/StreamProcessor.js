@@ -229,7 +229,6 @@ function StreamProcessor(config) {
 
     function onDataUpdateCompleted(e) {
         if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id) return;
-        logger.info('DataUpdateCompleted');
 
         if (!e.error) {
             // Update representation if no error
