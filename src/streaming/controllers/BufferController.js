@@ -305,22 +305,26 @@ function BufferController(config) {
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
         if (isNaN(seekTarget)) return;
 
-        const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
-        const currentTime = playbackController.getTime();
-
         // Check if current buffered range already contains seek target (and current video element time)
+        const currentTime = playbackController.getTime();
         let range = getRangeAt(seekTarget, 0);
         if (currentTime === seekTarget && range) return;
 
         // Get buffered range corresponding to the seek target
+        const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
         range = getRangeAt(seekTarget, segmentDuration);
         if (!range) return;
 
         if (Math.abs(currentTime - seekTarget) > segmentDuration) {
-            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element to seek target
+            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
             // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
-            playbackController.seek(Math.max(seekTarget, range.start), false, true);
-            seekTarget = NaN;
+
+            // Check if appended segment is not anterior from seek target (segments timeline/template tolerance)
+            if (seekTarget <= range.end) {
+                // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
+                playbackController.seek(Math.max(seekTarget, range.start), false, true);
+                seekTarget = NaN;
+            }
         } else if (currentTime < range.start) {
             // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
             playbackController.seek(range.start, false, true);
