@@ -94,10 +94,10 @@ function MediaController() {
         }
 
         if (tracks.length === 0) {
-            setTrack(type === Constants.FRAGMENTED_TEXT ? tracksForType[0] : selectInitialTrack(tracksForType), true);
+            setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(type === Constants.FRAGMENTED_TEXT ? tracks[0] : selectInitialTrack(tracks));
+                setTrack(selectInitialTrack(type, tracks));
             } else {
                 setTrack(tracks[0]);
             }
@@ -394,7 +394,9 @@ function MediaController() {
         };
     }
 
-    function selectInitialTrack(tracks) {
+    function selectInitialTrack(type, tracks) {
+        if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
+
         let mode = getSelectionModeForInitialTrack();
         let tmpArr = [];
 
