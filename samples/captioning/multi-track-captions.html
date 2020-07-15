@@ -13,7 +13,7 @@
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script class="code">
-        var EXTERNAL_CAPTION_URL = "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml
+        var EXTERNAL_CAPTION_URL = "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", /* need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml */
             FRAGMENTED_CAPTION_URL = "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
             videoElement,
             controlbar,
@@ -30,7 +30,7 @@
                     setTimeout(showDomStorage, 0);
                 }
             });
-            controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
+            controlbar = new ControlBar(player); /* Checkout ControlBar.js for more info on how to target/add text tracks to UI */
             controlbar.initialize();
             var checkbox = document.getElementById("textDefaultEnabled");
             checkbox.indeterminate = true;
