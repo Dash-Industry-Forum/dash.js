@@ -40,6 +40,7 @@ function InsufficientBufferRule(config) {
 
     config = config || {};
     const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
+    const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
 
@@ -118,8 +119,8 @@ function InsufficientBufferRule(config) {
 
     function resetInitialSettings() {
         bufferStateDict = {};
-        bufferStateDict[Constants.VIDEO] = {ignoreCount: 2};
-        bufferStateDict[Constants.AUDIO] = {ignoreCount: 2};
+        bufferStateDict[Constants.VIDEO] = {ignoreCount: SEGMENT_IGNORE_COUNT};
+        bufferStateDict[Constants.AUDIO] = {ignoreCount: SEGMENT_IGNORE_COUNT};
     }
 
     function onPlaybackSeeking() {
