@@ -32,8 +32,6 @@
             });
             controlbar = new ControlBar(player); /* Checkout ControlBar.js for more info on how to target/add text tracks to UI */
             controlbar.initialize();
-            var checkbox = document.getElementById("textDefaultEnabled");
-            checkbox.indeterminate = true;
             document.getElementById("lastMediaSettingsCachingInfoEnabled").checked = player.getSettings().streaming.lastMediaSettingsCachingInfo.enabled;
             showDomStorage();
         }
@@ -53,12 +51,7 @@
 
         function setTextDefaultEnabled() {
             var checkbox = document.getElementById("textDefaultEnabled");
-            if (!checkbox.indeterminate) {
-                document.getElementById("textDefaultEnabledValue").innerHTML = checkbox.checked;
-                player.setTextDefaultEnabled(checkbox.checked);
-            } else {
-                document.getElementById("textDefaultEnabledValue").innerHTML = 'undefined';
-            }
+            player.setTextDefaultEnabled(checkbox.checked);
         }
 
         function setLang() {
@@ -111,7 +104,6 @@
 
         label {
             font-size: 1.1em;
-            display: block;
         }
 
     </style>
@@ -157,8 +149,8 @@
                     <button onclick="play()">play</button>
                 </div>
                 <div>
+                    <input type="checkbox" id="textDefaultEnabled" onchange="setTextDefaultEnabled()" checked>
                     <label>textDefaultEnabled</label>
-                    <input type="checkbox" id="textDefaultEnabled" onchange="setTextDefaultEnabled()"/> <span id="textDefaultEnabledValue">undefined</span>
                 </div>
                 <div>
                     <label>initial settings Language/Role </label>
@@ -172,8 +164,8 @@
                     </select>
                 </div>
                 <div>
-                    <label>streaming.lastMediaSettingsCachingInfo.enabled</label>
                     <input type="checkbox" id="lastMediaSettingsCachingInfoEnabled" onchange="setLastMediaSettingsCachingInfoEnabled()"/>
+                    <label>streaming.lastMediaSettingsCachingInfo.enabled</label>
                 </div>
                 <div>
                     <label>localStorage content</label>
