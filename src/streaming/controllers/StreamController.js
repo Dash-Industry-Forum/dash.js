@@ -666,9 +666,9 @@ function StreamController() {
 
                 // we need to figure out what the correct starting period is
                 let initialStream = null;
-                const startTimeFormUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
+                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
 
-                initialStream = getStreamForTime(startTimeFormUri);
+                initialStream = getStreamForTime(startTimeFromUri);
 
                 // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
                 if (!initialStream && adapter.getIsDynamic() && streams.length) {
