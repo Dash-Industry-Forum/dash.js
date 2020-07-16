@@ -623,7 +623,7 @@ function PlaybackController() {
         const liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
 
         return settings.get().streaming.lowLatencyEnabled && settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
-            latencyDrift > settings.get().streaming.liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold ) ;
+            latencyDrift > settings.get().streaming.liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
     }
 
     function startPlaybackCatchUp() {
