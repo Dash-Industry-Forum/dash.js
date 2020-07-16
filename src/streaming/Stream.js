@@ -714,6 +714,8 @@ function Stream(config) {
     }
 
     function getProcessors() {
+        const isTextEnabled = textController.isTextEnabled();
+
         let arr = [];
 
         let type,
@@ -723,7 +725,9 @@ function Stream(config) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
-            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) {
+            if (type === Constants.AUDIO || type === Constants.VIDEO) {
+                arr.push(streamProcessor);
+            } else if ((type === Constants.FRAGMENTED_TEXT || type == Constants.TEXT) && isTextEnabled) {
                 arr.push(streamProcessor);
             }
         }
