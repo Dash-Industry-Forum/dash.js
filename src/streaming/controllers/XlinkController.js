@@ -59,9 +59,10 @@ function XlinkController(config) {
 
         xlinkLoader = XlinkLoader(context).create({
             errHandler: config.errHandler,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
-            requestModifier: config.requestModifier
+            requestModifier: config.requestModifier,
+            settings: config.settings
         });
     }
 

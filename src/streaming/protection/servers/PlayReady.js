@@ -38,6 +38,7 @@
  *
  * @implements LicenseServer
  * @class
+ * @ignore
  */
 
 function PlayReady() {

@@ -1,4 +1,3 @@
-import PlaybackControllerMock from './PlaybackControllerMock';
 import RepresentationControllerMock from './RepresentationControllerMock';
 
 class FragmentModelMock {
@@ -35,7 +34,8 @@ class BufferControllerMock {
 
     getBuffer() {
         return {
-            getAllBufferRanges: () => {}
+            getAllBufferRanges: () => {},
+            hasDiscontinuitiesAfter: () => {return false;}
         };
     }
 }
@@ -46,6 +46,11 @@ function StreamProcessorMock (testType, streamInfo) {
     this.representationController = new RepresentationControllerMock();
     this.fragmentModel = new FragmentModelMock();
     this.bufferController = new BufferControllerMock();
+
+    this.getFragmentRequest = function () {
+        return {startTime: 0,
+            duration: 2};
+    };
 
     this.getBufferController = function () {
         return this.bufferController;
@@ -65,28 +70,12 @@ function StreamProcessorMock (testType, streamInfo) {
         };
     };
 
-    this.getIndexHandler = function () {
-        return {
-            updateRepresentation: () => {},
-            getInitRequest: () => { return null;},
-            getNextSegmentRequest: () => { return null;},
-            getCurrentTime: () => {},
-            setCurrentTime: () => {}
-        };
-    };
-
     this.getScheduleController = function () {
         return {
             getBufferTarget() {
                 return 20;
             },
-            getSeekTarget() {
-                return 1;
-            },
             setSeekTarget() {
-            },
-            getTimeToLoadDelay() {
-                return 0;
             },
             setTimeToLoadDelay() {
             }
@@ -124,15 +113,7 @@ function StreamProcessorMock (testType, streamInfo) {
         return this.bufferController.getIsBufferingCompleted();
     };
 
-    this.getFragmentController = function () {
-        return null;
-    };
-
-    this.getPlaybackController = function () {
-        return new PlaybackControllerMock();
-    };
-
-    this.switchInitData = function () {};
+    this.appendInitSegment = function () {};
 
     this.reset = function () {};
 }

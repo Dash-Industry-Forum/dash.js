@@ -40,7 +40,6 @@ function VideoModel() {
         logger,
         element,
         TTMLRenderingDiv,
-        videoContainer,
         previousPlaybackRate;
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
@@ -166,14 +165,6 @@ function VideoModel() {
         return element ? element.src : null;
     }
 
-    function getVideoContainer() {
-        return videoContainer;
-    }
-
-    function setVideoContainer(value) {
-        videoContainer = value;
-    }
-
     function getTTMLRenderingDiv() {
         return TTMLRenderingDiv;
     }
@@ -276,7 +267,7 @@ function VideoModel() {
         if (element) {
             element.autoplay = true;
             const p = element.play();
-            if (p && (typeof Promise !== 'undefined') && (p instanceof Promise)) {
+            if (p && p.catch && typeof Promise !== 'undefined') {
                 p.catch((e) => {
                     if (e.name === 'NotAllowedError') {
                         eventBus.trigger(Events.PLAYBACK_NOT_ALLOWED);
@@ -355,11 +346,13 @@ function VideoModel() {
     }
 
     function getVideoRelativeOffsetTop() {
-        return element && element.parentNode ? element.getBoundingClientRect().top - element.parentNode.getBoundingClientRect().top : NaN;
+        const parentElement = element.parentNode.host || element.parentNode;
+        return parentElement ? element.getBoundingClientRect().top - parentElement.parentNode.getBoundingClientRect().top : NaN;
     }
 
     function getVideoRelativeOffsetLeft() {
-        return element && element.parentNode ? element.getBoundingClientRect().left - element.parentNode.getBoundingClientRect().left : NaN;
+        const parentElement = element.parentNode.host || element.parentNode;
+        return parentElement ? element.getBoundingClientRect().left - parentElement.getBoundingClientRect().left : NaN;
     }
 
     function getTextTracks() {
@@ -381,11 +374,19 @@ function VideoModel() {
         return null;
     }
 
-    function addTextTrack(kind, label, lang) {
-        if (element) {
-            return element.addTextTrack(kind, label, lang);
+    function addTextTrack(kind, label, lang, isTTML, isEmbedded) {
+        if (!element) {
+            return null;
         }
-        return null;
+        // check if track of same type has not been already created for previous stream
+        // then use it (no way to remove existing text track from video element)
+        let track = getTextTrack(kind, label, lang, isTTML, isEmbedded);
+        if (!track) {
+            track = element.addTextTrack(kind, label, lang);
+            track.isEmbedded = isEmbedded;
+            track.isTTML = isTTML;
+        }
+        return track;
     }
 
     function appendChild(childElement) {
@@ -422,8 +423,6 @@ function VideoModel() {
         setElement: setElement,
         setSource: setSource,
         getSource: getSource,
-        getVideoContainer: getVideoContainer,
-        setVideoContainer: setVideoContainer,
         getTTMLRenderingDiv: getTTMLRenderingDiv,
         setTTMLRenderingDiv: setTTMLRenderingDiv,
         getPlaybackQuality: getPlaybackQuality,

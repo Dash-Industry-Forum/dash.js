@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <title>Baseline dash.js Player</title>
+    <meta name="description" content="" />
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/dash.mss.debug.js"></script>
+
+    <script>
+        var player = null;
+        var video = null;
+        var playing = false;
+
+        function onLoad() {
+            video = document.querySelector(".dash-video-player video");
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, null, true);
+            player.setMute(true);
+            player.setAutoPlay(true);
+
+            video.addEventListener('playing', function () {
+                console.log('playing');
+                playing = true;
+            });
+        }
+
+        function loadStream(stream) {
+            player.attachSource(null);
+            playing = false;
+            player.setProtectionData(stream.protData);
+            player.attachSource(stream.url);
+        }
+
+        function isPlaying() {
+            return playing;
+        }
+
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 480px;
+        }
+    </style>
+
+    <body onload="onLoad()">
+        <div class="dash-video-player">
+            <video controls="true"></video>
+        </div>
+    </body>
+
+</html>

@@ -30,29 +30,26 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker';
-import BoxParser from '../utils/BoxParser';
 
 /**
-* @module FetchLoader
-* @description Manages download of resources via HTTP using fetch.
-* @param {Object} cfg - dependencies from parent
-*/
+ * @module FetchLoader
+ * @ignore
+ * @description Manages download of resources via HTTP using fetch.
+ * @param {Object} cfg - dependencies from parent
+ */
 function FetchLoader(cfg) {
+
     cfg = cfg || {};
     const requestModifier = cfg.requestModifier;
+    const boxParser = cfg.boxParser;
 
     let instance;
 
     function load(httpRequest) {
 
         // Variables will be used in the callback functions
-        let firstProgress = true; /*jshint ignore:line*/
-        let needFailureReport = true; /*jshint ignore:line*/
-        let requestStartTime = new Date();
-        let lastTraceTime = requestStartTime; /*jshint ignore:line*/
-        let lastTraceReceivedCount = 0; /*jshint ignore:line*/
-
-        let request = httpRequest.request;
+        const requestStartTime = new Date();
+        const request = httpRequest.request;
 
         const headers = new Headers(); /*jshint ignore:line*/
         if (request.range) {
@@ -79,6 +76,7 @@ function FetchLoader(cfg) {
         if (typeof window.AbortController === 'function') {
             abortController = new AbortController(); /*jshint ignore:line*/
             httpRequest.abortController = abortController;
+            abortController.signal.onabort = httpRequest.onabort;
         }
 
         const reqOptions = {
@@ -102,7 +100,7 @@ function FetchLoader(cfg) {
 
             let responseHeaders = '';
             for (const key of response.headers.keys()) {
-                responseHeaders += key + ': ' + response.headers.get(key) + '\n';
+                responseHeaders += key + ': ' + response.headers.get(key) + '\r\n';
             }
             httpRequest.response.responseHeaders = responseHeaders;
 
@@ -114,7 +112,8 @@ function FetchLoader(cfg) {
                     httpRequest.response.response = buffer;
                     const event = {
                         loaded: buffer.byteLength,
-                        total: buffer.byteLength
+                        total: buffer.byteLength,
+                        stream: false
                     };
                     httpRequest.progress(event);
                     httpRequest.onload();
@@ -132,7 +131,7 @@ function FetchLoader(cfg) {
             httpRequest.reader = response.body.getReader();
             let downLoadedData = [];
 
-            const processResult = function ({ value, done }) {
+            const processResult = function ({value, done}) {
                 if (done) {
                     if (remaining) {
                         // If there is pending data, call progress so network metrics
@@ -142,7 +141,8 @@ function FetchLoader(cfg) {
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(downLoadedData, bytesReceived)
+                            time: calculateDownloadedTime(downLoadedData, bytesReceived),
+                            stream: true
                         });
 
                         httpRequest.response.response = remaining.buffer;
@@ -160,7 +160,7 @@ function FetchLoader(cfg) {
                         bytes: value.length
                     });
 
-                    const boxesInfo = BoxParser().getInstance().findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
+                    const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
                     if (boxesInfo.found) {
                         const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
 
@@ -205,22 +205,22 @@ function FetchLoader(cfg) {
 
             read(httpRequest, processResult);
         })
-        .catch( function (e) {
-            if (httpRequest.onerror) {
-                httpRequest.onerror(e);
-            }
-        });
+            .catch(function (e) {
+                if (httpRequest.onerror) {
+                    httpRequest.onerror(e);
+                }
+            });
     }
 
     function read(httpRequest, processResult) {
         httpRequest.reader.read()
-        .then(processResult)
-        .catch(function (e) {
-            if (httpRequest.onerror && httpRequest.response.status === 200) {
-                // Error, but response code is 200, trigger error
-                httpRequest.onerror(e);
-            }
-        });
+            .then(processResult)
+            .catch(function (e) {
+                if (httpRequest.onerror && httpRequest.response.status === 200) {
+                    // Error, but response code is 200, trigger error
+                    httpRequest.onerror(e);
+                }
+            });
     }
 
     function concatTypedArray(remaining, data) {
@@ -241,6 +241,7 @@ function FetchLoader(cfg) {
             // For Chrome
             try {
                 request.reader.cancel();
+                request.onabort();
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue
@@ -249,7 +250,7 @@ function FetchLoader(cfg) {
     }
 
     function calculateDownloadedTime(datum, bytesReceived) {
-        datum = datum.filter(data => data.bytes > ((bytesReceived / 4) / datum.length) );
+        datum = datum.filter(data => data.bytes > ((bytesReceived / 4) / datum.length));
         if (datum.length > 1) {
             let time = 0;
             const avgTimeDistance = (datum[datum.length - 1].ts - datum[0].ts) / datum.length;

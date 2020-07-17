@@ -32,6 +32,7 @@
 /**
  * The an end place to put fragments after they have been fetched.
  * @interface Logger
+ * @ignore
  */
 
 /**

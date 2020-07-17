@@ -39,10 +39,9 @@ function ReportingFactory(config) {
     };
 
     const context = this.context;
-    const debug = config.debug;
-    const metricsConstants = config.metricsConstants;
-
     let instance;
+    const logger = config.debug ? config.debug.getLogger(instance) : {};
+    const metricsConstants = config.metricsConstants;
 
     function create(entry, rangeController) {
         let reporting;
@@ -55,7 +54,7 @@ function ReportingFactory(config) {
             reporting.initialize(entry, rangeController);
         } catch (e) {
             reporting = null;
-            debug.error(`ReportingFactory: could not create Reporting with schemeIdUri ${entry.schemeIdUri} (${e.message})`);
+            logger.error(`ReportingFactory: could not create Reporting with schemeIdUri ${entry.schemeIdUri} (${e.message})`);
         }
 
         return reporting;

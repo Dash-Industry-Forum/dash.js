@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Manual-player instantiation example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        function init() {
+            var video,
+                player,
+                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
+                version;
+
+            player = dashjs.MediaPlayer().create();
+            video = document.querySelector("video");
+            player.initialize(); 
+            version = player.getVersion();
+
+            player.updateSettings({
+                streaming: {
+                    cmcd: {
+                        enabled: true, /* enable reporting of cmcd parameters */
+                        sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
+                        cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
+                        did: 'dash.js-v' + version/* device id send with each request */
+                    }
+                }
+            });
+            player.setAutoPlay(false);
+            player.attachView(video);
+            player.attachSource(url);
+
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+            background-color: #666666;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <video controls="true">
+    </video>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

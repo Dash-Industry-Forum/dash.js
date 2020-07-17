@@ -44,9 +44,10 @@
  * {@link module:ProtectionController}
  *
  * @interface ProtectionModel
+ * @ignore
  */
 
-let ProtectionModel = function () { };
+const ProtectionModel = function () { };
 
 /**
  * Returns an array of all initialization data currently used by

@@ -1,0 +1,36 @@
+{
+    "short_name": "Offline dash.js",
+    "name": "Offline dash.js sample",
+    "icons": [
+        {
+        "src": "./app/img/icons/48x48.png",
+        "type": "image/png",
+        "sizes": "48x48"
+        },
+        {
+            "src": "./app/img/icons/64x64.png",
+            "type": "image/png",
+            "sizes": "64x64"
+        },
+        {
+            "src": "./app/img/icons/96x96.png",
+            "type": "image/png",
+            "sizes": "96x96"
+        },
+        {
+            "src": "./app/img/icons/256x256.png",
+            "type": "image/png",
+            "sizes": "256x256"
+        },
+        {
+            "src": "./app/img/icons/512x512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "index.html",
+    "background_color": "#3367D6",
+    "display": "fullscreen",
+    "scope": "/",
+    "theme_color": "#3367D6"
+}

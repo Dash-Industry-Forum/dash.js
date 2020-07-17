@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from './constants/Constants';
+import DashConstants from '../dash/constants/DashConstants';
 import StreamProcessor from './StreamProcessor';
-import EventController from './controllers/EventController';
 import FragmentController from './controllers/FragmentController';
 import ThumbnailController from './thumbnail/ThumbnailController';
 import EventBus from '../core/EventBus';
@@ -39,41 +39,49 @@ import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
 import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
+import BoxParser from './utils/BoxParser';
+import URLUtils from './utils/URLUtils';
 
 function Stream(config) {
 
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
 
     const manifestModel = config.manifestModel;
-    const dashManifestModel = config.dashManifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
     const capabilities = config.capabilities;
     const errHandler = config.errHandler;
     const timelineConverter = config.timelineConverter;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
+    const eventController = config.eventController;
     const mediaController = config.mediaController;
     const textController = config.textController;
     const videoModel = config.videoModel;
+    const settings = config.settings;
 
     let instance,
         logger,
+        streamInfo,
         streamProcessors,
+        isStreamInitialized,
         isStreamActivated,
         isMediaInitialized,
-        streamInfo,
+        hasVideoTrack,
+        hasAudioTrack,
         updateError,
         isUpdating,
         protectionController,
         fragmentController,
         thumbnailController,
-        eventController,
         preloaded,
+        boxParser,
+        debug,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -88,13 +96,20 @@ function Stream(config) {
     ];
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        debug = Debug(context).getInstance();
+        logger = debug.getLogger(instance);
         resetInitialSettings();
+
+        boxParser = BoxParser(context).getInstance();
 
         fragmentController = FragmentController(context).create({
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
-            errHandler: errHandler
+            dashMetrics: dashMetrics,
+            errHandler: errHandler,
+            settings: settings,
+            boxParser: boxParser,
+            dashConstants: DashConstants,
+            urlUtils: urlUtils
         });
 
         registerEvents();
@@ -103,11 +118,13 @@ function Stream(config) {
     function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+        eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
     function unRegisterEvents() {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
+        eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
     function registerProtectionEvents() {
@@ -191,7 +208,7 @@ function Stream(config) {
                 i++;
             } else {
                 streamProcessors[i].reset();
-                streamProcessors.splice(i,1);
+                streamProcessors.splice(i, 1);
             }
         }
 
@@ -202,9 +219,8 @@ function Stream(config) {
         }
 
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg +  'nostreams', manifestModel.getValue()));
+            const msg = 'No streams to play.';
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
             logger.fatal(msg);
         }
     }
@@ -212,6 +228,9 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         streamInfo = null;
+        isStreamInitialized = false;
+        hasVideoTrack = false;
+        hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
     }
@@ -244,6 +263,19 @@ function Stream(config) {
         return streamInfo ? streamInfo.start : NaN;
     }
 
+    function getLiveStartTime() {
+        if (!streamInfo.manifestInfo.isDynamic) return NaN;
+        // Get live start time of the video stream (1st in array of streams)
+        // or audio if no video stream
+        for (let i = 0; i < streamProcessors.length; i++) {
+            if (streamProcessors[i].getType() === Constants.AUDIO ||
+                streamProcessors[i].getType() === Constants.VIDEO) {
+                return streamProcessors[i].getLiveStartTime();
+            }
+        }
+        return NaN;
+    }
+
     function getId() {
         return streamInfo ? streamInfo.id : null;
     }
@@ -252,8 +284,12 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getFragmentController() {
-        return fragmentController;
+    function getHasAudioTrack () {
+        return hasAudioTrack;
+    }
+
+    function getHasVideoTrack () {
+        return hasVideoTrack;
     }
 
     function getThumbnailController() {
@@ -261,7 +297,7 @@ function Stream(config) {
     }
 
     function checkConfig() {
-        if (!abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
+        if (!videoModel || !abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -283,21 +319,8 @@ function Stream(config) {
         return abrController.getBitrateList(mediaInfo);
     }
 
-    function startEventController() {
-        if (eventController) {
-            eventController.start();
-        }
-    }
-
-    function stopEventController() {
-        if (eventController) {
-            eventController.stop();
-        }
-    }
-
     function onProtectionError(event) {
         if (event.error) {
-            errHandler.mediaKeySessionError(event.error.message);
             errHandler.error(event.error);
             logger.fatal(event.error.message);
             reset();
@@ -305,14 +328,13 @@ function Stream(config) {
     }
 
     function isMediaSupported(mediaInfo) {
-        const type = mediaInfo.type;
+        const type = mediaInfo ? mediaInfo.type : null;
         let codec,
             msg;
 
-        if (type === Constants.MUXED && mediaInfo) {
+        if (type === Constants.MUXED) {
             msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
             logger.fatal(msg);
-            errHandler.manifestError(msg, 'multiplexedrep', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
             return false;
         }
@@ -324,7 +346,6 @@ function Stream(config) {
         logger.debug(type + ' codec: ' + codec);
 
         if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.capabilityError('encryptedmedia');
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
         } else if (!capabilities.supportsCodec(codec)) {
             msg = type + 'Codec (' + codec + ') is not supported.';
@@ -336,18 +357,20 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+        let mediaInfo = e.newMediaInfo;
+        let manifest = manifestModel.getValue();
 
-        let processor = getProcessorForMediaInfo(e.newMediaInfo);
+        adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
+
+        let processor = getProcessorForMediaInfo(mediaInfo);
         if (!processor) return;
 
         let currentTime = playbackController.getTime();
         logger.info('Stream -  Process track changed at current time ' + currentTime);
-        let mediaInfo = e.newMediaInfo;
-        let manifest = manifestModel.getValue();
 
         logger.debug('Stream -  Update stream controller');
-        if (manifest.refreshManifestOnSwitchTrack) {
+        if (manifest.refreshManifestOnSwitchTrack) { // Applies only for MSS streams
             logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
@@ -358,41 +381,43 @@ function Stream(config) {
                 processor.switchTrackAsked();
                 processor.getFragmentModel().abortRequests();
             } else {
-                processor.getScheduleController().setSeekTarget(NaN);
-                adapter.setIndexHandlerTime(processor, currentTime);
-                adapter.resetIndexHandler(processor);
+                processor.getScheduleController().setSeekTarget(currentTime);
+                processor.setIndexHandlerTime(currentTime);
+                processor.resetIndexHandler();
             }
         }
     }
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
+
+        let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
+
         let streamProcessor = StreamProcessor(context).create({
-            type: mediaInfo.type,
-            mimeType: mediaInfo.mimeType,
+            streamInfo: streamInfo,
+            type: mediaInfo ? mediaInfo.type : null,
+            mimeType: mediaInfo ? mediaInfo.mimeType : null,
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
-            dashManifestModel: dashManifestModel,
             mediaPlayerModel: mediaPlayerModel,
-            metricsModel: metricsModel,
+            fragmentModel: fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
-            stream: instance,
             abrController: abrController,
-            domStorage: config.domStorage,
             playbackController: playbackController,
             mediaController: mediaController,
-            streamController: config.streamController,
             textController: textController,
-            errHandler: errHandler
+            errHandler: errHandler,
+            settings: settings,
+            boxParser: boxParser
         });
 
-        streamProcessor.initialize(mediaSource);
+        streamProcessor.initialize(mediaSource, hasVideoTrack);
         abrController.updateTopQualityIndex(mediaInfo);
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.getIndexHandler().setCurrentTime(optionalSettings.currentTime);
+            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);
@@ -402,7 +427,7 @@ function Stream(config) {
             return;
         }
 
-        if ((mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
+        if (mediaInfo && (mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
             let idx;
             for (let i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === mediaInfo.index) {
@@ -427,6 +452,14 @@ function Stream(config) {
             return;
         }
 
+        if (type === Constants.VIDEO) {
+            hasVideoTrack = true;
+        }
+
+        if (type === Constants.AUDIO) {
+            hasAudioTrack = true;
+        }
+
         for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
             mediaInfo = allMediaForType[i];
 
@@ -444,23 +477,26 @@ function Stream(config) {
 
         if (type === Constants.IMAGE) {
             thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
+                streamInfo: streamInfo,
                 adapter: adapter,
                 baseURLController: config.baseURLController,
-                stream: instance,
-                timelineConverter: config.timelineConverter
+                timelineConverter: config.timelineConverter,
+                debug: debug,
+                eventBus: eventBus,
+                events: Events,
+                dashConstants: DashConstants
             });
             return;
         }
 
-        if (type !== Constants.FRAGMENTED_TEXT || (type === Constants.FRAGMENTED_TEXT && textController.getTextDefaultEnabled())) {
-            mediaController.checkInitialMediaSettingsForType(type, streamInfo);
-            initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
-        }
 
-        if (type === Constants.FRAGMENTED_TEXT && !textController.getTextDefaultEnabled()) {
-            initialMediaInfo = mediaController.getTracksFor(type, streamInfo)[0];
-        }
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
+
+        eventBus.trigger(Events.STREAM_INITIALIZING, {
+            streamInfo: streamInfo,
+            mediaInfo: mediaInfo
+        });
 
         // TODO : How to tell index handler live/duration?
         // TODO : Pass to controller and then pass to each method on handler?
@@ -468,25 +504,14 @@ function Stream(config) {
         createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
     }
 
-    function initializeEventController () {
-        //if initializeMedia is called from a switch period, eventController could have been already created.
-        if (!eventController) {
-            eventController = EventController(context).create();
-
-            eventController.setConfig({
-                manifestUpdater: manifestUpdater,
-                playbackController: playbackController
-            });
-            addInlineEvents();
+    function addInlineEvents() {
+        if (eventController) {
+            const events = adapter.getEventsFor(streamInfo);
+            eventController.addInlineEvents(events);
         }
     }
 
-    function addInlineEvents () {
-        const events = adapter.getEventsFor(streamInfo);
-        eventController.addInlineEvents(events);
-    }
-
-    function addInbandEvents (events) {
+    function addInbandEvents(events) {
         if (eventController) {
             eventController.addInbandEvents(events);
         }
@@ -496,14 +521,14 @@ function Stream(config) {
         checkConfig();
         let element = videoModel.getElement();
 
-        initializeEventController();
+        addInlineEvents();
 
         isUpdating = true;
 
         filterCodecs(Constants.VIDEO);
         filterCodecs(Constants.AUDIO);
 
-        if (element === null || (element && (/^VIDEO$/i).test(element.nodeName))) {
+        if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);
         }
         initializeMediaForType(Constants.AUDIO, mediaSource);
@@ -521,7 +546,6 @@ function Stream(config) {
 
         if (streamProcessors.length === 0) {
             const msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.fatal(msg);
         } else {
@@ -540,8 +564,8 @@ function Stream(config) {
         isMediaInitialized = true;
         isUpdating = false;
         if (streamProcessors.length === 0) {
-            let msg = 'No streams to play.';
-            errHandler.manifestError(msg, 'nostreams', manifestModel.getValue());
+            const msg = 'No streams to play.';
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.debug(msg);
         } else {
             checkIfInitializationCompleted();
@@ -549,7 +573,7 @@ function Stream(config) {
     }
 
     function filterCodecs(type) {
-        const realAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), streamInfo.index, type, streamInfo);
+        const realAdaptation = adapter.getAdaptationForType(streamInfo ? streamInfo.index : null, type, streamInfo);
 
         if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
 
@@ -558,7 +582,7 @@ function Stream(config) {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
-            const codec = dashManifestModel.getCodec(realAdaptation, i, true);
+            const codec = adapter.getCodec(realAdaptation, i, true);
             if (!capabilities.supportsCodec(codec)) {
                 logger.error('[Stream] codec not supported: ' + codec);
                 return false;
@@ -594,17 +618,30 @@ function Stream(config) {
             }
         }
 
-        eventBus.trigger(Events.STREAM_INITIALIZED, {
-            streamInfo: streamInfo,
-            error: error
-        });
+        if (error) {
+            errHandler.error(error);
+        } else if (!isStreamInitialized) {
+            isStreamInitialized = true;
+            timelineConverter.setTimeSyncCompleted(true);
+
+            eventBus.trigger(Events.STREAM_INITIALIZED, {
+                streamInfo: streamInfo,
+                liveStartTime: getLiveStartTime()
+            });
+        }
+
+        // (Re)start ScheduleController:
+        // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
+        // - in case stream is complete but a track switch has been requested
+        for (let i = 0; i < ln && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
+        }
     }
 
     function getMediaInfo(type) {
-        const ln = streamProcessors.length;
         let streamProcessor = null;
 
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streamProcessors.length; i++) {
             streamProcessor = streamProcessors[i];
 
             if (streamProcessor.getType() === type) {
@@ -618,15 +655,16 @@ function Stream(config) {
     function createBuffers(previousBuffers) {
         const buffers = {};
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            buffers[streamProcessors[i].getType()] = streamProcessors[i].createBuffer(previousBuffers).getBuffer();
+            const buffer = streamProcessors[i].createBuffer(previousBuffers);
+            if (buffer) {
+                buffers[streamProcessors[i].getType()] = buffer.getBuffer();
+            }
         }
         return buffers;
     }
 
     function onBufferingCompleted(e) {
-        if (e.streamInfo !== streamInfo) {
-            return;
-        }
+        if (e.streamId !== streamInfo.id) return;
 
         let processors = getProcessors();
         const ln = processors.length;
@@ -640,27 +678,27 @@ function Stream(config) {
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
             if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
-                logger.warn('onBufferingCompleted - can\'t trigger STREAM_BUFFERING_COMPLETED because streamProcessor ' + processors[i].getType() + ' is not buffering completed');
+                logger.warn('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
                 return;
             }
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
             streamInfo: streamInfo
         });
     }
 
     function onDataUpdateCompleted(e) {
-        let sp = e.sender.getStreamProcessor();
+        if (!streamInfo || e.sender.getStreamId() !== streamInfo.id) return;
 
-        if (sp.getStreamInfo() !== streamInfo) {
-            return;
-        }
-
-        updateError[sp.getType()] = e.error;
+        updateError[e.sender.getType()] = e.error;
         checkIfInitializationCompleted();
+    }
+
+    function onInbandEvents(e) {
+        if (!streamInfo || e.streamInfo.id !== streamInfo.id) return;
+        addInbandEvents(e.events);
     }
 
     function getProcessorForMediaInfo(mediaInfo) {
@@ -676,13 +714,12 @@ function Stream(config) {
     }
 
     function getProcessors() {
-        const ln = streamProcessors.length;
         let arr = [];
 
         let type,
             streamProcessor;
 
-        for (let i = 0; i < ln; i++) {
+        for (let i = 0; i < streamProcessors.length; i++) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
@@ -710,6 +747,7 @@ function Stream(config) {
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
+            streamProcessor.updateStreamInfo(streamInfo);
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
             abrController.updateTopQualityIndex(mediaInfo);
             streamProcessor.addMediaInfo(mediaInfo, true);
@@ -717,7 +755,7 @@ function Stream(config) {
 
         if (trackChangedEvent) {
             let mediaInfo = trackChangedEvent.newMediaInfo;
-            if (mediaInfo.type !== 'fragmentedText') {
+            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                 if (!processor) return;
                 processor.switchTrackAsked();
@@ -729,11 +767,15 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isCompatibleWithStream(stream) {
-        return compareCodecs(stream, Constants.VIDEO) && compareCodecs(stream, Constants.AUDIO);
+    function isMediaCodecCompatible(newStream) {
+        return compareCodecs(newStream, Constants.VIDEO) && compareCodecs(newStream, Constants.AUDIO);
     }
 
-    function compareCodecs(stream, type) {
+    function isProtectionCompatible(stream) {
+        return compareProtectionConfig(stream, Constants.VIDEO) && compareProtectionConfig(stream, Constants.AUDIO);
+    }
+
+    function compareProtectionConfig(stream, type) {
         if (!stream) {
             return false;
         }
@@ -744,15 +786,42 @@ function Stream(config) {
             return false;
         }
 
-        const newAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), newStreamInfo.index, type, newStreamInfo);
-        const currentAdaptation = dashManifestModel.getAdaptationForType(manifestModel.getValue(), currentStreamInfo.index, type, currentStreamInfo);
+        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
 
         if (!newAdaptation || !currentAdaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible
             return !newAdaptation && !currentAdaptation;
         }
 
-        const sameMimeType =  newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
+        // If any of the periods requires EME, we can't do smooth transition
+        if (newAdaptation.ContentProtection || currentAdaptation.ContentProtection) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function compareCodecs(newStream, type) {
+        if (!newStream || !newStream.hasOwnProperty('getStreamInfo')) {
+            return false;
+        }
+        const newStreamInfo = newStream.getStreamInfo();
+        const currentStreamInfo = getStreamInfo();
+
+        if (!newStreamInfo || !currentStreamInfo) {
+            return false;
+        }
+
+        const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
+        const currentAdaptation = adapter.getAdaptationForType(currentStreamInfo.index, type, currentStreamInfo);
+
+        if (!newAdaptation || !currentAdaptation) {
+            // If there is no adaptation for neither the old or the new stream they're compatible
+            return !newAdaptation && !currentAdaptation;
+        }
+
+        const sameMimeType = newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
         const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
             return representation.codecs;
         });
@@ -772,8 +841,14 @@ function Stream(config) {
     // Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
     function codecRootCompatibleWithCodec(codec1, codec2) {
         const codecRoot = codec1.split('.')[0];
-        const compatTableCodec = codecCompatibilityTable.find((compat) => compat.codec === codecRoot);
         const rootCompatible = codec2.indexOf(codecRoot) === 0;
+        let compatTableCodec;
+        for (let i = 0; i < codecCompatibilityTable.length; i++) {
+            if (codecCompatibilityTable[i].codec === codecRoot) {
+                compatTableCodec = codecCompatibilityTable[i];
+                break;
+            }
+        }
         if (compatTableCodec) {
             return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
         }
@@ -789,7 +864,7 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        initializeEventController();
+        addInlineEvents();
 
         initializeMediaForType(Constants.VIDEO, mediaSource);
         initializeMediaForType(Constants.AUDIO, mediaSource);
@@ -809,6 +884,7 @@ function Stream(config) {
         setPreloaded(true);
     }
 
+
     instance = {
         initialize: initialize,
         activate: activate,
@@ -818,19 +894,18 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        getHasAudioTrack: getHasAudioTrack,
+        getHasVideoTrack: getHasVideoTrack,
         preload: preload,
-        getFragmentController: getFragmentController,
         getThumbnailController: getThumbnailController,
         getBitrateListFor: getBitrateListFor,
-        startEventController: startEventController,
-        stopEventController: stopEventController,
         updateData: updateData,
         reset: reset,
         getProcessors: getProcessors,
         setMediaSource: setMediaSource,
-        isCompatibleWithStream: isCompatibleWithStream,
-        getPreloaded: getPreloaded,
-        addInbandEvents: addInbandEvents
+        isMediaCodecCompatible: isMediaCodecCompatible,
+        isProtectionCompatible: isProtectionCompatible,
+        getPreloaded: getPreloaded
     };
 
     setup();

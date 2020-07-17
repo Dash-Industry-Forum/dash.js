@@ -48,7 +48,7 @@ function KeySystemPlayReady(config) {
 
     config = config || {};
     let instance;
-    let messageFormat = 'utf16';
+    let messageFormat = 'utf-16';
     const BASE64 = config.BASE64;
 
     function checkConfig() {
@@ -62,7 +62,7 @@ function KeySystemPlayReady(config) {
             xmlDoc;
         const headers = {};
         const parser = new DOMParser();
-        const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        const dataview = (messageFormat === 'utf-16') ? new Uint16Array(message) : new Uint8Array(message);
 
         msg = String.fromCharCode.apply(null, dataview);
         xmlDoc = parser.parseFromString(msg, 'application/xml');
@@ -72,16 +72,17 @@ function KeySystemPlayReady(config) {
         for (let i = 0; i < headerNameList.length; i++) {
             headers[headerNameList[i].childNodes[0].nodeValue] = headerValueList[i].childNodes[0].nodeValue;
         }
-        // some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
+        // Some versions of the PlayReady CDM return 'Content' instead of 'Content-Type'.
         // this is NOT w3c conform and license servers may reject the request!
         // -> rename it to proper w3c definition!
         if (headers.hasOwnProperty('Content')) {
             headers['Content-Type'] = headers.Content;
             delete headers.Content;
         }
-        // some devices (Ex: LG SmartTVs) require content-type to be defined
+        // Set Content-Type header by default if not provided in the the CDM message (<PlayReadyKeyMessage/>)
+        // or if the message contains directly the challenge itself (Ex: LG SmartTVs)
         if (!headers.hasOwnProperty('Content-Type')) {
-            headers['Content-Type'] = 'text/xml; charset=' + messageFormat;
+            headers['Content-Type'] = 'text/xml; charset=utf-8';
         }
         return headers;
     }
@@ -89,21 +90,21 @@ function KeySystemPlayReady(config) {
     function getLicenseRequestFromMessage(message) {
         let licenseRequest = null;
         const parser = new DOMParser();
-        const dataview = (messageFormat === 'utf16') ? new Uint16Array(message) : new Uint8Array(message);
+        const dataview = (messageFormat === 'utf-16') ? new Uint16Array(message) : new Uint8Array(message);
 
         checkConfig();
         const msg = String.fromCharCode.apply(null, dataview);
         const xmlDoc = parser.parseFromString(msg, 'application/xml');
 
-        if (xmlDoc.getElementsByTagName('Challenge')[0]) {
+        if (xmlDoc.getElementsByTagName('PlayReadyKeyMessage')[0]) {
             const Challenge = xmlDoc.getElementsByTagName('Challenge')[0].childNodes[0].nodeValue;
             if (Challenge) {
                 licenseRequest = BASE64.decode(Challenge);
             }
-        } else if (xmlDoc.getElementsByTagName('parsererror').length) {
-            // In case it is not an XML doc, return the message itself
-            // There are CDM implementations of some devices (example: some smartTVs) that
-            // return directly the challenge without wrapping it in an xml doc
+        } else {
+            // The message from CDM is not a wrapped message as on IE11 and Edge,
+            // thus it contains direclty the challenge itself
+            // (note that the xmlDoc at this point may be unreadable since it may have been interpreted as UTF-16)
             return message;
         }
 
@@ -175,6 +176,9 @@ function KeySystemPlayReady(config) {
             PSSHData;
 
         checkConfig();
+        if (!cpData) {
+            return null;
+        }
         // Handle common encryption PSSH
         if ('pssh' in cpData) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
@@ -221,12 +225,12 @@ function KeySystemPlayReady(config) {
      * messages using UTF16, while others return them as UTF8.  Use this function
      * to modify the message format to expect when parsing CDM messages.
      *
-     * @param {string} format the expected message format.  Either "utf8" or "utf16".
+     * @param {string} format the expected message format.  Either "utf-8" or "utf-16".
      * @throws {Error} Specified message format is not one of "utf8" or "utf16"
      */
     function setPlayReadyMessageFormat(format) {
-        if (format !== 'utf8' && format !== 'utf16') {
-            throw new Error('Illegal PlayReady message format! -- ' + format);
+        if (format !== 'utf-8' && format !== 'utf-16') {
+            throw new Error('Specified message format is not one of "utf-8" or "utf-16"');
         }
         messageFormat = format;
     }
@@ -281,7 +285,13 @@ function KeySystemPlayReady(config) {
         return null;
     }
 
-    function getSessionId(/*cp*/) {
+    function getSessionId(cp) {
+        // Get sessionId from protectionData or from manifest
+        if (protData && protData.sessionId) {
+            return protData.sessionId;
+        } else if (cp && cp.sessionId) {
+            return cp.sessionId;
+        }
         return null;
     }
 

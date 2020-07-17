@@ -30,13 +30,15 @@
  */
 import XHRLoader from './XHRLoader';
 import FetchLoader from './FetchLoader';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import FactoryMaker from '../../core/FactoryMaker';
-import Errors from '../../core/errors/Errors';
 import DashJSError from '../vo/DashJSError';
+import CmcdModel from '../models/CmcdModel';
+import Utils from '../../core/Utils';
 
 /**
  * @module HTTPLoader
+ * @ignore
  * @description Manages download of resources via HTTP.
  * @param {Object} cfg - dependancies from parent
  */
@@ -46,41 +48,34 @@ function HTTPLoader(cfg) {
 
     const context = this.context;
     const errHandler = cfg.errHandler;
-    const metricsModel = cfg.metricsModel;
+    const dashMetrics = cfg.dashMetrics;
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
+    const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
+    const errors = cfg.errors;
 
-    let instance;
-    let requests;
-    let delayedRequests;
-    let retryTimers;
-    let downloadErrorToRequestTypeMap;
-    let newDownloadErrorToRequestTypeMap;
+    let instance,
+        requests,
+        delayedRequests,
+        retryRequests,
+        downloadErrorToRequestTypeMap,
+        cmcdModel;
 
     function setup() {
         requests = [];
         delayedRequests = [];
-        retryTimers = [];
+        retryRequests = [];
+        cmcdModel = CmcdModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK,
-            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT,
-            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT
-        };
-
-        newDownloadErrorToRequestTypeMap = {
-            [HTTPRequest.MPD_TYPE]: Errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: Errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
-            [HTTPRequest.INIT_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
-            [HTTPRequest.INDEX_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
-            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
-            [HTTPRequest.OTHER_TYPE]: Errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
+            [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+            [HTTPRequest.OTHER_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
         };
     }
 
@@ -94,7 +89,7 @@ function HTTPLoader(cfg) {
         let lastTraceReceivedCount = 0;
         let httpRequest;
 
-        if (!requestModifier || !metricsModel || !errHandler) {
+        if (!requestModifier || !dashMetrics || !errHandler) {
             throw new Error('config object is not correct or missing');
         }
 
@@ -106,23 +101,15 @@ function HTTPLoader(cfg) {
             request.firstByteDate = request.firstByteDate || requestStartTime;
 
             if (!request.checkExistenceOnly) {
-                metricsModel.addHttpRequest(
-                    request.mediaType,
-                    null,
-                    request.type,
-                    request.url,
-                    httpRequest.response ? httpRequest.response.responseURL : null,
-                    request.serviceLocation || null,
-                    request.range || null,
-                    request.requestStartDate,
-                    request.firstByteDate,
-                    request.requestEndDate,
+                dashMetrics.addHttpRequest(request, httpRequest.response ? httpRequest.response.responseURL : null,
                     httpRequest.response ? httpRequest.response.status : null,
-                    request.duration,
                     httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
                         httpRequest.response ? httpRequest.response.responseHeaders : [],
-                    success ? traces : null
-                );
+                    success ? traces : null);
+
+                if (request.type === HTTPRequest.MPD_TYPE) {
+                    dashMetrics.addManifestUpdate(request.type, request.requestStartDate, request.requestEndDate);
+                }
             }
         };
 
@@ -138,19 +125,21 @@ function HTTPLoader(cfg) {
 
                 if (remainingAttempts > 0) {
                     remainingAttempts--;
-                    retryTimers.push(
-                        setTimeout(function () {
-                            internalLoad(config, remainingAttempts);
-                        }, mediaPlayerModel.getRetryIntervalForType(request.type))
-                    );
+                    let retryRequest = {config: config};
+                    retryRequests.push(retryRequest);
+                    retryRequest.timeout = setTimeout(function () {
+                        if (retryRequests.indexOf(retryRequest) === -1) {
+                            return;
+                        } else {
+                            retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
+                        }
+                        internalLoad(config, remainingAttempts);
+                    }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
-                    errHandler.downloadError(
-                        downloadErrorToRequestTypeMap[request.type],
-                        request.url,
-                        request
-                    );
-
-                    errHandler.error(new DashJSError(newDownloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {request: request, response: httpRequest.response}));
+                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
+                        request: request,
+                        response: httpRequest.response
+                    }));
 
                     if (config.error) {
                         config.error(request, 'error', httpRequest.response.statusText);
@@ -216,9 +205,10 @@ function HTTPLoader(cfg) {
         };
 
         let loader;
-        if (useFetch && window.fetch && request.responseType === 'arraybuffer') {
+        if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
-                requestModifier: requestModifier
+                requestModifier: requestModifier,
+                boxParser: boxParser
             });
         } else {
             loader = XHRLoader(context).create({
@@ -226,9 +216,12 @@ function HTTPLoader(cfg) {
             });
         }
 
-        const modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        let modifiedUrl = requestModifier.modifyRequestURL(request.url);
+        const additionalQueryParameter = _getAdditionalQueryParameter(request);
+        modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
+
 
         httpRequest = {
             url: modifiedUrl,
@@ -251,7 +244,7 @@ function HTTPLoader(cfg) {
             loader.load(httpRequest);
         } else {
             // delay
-            let delayedRequest = { httpRequest: httpRequest };
+            let delayedRequest = {httpRequest: httpRequest};
             delayedRequests.push(delayedRequest);
             delayedRequest.delayTimeout = setTimeout(function () {
                 if (delayedRequests.indexOf(delayedRequest) === -1) {
@@ -271,6 +264,21 @@ function HTTPLoader(cfg) {
         }
     }
 
+    function _getAdditionalQueryParameter(request) {
+        try {
+            const additionalQueryParameter = [];
+            const cmcdQueryParameter = cmcdModel.getQueryParameter(request);
+
+            if (cmcdQueryParameter) {
+                additionalQueryParameter.push(cmcdQueryParameter);
+            }
+
+            return additionalQueryParameter;
+        } catch (e) {
+            return [];
+        }
+    }
+
     /**
      * Initiates a download of the resource described by config.request
      * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
@@ -285,6 +293,10 @@ function HTTPLoader(cfg) {
                     config.request.type
                 )
             );
+        } else {
+            if (config.error) {
+                config.error(config.request, 'error');
+            }
         }
     }
 
@@ -294,8 +306,14 @@ function HTTPLoader(cfg) {
      * @instance
      */
     function abort() {
-        retryTimers.forEach(t => clearTimeout(t));
-        retryTimers = [];
+        retryRequests.forEach(t => {
+            clearTimeout(t.timeout);
+            // abort request in order to trigger LOADING_ABANDONED event
+            if (t.config.request && t.config.abort) {
+                t.config.abort(t.config.request);
+            }
+        });
+        retryRequests = [];
 
         delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
         delayedRequests = [];
@@ -306,7 +324,6 @@ function HTTPLoader(cfg) {
             // set them to undefined so they are not called
             x.onloadend = x.onerror = x.onprogress = undefined;
             x.loader.abort(x);
-            x.onabort();
         });
         requests = [];
     }

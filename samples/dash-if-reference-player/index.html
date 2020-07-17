@@ -4,7 +4,7 @@
     <meta charset="utf-8"/>
     <title>Dash JavaScript Player</title>
     <meta name="description" content="" />
-    <link rel="icon" type="image/x-icon" href="https://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
+    <link rel="icon" type="image/x-icon" href="https://dashif.org/img/favicon.ico" />
     <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
 
     <link rel="stylesheet" href="app/lib/bootstrap/css/bootstrap.min.css">
@@ -27,6 +27,7 @@
     <script src="app/lib/flot/jquery.flot.axislabels.js"></script>
     <!-- App -->
     <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/dash.mss.debug.js"></script>
     <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="app/main.js"></script>
     <script src="app/rules/DownloadRatioRule.js"></script>
@@ -133,6 +134,17 @@
             <div class="options-item">
                 <div class="options-item-title">Playback</div>
                 <div class="options-item-body">
+                    <label class="options-label">Playback Video quality:
+                        <div class="dropdown" data-toggle="tooltip" data-placement="left"
+                                title="Please select your video quality">
+                            <button class="btn btn-primary dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">Set Video Quality
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                                <li ng-repeat="bitrateInfo in videoQualities"><a ng-click="selectVideoQuality(bitrateInfo.qualityIndex)">{{bitrateInfo.qualityIndex + 1}}</a></li>
+                            </ul>
+                        </div>
+                    </label>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enables automatic startup of the media once the media is loaded">
                         <input type="checkbox" ng-model="autoPlaySelected" ng-change="toggleAutoPlay()" ng-checked="autoPlaySelected">
@@ -168,6 +180,11 @@
                         <input type="checkbox" id="fastSwitchCB" ng-model="fastSwitchSelected" ng-change="toggleFastSwitch()" ng-checked="fastSwitchSelected">
                         Fast Switching ABR
                     </label>
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables auto switch video quality using selected ABR strategy">
+                        <input type="checkbox" id="videoAutoSwitchCB" ng-model="videoAutoSwitchSelected" ng-change="toggleVideoAutoSwitch()" ng-checked="videoAutoSwitchSelected">
+                        Video Auto Switch
+                    </label>                    
                     <label data-toggle="tooltip" data-placement="right"
                            title="Dynamically switch between BOLA and Throughput strategies.">
                         <input  type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked" ng-click="changeABRStrategy('abrDynamic')" >
@@ -213,11 +230,19 @@
             <div class="options-item">
                 <div class="options-item-title">Initial Settings</div>
                 <div class="options-item-body">
+                    <label class="options-label">Initial bitrate Video:</label>
+                    <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate">
+                    <label class="options-label">Minimum bitrate Video:</label>
+                    <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate">
+                    <label class="options-label">Maximum bitrate Video:</label>
+                    <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate">
                     <label class="options-label">Audio:</label>
                     <input type="text" class="form-control" placeholder="audio initial lang, e.g. 'en'" ng-model="initialSettings.audio">
                     <label class="options-label">Video:</label>
-                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">        <label class="options-label">Text:</label>
+                    <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'" ng-model="initialSettings.video">
+                    <label class="options-label">Text:</label>
                     <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'" ng-model="initialSettings.text">
+                    <input type="text" class="form-control" placeholder="text initial role, e.g. 'caption'" ng-model="initialSettings.textRole">
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                            title="Enable subtitle on loading text">
                         <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled">
@@ -292,6 +317,22 @@
                            <input  type="radio" id="log-debug" value="debug" autocomplete="off" name="log-level" ng-click="setLogLevel()" >
                         DEBUG
                     </label>
+                </div>
+            </div>
+            <div class="options-item">
+                <div class="options-item-title">CMCD</div>
+                <div class="options-item-body">
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="Enables reporting of CMCD parameters via query parameters">
+                        <input type="checkbox" ng-model="cmcdEnabled" ng-change="toggleCmcdEnabled()" ng-checked="cmcdEnabled">
+                        Enable CMCD Reporting
+                    </label>
+                    <label class="options-label">Session ID:</label>
+                    <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId">
+                    <label class="options-label">Content ID:</label>
+                    <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId">
+                    <label class="options-label">Device ID:</label>
+                    <input type="text" class="form-control" placeholder="device id" ng-model="cmcdDeviceId">
                 </div>
             </div>
 

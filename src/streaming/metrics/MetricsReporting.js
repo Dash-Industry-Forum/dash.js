@@ -38,9 +38,8 @@ import ReportingFactory from './reporting/ReportingFactory';
 function MetricsReporting() {
 
     let context = this.context;
-    let instance;
-
-    let dvbErrorsTranslator;
+    let instance,
+        dvbErrorsTranslator;
 
     /**
      * Create a MetricsCollectionController, and a DVBErrorsTranslator
@@ -50,7 +49,7 @@ function MetricsReporting() {
     function createMetricsReporting(config) {
         dvbErrorsTranslator = DVBErrorsTranslator(context).getInstance({
             eventBus: config.eventBus,
-            metricsModel: config.metricsModel,
+            dashMetrics: config.dashMetrics,
             metricsConstants: config.metricsConstants,
             events: config.events
         });

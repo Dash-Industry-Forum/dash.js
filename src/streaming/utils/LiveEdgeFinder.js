@@ -35,34 +35,33 @@ import Constants from '../constants/Constants';
  * @param {Object} config
  * @returns {{initialize: initialize, getLiveEdge: getLiveEdge, reset: reset}|*}
  * @constructor
+ * @ignore
  */
 function LiveEdgeFinder(config) {
 
     config = config || {};
     let instance;
     let timelineConverter = config.timelineConverter;
-    let streamProcessor = config.streamProcessor;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge') || !streamProcessor || !streamProcessor.hasOwnProperty('getRepresentationInfo')) {
+        if (!timelineConverter || !timelineConverter.hasOwnProperty('getExpectedLiveEdge')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
 
-    function getLiveEdge() {
+    function getLiveEdge(representationInfo) {
         checkConfig();
-        const representationInfo = streamProcessor.getRepresentationInfo();
-        let liveEdge = representationInfo.DVRWindow.end;
+        const dvrEnd = representationInfo.DVRWindow ? representationInfo.DVRWindow.end : 0;
+        let liveEdge = dvrEnd;
         if (representationInfo.useCalculatedLiveEdgeTime) {
             liveEdge = timelineConverter.getExpectedLiveEdge();
-            timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
+            timelineConverter.setClientTimeOffset(liveEdge - dvrEnd);
         }
         return liveEdge;
     }
 
     function reset() {
         timelineConverter = null;
-        streamProcessor = null;
     }
 
     instance = {

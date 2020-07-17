@@ -31,7 +31,7 @@
 import EventsBase from '../core/events/EventsBase';
 /**
  * @class
- *
+ * @implements EventsBase
  */
 class MediaPlayerEvents extends EventsBase {
 
@@ -44,6 +44,7 @@ class MediaPlayerEvents extends EventsBase {
          * Triggered when playback will not start yet
          * as the MPD's availabilityStartTime is in the future.
          * Check delay property in payload to determine time before playback will start.
+         * @event MediaPlayerEvents#AST_IN_FUTURE
          */
         this.AST_IN_FUTURE = 'astInFuture';
 
@@ -72,7 +73,6 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#ERROR
          */
         this.ERROR = 'error';
-
         /**
          * Triggered when a fragment download has completed.
          * @event MediaPlayerEvents#FRAGMENT_LOADING_COMPLETED
@@ -170,6 +170,12 @@ class MediaPlayerEvents extends EventsBase {
         this.SOURCE_INITIALIZED = 'sourceInitialized';
 
         /**
+         * Triggered when a stream (period) is being loaded
+         * @event MediaPlayerEvents#STREAM_INITIALIZING
+         */
+        this.STREAM_INITIALIZING = 'streamInitializing';
+
+        /**
          * Triggered when a stream (period) is loaded
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
@@ -224,23 +230,6 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#CAN_PLAY
          */
         this.CAN_PLAY = 'canPlay';
-
-        /**
-         * Sent when live catch mechanism has been activated, which implies the measured latency of the low latency
-         * stream that is been played has gone beyond the target one.
-         * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
-         * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-         * @event MediaPlayerEvents#PLAYBACK_CATCHUP_START
-         */
-        this.PLAYBACK_CATCHUP_START = 'playbackCatchupStart';
-
-        /**
-         * Sent live catch up mechanism has been deactivated.
-         * @see {@link module:MediaPlayer#setCatchUpPlaybackRate setCatchUpPlaybackRate()}
-         * @see {@link module:MediaPlayer#setLiveDelay setLiveDelay()}
-         * @event MediaPlayerEvents#PLAYBACK_CATCHUP_END
-         */
-        this.PLAYBACK_CATCHUP_END = 'playbackCatchupEnd';
 
         /**
          * Sent when playback completes.

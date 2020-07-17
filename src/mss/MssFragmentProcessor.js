@@ -29,10 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MSSFragmentMoofProcessor from './MssFragmentMoofProcessor';
-import MSSFragmentMoovProcessor from './MssFragmentMoovProcessor';
-import MssEvents from './MssEvents';
-
+import MssFragmentMoofProcessor from './MssFragmentMoofProcessor';
+import MssFragmentMoovProcessor from './MssFragmentMoovProcessor';
 
 // Add specific box processors not provided by codem-isoboxer library
 
@@ -121,15 +119,15 @@ function MssFragmentProcessor(config) {
 
     config = config || {};
     const context = this.context;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
     const eventBus = config.eventBus;
     const protectionController = config.protectionController;
     const ISOBoxer = config.ISOBoxer;
     const debug = config.debug;
     let mssFragmentMoovProcessor,
-        mssFragmentMoofProcessor;
-    let instance;
+        mssFragmentMoofProcessor,
+        instance;
 
     function setup() {
         ISOBoxer.addBoxProcessor('uuid', uuidProcessor);
@@ -137,43 +135,39 @@ function MssFragmentProcessor(config) {
         ISOBoxer.addBoxProcessor('saiz', saizProcessor);
         ISOBoxer.addBoxProcessor('senc', sencProcessor);
 
-        mssFragmentMoovProcessor = MSSFragmentMoovProcessor(context).create({protectionController: protectionController,
-            constants: config.constants, ISOBoxer: ISOBoxer});
+        mssFragmentMoovProcessor = MssFragmentMoovProcessor(context).create({
+            protectionController: protectionController,
+            constants: config.constants,
+            ISOBoxer: ISOBoxer});
 
-        mssFragmentMoofProcessor = MSSFragmentMoofProcessor(context).create({
-                metricsModel: metricsModel,
-                playbackController: playbackController,
-                ISOBoxer: ISOBoxer,
-                eventBus: eventBus,
-                debug: debug,
-                errHandler: config.errHandler
-            });
+        mssFragmentMoofProcessor = MssFragmentMoofProcessor(context).create({
+            dashMetrics: dashMetrics,
+            playbackController: playbackController,
+            ISOBoxer: ISOBoxer,
+            eventBus: eventBus,
+            debug: debug,
+            errHandler: config.errHandler
+        });
     }
 
     function generateMoov(rep) {
         return mssFragmentMoovProcessor.generateMoov(rep);
     }
 
-    function processFragment(e, sp) {
+    function processFragment(e, streamProcessor) {
         if (!e || !e.request || !e.response) {
             throw new Error('e parameter is missing or malformed');
         }
 
-        let request = e.request;
+        if (e.request.type === 'MediaSegment') {
+            // MediaSegment => convert to Smooth Streaming moof format
+            mssFragmentMoofProcessor.convertFragment(e, streamProcessor);
 
-        if (request.type === 'MediaSegment') {
-            // it's a MediaSegment, let's convert fragment
-            mssFragmentMoofProcessor.convertFragment(e, sp);
+        } else if (e.request.type === 'FragmentInfoSegment') {
+            // FragmentInfo (live) => update segments list
+            mssFragmentMoofProcessor.updateSegmentList(e, streamProcessor);
 
-        } else if (request.type === 'FragmentInfoSegment') {
-
-            // it's a FragmentInfo, ask relative fragment info controller to handle it
-            eventBus.trigger(MssEvents.FRAGMENT_INFO_LOADING_COMPLETED, {
-                fragmentInfo: e,
-                streamProcessor: sp
-            });
-
-            // Change the sender value to stop event to be propagated (fragment info must not be added to buffer)
+            // Stop event propagation (FragmentInfo must not be added to buffer)
             e.sender = null;
         }
     }

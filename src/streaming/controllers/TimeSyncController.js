@@ -28,9 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
 import DashJSError from './../vo/DashJSError';
-import {HTTPRequest} from './../vo/metrics/HTTPRequest';
+import { HTTPRequest } from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import Errors from './../../core/errors/Errors';
@@ -50,10 +49,8 @@ function TimeSyncController() {
         logger,
         offsetToDeviceTimeMs,
         isSynchronizing,
-        isInitialised,
         useManifestDateHeaderTimeSource,
         handlers,
-        metricsModel,
         dashMetrics,
         baseURLController;
 
@@ -65,7 +62,6 @@ function TimeSyncController() {
         useManifestDateHeaderTimeSource = useManifestDateHeader;
         offsetToDeviceTimeMs = 0;
         isSynchronizing = false;
-        isInitialised = false;
 
         // a list of known schemeIdUris and a method to call with @value
         handlers = {
@@ -94,16 +90,11 @@ function TimeSyncController() {
 
         if (!getIsSynchronizing()) {
             attemptSync(timingSources);
-            setIsInitialised(true);
         }
     }
 
     function setConfig(config) {
         if (!config) return;
-
-        if (config.metricsModel) {
-            metricsModel = config.metricsModel;
-        }
 
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
@@ -124,10 +115,6 @@ function TimeSyncController() {
 
     function getIsSynchronizing() {
         return isSynchronizing;
-    }
-
-    function setIsInitialised(value) {
-        isInitialised = value;
     }
 
     function setOffsetMs(value) {
@@ -282,8 +269,7 @@ function TimeSyncController() {
     }
 
     function checkForDateHeader() {
-        let metrics = metricsModel.getReadOnlyMetricsFor(Constants.STREAM);
-        let dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID(metrics, 'Date');
+        let dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID('Date');
         let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
@@ -300,16 +286,7 @@ function TimeSyncController() {
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {
-        const v = (serverTime - deviceTime) / 1000;
-        let offset;
-        // Math.trunc not implemented by IE11
-        if (Math.trunc) {
-            offset = Math.trunc(v);
-        } else {
-            offset = (v - v % 1) || (!isFinite(v) || v === 0 ? v : v < 0 ? -0 : 0);
-        }
-
-        return offset * 1000;
+        return serverTime - deviceTime;
     }
 
     function attemptSync(sources, sourceIndex) {
@@ -348,8 +325,8 @@ function TimeSyncController() {
 
                         setOffsetMs(offset);
 
-                        logger.debug('Local time: ' + new Date(deviceTime));
-                        logger.debug('Server time: ' + new Date(serverTime));
+                        logger.info('Local time: ' + new Date(deviceTime));
+                        logger.info('Server time: ' + new Date(serverTime));
                         logger.info('Server Time - Local Time (ms): ' + offset);
 
                         onComplete(serverTime, offset);
@@ -374,7 +351,6 @@ function TimeSyncController() {
     }
 
     function reset() {
-        setIsInitialised(false);
         setIsSynchronizing(false);
     }
 

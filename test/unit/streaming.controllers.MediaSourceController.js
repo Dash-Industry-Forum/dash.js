@@ -121,6 +121,10 @@ describe('MediaSourceController', function () {
 
     describe('Method signalEndOfStream', function () {
 
+        it('should not signal end of stream - source is undefined', function () {
+            expect(mediaSourceController.signalEndOfStream.bind(mediaSourceController)).not.to.throw();
+        });
+
         it('should not signal end of stream - readyState is not opened', function () {
 
             class FakeSource {

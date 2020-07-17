@@ -41,24 +41,26 @@ const LOG_LEVEL_DEBUG = 5;
 
 /**
  * @module Debug
+ * @param {object} config
+ * @ignore
  */
-function Debug() {
+function Debug(config) {
 
+    config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = config.settings;
 
     const logFn = [];
 
     let instance,
         showLogTimestamp,
         showCalleeName,
-        startTime,
-        logLevel;
+        startTime;
 
     function setup() {
         showLogTimestamp = true;
         showCalleeName = true;
-        logLevel = LOG_LEVEL_WARNING;
         startTime = new Date().getTime();
 
         if (typeof window !== 'undefined' && window.console) {
@@ -97,47 +99,6 @@ function Debug() {
     }
 
     /**
-     * Sets up the log level. The levels are cumulative. For example, if you set the log level
-     * to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be logged. Possible values
-     *
-     * <ul>
-     * <li>dashjs.Debug.LOG_LEVEL_NONE<br/>
-     * No message is written in the browser console.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_FATAL<br/>
-     * Log fatal errors. An error is considered fatal when it causes playback to fail completely.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_ERROR<br/>
-     * Log error messages.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_WARNING<br/>
-     * Log warning messages.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_INFO<br/>
-     * Log info messages.
-     *
-     * <li>dashjs.Debug.LOG_LEVEL_DEBUG<br/>
-     * Log debug messages.
-     * </ul>
-     * @param {number} value Log level
-     * @default true
-     * @memberof module:Debug
-     * @instance
-     */
-    function setLogLevel(value) {
-        logLevel = value;
-    }
-
-    /**
-     * Use this method to get the current log level.
-     * @memberof module:Debug
-     * @instance
-     */
-    function getLogLevel() {
-        return logLevel;
-    }
-
-    /**
      * Prepends a timestamp in milliseconds to each log message.
      * @param {boolean} value Set to true if you want to see a timestamp in each log message.
      * @default LOG_LEVEL_WARNING
@@ -156,32 +117,6 @@ function Debug() {
      */
     function setCalleeNameVisible(value) {
         showCalleeName = value;
-    }
-    /**
-     * Toggles logging to the browser's javascript console.  If you set to false you will still receive a log event with the same message.
-     * @param {boolean} value Set to false if you want to turn off logging to the browser's console.
-     * @default true
-     * @memberof module:Debug
-     * @instance
-     * @deprecated
-     */
-    function setLogToBrowserConsole(value) {
-        // Replicate functionality previous to log levels feature
-        if (value) {
-            logLevel = LOG_LEVEL_DEBUG;
-        } else {
-            logLevel = LOG_LEVEL_NONE;
-        }
-    }
-    /**
-     * Use this method to get the state of logToBrowserConsole.
-     * @returns {boolean} The current value of logToBrowserConsole
-     * @memberof module:Debug
-     * @instance
-     * @deprecated
-     */
-    function getLogToBrowserConsole() {
-        return logLevel !== LOG_LEVEL_NONE;
     }
 
     function fatal(...params) {
@@ -229,7 +164,7 @@ function Debug() {
         });
 
         // log to console if the log level is high enough
-        if (logFn[level] && logLevel >= level) {
+        if (logFn[level] && settings.get().debug.logLevel >= level) {
             logFn[level](message);
         }
 
@@ -240,11 +175,7 @@ function Debug() {
     instance = {
         getLogger: getLogger,
         setLogTimestampVisible: setLogTimestampVisible,
-        setCalleeNameVisible: setCalleeNameVisible,
-        setLogToBrowserConsole: setLogToBrowserConsole,
-        getLogToBrowserConsole: getLogToBrowserConsole,
-        setLogLevel: setLogLevel,
-        getLogLevel: getLogLevel
+        setCalleeNameVisible: setCalleeNameVisible
     };
 
     setup();

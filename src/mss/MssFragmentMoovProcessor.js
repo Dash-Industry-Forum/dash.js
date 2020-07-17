@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
  import MssErrors from './errors/MssErrors';
 
 /**
  * @module MssFragmentMoovProcessor
+ * @ignore
  * @param {Object} config object
  */
 function MssFragmentMoovProcessor(config) {
@@ -154,7 +154,7 @@ function MssFragmentMoovProcessor(config) {
         mvhd.creation_time = 0; // the creation time of the presentation => ignore (set to 0)
         mvhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         mvhd.timescale = timescale; // the time-scale for the entire presentation => 10000000 for MSS
-        mvhd.duration = Math.round(period.duration * timescale); // the length of the presentation (in the indicated timescale) =>  take duration of period
+        mvhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale); // the length of the presentation (in the indicated timescale) =>  take duration of period
         mvhd.rate = 1.0; // 16.16 number, '1.0' = normal playback
         mvhd.volume = 1.0; // 8.8 number, '1.0' = full volume
         mvhd.reserved1 = 0;
@@ -183,7 +183,7 @@ function MssFragmentMoovProcessor(config) {
         tkhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         tkhd.track_ID = trackId; // uniquely identifies this track over the entire life-time of this presentation
         tkhd.reserved1 = 0;
-        tkhd.duration = Math.round(period.duration * timescale); // the duration of this track (in the timescale indicated in the Movie Header Box) =>  take duration of period
+        tkhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale); // the duration of this track (in the timescale indicated in the Movie Header Box) =>  take duration of period
         tkhd.reserved2 = [0x0, 0x0];
         tkhd.layer = 0; // specifies the front-to-back ordering of video tracks; tracks with lower numbers are closer to the viewer => 0 since only one video track
         tkhd.alternate_group = 0; // specifies a group or collection of tracks => ignore
@@ -209,8 +209,8 @@ function MssFragmentMoovProcessor(config) {
         mdhd.creation_time = 0; // the creation time of the presentation => ignore (set to 0)
         mdhd.modification_time = 0; // the most recent time the presentation was modified => ignore (set to 0)
         mdhd.timescale = timescale; // the time-scale for the entire presentation
-        mdhd.duration = Math.round(period.duration * timescale); // the duration of this media (in the scale of the timescale). If the duration cannot be determined then duration is set to all 1s.
-        mdhd.language = adaptationSet.lang || 'und'; // declares the language code for this media (see getLanguageCode())
+        mdhd.duration = period.duration === Infinity ? 0xFFFFFFFFFFFFFFFF : Math.round(period.duration * timescale); // the duration of this media (in the scale of the timescale). If the duration cannot be determined then duration is set to all 1s.
+        mdhd.language = adaptationSet.lang || 'und'; // declares the language code for this media
         mdhd.pre_defined = 0;
 
         return mdhd;
@@ -375,7 +375,6 @@ function MssFragmentMoovProcessor(config) {
         let AVCProfileIndication = 0;
         let AVCLevelIndication = 0;
         let profile_compatibility = 0;
-
 
         let nalus = representation.codecPrivateData.split('00000001').slice(1);
         let naluBytes, naluType;
@@ -559,17 +558,19 @@ function MssFragmentMoovProcessor(config) {
     }
 
     function createProtectionSystemSpecificHeaderBox(moov, keySystems) {
-        let pssh_bytes;
-        let pssh;
-        let i;
-        let parsedBuffer;
+        let pssh_bytes,
+            pssh,
+            i,
+            parsedBuffer;
 
         for (i = 0; i < keySystems.length; i += 1) {
             pssh_bytes = keySystems[i].initData;
-            parsedBuffer = ISOBoxer.parseBuffer(pssh_bytes);
-            pssh = parsedBuffer.fetch('pssh');
-            if (pssh) {
-                ISOBoxer.Utils.appendBox(moov, pssh);
+            if (pssh_bytes) {
+                parsedBuffer = ISOBoxer.parseBuffer(pssh_bytes);
+                pssh = parsedBuffer.fetch('pssh');
+                if (pssh) {
+                    ISOBoxer.Utils.appendBox(moov, pssh);
+                }
             }
         }
     }
@@ -587,7 +588,6 @@ function MssFragmentMoovProcessor(config) {
     }
 
     function createTrexBox(moov) {
-
         let trex = ISOBoxer.createFullBox('trex', moov);
 
         trex.track_ID = trackId;

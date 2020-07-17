@@ -41,8 +41,8 @@ function AbandonRequestsRule(config) {
 
     const context = this.context;
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
     const dashMetrics = config.dashMetrics;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -81,7 +81,7 @@ function AbandonRequestsRule(config) {
             setFragmentRequestDict(mediaType, req.index);
 
             const stableBufferTime = mediaPlayerModel.getStableBufferTime();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(mediaType));
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
             if ( bufferLevel > stableBufferTime ) {
                 return switchRequest;
             }
@@ -121,15 +121,17 @@ function AbandonRequestsRule(config) {
                     const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateList = abrController.getBitrateList(mediaInfo);
-                    const newQuality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * mediaPlayerModel.getBandwidthSafetyFactor());
-                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, mediaInfo.streamInfo)].bitrate;
+                    const quality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor);
+                    const minQuality = abrController.getMinAllowedIndexFor(mediaType);
+                    const newQuality = (minQuality !== undefined) ? Math.max(minQuality, quality) : quality;
+                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
                         switchRequest.quality = newQuality;
                         switchRequest.reason.throughput = fragmentInfo.measuredBandwidthInKbps;
                         switchRequest.reason.fragmentID = fragmentInfo.id;
                         abandonDict[fragmentInfo.id] = fragmentInfo;
-                        logger.debug('( ', mediaType, 'frag id',fragmentInfo.id,') is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
+                        logger.debug('[' + mediaType + '] frag id',fragmentInfo.id,' is asking to abandon and switch to quality to ', newQuality, ' measured bandwidth was', fragmentInfo.measuredBandwidthInKbps);
                         delete fragmentDict[mediaType][fragmentInfo.id];
                     }
                 }

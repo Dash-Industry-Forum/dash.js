@@ -28,12 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+
 /**
  * @class
  * @ignore
  */
 class FragmentRequest {
-    constructor() {
+    constructor(url) {
         this.action = FragmentRequest.ACTION_DOWNLOAD;
         this.startTime = NaN;
         this.mediaType = null;
@@ -42,7 +45,7 @@ class FragmentRequest {
         this.duration = NaN;
         this.timescale = NaN;
         this.range = null;
-        this.url = null;
+        this.url = url || null;
         this.serviceLocation = null;
         this.requestStartDate = null;
         this.firstByteDate = null;
@@ -57,6 +60,17 @@ class FragmentRequest {
         this.delayLoadingTime = NaN;
         this.responseType = 'arraybuffer';
         this.representationId = null;
+    }
+
+    isInitializationRequest() {
+        return (this.type && this.type === HTTPRequest.INIT_SEGMENT_TYPE);
+    }
+
+    setInfo(info) {
+        this.type = info && info.init ? HTTPRequest.INIT_SEGMENT_TYPE : HTTPRequest.MEDIA_SEGMENT_TYPE;
+        this.url = info && info.url ? info.url : null;
+        this.range = info && info.range ? info.range.start + '-' + info.range.end : null;
+        this.mediaType = info && info.mediaType ? info.mediaType : null;
     }
 }
 

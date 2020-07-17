@@ -49,10 +49,12 @@ class CoreEvents extends EventsBase {
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
+        this.INBAND_EVENTS = 'inbandEvents';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
-        this.INIT_REQUESTED = 'initRequested';
+        this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
+        this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
         this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
         this.LOADING_COMPLETED = 'loadingCompleted';
         this.LOADING_PROGRESS = 'loadingProgress';
@@ -60,8 +62,10 @@ class CoreEvents extends EventsBase {
         this.LOADING_ABANDONED = 'loadingAborted';
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
+        this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.REPRESENTATION_UPDATED = 'representationUpdated';
+        this.REPRESENTATION_UPDATE_STARTED = 'representationUpdateStarted';
+        this.REPRESENTATION_UPDATE_COMPLETED = 'representationUpdateCompleted';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
         this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
         this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
@@ -70,13 +74,16 @@ class CoreEvents extends EventsBase {
         this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
         this.STREAM_COMPLETED = 'streamCompleted';
         this.TEXT_TRACKS_QUEUE_INITIALIZED = 'textTracksQueueInitialized';
-        this.TIMED_TEXT_REQUESTED = 'timedTextRequested';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
         this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
         this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
+        this.SEGMENTBASE_INIT_REQUEST_NEEDED = 'segmentBaseInitRequestNeeded';
+        this.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED = 'segmentBaseSegmentsListRequestNeeded';
+        this.SEEK_TARGET = 'seekTarget';
+        this.DYNAMIC_STREAM_COMPLETED = 'dynamicStreamCompleted';
     }
 }
 

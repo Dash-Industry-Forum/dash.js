@@ -44,6 +44,12 @@ export function checkInteger(parameter) {
     }
 }
 
+export function checkRange(parameter, min, max) {
+    if (parameter < min || parameter > max) {
+        throw Constants.BAD_ARGUMENT_ERROR + ' : argument out of range';
+    }
+}
+
 export function checkIsVideoOrAudioType(type) {
     if (typeof type !== 'string' || (type !== Constants.AUDIO && type !== Constants.VIDEO)) {
         throw Constants.BAD_ARGUMENT_ERROR;

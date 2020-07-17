@@ -34,7 +34,7 @@ import Constants from '../constants/Constants';
 import Thumbnail from '../vo/Thumbnail';
 import ThumbnailTracks from './ThumbnailTracks';
 import BitrateInfo from '../vo/BitrateInfo';
-import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils';
+import { replaceTokenForTemplate, unescapeDollarsInTemplate } from '../../dash/utils/SegmentsUtils';
 
 function ThumbnailController(config) {
 
@@ -46,23 +46,40 @@ function ThumbnailController(config) {
     function setup() {
         reset();
         thumbnailTracks = ThumbnailTracks(context).create({
-            dashManifestModel: config.dashManifestModel,
+            streamInfo: config.streamInfo,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
-            stream: config.stream,
-            timelineConverter: config.timelineConverter
+            timelineConverter: config.timelineConverter,
+            debug: config.debug,
+            eventBus: config.eventBus,
+            events: config.events,
+            dashConstants: config.dashConstants
         });
     }
 
-    function getThumbnail(time, callback) {
+    function provideThumbnail(time, callback) {
+
+        if (typeof callback !== 'function') {
+            return;
+        }
         const track = thumbnailTracks.getCurrentTrack();
+        let offset,
+            request;
         if (!track || track.segmentDuration <= 0 || time === undefined || time === null) {
-            return null;
+            callback(null);
+            return;
         }
 
         // Calculate index of the sprite given a time
-        const seq = Math.floor(time / track.segmentDuration);
-        const offset = time % track.segmentDuration;
+        if (isNaN(track.segmentDuration)) {
+            request = thumbnailTracks.getThumbnailRequestForTime(time);
+            if (request) {
+                track.segmentDuration = request.duration;
+            }
+        }
+
+        offset = time % track.segmentDuration;
+
         const thumbIndex = Math.floor((offset * track.tilesHor * track.tilesVert) / track.segmentDuration);
         // Create and return the thumbnail
         const thumbnail = new Thumbnail();
@@ -75,14 +92,17 @@ function ThumbnailController(config) {
         if ('readThumbnail' in track) {
             return track.readThumbnail(time, (url) => {
                 thumbnail.url = url;
-                if (callback)
-                    callback(thumbnail);
+                callback(thumbnail);
             });
         } else {
-            thumbnail.url = buildUrlFromTemplate(track, seq);
-            if (callback)
-                callback(thumbnail);
-            return thumbnail;
+            if (!request) {
+                const seq = Math.floor(time / track.segmentDuration);
+                thumbnail.url = buildUrlFromTemplate(track, seq);
+            } else {
+                thumbnail.url = request.url;
+                track.segmentDuration = NaN;
+            }
+            callback(thumbnail);
         }
     }
 
@@ -124,7 +144,7 @@ function ThumbnailController(config) {
     }
 
     instance = {
-        get: getThumbnail,
+        provide: provideThumbnail,
         setTrackByIndex: setTrackByIndex,
         getCurrentTrackIndex: getCurrentTrackIndex,
         getBitrateList: getBitrateList,

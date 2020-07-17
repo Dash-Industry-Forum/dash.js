@@ -30,39 +30,50 @@
  */
 import Constants from '../../constants/Constants';
 import FactoryMaker from '../../../core/FactoryMaker';
+import MetricsConstants from '../../constants/MetricsConstants';
 
 function BufferLevelRule(config) {
 
     config = config || {};
     const dashMetrics = config.dashMetrics;
-    const metricsModel = config.metricsModel;
     const mediaPlayerModel = config.mediaPlayerModel;
     const textController = config.textController;
     const abrController = config.abrController;
+    const settings = config.settings;
 
     function setup() {
     }
 
-    function execute(streamProcessor, videoTrackPresent) {
-        if (!streamProcessor) {
+    function execute(type, representationInfo, hasVideoTrack) {
+        if (!type || !representationInfo) {
             return true;
         }
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(streamProcessor.getType()));
-        return bufferLevel < getBufferTarget(streamProcessor, videoTrackPresent);
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        return bufferLevel < getBufferTarget(type, representationInfo, hasVideoTrack);
     }
 
-    function getBufferTarget(streamProcessor, videoTrackPresent) {
+    function getBufferTarget(type, representationInfo, hasVideoTrack) {
         let bufferTarget = NaN;
 
-        if (!streamProcessor) {
+        if (!type || !representationInfo) {
             return bufferTarget;
         }
-        const type = streamProcessor.getType();
-        const representationInfo = streamProcessor.getRepresentationInfo();
+
         if (type === Constants.FRAGMENTED_TEXT) {
-            bufferTarget = textController.isTextEnabled() ? representationInfo.fragmentDuration : 0;
-        } else if (type === Constants.AUDIO && videoTrackPresent) {
-            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(metricsModel.getReadOnlyMetricsFor(Constants.VIDEO));
+            if (textController.isTextEnabled()) {
+                if (isNaN(representationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
+                    // call metrics function to have data in the latest scheduling info...
+                    // if no metric, returns 0. In this case, rule will return false.
+                    const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(MetricsConstants.SCHEDULING_INFO);
+                    bufferTarget = schedulingInfo ? schedulingInfo.duration : 0;
+                } else {
+                    bufferTarget = representationInfo.fragmentDuration;
+                }
+            } else { // text is disabled, rule will return false
+                bufferTarget = 0;
+            }
+        } else if (type === Constants.AUDIO && hasVideoTrack) {
+            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             if (isNaN(representationInfo.fragmentDuration)) {
                 bufferTarget = videoBufferLevel;
             } else {
@@ -71,8 +82,8 @@ function BufferLevelRule(config) {
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
-                const isLongFormContent = streamInfo.manifestInfo.duration >= mediaPlayerModel.getLongFormContentDurationThreshold();
-                bufferTarget = isLongFormContent ? mediaPlayerModel.getBufferTimeAtTopQualityLongForm() : mediaPlayerModel.getBufferTimeAtTopQuality();
+                const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.longFormContentDurationThreshold;
+                bufferTarget = isLongFormContent ? settings.get().streaming.bufferTimeAtTopQualityLongForm : settings.get().streaming.bufferTimeAtTopQuality;
             } else {
                 bufferTarget = mediaPlayerModel.getStableBufferTime();
             }

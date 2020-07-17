@@ -1,5 +1,6 @@
 function DomStorageMock () {
     this.mediaSettings = {};
+    this.bitrateSettings = {audio: NaN, video: NaN};
 
     this.getSavedMediaSettings = function (type) {
         if (this.mediaSettings[type]) {
@@ -8,8 +9,12 @@ function DomStorageMock () {
         return null;
     };
 
-    this.getSavedBitrateSettings = function (/*type*/) {
-        return 0;
+    this.setSavedBitrateSettings = function (type, bitrate) {
+        this.bitrateSettings[type] = bitrate;
+    };
+
+    this.getSavedBitrateSettings = function (type) {
+        return this.bitrateSettings[type];
     };
 
     this.setSavedMediaSettings = function (type, settings) {

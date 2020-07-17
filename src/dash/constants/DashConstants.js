@@ -103,6 +103,7 @@ class DashConstants {
         this.CONTENTPROTECTION_ASARRAY = 'ContentProtection_asArray';
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
+        this.STATIC = 'static';
         this.MEDIA_PRESENTATION_DURATION = 'mediaPresentationDuration';
         this.MINIMUM_UPDATE_PERIOD = 'minimumUpdatePeriod';
         this.CODEC_PRIVATE_DATA = 'codecPrivateData';
@@ -125,6 +126,11 @@ class DashConstants {
         this.CENC_DEFAULT_KID = 'cenc:default_KID';
         this.DVB_PRIORITY = 'dvb:priority';
         this.DVB_WEIGHT = 'dvb:weight';
+        this.SUGGESTED_PRESENTATION_DELAY = 'suggestedPresentationDelay';
+        this.SERVICE_DESCRIPTION = 'ServiceDescription';
+        this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
+        this.SERVICE_DESCRIPTION_LATENCY = 'Latency';
+        this.SERVICE_DESCRIPTION_PLAYBACK_RATE = 'PlaybackRate';
     }
 
     constructor () {

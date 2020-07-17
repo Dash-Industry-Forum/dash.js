@@ -1,13 +1,19 @@
 import ThumbnailController from '../../src/streaming/thumbnail/ThumbnailController';
 import ThumbnailTracks from '../../src/streaming/thumbnail/ThumbnailTracks';
+import DashConstants from '../../src/dash/constants/DashConstants';
+import Events from '../../src/core/events/Events';
+import EventBus from '../../src/core/EventBus';
+import Debug from '../../src/core/Debug';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
-import DashManifestModelMock from './mocks/DashManifestModelMock';
 import AdapterMock from './mocks/AdapterMock';
-import StreamMock from './mocks/StreamMock';
 
 const expect = require('chai').expect;
 const context = {};
+
+const streamInfo = {
+    id: 'id'
+};
 
 const sampleRepresentation = {
     id: 'rep_id',
@@ -58,17 +64,20 @@ const sampleRepresentation3 = {
 };
 
 describe('Thumbnails', function () {
-    describe('ThumbnailController', function () {
+    describe('ThumbnailController not initializeed', function () {
         const objectsHelper = new ObjectsHelper();
-        const dashManifestModel = new DashManifestModelMock();
+        const adapter = new AdapterMock();
         let thumbnailController;
 
         beforeEach(function () {
             thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
+                streamInfo: streamInfo,
+                adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
             });
         });
 
@@ -77,25 +86,42 @@ describe('Thumbnails', function () {
         });
 
         it('should return null if not initialized', function () {
-            const thumbnail = thumbnailController.get(0);
-            expect(thumbnail).to.be.null; // jshint ignore:line
+            thumbnailController.provide(0, (thumbnail) => {
+                expect(thumbnail).to.be.null; // jshint ignore:line
+            });
 
             expect(thumbnailController.getBitrateList()).to.be.empty; // jshint ignore:line
         });
+    });
+
+    describe('ThumbnailController initialized with sampleRepresentation', function () {
+        const objectsHelper = new ObjectsHelper();
+        const adapter = new AdapterMock();
+        let thumbnailController;
+
+        beforeEach(function () {
+            adapter.setRepresentation(sampleRepresentation);
+            thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
+                adapter: adapter,
+                baseURLController: objectsHelper.getDummyBaseURLController(),
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
+            });
+        });
+
+        afterEach(function () {
+            thumbnailController.reset();
+        });
 
         it('should return a thumbnail', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation);
-            thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+            thumbnailController.provide(undefined, thumbnail => {
+                expect(thumbnail).to.be.null; // jshint ignore:line
             });
 
-            let thumbnail = thumbnailController.get();
-            expect(thumbnail).to.be.null; // jshint ignore:line
-
-            thumbnailController.get(0, thumbnail => {
+            thumbnailController.provide(0, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
@@ -104,7 +130,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
 
-            thumbnailController.get(11, thumbnail => {
+            thumbnailController.provide(11, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(320);
                 expect(thumbnail.y).to.equal(0);
@@ -113,7 +139,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
 
-            thumbnailController.get(101, thumbnail => {
+            thumbnailController.provide(101, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
@@ -123,15 +149,51 @@ describe('Thumbnails', function () {
             });
         });
 
-        it('should return a thumbnail when using multiple rows sprites ', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation2);
-            thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+        it('shouldn\'t return any thumbnail after reset', function () {
+            thumbnailController.reset();
+            thumbnailController.provide(0, thumbnail => {
+                expect(thumbnail).to.be.null; // jshint ignore:line
             });
-            thumbnailController.get(0, thumbnail => {
+        });
+
+        it('should return list of available bitrates', function () {
+            const bitrates = thumbnailController.getBitrateList();
+            expect(bitrates).to.have.lengthOf(1);
+            expect(bitrates[0].mediaType).to.equal('image');
+            expect(bitrates[0].bitrate).to.equal(2000);
+        });
+
+        it('tracks selection', function () {
+            expect(thumbnailController.getCurrentTrackIndex()).to.equal(0);
+            thumbnailController.setTrackByIndex(-1);
+            expect(thumbnailController.getCurrentTrackIndex()).to.equal(-1);
+        });
+    });
+
+    describe('ThumbnailController initialized with sampleRepresentation2', function () {
+        const objectsHelper = new ObjectsHelper();
+        const adapter = new AdapterMock();
+        let thumbnailController;
+
+        beforeEach(function () {
+            adapter.setRepresentation(sampleRepresentation2);
+            thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
+                adapter: adapter,
+                baseURLController: objectsHelper.getDummyBaseURLController(),
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
+            });
+        });
+
+        afterEach(function () {
+            thumbnailController.reset();
+        });
+
+        it('should return a thumbnail when using multiple rows sprites ', function () {
+            thumbnailController.provide(0, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
@@ -141,7 +203,7 @@ describe('Thumbnails', function () {
             });
 
 
-            thumbnailController.get(15, thumbnail => {
+            thumbnailController.provide(15, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(409.6);
                 expect(thumbnail.y).to.equal(0);
@@ -150,7 +212,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
 
-            thumbnailController.get(40, thumbnail => {
+            thumbnailController.provide(40, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(204.8);
                 expect(thumbnail.y).to.equal(57.6);
@@ -159,61 +221,22 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
         });
-
-        it('shouldnt return any thumbnail after reset', function () {
-            dashManifestModel.setRepresentation();
-            thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
-            });
-            thumbnailController.reset();
-            thumbnailController.get(0, thumbnail => {
-                expect(thumbnail).to.be.null; // jshint ignore:line
-            });
-        });
-
-        it('should return list of available bitrates', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation);
-            thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
-            });
-            const bitrates = thumbnailController.getBitrateList();
-            expect(bitrates).to.have.lengthOf(1);
-            expect(bitrates[0].mediaType).to.equal('image');
-            expect(bitrates[0].bitrate).to.equal(2000);
-        });
-
-        it('tracks selection', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation);
-            thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
-            });
-            expect(thumbnailController.getCurrentTrackIndex()).to.equal(0);
-            thumbnailController.setTrackByIndex(-1);
-            expect(thumbnailController.getCurrentTrackIndex()).to.equal(-1);
-        });
     });
-
 
     describe('ThumbnailTracks', function () {
         const objectsHelper = new ObjectsHelper();
-        const dashManifestModel = new DashManifestModelMock();
+        const adapter = new AdapterMock();
         let thumbnailTracks;
 
         beforeEach(function () {
             thumbnailTracks = ThumbnailTracks(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
+                streamInfo: streamInfo,
+                adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
             });
         });
 
@@ -232,15 +255,18 @@ describe('Thumbnails', function () {
             expect(tracks).to.be.empty; // jshint ignore:line
         });
 
-        it('addTracks method doesnt add any track if config not set properly', function () {
-            thumbnailTracks = ThumbnailTracks(context).create({});
+        it('addTracks method doesn\'t add any track if config not set properly', function () {
+            thumbnailTracks = ThumbnailTracks(context).create({debug: Debug(context).getInstance(),
+                                                            eventBus: EventBus(context).getInstance(),
+                                                            events: Events,
+                                                            dashConstants: DashConstants});
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
             expect(tracks).to.be.empty; // jshint ignore:line
         });
 
         it('should parse representations without essential properties and generate thumbnail tracks', function () {
-            dashManifestModel.setRepresentation({
+            adapter.setRepresentation({
                 id: 'rep_id',
                 segmentInfoType: 'SegmentTemplate',
                 bandwidth: 2000,
@@ -265,7 +291,7 @@ describe('Thumbnails', function () {
         });
 
         it('should parse representations and its essential properties', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation);
+            adapter.setRepresentation(sampleRepresentation);
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
 
@@ -280,7 +306,7 @@ describe('Thumbnails', function () {
         });
 
         it('should empty tracks after a reset', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation);
+            adapter.setRepresentation(sampleRepresentation);
             thumbnailTracks.initialize();
             expect(thumbnailTracks.getTracks()).to.have.lengthOf(1);
             thumbnailTracks.reset();
@@ -288,7 +314,7 @@ describe('Thumbnails', function () {
         });
 
         it('tracks selection', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation);
+            adapter.setRepresentation(sampleRepresentation);
             thumbnailTracks.initialize();
             thumbnailTracks.setTrackByIndex(0);
             expect(thumbnailTracks.getCurrentTrackIndex()).to.equal(0);
@@ -302,16 +328,18 @@ describe('Thumbnails', function () {
 
     describe('CR URI schema', function () {
         const objectsHelper = new ObjectsHelper();
-        const dashManifestModel = new DashManifestModelMock();
-        let thumbnailController;
+        const adapter = new AdapterMock();
         let thumbnailTracks;
 
         beforeEach(function () {
             thumbnailTracks = ThumbnailTracks(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
+                streamInfo: streamInfo,
+                adapter: adapter,
                 baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
             });
         });
 
@@ -320,13 +348,7 @@ describe('Thumbnails', function () {
         });
 
         it('should support CR URI schema', function () {
-            dashManifestModel.setRepresentation(sampleRepresentation3);
-            thumbnailController = ThumbnailController(context).create({
-                dashManifestModel: dashManifestModel,
-                adapter: new AdapterMock(),
-                baseURLController: objectsHelper.getDummyBaseURLController(),
-                stream: new StreamMock()
-            });
+            adapter.setRepresentation(sampleRepresentation3);
 
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();

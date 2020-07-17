@@ -37,6 +37,7 @@
  *
  * @export
  * @class Round10
+ * @ignore
  */
 export default class Round10 {
     /**
@@ -45,6 +46,7 @@ export default class Round10 {
     * @param {Number}  value The number.
     * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
     * @returns {Number} The adjusted value.
+    * @ignore
     */
     static round10(value, exp) {
         return _decimalAdjust('round', value, exp);
@@ -58,6 +60,7 @@ export default class Round10 {
  * @param {Number}  value The number.
  * @param {Integer} exp   The exponent (the 10 logarithm of the adjustment base).
  * @returns {Number} The adjusted value.
+ * @ignore
  */
 function _decimalAdjust(type, value, exp) {
     // If the exp is undefined or zero...

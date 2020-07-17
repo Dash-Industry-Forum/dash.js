@@ -78,12 +78,6 @@ function MediaController() {
         const tracksForType = getTracksFor(type, streamInfo);
         const tracks = [];
 
-        if (type === Constants.FRAGMENTED_TEXT) {
-            // Choose the first track
-            setTrack(tracksForType[0]);
-            return;
-        }
-
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
             setInitialSettings(type, settings);
@@ -100,10 +94,10 @@ function MediaController() {
         }
 
         if (tracks.length === 0) {
-            setTrack(selectInitialTrack(tracksForType));
+            setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(selectInitialTrack(tracks));
+                setTrack(selectInitialTrack(type, tracks));
             } else {
                 setTrack(tracks[0]);
             }
@@ -185,10 +179,11 @@ function MediaController() {
 
     /**
      * @param {MediaInfo} track
+     * @param {boolean} noSettingsSave specify if settings must be not be saved
      * @memberof MediaController#
      */
-    function setTrack(track) {
-        if (!track) return;
+    function setTrack(track, noSettingsSave) {
+        if (!track || !track.streamInfo) return;
 
         const type = track.type;
         const streamInfo = track.streamInfo;
@@ -199,28 +194,31 @@ function MediaController() {
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current) {
+        if (tracks[id][type].current && !(noSettingsSave && type === Constants.FRAGMENTED_TEXT)) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
         }
 
-        let settings = extractSettings(track);
+        if (!noSettingsSave) {
 
-        if (!settings || !tracks[id][type].storeLastSettings) return;
+            let settings = extractSettings(track);
 
-        if (settings.roles) {
-            settings.role = settings.roles[0];
-            delete settings.roles;
+            if (!settings || !tracks[id][type].storeLastSettings) return;
+
+            if (settings.roles) {
+                settings.role = settings.roles[0];
+                delete settings.roles;
+            }
+
+            if (settings.accessibility) {
+                settings.accessibility = settings.accessibility[0];
+            }
+
+            if (settings.audioChannelConfiguration) {
+                settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
+            }
+
+            domStorage.setSavedMediaSettings(type, settings);
         }
-
-        if (settings.accessibility) {
-            settings.accessibility = settings.accessibility[0];
-        }
-
-        if (settings.audioChannelConfiguration) {
-            settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
-        }
-
-        domStorage.setSavedMediaSettings(type, settings);
     }
 
     /**
@@ -243,6 +241,13 @@ function MediaController() {
         if (!type) return null;
 
         return initialSettings[type];
+    }
+
+    /**
+     * @memberof MediaController#
+     */
+    function saveTextSettingsDisabled() {
+        domStorage.setSavedMediaSettings(Constants.FRAGMENTED_TEXT, null);
     }
 
     /**
@@ -359,7 +364,7 @@ function MediaController() {
     }
 
     function matchSettings(settings, track) {
-        const matchLang = !settings.lang || (settings.lang === track.lang);
+        const matchLang = !settings.lang || (track.lang.match(settings.lang));
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return item === settings.role;
@@ -384,13 +389,17 @@ function MediaController() {
     function resetInitialSettings() {
         initialSettings = {
             audio: null,
-            video: null
+            video: null,
+            fragmentedText: null
         };
     }
 
-    function selectInitialTrack(tracks) {
+    function selectInitialTrack(type, tracks) {
+        if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
+
         let mode = getSelectionModeForInitialTrack();
         let tmpArr = [];
+
         const getTracksWithHighestBitrate = function (trackArr) {
             let max = 0;
             let result = [];
@@ -496,6 +505,8 @@ function MediaController() {
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         isMultiTrackSupportedByType: isMultiTrackSupportedByType,
         isTracksEqual: isTracksEqual,
+        matchSettings: matchSettings,
+        saveTextSettingsDisabled: saveTextSettingsDisabled,
         setConfig: setConfig,
         reset: reset
     };

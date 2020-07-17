@@ -23,6 +23,7 @@ class MediaSourceBufferMock {
         this.chunk = null;
         this.aborted = false;
         this.timestampOffset = 1;
+        this.appendWindowEnd = Infinity;
     }
 
     addRange(range) {

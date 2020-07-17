@@ -29,13 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DataChunk from '../vo/DataChunk';
 import FragmentModel from '../models/FragmentModel';
 import FragmentLoader from '../FragmentLoader';
 import RequestModifier from '../utils/RequestModifier';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import Errors from '../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
@@ -47,40 +47,48 @@ function FragmentController( config ) {
 
     const errHandler = config.errHandler;
     const mediaPlayerModel = config.mediaPlayerModel;
-    const metricsModel = config.metricsModel;
+    const dashMetrics = config.dashMetrics;
+    const debug = Debug(context).getInstance();
 
     let instance,
         logger,
         fragmentModels;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
+        logger = debug.getLogger(instance);
         resetInitialSettings();
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
         eventBus.on(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, instance);
     }
 
-    function getModel(type) {
+    function getModel(streamId, type) {
         let model = fragmentModels[type];
         if (!model) {
             model = FragmentModel(context).create({
-                metricsModel: metricsModel,
+                streamId: streamId,
+                dashMetrics: dashMetrics,
                 fragmentLoader: FragmentLoader(context).create({
-                    metricsModel: metricsModel,
+                    dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     errHandler: errHandler,
-                    requestModifier: RequestModifier(context).getInstance()
-                })
+                    requestModifier: RequestModifier(context).getInstance(),
+                    settings: config.settings,
+                    boxParser: config.boxParser,
+                    eventBus: eventBus,
+                    events: Events,
+                    errors: Errors,
+                    dashConstants: config.dashConstants,
+                    urlUtils: config.urlUtils
+                }),
+                debug: debug,
+                eventBus: eventBus,
+                events: Events
             });
 
             fragmentModels[type] = model;
         }
 
         return model;
-    }
-
-    function isInitializationRequest(request) {
-        return (request && request.type && request.type === HTTPRequest.INIT_SEGMENT_TYPE);
     }
 
     function resetInitialSettings() {
@@ -115,13 +123,12 @@ function FragmentController( config ) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (fragmentModels[e.request.mediaType] !== e.sender) {
-            return;
-        }
+        // Event propagation may have been stopped (see MssHandler)
+        if (!e.sender) return;
 
         const request = e.request;
         const bytes = e.response;
-        const isInit = isInitializationRequest(request);
+        const isInit = request.isInitializationRequest();
         const streamInfo = request.mediaInfo.streamInfo;
 
         if (e.error) {
@@ -138,13 +145,12 @@ function FragmentController( config ) {
         const chunk = createDataChunk(bytes, request, streamInfo.id, e.type !== Events.FRAGMENT_LOADING_PROGRESS);
         eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {
             chunk: chunk,
-            fragmentModel: e.sender
+            request: request
         });
     }
 
     instance = {
         getModel: getModel,
-        isInitializationRequest: isInitializationRequest,
         reset: reset
     };
 

@@ -33,6 +33,7 @@ import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
+import DashConstants from '../dash/constants/DashConstants';
 
 function ManifestUpdater() {
 
@@ -47,9 +48,9 @@ function ManifestUpdater() {
         isUpdating,
         manifestLoader,
         manifestModel,
-        dashManifestModel,
+        adapter,
         errHandler,
-        mediaPlayerModel;
+        settings;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -61,17 +62,17 @@ function ManifestUpdater() {
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
-        if (config.dashManifestModel) {
-            dashManifestModel = config.dashManifestModel;
-        }
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
+        if (config.adapter) {
+            adapter = config.adapter;
         }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;
         }
         if (config.errHandler) {
             errHandler = config.errHandler;
+        }
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
@@ -107,7 +108,7 @@ function ManifestUpdater() {
 
     function stopManifestRefreshTimer() {
         if (refreshTimer !== null) {
-            clearInterval(refreshTimer);
+            clearTimeout(refreshTimer);
             refreshTimer = null;
         }
     }
@@ -129,7 +130,7 @@ function ManifestUpdater() {
         isUpdating = true;
         const manifest = manifestModel.getValue();
         let url = manifest.url;
-        const location = dashManifestModel.getLocation(manifest);
+        const location = adapter.getLocation(manifest);
         if (location) {
             url = location;
         }
@@ -138,11 +139,18 @@ function ManifestUpdater() {
 
     function update(manifest) {
 
+        // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
+        // Stop manifest update, ignore static manifest and signal end of dynamic stream to detect end of stream
+        if (manifestModel.getValue() && manifestModel.getValue().type === DashConstants.DYNAMIC && manifest.type === DashConstants.STATIC) {
+            eventBus.trigger(Events.DYNAMIC_STREAM_COMPLETED);
+            return;
+        }
+
         manifestModel.setValue(manifest);
 
         const date = new Date();
         const latencyOfLastUpdate = (date.getTime() - manifest.loadedTime.getTime()) / 1000;
-        refreshDelay = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
+        refreshDelay = adapter.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
         // setTimeout uses a 32 bit number to store the delay. Any number greater than it
         // will cause event associated with setTimeout to trigger immediately
         if (refreshDelay * 1000 > 0x7FFFFFFF) {
@@ -157,11 +165,11 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !mediaPlayerModel.getScheduleWhilePaused()) {
+        if (isPaused && !settings.get().streaming.scheduleWhilePaused) {
             return;
         }
         if (isUpdating) {
-            startManifestRefreshTimer(mediaPlayerModel.getManifestUpdateRetryInterval());
+            startManifestRefreshTimer(settings.get().streaming.manifestUpdateRetryInterval);
             return;
         }
         refreshManifest();
