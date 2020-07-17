@@ -77,6 +77,7 @@ function AbrController() {
         droppedFramesHistory,
         throughputHistory,
         isUsingBufferOccupancyABRDict,
+        isUsingL2AABRDict,
         dashMetrics,
         settings;
 
@@ -91,6 +92,7 @@ function AbrController() {
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = MetricsConstants.ALLOW_LOAD;
         isUsingBufferOccupancyABRDict[type] = false;
+        isUsingL2AABRDict[type] = false;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         if (type == Constants.VIDEO) {
             eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
@@ -126,6 +128,7 @@ function AbrController() {
         streamProcessorDict = {};
         switchHistoryDict = {};
         isUsingBufferOccupancyABRDict = {};
+        isUsingL2AABRDict = {};
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -308,7 +311,9 @@ function AbrController() {
                 currentValue: oldQuality,
                 switchHistory: switchHistoryDict[type],
                 droppedFramesHistory: droppedFramesHistory,
-                useBufferOccupancyABR: useBufferOccupancyABR(type)
+                useBufferOccupancyABR: useBufferOccupancyABR(type),
+                useL2AABR: useL2AABR(type)
+
             });
 
             if (droppedFramesHistory) {
@@ -336,7 +341,7 @@ function AbrController() {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
                 } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
-                    const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+                    const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                     logger.debug('[' + type + '] stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
             }
@@ -360,7 +365,7 @@ function AbrController() {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const id = streamInfo ? streamInfo.id : null;
             if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+                const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                 logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);
@@ -442,16 +447,23 @@ function AbrController() {
 
     function updateIsUsingBufferOccupancyABR(mediaType, bufferLevel) {
         const strategy = settings.get().streaming.abr.ABRStrategy;
-
-        if (strategy === Constants.ABR_STRATEGY_BOLA) {
+        if (strategy === Constants.ABR_STRATEGY_L2A) {
             isUsingBufferOccupancyABRDict[mediaType] = true;
+            isUsingL2AABRDict[mediaType] = true;
+            return;
+        }
+        else if (strategy === Constants.ABR_STRATEGY_BOLA) {
+            isUsingBufferOccupancyABRDict[mediaType] = true;
+            isUsingL2AABRDict[mediaType] = false;
+           
             return;
         } else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
             isUsingBufferOccupancyABRDict[mediaType] = false;
+            isUsingL2AABRDict[mediaType] = false;
             return;
         }
         // else ABR_STRATEGY_DYNAMIC
-
+        console.log(strategy);
         const stableBufferTime = mediaPlayerModel.getStableBufferTime();
         const switchOnThreshold = stableBufferTime;
         const switchOffThreshold = 0.5 * stableBufferTime;
@@ -472,21 +484,22 @@ function AbrController() {
     function useBufferOccupancyABR(mediaType) {
         return isUsingBufferOccupancyABRDict[mediaType];
     }
+    function useL2AABR(mediaType) {
+        return isUsingL2AABRDict[mediaType];
+    }
 
     function getThroughputHistory() {
         return throughputHistory;
     }
 
     function updateTopQualityIndex(mediaInfo) {
-        if (mediaInfo) {
-            const type = mediaInfo.type;
-            const streamId = mediaInfo.streamInfo.id;
-            const max = mediaInfo.representationCount - 1;
+        const type = mediaInfo.type;
+        const streamId = mediaInfo.streamInfo.id;
+        const max = mediaInfo.representationCount - 1;
 
-            setTopQualityIndex(type, streamId, max);
+        setTopQualityIndex(type, streamId, max);
 
-            return max;
-        }
+        return max;
     }
 
     function isPlayingAtTopQuality(streamInfo) {
@@ -612,7 +625,8 @@ function AbrController() {
                 abrController: instance,
                 streamProcessor: streamProcessor,
                 currentRequest: e.request,
-                useBufferOccupancyABR: useBufferOccupancyABR(type)
+                useBufferOccupancyABR: useBufferOccupancyABR(type),
+                useL2AABR: useL2AABR(type)
             });
             const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
