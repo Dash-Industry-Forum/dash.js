@@ -63,6 +63,7 @@ function InsufficientBufferRule(config) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
+
     /*
      * InsufficientBufferRule does not kick in before the first BUFFER_LOADED event happens. This is reset at every seek.
      *
@@ -73,7 +74,7 @@ function InsufficientBufferRule(config) {
      * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      */
-    function getMaxIndex (rulesContext) {
+    function getMaxIndex(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
@@ -92,7 +93,7 @@ function InsufficientBufferRule(config) {
             return switchRequest;
         }
 
-        if (currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
+        if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
@@ -130,7 +131,7 @@ function InsufficientBufferRule(config) {
     function onEndFragment(e) {
         if (!isNaN(e.startTime) && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
             if (bufferStateDict[e.mediaType].ignoreCount > 0) {
-                bufferStateDict[e.mediaType].ignoreCount --;
+                bufferStateDict[e.mediaType].ignoreCount--;
             }
         }
     }
