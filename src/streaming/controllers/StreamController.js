@@ -51,8 +51,8 @@ import EventController from './EventController';
 
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
-    const STALL_THRESHOLD_TO_CHECK_GAPS = 40;
-    const PERIOD_PREFETCH_TIME = 2000;
+    const GAP_HANDLER_INTERVAL = 50;
+    const PERIOD_PREFETCH_TIME = 8000;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -91,14 +91,15 @@ function StreamController() {
         isPaused,
         initialPlayback,
         isPeriodSwitchInProgress,
-        playbackEndedTimerId,
+        playbackEndedTimerInterval,
         prefetchTimerId,
         wallclockTicked,
         buffers,
         preloading,
         lastPlaybackTime,
         supportsChangeType,
-        settings;
+        settings,
+        gapHandlerInterval;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -149,8 +150,8 @@ function StreamController() {
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
     }
 
     function unRegisterEvents() {
@@ -165,8 +166,8 @@ function StreamController() {
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
     }
 
     /*
@@ -182,24 +183,62 @@ function StreamController() {
         }
     }
 
-    function onWallclockTimeUpdated(/*e*/) {
-        if (!settings.get().streaming.jumpGaps || getActiveStreamProcessors() === 0 ||
-            playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
-            hasMediaError || hasInitialisationError) {
-            return;
-        }
-
-        wallclockTicked++;
-        if (wallclockTicked >= STALL_THRESHOLD_TO_CHECK_GAPS) {
-            const currentTime = playbackController.getTime();
-            if (lastPlaybackTime === currentTime) {
-                jumpGap(currentTime);
-            } else {
-                lastPlaybackTime = currentTime;
-            }
-            wallclockTicked = 0;
+    function onBytesAppended() {
+        if (!gapHandlerInterval) {
+            startGapHandler();
         }
     }
+
+    function startGapHandler() {
+        try {
+            logger.debug('Timeline has gaps, starting the gap handler');
+            gapHandlerInterval = setInterval(() => {
+                if (getActiveStreamProcessors() === 0 ||
+                    playbackController.isSeeking() || isPaused || isStreamSwitchingInProgress ||
+                    hasMediaError || hasInitialisationError) {
+                    return;
+                }
+                const currentTime = playbackController.getTime();
+                if (lastPlaybackTime === currentTime) {
+                    jumpGap(currentTime);
+                } else {
+                    lastPlaybackTime = currentTime;
+                }
+            }, GAP_HANDLER_INTERVAL);
+        } catch (e) {
+        }
+    }
+
+    function stopGapHandler() {
+        logger.debug('Stopping the gap handler, no gaps found');
+        if (gapHandlerInterval) {
+            clearInterval(gapHandlerInterval);
+            gapHandlerInterval = null;
+        }
+    }
+
+    /*
+    function timelineHasGaps() {
+        try {
+            const streamProcessors = getActiveStreamProcessors();
+            let hasGaps = false;
+            let i = 0;
+
+            while (i < streamProcessors.length && !hasGaps) {
+                const mediaBuffer = streamProcessors[i].getBuffer();
+                const ranges = mediaBuffer.getAllBufferRanges();
+                if (ranges && ranges.length > 1) {
+                    hasGaps = true;
+                }
+                i += 1;
+            }
+
+            return hasGaps;
+        } catch (e) {
+            return false;
+        }
+    }
+    */
 
     function jumpGap(time) {
         const streamProcessors = getActiveStreamProcessors();
@@ -253,8 +292,7 @@ function StreamController() {
         const seekingStream = getStreamForTime(e.seekTime);
 
         //if end period has been detected, stop timer and reset isPeriodSwitchInProgress
-        if (playbackEndedTimerId) {
-            stopEndPeriodTimer();
+        if (playbackEndedTimerInterval) {
             isPeriodSwitchInProgress = false;
         }
 
@@ -297,14 +335,14 @@ function StreamController() {
         if (!e.ended) {
             isPaused = true;
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
-            toggleEndPeriodTimer();
+            //toggleEndPeriodTimer();
         }
     }
 
     function stopEndPeriodTimer() {
         logger.debug('[toggleEndPeriodTimer] stop end period timer.');
-        clearTimeout(playbackEndedTimerId);
-        playbackEndedTimerId = undefined;
+        clearInterval(playbackEndedTimerInterval);
+        playbackEndedTimerInterval = undefined;
     }
 
     function stopPreloadTimer() {
@@ -317,18 +355,21 @@ function StreamController() {
         //stream buffering completed has not been detected, nothing to do....
         if (isPeriodSwitchInProgress) {
             //stream buffering completed has been detected, if end period timer is running, stop it, otherwise start it....
-            if (playbackEndedTimerId) {
+            if (playbackEndedTimerInterval) {
                 stopEndPeriodTimer();
             } else {
                 const timeToEnd = playbackController.getTimeToStreamEnd();
                 const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
                 const prefetchDelay = delayPlaybackEnded < PERIOD_PREFETCH_TIME ? delayPlaybackEnded / 4 : delayPlaybackEnded - PERIOD_PREFETCH_TIME;
                 logger.debug('[toggleEndPeriodTimer] Going to fire preload in', prefetchDelay, 'milliseconds');
-                prefetchTimerId = setTimeout(onStreamCanLoadNext, prefetchDelay);
+                //prefetchTimerId = setTimeout(onStreamCanLoadNext, prefetchDelay);
+                onStreamCanLoadNext();
                 logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in', delayPlaybackEnded, 'milliseconds');
-                playbackEndedTimerId = setTimeout(function () {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
-                }, delayPlaybackEnded);
+                playbackEndedTimerInterval = setInterval(function () {
+                    if (playbackController.getTimeToStreamEnd() <= 0) {
+                        eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                    }
+                }, 30);
             }
         }
     }
@@ -339,7 +380,7 @@ function StreamController() {
         if (e.mediaType !== Constants.AUDIO && e.mediaType !== Constants.VIDEO) return;
 
         const isLast = getActiveStreamInfo().isLast;
-        if (mediaSource && !isLast && playbackEndedTimerId === undefined) {
+        if (mediaSource && !isLast && playbackEndedTimerInterval === undefined) {
             logger.info('[onTrackBufferingCompleted] end of period detected. Track', e.mediaType, 'has finished');
             isPeriodSwitchInProgress = true;
             if (isPaused === false) {
@@ -455,7 +496,7 @@ function StreamController() {
             logger.debug('StreamController no next stream found');
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
-        playbackEndedTimerId = undefined;
+        stopEndPeriodTimer();
         isPeriodSwitchInProgress = false;
     }
 
@@ -996,15 +1037,17 @@ function StreamController() {
         initialPlayback = true;
         isPaused = false;
         autoPlay = true;
-        playbackEndedTimerId = undefined;
+        playbackEndedTimerInterval = undefined;
         isPeriodSwitchInProgress = false;
         wallclockTicked = 0;
+        gapHandlerInterval = null;
     }
 
     function reset() {
         checkConfig();
 
         timeSyncController.reset();
+        stopGapHandler();
 
         flushPlaylistMetrics(
             hasMediaError || hasInitialisationError ?
