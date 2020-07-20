@@ -562,7 +562,8 @@ function PlaybackController() {
         if (wallclockTimeIntervalId && e.isLast) {
             // PLAYBACK_ENDED was triggered elsewhere, react.
             logger.info('onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
-            videoModel.setCurrentTime(getStreamEndTime());
+            const seekTime = e.seekTime ? e.seekTime : getStreamEndTime();
+            videoModel.setCurrentTime(seekTime);
             pause();
             stopUpdatingWallclockTime();
         }
