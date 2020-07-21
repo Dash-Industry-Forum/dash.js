@@ -22,8 +22,8 @@ class MediaControllerMock {
         return this.tracks;
     }
 
-    getCurrentTrackFor() {
-        return this.track;
+    getCurrentTrackFor(type) {
+        return this.track === undefined || this.track === null ? { codec: '', type } : this.track;
     }
 
     /**

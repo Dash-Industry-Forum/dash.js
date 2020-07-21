@@ -15,7 +15,7 @@ class TextControllerMock {
         this.textEnabled = state;
     }
     getTextDefaultEnabled() {
-        return true;
+        return false;
     }
     addEmbeddedTrack() {}
 }

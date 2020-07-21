@@ -9,6 +9,7 @@ import Errors from '../../src/core/errors/Errors';
 import Settings from '../../src/core/Settings';
 
 import AdapterMock from './mocks/AdapterMock';
+import BaseURLControllerMock from './mocks/BaseURLControllerMock';
 import ManifestModelMock from './mocks/ManifestModelMock';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
@@ -45,6 +46,7 @@ describe('Stream', function () {
     const dashMetricsMock = new DashMetricsMock();
     const textControllerMock = new TextControllerMock();
     const videoModelMock = new VideoModelMock();
+    const baseURLControllerMock = new BaseURLControllerMock();
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamInfo = {
         id: 'id',
@@ -70,6 +72,7 @@ describe('Stream', function () {
                 dashMetrics: dashMetricsMock,
                 textController: textControllerMock,
                 videoModel: videoModelMock,
+                baseURLController: baseURLControllerMock,
                 settings: settings});
         });
 
@@ -88,6 +91,60 @@ describe('Stream', function () {
 
             expect(processors).to.be.instanceOf(Array); // jshint ignore:line
             expect(processors).to.be.empty; // jshint ignore:line
+        });
+
+        it('should return an array that does not include the streamProcessors for text and fragmented text when getProcessors is called and text is disabled', () => {
+            // test-specific setup
+            adapterMock.setRepresentation({
+                adaptation: { period: { mpd: { manifest: { type: 'bar' } } } },
+                hasInitialization: () => false,
+                hasSegments: () => true,
+                id: 'foo'
+            });
+
+            stream.initialize(streamInfo, {});
+            stream.activate(
+                null,
+                null
+            );
+
+            // check textControllerMock is in correct state
+            expect(textControllerMock.isTextEnabled()).to.be.false; // jshint ignore:line
+
+            // check assertions
+            const processors = stream.getProcessors();
+            expect(processors.length).to.be.equal(2); // jshint ignore:line
+            expect(processors[0].getType()).to.be.equal('video'); // jshint ignore:line
+            expect(processors[1].getType()).to.be.equal('audio'); // jshint ignore:line
+        });
+
+        it('should return an array that includes the streamProcessors for text and fragmented text when getProcessors is called and text is enabled', () => {
+            // test-specific setup
+            adapterMock.setRepresentation({
+                adaptation: { period: { mpd: { manifest: { type: 'bar' } } } },
+                hasInitialization: () => false,
+                hasSegments: () => true,
+                id: 'foo'
+            });
+
+            textControllerMock.enableText(true);
+
+            stream.initialize(streamInfo, {});
+            stream.activate(
+                null,
+                null
+            );
+
+            // check textControllerMock is in correct state
+            expect(textControllerMock.isTextEnabled()).to.be.true; // jshint ignore:line
+
+            // check assertions
+            const processors = stream.getProcessors();
+            expect(processors.length).to.be.equal(4); // jshint ignore:line
+            expect(processors[0].getType()).to.be.equal('video'); // jshint ignore:line
+            expect(processors[1].getType()).to.be.equal('audio'); // jshint ignore:line
+            expect(processors[2].getType()).to.be.equal('text'); // jshint ignore:line
+            expect(processors[3].getType()).to.be.equal('fragmentedText'); // jshint ignore:line
         });
 
         it('should trigger MANIFEST_ERROR_ID_NOSTREAMS_CODE error when setMediaSource is called but streamProcessors array is empty', () => {
