@@ -864,24 +864,27 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        addInlineEvents();
+        if(!getPreloaded()) {
+            console.info('[onStreamCanLoadNext] Preloading next stream ' + getId());
+            addInlineEvents();
 
-        initializeMediaForType(Constants.VIDEO, mediaSource);
-        initializeMediaForType(Constants.AUDIO, mediaSource);
-        initializeMediaForType(Constants.TEXT, mediaSource);
-        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
-        initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
-        initializeMediaForType(Constants.MUXED, mediaSource);
-        initializeMediaForType(Constants.IMAGE, mediaSource);
+            initializeMediaForType(Constants.VIDEO, mediaSource);
+            initializeMediaForType(Constants.AUDIO, mediaSource);
+            initializeMediaForType(Constants.TEXT, mediaSource);
+            initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+            initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+            initializeMediaForType(Constants.MUXED, mediaSource);
+            initializeMediaForType(Constants.IMAGE, mediaSource);
 
-        createBuffers(previousBuffers);
+            createBuffers(previousBuffers);
 
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-        for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
-            streamProcessors[i].getScheduleController().start();
+            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+                streamProcessors[i].getScheduleController().start();
+            }
+
+            setPreloaded(true);
         }
-
-        setPreloaded(true);
     }
 
 

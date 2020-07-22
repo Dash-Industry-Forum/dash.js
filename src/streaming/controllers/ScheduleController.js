@@ -123,6 +123,7 @@ function ScheduleController(config) {
         if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
 
         logger.debug('Schedule Controller starts');
+        console.debug('Schedule Controller starts');
         isStopped = false;
         dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
 

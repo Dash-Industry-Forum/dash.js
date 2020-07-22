@@ -51,7 +51,7 @@ import EventController from './EventController';
 
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
-    const GAP_HANDLER_INTERVAL = 50;
+    const GAP_HANDLER_INTERVAL = 100;
     const PERIOD_PREFETCH_TIME = 8000;
 
     const context = this.context;
@@ -96,7 +96,7 @@ function StreamController() {
         prefetchTimerId,
         wallclockTicked,
         buffers,
-        preloading,
+        preloadingStreams,
         lastPlaybackTime,
         supportsChangeType,
         settings,
@@ -245,8 +245,9 @@ function StreamController() {
 
     function jumpGap(time) {
         const smallGapLimit = settings.get().streaming.smallGapLimit;
-        let seekToPosition;
+        const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
         let nextRangeStartTime = null;
+        let seekToPosition;
 
         const ranges = videoModel.getBufferRange();
         if (!ranges || ranges.length <= 1) {
@@ -264,31 +265,27 @@ function StreamController() {
 
         if (nextRangeStartTime > 0) {
             const gap = nextRangeStartTime - time;
-            //if (gap > 0 && gap <= smallGapLimit) {
-            if (gap > 0) {
-                if (seekToPosition === undefined || nextRangeStartTime > seekToPosition) {
-                    seekToPosition = nextRangeStartTime;
-                }
+            if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
+                seekToPosition = nextRangeStartTime;
             }
         }
 
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        //if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit) {
-        if (seekToPosition === undefined && !isNaN(timeToStreamEnd)) {
+        if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps)) {
             seekToPosition = time + timeToStreamEnd;
         }
 
         // If there is a safe position to jump to, do the seeking
         if (seekToPosition > 0) {
-            if (!isNaN(timeToStreamEnd) && seekToPosition >= time + timeToStreamEnd) {
-                logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to end of the stream');
+            const isLastPeriod = getActiveStreamInfo().isLast;
+            if (seekToPosition >= timeToStreamEnd)
                 eventBus.trigger(Events.PLAYBACK_ENDED, {
-                    'isLast': getActiveStreamInfo().isLast,
-                    seekTime: seekToPosition
+                    'isLast': isLastPeriod
                 });
-            } else {
-                logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
-                playbackController.seek(seekToPosition, true, true);
+            else {
+                //logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
+                console.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
+                playbackController.seek(seekToPosition, true, false);
             }
         }
     }
@@ -305,12 +302,15 @@ function StreamController() {
             stopPreloadTimer();
         }
 
-        if (seekingStream === activeStream && preloading) {
+        if (seekingStream === activeStream && preloadingStreams && preloadingStreams.length > 0) {
             // Seeking to the current period was requested while preloading the next one, deactivate preloading one
-            preloading.deactivate(true);
+            preloadingStreams.forEach((s) => {
+                s.deactivate(true);
+            });
         }
 
-        if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
+        //if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
+        if (seekingStream && seekingStream !== activeStream ) {
             // If we're preloading other stream, the active one was deactivated and we need to switch back
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(seekingStream, activeStream, e.seekTime);
@@ -331,7 +331,6 @@ function StreamController() {
                 isPaused = false;
                 bufferEmpty = false;
                 createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
-                toggleEndPeriodTimer();
             }
         }
     }
@@ -341,14 +340,7 @@ function StreamController() {
         if (!e.ended) {
             isPaused = true;
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
-            //toggleEndPeriodTimer();
         }
-    }
-
-    function stopEndPeriodTimer() {
-        logger.debug('[toggleEndPeriodTimer] stop end period timer.');
-        clearInterval(playbackEndedTimerInterval);
-        playbackEndedTimerInterval = undefined;
     }
 
     function stopPreloadTimer() {
@@ -357,42 +349,50 @@ function StreamController() {
         prefetchTimerId = undefined;
     }
 
-    function toggleEndPeriodTimer() {
+    function stopPlaybackEndedTimerInterval() {
+        logger.debug('[toggleEndPeriodTimer] stop end period timer.');
+        clearInterval(playbackEndedTimerInterval);
+        playbackEndedTimerInterval = null;
+    }
+
+    function startPeriodEndedHandler() {
         //stream buffering completed has not been detected, nothing to do....
         if (isPeriodSwitchInProgress) {
-            //stream buffering completed has been detected, if end period timer is running, stop it, otherwise start it....
-            if (playbackEndedTimerInterval) {
-                stopEndPeriodTimer();
-            } else {
-                const timeToEnd = playbackController.getTimeToStreamEnd();
-                const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
-                const prefetchDelay = delayPlaybackEnded < PERIOD_PREFETCH_TIME ? delayPlaybackEnded / 4 : delayPlaybackEnded - PERIOD_PREFETCH_TIME;
-                logger.debug('[toggleEndPeriodTimer] Going to fire preload in', prefetchDelay, 'milliseconds');
-                //prefetchTimerId = setTimeout(onStreamCanLoadNext, prefetchDelay);
-                onStreamCanLoadNext();
-                logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in', delayPlaybackEnded, 'milliseconds');
-                playbackEndedTimerInterval = setInterval(function () {
-                    if (playbackController.getTimeToStreamEnd() <= 0) {
-                        eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
-                    }
-                }, 30);
-            }
+            //const timeToEnd = playbackController.getTimeToStreamEnd();
+            //const delayPlaybackEnded = timeToEnd > 0 ? timeToEnd * 1000 : 0;
+            //const prefetchDelay = delayPlaybackEnded < PERIOD_PREFETCH_TIME ? delayPlaybackEnded / 4 : delayPlaybackEnded - PERIOD_PREFETCH_TIME;
+            //logger.debug('[toggleEndPeriodTimer] Going to fire preload in', prefetchDelay, 'milliseconds');
+            //prefetchTimerId = setTimeout(onStreamCanLoadNext, prefetchDelay);
+            //onStreamCanLoadNext();
+            //logger.debug('[toggleEndPeriodTimer] start-up of timer to notify PLAYBACK_ENDED event. It will be triggered in', delayPlaybackEnded, 'milliseconds');
+
         }
     }
 
     function onTrackBufferingCompleted(e) {
         // In multiperiod situations, as soon as one of the tracks (AUDIO, VIDEO) is finished we should
         // start doing prefetching of the next period
-        if (e.mediaType !== Constants.AUDIO && e.mediaType !== Constants.VIDEO) return;
+        console.log('onTrackBufferingCompleted');
+        if (e.mediaType !== Constants.AUDIO && e.mediaType !== Constants.VIDEO || !e.streamId) return;
 
+        const bufferedStream = getStreamById(e.streamId);
         const isLast = getActiveStreamInfo().isLast;
-        if (mediaSource && !isLast && playbackEndedTimerInterval === undefined) {
+
+        if (mediaSource && !isLast) {
             logger.info('[onTrackBufferingCompleted] end of period detected. Track', e.mediaType, 'has finished');
-            isPeriodSwitchInProgress = true;
-            if (isPaused === false) {
-                toggleEndPeriodTimer();
-            }
+
+            // We can not start prebuffering if the start of the next period is in the future. This will cause problems when calculating the segmentAvailabilityRange and updating the representations in the RepresentationController
+            onStreamCanLoadNext(bufferedStream);
         }
+    }
+
+    function startPlaybackEndedTimerInterval() {
+        playbackEndedTimerInterval = setInterval(function () {
+            if (playbackController.getTimeToStreamEnd() <= 0) {
+                eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                stopPlaybackEndedTimerInterval();
+            }
+        }, 50);
     }
 
     function onStreamBufferingCompleted() {
@@ -403,25 +403,25 @@ function StreamController() {
         }
     }
 
-    function onStreamCanLoadNext() {
-        const isLast = getActiveStreamInfo().isLast;
+    function onStreamCanLoadNext(previousStream = null) {
+        const isLast = previousStream.getStreamInfo().isLast;
+        const nextStream = getNextStream(previousStream);
 
-        if (mediaSource && !isLast) {
-            const newStream = getNextStream();
+        if (mediaSource && !isLast && !nextStream.getPreloaded()) {
 
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
-            let seamlessPeriodSwitch = activeStream.isProtectionCompatible(newStream) &&
-                (supportsChangeType || activeStream.isMediaCodecCompatible(newStream));
+            let seamlessPeriodSwitch = previousStream.isProtectionCompatible(nextStream) &&
+                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream));
 
             if (seamlessPeriodSwitch) {
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
-                activeStream.deactivate(true);
-                newStream.preload(mediaSource, buffers);
-                preloading = newStream;
-                newStream.getProcessors().forEach(p => {
-                    p.setIndexHandlerTime(newStream.getStartTime());
+                //activeStream.deactivate(true);
+                nextStream.preload(mediaSource, buffers);
+                preloadingStreams.push(nextStream);
+                nextStream.getProcessors().forEach(p => {
+                    p.setIndexHandlerTime(nextStream.getStartTime());
                 });
             }
         }
@@ -495,6 +495,7 @@ function StreamController() {
     }
 
     function onEnded() {
+        console.log('StreamController: onEnded()');
         const nextStream = getNextStream();
         if (nextStream) {
             switchStream(nextStream, activeStream, NaN);
@@ -502,14 +503,14 @@ function StreamController() {
             logger.debug('StreamController no next stream found');
         }
         flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
-        stopEndPeriodTimer();
         isPeriodSwitchInProgress = false;
     }
 
-    function getNextStream() {
-        if (activeStream) {
-            const start = getActiveStreamInfo().start;
-            const duration = getActiveStreamInfo().duration;
+    function getNextStream(stream = null) {
+        const refStream = stream ? stream : activeStream ? activeStream : null;
+        if (refStream) {
+            const start = refStream.getStreamInfo().start;
+            const duration = refStream.getStreamInfo().duration;
 
             return streams.filter(function (stream) {
                 return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
@@ -519,6 +520,7 @@ function StreamController() {
 
     function switchStream(stream, previousStream, seekTime) {
         logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
+        console.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
 
         if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
         isStreamSwitchingInProgress = true;
@@ -542,7 +544,9 @@ function StreamController() {
         seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
 
         activeStream = stream;
-        preloading = false;
+        preloadingStreams = preloadingStreams.filter((s) => {
+            return s.getId() !== activeStream.getId();
+        });
         playbackController.initialize(getActiveStreamInfo(), !!previousStream, seekTime);
         if (videoModel.getElement()) {
             //TODO detect if we should close jump to activateStream.
@@ -550,6 +554,7 @@ function StreamController() {
         } else {
             activateStream(seekTime, seamlessPeriodSwitch);
         }
+        isPeriodSwitchInProgress = false;
     }
 
     function switchToVideoElement(seekTime) {
@@ -726,6 +731,7 @@ function StreamController() {
                     initialStream = getInitialStream();
                 }
                 switchStream(initialStream !== null ? initialStream : streams[0], null, NaN);
+                startPlaybackEndedTimerInterval();
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);
@@ -1049,10 +1055,11 @@ function StreamController() {
         isPaused = false;
         bufferEmpty = false;
         autoPlay = true;
-        playbackEndedTimerInterval = undefined;
+        playbackEndedTimerInterval = null;
         isPeriodSwitchInProgress = false;
         wallclockTicked = 0;
         gapHandlerInterval = null;
+        preloadingStreams = [];
     }
 
     function reset() {
@@ -1101,6 +1108,7 @@ function StreamController() {
 
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         resetInitialSettings();
+        stopPlaybackEndedTimerInterval();
     }
 
     function onMetricAdded(e) {
