@@ -2,15 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>Low latency live stream instantiation example</title>   
+    <title>Low latency live stream instantiation example with local execution</title>   
     <script src="../../dist/dash.all.debug.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
     <script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="L2ARule.js" type="module"></script>
-    <!--script src="LowestBitrateRule.js"></script-->
-        <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
      
 
     <script class="code">
@@ -18,19 +13,14 @@
 
         function init() {
             var video,
-                url  = 'http://localhost:9001/live/live.mpd';
+                url  = 'http://localhost:9001/live/live.mpd';//See instructions at https://github.com/unifiedstreaming/Learn2Adapt-LowLatency
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
             player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true }});
             player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_WARNING }});
-           // player.updateSettings({
-            //'streaming': {
-            //    'abr': {
-             //       'useDefaultABRRules': false, 'ABRStrategy': 'abrL2A'//in case of own abr algo development
-             //   }
-            //}
+        
             player.updateSettings({
             'streaming': {
                 'abr': {
@@ -38,11 +28,6 @@
                 }
             }
         });
-            // add my custom quality switch rule.
-            // about the structure of a custom rule
-            
-            //player.addABRCustomRule('qualitySwitchRules', 'L2ARule', L2ARule);
-            //player.addABRCustomRule('qualitySwitchRules', 'LowestBitrateRule', LowestBitrateRule);
             applyParameters();
 
             return player;
