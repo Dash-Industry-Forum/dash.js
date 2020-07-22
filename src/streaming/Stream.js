@@ -81,6 +81,7 @@ function Stream(config) {
         thumbnailController,
         preloaded,
         boxParser,
+        preloadingScheduled,
         debug,
         trackChangedEvent;
 
@@ -233,6 +234,7 @@ function Stream(config) {
         hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
+        preloadingScheduled = false;
     }
 
     function reset() {

@@ -310,7 +310,7 @@ function StreamController() {
         }
 
         //if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
-        if (seekingStream && seekingStream !== activeStream ) {
+        if (seekingStream && seekingStream !== activeStream) {
             // If we're preloading other stream, the active one was deactivated and we need to switch back
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(seekingStream, activeStream, e.seekTime);
@@ -382,7 +382,17 @@ function StreamController() {
             logger.info('[onTrackBufferingCompleted] end of period detected. Track', e.mediaType, 'has finished');
 
             // We can not start prebuffering if the start of the next period is in the future. This will cause problems when calculating the segmentAvailabilityRange and updating the representations in the RepresentationController
-            onStreamCanLoadNext(bufferedStream);
+            const voPeriods = adapter.getVoPeriods();
+            const nextStream = getNextStream(bufferedStream);
+            const nextPeriod = voPeriods.filter((p) => {
+                return p.id === nextStream.getId();
+            })[0];
+            const now = timelineConverter.calcPresentationTimeFromWallTime(new Date(), nextPeriod);
+            const timeout = now && now >= nextPeriod.start +  2000 ?  0 : (nextPeriod.start - now)  + 2000;
+
+            setTimeout(() => {
+                onStreamCanLoadNext(nextStream, bufferedStream);
+            }, timeout);
         }
     }
 
@@ -390,7 +400,6 @@ function StreamController() {
         playbackEndedTimerInterval = setInterval(function () {
             if (playbackController.getTimeToStreamEnd() <= 0) {
                 eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
-                stopPlaybackEndedTimerInterval();
             }
         }, 50);
     }
@@ -403,11 +412,9 @@ function StreamController() {
         }
     }
 
-    function onStreamCanLoadNext(previousStream = null) {
-        const isLast = previousStream.getStreamInfo().isLast;
-        const nextStream = getNextStream(previousStream);
+    function onStreamCanLoadNext(nextStream, previousStream = null) {
 
-        if (mediaSource && !isLast && !nextStream.getPreloaded()) {
+        if (mediaSource && !nextStream.getPreloaded()) {
 
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
