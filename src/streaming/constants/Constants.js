@@ -136,6 +136,13 @@ class Constants {
          */
         this.ABR_STRATEGY_BOLA = 'abrBola';
 
+         /**
+         *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on Bola (buffer level)
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_L2A= 'abrL2A';
+
         /**
          *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
          *  @memberof Constants#
@@ -170,6 +177,7 @@ class Constants {
          *  @static
          */
         this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';
@@ -179,10 +187,9 @@ class Constants {
         this.UTF8 = 'utf-8';
         this.SCHEME_ID_URI = 'schemeIdUri';
         this.START_TIME = 'starttime';
+
         this.SERVICE_DESCRIPTION_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
         this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
-        this.XML = 'XML';
-        this.ARRAY_BUFFER = 'ArrayBuffer';
     }
 
     constructor () {
