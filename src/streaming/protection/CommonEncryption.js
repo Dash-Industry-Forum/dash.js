@@ -60,20 +60,25 @@ class CommonEncryption {
      * @return {ArrayBuffer} data portion of the PSSH
      */
     static getPSSHData(pssh) {
-        let offset = 8; // Box size and type fields
-        let view = new DataView(pssh);
+        try {
+            let offset = 8; // Box size and type fields
+            let view = new DataView(pssh);
 
-        // Read version
-        let version = view.getUint8(offset);
+            // Read version
+            let version = view.getUint8(offset);
 
-        offset += 20; // Version (1), flags (3), system ID (16)
+            offset += 20; // Version (1), flags (3), system ID (16)
 
-        if (version > 0) {
-            offset += 4 + (16 * view.getUint32(offset)); // Key ID count (4) and All key IDs (16*count)
+            if (version > 0) {
+                offset += 4 + (16 * view.getUint32(offset)); // Key ID count (4) and All key IDs (16*count)
+            }
+
+            offset += 4; // Data size
+            return pssh.slice(offset);
         }
-
-        offset += 4; // Data size
-        return pssh.slice(offset);
+        catch(e) {
+            return null;
+        }
     }
 
     /**
