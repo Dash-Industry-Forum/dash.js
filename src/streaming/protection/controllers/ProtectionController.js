@@ -608,12 +608,13 @@ function ProtectionController(config) {
         } else {
             // For clearkey use the url defined in the manifest
             if (protectionKeyController.isClearKey(keySystem)) {
-
-            }
-            const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
-            url = keySystem.getLicenseServerURLFromInitData(psshData);
-            if (!url) {
-                url = e.data.laURL;
+                url = keySystem.getLicenseServerUrlFromMediaInfo(mediaInfoArr);
+            } else {
+                const psshData = CommonEncryption.getPSSHData(sessionToken.initData);
+                url = keySystem.getLicenseServerURLFromInitData(psshData);
+                if (!url) {
+                    url = e.data.laURL;
+                }
             }
         }
         // Possibly update or override the URL based on the message
@@ -685,6 +686,7 @@ function ProtectionController(config) {
                 xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
         };
 
+        //const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         const reqMethod = licenseServerData.getHTTPMethod(messageType);
         const responseType = licenseServerData.getResponseType(keySystemString, messageType);
