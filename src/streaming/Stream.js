@@ -697,7 +697,7 @@ function Stream(config) {
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
