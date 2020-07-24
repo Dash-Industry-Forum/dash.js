@@ -524,7 +524,7 @@ function StreamProcessor(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.ADD_INBAND_EVENTS_REQUESTED, {sender: instance, events: events});
+            eventBus.trigger(Events.INBAND_EVENTS, {sender: instance, events: events});
         }
     }
 
