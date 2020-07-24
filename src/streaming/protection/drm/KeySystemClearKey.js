@@ -97,11 +97,11 @@ function KeySystemClearKey(config) {
 
     function cencDefaultKidToBase64Representation(cencDefaultKid) {
         try {
-            let kid = cencDefaultKid.split('-').join('');
+            let kid = cencDefaultKid.replace(/-/g, '');
             kid = btoa(kid.match(/\w{2}/g).map((a) => {
                 return String.fromCharCode(parseInt(a, 16));
             }).join(''));
-            return kid.split('=').join('');
+            return kid.replace(/=/g, '');
         } catch (e) {
             return null;
         }
@@ -137,23 +137,22 @@ function KeySystemClearKey(config) {
                     });
                     if (clearkeyProtData && clearkeyProtData.length > 0) {
                         let j = 0;
-                        let k = 0;
-                        let l = 0;
-                        while (l < clearkeyProtData.length && !licenseServer) {
-                            const ckData = clearkeyProtData[l];
-                            while (j < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
-                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[j];
-                                while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
-                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[k];
-
+                        while (j < clearkeyProtData.length && !licenseServer) {
+                            const ckData = clearkeyProtData[j];
+                            let k = 0;
+                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
+                                let l = 0;
+                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
+                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
+                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
                                     if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
                                         licenseServer = ckData[attribute].__text;
                                     }
-                                    k += 1;
+                                    l += 1;
                                 }
-                                j += 1;
+                                k += 1;
                             }
-                            l += 1;
+                            j += 1;
                         }
                     }
                 }
