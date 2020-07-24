@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @class
-  * @ignore
-  */
+/**
+ * @class
+ * @ignore
+ */
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
@@ -47,7 +47,7 @@ class CommonEncryption {
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
             if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
-                    cp.value.toLowerCase() === 'cenc')
+                cp.value.toLowerCase() === 'cenc')
                 retVal = cp;
         }
         return retVal;
@@ -60,25 +60,20 @@ class CommonEncryption {
      * @return {ArrayBuffer} data portion of the PSSH
      */
     static getPSSHData(pssh) {
-        try {
-            let offset = 8; // Box size and type fields
-            let view = new DataView(pssh);
+        let offset = 8; // Box size and type fields
+        let view = new DataView(pssh);
 
-            // Read version
-            let version = view.getUint8(offset);
+        // Read version
+        let version = view.getUint8(offset);
 
-            offset += 20; // Version (1), flags (3), system ID (16)
+        offset += 20; // Version (1), flags (3), system ID (16)
 
-            if (version > 0) {
-                offset += 4 + (16 * view.getUint32(offset)); // Key ID count (4) and All key IDs (16*count)
-            }
-
-            offset += 4; // Data size
-            return pssh.slice(offset);
+        if (version > 0) {
+            offset += 4 + (16 * view.getUint32(offset)); // Key ID count (4) and All key IDs (16*count)
         }
-        catch(e) {
-            return null;
-        }
+
+        offset += 4; // Data size
+        return pssh.slice(offset);
     }
 
     /**
@@ -111,7 +106,7 @@ class CommonEncryption {
         if ('pssh' in cpData) {
 
             // Remove whitespaces and newlines from pssh text
-            cpData.pssh.__text = cpData.pssh.__text.replace(/\r?\n|\r/g,'').replace(/\s+/g,'');
+            cpData.pssh.__text = cpData.pssh.__text.replace(/\r?\n|\r/g, '').replace(/\s+/g, '');
 
             return BASE64.decodeArray(cpData.pssh.__text).buffer;
         }
