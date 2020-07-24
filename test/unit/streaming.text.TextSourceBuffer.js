@@ -23,14 +23,6 @@ describe('TextSourceBuffer', function () {
                                 errHandler: errorHandlerMock,
                                 ttmlParser: ttmlParser});
 
-    it('call to addEmbeddedTrack function with no mediaInfo parameter should not throw an error', function () {
-        expect(textSourceBuffer.addEmbeddedTrack.bind(textSourceBuffer)).to.not.throw();
-    });
-
-    it('call to initialize function with no streamProcessor parameter should not throw an error', function () {
-        expect(textSourceBuffer.initialize.bind(textSourceBuffer, 'mimeType')).to.not.throw();
-    });
-
     it('call to append function with invalid tttml data should triggered a parse error', function () {
         const buffer = new ArrayBuffer(8);
         textSourceBuffer.append(buffer, {mediaInfo: {type: 'text', mimeType: 'application/ttml+xml', codec: 'application/ttml+xml;codecs=\'undefined\''}});

@@ -33,8 +33,9 @@ import OfflineErrors from '../errors/OfflineErrors';
 
 /**
  * @class OfflineStoreController
- * This class manages database store
- * @description Offline Storage Controller
+ * @description This class manages database store
+ * @param {object} config
+ * @ignore
  */
 function OfflineStoreController(config) {
 

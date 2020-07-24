@@ -64,6 +64,7 @@ function DashHandler(config) {
         requestedTime,
         currentTime,
         isDynamicManifest,
+        dynamicStreamCompleted,
         selectedMimeType,
         segmentsController;
 
@@ -76,10 +77,12 @@ function DashHandler(config) {
         eventBus.on(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
         eventBus.on(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.on(events.DYNAMIC_STREAM_COMPLETED, onDynamicStreamCompleted, instance);
     }
 
     function initialize(isDynamic) {
         isDynamicManifest = isDynamic;
+        dynamicStreamCompleted = false;
         segmentsController.initialize(isDynamic);
     }
 
@@ -126,6 +129,7 @@ function DashHandler(config) {
         eventBus.off(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
         eventBus.off(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
+        eventBus.off(events.DYNAMIC_STREAM_COMPLETED, onDynamicStreamCompleted, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -255,7 +259,9 @@ function DashHandler(config) {
                 isFinished = true;
             }
         } else {
-            if (lastSegment) {
+            if (dynamicStreamCompleted) {
+                isFinished = true;
+            } else if (lastSegment) {
                 const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
                 const endTime = lastSegment.duration > 0 ? time + 1.5 * lastSegment.duration : time;
                 const duration = representation.adaptation.period.duration;
@@ -322,7 +328,7 @@ function DashHandler(config) {
 
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
-        if (!segment && isEndlessMedia(representation)) {
+        if (!segment && isEndlessMedia(representation) && !dynamicStreamCompleted) {
             logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
         } else {
@@ -418,6 +424,11 @@ function DashHandler(config) {
         }
 
         eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+    }
+
+    function onDynamicStreamCompleted() {
+        logger.debug('Dynamic stream complete');
+        dynamicStreamCompleted = true;
     }
 
     instance = {

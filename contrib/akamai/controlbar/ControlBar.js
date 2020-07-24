@@ -278,7 +278,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
 
         // Get thumbnail information
-        player.getThumbnail(mouseTime, function (thumbnail) {
+        player.provideThumbnail(mouseTime, function (thumbnail) {
             if (!thumbnail) return;
 
             // Adjust left variable for positioning thumbnail with regards to its viewport
@@ -433,8 +433,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         window.removeEventListener('mousemove', onFullScreenMouseMove);
         clearFullscreenState();
 
-        if (document.exitFullscreen) {
+        if (document.fullscreenElement) {
             document.exitFullscreen();
+        } else if (document.exitFullscreen) {
+           document.exitFullscreen(); 
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {
@@ -489,6 +491,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             menuHandlersList.push(func);
             captionBtn.addEventListener('click', func);
             captionBtn.classList.remove('hide');
+        } else {
+            setMenuItemsState(e.index + 1, 'caption-list');
         }
     };
 
@@ -505,7 +509,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             var availableBitrates = { menuType: 'bitrate' };
             availableBitrates.audio = player.getBitrateInfoListFor('audio') || [];
             availableBitrates.video = player.getBitrateInfoListFor('video') || [];
-            if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1) {
+            availableBitrates.images = player.getBitrateInfoListFor('image') || [];
+            if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1 || availableBitrates.images.length > 1) {
                 contentFunc = function (element, index) {
                     var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate / 1000) + ' kbps';
                     result += element && element.width && element.height ? ' (' + element.width + 'x' + element.height + ')' : '';
@@ -578,6 +583,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     el = createMenuContent(el, getMenuContent(menuType, info.audio, contentFunc), 'audio', 'audio-' + menuType + '-list');
                     setMenuItemsState(getMenuInitialIndex(info.audio, menuType, 'audio'), 'audio-' + menuType + '-list');
                 }
+                if (info.images && info.images.length > 1) {
+                    el.appendChild(createMediaTypeMenu('image'));
+                    el = createMenuContent(el, getMenuContent(menuType, info.images, contentFunc, false), 'image', 'image-' + menuType + '-list');
+                    setMenuItemsState(getMenuInitialIndex(info.images, menuType, 'image'), 'image-' + menuType + '-list');
+                }
                 break;
         }
 
@@ -619,12 +629,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     };
 
-    var getMenuContent = function (type, arr, contentFunc) {
+    var getMenuContent = function (type, arr, contentFunc, autoswitch) {
+        autoswitch = (autoswitch !== undefined) ? autoswitch : true;
+
         var content = [];
         arr.forEach(function (element, index) {
             content.push(contentFunc(element, index));
         });
-        if (type !== 'track') {
+        if (type !== 'track' && autoswitch) {
             content.unshift(contentFunc(null, NaN));
         }
         return content;
@@ -655,7 +667,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         div.id = type;
 
-        title.textContent = type === 'video' ? 'Video' : 'Audio';
+        title.textContent = type.charAt(0).toUpperCase() + type.slice(1);
         title.classList.add('menu-sub-menu-title');
 
         content.id = type + 'Content';
@@ -748,6 +760,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                         cfg.streaming.abr.autoSwitchBitrate[self.mediaType] = true;
                         player.updateSettings(cfg);
                     }
+                    break;
+                case 'image-bitrate-list':
+                    player.setQualityFor(self.mediaType, self.index);
                     break;
                 case 'caption-list':
                     player.setTextTrack(self.index - 1);

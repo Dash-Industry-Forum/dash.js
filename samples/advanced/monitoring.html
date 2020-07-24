@@ -18,12 +18,12 @@
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
+            player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function () {
                 clearInterval(eventPoller);
                 clearInterval(bitrateCalculator);
             });
 
-            var eventPoller = setInterval(function() {
+            var eventPoller = setInterval(function () {
                 var streamInfo = player.getActiveStream().getStreamInfo();
                 var dashMetrics = player.getDashMetrics();
                 var dashAdapter = player.getDashAdapter();
@@ -33,7 +33,12 @@
                     var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
                     var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
                     var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                    var adaptation = dashAdapter.getAdaptationForType(periodIdx, 'video', streamInfo)
+                    var frameRate = adaptation.Representation_asArray.find(function (rep) {
+                        return rep.id === repSwitch.to
+                    }).frameRate;
                     document.getElementById('bufferLevel').innerText = bufferLevel + " secs";
+                    document.getElementById('framerate').innerText = frameRate + " fps";
                     document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
                 }
             }, 1000);
@@ -41,7 +46,7 @@
             if (video.webkitVideoDecodedByteCount !== undefined) {
                 var lastDecodedByteCount = 0;
                 const bitrateInterval = 5;
-                var bitrateCalculator = setInterval(function() {
+                var bitrateCalculator = setInterval(function () {
                     var calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
                     document.getElementById('calculatedBitrate').innerText = Math.round(calculatedBitrate) + " Kbps";
                     lastDecodedByteCount = video.webkitVideoDecodedByteCount;
@@ -75,19 +80,21 @@
 <body>
 <div id="container">
     <div class="video-container">
-        <video  data-dashjs-player autoplay controls="true">
+        <video data-dashjs-player autoplay controls="true">
         </video>
     </div>
     <div>
-            <strong>Reported bitrate:</strong>
-            <span id="reportedBitrate"></span>
-            <br />
-            <strong>Buffer level:</strong>
-            <span id="bufferLevel"></span>
-            <div id="chrome-only">
-                <strong>Calculated bitrate:</strong>
-                <span id="calculatedBitrate"></span>
-            </div>
+        <strong>Reported bitrate:</strong>
+        <span id="reportedBitrate"></span>
+        <br/>
+        <strong>Buffer level:</strong>
+        <span id="bufferLevel"></span>
+        <div id="chrome-only">
+            <strong>Calculated bitrate:</strong>
+            <span id="calculatedBitrate"></span>
+        </div>
+        <strong>Framerate:</strong>
+        <span id="framerate"></span>
     </div>
 </div>
 <script>

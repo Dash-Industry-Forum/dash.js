@@ -76,10 +76,6 @@ import DashJSError from './vo/DashJSError';
 import { checkParameterType } from './utils/SupervisorTools';
 import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
-import DashHandler from '../dash/DashHandler';
-import RepresentationController from '../dash/controllers/RepresentationController';
-import FragmentModel from './models/FragmentModel';
-import FragmentLoader from './FragmentLoader';
 import BoxParser from './utils/BoxParser';
 
 /* jscs:disable */
@@ -132,18 +128,17 @@ function MediaPlayer() {
         source,
         protectionData,
         mediaPlayerInitialized,
-        offlineControllerInitialized,
         streamingInitialized,
         playbackInitialized,
         autoPlay,
         abrController,
         schemeLoaderFactory,
-        offlineController,
         timelineConverter,
         mediaController,
         protectionController,
         metricsReportingController,
         mssHandler,
+        offlineController,
         adapter,
         mediaPlayerModel,
         errHandler,
@@ -170,7 +165,6 @@ function MediaPlayer() {
     function setup() {
         logger = debug.getLogger(instance);
         mediaPlayerInitialized = false;
-        offlineControllerInitialized = false;
         playbackInitialized = false;
         streamingInitialized = false;
         autoPlay = true;
@@ -326,6 +320,9 @@ function MediaPlayer() {
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
+        // Detect and initialize offline module to support offline contents playback
+        detectOffline();
+
         if (view) {
             attachView(view);
         }
@@ -334,9 +331,6 @@ function MediaPlayer() {
             attachSource(source);
         }
 
-        if (!offlineControllerInitialized) {
-            createOfflineControllers();
-        }
         logger.info('[dash.js ' + getVersion() + '] ' + 'MediaPlayer has been initialized');
     }
 
@@ -368,9 +362,7 @@ function MediaPlayer() {
 
         if (offlineController) {
             offlineController.reset();
-            offlineControllerInitialized = false;
-
-            eventBus.off(dashjs.OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance); /* jshint ignore:line */
+            offlineController = null;
         }
     }
 
@@ -1108,232 +1100,13 @@ function MediaPlayer() {
     ---------------------------------------------------------------------------
     */
 
-    /** Loads downloads from storage
-     * This methos has to be called first, to be sure that all downloads have been loaded
-     * @return {Promise} asynchronously resolved
-     * @memberof module:MediaPlayer
-     */
-    function loadDownloadsFromStorage() {
-        if (!offlineControllerInitialized) {
-            createOfflineControllers();
-        }
-        return offlineController ? offlineController.loadDownloadsFromStorage() : Promise.reject();
-    }
-
     /**
-     * Creates a new download object in storage
-     *
-     * @param {string} manifestURL - url of manifest
-     * @return {Promise} asynchronously resolved with identifier of download
+     * Detects if Offline is included and returns an instance of OfflineController.js
      * @memberof module:MediaPlayer
      * @instance
      */
-    function createDownload(manifestURL) {
-        if (!offlineControllerInitialized) {
-            createOfflineControllers();
-        }
-        return offlineController ? offlineController.createDownload(manifestURL) : Promise.reject();
-    }
-
-    /**
-     * Initialise download and gets manifest from url
-     *
-     * @param {string} id - identifier of download
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function initDownload(id) {
-        if (offlineController) {
-            offlineController.initDownload(id);
-        }
-    }
-
-    /**
-     * Start download of choosen representations
-     *
-     * @param {string} id - identifier of download
-     * @param {object} selectedRepresentations - choosen representations
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function startDownload(id, selectedRepresentations) {
-        if (selectedRepresentations && offlineController) {
-            offlineController.startDownload(id, selectedRepresentations);
-        }
-    }
-
-    /**
-     * Delete download
-     *
-     * @param {string} id - identifier of download
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function deleteDownload(id) {
-        if (!offlineControllerInitialized) {
-            createOfflineControllers();
-        }
-        return offlineController ? offlineController.deleteDownload(id) : Promise.reject();
-    }
-
-    /**
-     * Stop download
-     *
-     * @param {string} id - identifier of download
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function stopDownload(id) {
-        if (offlineControllerInitialized && offlineController) {
-            offlineController.stopDownload(id);
-        }
-    }
-
-    /**
-     * Resume download
-     *
-     * @param {string} id - identifier of download
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function resumeDownload(id) {
-        if (offlineControllerInitialized && offlineController) {
-            offlineController.resumeDownload(id);
-        }
-    }
-
-    /**
-     * Get progression of download
-     *
-     * @param {string} id - identifier of download
-     * @return {number} progression
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getDownloadProgression(id) {
-        if (offlineControllerInitialized) {
-            return offlineController ? offlineController.getDownloadProgression(id) : 0;
-        }
-    }
-
-    /**
-     * Get all saved downloads
-     *
-     * @return {Promise} asynchronously resolved with saved downloads
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getAllDownloads() {
-        if (!offlineControllerInitialized) {
-            createOfflineControllers();
-        }
-        return offlineController ? offlineController.getAllDownloads() : Promise.reject();
-    }
-
-    function onDashElementsNeeded(eventObj) {
-        let requestModifier = RequestModifier(context).getInstance();
-        let handler = DashHandler(context).create({
-            type: eventObj.config.type,
-            mediaPlayerModel: mediaPlayerModel,
-            mimeType: eventObj.config.mimeType,
-            baseURLController: baseURLController,
-            streamInfo: eventObj.config.streamInfo,
-            errHandler: errHandler,
-            timelineConverter: timelineConverter,
-            settings: settings,
-            dashMetrics: dashMetrics,
-            eventBus: eventBus,
-            events: Events,
-            errors: Errors,
-            debug: debug,
-            dashConstants: DashConstants,
-            requestModifier: requestModifier,
-            urlUtils: URLUtils(context).getInstance(),
-            boxParser: BoxParser(context).getInstance()
-        });
-        let repController = RepresentationController(context).create({
-            abrController: abrController,
-            dashMetrics: dashMetrics,
-            playbackController: playbackController,
-            timelineConverter: timelineConverter,
-            type: eventObj.config.type,
-            eventBus: eventBus,
-            events: Events,
-            errors: Errors,
-            dashConstants: DashConstants,
-            streamId: eventObj.config.streamInfo ? eventObj.config.streamInfo.id : null
-        });
-
-        let fragLoader = FragmentLoader(context).create({
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler,
-            requestModifier: requestModifier,
-            settings: settings,
-            dashMetrics: dashMetrics,
-            eventBus: eventBus,
-            events: Events,
-            errors: Errors,
-            dashConstants: DashConstants,
-            urlUtils: URLUtils(context).getInstance()
-        });
-
-        let fragModel = FragmentModel(context).create({
-            dashMetrics: dashMetrics,
-            fragmentLoader: fragLoader,
-            eventBus: eventBus,
-            events: Events,
-            debug: debug
-        });
-        eventObj.sender.setDashElements(handler, fragModel, repController);
-    }
-
-    function createOfflineControllers() {
-        if (!mediaPlayerInitialized) {
-            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-        }
-
-        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
-
-        if (typeof OfflineController !== 'function') { //TODO need a better way to register/detect plugin components
-            return;
-        }
-
-        offlineController = OfflineController(context).create();
-
-        eventBus.on(OfflineController.events.DASH_ELEMENTS_CREATION_NEEDED, onDashElementsNeeded, instance);
-
-        MediaPlayerEvents.extend(OfflineController.events, {
-            publicOnly: true
-        });
-        Errors.extend(OfflineController.errors);
-
-        const manifestLoader = createManifestLoader();
-        const manifestUpdater = ManifestUpdater(context).create();
-
-        manifestUpdater.setConfig({
-            manifestModel: manifestModel,
-            adapter: adapter,
-            manifestLoader: manifestLoader,
-            errHandler: errHandler
-        });
-
-        offlineController.setConfig({
-            debug: debug,
-            manifestUpdater: manifestUpdater,
-            baseURLController: baseURLController,
-            manifestLoader: manifestLoader,
-            manifestModel: manifestModel,
-            adapter: adapter,
-            errHandler: errHandler,
-            schemeLoaderFactory: schemeLoaderFactory,
-            eventBus: eventBus,
-            events: Events,
-            constants: Constants,
-            dashConstants: DashConstants,
-            urlUtils: URLUtils(context).getInstance()
-        });
-
-        offlineControllerInitialized = true;
+    function getOfflineController() {
+        return detectOffline();
     }
 
     /*
@@ -1369,12 +1142,13 @@ function MediaPlayer() {
      * @param {string} lang - default language
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated will be removed in version 3.2.0. Please use setInitialMediaSettingsFor("fragmentedText", { lang: lang }) instead
      */
     function setTextDefaultLanguage(lang) {
+        logger.warn('setTextDefaultLanguage is deprecated and will be removed in version 3.2.0. Please use setInitialMediaSettingsFor("fragmentedText", { lang: lang }) instead');
         if (textController === undefined) {
             textController = TextController(context).getInstance();
         }
-
         textController.setTextDefaultLanguage(lang);
     }
 
@@ -1384,8 +1158,10 @@ function MediaPlayer() {
      * @return {string} the default language if it has been set using setTextDefaultLanguage
      * @memberof module:MediaPlayer
      * @instance
+     * @deprecated will be removed in version 3.2.0. Please use getInitialMediaSettingsFor("fragmentedText").lang instead
      */
     function getTextDefaultLanguage() {
+        logger.warn('getTextDefaultLanguage is deprecated and will be removed in version 3.2.0. Please use getInitialMediaSettingsFor("fragmentedText").lang instead');
         if (textController === undefined) {
             textController = TextController(context).getInstance();
         }
@@ -1700,11 +1476,14 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      * @instance
      */
-    function setQualityForSettingsFor(type, value) {
+    function setInitialMediaSettingsFor(type, value) {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
         mediaController.setInitialSettings(type, value);
+        if (type === Constants.FRAGMENTED_TEXT) {
+            textController.setInitialSettings(value);
+        }
     }
 
     /**
@@ -1823,6 +1602,8 @@ function MediaPlayer() {
         PROTECTION MANAGEMENT
 
     ---------------------------------------------------------------------------
+    */
+
     /**
      * Detects if Protection is included and returns an instance of ProtectionController.js
      * @memberof module:MediaPlayer
@@ -1871,31 +1652,36 @@ function MediaPlayer() {
     */
 
     /**
-     * Return the thumbnail at time position.
-     * @returns {Thumbnail|null} - Thumbnail for the given time position. It returns null in case there are is not a thumbnails representation or
-     * if it doesn't contain a thumbnail for the given time position.
+     * Provide the thumbnail at time position. This can be asynchronous, so you must provide a callback ro retrieve thumbnails informations
      * @param {number} time - A relative time, in seconds, based on the return value of the {@link module:MediaPlayer#duration duration()} method is expected
-     * @param {function} callback - A Callback function provided when retrieving thumbnail
+     * @param {function} callback - A Callback function provided when retrieving thumbnail the given time position. Thumbnail object is null in case there are is not a thumbnails representation or
+     * if it doesn't contain a thumbnail for the given time position.
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getThumbnail(time, callback) {
+    function provideThumbnail(time, callback) {
+        if (typeof callback !== 'function') {
+            return;
+        }
         if (time < 0) {
-            return null;
+            callback(null);
+            return;
         }
         const s = playbackController.getIsDynamic() ? getDVRSeekOffset(time) : time;
         const stream = streamController.getStreamForTime(s);
         if (stream === null) {
-            return null;
+            callback(null);
+            return;
         }
 
         const thumbnailController = stream.getThumbnailController();
         if (!thumbnailController) {
-            return null;
+            callback(null);
+            return;
         }
 
         const timeInPeriod = streamController.getTimeRelativeToStreamId(s, stream.getId());
-        return thumbnailController.get(timeInPeriod, callback);
+        return thumbnailController.provide(timeInPeriod, callback);
     }
 
     /*
@@ -2209,6 +1995,7 @@ function MediaPlayer() {
 
     function createManifestLoader() {
         return ManifestLoader(context).create({
+            debug: debug,
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
@@ -2301,6 +2088,63 @@ function MediaPlayer() {
         }
     }
 
+    function detectOffline() {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (offlineController) {
+            return offlineController;
+        }
+
+        // do not require Offline as dependencies as this is optional and intended to be loaded separately
+        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
+
+        if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
+            Events.extend(OfflineController.events);
+            MediaPlayerEvents.extend(OfflineController.events, {
+                publicOnly: true
+            });
+            Errors.extend(OfflineController.errors);
+
+            const manifestLoader = createManifestLoader();
+            const manifestUpdater = ManifestUpdater(context).create();
+
+            manifestUpdater.setConfig({
+                manifestModel: manifestModel,
+                adapter: adapter,
+                manifestLoader: manifestLoader,
+                errHandler: errHandler
+            });
+
+            offlineController = OfflineController(context).create({
+                debug: debug,
+                manifestUpdater: manifestUpdater,
+                baseURLController: baseURLController,
+                manifestLoader: manifestLoader,
+                manifestModel: manifestModel,
+                mediaPlayerModel: mediaPlayerModel,
+                abrController: abrController,
+                playbackController: playbackController,
+                adapter: adapter,
+                errHandler: errHandler,
+                dashMetrics: dashMetrics,
+                timelineConverter: timelineConverter,
+                schemeLoaderFactory: schemeLoaderFactory,
+                eventBus: eventBus,
+                events: Events,
+                errors: Errors,
+                constants: Constants,
+                settings: settings,
+                dashConstants: DashConstants,
+                urlUtils: URLUtils(context).getInstance()
+            });
+            return offlineController;
+        }
+
+        return null;
+    }
+
     function getAsUTC(valToConvert) {
         let metric = dashMetrics.getCurrentDVRInfo();
         let availableFrom,
@@ -2315,8 +2159,9 @@ function MediaPlayer() {
     }
 
     function initializePlayback() {
-        if (offlineControllerInitialized) {
-            offlineController.resetDownloads();
+
+        if (offlineController) {
+            offlineController.resetRecords();
         }
 
         if (!streamingInitialized && source) {
@@ -2407,7 +2252,7 @@ function MediaPlayer() {
         getTracksFor: getTracksFor,
         getTracksForTypeFromManifest: getTracksForTypeFromManifest,
         getCurrentTrackFor: getCurrentTrackFor,
-        setInitialMediaSettingsFor: setQualityForSettingsFor,
+        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
         getInitialMediaSettingsFor: getInitialMediaSettingsFor,
         setCurrentTrack: setCurrentTrack,
         getTrackSwitchModeFor: getTrackSwitchModeFor,
@@ -2431,20 +2276,12 @@ function MediaPlayer() {
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
-        getThumbnail: getThumbnail,
-        loadDownloadsFromStorage: loadDownloadsFromStorage,
-        createDownload: createDownload,
+        provideThumbnail: provideThumbnail,
         getDashAdapter: getDashAdapter,
+        getOfflineController: getOfflineController,
         getSettings: getSettings,
         updateSettings: updateSettings,
         resetSettings: resetSettings,
-        stopDownload: stopDownload,
-        getAllDownloads: getAllDownloads,
-        deleteDownload: deleteDownload,
-        resumeDownload: resumeDownload,
-        getDownloadProgression: getDownloadProgression,
-        startDownload: startDownload,
-        initDownload: initDownload,
         reset: reset
     };
 

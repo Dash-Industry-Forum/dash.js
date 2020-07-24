@@ -31,9 +31,13 @@
 import OfflineStreamProcessor from './OfflineStreamProcessor';
 
 /**
- * @module  OfflineStream
+ * Initialize and Manage Offline Stream for each type
+ */
+/**
+ * @class OfflineStream
  * @description Initialize and Manage Offline Stream for each type
  * @param {Object} config - dependences
+ * @ignore
  */
 function OfflineStream(config) {
 
@@ -41,9 +45,19 @@ function OfflineStream(config) {
     const context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const constants = config.constants;
+    const dashConstants = config.dashConstants;
+    const settings = config.settings;
     const debug = config.debug;
+    const errHandler = config.errHandler;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const abrController = config.abrController;
+    const playbackController = config.playbackController;
     const adapter = config.adapter;
+    const dashMetrics = config.dashMetrics;
+    const baseURLController = config.baseURLController;
+    const timelineConverter = config.timelineConverter;
     const offlineStoreController = config.offlineStoreController;
     const manifestId = config.id;
     const startedCb = config.callbacks && config.callbacks.started;
@@ -87,97 +101,22 @@ function OfflineStream(config) {
     }
 
     /**
-     * Creates media bitrate list, so that user will be able to choose the representation he wants to download
+     * Creates media infos list, so that user will be able to choose the representation he wants to download
      */
-    function getDownloadableRepresentations() {
-        let downloadableRepresentations = {
-            video: [],
-            audio: [],
-            text: []
-        };
+    function getMediaInfos() {
+        let mediaInfos = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
+        mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.AUDIO));
+        mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.FRAGMENTED_TEXT));
+        mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.TEXT));
 
-        const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-        const getKind = function (mediaInfo) {
-            let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-            kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
-            return kind;
-        };
+        // mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.MUXED));
+        // mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.IMAGE));
 
-        // video
-        let mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
-        if (mediaInfo.length > 0) {
-            mediaInfo.forEach((item) => {
-                item.bitrateList.forEach((bitrate) => {
-                    downloadableRepresentations.video.push({
-                        id: bitrate.id,
-                        bandwidth: bitrate.bandwidth,
-                        width: bitrate.width,
-                        height: bitrate.height
-                    });
-                });
-            });
-        }
-
-        // audio
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.AUDIO);
-        if (mediaInfo.length > 0) {
-            mediaInfo.forEach((item) => {
-                item.bitrateList.forEach((bitrate) => {
-                    downloadableRepresentations.audio.push({
-                        id: bitrate.id,
-                        bandwidth: bitrate.bandwidth,
-                        lang: item.lang
-                    });
-                });
-            });
-        }
-
-        // text
-
-        const addTextInfo = function (infos, type) {
-            if (infos.length > 0) {
-
-                infos.forEach((item) => {
-                    item.bitrateList.forEach((bitrate) => {
-                        downloadableRepresentations.text.push({
-                            id: bitrate.id,
-                            lang: item.lang,
-                            kind: getKind(item),
-                            roles: item.roles,
-                            accessibility: item.accessibility,
-                            type: type
-                        });
-                    });
-                });
-            }
-        };
-
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.FRAGMENTED_TEXT);
-        addTextInfo(mediaInfo, constants.FRAGMENTED_TEXT);
-
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.TEXT);
-        addTextInfo(mediaInfo, constants.TEXT);
-
-        /**
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.MUXED);
-        if (mediaInfo.length > 0) {
-            downloadableRepresentations.push(mediaInfo);
-        }
-        mediaInfo = adapter.getAllMediaInfoForType(streamInfo, constants.IMAGE);
-        if (mediaInfo.length > 0) {
-            downloadableRepresentations.push(mediaInfo);
-        }
-        */
-
-        eventBus.trigger(events.DOWNLOADABLE_REPRESENTATIONS_LOADED, {
-            data: {
-                id: manifestId,
-                downloadableRepresentations: downloadableRepresentations
-            },
-            sender: this
+        eventBus.trigger(events.OFFLINE_RECORD_LOADEDMETADATA, {
+            id: manifestId,
+            mediaInfos: mediaInfos
         });
     }
-
 
     /**
      * Initialize with choosen representations by user
@@ -198,13 +137,8 @@ function OfflineStream(config) {
         createOfflineStreamProcessorFor(constants.FRAGMENTED_TEXT,streamInfo);
         createOfflineStreamProcessorFor(constants.TEXT,streamInfo);
 
-        for (let i = 0; i < offlineStreamProcessors.length; i++) {
-            offlineStreamProcessors[i].initialize();
-        }
-        /*
         createOfflineStreamProcessorFor(constants.MUXED,streamInfo);
         createOfflineStreamProcessorFor(constants.IMAGE,streamInfo);
-        */
     }
 
     function createOfflineStreamProcessorFor(type, streamInfo) {
@@ -238,25 +172,33 @@ function OfflineStream(config) {
 
         let streamProcessor = OfflineStreamProcessor(context).create({
             id: manifestId,
+            streamInfo: streamInfo,
+            debug: debug,
+            events: events,
+            errors: errors,
+            eventBus: eventBus,
+            constants: constants,
+            dashConstants: dashConstants,
+            settings: settings,
+            type: mediaInfo.type,
+            mimeType: mediaInfo.mimeType,
+            bitrate: bitrate,
+            errHandler: errHandler,
+            mediaPlayerModel: mediaPlayerModel,
+            abrController: abrController,
+            playbackController: playbackController,
+            adapter: adapter,
+            dashMetrics: dashMetrics,
+            baseURLController: baseURLController,
+            timelineConverter: timelineConverter,
+            offlineStoreController: offlineStoreController,
             callbacks: {
                 completed: onStreamCompleted,
                 progression: onStreamProgression
-            },
-            debug: debug,
-            events: events,
-            eventBus: eventBus,
-            constants: constants
-        });
-        streamProcessor.setConfig({
-            type: mediaInfo.type,
-            mimeType: mediaInfo.mimeType,
-            mediaInfo: mediaInfo,
-            bitrate: bitrate,
-            adapter: adapter,
-            stream: instance,
-            offlineStoreController: offlineStoreController
+            }
         });
         offlineStreamProcessors.push(streamProcessor);
+        streamProcessor.initialize(mediaInfo);
 
         progressionById[bitrate.id] = null;
     }
@@ -307,7 +249,7 @@ function OfflineStream(config) {
         let sp;
         // data are ready fr stream processor, let's start download
         for (let i = 0; i < offlineStreamProcessors.length; i++ ) {
-            if (offlineStreamProcessors[i].getRepresentationController() === repCtrl) {
+            if (offlineStreamProcessors[i].getRepresentationController().getType() === repCtrl.getType()) {
                 sp = offlineStreamProcessors[i];
                 break;
             }
@@ -382,7 +324,7 @@ function OfflineStream(config) {
 
     instance = {
         initialize: initialize,
-        getDownloadableRepresentations: getDownloadableRepresentations,
+        getMediaInfos: getMediaInfos,
         initializeAllMediasInfoList: initializeAllMediasInfoList,
         getStreamInfo: getStreamInfo,
         stopOfflineStreamProcessors: stopOfflineStreamProcessors,

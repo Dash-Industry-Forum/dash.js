@@ -30,13 +30,8 @@
  */
 
 const Entities = require('html-entities').XmlEntities;
-const OFFLINE_BASE_URL = 'offline_indexdb://';
+const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
-/**
- * @module OfflineIndexDBManifestParser
- * @description  Parse online manifest to offline manifest
- * @param {Object} config - dependances
-*/
 function OfflineIndexDBManifestParser(config) {
 
     const manifestId = config.manifestId;
@@ -60,7 +55,6 @@ function OfflineIndexDBManifestParser(config) {
      * @param {string} XMLDoc - xml manifest
      * @param {object} representation
      * @returns {Promise} a promise that will be resolved or rejected at the end of encoding process
-     * @memberof module:OfflineIndexDBManifestParser
      * @instance
     */
     function parse(XMLDoc, representation) {
@@ -88,7 +82,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * URL encode parsed manifest
      * @param {string} DOM
-     * @memberof module:OfflineIndexDBManifestParser
      * @returns {string} Url encoded XML
      * @instance
     */
@@ -100,7 +93,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Update baseURL to point to local stored data P
      * @param {XML} currentMPD
-     * @memberof module:OfflineIndexDBManifestParser
      * @instance
     */
     function editBaseURLAttribute(currentMPD) {
@@ -150,7 +142,6 @@ function OfflineIndexDBManifestParser(config) {
      * Browse periods
      * @param {XML} currentMPD
      * @param {Object} representation
-     * @memberof module:OfflineIndexDBManifestParser
      * @instance
     */
     function browsePeriods(currentMPD, representation) {
@@ -164,7 +155,6 @@ function OfflineIndexDBManifestParser(config) {
      * Browse adapatation set to update data (delete those taht are not choosen by user ...)
      * @param {XML} currentPeriod
      * @param {Array} representationsToUpdate
-     * @memberof module:offline
      * @instance
     */
     function browseAdaptationsSet(currentPeriod, representationsToUpdate) {
@@ -227,7 +217,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Returns type of adapation set
      * @param {XML} currentAdaptationSet
-     * @memberof module:offline
      * @returns {string|null} type
      * @instance
     */
@@ -344,7 +333,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Returns mime-type of xml tag
      * @param {Object} tag
-     * @memberof module:offline
      * @returns {string|null} mimeType
      * @instance
     */
@@ -355,7 +343,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Returns representations of adaptation set
      * @param {XML} adaptation
-     * @memberof module:offline
      * @returns {XML} representations
      * @instance
     */
@@ -366,7 +353,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Return segment template list of adaptations set
      * @param {XML} currentAdaptationSet
-     * @memberof module:offline
      * @returns {XML} representations
      * @instance
     */
@@ -377,7 +363,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Return segment list tags of adaptations set
      * @param {XML} tag
-     * @memberof module:offline
      * @returns {XML} representations
      * @instance
     */
@@ -396,7 +381,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * @param {XML} segmentTemplate
      * @param {object} rep
-     * @memberof module:offline
      * @instance
     */
     function addSegmentTimelineElements(segmentTemplate, rep) {
@@ -431,7 +415,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Update attributes of segment templates to match offline urls
      * @param {Array} segmentsTemplates
-     * @memberof module:offline
      * @instance
     */
     function editSegmentTemplateAttributes(segmentsTemplates) {
@@ -448,7 +431,6 @@ function OfflineIndexDBManifestParser(config) {
      * Update attributes of segment list to match offline urls
      * @param {Array} segmentLists
      * @param {Object} representation
-     * @memberof module:offline
      * @instance
     */
     function editSegmentListAttributes(segmentLists, representation) {
@@ -478,7 +460,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * @param {XML} adaptationSet
      * @param {object} rep
-     * @memberof module:offline
      * @instance
     */
     function addSegmentTemplateAttributes(adaptationSet, rep) {
@@ -495,7 +476,6 @@ function OfflineIndexDBManifestParser(config) {
      * @param {XML} currentAdaptationSet
      * @param {XML} representations
      * @param {string} adaptationType
-     * @memberof module:offline
      * @instance
     */
     function findAndKeepOnlySelectedRepresentations(currentAdaptationSet, representations, adaptationType) {
@@ -513,7 +493,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Get id of first representation of adaptation set
      * @param {XMl} currentAdaptationSet
-     * @memberof module:offline
      * @returns {string} id
      * @instance
     */
@@ -526,7 +505,6 @@ function OfflineIndexDBManifestParser(config) {
     /**
      * Parse and returns fragments of offline url => xxxx://xxxx/fragmentId/
      * @param {string} url
-     * @memberof module:offline
      * @returns {string} fragmentId
      * @instance
     */

@@ -1,4 +1,5 @@
 import DashParser from '../../src/dash/parser/DashParser';
+import DebugMock from './mocks/DebugMock';
 
 const expect = require('chai').expect;
 const fs = require('fs');
@@ -6,7 +7,7 @@ const jsdom = require('jsdom').JSDOM;
 
 const context = {};
 
-let dashParser = DashParser(context).create();
+let dashParser = DashParser(context).create({debug: new DebugMock()});
 
 describe('DashParser', function () {
 

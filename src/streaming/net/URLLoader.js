@@ -32,9 +32,10 @@ import FactoryMaker from '../../core/FactoryMaker';
 import SchemeLoaderFactory from '../../streaming/net/SchemeLoaderFactory';
 
 /**
- * @module URLLoader
+ * @class URLLoader
  * @description  Call Offline Loader or Online Loader dependaing on URL
  * @param {Object} cfg - dependances
+ * @ignore
 */
 function URLLoader(cfg) {
 

@@ -277,6 +277,11 @@ function DashManifestModel() {
             }
         }
 
+        // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+        if (codec) {
+            codec = codec.replace(/\sprofiles=[^;]*/g, '');
+        }
+
         return codec;
     }
 
@@ -537,6 +542,12 @@ function DashManifestModel() {
                         // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
                         // exceeds @maxSegmentDuration
                         voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
+                    } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
+                        segmentInfo = realRepresentation.SegmentTemplate;
+
+                        if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
+                            voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+                        }
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
                         voRepresentation.media = segmentInfo.media;
@@ -569,6 +580,12 @@ function DashManifestModel() {
         }
 
         return voRepresentations;
+    }
+
+    function calcSegmentDuration(segmentTimeline) {
+        let s0 = segmentTimeline.S_asArray[0];
+        let s1 = segmentTimeline.S_asArray[1];
+        return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
     }
 
     function calcMSETimeOffset(representation) {

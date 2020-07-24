@@ -3,7 +3,7 @@
 
 Build status (CircleCI): [![CircleCI](https://circleci.com/gh/Dash-Industry-Forum/dash.js/tree/development.svg?style=svg)](https://circleci.com/gh/Dash-Industry-Forum/dash.js/tree/development)
 
-Join the discussion: [![Slack Status](https://dashif-slack.azurewebsites.net/badge.svg)](https://dashif-slack.azurewebsites.net)
+[Join #dashjs on Slack!](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg)
 
 ## Overview
 A reference client implementation for the playback of MPEG DASH via JavaScript and [compliant browsers](http://caniuse.com/#feat=mediasource). Learn more about DASH IF Reference Client on our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
@@ -27,15 +27,15 @@ The [nightly build of the /dev branch reference player](http://reference.dashif.
 
 
 ### CDN hosted files
-The latest minified files have been hosted on a global CDN and are free to use in production: 
+The latest minified files have been hosted on a global CDN and are free to use in production:
 
-- [dash.all.min.js](http://cdn.dashjs.org/latest/dash.all.min.js) 
-- [dash.all.debug.js](http://cdn.dashjs.org/latest/dash.all.debug.js) 
+- [dash.all.min.js](http://cdn.dashjs.org/latest/dash.all.min.js)
+- [dash.all.debug.js](http://cdn.dashjs.org/latest/dash.all.debug.js)
 
-In addition, all the releases are available under the following urls. Replace "vx.x.x" with the release version, for instance "v3.1.0". 
+In addition, all the releases are available under the following urls. Replace "vx.x.x" with the release version, for instance "v3.1.0".
 
-- [http://cdn.dashjs.org/vx.x.x/dash.all.min.js](http://cdn.dashjs.org/v3.1.0/dash.all.min.js) 
-- [http://cdn.dashjs.org/vx.x.x/dash.all.debug.js](http://cdn.dashjs.org/v3.1.0/dash.all.debug.js) 
+- [http://cdn.dashjs.org/vx.x.x/dash.all.min.js](http://cdn.dashjs.org/v3.1.0/dash.all.min.js)
+- [http://cdn.dashjs.org/vx.x.x/dash.all.debug.js](http://cdn.dashjs.org/v3.1.0/dash.all.debug.js)
 
 
 

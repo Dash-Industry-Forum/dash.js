@@ -49,18 +49,17 @@ function PlaybackController() {
         adapter,
         videoModel,
         timelineConverter,
-        liveStartTime,
+        streamSwitch,
+        streamSeekTime,
         wallclockTimeIntervalId,
-        earliestTime,
         liveDelay,
-        bufferedRange,
         streamInfo,
         isDynamic,
         mediaPlayerModel,
         playOnceInitialized,
         lastLivePlaybackTime,
         availabilityStartTime,
-        compatibleWithPreviousStream,
+        seekTarget,
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
@@ -73,14 +72,14 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(StreamInfo, compatible) {
+    function initialize(StreamInfo, periodSwitch, seekTime) {
         streamInfo = StreamInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
         playbackStalled = false;
-        liveStartTime = streamInfo.start;
-        compatibleWithPreviousStream = compatible;
+        streamSwitch = periodSwitch === true;
+        streamSeekTime = seekTime;
 
         const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
 
@@ -88,11 +87,10 @@ function PlaybackController() {
         const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
         minPlaybackRateChange = isSafari ? 0.25 : 0.02;
 
+        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
@@ -104,10 +102,49 @@ function PlaybackController() {
         }
     }
 
-    function onPeriodSwitchStarted(e) {
-        if (!isDynamic && e.fromStreamInfo && earliestTime[e.fromStreamInfo.id] !== undefined) {
-            delete bufferedRange[e.fromStreamInfo.id];
-            delete earliestTime[e.fromStreamInfo.id];
+    function onStreamInitialized(e) {
+        // Seamless period switch
+        if (streamSwitch && isNaN(streamSeekTime)) return;
+
+        // Seek new stream in priority order:
+        // - at seek time (streamSeekTime) when switching period
+        // - at start time provided in URI parameters
+        // - at stream/period start time (for static streams) or live start time (for dynamic streams)
+        let startTime = streamSeekTime;
+        if (isNaN(startTime)) {
+            if (isDynamic) {
+                // For dynamic stream, start by default at (live edge - live delay)
+                startTime = e.liveStartTime;
+                // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
+                const dvrInfo = dashMetrics.getCurrentDVRInfo();
+                const dvrWindow = dvrInfo ? dvrInfo.range : null;
+                if (dvrWindow) {
+                    // #t shall be relative to period start
+                    const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, true);
+                    if (!isNaN(startTimeFromUri)) {
+                        logger.info('Start time from URI parameters: ' + startTimeFromUri);
+                        startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
+                    }
+                }
+            } else {
+                // For static stream, start by default at period start
+                startTime = streamInfo.start;
+                // If start time in URI, take max value between period start and time from URI (if in period range)
+                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, false);
+                if (!isNaN(startTimeFromUri) && startTimeFromUri < (startTime + streamInfo.duration)) {
+                    logger.info('Start time from URI parameters: ' + startTimeFromUri);
+                    startTime = Math.max(startTime, startTimeFromUri);
+                }
+            }
+        }
+
+        if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
+            // Trigger PLAYBACK_SEEKING event for controllers
+            eventBus.trigger(Events.PLAYBACK_SEEKING, {
+                seekTime: startTime
+            });
+            // Seek video model
+            seek(startTime, false, true);
         }
     }
 
@@ -116,9 +153,7 @@ function PlaybackController() {
     }
 
     function getStreamEndTime() {
-        const startTime = getStreamStartTime(true);
-        const offset = isDynamic && streamInfo ? startTime - streamInfo.start : 0;
-        return startTime + (streamInfo ? streamInfo.duration - offset : offset);
+        return streamInfo.start + streamInfo.duration;
     }
 
     function play() {
@@ -144,24 +179,22 @@ function PlaybackController() {
     }
 
     function seek(time, stickToBuffered, internalSeek) {
-        if (streamInfo && videoModel) {
-            if (internalSeek === true) {
-                if (time !== videoModel.getTime()) {
-                    // Internal seek = seek video model only (disable 'seeking' listener),
-                    // buffer(s) are already appended at given time (see onBytesAppended())
-                    videoModel.removeEventListener('seeking', onPlaybackSeeking);
-                    logger.info('Requesting internal seek to time: ' + time);
-                    videoModel.setCurrentTime(time, stickToBuffered);
-                }
-            } else {
-                eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-                if (streamInfo) {
-                    delete bufferedRange[streamInfo.id];
-                    delete earliestTime[streamInfo.id];
-                }
-                logger.info('Requesting seek to time: ' + time);
-                videoModel.setCurrentTime(time, stickToBuffered);
-            }
+        if (!streamInfo || !videoModel) return;
+
+        let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
+        if (time === currentTime) return;
+
+        if (internalSeek === true) {
+            // Internal seek = seek video model only (disable 'seeking' listener)
+            // buffer(s) are already appended at requested time
+            videoModel.removeEventListener('seeking', onPlaybackSeeking);
+            logger.info('Requesting internal seek to time: ' + time);
+            videoModel.setCurrentTime(time, stickToBuffered);
+        } else {
+            seekTarget = time;
+            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+            logger.info('Requesting seek to time: ' + time);
+            videoModel.setCurrentTime(time, stickToBuffered);
         }
     }
 
@@ -209,14 +242,6 @@ function PlaybackController() {
         return streamController;
     }
 
-    function setLiveStartTime(value) {
-        liveStartTime = value;
-    }
-
-    function getLiveStartTime() {
-        return liveStartTime;
-    }
-
     /**
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @param {number} fragmentDuration - seconds?
@@ -225,20 +250,14 @@ function PlaybackController() {
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime = NaN) {
+    function computeAndSetLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime) {
         let delay,
             ret,
-            r,
             startTime;
         const END_OF_PLAYLIST_PADDING = 10;
         const MIN_BUFFER_TIME_FACTOR = 4;
         const FRAGMENT_DURATION_FACTOR = 4;
-
-        let uriParameters = uriFragmentModel.getURIFragmentData();
-
-        if (uriParameters) {
-            r = parseInt(uriParameters.r, 10);
-        }
+        const adjustedFragmentDuration = !isNaN(fragmentDuration) && isFinite(fragmentDuration) ? fragmentDuration : NaN;
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
@@ -246,14 +265,12 @@ function PlaybackController() {
             delay = 0;
         } else if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(fragmentDuration)) {
-            delay = fragmentDuration * settings.get().streaming.liveDelayFragmentCount;
-        } else if (r) {
-            delay = r;
+        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * settings.get().streaming.liveDelayFragmentCount;
         } else if (settings.get().streaming.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
-        } else if (!isNaN(fragmentDuration)) {
-            delay = fragmentDuration * FRAGMENT_DURATION_FACTOR;
+        } else if (!isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
         } else {
             delay = !isNaN(minBufferTime) ? minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
@@ -281,6 +298,14 @@ function PlaybackController() {
         return liveDelay;
     }
 
+    function setLiveDelay(value, useMaxValue = false) {
+        if (useMaxValue && value < liveDelay) {
+            return;
+        }
+
+        liveDelay = value;
+    }
+
     function getCurrentLiveLatency() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
@@ -295,18 +320,17 @@ function PlaybackController() {
     }
 
     function reset() {
-        liveStartTime = NaN;
         playOnceInitialized = false;
-        earliestTime = {};
+        streamSwitch = false;
+        streamSeekTime = NaN;
         liveDelay = 0;
         availabilityStartTime = 0;
-        bufferedRange = {};
+        seekTarget = NaN;
         if (videoModel) {
+            eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-            eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
             eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-            eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, this);
             eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
@@ -349,65 +373,23 @@ function PlaybackController() {
         }
     }
 
-    function getStartTimeFromUriParameters() {
+    function getStartTimeFromUriParameters(rangeStart, isDynamic) {
         const fragData = uriFragmentModel.getURIFragmentData();
-        let uriParameters;
-        if (fragData) {
-            uriParameters = {};
-            const r = parseInt(fragData.r, 10);
-            if (r >= 0 && streamInfo && r < streamInfo.manifestInfo.DVRWindowSize && fragData.t === null) {
-                fragData.t = Math.max(Math.floor(Date.now() / 1000) - streamInfo.manifestInfo.DVRWindowSize, (streamInfo.manifestInfo.availableFrom.getTime() / 1000) + streamInfo.start) + r;
-            }
-            uriParameters.fragS = parseFloat(fragData.s);
-            uriParameters.fragT = parseFloat(fragData.t);
-        }
-        return uriParameters;
-    }
-
-    /**
-     * @param {boolean} ignoreStartOffset - ignore URL fragment start offset if true
-     * @param {number} liveEdge - liveEdge value
-     * @returns {number} object
-     * @memberof PlaybackController#
-     */
-    function getStreamStartTime(ignoreStartOffset, liveEdge) {
-        let presentationStartTime;
-        let startTimeOffset = NaN;
-
-        if (!ignoreStartOffset) {
-            const uriParameters = getStartTimeFromUriParameters();
-            if (uriParameters) {
-                startTimeOffset = !isNaN(uriParameters.fragS) ? uriParameters.fragS : uriParameters.fragT;
-            } else {
-                startTimeOffset = 0;
-            }
-        } else {
-            startTimeOffset = streamInfo ? streamInfo.start : startTimeOffset;
+        if (!fragData || !fragData.t) {
+            return NaN;
         }
 
-        if (isDynamic) {
-            if (!isNaN(startTimeOffset) && streamInfo) {
-                presentationStartTime = startTimeOffset - (streamInfo.manifestInfo.availableFrom.getTime() / 1000);
+        let startTime = NaN;
 
-                if (presentationStartTime > liveStartTime ||
-                    presentationStartTime < (!isNaN(liveEdge) ? (liveEdge - streamInfo.manifestInfo.DVRWindowSize) : NaN)) {
-                    presentationStartTime = null;
-                }
-            }
-            presentationStartTime = presentationStartTime || liveStartTime;
+        // Consider only start time of MediaRange
+        // TODO: consider end time of MediaRange to stop playback at provided end time
+        fragData.t = fragData.t.split(',')[0];
 
-        } else {
-            if (streamInfo) {
-                if (!isNaN(startTimeOffset) && startTimeOffset < Math.max(streamInfo.manifestInfo.duration, streamInfo.duration) && startTimeOffset >= 0) {
-                    presentationStartTime = startTimeOffset;
-                } else {
-                    let currentEarliestTime = earliestTime[streamInfo.id]; //set by ready bufferStart after first onBytesAppended
-                    presentationStartTime = currentEarliestTime !== undefined ? Math.max(currentEarliestTime.audio !== undefined ? currentEarliestTime.audio : 0, currentEarliestTime.video !== undefined ? currentEarliestTime.video : 0, streamInfo.start) : streamInfo.start;
-                }
-            }
-        }
+        // "t=<time>" : time is relative to period start (for static streams) or DVR window range start (for dynamic streams)
+        // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
+        startTime = (isDynamic && fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (rangeStart + parseInt(fragData.t));
 
-        return presentationStartTime;
+        return startTime;
     }
 
     function getActualPresentationTime(currentTime) {
@@ -508,7 +490,15 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeking() {
-        const seekTime = getTime();
+        let seekTime = getTime();
+
+        // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
+        // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
+        if (!isNaN(seekTarget) && seekTarget !== seekTime) {
+            seekTime = seekTarget;
+        }
+        seekTarget = NaN;
+
         logger.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_SEEKING, {
@@ -597,17 +587,6 @@ function PlaybackController() {
         }
     }
 
-    function checkTimeInRanges(time, ranges) {
-        if (ranges && ranges.length > 0) {
-            for (let i = 0, len = ranges.length; i < len; i++) {
-                if (time >= ranges.start(i) && time < ranges.end(i)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     function onPlaybackProgression() {
         if (
             isDynamic &&
@@ -639,8 +618,12 @@ function PlaybackController() {
     }
 
     function needToCatchUp() {
-        return settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
-            Math.abs(getCurrentLiveLatency() - mediaPlayerModel.getLiveDelay()) > settings.get().streaming.liveCatchUpMinDrift;
+        const currentLiveLatency = getCurrentLiveLatency();
+        const latencyDrift = Math.abs(currentLiveLatency - mediaPlayerModel.getLiveDelay());
+        const liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
+
+        return settings.get().streaming.lowLatencyEnabled && settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
+            latencyDrift > settings.get().streaming.liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
     }
 
     function startPlaybackCatchUp() {
@@ -687,75 +670,6 @@ function PlaybackController() {
         }
     }
 
-    function onBytesAppended(e) {
-        let commonEarliestTime,
-            initialStartTime;
-        let ranges = e.bufferedRanges;
-        if (!ranges || !ranges.length) return;
-        if (earliestTime[streamInfo.id] && earliestTime[streamInfo.id].started === true) {
-            //stream has already been started.
-            return;
-        }
-
-        const type = e.sender.getType();
-
-        if (bufferedRange[streamInfo.id] === undefined) {
-            bufferedRange[streamInfo.id] = [];
-        }
-
-        bufferedRange[streamInfo.id][type] = ranges;
-
-        if (earliestTime[streamInfo.id] === undefined) {
-            earliestTime[streamInfo.id] = [];
-            earliestTime[streamInfo.id].started = false;
-        }
-
-        if (earliestTime[streamInfo.id][type] === undefined) {
-            earliestTime[streamInfo.id][type] = Math.max(ranges.start(0), streamInfo.start);
-        }
-
-        const hasVideoTrack = streamController.isTrackTypePresent(Constants.VIDEO);
-        const hasAudioTrack = streamController.isTrackTypePresent(Constants.AUDIO);
-
-        initialStartTime = getStreamStartTime(false);
-        if (hasAudioTrack && hasVideoTrack) {
-            //current stream has audio and video contents
-            if (!isNaN(earliestTime[streamInfo.id].audio) && !isNaN(earliestTime[streamInfo.id].video)) {
-
-                if (earliestTime[streamInfo.id].audio < earliestTime[streamInfo.id].video) {
-                    // common earliest is video time
-                    // check buffered audio range has video time, if ok, we seek, otherwise, we wait some other data
-                    commonEarliestTime = earliestTime[streamInfo.id].video > initialStartTime ? earliestTime[streamInfo.id].video : initialStartTime;
-                    ranges = bufferedRange[streamInfo.id].audio;
-                } else {
-                    // common earliest is audio time
-                    // check buffered video range has audio time, if ok, we seek, otherwise, we wait some other data
-                    commonEarliestTime = earliestTime[streamInfo.id].audio > initialStartTime ? earliestTime[streamInfo.id].audio : initialStartTime;
-                    ranges = bufferedRange[streamInfo.id].video;
-                }
-                if (checkTimeInRanges(commonEarliestTime, ranges)) {
-                    if (!(checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id].audio) && checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id].video))) {
-                        if (!compatibleWithPreviousStream && commonEarliestTime !== 0) {
-                            seek(commonEarliestTime, true, true);
-                        }
-                    }
-                    earliestTime[streamInfo.id].started = true;
-                }
-            }
-        } else {
-            //current stream has only audio or only video content
-            if (earliestTime[streamInfo.id][type]) {
-                commonEarliestTime = earliestTime[streamInfo.id][type] > initialStartTime ? earliestTime[streamInfo.id][type] : initialStartTime;
-                if (!checkTimeInRanges(getNormalizedTime(), bufferedRange[streamInfo.id][type])) {
-                    if (!compatibleWithPreviousStream) {
-                        seek(commonEarliestTime, false, true);
-                    }
-                }
-                earliestTime[streamInfo.id].started = true;
-            }
-        }
-    }
-
     function onFragmentLoadProgress(e) {
         // If using fetch and stream mode is not available, readjust live latency so it is 20% higher than segment duration
         if (e.stream === false && settings.get().streaming.lowLatencyEnabled && !isNaN(e.request.duration)) {
@@ -770,7 +684,7 @@ function PlaybackController() {
 
     function onBufferLevelStateChanged(e) {
         // do not stall playback when get an event from Stream that is not active
-        if (e.streamInfo.id !== streamInfo.id) return;
+        if (e.streamId !== streamInfo.id) return;
 
         if (settings.get().streaming.lowLatencyEnabled) {
             if (e.state === MetricsConstants.BUFFER_EMPTY && !isSeeking()) {
@@ -872,7 +786,6 @@ function PlaybackController() {
         initialize: initialize,
         setConfig: setConfig,
         getStartTimeFromUriParameters: getStartTimeFromUriParameters,
-        getStreamStartTime: getStreamStartTime,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,
         getNormalizedTime: getNormalizedTime,
@@ -881,10 +794,9 @@ function PlaybackController() {
         getEnded: getEnded,
         getIsDynamic: getIsDynamic,
         getStreamController: getStreamController,
-        setLiveStartTime: setLiveStartTime,
-        getLiveStartTime: getLiveStartTime,
-        computeLiveDelay: computeLiveDelay,
+        computeAndSetLiveDelay: computeAndSetLiveDelay,
         getLiveDelay: getLiveDelay,
+        setLiveDelay: setLiveDelay,
         getCurrentLiveLatency: getCurrentLiveLatency,
         play: play,
         isPaused: isPaused,

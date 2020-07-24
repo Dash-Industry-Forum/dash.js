@@ -67,10 +67,13 @@ function Stream(config) {
 
     let instance,
         logger,
+        streamInfo,
         streamProcessors,
+        isStreamInitialized,
         isStreamActivated,
         isMediaInitialized,
-        streamInfo,
+        hasVideoTrack,
+        hasAudioTrack,
         updateError,
         isUpdating,
         protectionController,
@@ -225,6 +228,9 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         streamInfo = null;
+        isStreamInitialized = false;
+        hasVideoTrack = false;
+        hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
     }
@@ -257,12 +263,33 @@ function Stream(config) {
         return streamInfo ? streamInfo.start : NaN;
     }
 
+    function getLiveStartTime() {
+        if (!streamInfo.manifestInfo.isDynamic) return NaN;
+        // Get live start time of the video stream (1st in array of streams)
+        // or audio if no video stream
+        for (let i = 0; i < streamProcessors.length; i++) {
+            if (streamProcessors[i].getType() === Constants.AUDIO ||
+                streamProcessors[i].getType() === Constants.VIDEO) {
+                return streamProcessors[i].getLiveStartTime();
+            }
+        }
+        return NaN;
+    }
+
     function getId() {
         return streamInfo ? streamInfo.id : null;
     }
 
     function getStreamInfo() {
         return streamInfo;
+    }
+
+    function getHasAudioTrack () {
+        return hasAudioTrack;
+    }
+
+    function getHasVideoTrack () {
+        return hasVideoTrack;
     }
 
     function getThumbnailController() {
@@ -343,7 +370,7 @@ function Stream(config) {
         logger.info('Stream -  Process track changed at current time ' + currentTime);
 
         logger.debug('Stream -  Update stream controller');
-        if (manifest.refreshManifestOnSwitchTrack) {
+        if (manifest.refreshManifestOnSwitchTrack) { // Applies only for MSS streams
             logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
@@ -379,14 +406,13 @@ function Stream(config) {
             abrController: abrController,
             playbackController: playbackController,
             mediaController: mediaController,
-            streamController: config.streamController,
             textController: textController,
             errHandler: errHandler,
             settings: settings,
             boxParser: boxParser
         });
 
-        streamProcessor.initialize(mediaSource);
+        streamProcessor.initialize(mediaSource, hasVideoTrack);
         abrController.updateTopQualityIndex(mediaInfo);
 
         if (optionalSettings) {
@@ -426,6 +452,14 @@ function Stream(config) {
             return;
         }
 
+        if (type === Constants.VIDEO) {
+            hasVideoTrack = true;
+        }
+
+        if (type === Constants.AUDIO) {
+            hasAudioTrack = true;
+        }
+
         for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
             mediaInfo = allMediaForType[i];
 
@@ -455,14 +489,9 @@ function Stream(config) {
             return;
         }
 
-        if (type !== Constants.FRAGMENTED_TEXT || (type === Constants.FRAGMENTED_TEXT && textController.getTextDefaultEnabled())) {
-            mediaController.checkInitialMediaSettingsForType(type, streamInfo);
-            initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
-        }
 
-        if (type === Constants.FRAGMENTED_TEXT && !textController.getTextDefaultEnabled()) {
-            initialMediaInfo = mediaController.getTracksFor(type, streamInfo)[0];
-        }
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         eventBus.trigger(Events.STREAM_INITIALIZING, {
             streamInfo: streamInfo,
@@ -591,10 +620,21 @@ function Stream(config) {
 
         if (error) {
             errHandler.error(error);
-        } else {
+        } else if (!isStreamInitialized) {
+            isStreamInitialized = true;
+            timelineConverter.setTimeSyncCompleted(true);
+
             eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo: streamInfo
+                streamInfo: streamInfo,
+                liveStartTime: getLiveStartTime()
             });
+        }
+
+        // (Re)start ScheduleController:
+        // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
+        // - in case stream is complete but a track switch has been requested
+        for (let i = 0; i < ln && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
         }
     }
 
@@ -624,9 +664,7 @@ function Stream(config) {
     }
 
     function onBufferingCompleted(e) {
-        if (e.streamInfo !== streamInfo) {
-            return;
-        }
+        if (e.streamId !== streamInfo.id) return;
 
         let processors = getProcessors();
         const ln = processors.length;
@@ -659,7 +697,7 @@ function Stream(config) {
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
@@ -856,6 +894,8 @@ function Stream(config) {
         getStartTime: getStartTime,
         getId: getId,
         getStreamInfo: getStreamInfo,
+        getHasAudioTrack: getHasAudioTrack,
+        getHasVideoTrack: getHasVideoTrack,
         preload: preload,
         getThumbnailController: getThumbnailController,
         getBitrateListFor: getBitrateListFor,

@@ -44,7 +44,29 @@ declare namespace dashjs {
         reset(): void;
     }
 
+    export interface OfflineRecord {
+        id: string;
+        progress: number;
+        url: string;
+        originalUrl: string;
+        status: string;
+    }
+
+    interface OfflineController {
+        loadRecordsFromStorage(): Promise<void>;
+        getAllRecords(): OfflineRecord[];
+        createRecord(manifestURL: string): Promise<string>;
+        startRecord(id: string, mediaInfos: MediaInfo[]): void;
+        stopRecord(id: string): void;
+        resumeRecord(id: string): void;
+        deleteRecord(id: string): void;
+        getRecordProgression(id: string): number;
+        resetRecords(): void;
+        reset(): void;
+    }
+
     export interface Bitrate {
+        id?: string;
         width?: number;
         height?: number;
         bandwidth?: number;
@@ -195,7 +217,8 @@ declare namespace dashjs {
         on(type: ManifestLoadedEvent['type'], listener: (e: ManifestLoadedEvent) => void, scope?: object): void;
         on(type: MetricEvent['type'], listener: (e: MetricEvent) => void, scope?: object): void;
         on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
-        on(type: OfflineStreamEvent['type'], listener: (e: OfflineStreamEvent) => void, scope?: object): void;
+        on(type: OfflineRecordEvent['type'], listener: (e: OfflineRecordEvent) => void, scope?: object): void;
+        on(type: OfflineRecordLoademetadataEvent['type'], listener: (e: OfflineRecordLoademetadataEvent) => void, scope?: object): void;
         on(type: PeriodSwitchEvent['type'], listener: (e: PeriodSwitchEvent) => void, scope?: object): void;
         on(type: PlaybackErrorEvent['type'], listener: (e: PlaybackErrorEvent) => void, scope?: object): void;
         on(type: PlaybackPausedEvent['type'], listener: (e: PlaybackPausedEvent) => void, scope?: object): void;
@@ -260,7 +283,7 @@ declare namespace dashjs {
         setTextDefaultLanguage(lang: string): void;
         getTextDefaultEnabled(): boolean | undefined;
         setTextDefaultEnabled(enable: boolean): void;
-        getThumbnail(time: number): Thumbnail;
+        provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
         getBitrateInfoListFor(type: MediaType): BitrateInfo[];
         getStreamsFromManifest(manifest: object): StreamInfo[];
         getTracksFor(type: MediaType): MediaInfo[];
@@ -283,6 +306,7 @@ declare namespace dashjs {
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionData): void;
+        getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
@@ -352,7 +376,24 @@ declare namespace dashjs {
         KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE:                112;
         KEY_SESSION_CREATED_ERROR_CODE:                     113;
         MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE:              114;
+        // MSS errors
         MSS_NO_TFRF_CODE:                                   200;
+        MSS_UNSUPPORTED_CODEC_CODE:                         201;
+        // Offline errors
+        OFFLINE_ERROR:                                      11000;
+        INDEXEDDB_QUOTA_EXCEED_ERROR:                       11001;
+        INDEXEDDB_INVALID_STATE_ERROR:                      11002;
+        INDEXEDDB_NOT_READABLE_ERROR:                       11003;
+        INDEXEDDB_NOT_FOUND_ERROR:                          11004;
+        INDEXEDDB_NETWORK_ERROR:                            11005;
+        INDEXEDDB_DATA_ERROR:                               11006;
+        INDEXEDDB_TRANSACTION_INACTIVE_ERROR:               11007;
+        INDEXEDDB_NOT_ALLOWED_ERROR:                        11008;
+        INDEXEDDB_NOT_SUPPORTED_ERROR:                      11009;
+        INDEXEDDB_VERSION_ERROR:                            11010;
+        INDEXEDDB_TIMEOUT_ERROR:                            11011;
+        INDEXEDDB_ABORT_ERROR:                              11012;
+        INDEXEDDB_UNKNOWN_ERROR:                            11013;
     }
 
     interface MediaPlayerEvents {
@@ -382,6 +423,10 @@ declare namespace dashjs {
         METRIC_ADDED: 'metricAdded';
         METRIC_CHANGED: 'metricChanged';
         METRIC_UPDATED: 'metricUpdated';
+        OFFLINE_RECORD_FINISHED: 'public_offlineRecordFinished';
+        OFFLINE_RECORD_LOADEDMETADATA: 'public_offlineRecordLoadedmetadata';
+        OFFLINE_RECORD_STARTED: 'public_offlineRecordStarted';
+        OFFLINE_RECORD_STOPPED: 'public_offlineRecordStopped';
         PERIOD_SWITCH_COMPLETED: 'periodSwitchCompleted';
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
         PLAYBACK_ENDED: 'playbackEnded';
@@ -496,6 +541,7 @@ declare namespace dashjs {
                   MediaPlayerErrors['TIMED_TEXT_ERROR_ID_PARSE_CODE'] |
                   MediaPlayerErrors['MANIFEST_ERROR_ID_MULTIPLEXED_CODE'] |
                   MediaPlayerErrors['MEDIASOURCE_TYPE_UNSUPPORTED_CODE'] |
+                  // Protection errors
                   MediaPlayerErrors['MEDIA_KEYERR_CODE'] |
                   MediaPlayerErrors['MEDIA_KEYERR_UNKNOWN_CODE'] |
                   MediaPlayerErrors['MEDIA_KEYERR_CLIENT_CODE'] |
@@ -511,9 +557,26 @@ declare namespace dashjs {
                   MediaPlayerErrors['KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE'] |
                   MediaPlayerErrors['KEY_SESSION_CREATED_ERROR_CODE'] |
                   MediaPlayerErrors['MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE'] |
-                  MediaPlayerErrors['MSS_NO_TFRF_CODE'],
-            message:string,
-            data:object,
+                  // Offline errors
+                  MediaPlayerErrors['OFFLINE_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_QUOTA_EXCEED_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_INVALID_STATE_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_NOT_READABLE_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_NOT_FOUND_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_NETWORK_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_DATA_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_TRANSACTION_INACTIVE_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_NOT_ALLOWED_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_NOT_SUPPORTED_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_VERSION_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_TIMEOUT_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_ABORT_ERROR'] |
+                  MediaPlayerErrors['INDEXEDDB_UNKNOWN_ERROR'] |
+                  // MSS errors
+                  MediaPlayerErrors['MSS_NO_TFRF_CODE'] |
+                  MediaPlayerErrors['MSS_UNSUPPORTED_CODEC_CODE'],
+            message: string,
+            data: object,
         }
     }
 
@@ -619,6 +682,16 @@ declare namespace dashjs {
     export interface MetricChangedEvent extends Event {
         type: MediaPlayerEvents['METRIC_CHANGED'];
         mediaType: MediaType;
+    }
+
+    export interface OfflineRecordEvent extends Event {
+        type: MediaPlayerEvents['OFFLINE_RECORD_FINISHED' | 'OFFLINE_RECORD_STARTED' | 'OFFLINE_RECORD_STOPPED' | 'OFFLINE_RECORD_STOPPED'];
+        id: string;
+    }
+
+    export interface OfflineRecordLoademetadataEvent extends Event {
+        type: MediaPlayerEvents['OFFLINE_RECORD_LOADEDMETADATA'];
+        madiaInfos: MediaInfo[];
     }
 
     export interface PeriodSwitchEvent extends Event {
@@ -730,7 +803,7 @@ declare namespace dashjs {
     }
 
     export class BitrateInfo {
-        mediaType: 'video' | 'audio';
+        mediaType: 'video' | 'audio' | 'image';
         bitrate: number;
         width: number;
         height: number;
@@ -800,6 +873,7 @@ declare namespace dashjs {
         loadedTime: Date;
         maxFragmentDuration: number;
         minBufferTime: number;
+        protocol?: string;
     }
 
     export class StreamInfo {
@@ -807,7 +881,7 @@ declare namespace dashjs {
         index: number;
         start: number;
         duration: number;
-        manifestInfo: object;
+        manifestInfo: IManifestInfo;
         isLast: boolean;
     }
 

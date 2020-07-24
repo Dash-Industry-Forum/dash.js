@@ -36,103 +36,59 @@ import IndexDBOfflineLoader from '../net/IndexDBOfflineLoader';
 import OfflineUrlUtils from '../utils/OfflineUrlUtils';
 import OfflineEvents from '../events/OfflineEvents';
 import OfflineErrors from '../errors/OfflineErrors';
-import OfflineDownloadVo from '../vo/OfflineDownloadVo';
+import OfflineRecord from '../vo/OfflineDownloadVo';
 
 /**
- * @class OfflineController
+ * @module OfflineController
+ * @param {Object} config - dependencies
+ * @description Provides access to offline stream recording and playback functionality.
  */
-function OfflineController() {
+function OfflineController(config) {
 
     const context = this.context;
+    const errHandler = config.errHandler;
+    const events = config.events;
+    const errors = config.errors;
+    const settings = config.settings;
+    const eventBus = config.eventBus;
+    const debug = config.debug;
+    const manifestLoader = config.manifestLoader;
+    const manifestModel = config.manifestModel;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const abrController = config.abrController;
+    const playbackController = config.playbackController;
+    const dashMetrics = config.dashMetrics;
+    const timelineConverter = config.timelineConverter;
+    const adapter = config.adapter;
+    const manifestUpdater = config.manifestUpdater;
+    const baseURLController = config.baseURLController;
+    const schemeLoaderFactory = config.schemeLoaderFactory;
+    const constants = config.constants;
+    const dashConstants = config.dashConstants;
+    const urlUtils = config.urlUtils;
 
     let instance,
         downloads,
-        adapter,
-        schemeLoaderFactory,
-        debug,
         logger,
-        manifestLoader,
-        manifestModel,
-        manifestUpdater,
-        baseURLController,
         offlineStoreController,
-        urlUtils,
-        offlineUrlUtils,
-        events,
-        eventBus,
-        constants,
-        dashConstants,
-        errHandler;
+        offlineUrlUtils;
 
     function setup() {
+        logger = debug.getLogger(instance);
+        offlineStoreController = OfflineStoreController(context).create({
+            eventBus: config.eventBus,
+            errHandler: errHandler
+        });
         offlineUrlUtils = OfflineUrlUtils(context).getInstance();
+        urlUtils.registerUrlRegex(offlineUrlUtils.getRegex(), offlineUrlUtils);
+        schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
 
         downloads = [];
     }
 
-    function setConfig(config) {
-        if (!config) return;
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
-
-        if (config.events && config.eventBus) {
-            events = config.events;
-            eventBus = config.eventBus;
-            offlineStoreController = OfflineStoreController(context).create({ eventBus: config.eventBus, errHandler: errHandler});
-        }
-
-        if (config.debug) {
-            debug = config.debug;
-            logger = debug.getLogger(instance);
-        }
-
-        if (config.manifestLoader) {
-            manifestLoader = config.manifestLoader;
-        }
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
-
-        if (config.manifestUpdater) {
-            manifestUpdater = config.manifestUpdater;
-        }
-
-        if (config.baseURLController) {
-            baseURLController = config.baseURLController;
-        }
-
-        if (config.schemeLoaderFactory) {
-            schemeLoaderFactory = config.schemeLoaderFactory;
-        }
-
-        if (config.constants) {
-            constants = config.constants;
-        }
-
-        if (config.dashConstants) {
-            dashConstants = config.dashConstants;
-        }
-
-        if (config.urlUtils) {
-            urlUtils = config.urlUtils;
-            urlUtils.registerUrlRegex(offlineUrlUtils.getRegex(), offlineUrlUtils);
-        }
-
-        schemeLoaderFactory.registerLoader(OfflineConstants.OFFLINE_SCHEME, IndexDBOfflineLoader);
-    }
-
     /*
     ---------------------------------------------------------------------------
-
         DOWNLOAD LIST FUNCTIONS
-
     ---------------------------------------------------------------------------
     */
     function getDownloadFromId(id) {
@@ -152,11 +108,18 @@ function OfflineController() {
                 id: id,
                 eventBus: eventBus,
                 events: events,
+                errors: errors,
+                settings: settings,
                 manifestLoader: manifestLoader,
                 manifestModel: manifestModel,
+                mediaPlayerModel: mediaPlayerModel,
                 manifestUpdater: manifestUpdater,
                 baseURLController: baseURLController,
+                abrController: abrController,
+                playbackController: playbackController,
                 adapter: adapter,
+                dashMetrics: dashMetrics,
+                timelineConverter: timelineConverter,
                 errHandler: errHandler,
                 offlineStoreController: offlineStoreController,
                 debug: debug,
@@ -202,14 +165,14 @@ function OfflineController() {
                     //register status changed event
                     waitForStatusChanged = true;
                     const downloadStopped = function () {
-                        eventBus.off(events.DOWNLOADING_STOPPED, downloadStopped, instance);
+                        eventBus.off(events.OFFLINE_RECORD_STOPPED, downloadStopped, instance);
                         return offlineStoreController.deleteDownloadById(id).then(function () {
                             resolve();
                         }).catch(function (err) {
                             reject(err);
                         });
                     };
-                    eventBus.on(events.DOWNLOADING_STOPPED, downloadStopped, instance);
+                    eventBus.on(events.OFFLINE_RECORD_STOPPED, downloadStopped, instance);
                 }
                 download.deleteDownload();
                 let index = downloads.indexOf(download);
@@ -222,20 +185,27 @@ function OfflineController() {
         });
     }
 
-    /*
-    ---------------------------------------------------------------------------
-
-        DOWNLOAD FUNCTIONS
-
-    ---------------------------------------------------------------------------
-    */
     function generateManifestId() {
         let timestamp = new Date().getTime();
         return timestamp;
     }
 
-    function loadDownloadsFromStorage() {
+    /*
+    ---------------------------------------------------------------------------
 
+        OFFLINE CONTROLLER API
+
+    ---------------------------------------------------------------------------
+    */
+
+    /**
+     * Loads records from storage
+     * This methods has to be called first, to be sure that all downloads have been loaded
+     *
+     * @return {Promise} asynchronously resolved
+     * @memberof module:OfflineController
+     */
+    function loadRecordsFromStorage() {
         return new Promise(function (resolve, reject) {
             offlineStoreController.getAllManifests().then((items) => {
                 items.manifests.forEach((offline) => {
@@ -250,14 +220,44 @@ function OfflineController() {
         });
     }
 
-    function createDownload(url) {
+    /**
+     * Get all records from storage
+     *
+     * @return {Promise} asynchronously resolved with records
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function getAllRecords() {
+        let records = [];
+        downloads.forEach((download) => {
+            const record = new OfflineRecord();
+            record.id = download.getId();
+            record.progress = download.getDownloadProgression();
+            record.url = download.getOfflineUrl();
+            record.originalUrl = download.getManifestUrl();
+            record.status = download.getStatus();
+            records.push(record);
+        });
+        return records;
+    }
+
+    /**
+     * Create a new content record in storage and download manifest from url
+     *
+     * @param {string} manifestURL - the content manifest url
+     * @return {Promise} asynchronously resolved with record identifier
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function createRecord(manifestURL) {
         return new Promise(function (resolve, reject) {
             let id = generateManifestId();
 
             // create download controller
             let download = createDownloadFromId(id);
 
-            download.downloadFromUrl(url).then(() => {
+            download.downloadFromUrl(manifestURL).then(() => {
+                download.initDownload();
                 resolve(id);
             })
             .catch((e) => {
@@ -269,57 +269,72 @@ function OfflineController() {
         });
     }
 
-    function initDownload(id) {
+    /**
+     * Start downloading the record with selected tracks representations
+     *
+     * @param {string} id - record identifier
+     * @param {MediaInfo[]} mediaInfos - the selected tracks representations
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function startRecord(id, mediaInfos) {
         let download = getDownloadFromId(id);
         if (download) {
-            download.initDownload();
+            download.startDownload(mediaInfos);
         }
     }
 
-    function startDownload(id, selectedRepresentations) {
-        let download = getDownloadFromId(id);
-        if (download) {
-            download.startDownload(selectedRepresentations);
-        }
-    }
-
-    function getAllDownloads() {
-
-        let ret = [];
-        downloads.forEach((download) => {
-            const offlineDownload = new OfflineDownloadVo();
-            offlineDownload.id = download.getId();
-            offlineDownload.progress = download.getDownloadProgression();
-            offlineDownload.url = download.getOfflineUrl();
-            offlineDownload.originalUrl = download.getManifestUrl();
-            offlineDownload.status = download.getStatus();
-            ret.push(offlineDownload);
-        });
-
-        return ret;
-    }
-
-    function stopDownload(id) {
+    /**
+     * Stop downloading of the record
+     *
+     * @param {string} id - record identifier
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function stopRecord(id) {
         let download = getDownloadFromId(id);
         if (download) {
             download.stopDownload();
         }
     }
 
-    function deleteDownload(id) {
-        return removeDownloadFromId(id).then(function () {
-            return offlineStoreController.deleteDownloadById(id);
-        });
-    }
-
-    function resumeDownload(id) {
+    /**
+     * Resume downloading of the record
+     *
+     * @param {string} id - record identifier
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function resumeRecord(id) {
         let download = getDownloadFromId(id);
         if (download) {
             download.resumeDownload();
         }
     }
 
-    function getDownloadProgression(id) {
+    /**
+     * Deletes a record from storage
+     *
+     * @param {string} id - record identifier
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function deleteRecord(id) {
+        return removeDownloadFromId(id).then(function () {
+            return offlineStoreController.deleteDownloadById(id);
+        });
+    }
+
+
+    /**
+     * Get download progression of a record
+     *
+     * @param {string} id - record identifier
+     * @return {number} percentage progression
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function getRecordProgression(id) {
         let download = getDownloadFromId(id);
         if (download) {
             return download.getDownloadProgression();
@@ -327,7 +342,12 @@ function OfflineController() {
         return 0;
     }
 
-    function resetDownloads() {
+    /**
+     * Reset all records
+     * @memberof module:OfflineController
+     * @instance
+     */
+    function resetRecords() {
         downloads.forEach((download) => {
             download.resetDownload();
         });
@@ -338,22 +358,20 @@ function OfflineController() {
      * @instance
      */
     function reset() {
-        resetDownloads();
+        resetRecords();
         schemeLoaderFactory.unregisterLoader(OfflineConstants.OFFLINE_SCHEME);
     }
 
     instance = {
-        setConfig: setConfig,
-        loadDownloadsFromStorage: loadDownloadsFromStorage,
-        createDownload: createDownload,
-        initDownload: initDownload,
-        startDownload: startDownload,
-        stopDownload: stopDownload,
-        resumeDownload: resumeDownload,
-        deleteDownload: deleteDownload,
-        getDownloadProgression: getDownloadProgression,
-        getAllDownloads: getAllDownloads,
-        resetDownloads: resetDownloads,
+        loadRecordsFromStorage: loadRecordsFromStorage,
+        createRecord: createRecord,
+        startRecord: startRecord,
+        stopRecord: stopRecord,
+        resumeRecord: resumeRecord,
+        deleteRecord: deleteRecord,
+        getRecordProgression: getRecordProgression,
+        getAllRecords: getAllRecords,
+        resetRecords: resetRecords,
         reset: reset
     };
 

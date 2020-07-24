@@ -873,8 +873,8 @@ describe('MediaPlayer', function () {
                 expect(player.setTextDefaultEnabled).to.throw(Constants.BAD_ARGUMENT_ERROR);
             });
 
-            it('Method getTextDefaultEnabled should return true', function () {
-                expect(player.getTextDefaultEnabled()).to.be.true; // jshint ignore:line
+            it('Method getTextDefaultEnabled should return false', function () {
+                expect(player.getTextDefaultEnabled()).to.be.false; // jshint ignore:line
             });
         });
     });
@@ -1040,6 +1040,13 @@ describe('MediaPlayer', function () {
 
                 initialSettings = player.getInitialMediaSettingsFor('audio');
                 expect(initialSettings).to.equal('settings');
+
+                player.setInitialMediaSettingsFor('fragmentedText', { lang: 'en', role: 'caption'});
+                initialSettings = player.getInitialMediaSettingsFor('fragmentedText');
+                expect(initialSettings).to.exist; ; // jshint ignore:line
+                expect(initialSettings.lang).to.equal('en');
+                expect(initialSettings.role).to.equal('caption');
+
             });
 
             it('should set current track', function () {
