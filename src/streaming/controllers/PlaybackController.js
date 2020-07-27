@@ -552,6 +552,7 @@ function PlaybackController() {
     // Event to handle the native video element ended event
     function onNativePlaybackEnded() {
         logger.info('Native video element event: ended');
+        console.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': streamController.getActiveStreamInfo().isLast});

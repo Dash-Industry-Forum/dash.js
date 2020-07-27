@@ -83,6 +83,7 @@ function Stream(config) {
         boxParser,
         preloadingScheduled,
         debug,
+        isEndedEventSignaled,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -235,6 +236,7 @@ function Stream(config) {
         updateError = {};
         isUpdating = false;
         preloadingScheduled = false;
+        isEndedEventSignaled = false;
     }
 
     function reset() {
@@ -261,10 +263,25 @@ function Stream(config) {
         return streamInfo ? streamInfo.duration : NaN;
     }
 
+    function getIsEndedEventSignaled() {
+        return isEndedEventSignaled;
+    }
+
+    function setIsEndedEventSignaled(value) {
+        isEndedEventSignaled = value;
+    }
+
     function getStartTime() {
         return streamInfo ? streamInfo.start : NaN;
     }
 
+    function getPreloadingScheduled() {
+        return preloadingScheduled;
+    }
+
+    function setPreloadingScheduled(value) {
+        preloadingScheduled = value;
+    }
     function getLiveStartTime() {
         if (!streamInfo.manifestInfo.isDynamic) return NaN;
         // Get live start time of the video stream (1st in array of streams)
@@ -910,7 +927,11 @@ function Stream(config) {
         setMediaSource: setMediaSource,
         isMediaCodecCompatible: isMediaCodecCompatible,
         isProtectionCompatible: isProtectionCompatible,
-        getPreloaded: getPreloaded
+        getPreloaded: getPreloaded,
+        getPreloadingScheduled,
+        setPreloadingScheduled,
+        getIsEndedEventSignaled,
+        setIsEndedEventSignaled
     };
 
     setup();
