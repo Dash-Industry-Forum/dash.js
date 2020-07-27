@@ -73,6 +73,7 @@ function PlaybackController() {
     }
 
     function initialize(StreamInfo, periodSwitch, seekTime) {
+        console.log('Updating streaminfo in playback controller');
         streamInfo = StreamInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
