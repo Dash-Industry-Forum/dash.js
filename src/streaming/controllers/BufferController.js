@@ -219,6 +219,7 @@ function BufferController(config) {
             const ranges = buffer && buffer.getAllBufferRanges();
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
                 logger.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
+                console.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
                     end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD,
@@ -735,6 +736,9 @@ function BufferController(config) {
     function onDataUpdateCompleted(e) {
         if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type) return;
         if (e.error) return;
+        if(isBufferingCompleted) {
+            return;
+        }
         updateBufferTimestampOffset(e.currentRepresentation);
     }
 
