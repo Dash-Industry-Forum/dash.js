@@ -231,7 +231,7 @@ function ProtectionKeyController() {
      *
      * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
      * supported by the content
-     * @param {ProtectionData} protDataSet user specified protection data - license server url etc
+     * @param {ProtectionDataSet} protDataSet user specified protection data - license server url etc
      * supported by the content
      * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
@@ -266,7 +266,7 @@ function ProtectionKeyController() {
      *
      * @param {KeySystem} keySystem the key system
      * associated with this license request
-     * @param {ProtectionData} protData protection data to use for the
+     * @param {ProtectionDataSet} protData protection data to use for the
      * request
      * @param {string} [messageType="license-request"] the message type associated with this
      * request.  Supported message types can be found
@@ -304,7 +304,7 @@ function ProtectionKeyController() {
      * Allows application-specific retrieval of ClearKey keys.
      *
      * @param {KeySystem} clearkeyKeySystem They exact ClearKey System to be used
-     * @param {ProtectionData} protData protection data to use for the
+     * @param {ProtectionDataSet} protData protection data to use for the
      * request
      * @param {ArrayBuffer} message the key message from the CDM
      * @return {ClearKeyKeySet|null} the clear keys associated with
