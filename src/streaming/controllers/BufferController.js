@@ -745,7 +745,7 @@ function BufferController(config) {
 
     function updateAppendWindow() {
         if (buffer && !isBufferingCompleted) {
-            //buffer.updateAppendWindow(streamInfo);
+            buffer.updateAppendWindow(streamInfo);
         }
     }
 

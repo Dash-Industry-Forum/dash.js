@@ -584,7 +584,7 @@ function StreamController() {
                 const duration = refStream.getStreamInfo().duration;
 
                 return streams.filter(function (stream) {
-                    return (stream.getStreamInfo().start >= parseFloat((start + duration).toFixed(5)));
+                    return (stream.getStreamInfo().start > start);
                 });
             }
         } catch (e) {
