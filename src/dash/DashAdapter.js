@@ -896,6 +896,7 @@ function DashAdapter() {
         getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
+        getMpd,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
         getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
