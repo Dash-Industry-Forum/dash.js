@@ -129,15 +129,15 @@ function BufferController(config) {
         return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
     }
 
-    function createBuffer(mediaInfoArr, oldBuffers) {
+    function createBuffer(mediaInfoArr, oldBuffers, streamInfo) {
         if (!initCache || !mediaInfoArr) return null;
         const mediaInfo = mediaInfoArr[0];
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd, oldBuffers[type]);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd, oldBuffers[type], streamInfo);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd, null, streamInfo);
                 }
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
@@ -733,6 +733,12 @@ function BufferController(config) {
         }
     }
 
+    function updateAppendWindow() {
+        if(buffer) {
+            buffer.updateAppendWindow(streamInfo);
+        }
+    }
+
     function onDataUpdateCompleted(e) {
         if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type) return;
         if (e.error) return;
@@ -910,7 +916,8 @@ function BufferController(config) {
         replaceBuffer: replaceBuffer,
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
-        reset: reset
+        reset: reset,
+        updateAppendWindow
     };
 
     setup();

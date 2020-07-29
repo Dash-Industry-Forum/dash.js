@@ -51,8 +51,9 @@ import EventController from './EventController';
 
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
-    const GAP_HANDLER_INTERVAL = 200;
+    const GAP_HANDLER_INTERVAL = 50;
     const PERIOD_PREFETCH_TIME = 8000;
+    const GAP_THRESHOLD = 0.1;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -179,6 +180,7 @@ function StreamController() {
      */
     function onPlaybackTimeUpdated(/*e*/) {
         if (hasVideoTrack()) {
+            //console.log(playbackController.getTime());
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
@@ -206,17 +208,14 @@ function StreamController() {
             console.debug('Timeline has gaps, starting the gap handler');
             gapHandlerInterval = setInterval(() => {
                 if (getActiveStreamProcessors() === 0 ||
-                    playbackController.isSeeking() || (isPaused && !bufferEmpty) || isStreamSwitchingInProgress ||
+                    playbackController.isSeeking() || (isPaused && !bufferEmpty) ||
                     hasMediaError || hasInitialisationError) {
                     return;
                 }
+                // Improve, check if currentTime is in buffer gap
                 const currentTime = playbackController.getTime();
-                if (lastPlaybackTime === currentTime) {
-                    console.log('Should jump gap');
-                    jumpGap(currentTime);
-                } else {
-                    lastPlaybackTime = currentTime;
-                }
+                jumpGap(currentTime);
+
             }, GAP_HANDLER_INTERVAL);
         } catch (e) {
         }
@@ -231,81 +230,56 @@ function StreamController() {
         }
     }
 
-    /*
-    function timelineHasGaps() {
-        try {
-            const streamProcessors = getActiveStreamProcessors();
-            let hasGaps = false;
-            let i = 0;
-
-            while (i < streamProcessors.length && !hasGaps) {
-                const mediaBuffer = streamProcessors[i].getBuffer();
-                const ranges = mediaBuffer.getAllBufferRanges();
-                if (ranges && ranges.length > 1) {
-                    hasGaps = true;
-                }
-                i += 1;
-            }
-
-            return hasGaps;
-        } catch (e) {
-            return false;
-        }
-    }
-    */
-
-    function jumpGap(time) {
+    function jumpGap(currentTime) {
         const smallGapLimit = settings.get().streaming.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
         let nextRangeStartTime = null;
         let seekToPosition;
 
-        const ranges = videoModel.getBufferRange();
-        if (!ranges || ranges.length <= 1) {
-            return;
-        }
-        console.log('Buffered ranges > 1');
 
         // Get the range just after current time position
-        let j = 0;
-        while (!nextRangeStartTime && j < ranges.length) {
-            if (time < ranges.start(j)) {
-                nextRangeStartTime = ranges.start(j);
-            }
-            j += 1;
+        nextRangeStartTime = getNextRangeStartTime(currentTime);
+
+        if (!nextRangeStartTime || nextRangeStartTime <= 0) {
+            return;
         }
 
-        if (nextRangeStartTime > 0) {
-            const gap = nextRangeStartTime - time;
-            if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
-                seekToPosition = nextRangeStartTime;
-            }
+        const gap = nextRangeStartTime - currentTime;
+        if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
+            seekToPosition = nextRangeStartTime;
         }
+
 
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps)) {
-            seekToPosition = time + timeToStreamEnd;
+        if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps) && getActiveStreamInfo().isLast) {
+            seekToPosition = currentTime + timeToStreamEnd;
         }
 
-        /* If there is a safe position to jump to, do the seeking
         if (seekToPosition > 0) {
-            const isLastPeriod = getActiveStreamInfo().isLast;
-            if (seekToPosition >= timeToStreamEnd) {
-                console.log('Found a gap and signaling playback ended');
-                eventBus.trigger(Events.PLAYBACK_ENDED, {
-                    'isLast': isLastPeriod
-                });
-            }
-            else {
-                //logger.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
-                console.info('Jumping media gap (discontinuity) at time ', time, '. Jumping to time position', seekToPosition);
-                playbackController.seek(seekToPosition, true, false);
-            }
-        }
-        */
-        if (seekToPosition > 0) {
-            console.log('Jumping gap');
+            console.log('Jumping gap to ' + seekToPosition + 'at time ' + currentTime);
             playbackController.seek(seekToPosition, true, true);
+        }
+    }
+
+    function getNextRangeStartTime(currentTime) {
+        try {
+            const ranges = videoModel.getBufferRange();
+            if (!ranges || ranges.length <= 1) {
+                return null;
+            }
+            let nextRangeStartTime = null;
+            let j = 1;
+
+            while (!nextRangeStartTime && j < ranges.length) {
+                if (currentTime < ranges.start(j) && ranges.end(j - 1) - currentTime < GAP_THRESHOLD) {
+                    nextRangeStartTime = ranges.start(j);
+                }
+                j += 1;
+            }
+            return nextRangeStartTime;
+
+        } catch (e) {
+            return null;
         }
     }
 
@@ -569,6 +543,8 @@ function StreamController() {
                 switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
+                console.debug('StreamController no next stream found');
+                activeStream.setIsEndedEventSignaled(false);
             }
             flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
             isPeriodSwitchInProgress = false;
@@ -580,9 +556,10 @@ function StreamController() {
         if (refStream) {
             const start = refStream.getStreamInfo().start;
             const duration = refStream.getStreamInfo().duration;
+            const streamEnd = parseFloat((start + duration).toFixed(5));
 
             return streams.filter(function (stream) {
-                return (stream.getStreamInfo().start === parseFloat((start + duration).toFixed(5)));
+                return (Math.abs(stream.getStreamInfo().start - streamEnd) <= 0.1);
             })[0];
         }
     }
@@ -606,7 +583,7 @@ function StreamController() {
 
     function switchStream(stream, previousStream, seekTime) {
         logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
-        console.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
+        console.info('Switch stream to ' + stream.getId() + ' at t=' + playbackController.getTime());
 
         if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
         isStreamSwitchingInProgress = true;

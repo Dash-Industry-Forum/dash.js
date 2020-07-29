@@ -190,11 +190,13 @@ function PlaybackController() {
             // buffer(s) are already appended at requested time
             videoModel.removeEventListener('seeking', onPlaybackSeeking);
             logger.info('Requesting internal seek to time: ' + time);
+            console.info('Requesting internal seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         } else {
             seekTarget = time;
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             logger.info('Requesting seek to time: ' + time);
+            console.info('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         }
     }
@@ -493,7 +495,6 @@ function PlaybackController() {
 
     function onPlaybackSeeking() {
         let seekTime = getTime();
-
         // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
         // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
         if (!isNaN(seekTarget) && seekTarget !== seekTime) {
@@ -502,6 +503,7 @@ function PlaybackController() {
         seekTarget = NaN;
 
         logger.info('Seeking to: ' + seekTime);
+        console.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_SEEKING, {
             seekTime: seekTime

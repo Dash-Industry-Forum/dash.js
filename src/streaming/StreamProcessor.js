@@ -314,6 +314,7 @@ function StreamProcessor(config) {
 
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
+        bufferController.updateAppendWindow();
     }
 
     function getStreamInfo() {
@@ -554,7 +555,8 @@ function StreamProcessor(config) {
     }
 
     function createBuffer(previousBuffers) {
-        return (getBuffer() || bufferController ? bufferController.createBuffer(mediaInfoArr, previousBuffers) : null);
+        const streamInfo = getStreamInfo();
+        return (getBuffer() || bufferController ? bufferController.createBuffer(mediaInfoArr, previousBuffers, streamInfo) : null);
     }
 
     function switchTrackAsked() {
