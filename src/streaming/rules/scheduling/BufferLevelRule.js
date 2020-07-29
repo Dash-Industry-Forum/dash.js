@@ -73,6 +73,8 @@ function BufferLevelRule(config) {
                 bufferTarget = 0;
             }
         } else if (type === Constants.AUDIO && hasVideoTrack) {
+            //TODO FIX
+            return mediaPlayerModel.getStableBufferTime();
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             if (isNaN(representationInfo.fragmentDuration)) {
                 bufferTarget = videoBufferLevel;

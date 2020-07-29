@@ -266,10 +266,11 @@ function DashHandler(config) {
                 const endTime = lastSegment.duration > 0 ? time + 1.5 * lastSegment.duration : time;
                 const duration = representation.adaptation.period.duration;
 
+                console.log(getType() + ' End time: ' + endTime + ' duration ' + duration);
                 isFinished = endTime >= duration;
             }
         }
-
+        console.log('Media is ' + isFinished + ' for type ' + getType());
         return isFinished;
     }
 
@@ -287,6 +288,7 @@ function DashHandler(config) {
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
             logger.debug('Getting the request for time : ' + time);
+            console.debug(getType() + ' Getting the request for time : ' + time);
         }
 
         const segment = segmentsController.getSegmentByTime(representation, time);
@@ -325,11 +327,13 @@ function DashHandler(config) {
 
         const indexToRequest = segmentIndex + 1;
         logger.debug('Getting the next request at index: ' + indexToRequest);
+        console.debug(getType() + ' Getting the next request at index: ' + indexToRequest);
 
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
         if (!segment && isEndlessMedia(representation) && !dynamicStreamCompleted) {
-            logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
+            logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
+            console.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
         } else {
             if (segment) {

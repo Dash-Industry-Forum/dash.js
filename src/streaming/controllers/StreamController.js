@@ -99,7 +99,6 @@ function StreamController() {
         wallclockTicked,
         buffers,
         preloadingStreams,
-        lastPlaybackTime,
         supportsChangeType,
         settings,
         preBufferingCheckInProgress,
@@ -196,7 +195,7 @@ function StreamController() {
             bufferedString += `Range ${i}: start ${ranges.start(i)} end ${ranges.end(i)}`;
         }
 
-        console.log(bufferedString);
+        //console.log(bufferedString);
         if (!gapHandlerInterval) {
             startGapHandler();
         }
@@ -205,7 +204,7 @@ function StreamController() {
     function startGapHandler() {
         try {
             logger.debug('Timeline has gaps, starting the gap handler');
-            console.debug('Timeline has gaps, starting the gap handler');
+            //console.debug('Timeline has gaps, starting the gap handler');
             gapHandlerInterval = setInterval(() => {
                 if (getActiveStreamProcessors() === 0 ||
                     playbackController.isSeeking() || (isPaused && !bufferEmpty) ||
@@ -223,7 +222,7 @@ function StreamController() {
 
     function stopGapHandler() {
         logger.debug('Stopping the gap handler, no gaps found');
-        console.debug('Stopping the gap handler, no gaps found');
+        //console.debug('Stopping the gap handler, no gaps found');
         if (gapHandlerInterval) {
             clearInterval(gapHandlerInterval);
             gapHandlerInterval = null;
@@ -305,7 +304,7 @@ function StreamController() {
         //if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
         if (seekingStream && seekingStream !== activeStream) {
             // If we're preloading other stream, the active one was deactivated and we need to switch back
-            console.log('onPlaybackSeeking calling switch stream');
+            //console.log('onPlaybackSeeking calling switch stream');
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(seekingStream, activeStream, e.seekTime);
         } else {
@@ -381,6 +380,9 @@ function StreamController() {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
+            if(hasStreamFinishedBuffering(previousStream)) {
+                //console.log('Stream ' + previousStream.getId() + ' has finished buffering');
+            }
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
 
                 if (mediaSource) {
@@ -404,6 +406,8 @@ function StreamController() {
 
                     if (segmentAvailabilityRangeIsOk) {
                         onStreamCanLoadNext(stream, previousStream);
+                    } else {
+                        console.log('Start of period ' + stream.getId() + ' is in the future');
                     }
 
                 }
@@ -422,14 +426,20 @@ function StreamController() {
             });
 
             if (!streamProcessors || streamProcessors.length === 0) {
+                //console.log('No stream processors found for stream  ' + stream.getId());
                 return false;
             }
 
-            const unfinishedMediaTypes = streamProcessors.filter((sp) => {
-                return sp.getBufferController().getIsBufferingCompleted() === false;
+            const unfinishedStreamProcessors = streamProcessors.filter((sp) => {
+                return !sp.isBufferingCompleted();
             });
 
-            return unfinishedMediaTypes && unfinishedMediaTypes.length === 0;
+            if (unfinishedStreamProcessors.length > 0) {
+                unfinishedStreamProcessors.forEach((sp) => {
+                    //console.log('Unfinished media type for stream ' + stream.getId() + ' ' + sp.getType());
+                });
+            }
+            return unfinishedStreamProcessors && unfinishedStreamProcessors.length === 0;
 
         } catch (e) {
             return false;
@@ -447,7 +457,6 @@ function StreamController() {
     function onStreamCanLoadNext(nextStream, previousStream = null) {
 
         if (mediaSource && !nextStream.getPreloaded()) {
-            nextStream.setPreloadingScheduled(true);
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
@@ -455,7 +464,9 @@ function StreamController() {
                 (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream));
 
             if (seamlessPeriodSwitch) {
+                nextStream.setPreloadingScheduled(true);
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
+                console.info('[onStreamCanLoadNext] Preloading next stream ' + nextStream.getId());
                 //activeStream.deactivate(true);
                 isPeriodSwitchInProgress = true;
                 nextStream.preload(mediaSource, buffers);
@@ -535,7 +546,7 @@ function StreamController() {
     }
 
     function onEnded() {
-        console.log('StreamController: onEnded()');
+        //console.log('StreamController: onEnded()');
         if (!activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();

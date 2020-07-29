@@ -884,7 +884,6 @@ function Stream(config) {
 
     function preload(mediaSource, previousBuffers) {
         if(!getPreloaded()) {
-            console.info('[onStreamCanLoadNext] Preloading next stream ' + getId());
             addInlineEvents();
 
             initializeMediaForType(Constants.VIDEO, mediaSource);

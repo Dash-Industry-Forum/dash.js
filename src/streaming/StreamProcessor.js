@@ -432,9 +432,13 @@ function StreamProcessor(config) {
     }
 
     function onMediaFragmentNeeded(e) {
-        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) return;
-
+        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) {
+            return;
+        };
+        console.log('Media fragment needed for ' + type);
         let request;
+
+
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
@@ -455,6 +459,7 @@ function StreamProcessor(config) {
     }
 
     function findNextRequest(seekTarget, requestToReplace) {
+        console.log(type + 'Trying to find request');
         const representationInfo = getRepresentationInfo();
         const hasSeekTarget = !isNaN(seekTarget);
         const currentTime = playbackController.getNormalizedTime();
@@ -491,8 +496,10 @@ function StreamProcessor(config) {
         } else {
             // Use time just whenever is strictly needed
             request = getFragmentRequest(representationInfo,
-                hasSeekTarget || bufferIsDivided ? time : undefined, {
-                    keepIdx: !hasSeekTarget && !bufferIsDivided
+                //hasSeekTarget || bufferIsDivided ? time : undefined, {
+                hasSeekTarget ? time : undefined, {
+                    keepIdx: !hasSeekTarget
+                    //keepIdx: !hasSeekTarget && !bufferIsDivided
                 });
 
             // Then, check if this request was downloaded or not
