@@ -402,7 +402,7 @@ function Settings() {
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
             useSuggestedPresentationDelay: true,
-            useAppendWindowEnd: true,
+            useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
             liveCatchUpMaxDrift: 0,
