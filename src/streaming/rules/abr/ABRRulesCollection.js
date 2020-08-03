@@ -34,6 +34,7 @@ import AbandonRequestsRule from './AbandonRequestsRule';
 import DroppedFramesRule from './DroppedFramesRule';
 import SwitchHistoryRule from './SwitchHistoryRule';
 import BolaRule from './BolaRule';
+import L2ARule from './L2ARule.js';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest';
 
@@ -91,7 +92,15 @@ function ABRRulesCollection(config) {
                 })
             );
         }
-
+        else if (settings.get().streaming.abr.ABRStrategy == 'abrL2A') {
+            qualitySwitchRules.push(
+                L2ARule(context).create({
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
+                })
+            );
+        }
         // add custom ABR rules if any
         const customRules = mediaPlayerModel.getABRCustomRules();
         customRules.forEach(function (rule) {
