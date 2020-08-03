@@ -451,13 +451,11 @@ function AbrController() {
             isUsingBufferOccupancyABRDict[mediaType] = true;
             isUsingL2AABRDict[mediaType] = true;
             return;
-        }
-        else if (strategy === Constants.ABR_STRATEGY_BOLA) {
+        }else if (strategy === Constants.ABR_STRATEGY_BOLA) {
             isUsingBufferOccupancyABRDict[mediaType] = true;
             isUsingL2AABRDict[mediaType] = false;
-           
             return;
-        } else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
+        }else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
             isUsingBufferOccupancyABRDict[mediaType] = false;
             isUsingL2AABRDict[mediaType] = false;
             return;

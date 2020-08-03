@@ -93,7 +93,7 @@ function ABRRulesCollection(config) {
                 })
             );
         }
-        else if(settings.get().streaming.abr.ABRStrategy=='abrL2A'){
+        else if (settings.get().streaming.abr.ABRStrategy == 'abrL2A') {
             qualitySwitchRules.push(
                 L2ARule(context).create({
                     dashMetrics: dashMetrics,
@@ -101,9 +101,7 @@ function ABRRulesCollection(config) {
                     settings: settings
                 })
             );
-
         }
-
         // add custom ABR rules if any
         const customRules = mediaPlayerModel.getABRCustomRules();
         customRules.forEach(function (rule) {
