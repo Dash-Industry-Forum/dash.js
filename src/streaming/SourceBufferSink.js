@@ -116,7 +116,13 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
                 buffer.removeEventListener('abort', errHandler, false);
             }
             clearInterval(intervalId);
-            buffer.appendWindowEnd = Infinity;
+            try {
+                buffer.appendWindowEnd = Infinity;
+                buffer.appendWindowStart = 0;
+            }
+            catch(e) {
+                logger.error('Failed to reset append window');
+            }
             if (!keepBuffer) {
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
@@ -190,7 +196,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
     }
 
     function updateAppendWindow(sInfo) {
-        if (sInfo.id !== streamInfo.id) {
+        if (sInfo.id !== streamInfo.id || !buffer) {
             return;
         }
         waitForUpdateEnd(() => {
@@ -205,6 +211,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
             buffer.appendWindowStart = 0;
             buffer.appendWindowEnd = appendWindowEnd;
             buffer.appendWindowStart = appendWindowStart;
+            logger.debug(`Updated append window. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
         });
     }
 
