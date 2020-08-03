@@ -73,7 +73,6 @@ function PlaybackController() {
     }
 
     function initialize(StreamInfo, periodSwitch, seekTime) {
-        console.log('Updating streaminfo in playback controller');
         streamInfo = StreamInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
@@ -190,13 +189,11 @@ function PlaybackController() {
             // buffer(s) are already appended at requested time
             videoModel.removeEventListener('seeking', onPlaybackSeeking);
             logger.info('Requesting internal seek to time: ' + time);
-            console.info('Requesting internal seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         } else {
             seekTarget = time;
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             logger.info('Requesting seek to time: ' + time);
-            console.info('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         }
     }
@@ -503,7 +500,6 @@ function PlaybackController() {
         seekTarget = NaN;
 
         logger.info('Seeking to: ' + seekTime);
-        console.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_SEEKING, {
             seekTime: seekTime
@@ -555,7 +551,6 @@ function PlaybackController() {
     // Event to handle the native video element ended event
     function onNativePlaybackEnded() {
         logger.info('Native video element event: ended');
-        console.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
         eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': streamController.getActiveStreamInfo().isLast});

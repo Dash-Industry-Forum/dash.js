@@ -179,7 +179,6 @@ function StreamController() {
      */
     function onPlaybackTimeUpdated(/*e*/) {
         if (hasVideoTrack()) {
-            //console.log(playbackController.getTime());
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
@@ -195,7 +194,6 @@ function StreamController() {
             bufferedString += `Range ${i}: start ${ranges.start(i)} end ${ranges.end(i)}`;
         }
 
-        //console.log(bufferedString);
         if (!gapHandlerInterval) {
             startGapHandler();
         }
@@ -204,7 +202,6 @@ function StreamController() {
     function startGapHandler() {
         try {
             logger.debug('Timeline has gaps, starting the gap handler');
-            //console.debug('Timeline has gaps, starting the gap handler');
             gapHandlerInterval = setInterval(() => {
                 if (getActiveStreamProcessors() === 0 ||
                     playbackController.isSeeking() || (isPaused && !bufferEmpty) ||
@@ -222,7 +219,6 @@ function StreamController() {
 
     function stopGapHandler() {
         logger.debug('Stopping the gap handler, no gaps found');
-        //console.debug('Stopping the gap handler, no gaps found');
         if (gapHandlerInterval) {
             clearInterval(gapHandlerInterval);
             gapHandlerInterval = null;
@@ -255,7 +251,6 @@ function StreamController() {
         }
 
         if (seekToPosition > 0) {
-            console.log('Jumping gap to ' + seekToPosition + 'at time ' + currentTime);
             playbackController.seek(seekToPosition, true, true);
         }
     }
@@ -305,7 +300,6 @@ function StreamController() {
         //if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
         if (seekingStream && seekingStream !== activeStream) {
             // If we're preloading other stream, the active one was deactivated and we need to switch back
-            //console.log('onPlaybackSeeking calling switch stream');
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(seekingStream, activeStream, e.seekTime);
         } else {
@@ -346,7 +340,6 @@ function StreamController() {
     function startPlaybackEndedTimerInterval() {
         playbackEndedTimerInterval = setInterval(function () {
             if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
-                console.log("Playback Ended ");
                 eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
             }
         }, 100);
@@ -381,9 +374,6 @@ function StreamController() {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
-            if (hasStreamFinishedBuffering(previousStream)) {
-                //console.log('Stream ' + previousStream.getId() + ' has finished buffering');
-            }
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
 
                 if (mediaSource) {
@@ -407,10 +397,7 @@ function StreamController() {
 
                     if (segmentAvailabilityRangeIsOk) {
                         onStreamCanLoadNext(stream, previousStream);
-                    } else {
-                        console.log('Start of period ' + stream.getId() + ' is in the future');
                     }
-
                 }
             }
             i += 1;
@@ -427,7 +414,6 @@ function StreamController() {
             });
 
             if (!streamProcessors || streamProcessors.length === 0) {
-                //console.log('No stream processors found for stream  ' + stream.getId());
                 return false;
             }
 
@@ -437,7 +423,6 @@ function StreamController() {
 
             if (unfinishedStreamProcessors.length > 0) {
                 unfinishedStreamProcessors.forEach((sp) => {
-                    //console.log('Unfinished media type for stream ' + stream.getId() + ' ' + sp.getType());
                 });
             }
             return unfinishedStreamProcessors && unfinishedStreamProcessors.length === 0;
@@ -467,7 +452,6 @@ function StreamController() {
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
                 logger.info('[onStreamCanLoadNext] Preloading next stream');
-                console.info('[onStreamCanLoadNext] Preloading next stream ' + nextStream.getId());
                 //activeStream.deactivate(true);
                 isPeriodSwitchInProgress = true;
                 nextStream.preload(mediaSource, buffers);
@@ -547,7 +531,6 @@ function StreamController() {
     }
 
     function onEnded() {
-        //console.log('StreamController: onEnded()');
         if (!activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
@@ -555,7 +538,6 @@ function StreamController() {
                 switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
-                console.debug('StreamController no next stream found');
                 activeStream.setIsEndedEventSignaled(false);
             }
             flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
@@ -595,7 +577,6 @@ function StreamController() {
 
     function switchStream(stream, previousStream, seekTime) {
         logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
-        console.info('Switch stream to ' + stream.getId() + ' at t=' + playbackController.getTime());
 
         if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
         isStreamSwitchingInProgress = true;

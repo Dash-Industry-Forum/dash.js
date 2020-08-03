@@ -219,7 +219,6 @@ function BufferController(config) {
             const ranges = buffer && buffer.getAllBufferRanges();
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
                 logger.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
-                console.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
                     end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD,
@@ -352,7 +351,6 @@ function BufferController(config) {
         seekTarget = e.seekTime;
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
-            console.log('Setting isBufferingCompleted for stream ' + streamInfo.id + ' to false');
             isBufferingCompleted = false;
             //a seek command has occured, reset lastIndex value, it will be set next time that onStreamCompleted will be called.
             lastIndex = Number.POSITIVE_INFINITY;
@@ -537,13 +535,10 @@ function BufferController(config) {
     }
 
     function checkIfBufferingCompleted() {
-
-        console.log(type + ': Max appended Index ' + maxAppendedIndex + ' LastIndex ' + lastIndex);
         const isLastIdxAppended = maxAppendedIndex >= lastIndex - 1; // Handles 0 and non 0 based request index
         if (isLastIdxAppended && !isBufferingCompleted && buffer.discharge === undefined) {
             isBufferingCompleted = true;
             logger.debug('checkIfBufferingCompleted trigger BUFFERING_COMPLETED for ' + type);
-            console.debug('checkIfBufferingCompleted trigger BUFFERING_COMPLETED for ' + type + ' and stream id '+ streamInfo.id);
             triggerEvent(Events.BUFFERING_COMPLETED);
         }
     }
@@ -688,7 +683,6 @@ function BufferController(config) {
         // If removing buffer ahead current playback position, update maxAppendedIndex
         const currentTime = playbackController.getTime();
         if (currentTime < range.end) {
-            console.log('Setting isBufferingCompleted for stream ' + streamInfo.id + ' to false');
             isBufferingCompleted = false;
             maxAppendedIndex = 0;
         }
@@ -760,7 +754,6 @@ function BufferController(config) {
 
     function onStreamCompleted(e) {
         if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
-        console.log('onStreamCompleted for type ' + type);
         lastIndex = e.request.index;
         checkIfBufferingCompleted();
     }
@@ -774,7 +767,6 @@ function BufferController(config) {
         logger.info('Track change asked');
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
-                console.log('Setting isBufferingCompleted for stream ' + streamInfo.id + ' to false');
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
             }

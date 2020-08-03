@@ -184,7 +184,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
                 if (MSETimeOffset < 0) {
                     MSETimeOffset += 0.001;
                 }
-                //console.log(`Setting MSETimeOffset for ${mediaInfo.type} to ${MSETimeOffset}`);
                 buffer.timestampOffset = MSETimeOffset;
             });
         }

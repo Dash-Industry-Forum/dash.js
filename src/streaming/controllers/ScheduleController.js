@@ -123,7 +123,6 @@ function ScheduleController(config) {
         if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
 
         logger.debug('Schedule Controller starts');
-        console.debug(streamId + ' ' + type + ' Schedule Controller starts');
         isStopped = false;
         dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
 
@@ -162,23 +161,19 @@ function ScheduleController(config) {
             ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()) ||
             bufferController.getIsBufferingCompleted()) {
             stop();
-            console.log(getType() + ' Stop scheduling');
             return;
         }
 
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        console.log(getType() + ' Before check seg req');
         if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
-            console.log(getType() + 'Scheduling segment request');
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
                         logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
-                        console.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
                         replacingBuffer = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
                         if (replacingBuffer && bufferController.replaceBuffer) {
                             bufferController.replaceBuffer();
@@ -186,7 +181,6 @@ function ScheduleController(config) {
                         switchTrack = false;
                     } else {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
-                        console.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     }
                     eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
                         sender: instance,

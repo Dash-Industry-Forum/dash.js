@@ -435,7 +435,6 @@ function StreamProcessor(config) {
         if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) {
             return;
         };
-        console.log('Media fragment needed for ' + type);
         let request;
 
 
@@ -459,7 +458,6 @@ function StreamProcessor(config) {
     }
 
     function findNextRequest(seekTarget, requestToReplace) {
-        console.log(type + 'Trying to find request');
         const representationInfo = getRepresentationInfo();
         const hasSeekTarget = !isNaN(seekTarget);
         const currentTime = playbackController.getNormalizedTime();
