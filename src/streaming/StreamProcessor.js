@@ -436,7 +436,7 @@ function StreamProcessor(config) {
     function onMediaFragmentNeeded(e) {
         if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) {
             return;
-        };
+        }
         let request;
 
 
@@ -624,6 +624,11 @@ function StreamProcessor(config) {
         let liveStartTime = NaN;
         const currentRepresentationInfo = getRepresentationInfo();
         const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
+
+        if(isNaN(liveEdge)) {
+            return NaN;
+        }
+
         const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
 
         if (request) {
