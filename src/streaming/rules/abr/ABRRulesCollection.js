@@ -68,6 +68,7 @@ function ABRRulesCollection(config) {
                     settings: settings
                 })
             );
+            
             qualitySwitchRules.push(
                 ThroughputRule(context).create({
                     dashMetrics: dashMetrics
