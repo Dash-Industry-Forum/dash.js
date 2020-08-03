@@ -263,14 +263,15 @@ function StreamController() {
     function getNextRangeStartTime(currentTime) {
         try {
             const ranges = videoModel.getBufferRange();
-            if (!ranges || ranges.length <= 1) {
+            if (!ranges || (ranges.length <= 1 && currentTime > 0)) {
                 return null;
             }
             let nextRangeStartTime = null;
-            let j = 1;
+            let j = 0;
 
             while (!nextRangeStartTime && j < ranges.length) {
-                if (currentTime < ranges.start(j) && ranges.end(j - 1) - currentTime < GAP_THRESHOLD) {
+                const rangeEnd = j > 0 ? ranges.end(j - 1) : 0;
+                if (currentTime < ranges.start(j) && rangeEnd - currentTime < GAP_THRESHOLD) {
                     nextRangeStartTime = ranges.start(j);
                 }
                 j += 1;
@@ -380,7 +381,7 @@ function StreamController() {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
-            if(hasStreamFinishedBuffering(previousStream)) {
+            if (hasStreamFinishedBuffering(previousStream)) {
                 //console.log('Stream ' + previousStream.getId() + ' has finished buffering');
             }
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
