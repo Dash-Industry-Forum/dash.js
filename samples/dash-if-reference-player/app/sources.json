@@ -181,6 +181,50 @@
                     "provider": "dashif"
                 },
                 {
+                    "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
+                    "name": "Unified Streaming reference stream with scte35 markers",
+                    "moreInfo": "http://demo.unified-streaming.com/features.html",
+                    "provider": "unified"
+                },
+                {
+                    "name": "Clear Dynamic SegmentTimeline",
+                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Clear Dynamic SegmentTemplate",
+                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
+                    "provider": "wowza"
+                },
+                {
+                    "name": "Clear Dynamic SegmentList",
+                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
+                    "provider": "wowza"
+                }
+            ]
+        },
+        {
+            "name": "Live Low Latency",
+            "submenu": [
+                {
+                    "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
+                    "name": "Akamai Low Latency Stream (Single Rate)",
+                    "bufferConfig": {
+                        "lowLatencyMode": true,
+                        "liveDelay": 3
+                    },
+                    "provider": "akamai"
+                },
+                {
+                    "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd",
+                    "name": "Akamai Low Latency Stream (Multi Rate)",
+                    "bufferConfig": {
+                        "lowLatencyMode": true,
+                        "liveDelay": 3
+                    },
+                    "provider": "akamai"
+                },
+                {
                     "url": "https://livesim.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
                     "name": "Low Latency (Single-Rate) (livesim-chunked)",
                     "bufferConfig": {
@@ -197,36 +241,6 @@
                         "liveDelay": 4
                     },
                     "provider": "dashif"
-                },
-                {
-                    "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
-                    "name": "Unified Streaming reference stream with scte35 markers",
-                    "moreInfo": "http://demo.unified-streaming.com/features.html",
-                    "provider": "unified"
-                },
-                {
-                    "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
-                    "name": "Low Latency Stream",
-                    "bufferConfig": {
-                        "lowLatencyMode": true,
-                        "liveDelay": 3
-                    },
-                    "provider": "akamai"
-                },
-                {
-                    "name": "Clear Dynamic SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvtime.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Dynamic SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvnumber.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Dynamic SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
-                    "provider": "wowza"
                 }
             ]
         },
