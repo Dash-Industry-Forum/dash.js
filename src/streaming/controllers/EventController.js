@@ -54,7 +54,7 @@ function EventController() {
         inlineEvents, // Holds all Inline Events not triggered yet
         inbandEvents, // Holds all Inband Events not triggered yet
         activeEvents, // Holds all Events currently running
-        eventInterval, // variable holding the setInterval
+        eventInterval, // variable holding the setTimeout
         lastEventTimerCall,
         manifestUpdater,
         playbackController,
@@ -77,7 +77,7 @@ function EventController() {
         inlineEvents = {};
         inbandEvents = {};
         activeEvents = {};
-        eventInterval = null;
+        stopPollHandler();
         eventHandlingInProgress = false;
         lastEventTimerCall = Date.now() / 1000;
     }
@@ -85,8 +85,7 @@ function EventController() {
     function _stop() {
         try {
             if (eventInterval !== null && isStarted) {
-                clearInterval(eventInterval);
-                eventInterval = null;
+                stopPollHandler();
                 isStarted = false;
                 _onStopEventController();
             }
@@ -101,7 +100,7 @@ function EventController() {
             logger.debug('Start Event Controller');
             if (!isStarted && !isNaN(REFRESH_DELAY)) {
                 isStarted = true;
-                eventInterval = setInterval(_onEventTimer, REFRESH_DELAY);
+                pollHandler(_onEventTimer, REFRESH_DELAY);
             }
         } catch (e) {
             throw e;
@@ -377,6 +376,18 @@ function EventController() {
     function reset() {
         _stop();
         _resetInitialSettings();
+    }
+
+    function pollHandler(handler, interval) {
+        eventInterval = setTimeout(function () {
+            pollHandler(handler, interval);
+            handler();
+        }, interval);
+    }
+
+    function stopPollHandler() {
+        clearTimeout(eventInterval);
+        eventInterval = null;
     }
 
     instance = {
