@@ -45,7 +45,7 @@ function KeySystemW3CClearKey(config) {
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
-     * @param {ProtectionData} protectionData the protection data
+     * @param {ProtectionDataSet} protectionData the protection data
      * @param {ArrayBuffer} message the ClearKey CDM message
      * @returns {ClearKeyKeySet} the key set or null if none found
      * @throws {Error} if a keyID specified in the CDM message was not found in the
