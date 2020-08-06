@@ -52,7 +52,7 @@ import EventController from './EventController';
 function StreamController() {
     // Check whether there is a gap every 40 wallClockUpdateEvent times
     const GAP_HANDLER_INTERVAL = 50;
-    const PERIOD_PREFETCH_TIME = 8000;
+    const THRESHOLD_TO_STALLS = 10;
     const GAP_THRESHOLD = 0.1;
 
     const context = this.context;
@@ -101,6 +101,7 @@ function StreamController() {
         preloadingStreams,
         supportsChangeType,
         settings,
+        lastPlaybackTime,
         preBufferingCheckInProgress,
         gapHandlerInterval;
 
@@ -155,6 +156,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
     }
 
     function unRegisterEvents() {
@@ -171,6 +173,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
     }
 
     /*
@@ -201,14 +204,12 @@ function StreamController() {
 
     function startGapHandler() {
         try {
-            logger.debug('Timeline has gaps, starting the gap handler');
+            logger.debug('Starting the gap handler');
             gapHandlerInterval = setInterval(() => {
-                if (getActiveStreamProcessors() === 0 ||
-                    playbackController.isSeeking() || (isPaused && !bufferEmpty) ||
-                    hasMediaError || hasInitialisationError) {
+                if (!_shouldCheckForGaps()) {
                     return;
                 }
-                // Improve, check if currentTime is in buffer gap
+                // TODO Improve, check if currentTime is in buffer gap
                 const currentTime = playbackController.getTime();
                 jumpGap(currentTime);
 
@@ -225,33 +226,62 @@ function StreamController() {
         }
     }
 
-    function jumpGap(currentTime) {
+    function _shouldCheckForGaps() {
+        return settings.get().streaming.jumpGaps && getActiveStreamProcessors().length > 0 &&
+            !playbackController.isSeeking() && !isPaused && !isStreamSwitchingInProgress &&
+            !hasMediaError && !hasInitialisationError;
+    }
+
+    function onWallclockTimeUpdated(/*e*/) {
+        if (!_shouldCheckForGaps()) {
+            return;
+        }
+
+        wallclockTicked++;
+        if (wallclockTicked >= THRESHOLD_TO_STALLS) {
+            const currentTime = playbackController.getTime();
+            if (lastPlaybackTime === currentTime) {
+                jumpGap(currentTime, true);
+            } else {
+                lastPlaybackTime = currentTime;
+            }
+            wallclockTicked = 0;
+        }
+    }
+
+    function jumpGap(currentTime, playbackStalled = false) {
         const smallGapLimit = settings.get().streaming.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
         let nextRangeStartTime = null;
         let seekToPosition;
+        let jumpToStreamEnd = false;
 
 
         // Get the range just after current time position
         nextRangeStartTime = getNextRangeStartTime(currentTime);
 
-        if (!nextRangeStartTime || nextRangeStartTime <= 0) {
-            return;
+        if (nextRangeStartTime && nextRangeStartTime > 0) {
+            const gap = nextRangeStartTime - currentTime;
+            if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
+                seekToPosition = nextRangeStartTime;
+            }
         }
-
-        const gap = nextRangeStartTime - currentTime;
-        if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
-            seekToPosition = nextRangeStartTime;
-        }
-
 
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (seekToPosition === undefined && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps) && getActiveStreamInfo().isLast) {
+        if (seekToPosition === undefined && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps)) {
             seekToPosition = currentTime + timeToStreamEnd;
+            jumpToStreamEnd = true;
         }
 
         if (seekToPosition > 0) {
-            playbackController.seek(seekToPosition, true, true);
+            logger.warn(`Jumping gap to ${seekToPosition}`);
+            if(jumpToStreamEnd) {
+                onPlaybackSeeking({
+                    seekTime: seekToPosition
+                });
+            } else {
+                playbackController.seek(seekToPosition, true, true);
+            }
         }
     }
 
@@ -268,6 +298,7 @@ function StreamController() {
                 const rangeEnd = j > 0 ? ranges.end(j - 1) : 0;
                 if (currentTime < ranges.start(j) && rangeEnd - currentTime < GAP_THRESHOLD) {
                     nextRangeStartTime = ranges.start(j);
+                    logger.warn(`Found a gap starting at ${rangeEnd} ending at ${nextRangeStartTime}`);
                 }
                 j += 1;
             }
@@ -363,7 +394,6 @@ function StreamController() {
 
     function checkIfPrebufferingCanStart() {
         // In multiperiod situations, we constantly check if the streams have finished buffering so we can immediately start buffering the next stream
-
         if (!activeStream || !hasStreamFinishedBuffering(activeStream)) {
             return;
         }
@@ -421,10 +451,6 @@ function StreamController() {
                 return !sp.isBufferingCompleted();
             });
 
-            if (unfinishedStreamProcessors.length > 0) {
-                unfinishedStreamProcessors.forEach((sp) => {
-                });
-            }
             return unfinishedStreamProcessors && unfinishedStreamProcessors.length === 0;
 
         } catch (e) {
@@ -563,7 +589,6 @@ function StreamController() {
 
             if (refStream) {
                 const start = refStream.getStreamInfo().start;
-                const duration = refStream.getStreamInfo().duration;
 
                 return streams.filter(function (stream) {
                     return (stream.getStreamInfo().start > start);
