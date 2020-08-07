@@ -50,9 +50,8 @@ import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
 
 function StreamController() {
-    // Check whether there is a gap every 40 wallClockUpdateEvent times
     const GAP_HANDLER_INTERVAL = 50;
-    const THRESHOLD_TO_STALLS = 10;
+    const THRESHOLD_TO_STALLS = 30;
     const GAP_THRESHOLD = 0.1;
 
     const context = this.context;
@@ -253,7 +252,7 @@ function StreamController() {
         const smallGapLimit = settings.get().streaming.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
         let nextRangeStartTime = null;
-        let seekToPosition;
+        let seekToPosition = NaN;
         let jumpToStreamEnd = false;
 
 
@@ -268,18 +267,26 @@ function StreamController() {
         }
 
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (seekToPosition === undefined && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps)) {
+        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps)) {
             seekToPosition = currentTime + timeToStreamEnd;
+
+            // If we have another period coming up it is safer to jump to the start of this period
+            const upcomingStream = getNextStream(activeStream);
+            if(upcomingStream) {
+                const streamInfo = upcomingStream.getStreamInfo();
+                seekToPosition = streamInfo.start && streamInfo.start > seekToPosition ? streamInfo.start : seekToPosition;
+            }
             jumpToStreamEnd = true;
         }
 
         if (seekToPosition > 0) {
-            logger.warn(`Jumping gap to ${seekToPosition}`);
-            if(jumpToStreamEnd) {
+            if (jumpToStreamEnd) {
+                logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 onPlaybackSeeking({
                     seekTime: seekToPosition
                 });
             } else {
+                logger.warn(`Jumping gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 playbackController.seek(seekToPosition, true, true);
             }
         }
@@ -298,7 +305,6 @@ function StreamController() {
                 const rangeEnd = j > 0 ? ranges.end(j - 1) : 0;
                 if (currentTime < ranges.start(j) && rangeEnd - currentTime < GAP_THRESHOLD) {
                     nextRangeStartTime = ranges.start(j);
-                    logger.warn(`Found a gap starting at ${rangeEnd} ending at ${nextRangeStartTime}`);
                 }
                 j += 1;
             }
