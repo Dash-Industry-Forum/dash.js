@@ -51,8 +51,6 @@ import EventController from './EventController';
 
 function StreamController() {
 
-    const GAP_THRESHOLD = 0.1;
-
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -93,7 +91,6 @@ function StreamController() {
         isPeriodSwitchInProgress,
         playbackEndedTimerInterval,
         prebufferingCanStartInterval,
-        prefetchTimerId,
         buffers,
         preloadingStreams,
         supportsChangeType,
@@ -140,7 +137,7 @@ function StreamController() {
     function registerEvents() {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.on(Events.GAP_CAUSED_PLAYBACK_SEEK, onPlaybackSeeking, this);
+        eventBus.on(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, this);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -157,7 +154,7 @@ function StreamController() {
     function unRegisterEvents() {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.GAP_CAUSED_PLAYBACK_SEEK, onPlaybackSeeking, this);
+        eventBus.off(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, this);
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -196,15 +193,6 @@ function StreamController() {
     function onPlaybackSeeking(e) {
         const seekingStream = getStreamForTime(e.seekTime);
 
-        //if end period has been detected, stop timer and reset isPeriodSwitchInProgress
-        if (playbackEndedTimerInterval) {
-            isPeriodSwitchInProgress = false;
-        }
-
-        if (prefetchTimerId) {
-            stopPreloadTimer();
-        }
-
         if (seekingStream === activeStream && preloadingStreams && preloadingStreams.length > 0) {
             // Seeking to the current period was requested while preloading the next one, deactivate preloading one
             preloadingStreams.forEach((s) => {
@@ -212,7 +200,6 @@ function StreamController() {
             });
         }
 
-        //if (seekingStream && (seekingStream !== activeStream || (preloading && !activeStream.isActive()))) {
         if (seekingStream && seekingStream !== activeStream) {
             // If we're preloading other stream, the active one was deactivated and we need to switch back
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
@@ -221,6 +208,13 @@ function StreamController() {
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
 
+        createPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    function onGapCausedPlaybackSeek(e) {
+        const nextStream = getNextStream();
+        flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
+        switchStream(nextStream, activeStream, e.seekTime);
         createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
@@ -244,12 +238,6 @@ function StreamController() {
             isPaused = true;
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
-    }
-
-    function stopPreloadTimer() {
-        logger.debug('[PreloadTimer] stop period preload timer.');
-        clearTimeout(prefetchTimerId);
-        prefetchTimerId = undefined;
     }
 
     function startPlaybackEndedTimerInterval() {
@@ -391,7 +379,7 @@ function StreamController() {
             stream = streams[i];
             streamDuration = parseFloat(streamDuration + stream.getDuration());
 
-            if (time - GAP_THRESHOLD < streamDuration) {
+            if (time < streamDuration) {
                 return stream;
             }
         }
@@ -465,6 +453,8 @@ function StreamController() {
                 return (Math.abs(stream.getStreamInfo().start - streamEnd) <= 0.1);
             })[0];
         }
+
+        return null;
     }
 
     function getNextStreams(stream) {
@@ -1111,6 +1101,8 @@ function StreamController() {
         setProtectionData,
         getIsStreamSwitchInProgress,
         getHasMediaOrIntialisationError,
+        getNextStream,
+        switchStream,
         reset
     };
 
