@@ -314,7 +314,7 @@ function StreamProcessor(config) {
 
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
-        if(settings.get().streaming.useAppendWindow) {
+        if (settings.get().streaming.useAppendWindow) {
             bufferController.updateAppendWindow();
         }
     }
@@ -440,7 +440,6 @@ function StreamProcessor(config) {
         let request;
 
 
-
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
             request = findNextRequest(e.seekTarget, e.replacement);
@@ -532,7 +531,7 @@ function StreamProcessor(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.ADD_INBAND_EVENTS_REQUESTED, {sender: instance, events: events});
+            eventBus.trigger(Events.INBAND_EVENTS, {sender: instance, events: events});
         }
     }
 
@@ -625,7 +624,7 @@ function StreamProcessor(config) {
         const currentRepresentationInfo = getRepresentationInfo();
         const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
 
-        if(isNaN(liveEdge)) {
+        if (isNaN(liveEdge)) {
             return NaN;
         }
 

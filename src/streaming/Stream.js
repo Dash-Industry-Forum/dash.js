@@ -282,6 +282,7 @@ function Stream(config) {
     function setPreloadingScheduled(value) {
         preloadingScheduled = value;
     }
+
     function getLiveStartTime() {
         if (!streamInfo.manifestInfo.isDynamic) return NaN;
         // Get live start time of the video stream (1st in array of streams)
@@ -303,11 +304,11 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getHasAudioTrack () {
+    function getHasAudioTrack() {
         return hasAudioTrack;
     }
 
-    function getHasVideoTrack () {
+    function getHasVideoTrack() {
         return hasVideoTrack;
     }
 
@@ -409,7 +410,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
+        let fragmentModel = fragmentController.getModel(getId(), mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -716,7 +717,7 @@ function Stream(config) {
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
@@ -883,7 +884,7 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        if(!getPreloaded()) {
+        if (!getPreloaded()) {
             addInlineEvents();
 
             initializeMediaForType(Constants.VIDEO, mediaSource);
