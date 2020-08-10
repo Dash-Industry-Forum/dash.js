@@ -102,7 +102,8 @@ function StreamController() {
         settings,
         lastPlaybackTime,
         preBufferingCheckInProgress,
-        gapHandlerInterval;
+        gapHandlerInterval,
+        lastGapJumpPosition;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -267,19 +268,12 @@ function StreamController() {
         }
 
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit || jumpLargeGaps)) {
-            seekToPosition = currentTime + timeToStreamEnd;
-
-            // If we have another period coming up it is safer to jump to the start of this period
-            const upcomingStream = getNextStream(activeStream);
-            if(upcomingStream) {
-                const streamInfo = upcomingStream.getStreamInfo();
-                seekToPosition = streamInfo.start && streamInfo.start > seekToPosition ? streamInfo.start : seekToPosition;
-            }
+        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit)) {
+            seekToPosition = parseFloat(currentTime + timeToStreamEnd).toFixed(5);
             jumpToStreamEnd = true;
         }
 
-        if (seekToPosition > 0) {
+        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition) {
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 onPlaybackSeeking({
@@ -289,6 +283,7 @@ function StreamController() {
                 logger.warn(`Jumping gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 playbackController.seek(seekToPosition, true, true);
             }
+            lastGapJumpPosition = seekToPosition;
         }
     }
 
@@ -316,6 +311,7 @@ function StreamController() {
     }
 
     function onPlaybackSeeking(e) {
+        console.log('gap onPlaybackSeeking');
         const seekingStream = getStreamForTime(e.seekTime);
 
         //if end period has been detected, stop timer and reset isPeriodSwitchInProgress
@@ -399,6 +395,7 @@ function StreamController() {
     }
 
     function checkIfPrebufferingCanStart() {
+        return;
         // In multiperiod situations, we constantly check if the streams have finished buffering so we can immediately start buffering the next stream
         if (!activeStream || !hasStreamFinishedBuffering(activeStream)) {
             return;
@@ -500,20 +497,20 @@ function StreamController() {
             return null;
         }
 
-        let duration = 0;
+        let streamDuration = 0;
         let stream = null;
 
         const ln = streams.length;
 
         if (ln > 0) {
-            duration += streams[0].getStartTime();
+            streamDuration += streams[0].getStartTime();
         }
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            duration = parseFloat((duration + stream.getDuration()).toFixed(5));
+            streamDuration = parseFloat(streamDuration + stream.getDuration());
 
-            if (time < duration) {
+            if (time - GAP_THRESHOLD < streamDuration) {
                 return stream;
             }
         }
@@ -1148,6 +1145,7 @@ function StreamController() {
         gapHandlerInterval = null;
         prebufferingCanStartInterval = null;
         preBufferingCheckInProgress = false;
+        lastGapJumpPosition = NaN;
         preloadingStreams = [];
     }
 
