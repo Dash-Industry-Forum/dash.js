@@ -485,7 +485,7 @@ function ScheduleController(config) {
     }
 
     function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
+        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo);
     }
 
     function getType() {
