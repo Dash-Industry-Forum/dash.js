@@ -30,8 +30,8 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import Events from "../../core/events/Events";
-import EventBus from "../../core/EventBus";
+import Events from '../../core/events/Events';
+import EventBus from '../../core/EventBus';
 
 const GAP_HANDLER_INTERVAL = 50;
 const THRESHOLD_TO_STALLS = 30;

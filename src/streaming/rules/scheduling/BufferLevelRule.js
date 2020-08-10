@@ -44,7 +44,7 @@ function BufferLevelRule(config) {
     function setup() {
     }
 
-    function execute(type, representationInfo, hasVideoTrack) {
+    function execute(type, representationInfo) {
         if (!type || !representationInfo) {
             return true;
         }

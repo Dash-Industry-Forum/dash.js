@@ -119,8 +119,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
             try {
                 buffer.appendWindowEnd = Infinity;
                 buffer.appendWindowStart = 0;
-            }
-            catch(e) {
+            } catch (e) {
                 logger.error('Failed to reset append window');
             }
             if (!keepBuffer) {
