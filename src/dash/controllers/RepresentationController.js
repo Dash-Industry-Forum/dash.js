@@ -239,18 +239,18 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod) {
+        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod && playbackController.getStreamController().getStreams().length <= 1) {
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
             postponeTimePeriod = getRepresentationUpdatePostponeTimePeriod(r, streamInfo);
         }
-        /*
+
         if (postponeTimePeriod > 0) {
             postponeUpdate(postponeTimePeriod);
             err = new DashJSError(errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
             endDataUpdate(err);
             return;
         }
-        */
+
         if (manifestUpdateInfo) {
             for (let i = 0; i < manifestUpdateInfo.representationInfo.length; i++) {
                 repInfo = manifestUpdateInfo.representationInfo[i];

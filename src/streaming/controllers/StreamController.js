@@ -1085,6 +1085,10 @@ function StreamController() {
         }
     }
 
+    function getStreams() {
+        return streams;
+    }
+
     instance = {
         initialize,
         getActiveStreamInfo,
@@ -1101,8 +1105,7 @@ function StreamController() {
         setProtectionData,
         getIsStreamSwitchInProgress,
         getHasMediaOrIntialisationError,
-        getNextStream,
-        switchStream,
+        getStreams,
         reset
     };
 
