@@ -635,14 +635,14 @@ function DashAdapter() {
     /**
      * Returns the bandwidth for a given representation id
      * @param {number} representationId
-     * @param {number} periodId
+     * @param {number} periodIdx
      * @returns {number} bandwidth
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getBandwidthForRepresentation(representationId, periodId) {
+    function getBandwidthForRepresentation(representationId, periodIdx) {
         let representation;
-        let period = getPeriod(periodId);
+        let period = getPeriod(periodIdx);
 
         representation = findRepresentation(period, representationId);
 
@@ -676,6 +676,26 @@ function DashAdapter() {
         let period = getPeriod(periodIdx);
 
         return findMaxBufferIndex(period, bufferType);
+    }
+
+    /**
+     * Returns the voPeriod object for a given id
+     * @param {String} id
+     * @returns {object|null}
+     */
+    function getPeriodById(id) {
+        if (!id || voPeriods.length === 0) {
+            return null;
+        }
+        const periods = voPeriods.filter((p) => {
+            return p.id === id;
+        });
+
+        if (periods && periods.length > 0) {
+            return periods[0];
+        }
+
+        return null;
     }
 
     function reset() {
@@ -821,8 +841,8 @@ function DashAdapter() {
         }
     }
 
-    function getPeriod(periodId) {
-        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodId] : null;
+    function getPeriod(periodIdx) {
+        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodIdx] : null;
     }
 
     function findRepresentationIndex(period, representationId) {
@@ -883,39 +903,40 @@ function DashAdapter() {
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
-        getBandwidthForRepresentation: getBandwidthForRepresentation,
-        getIndexForRepresentation: getIndexForRepresentation,
-        getMaxIndexForBufferType: getMaxIndexForBufferType,
+        getBandwidthForRepresentation,
+        getIndexForRepresentation,
+        getMaxIndexForBufferType,
         convertDataToRepresentationInfo: convertRepresentationToRepresentationInfo,
-        getDataForMedia: getAdaptationForMediaInfo,
-        getStreamsInfo: getStreamsInfo,
-        getMediaInfoForType: getMediaInfoForType,
-        getAllMediaInfoForType: getAllMediaInfoForType,
-        getAdaptationForType: getAdaptationForType,
-        getRealAdaptation: getRealAdaptation,
-        getVoRepresentations: getVoRepresentations,
-        getEventsFor: getEventsFor,
-        getEvent: getEvent,
-        setConfig: setConfig,
-        updatePeriods: updatePeriods,
-        getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
-        getIsTextTrack: getIsTextTrack,
-        getUTCTimingSources: getUTCTimingSources,
-        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
-        getAvailabilityStartTime: getAvailabilityStartTime,
-        getIsDynamic: getIsDynamic,
-        getDuration: getDuration,
-        getRegularPeriods: getRegularPeriods,
-        getLocation: getLocation,
-        getManifestUpdatePeriod: getManifestUpdatePeriod,
-        getIsDVB: getIsDVB,
-        getBaseURLsFromElement: getBaseURLsFromElement,
-        getRepresentationSortFunction: getRepresentationSortFunction,
-        getCodec: getCodec,
-        getVoAdaptations: getVoAdaptations,
-        getVoPeriods: getVoPeriods,
-        setCurrentMediaInfo: setCurrentMediaInfo,
-        reset: reset
+        getAdaptationForMediaInfo,
+        getStreamsInfo,
+        getMediaInfoForType,
+        getAllMediaInfoForType,
+        getAdaptationForType,
+        getRealAdaptation,
+        getVoRepresentations,
+        getEventsFor,
+        getEvent,
+        setConfig,
+        updatePeriods,
+        getUseCalculatedLiveEdgeTimeForMediaInfo,
+        getIsTextTrack,
+        getUTCTimingSources,
+        getSuggestedPresentationDelay,
+        getAvailabilityStartTime,
+        getIsDynamic,
+        getDuration,
+        getRegularPeriods,
+        getLocation,
+        getManifestUpdatePeriod,
+        getIsDVB,
+        getBaseURLsFromElement,
+        getRepresentationSortFunction,
+        getCodec,
+        getVoAdaptations,
+        getVoPeriods,
+        getPeriodById,
+        setCurrentMediaInfo,
+        reset
     };
 
     setup();
