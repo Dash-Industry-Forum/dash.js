@@ -335,6 +335,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
          */
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
+
+        /**
+         * Manifest validity changed - As a result of an MPD validity expiration event.
+         * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
+         */
+        this.GAP_CAUSED_PLAYBACK_SEEK = 'gapCausedPlaybackSeek';
     }
 }
 

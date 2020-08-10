@@ -34,6 +34,7 @@ import DashConstants from '../dash/constants/DashConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
+import GapController from './controllers/GapController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -145,6 +146,7 @@ function MediaPlayer() {
         baseURLController,
         capabilities,
         streamController,
+        gapController,
         playbackController,
         dashMetrics,
         manifestModel,
@@ -195,6 +197,9 @@ function MediaPlayer() {
         }
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.gapController) {
+            gapController = config.gapController;
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
@@ -270,6 +275,10 @@ function MediaPlayer() {
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
+        }
+
+        if (!gapController) {
+            gapController = GapController(context).getInstance();
         }
 
         adapter = DashAdapter(context).getInstance();
@@ -1903,6 +1912,7 @@ function MediaPlayer() {
         streamingInitialized = false;
         adapter.reset();
         streamController.reset();
+        gapController.reset();
         playbackController.reset();
         abrController.reset();
         mediaController.reset();
@@ -1951,6 +1961,13 @@ function MediaPlayer() {
             baseURLController: baseURLController
         });
 
+        gapController.setConfig({
+            settings,
+            playbackController,
+            streamController,
+            videoModel
+        });
+
         playbackController.setConfig({
             streamController: streamController,
             dashMetrics: dashMetrics,
@@ -1990,6 +2007,7 @@ function MediaPlayer() {
 
         // initialises controller
         streamController.initialize(autoPlay, protectionData);
+        gapController.initialize();
         cmcdModel.initialize();
     }
 
