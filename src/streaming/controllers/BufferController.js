@@ -135,9 +135,12 @@ function BufferController(config) {
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindow, oldBuffers[type], streamInfo);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type]);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindow, null, streamInfo);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), null);
+                }
+                if (settings.get().streaming.useAppendWindow) {
+                    buffer.updateAppendWindow(streamInfo);
                 }
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
@@ -904,23 +907,23 @@ function BufferController(config) {
     }
 
     instance = {
-        getBufferControllerType: getBufferControllerType,
-        getRepresentationInfo: getRepresentationInfo,
-        initialize: initialize,
-        createBuffer: createBuffer,
-        dischargePreBuffer: dischargePreBuffer,
-        getType: getType,
-        getBuffer: getBuffer,
-        setBuffer: setBuffer,
-        getBufferLevel: getBufferLevel,
-        getRangeAt: getRangeAt,
-        setMediaSource: setMediaSource,
-        getMediaSource: getMediaSource,
-        appendInitSegment: appendInitSegment,
-        replaceBuffer: replaceBuffer,
-        getIsBufferingCompleted: getIsBufferingCompleted,
-        getIsPruningInProgress: getIsPruningInProgress,
-        reset: reset,
+        getBufferControllerType,
+        getRepresentationInfo,
+        initialize,
+        createBuffer,
+        dischargePreBuffer,
+        getType,
+        getBuffer,
+        setBuffer,
+        getBufferLevel,
+        getRangeAt,
+        setMediaSource,
+        getMediaSource,
+        appendInitSegment,
+        replaceBuffer,
+        getIsBufferingCompleted,
+        getIsPruningInProgress,
+        reset,
         updateAppendWindow
     };
 

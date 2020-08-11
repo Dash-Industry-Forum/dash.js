@@ -43,7 +43,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
  * @ignore
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendWindow, oldBuffer, streamInfo) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -56,7 +56,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
     let callbacks = [];
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let setAppendWindow = useAppendWindow !== false;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -75,10 +74,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
             if (buffer.changeType && oldBuffer) {
                 logger.debug('Doing period transition with changeType');
                 buffer.changeType(codec);
-            }
-
-            if (setAppendWindow && buffer) {
-                updateAppendWindow(streamInfo);
             }
 
             const CHECK_INTERVAL = 50;
@@ -195,22 +190,22 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
     }
 
     function updateAppendWindow(sInfo) {
-        if (sInfo.id !== streamInfo.id || !buffer) {
+        if (!buffer) {
             return;
         }
         waitForUpdateEnd(() => {
             let appendWindowEnd = mediaSource.duration;
             let appendWindowStart = 0;
-            if (streamInfo.start && streamInfo.duration && isFinite(streamInfo.duration)) {
-                appendWindowEnd = streamInfo.start + streamInfo.duration;
+            if (sInfo.start && sInfo.duration && isFinite(sInfo.duration)) {
+                appendWindowEnd = sInfo.start + sInfo.duration;
             }
-            if (streamInfo.start) {
-                appendWindowStart = streamInfo.start;
+            if (sInfo.start) {
+                appendWindowStart = sInfo.start;
             }
             buffer.appendWindowStart = 0;
             buffer.appendWindowEnd = appendWindowEnd;
             buffer.appendWindowStart = appendWindowStart;
-            logger.debug(`Updated append window. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+            logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
         });
     }
 
