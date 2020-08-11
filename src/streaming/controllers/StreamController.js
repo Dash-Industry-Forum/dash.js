@@ -241,11 +241,13 @@ function StreamController() {
     }
 
     function startPlaybackEndedTimerInterval() {
-        playbackEndedTimerInterval = setInterval(function () {
-            if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
-                eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
-            }
-        }, 100);
+        if (!playbackEndedTimerInterval) {
+            playbackEndedTimerInterval = setInterval(function () {
+                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
+                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                }
+            }, 200);
+        }
     }
 
     function stopPlaybackEndedTimerInterval() {
@@ -254,9 +256,11 @@ function StreamController() {
     }
 
     function startCheckIfPrebufferingCanStartInterval() {
-        prebufferingCanStartInterval = setInterval(function () {
-            checkIfPrebufferingCanStart();
-        }, 500);
+        if (!prebufferingCanStartInterval) {
+            prebufferingCanStartInterval = setInterval(function () {
+                checkIfPrebufferingCanStart();
+            }, 500);
+        }
     }
 
     function stopCheckIfPrebufferingCanStartInterval() {
