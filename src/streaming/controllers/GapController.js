@@ -157,21 +157,23 @@ function GapController() {
 
     function startGapHandler() {
         try {
-            logger.debug('Starting the gap handler');
-            gapHandlerInterval = setInterval(() => {
-                if (!_shouldCheckForGaps()) {
-                    return;
-                }
-                const currentTime = playbackController.getTime();
-                jumpGap(currentTime);
+            if (!gapHandlerInterval) {
+                logger.debug('Starting the gap controller');
+                gapHandlerInterval = setInterval(() => {
+                    if (!_shouldCheckForGaps()) {
+                        return;
+                    }
+                    const currentTime = playbackController.getTime();
+                    jumpGap(currentTime);
 
-            }, GAP_HANDLER_INTERVAL);
+                }, GAP_HANDLER_INTERVAL);
+            }
         } catch (e) {
         }
     }
 
     function stopGapHandler() {
-        logger.debug('Stopping the gap handler, no gaps found');
+        logger.debug('Stopping the gap controller');
         if (gapHandlerInterval) {
             clearInterval(gapHandlerInterval);
             gapHandlerInterval = null;
