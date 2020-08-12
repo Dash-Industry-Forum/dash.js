@@ -337,7 +337,7 @@ class MediaPlayerEvents extends EventsBase {
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
 
         /**
-         * Manifest validity changed - As a result of an MPD validity expiration event.
+         * A gap occured in the timeline which requires a seek
          * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
          */
         this.GAP_CAUSED_PLAYBACK_SEEK = 'gapCausedPlaybackSeek';
