@@ -62,6 +62,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          bufferToKeep: 20,
  *          bufferAheadToKeep: 80,
  *          jumpGaps: true,
+ *          jumpLargeGaps: true,
  *          smallGapLimit: 1.5,
  *          stableBufferTime: 12,
  *          bufferTimeAtTopQuality: 30,
@@ -243,6 +244,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
  * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
  * @property {boolean} [jumpGaps=true] Sets whether player should jump small gaps (discontinuities) in the buffer.
+ * @property {boolean} [jumpLargeGaps=true] Sets whether player should jump large gaps (discontinuities) in the buffer.
  * @property {number} [smallGapLimit=1.8] Time in seconds for a gap to be considered small.
  * @property {number} [stableBufferTime=12]
  * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
@@ -392,6 +394,7 @@ function Settings() {
             bufferToKeep: 20,
             bufferAheadToKeep: 80,
             jumpGaps: true,
+            jumpLargeGaps: true,
             smallGapLimit: 1.5,
             stableBufferTime: 12,
             bufferTimeAtTopQuality: 30,
@@ -408,7 +411,6 @@ function Settings() {
             liveCatchUpMaxDrift: 0,
             liveCatchUpPlaybackRate: 0.5,
             liveCatchupLatencyThreshold: NaN,
-            jumpLargeGaps: true,
             lastBitrateCachingInfo: {enabled: true, ttl: 360000},
             lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
             cacheLoadThresholds: {video: 50, audio: 5},

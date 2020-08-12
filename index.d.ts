@@ -115,6 +115,7 @@ declare namespace dashjs {
             bufferToKeep?: number;
             bufferAheadToKeep?: number;
             jumpGaps?: boolean;
+            jumpLargeGaps?: boolean;
             smallGapLimit?: number;
             stableBufferTime?: number;
             bufferTimeAtTopQuality?: number;
