@@ -33,8 +33,8 @@ import Debug from '../../core/Debug';
 import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 
-const GAP_HANDLER_INTERVAL = 50;
-const THRESHOLD_TO_STALLS = 30;
+const GAP_HANDLER_INTERVAL = 100;
+const THRESHOLD_TO_STALLS = 10;
 const GAP_THRESHOLD = 0.1;
 
 function GapController() {

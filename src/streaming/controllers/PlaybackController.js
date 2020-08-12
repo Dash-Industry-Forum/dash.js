@@ -425,8 +425,7 @@ function PlaybackController() {
             onWallclockTime();
         };
 
-        //wallclockTimeIntervalId = setInterval(tick, settings.get().streaming.wallclockTimeUpdateInterval);
-        wallclockTimeIntervalId = setInterval(tick, 10);
+        wallclockTimeIntervalId = setInterval(tick, settings.get().streaming.wallclockTimeUpdateInterval);
     }
 
     function stopUpdatingWallclockTime() {
