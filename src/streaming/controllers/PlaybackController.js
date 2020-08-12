@@ -401,7 +401,7 @@ function PlaybackController() {
             return NaN;
         }
         if (currentTime > DVRWindow.end) {
-            actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
+            actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
         } else if (currentTime > 0 && currentTime + 0.250 < DVRWindow.start && Math.abs(currentTime - DVRWindow.start) < 315360000) {
 
@@ -410,7 +410,8 @@ function PlaybackController() {
             // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             // Checking also duration of the DVR makes sense. We detected temporary situations in which currentTime
             // is bad reported by the browser which causes playback to jump to start (315360000 = 1 year)
-            actualTime = DVRWindow.start;
+            //actualTime = DVRWindow.start;
+            actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
         } else {
             actualTime = currentTime;
         }
