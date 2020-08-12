@@ -81,7 +81,9 @@ function Stream(config) {
         thumbnailController,
         preloaded,
         boxParser,
+        preloadingScheduled,
         debug,
+        isEndedEventSignaled,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -233,6 +235,8 @@ function Stream(config) {
         hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
+        preloadingScheduled = false;
+        isEndedEventSignaled = false;
     }
 
     function reset() {
@@ -259,8 +263,24 @@ function Stream(config) {
         return streamInfo ? streamInfo.duration : NaN;
     }
 
+    function getIsEndedEventSignaled() {
+        return isEndedEventSignaled;
+    }
+
+    function setIsEndedEventSignaled(value) {
+        isEndedEventSignaled = value;
+    }
+
     function getStartTime() {
         return streamInfo ? streamInfo.start : NaN;
+    }
+
+    function getPreloadingScheduled() {
+        return preloadingScheduled;
+    }
+
+    function setPreloadingScheduled(value) {
+        preloadingScheduled = value;
     }
 
     function getLiveStartTime() {
@@ -284,11 +304,11 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getHasAudioTrack () {
+    function getHasAudioTrack() {
         return hasAudioTrack;
     }
 
-    function getHasVideoTrack () {
+    function getHasVideoTrack() {
         return hasVideoTrack;
     }
 
@@ -390,7 +410,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
+        let fragmentModel = fragmentController.getModel(getId(), mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -864,24 +884,26 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        addInlineEvents();
+        if (!getPreloaded()) {
+            addInlineEvents();
 
-        initializeMediaForType(Constants.VIDEO, mediaSource);
-        initializeMediaForType(Constants.AUDIO, mediaSource);
-        initializeMediaForType(Constants.TEXT, mediaSource);
-        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
-        initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
-        initializeMediaForType(Constants.MUXED, mediaSource);
-        initializeMediaForType(Constants.IMAGE, mediaSource);
+            initializeMediaForType(Constants.VIDEO, mediaSource);
+            initializeMediaForType(Constants.AUDIO, mediaSource);
+            initializeMediaForType(Constants.TEXT, mediaSource);
+            initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+            initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+            initializeMediaForType(Constants.MUXED, mediaSource);
+            initializeMediaForType(Constants.IMAGE, mediaSource);
 
-        createBuffers(previousBuffers);
+            createBuffers(previousBuffers);
 
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-        for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
-            streamProcessors[i].getScheduleController().start();
+            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+                streamProcessors[i].getScheduleController().start();
+            }
+
+            setPreloaded(true);
         }
-
-        setPreloaded(true);
     }
 
 
@@ -905,7 +927,11 @@ function Stream(config) {
         setMediaSource: setMediaSource,
         isMediaCodecCompatible: isMediaCodecCompatible,
         isProtectionCompatible: isProtectionCompatible,
-        getPreloaded: getPreloaded
+        getPreloaded: getPreloaded,
+        getPreloadingScheduled,
+        setPreloadingScheduled,
+        getIsEndedEventSignaled,
+        setIsEndedEventSignaled
     };
 
     setup();

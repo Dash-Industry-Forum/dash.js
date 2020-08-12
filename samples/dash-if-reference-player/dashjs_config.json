@@ -1,6 +1,6 @@
 {
     "debug": {
-        "logLevel": 4
+        "logLevel": 5
     },
     "streaming": {
         "metricsMaxListDepth": 50,

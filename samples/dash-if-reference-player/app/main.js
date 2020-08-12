@@ -61,11 +61,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         // Add provider to beginning of each Vector
         var provider = data.provider;
         $scope.availableStreams.forEach(function (item) {
-            if(item && item.submenu && item.submenu.length > 0) {
+            if (item && item.submenu && item.submenu.length > 0) {
                 item.submenu.forEach(function (subitem) {
-                   if(subitem && subitem.name && subitem.provider && provider[subitem.provider] && provider[subitem.provider].acronym) {
-                       subitem.name = '[' + provider[subitem.provider].acronym + '] ' + subitem.name;
-                   }
+                    if (subitem && subitem.name && subitem.provider && provider[subitem.provider] && provider[subitem.provider].acronym) {
+                        subitem.name = '[' + provider[subitem.provider].acronym + '] ' + subitem.name;
+                    }
                 });
             }
         });
@@ -853,7 +853,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         var dashAdapter = $scope.player.getDashAdapter();
 
         if (dashMetrics && $scope.streamInfo) {
-            var periodIdx = $scope.streamInfo.index;
+            var period = dashAdapter.getPeriodById($scope.streamInfo.id);
+            var periodIdx = period ? period.index : $scope.streamInfo.index;
 
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);

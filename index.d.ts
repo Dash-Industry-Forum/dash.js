@@ -115,6 +115,7 @@ declare namespace dashjs {
             bufferToKeep?: number;
             bufferAheadToKeep?: number;
             jumpGaps?: boolean;
+            jumpLargeGaps?: boolean;
             smallGapLimit?: number;
             stableBufferTime?: number;
             bufferTimeAtTopQuality?: number;
@@ -125,7 +126,7 @@ declare namespace dashjs {
             keepProtectionMediaKeys?: boolean;
             useManifestDateHeaderTimeSource?: boolean;
             useSuggestedPresentationDelay?: boolean;
-            useAppendWindowEnd?: boolean,
+            useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             liveCatchUpMinDrift?: number;
             liveCatchUpMaxDrift?: number;
