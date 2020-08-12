@@ -495,10 +495,8 @@ function StreamProcessor(config) {
         } else {
             // Use time just whenever is strictly needed
             request = getFragmentRequest(representationInfo,
-                //hasSeekTarget || bufferIsDivided ? time : undefined, {
-                hasSeekTarget ? time : undefined, {
-                    keepIdx: !hasSeekTarget
-                    //keepIdx: !hasSeekTarget && !bufferIsDivided
+                hasSeekTarget || bufferIsDivided ? time : undefined, {
+                    keepIdx: !hasSeekTarget && !bufferIsDivided
                 });
 
             // Then, check if this request was downloaded or not
@@ -561,8 +559,7 @@ function StreamProcessor(config) {
     }
 
     function createBuffer(previousBuffers) {
-        const streamInfo = getStreamInfo();
-        return (getBuffer() || bufferController ? bufferController.createBuffer(mediaInfoArr, previousBuffers, streamInfo) : null);
+        return (getBuffer() || bufferController ? bufferController.createBuffer(mediaInfoArr, previousBuffers) : null);
     }
 
     function switchTrackAsked() {

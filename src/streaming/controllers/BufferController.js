@@ -129,7 +129,7 @@ function BufferController(config) {
         return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
     }
 
-    function createBuffer(mediaInfoArr, oldBuffers, streamInfo) {
+    function createBuffer(mediaInfoArr, oldBuffers) {
         if (!initCache || !mediaInfoArr) return null;
         const mediaInfo = mediaInfoArr[0];
         if (mediaSource) {
@@ -215,7 +215,7 @@ function BufferController(config) {
 
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
-        if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type != type) return;
+        if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type !== type) return;
 
         if (replacingBuffer) {
             mediaChunk = chunk;
@@ -341,7 +341,7 @@ function BufferController(config) {
     }
 
     function onQualityChanged(e) {
-        if (e.streamInfo.id != streamInfo.id || e.mediaType !== type || requiredQuality === e.newQuality) return;
+        if (e.streamInfo.id !== streamInfo.id || e.mediaType !== type || requiredQuality === e.newQuality) return;
 
         updateBufferTimestampOffset(this.getRepresentationInfo(e.newQuality));
         requiredQuality = e.newQuality;
