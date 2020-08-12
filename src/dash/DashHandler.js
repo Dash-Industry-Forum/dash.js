@@ -269,7 +269,6 @@ function DashHandler(config) {
                 isFinished = endTime >= duration;
             }
         }
-
         return isFinished;
     }
 
@@ -329,7 +328,7 @@ function DashHandler(config) {
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
         if (!segment && isEndlessMedia(representation) && !dynamicStreamCompleted) {
-            logger.debug('No segment found at index: ' + indexToRequest + '. Wait for next loop');
+            logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
         } else {
             if (segment) {

@@ -61,7 +61,7 @@ describe('BufferLevelRule', function () {
 
     it('should return 15 (value returns by getCurrentBufferLevel of DashMetricsMock) if streamProcessor is defined and current representation is audio and videoTrackPresent is true', function () {
         const result = bufferLevelRule.getBufferTarget(testAudioType, representationInfo, true);
-        expect(result).to.be.equal(15); // jshint ignore:line
+        expect(result).to.be.equal(12); // jshint ignore:line
     });
 
     it('should return 12 (DEFAULT_MIN_BUFFER_TIME of MediaPlayerModelMock) if streamProcessor is defined and current representation is audio and videoTrackPresent is false', function () {

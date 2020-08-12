@@ -137,6 +137,7 @@ function ScheduleController(config) {
         if (isStopped) return;
 
         logger.debug('Schedule Controller stops');
+        logger.debug(type + ' Schedule Controller stops');
         isStopped = true;
         clearTimeout(scheduleTimeout);
     }
@@ -169,7 +170,6 @@ function ScheduleController(config) {
         if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
-
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
@@ -485,7 +485,7 @@ function ScheduleController(config) {
     }
 
     function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
+        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo);
     }
 
     function getType() {

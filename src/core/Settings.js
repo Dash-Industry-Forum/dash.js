@@ -62,6 +62,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          bufferToKeep: 20,
  *          bufferAheadToKeep: 80,
  *          jumpGaps: true,
+ *          jumpLargeGaps: true,
  *          smallGapLimit: 1.5,
  *          stableBufferTime: 12,
  *          bufferTimeAtTopQuality: 30,
@@ -72,7 +73,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          keepProtectionMediaKeys: false,
  *          useManifestDateHeaderTimeSource: true,
  *          useSuggestedPresentationDelay: true,
- *          useAppendWindowEnd: true,
+ *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
  *          liveCatchUpMinDrift: 0.02,
  *          liveCatchUpMaxDrift: 0,
@@ -243,6 +244,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
  * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
  * @property {boolean} [jumpGaps=true] Sets whether player should jump small gaps (discontinuities) in the buffer.
+ * @property {boolean} [jumpLargeGaps=true] Sets whether player should jump large gaps (discontinuities) in the buffer.
  * @property {number} [smallGapLimit=1.8] Time in seconds for a gap to be considered small.
  * @property {number} [stableBufferTime=12]
  * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
@@ -270,8 +272,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {boolean} [useSuggestedPresentationDelay=true]
  * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
- * @property {boolean} [useAppendWindowEnd=true]
- * Specifies if the appendWindowEnd attribute of the MSE SourceBuffers should be set according to content duration from manifest.
+ * @property {boolean} [useAppendWindow=true]
+ * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
@@ -392,6 +394,7 @@ function Settings() {
             bufferToKeep: 20,
             bufferAheadToKeep: 80,
             jumpGaps: true,
+            jumpLargeGaps: true,
             smallGapLimit: 1.5,
             stableBufferTime: 12,
             bufferTimeAtTopQuality: 30,
@@ -402,7 +405,7 @@ function Settings() {
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
             useSuggestedPresentationDelay: true,
-            useAppendWindowEnd: true,
+            useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
             liveCatchUpMaxDrift: 0,
