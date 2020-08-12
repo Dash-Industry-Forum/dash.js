@@ -49,6 +49,9 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
 
+const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
+const PREBUFFERING_CAN_START_INTERVAL = 500;
+
 function StreamController() {
 
     const context = this.context;
@@ -86,7 +89,6 @@ function StreamController() {
         playbackController,
         mediaPlayerModel,
         isPaused,
-        bufferEmpty,
         initialPlayback,
         isPeriodSwitchInProgress,
         playbackEndedTimerInterval,
@@ -147,8 +149,6 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
-        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
     }
 
     function unRegisterEvents() {
@@ -164,8 +164,6 @@ function StreamController() {
         eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
-        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
     }
 
     /*
@@ -178,15 +176,6 @@ function StreamController() {
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
             }
-        }
-    }
-
-    function onBytesAppended() {
-        const ranges = videoModel.getBufferRange();
-        let bufferedString = '';
-
-        for (let i = 0; i < ranges.length; i++) {
-            bufferedString += `Range ${i}: start ${ranges.start(i)} end ${ranges.end(i)}`;
         }
     }
 
@@ -226,7 +215,6 @@ function StreamController() {
         } else {
             if (isPaused) {
                 isPaused = false;
-                bufferEmpty = false;
                 createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
             }
         }
@@ -246,7 +234,7 @@ function StreamController() {
                 if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
                     eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
                 }
-            }, 200);
+            }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
     }
 
@@ -259,7 +247,7 @@ function StreamController() {
         if (!prebufferingCanStartInterval) {
             prebufferingCanStartInterval = setInterval(function () {
                 checkIfPrebufferingCanStart();
-            }, 500);
+            }, PREBUFFERING_CAN_START_INTERVAL);
         }
     }
 
@@ -283,7 +271,6 @@ function StreamController() {
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
 
                 if (mediaSource) {
-
                     // We can not start prebuffering if the start of the next period is in the future. This will cause problems when calculating the segmentAvailabilityRange and updating the representations in the RepresentationController
                     // As long as the timeline converter returns an invalid range we do not start the prebuffering
                     const mediaTypes = [Constants.VIDEO, Constants.AUDIO];
@@ -1005,12 +992,6 @@ function StreamController() {
         protectionData = protData;
     }
 
-    function onBufferLevelStateChanged(e) {
-        if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            bufferEmpty = true;
-        }
-    }
-
     function resetInitialSettings() {
         streams = [];
         protectionController = null;
@@ -1020,7 +1001,6 @@ function StreamController() {
         hasInitialisationError = false;
         initialPlayback = true;
         isPaused = false;
-        bufferEmpty = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;
         isPeriodSwitchInProgress = false;
