@@ -83,8 +83,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
 
-    function createBuffer(mediaInfoArr, previousBuffers, streamInfo) {
-        return _BufferControllerImpl.createBuffer(mediaInfoArr, previousBuffers, streamInfo);
+    function createBuffer(mediaInfoArr, previousBuffers) {
+        return _BufferControllerImpl.createBuffer(mediaInfoArr, previousBuffers);
     }
 
     function getType() {
