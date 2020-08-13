@@ -151,9 +151,10 @@ function Stream(config) {
         }
     }
 
-    function initialize(StreamInfo, ProtectionController) {
-        streamInfo = StreamInfo;
-        protectionController = ProtectionController;
+    function initialize(strInfo, prtctnController) {
+        streamInfo = strInfo;
+        fragmentController.setStreamId(strInfo.id);
+        protectionController = prtctnController;
         registerProtectionEvents();
     }
 
