@@ -6,7 +6,8 @@ define([
     'test/functional/tests/playFromTime',
     'test/functional/tests/pause',
     'test/functional/tests/seek',
-    'test/functional/tests/ended'
+    'test/functional/tests/ended',
+    'test/functional/tests/audioSwitching'
 ], function(intern,
             streams,
             setup,
@@ -14,10 +15,11 @@ define([
             playFromTime,
             pause,
             seek,
-            ended) {
+            ended,
+            audioSwitching) {
 
     var registerSuites = function (stream) {
-        var suites = intern.config.testSuites || ['play', /*'playFromTime',*/ 'pause', /*'seek',*/ 'ended'];
+        var suites = intern.config.testSuites || [/*'play' /*'playFromTime', 'pause', /*'seek',*/ /*'ended'*/ 'audioSwitching'];
 
         setup.register(stream);
 
@@ -26,6 +28,7 @@ define([
         if (suites.indexOf('pause') !== -1) pause.register(stream);
         if (suites.indexOf('seek') !== -1) seek.register(stream);
         if (suites.indexOf('ended') !== -1) ended.register(stream);
+        if (suites.indexOf('audioSwitching') !== -1) audioSwitching.register(stream);
     };
 
     for (var i = 0; i < streams.items.length; i++) {
