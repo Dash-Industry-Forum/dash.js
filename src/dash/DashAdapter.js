@@ -392,11 +392,18 @@ function DashAdapter() {
         const schemeIdUri = eventBox.scheme_id_uri;
         const value = eventBox.value;
         const timescale = eventBox.timescale;
-        const presentationTimeDelta = eventBox.presentation_time_delta;
+        let presentationTimeDelta;
+        let calculatedPresentationTime;
+        if (eventBox.version === 0) {
+            presentationTimeDelta = eventBox.presentation_time_delta;
+            calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
+        } else {
+            presentationTimeDelta = 0;
+            calculatedPresentationTime = eventBox.presentation_time_delta;
+        }
         const duration = eventBox.event_duration;
         const id = eventBox.id;
         const messageData = eventBox.message_data;
-        const calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
 
         if (!eventStreams[schemeIdUri + '/' + value]) return null;
 
