@@ -345,7 +345,7 @@ function StreamController() {
                 nextStream.preload(mediaSource, buffers);
                 preloadingStreams.push(nextStream);
                 nextStream.getProcessors().forEach(p => {
-                    p.setIndexHandlerTime(nextStream.getStartTime());
+                    p.setBufferingTime(nextStream.getStartTime());
                 });
             }
         }
@@ -569,12 +569,12 @@ function StreamController() {
 
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
-                playbackController.seek(seekTime); //we only need to call seek here, IndexHandlerTime was set from seeking event
+                playbackController.seek(seekTime); //we only need to call seek here, bufferingTime was set from seeking event
             } else {
                 // let startTime = playbackController.getStreamStartTime(true);
                 // if (!keepBuffers) {
                 //     getActiveStreamProcessors().forEach(p => {
-                //         p.setIndexHandlerTime(startTime);
+                //         p.setBufferingTime(startTime);
                 //     });
                 // }
             }

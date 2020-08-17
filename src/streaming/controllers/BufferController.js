@@ -257,13 +257,16 @@ function BufferController(config) {
                 logger.warn('Quota exceeded, Critical Buffer: ' + criticalBufferLevel);
 
                 if (criticalBufferLevel > 0) {
-                    // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
+                    // recalculate buffer lengths according to criticalBufferLevel
                     const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
                     const bufferAhead = criticalBufferLevel - bufferToKeep;
+                    const bufferTimeAtTopQuality = Math.min(settings.get().streaming.bufferTimeAtTopQuality, bufferAhead * 0.9);
+                    const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
                     const s = {
                         streaming: {
                             bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
-                            bufferAheadToKeep: parseFloat(bufferAhead.toFixed(5))
+                            bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
+                            bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
                         }
                     };
                     settings.update(s);
@@ -271,8 +274,9 @@ function BufferController(config) {
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
-                triggerEvent(Events.QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel}); //Tells ScheduleController to stop scheduling.
-                pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                // Notify Schedulecontroller to stop scheduling until buffer has been pruned
+                triggerEvent(Events.QUOTA_EXCEEDED, { criticalBufferLevel: criticalBufferLevel });
+                clearBuffers(getClearRanges());
             }
             return;
         }
@@ -603,10 +607,7 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        const rangeToKeep = {
-            start: Math.max(0, currentTime - settings.get().streaming.bufferToKeep),
-            end: currentTime + settings.get().streaming.bufferAheadToKeep
-        };
+        let startRangeToKeep = Math.max(0, currentTime - settings.get().streaming.bufferToKeep);
 
         const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -616,34 +617,22 @@ function BufferController(config) {
 
         // Ensure we keep full range of current fragment
         if (currentTimeRequest) {
-            rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
-            rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
+            startRangeToKeep = Math.min(currentTimeRequest.startTime, startRangeToKeep);
         } else if (currentTime === 0 && playbackController.getIsDynamic()) {
             // Don't prune before the live stream starts, it messes with low latency
             return [];
         }
 
-        if (ranges.start(0) <= rangeToKeep.start) {
+        if (ranges.start(0) <= startRangeToKeep) {
             const behindRange = {
                 start: 0,
-                end: rangeToKeep.start
+                end: startRangeToKeep
             };
-            for (let i = 0; i < ranges.length && ranges.end(i) <= rangeToKeep.start; i++) {
+            for (let i = 0; i < ranges.length && ranges.end(i) <= startRangeToKeep; i++) {
                 behindRange.end = ranges.end(i);
             }
             if (behindRange.start < behindRange.end) {
                 clearRanges.push(behindRange);
-            }
-        }
-
-        if (ranges.end(ranges.length - 1) >= rangeToKeep.end) {
-            const aheadRange = {
-                start: rangeToKeep.end,
-                end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
-            };
-
-            if (aheadRange.start < aheadRange.end) {
-                clearRanges.push(aheadRange);
             }
         }
 

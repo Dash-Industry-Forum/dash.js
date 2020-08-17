@@ -62,7 +62,6 @@ function DashHandler(config) {
         segmentIndex,
         lastSegment,
         requestedTime,
-        currentTime,
         isDynamicManifest,
         dynamicStreamCompleted,
         selectedMimeType,
@@ -94,14 +93,6 @@ function DashHandler(config) {
         return streamInfo;
     }
 
-    function setCurrentTime(value) {
-        currentTime = value;
-    }
-
-    function getCurrentTime() {
-        return currentTime;
-    }
-
     function setCurrentIndex (value) {
         segmentIndex = value;
     }
@@ -117,7 +108,6 @@ function DashHandler(config) {
 
     function resetInitialSettings() {
         resetIndex();
-        currentTime = 0;
         requestedTime = null;
         segmentsController = null;
         selectedMimeType = null;
@@ -438,8 +428,6 @@ function DashHandler(config) {
         getRequestForSegment: getRequestForSegment,
         getSegmentRequestForTime: getSegmentRequestForTime,
         getNextSegmentRequest: getNextSegmentRequest,
-        setCurrentTime: setCurrentTime,
-        getCurrentTime: getCurrentTime,
         setCurrentIndex: setCurrentIndex,
         getCurrentIndex: getCurrentIndex,
         isMediaFinished: isMediaFinished,

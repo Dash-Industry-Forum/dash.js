@@ -42,13 +42,8 @@ describe('StreamProcessor', function () {
             streamProcessor.reset();
         });
 
-        it('getIndexHandlerTime should return NaN', function () {
-            const time = streamProcessor.getIndexHandlerTime();
-            expect(time).to.be.NaN; // jshint ignore:line
-        });
-
-        it('setIndexHandlerTime should not throw an error', function () {
-            expect(streamProcessor.setIndexHandlerTime.bind(streamProcessor)).to.not.throw();
+        it('setBufferingTime should not throw an error', function () {
+            expect(streamProcessor.setBufferingTime.bind(streamProcessor)).to.not.throw();
         });
 
         it('getInitRequest should return null', function () {
