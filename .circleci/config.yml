@@ -93,15 +93,15 @@ workflows:
   commit-workflow:
     jobs:
       - build:
-        filters:
-          branches:
-            ignore:
-              - functional-tests
+          filters:
+            branches:
+              ignore:
+                - functional-tests
       - functional-tests:
-        filters:
-          branches:
-            only:
-              - functional-tests
+          filters:
+            branches:
+              only:
+                - functional-tests
   scheduled-workflow:
     triggers:
       - schedule:
