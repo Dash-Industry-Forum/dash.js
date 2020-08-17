@@ -84,6 +84,7 @@ function StreamProcessor(config) {
         representationController,
         liveEdgeFinder,
         indexHandler,
+        bufferingTime,
         bufferPruned;
 
     function setup() {
@@ -170,12 +171,14 @@ function StreamProcessor(config) {
 
         scheduleController.initialize(hasVideoTrack);
 
+        bufferingTime = 0;
         bufferPruned = false;
     }
 
     function resetInitialSettings() {
         mediaInfoArr = [];
         mediaInfo = null;
+        bufferingTime = 0;
     }
 
     function reset(errored, keepBuffers) {
@@ -278,7 +281,7 @@ function StreamProcessor(config) {
 
         // If buffer removed ahead current time (QuotaExceededError or automatic buffer pruning) then adjust current index handler time
         if (e.from > playbackController.getTime()) {
-            setIndexHandlerTime(e.from);
+            bufferingTime = e.from;
             bufferPruned = true;
         }
     }
@@ -449,7 +452,7 @@ function StreamProcessor(config) {
                 scheduleController.setSeekTarget(NaN);
                 if (!e.replacement) {
                     if (!isNaN(request.startTime + request.duration)) {
-                        setIndexHandlerTime(request.startTime + request.duration);
+                        bufferingTime = request.startTime + request.duration;
                     }
                     request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
                     scheduleController.setTimeToLoadDelay(0);
@@ -464,7 +467,7 @@ function StreamProcessor(config) {
         const representationInfo = getRepresentationInfo();
         const hasSeekTarget = !isNaN(seekTarget);
         const currentTime = playbackController.getNormalizedTime();
-        let time = hasSeekTarget ? seekTarget : getIndexHandlerTime();
+        let time = hasSeekTarget ? seekTarget : bufferingTime;
         let bufferIsDivided = false;
         let request;
 
@@ -682,18 +685,12 @@ function StreamProcessor(config) {
     function onSeekTarget(e) {
         if (e.mediaType !== type || e.streamId !== streamInfo.id) return;
 
-        setIndexHandlerTime(e.time);
+        bufferingTime = e.time;
         scheduleController.setSeekTarget(e.time);
     }
 
-    function setIndexHandlerTime(value) {
-        if (indexHandler) {
-            indexHandler.setCurrentTime(value);
-        }
-    }
-
-    function getIndexHandlerTime() {
-        return indexHandler ? indexHandler.getCurrentTime() : NaN;
+    function setBufferingTime(value) {
+        bufferingTime = value;
     }
 
     function resetIndexHandler() {
@@ -755,8 +752,7 @@ function StreamProcessor(config) {
         dischargePreBuffer: dischargePreBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        setIndexHandlerTime: setIndexHandlerTime,
-        getIndexHandlerTime: getIndexHandlerTime,
+        setBufferingTime: setBufferingTime,
         resetIndexHandler: resetIndexHandler,
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,
