@@ -265,7 +265,6 @@ function BufferController(config) {
                     const s = {
                         streaming: {
                             bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
-                            bufferAheadToKeep: parseFloat(bufferAhead.toFixed(5)),
                             bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
                             bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
                         }
@@ -608,10 +607,7 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        const rangeToKeep = {
-            start: Math.max(0, currentTime - settings.get().streaming.bufferToKeep),
-            end: currentTime + settings.get().streaming.bufferAheadToKeep
-        };
+        let startRangeToKeep = Math.max(0, currentTime - settings.get().streaming.bufferToKeep);
 
         const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -621,34 +617,22 @@ function BufferController(config) {
 
         // Ensure we keep full range of current fragment
         if (currentTimeRequest) {
-            rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
-            rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
+            startRangeToKeep = Math.min(currentTimeRequest.startTime, startRangeToKeep);
         } else if (currentTime === 0 && playbackController.getIsDynamic()) {
             // Don't prune before the live stream starts, it messes with low latency
             return [];
         }
 
-        if (ranges.start(0) <= rangeToKeep.start) {
+        if (ranges.start(0) <= startRangeToKeep) {
             const behindRange = {
                 start: 0,
-                end: rangeToKeep.start
+                end: startRangeToKeep
             };
-            for (let i = 0; i < ranges.length && ranges.end(i) <= rangeToKeep.start; i++) {
+            for (let i = 0; i < ranges.length && ranges.end(i) <= startRangeToKeep; i++) {
                 behindRange.end = ranges.end(i);
             }
             if (behindRange.start < behindRange.end) {
                 clearRanges.push(behindRange);
-            }
-        }
-
-        if (ranges.end(ranges.length - 1) >= rangeToKeep.end) {
-            const aheadRange = {
-                start: rangeToKeep.end,
-                end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
-            };
-
-            if (aheadRange.start < aheadRange.end) {
-                clearRanges.push(aheadRange);
             }
         }
 
