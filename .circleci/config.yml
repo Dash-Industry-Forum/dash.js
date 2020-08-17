@@ -92,7 +92,16 @@ workflows:
   version: 2
   commit-workflow:
     jobs:
-      - build
+      - build:
+        filters:
+          branches:
+            ignore:
+              - functional-tests
+      - functional-tests:
+        filters:
+          branches:
+            only:
+              - functional-tests
   scheduled-workflow:
     triggers:
       - schedule:
