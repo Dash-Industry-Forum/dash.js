@@ -465,9 +465,9 @@ function StreamController() {
     }
 
     function switchStream(stream, previousStream, seekTime) {
-        logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
 
         if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
+        logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
         isStreamSwitchingInProgress = true;
 
         eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
