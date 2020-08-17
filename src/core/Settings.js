@@ -60,7 +60,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          fastSwitchEnabled: false,
  *          bufferPruningInterval: 10,
  *          bufferToKeep: 20,
- *          bufferAheadToKeep: 80,
  *          jumpGaps: true,
  *          jumpLargeGaps: true,
  *          smallGapLimit: 1.5,
@@ -239,10 +238,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This value influences the buffer pruning logic.
  * Allows you to modify the buffer that is kept in source buffer in seconds.
  *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
- * @property {number} [bufferAheadToKeep=80]
- * This value influences the buffer pruning logic.
- * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
- * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
  * @property {boolean} [jumpGaps=true] Sets whether player should jump small gaps (discontinuities) in the buffer.
  * @property {boolean} [jumpLargeGaps=true] Sets whether player should jump large gaps (discontinuities) in the buffer.
  * @property {number} [smallGapLimit=1.8] Time in seconds for a gap to be considered small.
@@ -392,7 +387,6 @@ function Settings() {
             fastSwitchEnabled: false,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
-            bufferAheadToKeep: 80,
             jumpGaps: true,
             jumpLargeGaps: true,
             smallGapLimit: 1.5,
