@@ -289,6 +289,7 @@ function ScheduleController(config) {
     function processMediaRequest(request) {
         if (request) {
             logger.debug('Next fragment request url is ' + request.url);
+            console.debug('Next fragment request url is ' + request.url);
             fragmentModel.executeRequest(request);
         } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
             if (playbackController.getIsDynamic()) {

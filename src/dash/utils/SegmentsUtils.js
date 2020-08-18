@@ -179,7 +179,9 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
         duration = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
+    const startNumber = !isNaN(representation.startNumber) ? representation.startNumber : 1;
+    const startNumberOffset = startNumber > 0 ? (startNumber - 1) * duration : 0;
+    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration) + (startNumberOffset)).toFixed(5));
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     const segment = getSegment(representation, duration, presentationStartTime,
