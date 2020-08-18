@@ -189,13 +189,11 @@ function PlaybackController() {
             // buffer(s) are already appended at requested time
             videoModel.removeEventListener('seeking', onPlaybackSeeking);
             logger.info('Requesting internal seek to time: ' + time);
-            console.info('Requesting internal seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         } else {
             seekTarget = time;
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             logger.info('Requesting seek to time: ' + time);
-            console.info('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         }
     }

@@ -65,11 +65,6 @@
             "name": "VOD (Static MPD)",
             "submenu": [
                 {
-                    "url": "http://localhost:5555/dash?asfilter=a&repfilter=true&rewritebaseurl=true",
-                    "name": "localhost",
-                    "provider": "dashif"
-                },
-                {
                     "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
                     "name": "SegmentBase, ondemand profile",
                     "provider": "dashif"
