@@ -91,8 +91,9 @@ function ListSegmentsGetter(config, isDynamic) {
         }
 
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const startIndex = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
-        const index = Math.floor(periodTime / duration) - startIndex;
+        const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
+        const offsetToSubtract = Math.max((startNumber - 1), 0);
+        const index = Math.max(Math.floor(periodTime / duration) - offsetToSubtract, 0);
 
         return getSegmentByIndex(representation, index);
     }
