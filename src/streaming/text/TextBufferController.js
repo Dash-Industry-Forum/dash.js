@@ -142,6 +142,10 @@ function TextBufferController(config) {
         }
     }
 
+    function updateAppendWindow() {
+        _BufferControllerImpl.updateAppendWindow();
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -158,7 +162,8 @@ function TextBufferController(config) {
         appendInitSegment: appendInitSegment,
         getRangeAt: getRangeAt,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        updateAppendWindow
     };
 
     setup();
