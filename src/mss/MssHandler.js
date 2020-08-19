@@ -132,7 +132,7 @@ function MssHandler(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        let streamProcessor = getStreamProcessor(e.sender.getType());
+        let streamProcessor = getStreamProcessor(e.mediaType);
         if (!streamProcessor) return;
 
         // Create init segment request
