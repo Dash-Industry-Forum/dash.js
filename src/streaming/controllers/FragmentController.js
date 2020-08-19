@@ -49,11 +49,11 @@ function FragmentController( config ) {
     const mediaPlayerModel = config.mediaPlayerModel;
     const dashMetrics = config.dashMetrics;
     const debug = Debug(context).getInstance();
+    const streamInfo = config.streamInfo;
 
     let instance,
         logger,
-        fragmentModels,
-        streamId;
+        fragmentModels;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -62,11 +62,16 @@ function FragmentController( config ) {
         eventBus.on(Events.FRAGMENT_LOADING_PROGRESS, onFragmentLoadingCompleted, instance);
     }
 
-    function getModel(streamId, type) {
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getModel(type) {
         let model = fragmentModels[type];
         if (!model) {
             model = FragmentModel(context).create({
-                streamId: streamId,
+                streamInfo: streamInfo,
+                type: type,
                 dashMetrics: dashMetrics,
                 fragmentLoader: FragmentLoader(context).create({
                     dashMetrics: dashMetrics,
@@ -130,18 +135,16 @@ function FragmentController( config ) {
         const request = e.request;
         const bytes = e.response;
         const isInit = request.isInitializationRequest();
-        const streamInfo = request.mediaInfo.streamInfo;
-
-        if (streamInfo && streamInfo.id !== streamId) return;
+        const strInfo = request.mediaInfo.streamInfo;
 
         if (e.error) {
-            if (e.request.mediaType === Constants.AUDIO || e.request.mediaType === Constants.VIDEO || e.request.mediaType === Constants.FRAGMENTED_TEXT) {
+            if (request.mediaType === Constants.AUDIO || request.mediaType === Constants.VIDEO || request.mediaType === Constants.FRAGMENTED_TEXT) {
                 // add service location to blacklist controller - only for audio or video. text should not set errors
                 eventBus.trigger(Events.SERVICE_LOCATION_BLACKLIST_ADD, {entry: e.request.serviceLocation});
             }
         }
 
-        if (!bytes || !streamInfo) {
+        if (!bytes || !strInfo) {
             logger.warn('No ' + request.mediaType + ' bytes to push or stream is inactive.');
             return;
         }
@@ -149,16 +152,12 @@ function FragmentController( config ) {
         eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {
             chunk: chunk,
             request: request
-        });
-    }
-
-    function setStreamId (id) {
-        streamId = id;
+        }, strInfo.id, request.mediaType);
     }
 
     instance = {
+        getStreamId: getStreamId,
         getModel: getModel,
-        setStreamId: setStreamId,
         reset: reset
     };
 

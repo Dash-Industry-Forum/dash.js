@@ -48,6 +48,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        type,
         logger,
         buffer,
         isAppendingInProgress,
@@ -61,6 +62,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         logger = Debug(context).getInstance().getLogger(instance);
         isAppendingInProgress = false;
 
+        type = mediaInfo.type;
         const codec = mediaInfo.codec;
         try {
             // Safari claims to support anything starting 'application/mp4'.
@@ -101,6 +103,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 throw ex;
             }
         }
+    }
+
+    function getType() {
+        return type;
     }
 
     function reset(keepBuffer) {
@@ -205,7 +211,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             buffer.appendWindowStart = 0;
             buffer.appendWindowEnd = appendWindowEnd;
             buffer.appendWindowStart = appendWindowStart;
-            logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+            logger.debug(`Updated append window. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
         });
     }
 
@@ -357,7 +363,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     function errHandler() {
-        logger.error('SourceBufferSink error', mediaInfo.type);
+        logger.error('SourceBufferSink error');
     }
 
     function waitForUpdateEnd(callback) {
@@ -369,6 +375,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     instance = {
+        getType: getType,
         getAllBufferRanges: getAllBufferRanges,
         getBuffer: getBuffer,
         append: append,

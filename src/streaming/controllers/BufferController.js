@@ -125,6 +125,15 @@ function BufferController(config) {
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
     }
 
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
+    }
+
+
     function getRepresentationInfo(quality) {
         return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
     }
@@ -190,8 +199,6 @@ function BufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamInfo.id || e.chunk.mediaInfo.type !== type) return;
-
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
@@ -345,7 +352,7 @@ function BufferController(config) {
     }
 
     function onQualityChanged(e) {
-        if (e.streamInfo.id !== streamInfo.id || e.mediaType !== type || requiredQuality === e.newQuality) return;
+        if (requiredQuality === e.newQuality) return;
 
         updateBufferTimestampOffset(this.getRepresentationInfo(e.newQuality));
         requiredQuality = e.newQuality;
@@ -736,11 +743,7 @@ function BufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type) return;
-        if (e.error) return;
-        if (isBufferingCompleted) {
-            return;
-        }
+        if (e.error || isBufferingCompleted) return;
         updateBufferTimestampOffset(e.currentRepresentation);
     }
 
@@ -776,10 +779,6 @@ function BufferController(config) {
 
     function onPlaybackRateChanged() {
         checkIfSufficientBuffer();
-    }
-
-    function getType() {
-        return type;
     }
 
     function getBuffer() {
@@ -842,10 +841,7 @@ function BufferController(config) {
 
     function triggerEvent(eventType, data) {
         let payload = data || {};
-        payload.sender = instance;
-        payload.mediaType = type;
-        payload.streamId = streamInfo.id;
-        eventBus.trigger(eventType, payload);
+        eventBus.trigger(eventType, payload, streamInfo.id, type);
     }
 
     function resetInitialSettings(errored, keepBuffers) {
@@ -896,12 +892,13 @@ function BufferController(config) {
     }
 
     instance = {
+        initialize,
+        getStreamId,
+        getType,
         getBufferControllerType,
         getRepresentationInfo,
-        initialize,
         createBuffer,
         dischargePreBuffer,
-        getType,
         getBuffer,
         setBuffer,
         getBufferLevel,

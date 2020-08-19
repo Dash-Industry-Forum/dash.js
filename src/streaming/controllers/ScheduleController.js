@@ -50,7 +50,7 @@ function ScheduleController(config) {
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const textController = config.textController;
-    const streamId = config.streamId;
+    const streamInfo = config.streamInfo;
     const type = config.type;
     const mimeType = config.mimeType;
     const mediaController = config.mediaController;
@@ -108,6 +108,14 @@ function ScheduleController(config) {
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
+    }
+
+    function getType() {
+        return type;
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     function setCurrentRepresentation(representationInfo) {
@@ -168,7 +176,7 @@ function ScheduleController(config) {
 
         const isReplacement = replaceRequestArray.length > 0;
         if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
-            hasTopQualityChanged(type, streamId) ||
+            hasTopQualityChanged(type, streamInfo.id) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
@@ -183,11 +191,8 @@ function ScheduleController(config) {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     }
                     eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-                        sender: instance,
-                        streamId: streamId,
-                        mediaType: type,
                         representationId: currentRepresentationInfo.id
-                    });
+                    }, streamInfo.id, type);
                     lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
                 } else {
@@ -196,20 +201,14 @@ function ScheduleController(config) {
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
                         eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-                            sender: instance,
-                            streamId: streamId,
-                            mediaType: type,
                             representationId: replacement.representationId
-                        });
+                        }, streamInfo.id, type);
                         checkPlaybackQuality = false;
                     } else {
                         eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {
-                            sender: instance,
-                            streamId: streamId,
-                            mediaType: type,
                             seekTarget: seekTarget,
                             replacement: replacement
-                        });
+                        }, streamInfo.id, type);
                         checkPlaybackQuality = true;
                     }
                 }
@@ -339,7 +338,7 @@ function ScheduleController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
+        if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
 
         stop();
         setFragmentProcessState(false);
@@ -347,7 +346,7 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
+        if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
 
         logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
 
@@ -371,8 +370,6 @@ function ScheduleController(config) {
     }
 
     function onBytesAppended(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) return;
-
         if (replacingBuffer && !isNaN(e.startTime)) {
             replacingBuffer = false;
             fragmentModel.addExecutedRequest(mediaRequest);
@@ -398,8 +395,6 @@ function ScheduleController(config) {
     }
 
     function onFragmentLoadingAbandoned(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) return;
-
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
         if (!playbackController.isSeeking() && !switchTrack) {
             logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process or switch track call');
@@ -409,28 +404,22 @@ function ScheduleController(config) {
         startScheduleTimer(0);
     }
 
-    function onDataUpdateStarted(e) {
-        if (e.sender.getType() !== type || e.sender.getStreamId() !== streamId) return;
+    function onDataUpdateStarted(/*e*/) {
         // stop();
     }
 
-    function onBufferingCompleted(e) {
-        if (type !== e.mediaType || streamId !== e.streamId) return;
+    function onBufferingCompleted(/*e*/) {
         stop();
     }
 
     function onBufferCleared(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) return;
-
         // (Re)start schedule once buffer has been pruned after a QuotaExceededError
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             start();
         }
     }
 
-    function onQuotaExceeded(e) {
-        if (e.streamId !== streamId || e.mediaType !== type) return;
-
+    function onQuotaExceeded(/*e*/) {
         // Stop scheduler (will be restarted once buffer is pruned)
         stop();
         setFragmentProcessState(false);
@@ -487,14 +476,6 @@ function ScheduleController(config) {
 
     function getBufferTarget() {
         return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo);
-    }
-
-    function getType() {
-        return type;
-    }
-
-    function getStreamId() {
-        return streamId;
     }
 
     function resetInitialSettings() {

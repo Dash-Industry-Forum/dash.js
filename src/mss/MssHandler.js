@@ -157,7 +157,7 @@ function MssHandler(config) {
             // Notify init segment has been loaded
             eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
                 chunk: chunk
-            });
+            }, mediaInfo.streamInfo.id, representation.adaptation.type);
         } catch (e) {
             config.errHandler.error(new DashJSError(e.code, e.message, e.data));
         }

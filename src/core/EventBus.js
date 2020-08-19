@@ -56,6 +56,13 @@ function EventBus() {
             priority: priority
         };
 
+        if (scope && scope.getStreamId) {
+            handler.streamId = scope.getStreamId();
+        }
+        if (scope && scope.getType) {
+            handler.mediaType = scope.getType();
+        }
+
         const inserted = handlers[type].some((item , idx) => {
             if (item && priority > item.priority ) {
                 handlers[type].splice(idx, 0, handler);
@@ -75,7 +82,7 @@ function EventBus() {
         handlers[type][idx] = null;
     }
 
-    function trigger(type, payload) {
+    function trigger(type, payload = {}, streamId = undefined, mediaType = undefined) {
         if (!type || !handlers[type]) return;
 
         payload = payload || {};
@@ -83,9 +90,25 @@ function EventBus() {
         if (payload.hasOwnProperty('type')) throw new Error('\'type\' is a reserved word for event dispatching');
 
         payload.type = type;
+        if (streamId) {
+            payload.streamId = streamId;
+        }
+        if (mediaType) {
+            payload.mediaType = mediaType;
+        }
 
         handlers[type] = handlers[type].filter((item) => item);
-        handlers[type].forEach( handler => handler && handler.callback.call(handler.scope, payload) );
+        const eventHandlers = handlers[type].filter(item => {
+            if (streamId && item.streamId && item.streamId !== streamId) {
+                return false;
+            }
+            if (mediaType && item.mediaType && item.mediaType !== mediaType) {
+                return false;
+            }
+            return true;
+        });
+
+        eventHandlers.forEach(handler => handler && handler.callback.call(handler.scope, payload));
     }
 
     function getHandlerIdx(type, listener, scope) {

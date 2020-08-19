@@ -137,33 +137,33 @@ function StreamController() {
     }
 
     function registerEvents() {
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.on(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, this);
-        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
-        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
-        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, instance);
+        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
+        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance);
+        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
+        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
     }
 
     function unRegisterEvents() {
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, this);
-        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, instance);
+        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
+        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
+        eventBus.off(Events.PLAYBACK_ENDED, onEnded, instance);
+        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
+        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
     }
 
     /*
@@ -644,11 +644,13 @@ function StreamController() {
                         eventController: eventController,
                         mediaController: mediaController,
                         textController: textController,
+                        protectionController: protectionController,
                         videoModel: videoModel,
+                        streamInfo: streamInfo,
                         settings: settings
                     });
                     streams.push(stream);
-                    stream.initialize(streamInfo, protectionController);
+                    stream.initialize();
                 } else {
                     stream.updateData(streamInfo);
                 }

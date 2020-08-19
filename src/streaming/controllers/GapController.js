@@ -93,13 +93,13 @@ function GapController() {
     }
 
     function registerEvents() {
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
     }
 
     function unregisterEvents() {
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
     }
 
     function onBytesAppended() {

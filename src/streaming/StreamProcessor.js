@@ -136,7 +136,7 @@ function StreamProcessor(config) {
         abrController.registerStreamType(type, instance);
 
         representationController = RepresentationController(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             type: type,
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -154,7 +154,7 @@ function StreamProcessor(config) {
         }
 
         scheduleController = ScheduleController(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             type: type,
             mimeType: mimeType,
             adapter: adapter,
@@ -173,6 +173,14 @@ function StreamProcessor(config) {
 
         bufferingTime = 0;
         bufferPruned = false;
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
     }
 
     function resetInitialSettings() {
@@ -231,8 +239,6 @@ function StreamProcessor(config) {
 
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id) return;
-
         if (!e.error) {
             // Update representation if no error
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
@@ -244,7 +250,6 @@ function StreamProcessor(config) {
     }
 
     function onQualityChanged(e) {
-        if (type !== e.mediaType || streamInfo.id !== e.streamInfo.id) return;
         let representationInfo = getRepresentationInfo(e.newQuality);
         scheduleController.setCurrentRepresentation(representationInfo);
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
@@ -252,18 +257,13 @@ function StreamProcessor(config) {
     }
 
     function onBufferLevelUpdated(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
-
         dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
-
         if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated) {
             addDVRMetric();
         }
     }
 
     function onBufferLevelStateChanged(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
-
         dashMetrics.addBufferState(type, e.state, scheduleController.getBufferTarget());
         if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
             // logger.info('Buffer is empty! Stalling!');
@@ -272,8 +272,6 @@ function StreamProcessor(config) {
     }
 
     function onBufferCleared(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
-
         // Remove executed requests not buffered anymore
         fragmentModel.syncExecutedRequestsWithBufferedRange(
             bufferController.getBuffer().getAllBufferRanges(),
@@ -291,10 +289,6 @@ function StreamProcessor(config) {
         const isDynamic = manifestInfo.isDynamic;
         const range = timelineConverter.calcSegmentAvailabilityRange(representationController.getCurrentRepresentation(), isDynamic);
         dashMetrics.addDVRInfo(getType(), playbackController.getTime(), manifestInfo, range);
-    }
-
-    function getType() {
-        return type;
     }
 
     function getRepresentationController() {
@@ -425,8 +419,6 @@ function StreamProcessor(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) return;
-
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
@@ -439,11 +431,7 @@ function StreamProcessor(config) {
     }
 
     function onMediaFragmentNeeded(e) {
-        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) {
-            return;
-        }
         let request;
-
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
@@ -536,7 +524,7 @@ function StreamProcessor(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.INBAND_EVENTS, {sender: instance, events: events});
+            eventBus.trigger(Events.INBAND_EVENTS, {events: events}, streamInfo.id);
         }
     }
 
@@ -683,8 +671,6 @@ function StreamProcessor(config) {
     }
 
     function onSeekTarget(e) {
-        if (e.mediaType !== type || e.streamId !== streamInfo.id) return;
-
         bufferingTime = e.time;
         scheduleController.setSeekTarget(e.time);
     }
@@ -729,8 +715,9 @@ function StreamProcessor(config) {
 
     instance = {
         initialize: initialize,
-        isUpdating: isUpdating,
+        getStreamId: getStreamId,
         getType: getType,
+        isUpdating: isUpdating,
         getBufferController: getBufferController,
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,

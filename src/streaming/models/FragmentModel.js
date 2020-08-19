@@ -45,7 +45,8 @@ function FragmentModel(config) {
     const dashMetrics = config.dashMetrics;
     const fragmentLoader = config.fragmentLoader;
     const debug = config.debug;
-    const streamId = config.streamId;
+    const streamInfo = config.streamInfo;
+    const type = config.type;
 
     let instance,
         logger,
@@ -58,6 +59,14 @@ function FragmentModel(config) {
         eventBus.on(events.LOADING_COMPLETED, onLoadingCompleted, instance);
         eventBus.on(events.LOADING_DATA_PROGRESS, onLoadingInProgress, instance);
         eventBus.on(events.LOADING_ABANDONED, onLoadingAborted, instance);
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
     }
 
     function isFragmentLoaded(request) {
@@ -211,10 +220,7 @@ function FragmentModel(config) {
     }
 
     function loadCurrentFragment(request) {
-        eventBus.trigger(events.FRAGMENT_LOADING_STARTED, {
-            streamId: streamId,
-            request: request
-        });
+        eventBus.trigger(events.FRAGMENT_LOADING_STARTED, { request: request }, streamInfo.id, type);
         fragmentLoader.load(request);
     }
 
@@ -285,7 +291,7 @@ function FragmentModel(config) {
             response: e.response,
             error: e.error,
             sender: this
-        });
+        }, streamInfo.id, type);
     }
 
     function onLoadingInProgress(e) {
@@ -296,13 +302,13 @@ function FragmentModel(config) {
             response: e.response,
             error: e.error,
             sender: this
-        });
+        }, streamInfo.id, type);
     }
 
     function onLoadingAborted(e) {
         if (e.sender !== fragmentLoader) return;
 
-        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { streamId: streamId, request: e.request, mediaType: e.mediaType });
+        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { request: e.request }, streamInfo.id, type);
     }
 
     function resetInitialSettings() {
@@ -326,6 +332,8 @@ function FragmentModel(config) {
     }
 
     instance = {
+        getStreamId: getStreamId,
+        getType: getType,
         getRequests: getRequests,
         isFragmentLoaded: isFragmentLoaded,
         isFragmentLoadedOrPending: isFragmentLoadedOrPending,

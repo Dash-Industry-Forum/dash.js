@@ -145,8 +145,6 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type || e.error) return;
-
         if (initCache.extract(streamInfo.id, e.currentRepresentation.id) !== null) {
             return;
         }
@@ -156,11 +154,8 @@ function NotFragmentedTextBufferController(config) {
 
         // // Text data file is contained in initialization segment
         eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-            sender: instance,
-            streamId: streamInfo.id,
-            mediaType: type,
             representationId: e.currentRepresentation.id
-        });
+        }, streamInfo.id, type);
     }
 
     function appendInitSegment(representationId) {
@@ -169,7 +164,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamInfo.id || e.chunk.mediaInfo.type !== type || (!e.chunk.bytes)) return;
+        if (!e.chunk.bytes) return;
 
         initCache.save(e.chunk);
         buffer.append(e.chunk);
