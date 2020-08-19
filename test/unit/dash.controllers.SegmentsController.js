@@ -29,6 +29,7 @@ describe('SegmentsController', function () {
     const eventBus = EventBus(context).getInstance();
 
     const segmentsController = SegmentsController(context).create({
+        streamInfo: {streamId: 'streamId'},
         dashMetrics: dashMetricsMock,
         mediaPlayerModel: mediaPlayerModel,
         errHandler: errHandler,

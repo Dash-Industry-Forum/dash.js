@@ -35,7 +35,7 @@ describe('StreamProcessor', function () {
         let streamProcessor = null;
 
         beforeEach(function () {
-            streamProcessor = StreamProcessor(context).create({});
+            streamProcessor = StreamProcessor(context).create({streamInfo: streamInfo});
         });
 
         afterEach(function () {
