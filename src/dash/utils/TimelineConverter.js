@@ -186,7 +186,7 @@ function TimelineConverter() {
             i,
             len;
 
-        range.start = calcPresentationTimeFromMediaTime(segments[0].t, voRepresentation) / timescale;
+        range.start = calcPresentationTimeFromMediaTime(segments[0].t / timescale, voRepresentation);
 
         for (i = 0, len = segments.length; i < len; i++) {
             segment = segments[i];
