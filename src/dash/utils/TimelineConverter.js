@@ -176,8 +176,6 @@ function TimelineConverter() {
     function calcSegmentAvailabilityRangeFromTimeline(voRepresentation) {
         const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
         const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
-        const voPeriod = voRepresentation.adaptation.period;
-
         const timeline = representation.SegmentTemplate.SegmentTimeline;
         const timescale = representation.SegmentTemplate.timescale;
         const segments = timeline.S_asArray;
@@ -188,7 +186,7 @@ function TimelineConverter() {
             i,
             len;
 
-        range.start = voPeriod.start + segments[0].t / timescale;
+        range.start = calcPresentationTimeFromMediaTime(segments[0].t, voRepresentation) / timescale;
 
         for (i = 0, len = segments.length; i < len; i++) {
             segment = segments[i];
