@@ -340,7 +340,7 @@ function StreamController() {
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
-                logger.info('[onStreamCanLoadNext] Preloading next stream');
+                logger.info(`[onStreamCanLoadNext] Preloading next stream with id ${nextStream.getId()}`);
                 isPeriodSwitchInProgress = true;
                 nextStream.preload(mediaSource, buffers);
                 preloadingStreams.push(nextStream);
