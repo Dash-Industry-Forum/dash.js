@@ -180,7 +180,8 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     }
 
     const startNumber = !isNaN(representation.startNumber) ? representation.startNumber : 1;
-    const startNumberOffset = startNumber > 0 ? (startNumber - 1) * duration : 0;
+    let startNumberOffset = startNumber > 0 ? (startNumber - 1) * duration : 0;
+    startNumberOffset -= representation.presentationTimeOffset;
     presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration) + (startNumberOffset)).toFixed(5));
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
