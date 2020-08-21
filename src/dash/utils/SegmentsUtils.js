@@ -47,7 +47,9 @@ export function unescapeDollarsInTemplate(url) {
 }
 
 export function replaceIDForTemplate(url, value) {
-    if (!value || !url || url.indexOf('$RepresentationID$') === -1) { return url; }
+    if (!value || !url || url.indexOf('$RepresentationID$') === -1) {
+        return url;
+    }
     let v = value.toString();
     return url.split('$RepresentationID$').join(v);
 }
@@ -127,7 +129,7 @@ export function replaceTokenForTemplate(url, token, value) {
 }
 
 function getSegment(representation, duration, presentationStartTime, mediaStartTime, availabilityStartTime,
-    timelineConverter, presentationEndTime, isDynamic, index) {
+                    timelineConverter, presentationEndTime, isDynamic, index) {
     let seg = new Segment();
 
     seg.representation = representation;
@@ -152,7 +154,7 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
         if (isDynamic) {
             // segment is not available in current period, but it may be segment available in another period that current one (in DVR window)
             // if not (time > segmentAvailabilityRange.end), then return false
-            if ( representation.segmentAvailabilityRange && segment.presentationStartTime >= representation.segmentAvailabilityRange.end) {
+            if (representation.segmentAvailabilityRange && segment.presentationStartTime >= representation.segmentAvailabilityRange.end) {
                 return false;
             }
         } else {
@@ -180,15 +182,15 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     }
 
     const startNumber = !isNaN(representation.startNumber) ? representation.startNumber : 1;
-    let startNumberOffset = startNumber > 0 ? (startNumber - 1) * duration : 0;
+    let startNumberOffset = startNumber * duration;
     startNumberOffset -= representation.presentationTimeOffset;
     presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration) + (startNumberOffset)).toFixed(5));
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     const segment = getSegment(representation, duration, presentationStartTime,
-                      timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation),
-                      timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic),
-                      timelineConverter, presentationEndTime, isDynamic, index);
+        timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation),
+        timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic),
+        timelineConverter, presentationEndTime, isDynamic, index);
 
     if (!isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
         return null;
@@ -209,9 +211,9 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
     presentationEndTime = presentationStartTime + scaledDuration;
 
     seg = getSegment(representation, scaledDuration, presentationStartTime,
-                     scaledTime,
-                     representation.adaptation.period.mpd.manifest.loadedTime,
-                     timelineConverter, presentationEndTime, isDynamic, index);
+        scaledTime,
+        representation.adaptation.period.mpd.manifest.loadedTime,
+        timelineConverter, presentationEndTime, isDynamic, index);
 
     if (!isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
         return null;
