@@ -143,7 +143,7 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
