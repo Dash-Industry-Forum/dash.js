@@ -30,7 +30,6 @@
  */
 
 import Segment from './../vo/Segment';
-import DashConstants from '../constants/DashConstants';
 
 function zeroPadToLength(numStr, minStrLength) {
     while (numStr.length < minStrLength) {
@@ -182,14 +181,7 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
         duration = representation.adaptation.period.duration;
     }
 
-    // For SegmentTemplate manifests the index should be relative to Period@start. For SegmentList some of the entries might have been removed over time. We need to consider the startNumber in this case and add it as an offset.
-    let startNumberOffset = 0;
-    if (representation.segmentInfoType === DashConstants.SEGMENT_LIST) {
-        const startNumber = !isNaN(representation.startNumber) ? representation.startNumber : 1;
-        startNumberOffset = (startNumber - 1) * duration;
-    }
-
-    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration) + (startNumberOffset)).toFixed(5));
+    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     const segment = getSegment(representation, duration, presentationStartTime,

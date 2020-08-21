@@ -316,16 +316,6 @@ function DashHandler(config) {
 
         let indexToRequest = segmentIndex + 1;
 
-        // For dynamic manifests new segments might have been added while old segments have been removed. We need to adjust the index to request depending on the last requested segment
-        if (isDynamicManifest && representation.segmentInfoType === dashConstants.SEGMENT_LIST) {
-            const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
-            const lastSegmentReplacementNumber = lastSegment && lastSegment.replacementNumber ? lastSegment.replacementNumber : NaN;
-
-            if (!isNaN(startNumber) && !isNaN(lastSegmentReplacementNumber)) {
-                indexToRequest = Math.max((lastSegmentReplacementNumber - startNumber) + 1, 0);
-            }
-        }
-
         logger.debug('Getting the next request at index: ' + indexToRequest);
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);

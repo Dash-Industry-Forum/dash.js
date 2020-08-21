@@ -57,10 +57,13 @@ function ListSegmentsGetter(config, isDynamic) {
         const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         const len = list.SegmentURL_asArray.length;
 
+        const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
+        const offsetToSubtract = Math.max(startNumber - 1, 0);
+
         const start = representation.startNumber;
         let segment = null;
-        if (index < len) {
-            const s = list.SegmentURL_asArray[index];
+        if ((index - offsetToSubtract) < len) {
+            const s = list.SegmentURL_asArray[index - offsetToSubtract];
 
             segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
             if (segment) {
@@ -90,10 +93,9 @@ function ListSegmentsGetter(config, isDynamic) {
             return null;
         }
 
+
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
-        const offsetToSubtract = Math.max(startNumber - 1, 0);
-        const index = Math.max(Math.floor(periodTime / duration) - offsetToSubtract, 0);
+        const index = Math.floor(periodTime / duration);
 
         return getSegmentByIndex(representation, index);
     }
