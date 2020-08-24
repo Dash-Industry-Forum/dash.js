@@ -401,7 +401,7 @@ function PlaybackController() {
             return NaN;
         }
 
-        if (Math.abs(DVRWindow.end - DVRWindow.start) < 4) {
+        if (Math.abs(DVRWindow.end - DVRWindow.start) < 6) {
             return currentTime;
         }
         if (currentTime > DVRWindow.end) {
