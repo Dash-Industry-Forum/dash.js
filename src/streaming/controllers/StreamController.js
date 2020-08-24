@@ -239,8 +239,10 @@ function StreamController() {
     }
 
     function stopPlaybackEndedTimerInterval() {
-        clearInterval(playbackEndedTimerInterval);
-        playbackEndedTimerInterval = null;
+        if (playbackEndedTimerInterval) {
+            clearInterval(playbackEndedTimerInterval);
+            playbackEndedTimerInterval = null;
+        }
     }
 
     function startCheckIfPrebufferingCanStartInterval() {
@@ -418,7 +420,7 @@ function StreamController() {
         return activeStream ? activeStream.getProcessors() : [];
     }
 
-    function onEnded() {
+    function onEnded(e) {
         if (!activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
@@ -430,6 +432,9 @@ function StreamController() {
             }
             flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
             isPeriodSwitchInProgress = false;
+        }
+        if (e && e.isLast) {
+            stopPlaybackEndedTimerInterval();
         }
     }
 
