@@ -436,7 +436,7 @@ function PlaybackController() {
     }
 
     function updateCurrentTime() {
-        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || !videoModel.isStalled()) return;
+        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
