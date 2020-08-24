@@ -198,6 +198,7 @@ function GapController() {
             }
         }
 
+        // Playback has stalled before pperiod end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
         if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit)) {
             seekToPosition = parseFloat((currentTime + timeToStreamEnd).toFixed(5));

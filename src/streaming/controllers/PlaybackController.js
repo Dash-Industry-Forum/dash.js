@@ -401,9 +401,6 @@ function PlaybackController() {
             return NaN;
         }
 
-        if (Math.abs(DVRWindow.end - DVRWindow.start) < 4) {
-            return currentTime;
-        }
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
