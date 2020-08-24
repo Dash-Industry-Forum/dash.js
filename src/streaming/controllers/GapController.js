@@ -50,6 +50,8 @@ function GapController() {
         playbackController,
         streamController,
         videoModel,
+        timelineConverter,
+        adapter,
         logger;
 
     function initialize() {
@@ -89,6 +91,12 @@ function GapController() {
         }
         if (config.videoModel) {
             videoModel = config.videoModel;
+        }
+        if (config.timelineConverter) {
+            timelineConverter = config.timelineConverter;
+        }
+        if (config.adapter) {
+            adapter = config.adapter;
         }
     }
 
@@ -198,11 +206,28 @@ function GapController() {
             }
         }
 
-        // Playback has stalled before pperiod end. We seek to the end of the period
+        // Playback has stalled before period end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
         if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit)) {
             seekToPosition = parseFloat((currentTime + timeToStreamEnd).toFixed(5));
             jumpToStreamEnd = true;
+        }
+
+        // Playback has stalled probably because user has paused and pressed play again and in the meantime the active period has transitioned out of the MPD. Hence playbackController.updateCurrentTime is not triggered
+        else if (!isNaN(seekToPosition) && playbackStalled) {
+            const activeStreamInfo = streamController.getActiveStreamInfo();
+            const isActiveStreamStillInMpd = streamController.getStreams().filter((stream) => {
+                return stream.getId() === activeStreamInfo.id;
+            }).length > 0;
+
+            if (!isActiveStreamStillInMpd) {
+                const liveEdge = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
+                const targetDelay = playbackController.getLiveDelay();
+                const targetTime = liveEdge - targetDelay;
+
+                logger.warn(`Active Stream is not included in the MPD anymore. Seeking to ${targetTime}`);
+                playbackController.seek(targetTime);
+            }
         }
 
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition) {

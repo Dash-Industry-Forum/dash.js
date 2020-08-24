@@ -627,6 +627,21 @@ function StreamController() {
                 clientTimeOffset: timelineConverter.getClientTimeOffset()
             });
 
+            // Filter streams that are outdated and not included in the MPD anymore
+            if (streams.length > 0) {
+                streams = streams.filter((stream) => {
+
+                    const isStillValid = streamsInfo.filter((sInfo) => {
+                        return sInfo.id === stream.getId();
+                    }).length > 0;
+
+                    if(!isStillValid) {
+                        console.log(`Removed stream ${stream.getId()}`);
+                    }
+                    return isStillValid;
+                });
+            }
+
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
                 // If the Stream object does not exist we probably loaded the manifest the first time or it was
                 // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
