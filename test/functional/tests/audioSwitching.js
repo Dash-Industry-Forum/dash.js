@@ -59,9 +59,7 @@ define([
                 utils.log(NAME, 'SwitchAudio');
         
                 return command.execute(player.getTracksFor,[mediaType])
-                .then(function(mediaInf) {
-                    //return command.execute(player.setCurrentTrack, [mediaInf[1]])
-                    for(let i = 0; i < mediaInf.length; i++){
+                .then(function(mediaInf) {      
                         
                         return command.sleep(2*1000).execute(player.setCurrentTrack, [mediaInf[0]])
                         .then(function(){
@@ -76,13 +74,10 @@ define([
                         .then(function(){
                             return command.sleep(2*1000).execute(player.setCurrentTrack, [mediaInf[2]]);
                         });
-                    }
-                });
-                
+                    });
             }
-        })
+        });
     };
-
     var play = function(stream) {
         registerSuite({
             name: utils.testName(NAME, stream),
