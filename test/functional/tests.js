@@ -19,7 +19,7 @@ define([
             audioSwitching) {
 
     var registerSuites = function (stream) {
-        var suites = intern.config.testSuites || [/*'play' /*'playFromTime', 'pause', /*'seek',*/ /*'ended'*/ 'audioSwitching'];
+        var suites = intern.config.testSuites || [/*'play'/*'playFromTime', 'pause', /*'seek',*/ /*'ended'*/ 'audioSwitching'];
 
         setup.register(stream);
 

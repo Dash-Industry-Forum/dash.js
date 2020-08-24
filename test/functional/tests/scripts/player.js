@@ -126,6 +126,14 @@ define([], function () {
 
             _timeout = setTimeout(_onTimeout, timeout * 1000);
             player.on(event, _onEvent);
+        },
+
+        getTracksFor: function(mediaType){
+            return player.getTracksFor(mediaType);
+        },
+
+        setCurrentTrack: function(track){
+            player.setCurrentTrack(track);
         }
     };
 });
