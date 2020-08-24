@@ -198,10 +198,24 @@ function GapController() {
             }
         }
 
+        // Playback has stalled before pperiod end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
         if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit)) {
             seekToPosition = parseFloat((currentTime + timeToStreamEnd).toFixed(5));
             jumpToStreamEnd = true;
+        }
+
+        // Playback has stalled because the current period has transitioned out of the MPD. We need to seek otherwise we are stuck in a loop trying to find a non existent index for the current period
+        else if (isNaN(seekToPosition) && playbackStalled) {
+            const currentStream = streamController.getActiveStreamInfo();
+            const streams = streamController.getStreams();
+            const isStreamStillInMpd = streams.filter((stream) => {
+                return stream.getId() === currentStream.id;
+            }).length;
+
+            if (!isStreamStillInMpd) {
+                playbackController.seekToLive();
+            }
         }
 
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition) {
