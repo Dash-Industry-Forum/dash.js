@@ -401,9 +401,6 @@ function PlaybackController() {
             return NaN;
         }
 
-        if (Math.abs(DVRWindow.end - DVRWindow.start) < 6) {
-            return currentTime;
-        }
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
@@ -439,7 +436,7 @@ function PlaybackController() {
     }
 
     function updateCurrentTime() {
-        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
+        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || !videoModel.isStalled()) return;
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);

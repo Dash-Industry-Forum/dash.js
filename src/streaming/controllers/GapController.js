@@ -205,19 +205,6 @@ function GapController() {
             jumpToStreamEnd = true;
         }
 
-        // Playback has stalled because the current period has transitioned out of the MPD. We need to seek otherwise we are stuck in a loop trying to find a non existent index for the current period
-        else if (isNaN(seekToPosition) && playbackStalled) {
-            const currentStream = streamController.getActiveStreamInfo();
-            const streams = streamController.getStreams();
-            const isStreamStillInMpd = streams.filter((stream) => {
-                return stream.getId() === currentStream.id;
-            }).length;
-
-            if (!isStreamStillInMpd) {
-                playbackController.seekToLive();
-            }
-        }
-
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition) {
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
