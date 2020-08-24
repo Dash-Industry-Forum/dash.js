@@ -479,7 +479,7 @@ function StreamController() {
         if (previousStream) {
             seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream) &&
                 (supportsChangeType || activeStream.isMediaCodecCompatible(stream))) &&
-                !seekTime || stream.getPreloaded();
+                !seekTime && stream.getPreloaded();
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
