@@ -158,6 +158,11 @@ function Stream(config) {
         }
         protectionController = prtctnController;
         registerProtectionEvents();
+
+        eventBus.trigger(Events.STREAM_UPDATED, {
+            streamInfo: streamInfo
+        });
+
     }
 
     /**
@@ -760,6 +765,10 @@ function Stream(config) {
         isStreamActivated = false;
         isUpdating = true;
         streamInfo = updatedStreamInfo;
+
+        eventBus.trigger(Events.STREAM_UPDATED, {
+            streamInfo: streamInfo
+        });
 
         if (eventController) {
             addInlineEvents();

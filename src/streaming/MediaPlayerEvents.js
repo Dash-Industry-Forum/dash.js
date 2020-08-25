@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventsBase from '../core/events/EventsBase';
+
 /**
  * @class
  * @implements EventsBase
@@ -177,6 +178,12 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when a stream (period) is loaded
+         * @event MediaPlayerEvents#STREAM_UPDATED
+         */
+        this.STREAM_UPDATED = 'streamUpdated';
+
+        /**
+         * Triggered when a stream (period) is updated
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
