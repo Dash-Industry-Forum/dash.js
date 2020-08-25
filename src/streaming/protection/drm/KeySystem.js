@@ -78,6 +78,8 @@
  * @param {Object} contentProtection the json-style contentProtection
  * object representing the ContentProtection element parsed from the
  * MPD XML document.
+ * @param {Object} cencContentProtection the Common Encryption content protection element or
+ * null if not specified.
  * @returns {ArrayBuffer} EME initialization data
  */
 
@@ -117,7 +119,7 @@
  * @returns {?string} The license server URL or null if URL is not available in initData
  */
 
- /**
+/**
  * Returns specific CDM (custom) data.
  *
  * @function
@@ -125,7 +127,7 @@
  * @returns {ArrayBuffer} the CDM (custom) data
  */
 
- /**
+/**
  * Returns MediaKeySession session ID.
  *
  * @function
