@@ -111,7 +111,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 buffer.removeEventListener('abort', errHandler, false);
             }
             clearInterval(intervalId);
-            console.log(`Callback length before reset ` + callbacks.length);
             callbacks = [];
             try {
                 buffer.appendWindowEnd = Infinity;
