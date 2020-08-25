@@ -75,20 +75,20 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({ BASE64: BASE64 });
+        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance({ BASE64: BASE64 });
+        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance({ BASE64: BASE64 });
+        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, debug: debug });
+        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, debug: debug});
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -202,13 +202,14 @@ function ProtectionKeyController() {
         let supportedKS = [];
 
         if (cps) {
+            const cencContentProtection = CommonEncryption.findCencContentProtection(cps);
             for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 ks = keySystems[ksIdx];
                 for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
                         // Look for DRM-specific ContentProtection
-                        let initData = ks.getInitData(cp);
+                        let initData = ks.getInitData(cp, cencContentProtection);
 
                         supportedKS.push({
                             ks: keySystems[ksIdx],
@@ -231,7 +232,7 @@ function ProtectionKeyController() {
      *
      * @param {ArrayBuffer} initData Concatenated PSSH data for all DRMs
      * supported by the content
-     * @param {ProtectionDataSet} protDataSet user specified protection data - license server url etc
+     * @param {ProtectionData} protDataSet user specified protection data - license server url etc
      * supported by the content
      * @returns {Array.<Object>} array of objects indicating which supported key
      * systems were found.  Empty array is returned if no
@@ -266,7 +267,7 @@ function ProtectionKeyController() {
      *
      * @param {KeySystem} keySystem the key system
      * associated with this license request
-     * @param {ProtectionDataSet} protData protection data to use for the
+     * @param {ProtectionData} protData protection data to use for the
      * request
      * @param {string} [messageType="license-request"] the message type associated with this
      * request.  Supported message types can be found
@@ -288,7 +289,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance({ BASE64: BASE64 });
+            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {
@@ -304,7 +305,7 @@ function ProtectionKeyController() {
      * Allows application-specific retrieval of ClearKey keys.
      *
      * @param {KeySystem} clearkeyKeySystem They exact ClearKey System to be used
-     * @param {ProtectionDataSet} protData protection data to use for the
+     * @param {ProtectionData} protData protection data to use for the
      * request
      * @param {ArrayBuffer} message the key message from the CDM
      * @return {ClearKeyKeySet|null} the clear keys associated with

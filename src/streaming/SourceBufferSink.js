@@ -111,6 +111,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 buffer.removeEventListener('abort', errHandler, false);
             }
             clearInterval(intervalId);
+            callbacks = [];
             try {
                 buffer.appendWindowEnd = Infinity;
                 buffer.appendWindowStart = 0;
@@ -196,10 +197,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         waitForUpdateEnd(() => {
             let appendWindowEnd = mediaSource.duration;
             let appendWindowStart = 0;
-            if (sInfo.start && sInfo.duration && isFinite(sInfo.duration)) {
+            if (!isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
                 appendWindowEnd = sInfo.start + sInfo.duration;
             }
-            if (sInfo.start) {
+            if (!isNaN(sInfo.start)) {
                 appendWindowStart = sInfo.start;
             }
             buffer.appendWindowStart = 0;

@@ -239,8 +239,10 @@ function StreamController() {
     }
 
     function stopPlaybackEndedTimerInterval() {
-        clearInterval(playbackEndedTimerInterval);
-        playbackEndedTimerInterval = null;
+        if (playbackEndedTimerInterval) {
+            clearInterval(playbackEndedTimerInterval);
+            playbackEndedTimerInterval = null;
+        }
     }
 
     function startCheckIfPrebufferingCanStartInterval() {
@@ -340,7 +342,7 @@ function StreamController() {
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
-                logger.info('[onStreamCanLoadNext] Preloading next stream');
+                logger.info(`[onStreamCanLoadNext] Preloading next stream with id ${nextStream.getId()}`);
                 isPeriodSwitchInProgress = true;
                 nextStream.preload(mediaSource, buffers);
                 preloadingStreams.push(nextStream);
@@ -418,7 +420,7 @@ function StreamController() {
         return activeStream ? activeStream.getProcessors() : [];
     }
 
-    function onEnded() {
+    function onEnded(e) {
         if (!activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
@@ -430,6 +432,9 @@ function StreamController() {
             }
             flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
             isPeriodSwitchInProgress = false;
+        }
+        if (e && e.isLast) {
+            stopPlaybackEndedTimerInterval();
         }
     }
 
@@ -479,7 +484,7 @@ function StreamController() {
         if (previousStream) {
             seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream) &&
                 (supportsChangeType || activeStream.isMediaCodecCompatible(stream))) &&
-                !seekTime || stream.getPreloaded();
+                !seekTime && stream.getPreloaded();
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
