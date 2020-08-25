@@ -817,12 +817,19 @@ function Stream(config) {
             return !newAdaptation && !currentAdaptation;
         }
 
-        // If any of the periods requires EME, we can't do smooth transition
-        if (newAdaptation.ContentProtection || currentAdaptation.ContentProtection) {
+        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
+        return !(!isAdaptationDrmProtected(currentAdaptation) && isAdaptationDrmProtected(newAdaptation));
+    }
+
+    function isAdaptationDrmProtected(adaptation) {
+
+        if (!adaptation) {
+            // If there is no adaptation for neither the old or the new stream they're compatible
             return false;
         }
 
-        return true;
+        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
+        return !!(adaptation.ContentProtection || (adaptation.Representation && adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
     }
 
     function compareCodecs(newStream, type) {
