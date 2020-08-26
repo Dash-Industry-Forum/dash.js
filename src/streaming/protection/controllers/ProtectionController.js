@@ -442,6 +442,15 @@ function ProtectionController(config) {
                         } else {
                             logger.info('DRM: KeySystem Access Granted');
                             eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
+                            const protData = getProtData(keySystem);
+                            if (protectionKeyController.isClearKey(keySystem)) {
+                                // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                                // initData and overwrite possible initData indicated in encrypted event (EME)
+                                if (protData && protData.hasOwnProperty('clearkeys')) {
+                                    const initData = {kids: Object.keys(protData.clearkeys)};
+                                    supportedKS[ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
+                                }
+                            }
                             if (supportedKS[ksIdx].sessionId) {
                                 // Load MediaKeySession with sessionId
                                 loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
