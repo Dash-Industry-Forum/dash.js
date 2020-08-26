@@ -3,6 +3,7 @@ import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import EventBus from '../../src/core/EventBus';
 import Constants from '../../src/streaming/constants/Constants';
 import Events from '../../src/core/events/Events';
+import Settings from '../../src/core/Settings';
 
 import DomStorageMock from './mocks/DomStorageMock';
 
@@ -15,13 +16,15 @@ describe('MediaController', function () {
     let mediaController;
     let domStorageMock;
     const trackType = Constants.AUDIO;
+    const settings = Settings(context).getInstance();
 
     beforeEach(function () {
 
         domStorageMock = new DomStorageMock();
         mediaController = MediaController(context).getInstance();
         mediaController.setConfig({
-            domStorage: domStorageMock
+            domStorage: domStorageMock,
+            settings: settings
         });
 
     });
@@ -385,7 +388,7 @@ describe('MediaController', function () {
 
                 expect(objectUtils.areEqual(old, track1)).to.be.true; // jshint ignore:line
                 expect(objectUtils.areEqual(current, track2)).to.be.true; // jshint ignore:line
-                expect(switchMode).to.equal(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+                expect(switchMode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
                 eventBus.off(Events.CURRENT_TRACK_CHANGED, onTrackChanged);
                 done();

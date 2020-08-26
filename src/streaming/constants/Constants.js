@@ -165,11 +165,26 @@ class Constants {
         this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
 
         /**
-         *  @constant {string} MISSING_CONFIG_ERROR Missing ocnfiguration parameters type of error
+         *  @constant {string} MISSING_CONFIG_ERROR Missing configuration parameters type of error
          *  @memberof Constants#
          *  @static
          */
         this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+
+        /**
+         *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
+
+        /**
+         *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
+
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';

@@ -34,8 +34,6 @@ import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-const TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
-const TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
 const TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
 const TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
 const DEFAULT_INIT_TRACK_SELECTION_MODE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
@@ -48,14 +46,14 @@ function MediaController() {
     let instance,
         logger,
         tracks,
+        settings,
         initialSettings,
         selectionMode,
-        switchMode,
         domStorage;
 
     const validTrackSwitchModes = [
-        TRACK_SWITCH_MODE_ALWAYS_REPLACE,
-        TRACK_SWITCH_MODE_NEVER_REPLACE
+        Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+        Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
     ];
 
     const validTrackSelectionModes = [
@@ -195,7 +193,7 @@ function MediaController() {
         tracks[id][type].current = track;
 
         if (tracks[id][type].current && !(noSettingsSave && type === Constants.FRAGMENTED_TEXT)) {
-            eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
+            eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: getSwitchMode(type)});
         }
 
         if (!noSettingsSave) {
@@ -254,8 +252,10 @@ function MediaController() {
      * @param {string} type
      * @param {string} mode
      * @memberof MediaController#
+     * @deprecated Please use updateSettings({streaming: { trackSwitchMode: mode } }) instead
      */
     function setSwitchMode(type, mode) {
+        logger.warn('deprecated: Please use updateSettings({streaming: { trackSwitchMode: mode } }) instead');
         const isModeSupported = (validTrackSwitchModes.indexOf(mode) !== -1);
 
         if (!isModeSupported) {
@@ -263,7 +263,14 @@ function MediaController() {
             return;
         }
 
+        let switchMode = {};
         switchMode[type] = mode;
+
+        settings.update({
+            streaming: {
+                trackSwitchMode: switchMode
+            }
+        });
     }
 
     /**
@@ -272,7 +279,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getSwitchMode(type) {
-        return switchMode[type];
+        return settings.get().streaming.trackSwitchMode[type];
     }
 
     /**
@@ -338,6 +345,10 @@ function MediaController() {
         if (config.domStorage) {
             domStorage = config.domStorage;
         }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     /**
@@ -346,7 +357,6 @@ function MediaController() {
     function reset() {
         tracks = {};
         resetInitialSettings();
-        resetSwitchMode();
     }
 
     function extractSettings(mediaInfo) {
@@ -377,13 +387,6 @@ function MediaController() {
         })[0];
 
         return (matchLang && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
-    }
-
-    function resetSwitchMode() {
-        switchMode = {
-            audio: TRACK_SWITCH_MODE_ALWAYS_REPLACE,
-            video: TRACK_SWITCH_MODE_NEVER_REPLACE
-        };
     }
 
     function resetInitialSettings() {
@@ -518,8 +521,6 @@ function MediaController() {
 
 MediaController.__dashjs_factory_name = 'MediaController';
 const factory = FactoryMaker.getSingletonFactory(MediaController);
-factory.TRACK_SWITCH_MODE_NEVER_REPLACE = TRACK_SWITCH_MODE_NEVER_REPLACE;
-factory.TRACK_SWITCH_MODE_ALWAYS_REPLACE = TRACK_SWITCH_MODE_ALWAYS_REPLACE;
 factory.TRACK_SELECTION_MODE_HIGHEST_BITRATE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
 factory.TRACK_SELECTION_MODE_WIDEST_RANGE = TRACK_SELECTION_MODE_WIDEST_RANGE;
 factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;

@@ -417,6 +417,7 @@ function Settings() {
             lastBitrateCachingInfo: {enabled: true, ttl: 360000},
             lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
             cacheLoadThresholds: {video: 50, audio: 5},
+            trackSwitchMode: {audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE, video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE},
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
