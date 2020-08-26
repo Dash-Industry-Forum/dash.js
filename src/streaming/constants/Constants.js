@@ -185,6 +185,20 @@ class Constants {
          */
         this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
+
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE this mode makes the player select the track with a widest range of bitrates
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
+
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';

@@ -91,22 +91,22 @@ describe('MediaController', function () {
     describe('Selection Mode For Initial Track', function () {
         it('should not set selection mode if mode is not supported', function () {
             let mode = mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE);
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
 
             mediaController.setSelectionModeForInitialTrack('unsupported');
 
-            mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE);
+            mode = mediaController.getSelectionModeForInitialTrack();
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
         });
 
         it('should set and get selection mode', function () {
             let mode = mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE);
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
 
-            mediaController.setSelectionModeForInitialTrack(MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
+            mediaController.setSelectionModeForInitialTrack(Constants.TRACK_SELECTION_MODE_WIDEST_RANGE);
 
-            mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
+            mode = mediaController.getSelectionModeForInitialTrack();
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_WIDEST_RANGE);
         });
     });
 

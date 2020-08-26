@@ -34,10 +34,6 @@ import EventBus from '../../core/EventBus';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-const TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
-const TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
-const DEFAULT_INIT_TRACK_SELECTION_MODE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
-
 function MediaController() {
 
     const context = this.context;
@@ -48,7 +44,6 @@ function MediaController() {
         tracks,
         settings,
         initialSettings,
-        selectionMode,
         domStorage;
 
     const validTrackSwitchModes = [
@@ -57,8 +52,8 @@ function MediaController() {
     ];
 
     const validTrackSelectionModes = [
-        TRACK_SELECTION_MODE_HIGHEST_BITRATE,
-        TRACK_SELECTION_MODE_WIDEST_RANGE
+        Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+        Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
     ];
 
     function setup() {
@@ -285,15 +280,22 @@ function MediaController() {
     /**
      * @param {string} mode
      * @memberof MediaController#
+     * @deprecated Please use updateSettings({streaming: { selectionModeForInitialTrack: mode } }) instead
      */
     function setSelectionModeForInitialTrack(mode) {
+        logger.warn('deprecated: Please use updateSettings({streaming: { selectionModeForInitialTrack: mode } }) instead');
         const isModeSupported = (validTrackSelectionModes.indexOf(mode) !== -1);
 
         if (!isModeSupported) {
             logger.warn('Track selection mode is not supported: ' + mode);
             return;
         }
-        selectionMode = mode;
+
+        settings.update({
+            streaming: {
+                selectionModeForInitialTrack: mode
+            }
+        });
     }
 
     /**
@@ -301,7 +303,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function getSelectionModeForInitialTrack() {
-        return selectionMode || DEFAULT_INIT_TRACK_SELECTION_MODE;
+        return settings.get().streaming.selectionModeForInitialTrack;
     }
 
     /**
@@ -441,14 +443,14 @@ function MediaController() {
         };
 
         switch (mode) {
-            case TRACK_SELECTION_MODE_HIGHEST_BITRATE:
+            case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
                 tmpArr = getTracksWithHighestBitrate(tracks);
 
                 if (tmpArr.length > 1) {
                     tmpArr = getTracksWithWidestRange(tmpArr);
                 }
                 break;
-            case TRACK_SELECTION_MODE_WIDEST_RANGE:
+            case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
                 tmpArr = getTracksWithWidestRange(tracks);
 
                 if (tmpArr.length > 1) {
@@ -521,8 +523,5 @@ function MediaController() {
 
 MediaController.__dashjs_factory_name = 'MediaController';
 const factory = FactoryMaker.getSingletonFactory(MediaController);
-factory.TRACK_SELECTION_MODE_HIGHEST_BITRATE = TRACK_SELECTION_MODE_HIGHEST_BITRATE;
-factory.TRACK_SELECTION_MODE_WIDEST_RANGE = TRACK_SELECTION_MODE_WIDEST_RANGE;
-factory.DEFAULT_INIT_TRACK_SELECTION_MODE = DEFAULT_INIT_TRACK_SELECTION_MODE;
 FactoryMaker.updateSingletonFactory(MediaController.__dashjs_factory_name, factory);
 export default factory;
