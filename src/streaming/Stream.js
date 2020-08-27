@@ -654,7 +654,7 @@ function Stream(config) {
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
                 streamInfo: streamInfo,
-                liveStartTime: getLiveStartTime()
+                liveStartTime: !preloaded ? getLiveStartTime() : NaN
             });
         }
 
