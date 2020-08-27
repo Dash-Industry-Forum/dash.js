@@ -627,6 +627,21 @@ function StreamController() {
                 clientTimeOffset: timelineConverter.getClientTimeOffset()
             });
 
+            // Filter streams that are outdated and not included in the MPD anymore
+            if (streams.length > 0) {
+                streams = streams.filter((stream) => {
+
+                    const isStillValid = streamsInfo.filter((sInfo) => {
+                        return sInfo.id === stream.getId();
+                    }).length > 0;
+
+                    if (!isStillValid) {
+                        logger.debug(`Removed stream ${stream.getId()}`);
+                    }
+                    return isStillValid;
+                });
+            }
+
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
                 // If the Stream object does not exist we probably loaded the manifest the first time or it was
                 // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
@@ -786,24 +801,9 @@ function StreamController() {
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
             adapter.updatePeriods(manifest);
-            const streamInfo = adapter.getStreamsInfo(undefined, 1)[0];
-            const mediaInfo = (
-                adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) ||
-                adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
-            );
-
-            let useCalculatedLiveEdgeTime;
-            if (mediaInfo) {
-                useCalculatedLiveEdgeTime = adapter.getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo);
-                if (useCalculatedLiveEdgeTime) {
-                    logger.debug('SegmentTimeline detected using calculated Live Edge Time');
-                    const s = {streaming: {useManifestDateHeaderTimeSource: false}};
-                    settings.update(s);
-                }
-            }
 
             let manifestUTCTimingSources = adapter.getUTCTimingSources();
-            let allUTCTimingSources = (!adapter.getIsDynamic() || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.

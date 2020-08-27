@@ -76,6 +76,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 buffer.changeType(codec);
             }
 
+            updateAppendWindow();
+
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
             if (typeof buffer.addEventListener === 'function') {
@@ -112,12 +114,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             }
             clearInterval(intervalId);
             callbacks = [];
-            try {
-                buffer.appendWindowEnd = Infinity;
-                buffer.appendWindowStart = 0;
-            } catch (e) {
-                logger.error('Failed to reset append window');
-            }
             if (!keepBuffer) {
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
@@ -195,18 +191,22 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             return;
         }
         waitForUpdateEnd(() => {
-            let appendWindowEnd = mediaSource.duration;
-            let appendWindowStart = 0;
-            if (!isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
-                appendWindowEnd = sInfo.start + sInfo.duration;
+            try {
+                let appendWindowEnd = mediaSource.duration;
+                let appendWindowStart = 0;
+                if (sInfo && !isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
+                    appendWindowEnd = sInfo.start + sInfo.duration;
+                }
+                if (sInfo && !isNaN(sInfo.start)) {
+                    appendWindowStart = sInfo.start;
+                }
+                buffer.appendWindowStart = 0;
+                buffer.appendWindowEnd = appendWindowEnd;
+                buffer.appendWindowStart = appendWindowStart;
+                logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+            } catch (e) {
+                logger.warn(`Failed to set append window`);
             }
-            if (!isNaN(sInfo.start)) {
-                appendWindowStart = sInfo.start;
-            }
-            buffer.appendWindowStart = 0;
-            buffer.appendWindowEnd = appendWindowEnd;
-            buffer.appendWindowStart = appendWindowStart;
-            logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
         });
     }
 
