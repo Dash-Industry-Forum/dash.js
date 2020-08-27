@@ -205,14 +205,17 @@ function ProtectionModel_21Jan2015(config) {
 
         // Generate initial key request.
         // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
-        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && protData && protData.clearkeys ? 'keyids' : 'cenc';
+        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData ||  (protData && protData.clearkeys)) ? 'keyids' : 'cenc';
         session.generateRequest(dataType, initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
         }).catch(function (error) {
             // TODO: Better error string
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)
+            });
         });
     }
 
@@ -251,11 +254,17 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
             } else {
                 removeSession(sessionToken);
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')});
+                eventBus.trigger(events.KEY_SESSION_CREATED, {
+                    data: null,
+                    error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')
+                });
             }
         }).catch(function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)
+            });
         });
     }
 
@@ -266,7 +275,10 @@ function ProtectionModel_21Jan2015(config) {
             logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_REMOVED, {data: sessionToken.getSessionID()});
         }, function (error) {
-            eventBus.trigger(events.KEY_SESSION_REMOVED, {data: null, error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_REMOVED, {
+                data: null,
+                error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name
+            });
 
         });
     }
@@ -275,7 +287,10 @@ function ProtectionModel_21Jan2015(config) {
         // Send our request to the key session
         closeKeySessionInternal(sessionToken).catch(function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: null, error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {
+                data: null,
+                error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name
+            });
         });
     }
 
@@ -300,7 +315,7 @@ function ProtectionModel_21Jan2015(config) {
             navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                        mediaKeySystemAccess.getConfiguration() : null;
+                    mediaKeySystemAccess.getConfiguration() : null;
                 const keySystemAccess = new KeySystemAccess(keySystem, configuration);
                 keySystemAccess.mksa = mediaKeySystemAccess;
                 eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
@@ -348,7 +363,7 @@ function ProtectionModel_21Jan2015(config) {
         // Remove from our session list
         for (let i = 0; i < sessions.length; i++) {
             if (sessions[i] === token) {
-                sessions.splice(i,1);
+                sessions.splice(i, 1);
                 break;
             }
         }
@@ -428,7 +443,7 @@ function ProtectionModel_21Jan2015(config) {
             },
 
             getUsable: function () {
-                let usable  = false;
+                let usable = false;
                 session.keyStatuses.forEach(function () {
                     let keyStatus = parseKeyStatus(arguments);
                     if (keyStatus.status === 'usable') {

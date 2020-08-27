@@ -111,6 +111,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 buffer.removeEventListener('abort', errHandler, false);
             }
             clearInterval(intervalId);
+            callbacks = [];
             try {
                 buffer.appendWindowEnd = Infinity;
                 buffer.appendWindowStart = 0;

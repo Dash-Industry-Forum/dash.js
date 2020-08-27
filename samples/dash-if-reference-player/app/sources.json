@@ -10,16 +10,16 @@
             "name": "Unified Streaming",
             "url": "https://www.unified-streaming.com/"
         },
-        "bbc":{
+        "bbc": {
             "acronym": "BBC",
             "name": "British Broadcasting Corporation",
             "url": "https://www.bbc.com/"
         },
-        "envivio":{
+        "envivio": {
             "acronym": "Envivio",
             "name": "Envivio"
         },
-        "irt":{
+        "irt": {
             "acronym": "IRT",
             "name": "Institut fuer Rundfunktechnik",
             "url": "https://www.irt.de/de/home"
@@ -27,7 +27,7 @@
         "akamai": {
             "acronym": "Akamai",
             "name": "Akamai",
-            "url": "https://www.akamai.com/de/de/"   
+            "url": "https://www.akamai.com/de/de/"
         },
         "cta": {
             "acronym": "CTA",
@@ -42,7 +42,7 @@
         "microsoft": {
             "acronym": "Microsoft",
             "name": "Microsoft",
-            "url": "https://www.microsoft.com/de-de/"    
+            "url": "https://www.microsoft.com/de-de/"
         },
         "streamroot": {
             "acronym": "Streamroot",
@@ -839,6 +839,25 @@
                         }
                     },
                     "provider": "wowza"
+                },
+                {
+                    "name": "Live Multiperiod SegmentTimeline/$Number$, full manifest. 31s ad pod every 3 minutes, with PlayReady and Widevine DRM, single key",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/2fc23947945841b9b1be9768f9c13e75/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICIgYXdzLWVsZW1lbnRhbDo6c3Bla2UtdGVzdGluZyAiLAogICAgInNlc3Npb25JZCI6ICJkYXNoanN0ZXN0IiwKICAgICJtZXJjaGFudCI6ICJhd3MtZWxlbWVudGFsIgp9"
+                            },
+                            "com.microsoft.playready": {
+                                "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                                "httpRequestHeaders": {
+                                    "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICIgYXdzLWVsZW1lbnRhbDo6c3Bla2UtdGVzdGluZyAiLAogICAgInNlc3Npb25JZCI6ICJkYXNoanN0ZXN0IiwKICAgICJtZXJjaGFudCI6ICJhd3MtZWxlbWVudGFsIgp9"
+                                }
+                            }
+                        }
+                    },
+                    "provider": "aws"
                 }
             ]
         },
