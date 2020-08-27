@@ -488,8 +488,6 @@ function StreamController() {
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
-        console.log(`seamlessPeriodSwitch: ${seamlessPeriodSwitch}`);
-
         // Determine seek time when switching to new period
         // - seek at given seek time
         // - or seek at period start if seamless period switching
@@ -638,7 +636,7 @@ function StreamController() {
                     }).length > 0;
 
                     if (!isStillValid) {
-                        console.log(`Removed stream ${stream.getId()}`);
+                        logger.debug(`Removed stream ${stream.getId()}`);
                     }
                     return isStillValid;
                 });
