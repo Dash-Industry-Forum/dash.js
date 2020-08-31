@@ -342,7 +342,7 @@ function ScheduleController(config) {
 
         stop();
         setFragmentProcessState(false);
-        logger.info(`Stream ${streamId} is complete`);
+        logger.info(`Stream ${streamInfo.id} is complete`);
     }
 
     function onFragmentLoadingCompleted(e) {
