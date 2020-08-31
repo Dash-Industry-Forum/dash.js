@@ -50,14 +50,20 @@ define([
         })
     };
 
-    var recurse = function (mediaInf) {
+    var switchTrack = function (stream, mediaInf) {
          registerSuite({   
 
-            recurse: function(){
-                var curr = mediaInf.shift();
+            name: utils.testName(NAME, stream),
+
+            switchTrack: function(){
+                var curr = mediaInf.pop();
+
+                if(mediaInf.length != 0) switchTrack(stream, mediaInf);
+                else return command.sleep(5*1000);
+
                 return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
                 .then(function(){
-                    return command.sleep(2*1000).execute(player.setCurrentTrack, [curr])
+                    return command.sleep(5*1000).execute(player.setCurrentTrack, [curr])
                 })
                 .then(function(){
                     return command.execute(player.getCurrentTrackFor, [mediaType])
@@ -65,10 +71,6 @@ define([
                 .then(function(currTrack){
                     assert.equal(curr.lang, currTrack.lang)
                 })
-                .then(function () {
-                    if(mediaInf.length == 0) return;
-                    else return recurse(mediaInf);
-                });
             }
         })
     };
@@ -83,7 +85,7 @@ define([
         
                 return command.execute(player.getTracksFor,[mediaType])
                 .then(function(mediaInf) {      
-                    recurse(mediaInf);
+                    switchTrack(stream, mediaInf);
                 });
             }
         });
