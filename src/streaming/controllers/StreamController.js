@@ -631,14 +631,17 @@ function StreamController() {
             if (streams.length > 0) {
                 streams = streams.filter((stream) => {
 
-                    const isStillValid = streamsInfo.filter((sInfo) => {
+                    const isStillIncluded = streamsInfo.filter((sInfo) => {
                         return sInfo.id === stream.getId();
                     }).length > 0;
 
-                    if (!isStillValid) {
-                        logger.debug(`Removed stream ${stream.getId()}`);
+                    const shouldKeepStream = isStillIncluded || stream.getId() === activeStream.getId();
+
+                    if (!shouldKeepStream) {
+                        logger.debug(`Removing stream ${stream.getId()}`);
                     }
-                    return isStillValid;
+
+                    return shouldKeepStream;
                 });
             }
 
