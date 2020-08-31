@@ -13,12 +13,12 @@
         function init() {
             var video,
                 player,
-                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            // Can be LOG_LEVEL_NONE, LOG_LEVEL_FATAL, LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO or LOG_LEVEL_DEBUG
+            /* Can be LOG_LEVEL_NONE, LOG_LEVEL_FATAL, LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO or LOG_LEVEL_DEBUG */
             player.updateSettings({
                 'debug': {
                     'logLevel': dashjs.Debug.LOG_LEVEL_INFO

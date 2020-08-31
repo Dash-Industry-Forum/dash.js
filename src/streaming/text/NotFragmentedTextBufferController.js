@@ -125,9 +125,6 @@ function NotFragmentedTextBufferController(config) {
     function dischargePreBuffer() {
     }
 
-    function setSeekStartTime() { //Unused - TODO Remove need for stub function
-    }
-
     function getBufferLevel() {
         return 0;
     }
@@ -150,17 +147,25 @@ function NotFragmentedTextBufferController(config) {
     function onDataUpdateCompleted(e) {
         if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type || e.error) return;
 
-        const currentRepresentation = e.sender.getCurrentRepresentation();
-
-        const chunk = initCache.extract(streamInfo.id, currentRepresentation ? currentRepresentation.id : null);
-
-        if (!chunk) {
-            eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
-                index: 0,
-                streamId: streamInfo.id,
-                sender: e.sender
-            }); //TODO make index dynamic if referring to MP?
+        if (initCache.extract(streamInfo.id, e.currentRepresentation.id) !== null) {
+            return;
         }
+
+        // Representation has changed, clear buffer
+        isBufferingCompleted = false;
+
+        // // Text data file is contained in initialization segment
+        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
+            sender: instance,
+            streamId: streamInfo.id,
+            mediaType: type,
+            representationId: e.currentRepresentation.id
+        });
+    }
+
+    function appendInitSegment(representationId) {
+        // If text data file already in cache then no need to append it again
+        return initCache.extract(streamInfo.id, representationId) !== null;
     }
 
     function onInitFragmentLoaded(e) {
@@ -169,22 +174,11 @@ function NotFragmentedTextBufferController(config) {
         initCache.save(e.chunk);
         buffer.append(e.chunk);
 
+        isBufferingCompleted = true;
+
         eventBus.trigger(Events.STREAM_COMPLETED, {
             request: e.request
         });
-    }
-
-    function appendInitSegment(representationId) {
-        const chunk = initCache.extract(streamInfo.id, representationId);
-
-        if (!chunk) {
-            console.log('trigger TIMED_TEXT_REQUESTED');
-            eventBus.trigger(Events.TIMED_TEXT_REQUESTED, {
-                index: 0,
-                streamId: streamInfo.id,
-                sender: instance
-            });
-        }
     }
 
     function getRangeAt() {
@@ -202,7 +196,6 @@ function NotFragmentedTextBufferController(config) {
         initialize: initialize,
         createBuffer: createBuffer,
         getType: getType,
-        setSeekStartTime: setSeekStartTime,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,
         setMediaSource: setMediaSource,

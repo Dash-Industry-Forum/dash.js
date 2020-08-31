@@ -4,7 +4,7 @@
 (function() {
     var player = dashjs.MediaPlayer().create();
         playerAd = dashjs.MediaPlayer().create();
-        contentUrl = 'https://vm2.dashif.org/livesim/scte35_1/testpic_2s/Manifest.mpd ',
+        contentUrl = 'https://livesim.dashif.org/livesim/scte35_1/testpic_2s/Manifest.mpd ',
         adUrl = 'https://dash.akamaized.net/fokus/adinsertion-samples/scte/dash.mpd',
         currentlyAd = false;
 

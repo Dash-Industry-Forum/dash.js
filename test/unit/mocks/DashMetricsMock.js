@@ -1,4 +1,4 @@
-function DashMetricsMock () {
+function DashMetricsMock() {
 
     this.bufferState = null;
     this.currentDVRInfo = null;
@@ -52,6 +52,10 @@ function DashMetricsMock () {
             manifestInfo: manifestInfo,
             range: range
         };
+    };
+
+    this.resetCurrentDvrWindow = function () {
+        this.currentDVRInfo = null;
     };
 
     this.getCurrentManifestUpdate = function () {

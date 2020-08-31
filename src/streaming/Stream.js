@@ -67,10 +67,11 @@ function Stream(config) {
 
     let instance,
         logger,
+        streamInfo,
         streamProcessors,
+        isStreamInitialized,
         isStreamActivated,
         isMediaInitialized,
-        streamInfo,
         hasVideoTrack,
         hasAudioTrack,
         updateError,
@@ -80,7 +81,9 @@ function Stream(config) {
         thumbnailController,
         preloaded,
         boxParser,
+        preloadingScheduled,
         debug,
+        isEndedEventSignaled,
         trackChangedEvent;
 
     const codecCompatibilityTable = [
@@ -148,10 +151,18 @@ function Stream(config) {
         }
     }
 
-    function initialize(StreamInfo, ProtectionController) {
-        streamInfo = StreamInfo;
-        protectionController = ProtectionController;
+    function initialize(strInfo, prtctnController) {
+        streamInfo = strInfo;
+        if (strInfo) {
+            fragmentController.setStreamId(strInfo.id);
+        }
+        protectionController = prtctnController;
         registerProtectionEvents();
+
+        eventBus.trigger(Events.STREAM_UPDATED, {
+            streamInfo: streamInfo
+        });
+
     }
 
     /**
@@ -227,10 +238,13 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         streamInfo = null;
+        isStreamInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
+        preloadingScheduled = false;
+        isEndedEventSignaled = false;
     }
 
     function reset() {
@@ -257,8 +271,37 @@ function Stream(config) {
         return streamInfo ? streamInfo.duration : NaN;
     }
 
+    function getIsEndedEventSignaled() {
+        return isEndedEventSignaled;
+    }
+
+    function setIsEndedEventSignaled(value) {
+        isEndedEventSignaled = value;
+    }
+
     function getStartTime() {
         return streamInfo ? streamInfo.start : NaN;
+    }
+
+    function getPreloadingScheduled() {
+        return preloadingScheduled;
+    }
+
+    function setPreloadingScheduled(value) {
+        preloadingScheduled = value;
+    }
+
+    function getLiveStartTime() {
+        if (!streamInfo.manifestInfo.isDynamic) return NaN;
+        // Get live start time of the video stream (1st in array of streams)
+        // or audio if no video stream
+        for (let i = 0; i < streamProcessors.length; i++) {
+            if (streamProcessors[i].getType() === Constants.AUDIO ||
+                streamProcessors[i].getType() === Constants.VIDEO) {
+                return streamProcessors[i].getLiveStartTime();
+            }
+        }
+        return NaN;
     }
 
     function getId() {
@@ -269,11 +312,11 @@ function Stream(config) {
         return streamInfo;
     }
 
-    function getHasAudioTrack () {
+    function getHasAudioTrack() {
         return hasAudioTrack;
     }
 
-    function getHasVideoTrack () {
+    function getHasVideoTrack() {
         return hasVideoTrack;
     }
 
@@ -367,7 +410,7 @@ function Stream(config) {
                 processor.getFragmentModel().abortRequests();
             } else {
                 processor.getScheduleController().setSeekTarget(currentTime);
-                processor.setIndexHandlerTime(currentTime);
+                processor.setBufferingTime(currentTime);
                 processor.resetIndexHandler();
             }
         }
@@ -375,7 +418,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(),  mediaInfo ? mediaInfo.type : null);
+        let fragmentModel = fragmentController.getModel(getId(), mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -402,7 +445,7 @@ function Stream(config) {
 
         if (optionalSettings) {
             streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.setIndexHandlerTime(optionalSettings.currentTime);
+            streamProcessor.setBufferingTime(optionalSettings.currentTime);
             streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
         } else {
             streamProcessors.push(streamProcessor);
@@ -474,14 +517,9 @@ function Stream(config) {
             return;
         }
 
-        if (type !== Constants.FRAGMENTED_TEXT || (type === Constants.FRAGMENTED_TEXT && textController.getTextDefaultEnabled())) {
-            mediaController.checkInitialMediaSettingsForType(type, streamInfo);
-            initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
-        }
 
-        if (type === Constants.FRAGMENTED_TEXT && !textController.getTextDefaultEnabled()) {
-            initialMediaInfo = mediaController.getTracksFor(type, streamInfo)[0];
-        }
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         eventBus.trigger(Events.STREAM_INITIALIZING, {
             streamInfo: streamInfo,
@@ -610,8 +648,21 @@ function Stream(config) {
 
         if (error) {
             errHandler.error(error);
-        } else {
-            eventBus.trigger(Events.STREAM_INITIALIZED, { streamInfo: streamInfo });
+        } else if (!isStreamInitialized) {
+            isStreamInitialized = true;
+            timelineConverter.setTimeSyncCompleted(true);
+
+            eventBus.trigger(Events.STREAM_INITIALIZED, {
+                streamInfo: streamInfo,
+                liveStartTime: !preloaded ? getLiveStartTime() : NaN
+            });
+        }
+
+        // (Re)start ScheduleController:
+        // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
+        // - in case stream is complete but a track switch has been requested
+        for (let i = 0; i < ln && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
         }
     }
 
@@ -674,7 +725,7 @@ function Stream(config) {
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
@@ -715,6 +766,10 @@ function Stream(config) {
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
+        eventBus.trigger(Events.STREAM_UPDATED, {
+            streamInfo: streamInfo
+        });
+
         if (eventController) {
             addInlineEvents();
         }
@@ -744,20 +799,20 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isMediaCodecCompatible(newStream) {
-        return compareCodecs(newStream, Constants.VIDEO) && compareCodecs(newStream, Constants.AUDIO);
+    function isMediaCodecCompatible(newStream, previousStream = null) {
+        return compareCodecs(newStream, Constants.VIDEO, previousStream) && compareCodecs(newStream, Constants.AUDIO, previousStream);
     }
 
-    function isProtectionCompatible(stream) {
-        return compareProtectionConfig(stream, Constants.VIDEO) && compareProtectionConfig(stream, Constants.AUDIO);
+    function isProtectionCompatible(stream, previousStream = null) {
+        return compareProtectionConfig(stream, Constants.VIDEO, previousStream) && compareProtectionConfig(stream, Constants.AUDIO, previousStream);
     }
 
-    function compareProtectionConfig(stream, type) {
+    function compareProtectionConfig(stream, type, previousStream = null) {
         if (!stream) {
             return false;
         }
         const newStreamInfo = stream.getStreamInfo();
-        const currentStreamInfo = getStreamInfo();
+        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
@@ -771,20 +826,27 @@ function Stream(config) {
             return !newAdaptation && !currentAdaptation;
         }
 
-        // If any of the periods requires EME, we can't do smooth transition
-        if (newAdaptation.ContentProtection || currentAdaptation.ContentProtection) {
+        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
+        return !(!isAdaptationDrmProtected(currentAdaptation) && isAdaptationDrmProtected(newAdaptation));
+    }
+
+    function isAdaptationDrmProtected(adaptation) {
+
+        if (!adaptation) {
+            // If there is no adaptation for neither the old or the new stream they're compatible
             return false;
         }
 
-        return true;
+        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
+        return !!(adaptation.ContentProtection || (adaptation.Representation && adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
     }
 
-    function compareCodecs(newStream, type) {
+    function compareCodecs(newStream, type, previousStream = null) {
         if (!newStream || !newStream.hasOwnProperty('getStreamInfo')) {
             return false;
         }
         const newStreamInfo = newStream.getStreamInfo();
-        const currentStreamInfo = getStreamInfo();
+        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
@@ -841,24 +903,26 @@ function Stream(config) {
     }
 
     function preload(mediaSource, previousBuffers) {
-        addInlineEvents();
+        if (!getPreloaded()) {
+            addInlineEvents();
 
-        initializeMediaForType(Constants.VIDEO, mediaSource);
-        initializeMediaForType(Constants.AUDIO, mediaSource);
-        initializeMediaForType(Constants.TEXT, mediaSource);
-        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
-        initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
-        initializeMediaForType(Constants.MUXED, mediaSource);
-        initializeMediaForType(Constants.IMAGE, mediaSource);
+            initializeMediaForType(Constants.VIDEO, mediaSource);
+            initializeMediaForType(Constants.AUDIO, mediaSource);
+            initializeMediaForType(Constants.TEXT, mediaSource);
+            initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+            initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+            initializeMediaForType(Constants.MUXED, mediaSource);
+            initializeMediaForType(Constants.IMAGE, mediaSource);
 
-        createBuffers(previousBuffers);
+            createBuffers(previousBuffers);
 
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-        for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
-            streamProcessors[i].getScheduleController().start();
+            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+            for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+                streamProcessors[i].getScheduleController().start();
+            }
+
+            setPreloaded(true);
         }
-
-        setPreloaded(true);
     }
 
 
@@ -882,7 +946,11 @@ function Stream(config) {
         setMediaSource: setMediaSource,
         isMediaCodecCompatible: isMediaCodecCompatible,
         isProtectionCompatible: isProtectionCompatible,
-        getPreloaded: getPreloaded
+        getPreloaded: getPreloaded,
+        getPreloadingScheduled,
+        setPreloadingScheduled,
+        getIsEndedEventSignaled,
+        setIsEndedEventSignaled
     };
 
     setup();

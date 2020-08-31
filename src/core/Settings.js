@@ -61,8 +61,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          flushBufferAtTrackSwitch: false,
  *          bufferPruningInterval: 10,
  *          bufferToKeep: 20,
- *          bufferAheadToKeep: 80,
  *          jumpGaps: true,
+ *          jumpLargeGaps: true,
  *          smallGapLimit: 1.5,
  *          stableBufferTime: 12,
  *          bufferTimeAtTopQuality: 30,
@@ -73,7 +73,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          keepProtectionMediaKeys: false,
  *          useManifestDateHeaderTimeSource: true,
  *          useSuggestedPresentationDelay: true,
- *          useAppendWindowEnd: true,
+ *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
  *          liveCatchUpMinDrift: 0.02,
  *          liveCatchUpMaxDrift: 0,
@@ -88,7 +88,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 1000,
  *              MediaSegment: 1000,
  *              BitstreamSwitchingSegment: 1000,
- *              other: 1000
+ *              other: 1000,
+ *              lowLatencyReductionFactor: 10
  *          },
  *          retryAttempts: {
  *              MPD: 3,
@@ -97,7 +98,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 3,
  *              MediaSegment: 3,
  *              BitstreamSwitchingSegment: 3,
- *              other: 3
+ *              other: 3,
+ *              lowLatencyMultiplyFactor: 5
  *          },
  *          abr: {
  *              movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
@@ -237,16 +239,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
+ * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=true] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
  * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
  * Allows you to modify the buffer that is kept in source buffer in seconds.
  *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
- * @property {number} [bufferAheadToKeep=80]
- * This value influences the buffer pruning logic.
- * Allows you to modify the buffer ahead of current time position that is kept in source buffer in seconds.
- * <pre>0|--------|currentTime|-----bufferAheadToKeep----|----bufferToPrune-----------|end|</pre>
  * @property {boolean} [jumpGaps=true] Sets whether player should jump small gaps (discontinuities) in the buffer.
+ * @property {boolean} [jumpLargeGaps=true] Sets whether player should jump large gaps (discontinuities) in the buffer.
  * @property {number} [smallGapLimit=1.8] Time in seconds for a gap to be considered small.
  * @property {number} [stableBufferTime=12]
  * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
@@ -274,8 +274,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {boolean} [useSuggestedPresentationDelay=true]
  * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
- * @property {boolean} [useAppendWindowEnd=true]
- * Specifies if the appendWindowEnd attribute of the MSE SourceBuffers should be set according to content duration from manifest.
+ * @property {boolean} [useAppendWindow=true]
+ * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
@@ -300,11 +300,20 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [liveCatchUpPlaybackRate=0.5]
- * Use this method to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
+ * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
  * when measured latency is higher/lower than the target one,
  * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
  *
  * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [liveCatchupLatencyThreshold=NaN]
+ * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
+ * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
+ * of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
+ * maximumLiveDelay = targetDelay + liveCatchupMinDrift
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
@@ -322,8 +331,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment
  * request is coming from browser cache or not.
- * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt.
- * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails.
+ * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt. For low latency mode these values are divided by lowLatencyReductionFactor.
+ * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails. For low latency mode these values are multiplied by lowLatencyMultiplyFactor.
  * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
  */
@@ -384,10 +393,11 @@ function Settings() {
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
+            calcSegmentAvailabilityRangeFromTimeline: true,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
-            bufferAheadToKeep: 80,
             jumpGaps: true,
+            jumpLargeGaps: true,
             smallGapLimit: 1.5,
             stableBufferTime: 12,
             bufferTimeAtTopQuality: 30,
@@ -398,11 +408,12 @@ function Settings() {
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
             useSuggestedPresentationDelay: true,
-            useAppendWindowEnd: true,
+            useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
             liveCatchUpMinDrift: 0.02,
             liveCatchUpMaxDrift: 0,
             liveCatchUpPlaybackRate: 0.5,
+            liveCatchupLatencyThreshold: NaN,
             lastBitrateCachingInfo: {enabled: true, ttl: 360000},
             lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
             cacheLoadThresholds: {video: 50, audio: 5},
@@ -413,7 +424,8 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
-                [HTTPRequest.OTHER_TYPE]: 1000
+                [HTTPRequest.OTHER_TYPE]: 1000,
+                lowLatencyReductionFactor: 10
             },
             retryAttempts: {
                 [HTTPRequest.MPD_TYPE]: 3,
@@ -422,7 +434,8 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 3,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
-                [HTTPRequest.OTHER_TYPE]: 3
+                [HTTPRequest.OTHER_TYPE]: 3,
+                lowLatencyMultiplyFactor: 5
             },
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,

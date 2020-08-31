@@ -2,38 +2,34 @@ import EventsBase from './../../core/events/EventsBase';
 /**
  * These are offline events that should be sent to the player level.
  * @class
- * @ignore
  */
 class OfflineEvents extends EventsBase {
     constructor () {
         super();
 
-        this.DOWNLOADING_PAUSED = 'downloadingPaused';
+        /**
+        * Triggered when all mediaInfo has been loaded
+        * @event OfflineEvents#OFFLINE_RECORD_LOADEDMETADATA
+        */
+        this.OFFLINE_RECORD_LOADEDMETADATA = 'public_offlineRecordLoadedmetadata';
 
         /**
-         * Triggered when all mediaInfo has been loaded on OfflineStream
-         * Return a list of available bitrateInfo needed to download stream.
-         */
-        this.DOWNLOADABLE_REPRESENTATIONS_LOADED = 'public_downloadableRepresentationsInfoLoaded';
-
-        this.DASH_ELEMENTS_CREATION_NEEDED = 'dashElementsCreationNeeded';
-
-        /** Triggered when the downloading is initialize and started
-        * @event OfflineEvents#DOWNLOADING_STOPPED
+        * Triggered when a record is initialized and download is started
+        * @event OfflineEvents#OFFLINE_RECORD_STARTED
         */
-        this.DOWNLOADING_STARTED = 'public_downloadingStarted';
+        this.OFFLINE_RECORD_STARTED = 'public_offlineRecordStarted';
 
         /**
-        * Triggered when the user stop current downloading
-        * @event OfflineEvents#DOWNLOADING_STOPPED
+        * Triggered when the user stop downloading a record
+        * @event OfflineEvents#OFFLINE_RECORD_STOPPED
         */
-        this.DOWNLOADING_STOPPED = 'public_downloadingStopped';
+        this.OFFLINE_RECORD_STOPPED = 'public_offlineRecordStopped';
 
         /**
-        * Triggered when all fragments has been downloaded
-        * @event OfflineEvents#DOWNLOADING_FINISHED
+        * Triggered when all record has been downloaded
+        * @event OfflineEvents#OFFLINE_RECORD_FINISHED
         */
-        this.DOWNLOADING_FINISHED = 'public_downloadingFinished';
+        this.OFFLINE_RECORD_FINISHED = 'public_offlineRecordFinished';
     }
 }
 

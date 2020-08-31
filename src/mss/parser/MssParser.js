@@ -79,7 +79,8 @@ function MssParser(config) {
     };
 
     let instance,
-        logger;
+        logger,
+        initialBufferSettings;
 
 
     function setup() {
@@ -687,8 +688,8 @@ function MssParser(config) {
             if (adaptations[i].contentType === 'video') {
                 // Get video segment duration
                 segmentDuration = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale;
-                // Set minBufferTime
-                manifest.minBufferTime = segmentDuration * 2;
+                // Set minBufferTime to one segment duration
+                manifest.minBufferTime = segmentDuration;
 
                 if (manifest.type === 'dynamic' ) {
                     // Set availabilityStartTime
@@ -722,6 +723,17 @@ function MssParser(config) {
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
             // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
             let bufferTime = liveDelay - segmentDuration;
+
+            // Store initial buffer settings
+            initialBufferSettings = {
+                'streaming': {
+                    'liveDelay': settings.get().streaming.liveDelay,
+                    'stableBufferTime': settings.get().streaming.stableBufferTime,
+                    'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
+                    'bufferTimeAtTopQualityLongForm': settings.get().streaming.bufferTimeAtTopQualityLongForm
+                }
+            };
+
             settings.update({
                 'streaming': {
                     'liveDelay': liveDelay,
@@ -749,7 +761,7 @@ function MssParser(config) {
                 for (i = 0; i < adaptations.length; i++) {
                     if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
                         segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
-                        startTime = segments[0].t / adaptations[i].SegmentTemplate.timescale;
+                        startTime = segments[0].t;
                         if (timestampOffset === undefined) {
                             timestampOffset = startTime;
                         }
@@ -760,16 +772,16 @@ function MssParser(config) {
                     }
                 }
             }
-            // Patch segment templates timestamps and determine period start time (since audio/video should not be aligned to 0)
             if (timestampOffset > 0) {
+                // Patch segment templates timestamps and determine period start time (since audio/video should not be aligned to 0)
                 manifest.timestampOffset = timestampOffset;
                 for (i = 0; i < adaptations.length; i++) {
                     segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
                     for (j = 0; j < segments.length; j++) {
                         if (!segments[j].tManifest) {
-                            segments[j].tManifest = segments[j].t;
+                            segments[j].tManifest = segments[j].t.toString();
                         }
-                        segments[j].t -= (timestampOffset * adaptations[i].SegmentTemplate.timescale);
+                        segments[j].t -= timestampOffset;
                     }
                     if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
                         period.start = Math.max(segments[0].t, period.start);
@@ -836,10 +848,18 @@ function MssParser(config) {
         return manifest;
     }
 
+    function reset() {
+        // Restore initial buffer settings
+        if (initialBufferSettings) {
+            settings.update(initialBufferSettings);
+        }
+    }
+
     instance = {
         parse: internalParse,
         getMatchers: getMatchers,
-        getIron: getIron
+        getIron: getIron,
+        reset: reset
     };
 
     setup();

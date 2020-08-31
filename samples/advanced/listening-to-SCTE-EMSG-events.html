@@ -11,7 +11,7 @@
 
     <script class="code">
         var player;
-        const URL = "https://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
+        const URL = "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
         const SCHEMEIDURI = "urn:scte:scte35:2013:xml";
 
         function init() {
@@ -23,7 +23,7 @@
 
         function showEvent(e) {
             log("EVENT RECEIVED: " + e.type);
-            // We double process in order to pretty-print. Only two levels of object properties are exposed.
+            /* We double process in order to pretty-print. Only two levels of object properties are exposed. */
             for (var name in e) {
                 if (typeof e[name] != 'object') {
                     log("    " + name + ": " + e[name]);
@@ -40,7 +40,7 @@
         }
 
         function log(msg) {
-            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; // to avoid repeated wrapping with large objects
+            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; /* to avoid repeated wrapping with large objects */
             var tracePanel = document.getElementById("trace");
             tracePanel.innerHTML += msg + "\n";
             tracePanel.scrollTop = tracePanel.scrollHeight;

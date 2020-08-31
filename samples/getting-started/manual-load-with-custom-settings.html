@@ -13,24 +13,24 @@
         function init() {
             var video,
                 player,
-                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
             player = dashjs.MediaPlayer().create();
             video = document.querySelector("video");
-            player.initialize(); // initialize the MediaPlayer instance
+            player.initialize(); /* initialize the MediaPlayer instance */
 
             player.updateSettings({
                 'debug': {
-                    'logLevel': dashjs.Debug.LOG_LEVEL_NONE  // turns off console logging
+                    'logLevel': dashjs.Debug.LOG_LEVEL_NONE  /* turns off console logging */
                 },
                 'streaming': {
-                    'scheduleWhilePaused': false,   // stops the player from loading segments while paused
-                    'fastSwitchEnabled': true       // enables buffer replacement when switching bitrates for faster switching
+                    'scheduleWhilePaused': false,   /* stops the player from loading segments while paused */
+                    'fastSwitchEnabled': true       /* enables buffer replacement when switching bitrates for faster switching */
                 }
             });
-            player.setAutoPlay(false); // remove this line if you want the player to start automatically on load
-            player.attachView(video); // tell the player which videoElement it should use
-            player.attachSource(url); // provide the manifest source
+            player.setAutoPlay(false); /* remove this line if you want the player to start automatically on load */
+            player.attachView(video); /* tell the player which videoElement it should use */
+            player.attachSource(url); /* provide the manifest source */
 
         }
     </script>

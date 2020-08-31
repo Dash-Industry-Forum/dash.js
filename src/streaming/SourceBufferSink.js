@@ -43,7 +43,7 @@ const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
  * @ignore
  * @implements FragmentSink
  */
-function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendWindowEnd, oldBuffer) {
+function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -56,7 +56,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
     let callbacks = [];
     let appendQueue = [];
     let onAppended = onAppendedCallback;
-    let setAppendWindowEnd = (useAppendWindowEnd === false) ? false : true;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -77,9 +76,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
                 buffer.changeType(codec);
             }
 
-            if (setAppendWindowEnd && buffer) {
-                buffer.appendWindowEnd = mediaSource.duration;
-            }
+            updateAppendWindow();
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
@@ -116,7 +113,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
                 buffer.removeEventListener('abort', errHandler, false);
             }
             clearInterval(intervalId);
-            buffer.appendWindowEnd = Infinity;
+            callbacks = [];
             if (!keepBuffer) {
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
@@ -181,9 +178,36 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
     function updateTimestampOffset(MSETimeOffset) {
         if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
             waitForUpdateEnd(() => {
+                if (MSETimeOffset < 0) {
+                    MSETimeOffset += 0.001;
+                }
                 buffer.timestampOffset = MSETimeOffset;
             });
         }
+    }
+
+    function updateAppendWindow(sInfo) {
+        if (!buffer) {
+            return;
+        }
+        waitForUpdateEnd(() => {
+            try {
+                let appendWindowEnd = mediaSource.duration;
+                let appendWindowStart = 0;
+                if (sInfo && !isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
+                    appendWindowEnd = sInfo.start + sInfo.duration;
+                }
+                if (sInfo && !isNaN(sInfo.start)) {
+                    appendWindowStart = sInfo.start;
+                }
+                buffer.appendWindowStart = 0;
+                buffer.appendWindowEnd = appendWindowEnd;
+                buffer.appendWindowStart = appendWindowStart;
+                logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+            } catch (e) {
+                logger.warn(`Failed to set append window`);
+            }
+        });
     }
 
     function remove(start, end, forceRemoval) {
@@ -221,7 +245,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
         if (appendQueue.length > 0) {
             isAppendingInProgress = true;
             const nextChunk = appendQueue[0];
-            appendQueue.splice(0,1);
+            appendQueue.splice(0, 1);
             let oldRanges = [];
             const afterSuccess = function () {
                 // Safari sometimes drops a portion of a buffer after appending. Handle these situations here
@@ -284,10 +308,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
     }
 
     function isChunkAlignedWithRange(oldRanges, chunk) {
-        for (let i = 0; i < oldRanges.length; i++ ) {
+        for (let i = 0; i < oldRanges.length; i++) {
             const start = Math.round(oldRanges.start(i));
             const end = Math.round(oldRanges.end(i));
-            if (end === chunk.start || start === chunk.end || (chunk.start >= start && chunk.end <= end) ) {
+            if (end === chunk.start || start === chunk.end || (chunk.start >= start && chunk.end <= end)) {
                 return true;
             }
         }
@@ -354,7 +378,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, useAppendW
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
         hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
-        waitForUpdateEnd: waitForUpdateEnd
+        waitForUpdateEnd: waitForUpdateEnd,
+        updateAppendWindow
     };
 
     setup();

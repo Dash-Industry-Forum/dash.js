@@ -2,6 +2,7 @@ import BaseURLTreeModel from '../../src/streaming/models/BaseURLTreeModel';
 import DashParser from '../../src/dash/parser/DashParser';
 
 import AdapterMock from './mocks/AdapterMock';
+import DebugMock from './mocks/DebugMock';
 
 const fs = require('fs');
 const chai = require('chai');
@@ -46,7 +47,7 @@ describe('BaseURLTreeModel', function () {
 
     it('should return an empty array if a test manifest is well defined', function () {
         baseURLTreeModel.setConfig({adapter: adapterMock});
-        let parser = DashParser(context).create();
+        let parser = DashParser(context).create({debug: new DebugMock()});
         let xml = fs.readFileSync(__dirname + '/data/dash/manifest.xml', 'utf8');
         const manifest = parser.parse(xml);
         expect(baseURLTreeModel.update.bind(baseURLTreeModel, manifest)).to.not.throw();

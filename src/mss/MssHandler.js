@@ -41,16 +41,16 @@ import InitCache from '../streaming/utils/InitCache';
 function MssHandler(config) {
 
     config = config || {};
-    let context = this.context;
-    let eventBus = config.eventBus;
+    const context = this.context;
+    const eventBus = config.eventBus;
     const events = config.events;
     const constants = config.constants;
     const initSegmentType = config.initSegmentType;
-    let dashMetrics = config.dashMetrics;
-    let playbackController = config.playbackController;
-    let streamController = config.streamController;
-    let protectionController = config.protectionController;
-    let mssFragmentProcessor = MssFragmentProcessor(context).create({
+    const dashMetrics = config.dashMetrics;
+    const playbackController = config.playbackController;
+    const streamController = config.streamController;
+    const protectionController = config.protectionController;
+    const mssFragmentProcessor = MssFragmentProcessor(context).create({
         dashMetrics: dashMetrics,
         playbackController: playbackController,
         protectionController: protectionController,
@@ -219,6 +219,11 @@ function MssHandler(config) {
     }
 
     function reset() {
+        if (mssParser) {
+            mssParser.reset();
+            mssParser = undefined;
+        }
+
         eventBus.off(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, this);
         eventBus.off(events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, this);

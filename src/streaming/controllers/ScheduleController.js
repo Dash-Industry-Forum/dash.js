@@ -137,6 +137,7 @@ function ScheduleController(config) {
         if (isStopped) return;
 
         logger.debug('Schedule Controller stops');
+        logger.debug(type + ' Schedule Controller stops');
         isStopped = true;
         clearTimeout(scheduleTimeout);
     }
@@ -157,13 +158,9 @@ function ScheduleController(config) {
     function schedule() {
         if (isStopped || isFragmentProcessingInProgress ||
             (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
-            ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled())) {
-            logger.debug('Schedule stop!');
-            return;
-        }
-
-        if (bufferController.getIsBufferingCompleted()) {
-            logger.debug('Schedule stop because buffering is completed!');
+            ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()) ||
+            bufferController.getIsBufferingCompleted()) {
+            stop();
             return;
         }
 
@@ -173,7 +170,6 @@ function ScheduleController(config) {
         if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
-
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
@@ -186,7 +182,12 @@ function ScheduleController(config) {
                     } else {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     }
-                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: currentRepresentationInfo.id });
+                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
+                        sender: instance,
+                        streamId: streamId,
+                        mediaType: type,
+                        representationId: currentRepresentationInfo.id
+                    });
                     lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
                 } else {
@@ -194,10 +195,21 @@ function ScheduleController(config) {
 
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
-                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, { sender: instance, representationId: replacement.representationId });
+                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
+                            sender: instance,
+                            streamId: streamId,
+                            mediaType: type,
+                            representationId: replacement.representationId
+                        });
                         checkPlaybackQuality = false;
                     } else {
-                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, { sender: instance, seekTarget: seekTarget, replacement: replacement });
+                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {
+                            sender: instance,
+                            streamId: streamId,
+                            mediaType: type,
+                            seekTarget: seekTarget,
+                            replacement: replacement
+                        });
                         checkPlaybackQuality = true;
                     }
                 }
@@ -331,7 +343,7 @@ function ScheduleController(config) {
 
         stop();
         setFragmentProcessState(false);
-        logger.info('Stream is complete');
+        logger.info(`Stream ${streamId} is complete`);
     }
 
     function onFragmentLoadingCompleted(e) {
@@ -399,7 +411,7 @@ function ScheduleController(config) {
 
     function onDataUpdateStarted(e) {
         if (e.sender.getType() !== type || e.sender.getStreamId() !== streamId) return;
-        stop();
+        // stop();
     }
 
     function onBufferingCompleted(e) {
@@ -416,7 +428,8 @@ function ScheduleController(config) {
             playbackController.seek(playbackController.getTime() + 0.001, false, true);
         }
 
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && isStopped) {
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             start();
         }
     }
@@ -424,6 +437,7 @@ function ScheduleController(config) {
     function onQuotaExceeded(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
+        // Stop scheduler (will be restarted once buffer is pruned)
         stop();
         setFragmentProcessState(false);
     }
@@ -452,11 +466,11 @@ function ScheduleController(config) {
             latency: latency
         });
 
-        //if, during the seek command, the scheduleController is waiting : stop waiting, request chunk as soon as possible
         if (!isFragmentProcessingInProgress) {
+            // No pending request, request next segment at seek target
             startScheduleTimer(0);
         } else {
-            logger.debug('onPlaybackSeeking, call fragmentModel.abortRequests in order to seek quicker');
+            // Abort current request
             fragmentModel.abortRequests();
         }
     }
@@ -478,7 +492,7 @@ function ScheduleController(config) {
     }
 
     function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
+        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo);
     }
 
     function getType() {

@@ -160,7 +160,7 @@ function RepresentationController(config) {
     function updateRepresentation(representation, isDynamic) {
         representation.segmentAvailabilityRange = timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic);
 
-        if ((representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) && !representation.useCalculatedLiveEdgeTime) {
+        if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) {
             let error = new DashJSError(errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
             endDataUpdate(error);
             return;
@@ -177,7 +177,10 @@ function RepresentationController(config) {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             updateRepresentation(voAvailableRepresentations[i], isDynamic);
             if (notifyUpdate) {
-                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { sender: instance, representation:  voAvailableRepresentations[i]});
+                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, {
+                    sender: instance,
+                    representation: voAvailableRepresentations[i]
+                });
             }
         }
     }
@@ -190,7 +193,7 @@ function RepresentationController(config) {
 
     function startDataUpdate() {
         updating = true;
-        eventBus.trigger(events.DATA_UPDATE_STARTED, { sender: instance });
+        eventBus.trigger(events.DATA_UPDATE_STARTED, {sender: instance});
     }
 
     function endDataUpdate(error) {
@@ -215,7 +218,7 @@ function RepresentationController(config) {
 
             updateAvailabilityWindow(playbackController.getIsDynamic(), true);
         };
-        eventBus.trigger(events.AST_IN_FUTURE, { delay: delay });
+        eventBus.trigger(events.AST_IN_FUTURE, {delay: delay});
         setTimeout(update, delay);
     }
 
@@ -236,11 +239,9 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod) {
-            let segmentAvailabilityTimePeriod = r.segmentAvailabilityRange.end - r.segmentAvailabilityRange.start;
+        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod && playbackController.getStreamController().getStreams().length <= 1) {
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            let liveDelay = playbackController.computeLiveDelay(currentVoRepresentation.segmentDuration, streamInfo.manifestInfo.DVRWindowSize);
-            postponeTimePeriod = (liveDelay - segmentAvailabilityTimePeriod) * 1000;
+            postponeTimePeriod = getRepresentationUpdatePostponeTimePeriod(r, streamInfo);
         }
 
         if (postponeTimePeriod > 0) {
@@ -274,6 +275,26 @@ function RepresentationController(config) {
                 addRepresentationSwitch();
             }
             endDataUpdate();
+        }
+    }
+
+    function getRepresentationUpdatePostponeTimePeriod(representation, streamInfo) {
+        try {
+            const streamController = playbackController.getStreamController();
+            const activeStreamInfo = streamController.getActiveStreamInfo();
+            let startTimeAnchor = representation.segmentAvailabilityRange.start;
+
+            if (activeStreamInfo && activeStreamInfo.id && activeStreamInfo.id !== streamInfo.id) {
+                // We need to consider the currently playing period if a period switch is performed.
+                startTimeAnchor = Math.min(playbackController.getTime(), startTimeAnchor);
+            }
+
+            let segmentAvailabilityTimePeriod = representation.segmentAvailabilityRange.end - startTimeAnchor;
+            let liveDelay = playbackController.getLiveDelay();
+
+            return (liveDelay - segmentAvailabilityTimePeriod) * 1000;
+        } catch (e) {
+            return 0;
         }
     }
 
