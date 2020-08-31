@@ -29,7 +29,8 @@ define([
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
     var PROGRESS_TIMEOUT = 15; // Timeout (in sec.) for checking playback progress
     var SWITCH_DURATION = 3; // Time between track switches
-
+    var SKIPPABLE = false; // if there is only one track skipp this test suite
+    
     var load = function(stream) {
         registerSuite({
             name: utils.testName(NAME, stream),
@@ -84,7 +85,10 @@ define([
 
                 return command.execute(player.getTracksFor,[mediaType])
                 .then(function(mediaInf) {     
-                    if(mediaInf.length <= 1) thisRef.skip(); 
+                    if(mediaInf.length <= 1) {
+                        SKIPPABLE = true;
+                        thisRef.skip(); 
+                    }
                     return switchTrack(stream, mediaInf);
                 });
             }
@@ -95,7 +99,7 @@ define([
             name: utils.testName(NAME, stream),
 
             play: function() {
-                if (!stream.available) this.skip();
+                if (!stream.available || SKIPPABLE) this.skip();
                 utils.log(NAME, 'Play');
                 return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
                 .then(function (playing) {
@@ -105,7 +109,7 @@ define([
             },
 
             progress: function() {
-                if (!stream.available) this.skip();
+                if (!stream.available || SKIPPABLE) this.skip();
                 utils.log(NAME, 'Progress');
                 return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
                 .then(function (progressing) {
