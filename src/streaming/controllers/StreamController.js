@@ -239,8 +239,10 @@ function StreamController() {
     }
 
     function stopPlaybackEndedTimerInterval() {
-        clearInterval(playbackEndedTimerInterval);
-        playbackEndedTimerInterval = null;
+        if (playbackEndedTimerInterval) {
+            clearInterval(playbackEndedTimerInterval);
+            playbackEndedTimerInterval = null;
+        }
     }
 
     function startCheckIfPrebufferingCanStartInterval() {
@@ -340,7 +342,7 @@ function StreamController() {
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
-                logger.info('[onStreamCanLoadNext] Preloading next stream');
+                logger.info(`[onStreamCanLoadNext] Preloading next stream with id ${nextStream.getId()}`);
                 isPeriodSwitchInProgress = true;
                 nextStream.preload(mediaSource, buffers);
                 preloadingStreams.push(nextStream);
@@ -418,7 +420,7 @@ function StreamController() {
         return activeStream ? activeStream.getProcessors() : [];
     }
 
-    function onEnded() {
+    function onEnded(e) {
         if (!activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
@@ -430,6 +432,9 @@ function StreamController() {
             }
             flushPlaylistMetrics(nextStream ? PlayListTrace.END_OF_PERIOD_STOP_REASON : PlayListTrace.END_OF_CONTENT_STOP_REASON);
             isPeriodSwitchInProgress = false;
+        }
+        if (e && e.isLast) {
+            stopPlaybackEndedTimerInterval();
         }
     }
 
@@ -479,7 +484,7 @@ function StreamController() {
         if (previousStream) {
             seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream) &&
                 (supportsChangeType || activeStream.isMediaCodecCompatible(stream))) &&
-                !seekTime || stream.getPreloaded();
+                !seekTime && stream.getPreloaded();
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
@@ -621,6 +626,21 @@ function StreamController() {
                 presentationStartTime: streamsInfo[0].start,
                 clientTimeOffset: timelineConverter.getClientTimeOffset()
             });
+
+            // Filter streams that are outdated and not included in the MPD anymore
+            if (streams.length > 0) {
+                streams = streams.filter((stream) => {
+
+                    const isStillValid = streamsInfo.filter((sInfo) => {
+                        return sInfo.id === stream.getId();
+                    }).length > 0;
+
+                    if (!isStillValid) {
+                        logger.debug(`Removed stream ${stream.getId()}`);
+                    }
+                    return isStillValid;
+                });
+            }
 
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
                 // If the Stream object does not exist we probably loaded the manifest the first time or it was
@@ -783,24 +803,9 @@ function StreamController() {
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
             adapter.updatePeriods(manifest);
-            const streamInfo = adapter.getStreamsInfo(undefined, 1)[0];
-            const mediaInfo = (
-                adapter.getMediaInfoForType(streamInfo, Constants.VIDEO) ||
-                adapter.getMediaInfoForType(streamInfo, Constants.AUDIO)
-            );
-
-            let useCalculatedLiveEdgeTime;
-            if (mediaInfo) {
-                useCalculatedLiveEdgeTime = adapter.getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo);
-                if (useCalculatedLiveEdgeTime) {
-                    logger.debug('SegmentTimeline detected using calculated Live Edge Time');
-                    const s = {streaming: {useManifestDateHeaderTimeSource: false}};
-                    settings.update(s);
-                }
-            }
 
             let manifestUTCTimingSources = adapter.getUTCTimingSources();
-            let allUTCTimingSources = (!adapter.getIsDynamic() || useCalculatedLiveEdgeTime) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
+            let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
             //If https is detected on manifest then lets apply that protocol to only the default time source(s). In the future we may find the need to apply this to more then just default so left code at this level instead of in MediaPlayer.

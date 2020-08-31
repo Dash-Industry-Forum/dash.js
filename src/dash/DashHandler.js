@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FragmentRequest from '../streaming/vo/FragmentRequest';
-import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import {
     replaceIDForTemplate,
@@ -97,11 +97,11 @@ function DashHandler(config) {
         return streamInfo;
     }
 
-    function setCurrentIndex (value) {
+    function setCurrentIndex(value) {
         segmentIndex = value;
     }
 
-    function getCurrentIndex () {
+    function getCurrentIndex() {
         return segmentIndex;
     }
 
@@ -211,8 +211,7 @@ function DashHandler(config) {
 
         const request = new FragmentRequest();
         const representation = segment.representation;
-        const bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
+        const bandwidth = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].bandwidth;
         let url = segment.media;
 
         url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
@@ -314,9 +313,9 @@ function DashHandler(config) {
 
         requestedTime = null;
 
-        const indexToRequest = segmentIndex + 1;
-        logger.debug('Getting the next request at index: ' + indexToRequest);
+        let indexToRequest = segmentIndex + 1;
 
+        logger.debug('Getting the next request at index: ' + indexToRequest);
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
         if (!segment && isEndlessMedia(representation) && !dynamicStreamCompleted) {
@@ -398,7 +397,10 @@ function DashHandler(config) {
         }
 
         if (segments.length > 0) {
-            representation.segmentAvailabilityRange = {start: segments[0].presentationStartTime, end: segments[segments.length - 1].presentationStartTime};
+            representation.segmentAvailabilityRange = {
+                start: segments[0].presentationStartTime,
+                end: segments[segments.length - 1].presentationStartTime
+            };
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
 

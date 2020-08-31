@@ -560,7 +560,7 @@ describe('MediaPlayer', function () {
 
             it('should configure quality for type', function () {
                 let qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'dummyId'
+                    id: 'streamId'
                 });
                 expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
 
@@ -570,7 +570,7 @@ describe('MediaPlayer', function () {
                 player.setQualityFor('video', 10);
 
                 qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'dummyId'
+                    id: 'streamId'
                 });
                 expect(qualityFor).to.equal(10);
 
@@ -604,7 +604,7 @@ describe('MediaPlayer', function () {
             let liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
             expect(liveDelayFragmentCount).to.be.NaN; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'liveDelayFragmentCount': 5 }});
+            player.updateSettings({'streaming': {'liveDelayFragmentCount': 5}});
 
             liveDelayFragmentCount = player.getSettings().streaming.liveDelayFragmentCount;
             expect(liveDelayFragmentCount).to.equal(5);
@@ -614,7 +614,7 @@ describe('MediaPlayer', function () {
             let useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.true; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'useSuggestedPresentationDelay': false }});
+            player.updateSettings({'streaming': {'useSuggestedPresentationDelay': false}});
 
             useSuggestedPresentationDelay = player.getSettings().streaming.useSuggestedPresentationDelay;
             expect(useSuggestedPresentationDelay).to.be.false; // jshint ignore:line
@@ -624,7 +624,7 @@ describe('MediaPlayer', function () {
             let scheduleWhilePaused = player.getSettings().streaming.scheduleWhilePaused;
             expect(scheduleWhilePaused).to.be.true; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'scheduleWhilePaused': false }});
+            player.updateSettings({'streaming': {'scheduleWhilePaused': false}});
 
             scheduleWhilePaused = player.getSettings().streaming.scheduleWhilePaused;
             expect(scheduleWhilePaused).to.be.false; // jshint ignore:line
@@ -634,7 +634,7 @@ describe('MediaPlayer', function () {
             let fastSwitchEnabled = player.getSettings().streaming.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.false; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'fastSwitchEnabled': true }});
+            player.updateSettings({'streaming': {'fastSwitchEnabled': true}});
 
             fastSwitchEnabled = player.getSettings().streaming.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.true; // jshint ignore:line
@@ -644,7 +644,7 @@ describe('MediaPlayer', function () {
             let useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
             expect(useDefaultABRRules).to.be.true; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'abr': { 'useDefaultABRRules': false }}});
+            player.updateSettings({'streaming': {'abr': {'useDefaultABRRules': false}}});
 
 
             useDefaultABRRules = player.getSettings().streaming.abr.useDefaultABRRules;
@@ -705,7 +705,7 @@ describe('MediaPlayer', function () {
             let useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.true; // jshint ignore:line
 
-            player.updateSettings({'streaming': { 'useManifestDateHeaderTimeSource': false }});
+            player.updateSettings({'streaming': {'useManifestDateHeaderTimeSource': false}});
 
             useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.false; // jshint ignore:line
@@ -715,7 +715,7 @@ describe('MediaPlayer', function () {
             let BufferToKeep = player.getSettings().streaming.bufferToKeep;
             expect(BufferToKeep).to.equal(20);
 
-            player.updateSettings({'streaming': { 'bufferToKeep': 50 }});
+            player.updateSettings({'streaming': {'bufferToKeep': 50}});
 
             BufferToKeep = player.getSettings().streaming.bufferToKeep;
             expect(BufferToKeep).to.equal(50);
@@ -725,7 +725,7 @@ describe('MediaPlayer', function () {
             let BufferPruningInterval = player.getSettings().streaming.bufferPruningInterval;
             expect(BufferPruningInterval).to.equal(10);
 
-            player.updateSettings({'streaming': { 'bufferPruningInterval': 50 }});
+            player.updateSettings({'streaming': {'bufferPruningInterval': 50}});
 
             BufferPruningInterval = player.getSettings().streaming.bufferPruningInterval;
             expect(BufferPruningInterval).to.equal(50);
@@ -740,7 +740,7 @@ describe('MediaPlayer', function () {
             let BufferTimeAtTopQuality = player.getSettings().streaming.bufferTimeAtTopQuality;
             expect(BufferTimeAtTopQuality).to.equal(30);
 
-            player.updateSettings({'streaming': { 'bufferTimeAtTopQuality': 50 }});
+            player.updateSettings({'streaming': {'bufferTimeAtTopQuality': 50}});
 
             BufferTimeAtTopQuality = player.getSettings().streaming.bufferTimeAtTopQuality;
             expect(BufferTimeAtTopQuality).to.equal(50);
@@ -750,7 +750,7 @@ describe('MediaPlayer', function () {
             let bufferTimeAtTopQualityLongForm = player.getSettings().streaming.bufferTimeAtTopQualityLongForm;
             expect(bufferTimeAtTopQualityLongForm).to.equal(60);
 
-            player.updateSettings({'streaming': { 'bufferTimeAtTopQualityLongForm': 50 }});
+            player.updateSettings({'streaming': {'bufferTimeAtTopQualityLongForm': 50}});
 
             bufferTimeAtTopQualityLongForm = player.getSettings().streaming.bufferTimeAtTopQualityLongForm;
             expect(bufferTimeAtTopQualityLongForm).to.equal(50);
@@ -760,7 +760,7 @@ describe('MediaPlayer', function () {
             let LongFormContentDurationThreshold = player.getSettings().streaming.longFormContentDurationThreshold;
             expect(LongFormContentDurationThreshold).to.equal(600);
 
-            player.updateSettings({'streaming': { 'longFormContentDurationThreshold': 50 }});
+            player.updateSettings({'streaming': {'longFormContentDurationThreshold': 50}});
 
             LongFormContentDurationThreshold = player.getSettings().streaming.longFormContentDurationThreshold;
             expect(LongFormContentDurationThreshold).to.equal(50);
@@ -770,7 +770,7 @@ describe('MediaPlayer', function () {
             let cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(50);
 
-            player.updateSettings({'streaming': { 'cacheLoadThresholds': { 'video': 10 } }});
+            player.updateSettings({'streaming': {'cacheLoadThresholds': {'video': 10}}});
 
             cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
             expect(cacheLoadThresholdForVideo).to.equal(10);
@@ -778,7 +778,7 @@ describe('MediaPlayer', function () {
             let cacheLoadThresholdForAudio = player.getSettings().streaming.cacheLoadThresholds[Constants.AUDIO];
             expect(cacheLoadThresholdForAudio).to.equal(5);
 
-            player.updateSettings({'streaming': { 'cacheLoadThresholds': { 'audio': 2 } }});
+            player.updateSettings({'streaming': {'cacheLoadThresholds': {'audio': 2}}});
 
             cacheLoadThresholdForAudio = player.getSettings().streaming.cacheLoadThresholds[Constants.AUDIO];
             expect(cacheLoadThresholdForAudio).to.equal(2);
@@ -788,7 +788,7 @@ describe('MediaPlayer', function () {
             let jumpGaps = player.getSettings().streaming.jumpGaps;
             expect(jumpGaps).to.equal(true);
 
-            player.updateSettings({'streaming': { 'jumpGaps': false }});
+            player.updateSettings({'streaming': {'jumpGaps': false}});
 
             jumpGaps = player.getSettings().streaming.jumpGaps;
             expect(jumpGaps).to.equal(false);
@@ -796,7 +796,7 @@ describe('MediaPlayer', function () {
             let smallGapLimit = player.getSettings().streaming.smallGapLimit;
             expect(smallGapLimit).to.equal(1.5);
 
-            player.updateSettings({'streaming': { 'smallGapLimit': 0.5 }});
+            player.updateSettings({'streaming': {'smallGapLimit': 0.5}});
 
             smallGapLimit = player.getSettings().streaming.smallGapLimit;
             expect(smallGapLimit).to.equal(0.5);
@@ -806,7 +806,7 @@ describe('MediaPlayer', function () {
             let manifestUpdateRetryInterval = player.getSettings().streaming.manifestUpdateRetryInterval;
             expect(manifestUpdateRetryInterval).to.equal(100);
 
-            player.updateSettings({'streaming': { 'manifestUpdateRetryInterval': 200 }});
+            player.updateSettings({'streaming': {'manifestUpdateRetryInterval': 200}});
 
             manifestUpdateRetryInterval = player.getSettings().streaming.manifestUpdateRetryInterval;
             expect(manifestUpdateRetryInterval).to.equal(200);
@@ -1041,9 +1041,9 @@ describe('MediaPlayer', function () {
                 initialSettings = player.getInitialMediaSettingsFor('audio');
                 expect(initialSettings).to.equal('settings');
 
-                player.setInitialMediaSettingsFor('fragmentedText', { lang: 'en', role: 'caption'});
+                player.setInitialMediaSettingsFor('fragmentedText', {lang: 'en', role: 'caption'});
                 initialSettings = player.getInitialMediaSettingsFor('fragmentedText');
-                expect(initialSettings).to.exist; ; // jshint ignore:line
+                expect(initialSettings).to.exist; // jshint ignore:line
                 expect(initialSettings.lang).to.equal('en');
                 expect(initialSettings.role).to.equal('caption');
 
@@ -1081,7 +1081,8 @@ describe('MediaPlayer', function () {
         });
     });
 
-    describe('Protection Management Functions', function () {});
+    describe('Protection Management Functions', function () {
+    });
 
     describe('Tools Functions', function () {
         describe('When it is not initialized', function () {

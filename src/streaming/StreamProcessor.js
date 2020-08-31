@@ -245,7 +245,10 @@ function StreamProcessor(config) {
         }
         if (!e.error || e.error.code === Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
             // Update has been postponed, update nevertheless DVR info
-            addDVRMetric();
+            const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
+            if (activeStreamId === streamInfo.id) {
+                addDVRMetric();
+            }
         }
     }
 
@@ -258,7 +261,8 @@ function StreamProcessor(config) {
 
     function onBufferLevelUpdated(e) {
         dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
-        if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated) {
+        const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
+        if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
             addDVRMetric();
         }
     }

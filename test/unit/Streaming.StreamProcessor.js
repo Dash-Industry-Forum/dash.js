@@ -82,10 +82,35 @@ describe('StreamProcessor', function () {
         let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
         expect(dvrInfo).to.be.null; // jshint ignore:line
 
-        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { streamId: streamInfo.id, mediaType: testType, bufferLevel: 50 });
+        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {streamId: streamInfo.id, mediaType: testType, bufferLevel: 50});
 
         dvrInfo = dashMetricsMock.getCurrentDVRInfo();
         expect(dvrInfo).not.to.be.null; // jshint ignore:line
         expect(dvrInfo.type).to.equal(testType); // jshint ignore:line
+    });
+
+    it('when a BUFFER_LEVEL_UPDATED event occurs for a non active stream it should not update dvr info metrics', function () {
+        streamInfo.id = 'wrongId';
+        dashMetricsMock.resetCurrentDvrWindow();
+        const streamProcessor = StreamProcessor(context).create({
+            streamInfo: streamInfo,
+            type: testType,
+            dashMetrics: dashMetricsMock,
+            manifestModel: manifestModelMock,
+            playbackController: playbackControllerMock,
+            timelineConverter: timelineConverterMock,
+            abrController: abrControllerMock,
+            adapter: adapterMock
+        });
+
+        streamProcessor.initialize();
+
+        let dvrInfo = dashMetricsMock.getCurrentDVRInfo();
+        expect(dvrInfo).to.be.null; // jshint ignore:line
+
+        eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, {streamId: streamInfo.id, mediaType: testType, bufferLevel: 50});
+
+        dvrInfo = dashMetricsMock.getCurrentDVRInfo();
+        expect(dvrInfo).to.be.null; // jshint ignore:line
     });
 });

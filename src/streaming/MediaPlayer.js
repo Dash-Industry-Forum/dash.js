@@ -1965,7 +1965,9 @@ function MediaPlayer() {
             settings,
             playbackController,
             streamController,
-            videoModel
+            videoModel,
+            timelineConverter,
+            adapter
         });
 
         playbackController.setConfig({
