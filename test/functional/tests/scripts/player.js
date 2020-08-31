@@ -134,6 +134,10 @@ define([], function () {
 
         setCurrentTrack: function(track){
             player.setCurrentTrack(track);
+        },
+
+        getCurrentTrackFor: function(mediaType){
+            return player.getCurrentTrackFor(mediaType);
         }
     };
 });

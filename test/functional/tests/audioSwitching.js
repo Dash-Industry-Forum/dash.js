@@ -50,6 +50,29 @@ define([
         })
     };
 
+    var recurse = function (mediaInf) {
+         registerSuite({   
+
+            recurse: function(){
+                var curr = mediaInf.shift();
+                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
+                .then(function(){
+                    return command.sleep(2*1000).execute(player.setCurrentTrack, [curr])
+                })
+                .then(function(){
+                    return command.execute(player.getCurrentTrackFor, [mediaType])
+                })
+                .then(function(currTrack){
+                    assert.equal(curr.lang, currTrack.lang)
+                })
+                .then(function () {
+                    if(mediaInf.length == 0) return;
+                    else return recurse(mediaInf);
+                });
+            }
+        })
+    };
+
     var switchAudio = function(stream){
         registerSuite({
             name: utils.testName(NAME, stream),
@@ -60,21 +83,8 @@ define([
         
                 return command.execute(player.getTracksFor,[mediaType])
                 .then(function(mediaInf) {      
-                        
-                        return command.sleep(2*1000).execute(player.setCurrentTrack, [mediaInf[0]])
-                        .then(function(){
-                            return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                        })
-                        .then(function(){
-                            return command.sleep(2*1000).execute(player.setCurrentTrack, [mediaInf[1]]);
-                        })
-                        .then(function(){
-                            return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                        })
-                        .then(function(){
-                            return command.sleep(2*1000).execute(player.setCurrentTrack, [mediaInf[2]]);
-                        });
-                    });
+                    recurse(mediaInf);
+                });
             }
         });
     };
