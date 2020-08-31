@@ -799,20 +799,20 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isMediaCodecCompatible(newStream) {
-        return compareCodecs(newStream, Constants.VIDEO) && compareCodecs(newStream, Constants.AUDIO);
+    function isMediaCodecCompatible(newStream, previousStream = null) {
+        return compareCodecs(newStream, Constants.VIDEO, previousStream) && compareCodecs(newStream, Constants.AUDIO, previousStream);
     }
 
-    function isProtectionCompatible(stream) {
-        return compareProtectionConfig(stream, Constants.VIDEO) && compareProtectionConfig(stream, Constants.AUDIO);
+    function isProtectionCompatible(stream, previousStream = null) {
+        return compareProtectionConfig(stream, Constants.VIDEO, previousStream) && compareProtectionConfig(stream, Constants.AUDIO, previousStream);
     }
 
-    function compareProtectionConfig(stream, type) {
+    function compareProtectionConfig(stream, type, previousStream = null) {
         if (!stream) {
             return false;
         }
         const newStreamInfo = stream.getStreamInfo();
-        const currentStreamInfo = getStreamInfo();
+        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
@@ -841,12 +841,12 @@ function Stream(config) {
         return !!(adaptation.ContentProtection || (adaptation.Representation && adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
     }
 
-    function compareCodecs(newStream, type) {
+    function compareCodecs(newStream, type, previousStream = null) {
         if (!newStream || !newStream.hasOwnProperty('getStreamInfo')) {
             return false;
         }
         const newStreamInfo = newStream.getStreamInfo();
-        const currentStreamInfo = getStreamInfo();
+        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
