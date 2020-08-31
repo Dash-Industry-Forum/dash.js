@@ -337,8 +337,8 @@ function StreamController() {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
-            let seamlessPeriodSwitch = previousStream.isProtectionCompatible(nextStream) &&
-                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream));
+            let seamlessPeriodSwitch = previousStream.isProtectionCompatible(nextStream, previousStream) &&
+                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream));
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
@@ -482,8 +482,8 @@ function StreamController() {
 
         let seamlessPeriodSwitch = false;
         if (previousStream) {
-            seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream) &&
-                (supportsChangeType || activeStream.isMediaCodecCompatible(stream))) &&
+            seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream, previousStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(stream, previousStream))) &&
                 !seekTime && stream.getPreloaded();
             previousStream.deactivate(seamlessPeriodSwitch);
         }
