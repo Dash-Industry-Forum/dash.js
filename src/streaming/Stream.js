@@ -689,9 +689,7 @@ function Stream(config) {
         return buffers;
     }
 
-    function onBufferingCompleted(e) {
-        if (e.streamId !== streamInfo.id) return;
-
+    function onBufferingCompleted() {
         let processors = getProcessors();
         const ln = processors.length;
 

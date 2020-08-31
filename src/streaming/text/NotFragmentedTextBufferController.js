@@ -173,7 +173,7 @@ function NotFragmentedTextBufferController(config) {
 
         eventBus.trigger(Events.STREAM_COMPLETED, {
             request: e.request
-        });
+        }, streamInfo.id, type);
     }
 
     function getRangeAt() {

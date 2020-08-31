@@ -221,30 +221,6 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong stream id', function (done) {
-            const event = {
-                chunk: {
-                    streamId: 'wrong',
-                    mediaInfo: {
-                        type: 'video'
-                    },
-                    bytes: 'data',
-                    quality: 2,
-                    representationId: 'representationId'
-                }
-            };
-            const onMediaFragmentLoaded = function () {
-                eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
-                expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-                done();
-            };
-            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-
-            expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-            // send event
-            eventBus.trigger(Events.MEDIA_FRAGMENT_LOADED, event);
-        });
-
         it('should append data to source buffer ', function (done) {
             const event = {
                 chunk: {

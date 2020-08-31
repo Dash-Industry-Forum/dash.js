@@ -222,7 +222,6 @@ function BufferController(config) {
 
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
-        if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type !== type) return;
 
         if (replacingBuffer) {
             mediaChunk = chunk;
@@ -748,7 +747,6 @@ function BufferController(config) {
     }
 
     function onStreamCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
         lastIndex = e.request.index;
         checkIfBufferingCompleted();
     }

@@ -207,7 +207,7 @@ function FragmentModel(config) {
                 logger.debug('STREAM_COMPLETED');
                 eventBus.trigger(events.STREAM_COMPLETED, {
                     request: request
-                });
+                }, request.mediaInfo.streamInfo.id, request.mediaType);
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);

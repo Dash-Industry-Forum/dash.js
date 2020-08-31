@@ -337,9 +337,7 @@ function ScheduleController(config) {
         }
     }
 
-    function onStreamCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
-
+    function onStreamCompleted() {
         stop();
         setFragmentProcessState(false);
         logger.info(`Stream ${streamInfo.id} is complete`);

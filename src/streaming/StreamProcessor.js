@@ -510,7 +510,6 @@ function StreamProcessor(config) {
 
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
-        if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type != type) return;
 
         const bytes = chunk.bytes;
         const quality = chunk.quality;
