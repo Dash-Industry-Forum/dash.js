@@ -27,7 +27,8 @@ define([
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
+    var PROGRESS_TIMEOUT = 15; // Timeout (in sec.) for checking playback progress
+    var SWITCH_DURATION = 3; // Time between track switches
 
     var load = function(stream) {
         registerSuite({
@@ -51,28 +52,25 @@ define([
     };
 
     var switchTrack = function (stream, mediaInf) {
-         registerSuite({   
+            
+        var curr = mediaInf.shift();
 
-            name: utils.testName(NAME, stream),
-
-            switchTrack: function(){
-                var curr = mediaInf.pop();
-
-                if(mediaInf.length != 0) switchTrack(stream, mediaInf);
-                else return command.sleep(5*1000);
-
-                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-                .then(function(){
-                    return command.sleep(5*1000).execute(player.setCurrentTrack, [curr])
-                })
-                .then(function(){
-                    return command.execute(player.getCurrentTrackFor, [mediaType])
-                })
-                .then(function(currTrack){
-                    assert.equal(curr.lang, currTrack.lang)
-                })
-            }
+        return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
+        .then(function(){
+            //switch track
+            return command.execute(player.setCurrentTrack, [curr]).sleep(SWITCH_DURATION*1000)
         })
+        .then(function(){
+            return command.execute(player.getCurrentTrackFor, [mediaType])
+        })
+        .then(function(currTrack){
+            // check if correct audio track
+            assert.equal(curr.lang, currTrack.lang)
+        })
+        .then(function(){
+            if(mediaInf.length != 0) return switchTrack(stream, mediaInf);
+            else return;
+        });
     };
 
     var switchAudio = function(stream){
@@ -82,10 +80,12 @@ define([
             switchAudio: function(){
                 if (!stream.available) this.skip();
                 utils.log(NAME, 'SwitchAudio');
-        
+                var thisRef = this;
+
                 return command.execute(player.getTracksFor,[mediaType])
-                .then(function(mediaInf) {      
-                    switchTrack(stream, mediaInf);
+                .then(function(mediaInf) {     
+                    if(mediaInf.length <= 1) thisRef.skip(); 
+                    return switchTrack(stream, mediaInf);
                 });
             }
         });
