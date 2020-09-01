@@ -76,7 +76,7 @@ jobs:
           # Run functional tests for chrome browser for https
           name: Run functional tests (chrome / https)
           command:
-            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https stream="DRM Content (conservative/legacy)"
+            node node_modules/intern/runner.js config=test/functional/config.js selenium=remote app=remote browsers=chrome protocol=https
 
     #   - run:
     #       # Run functional tests for chrome browser for http
