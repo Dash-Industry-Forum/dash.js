@@ -9,6 +9,7 @@
         "liveDelay": null,
         "scheduleWhilePaused": true,
         "fastSwitchEnabled": true,
+        "flushBufferAtTrackSwitch": false,
         "bufferPruningInterval": 10,
         "bufferToKeep": 20,
         "jumpGaps": true,
