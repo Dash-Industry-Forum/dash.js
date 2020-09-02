@@ -385,7 +385,7 @@ function StreamController() {
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            streamDuration = parseFloat(streamDuration + stream.getDuration());
+            streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
 
             if (time < streamDuration) {
                 return stream;
