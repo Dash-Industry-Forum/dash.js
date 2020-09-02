@@ -515,9 +515,8 @@ function StreamController() {
 
         let seamlessPeriodSwitch = false;
         if (previousStream) {
-            seamlessPeriodSwitch = activeStream.isProtectionCompatible(stream, previousStream) &&
-                (supportsChangeType || activeStream.isMediaCodecCompatible(stream, previousStream)) && !hasCriticalTexttracks(stream) &&
-                !seekTime;
+            seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream, previousStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(stream, previousStream)) && !hasCriticalTexttracks(stream));
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
