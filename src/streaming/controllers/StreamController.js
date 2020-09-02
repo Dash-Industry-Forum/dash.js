@@ -338,7 +338,7 @@ function StreamController() {
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
             let seamlessPeriodSwitch = previousStream.isProtectionCompatible(nextStream, previousStream) &&
-                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream));
+                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream);
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
@@ -350,6 +350,21 @@ function StreamController() {
                     p.setBufferingTime(nextStream.getStartTime());
                 });
             }
+        }
+    }
+
+    function hasCriticalTexttracks(stream) {
+        try {
+            // if the upcoming stream has stpp or wvtt texttracks we need to reset the sourcebuffers and can not prebuffer
+            const streamInfo = stream.getStreamInfo();
+            const as = adapter.getAdaptationForType(streamInfo.index, Constants.FRAGMENTED_TEXT, streamInfo);
+            if (!as) {
+                return false;
+            }
+
+            return (as.codecs.indexOf('stpp') !== -1) || (as.codecs.indexOf('wvtt') !== -1);
+        } catch (e) {
+            return false;
         }
     }
 
