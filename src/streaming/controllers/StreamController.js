@@ -338,7 +338,7 @@ function StreamController() {
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
             let seamlessPeriodSwitch = previousStream.isProtectionCompatible(nextStream, previousStream) &&
-                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream));
+                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream);
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
@@ -350,6 +350,21 @@ function StreamController() {
                     p.setBufferingTime(nextStream.getStartTime());
                 });
             }
+        }
+    }
+
+    function hasCriticalTexttracks(stream) {
+        try {
+            // if the upcoming stream has stpp or wvtt texttracks we need to reset the sourcebuffers and can not prebuffer
+            const streamInfo = stream.getStreamInfo();
+            const as = adapter.getAdaptationForType(streamInfo.index, Constants.FRAGMENTED_TEXT, streamInfo);
+            if (!as) {
+                return false;
+            }
+
+            return (as.codecs.indexOf('stpp') !== -1) || (as.codecs.indexOf('wvtt') !== -1);
+        } catch (e) {
+            return false;
         }
     }
 
@@ -425,6 +440,7 @@ function StreamController() {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
             if (nextStream) {
+                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}`);
                 switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
@@ -445,9 +461,26 @@ function StreamController() {
             const duration = refStream.getStreamInfo().duration;
             const streamEnd = parseFloat((start + duration).toFixed(5));
 
-            return streams.filter(function (stream) {
-                return (Math.abs(stream.getStreamInfo().start - streamEnd) <= 0.1);
-            })[0];
+            let i = 0;
+            let targetIndex = -1;
+            let lastDiff = NaN;
+            while (i < streams.length) {
+                const s = streams[i];
+                const diff = s.getStreamInfo().start - streamEnd;
+
+                if (diff >= 0 && (isNaN(lastDiff) || diff < lastDiff)) {
+                    lastDiff = diff;
+                    targetIndex = i;
+                }
+
+                i += 1;
+            }
+
+            if (targetIndex >= 0) {
+                return streams[targetIndex];
+            }
+
+            return null;
         }
 
         return null;
@@ -482,9 +515,9 @@ function StreamController() {
 
         let seamlessPeriodSwitch = false;
         if (previousStream) {
-            seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream, previousStream) &&
-                (supportsChangeType || activeStream.isMediaCodecCompatible(stream, previousStream))) &&
-                !seekTime && stream.getPreloaded();
+            seamlessPeriodSwitch = activeStream.isProtectionCompatible(stream, previousStream) &&
+                (supportsChangeType || activeStream.isMediaCodecCompatible(stream, previousStream)) && !hasCriticalTexttracks(stream) &&
+                !seekTime;
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
