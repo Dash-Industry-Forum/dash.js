@@ -593,6 +593,10 @@ function StreamController() {
         }
     }
 
+    function getActiveStream() {
+        return activeStream;
+    }
+
     function activateStream(seekTime, keepBuffers) {
         buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
 
@@ -1130,7 +1134,9 @@ function StreamController() {
         setProtectionData,
         getIsStreamSwitchInProgress,
         getHasMediaOrIntialisationError,
+        hasStreamFinishedBuffering,
         getStreams,
+        getActiveStream,
         reset
     };
 
