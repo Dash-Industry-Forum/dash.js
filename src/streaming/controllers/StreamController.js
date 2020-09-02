@@ -440,6 +440,7 @@ function StreamController() {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
             if (nextStream) {
+                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}`);
                 switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
@@ -460,9 +461,26 @@ function StreamController() {
             const duration = refStream.getStreamInfo().duration;
             const streamEnd = parseFloat((start + duration).toFixed(5));
 
-            return streams.filter(function (stream) {
-                return (Math.abs(stream.getStreamInfo().start - streamEnd) <= 0.1);
-            })[0];
+            let i = 0;
+            let targetIndex = -1;
+            let lastDiff = NaN;
+            while (i < streams.length) {
+                const s = streams[i];
+                const diff = s.getStreamInfo().start - streamEnd;
+
+                if (diff >= 0 && (isNaN(lastDiff) || diff < lastDiff)) {
+                    lastDiff = diff;
+                    targetIndex = i;
+                }
+
+                i += 1;
+            }
+
+            if (targetIndex >= 0) {
+                return streams[targetIndex];
+            }
+
+            return null;
         }
 
         return null;
