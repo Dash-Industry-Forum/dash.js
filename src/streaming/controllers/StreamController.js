@@ -528,7 +528,7 @@ function StreamController() {
         // Determine seek time when switching to new period
         // - seek at given seek time
         // - or seek at period start if upcoming period is not prebuffered
-        seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch ? stream.getStreamInfo().start : NaN);
+        seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
         logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}`);
         logger.info(`Seamless period switch is set to ${seamlessPeriodSwitch}`);
 
