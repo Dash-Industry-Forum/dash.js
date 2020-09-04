@@ -72,8 +72,8 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(StreamInfo, periodSwitch, seekTime) {
-        streamInfo = StreamInfo;
+    function initialize(sInfo, periodSwitch, seekTime) {
+        streamInfo = sInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
@@ -138,13 +138,16 @@ function PlaybackController() {
             }
         }
 
-        if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
-            // Trigger PLAYBACK_SEEKING event for controllers
-            eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: startTime
-            });
-            // Seek video model
-            seek(startTime, false, true);
+        if (!isNaN(startTime)) {
+            logger.debug(`onStreamInitialized: seektime is set to ${startTime}`);
+            // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
+            if (startTime === videoModel.getTime() && streamSwitch) {
+                eventBus.trigger(Events.PLAYBACK_SEEKING, {
+                    seekTime: startTime
+                });
+            } else {
+                seek(startTime, false, false);
+            }
         }
     }
 
@@ -441,6 +444,7 @@ function PlaybackController() {
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
+            logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
     }
@@ -804,6 +808,7 @@ function PlaybackController() {
         isPaused: isPaused,
         pause: pause,
         isSeeking: isSeeking,
+        getStreamEndTime,
         seek: seek,
         reset: reset
     };
