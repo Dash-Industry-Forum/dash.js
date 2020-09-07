@@ -687,7 +687,7 @@ function StreamProcessor(config) {
     }
 
     function onSeekTarget(e) {
-        if (e.mediaType !== type || e.streamId !== streamInfo.id) return;
+        if ((e.mediaType && e.mediaType !== type) || e.streamId !== streamInfo.id) return;
 
         bufferingTime = e.time;
         scheduleController.setSeekTarget(e.time);
