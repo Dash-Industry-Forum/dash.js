@@ -165,7 +165,7 @@ function ManifestUpdater() {
     }
 
     function onRefreshTimer() {
-        if (isPaused && !settings.get().streaming.scheduleWhilePaused) {
+        if (isPaused) {
             return;
         }
         if (isUpdating) {
@@ -189,8 +189,11 @@ function ManifestUpdater() {
     }
 
     function onPlaybackPaused(/*e*/) {
-        isPaused = true;
-        stopManifestRefreshTimer();
+        isPaused = !settings.get().streaming.scheduleWhilePaused;
+
+        if (isPaused) {
+            stopManifestRefreshTimer();
+        }
     }
 
     function onStreamsComposed(/*e*/) {
