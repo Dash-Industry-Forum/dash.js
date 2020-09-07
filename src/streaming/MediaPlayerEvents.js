@@ -344,10 +344,10 @@ class MediaPlayerEvents extends EventsBase {
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
 
         /**
-         * A gap occured in the timeline which requires a seek
-         * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
+         * A gap occured in the timeline which requires a seek to the next period
+         * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
          */
-        this.GAP_CAUSED_PLAYBACK_SEEK = 'gapCausedPlaybackSeek';
+        this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
     }
 }
 
