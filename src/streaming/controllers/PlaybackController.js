@@ -138,16 +138,13 @@ function PlaybackController() {
             }
         }
 
-        if (!isNaN(startTime)) {
-            logger.debug(`onStreamInitialized: seektime is set to ${startTime}`);
-            // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
-            if (startTime === videoModel.getTime() && streamSwitch) {
-                eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                    seekTime: startTime
-                });
-            } else {
-                seek(startTime, false, false);
-            }
+        if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
+            // Trigger PLAYBACK_SEEKING event for controllers
+            eventBus.trigger(Events.PLAYBACK_SEEKING, {
+                seekTime: startTime
+            });
+            // Seek video model
+            seek(startTime, false, true);
         }
     }
 
@@ -404,6 +401,7 @@ function PlaybackController() {
             return NaN;
         }
 
+        logger.debug(`Checking DVR window for at ${currentTime} with DVR window range ${DVRWindow.start} - ${DVRWindow.end}`);
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
