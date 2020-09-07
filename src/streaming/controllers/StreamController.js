@@ -618,9 +618,7 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
                 if (seekTime === playbackController.getTime()) {
-                    eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                        seekTime
-                    });
+                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime, streamId: activeStream.getId()});
                 } else {
                     playbackController.seek(seekTime);
                 }
