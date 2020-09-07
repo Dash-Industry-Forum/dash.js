@@ -134,6 +134,7 @@ function GapController() {
                 jumpGap(currentTime, true);
             } else {
                 lastPlaybackTime = currentTime;
+                lastGapJumpPosition = NaN;
             }
             wallclockTicked = 0;
         }

@@ -393,7 +393,7 @@ function StreamController() {
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            streamDuration = parseFloat(streamDuration + stream.getDuration());
+            streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
 
             if (time < streamDuration) {
                 return stream;
@@ -448,6 +448,7 @@ function StreamController() {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
             if (nextStream) {
+                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}`);
                 switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
