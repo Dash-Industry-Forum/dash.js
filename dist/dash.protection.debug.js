@@ -278,7 +278,7 @@ var CommonEncryption = (function () {
             var retVal = null;
             for (var i = 0; i < cpArray.length; ++i) {
                 var cp = cpArray[i];
-                if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' && cp.value.toLowerCase() === 'cenc') retVal = cp;
+                if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' && (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs')) retVal = cp;
             }
             return retVal;
         }
@@ -1087,12 +1087,18 @@ function ProtectionController(config) {
             try {
                 protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
             } catch (error) {
-                eventBus.trigger(events.KEY_SESSION_CREATED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + error.message) });
+                eventBus.trigger(events.KEY_SESSION_CREATED, {
+                    data: null,
+                    error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + error.message)
+                });
             }
         } else if (initData) {
             protectionModel.createKeySession(initData, protData, getSessionType(keySystem), cdmData);
         } else {
-            eventBus.trigger(events.KEY_SESSION_CREATED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (keySystem ? keySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!') });
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (keySystem ? keySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
+            });
         }
     }
 
@@ -1328,7 +1334,10 @@ function ProtectionController(config) {
                 if (keySystem === supportedKS[ksIdx].ks) {
                     var _ret = (function () {
 
-                        requestedKeySystems.push({ ks: supportedKS[ksIdx].ks, configs: [getKeySystemConfiguration(keySystem)] });
+                        requestedKeySystems.push({
+                            ks: supportedKS[ksIdx].ks,
+                            configs: [getKeySystemConfiguration(keySystem)]
+                        });
 
                         // Ensure that we would be granted key system access using the key
                         // system and codec information
@@ -1341,6 +1350,15 @@ function ProtectionController(config) {
                             } else {
                                 logger.info('DRM: KeySystem Access Granted');
                                 eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: event.data });
+                                var protData = getProtData(keySystem);
+                                if (protectionKeyController.isClearKey(keySystem)) {
+                                    // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                                    // initData and overwrite possible initData indicated in encrypted event (EME)
+                                    if (protData && protData.hasOwnProperty('clearkeys')) {
+                                        var initData = { kids: Object.keys(protData.clearkeys) };
+                                        supportedKS[ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
+                                    }
+                                }
                                 if (supportedKS[ksIdx].sessionId) {
                                     // Load MediaKeySession with sessionId
                                     loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
@@ -1368,7 +1386,10 @@ function ProtectionController(config) {
 
                 // Add all key systems to our request list since we have yet to select a key system
                 for (var i = 0; i < supportedKS.length; i++) {
-                    requestedKeySystems.push({ ks: supportedKS[i].ks, configs: [getKeySystemConfiguration(supportedKS[i].ks)] });
+                    requestedKeySystems.push({
+                        ks: supportedKS[i].ks,
+                        configs: [getKeySystemConfiguration(supportedKS[i].ks)]
+                    });
                 }
 
                 var keySystemAccess = undefined;
@@ -1378,7 +1399,10 @@ function ProtectionController(config) {
                         keySystem = undefined;
                         eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
                         if (!fromManifest) {
-                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error) });
+                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+                                data: null,
+                                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)
+                            });
                         }
                     } else {
                         keySystemAccess = event.data;
@@ -1404,11 +1428,13 @@ function ProtectionController(config) {
                         for (var i = 0; i < pendingNeedKeyData.length; i++) {
                             for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
                                 if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                    // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
-                                    // initData and overwrite possible initData indicated in encrypted event (EME)
-                                    if (protectionKeyController.isClearKey(keySystem) && protData && protData.hasOwnProperty('clearkeys')) {
-                                        var initData = { kids: Object.keys(protData.clearkeys) };
-                                        pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
+                                    if (protectionKeyController.isClearKey(keySystem)) {
+                                        // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                                        // initData and overwrite possible initData indicated in encrypted event (EME)
+                                        if (protData && protData.hasOwnProperty('clearkeys')) {
+                                            var initData = { kids: Object.keys(protData.clearkeys) };
+                                            pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
+                                        }
                                     }
                                     if (pendingNeedKeyData[i][ksIdx].sessionId) {
                                         // Load MediaKeySession with sessionId
@@ -1424,7 +1450,10 @@ function ProtectionController(config) {
                     } else {
                         keySystem = undefined;
                         if (!fromManifest) {
-                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error) });
+                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+                                data: null,
+                                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+                            });
                         }
                     }
                 };
@@ -1503,9 +1532,15 @@ function ProtectionController(config) {
             // TODO: Deprecated!
             url = protData.laURL;
         } else {
-            url = keySystem.getLicenseServerURLFromInitData(_CommonEncryption2['default'].getPSSHData(sessionToken.initData));
-            if (!url) {
-                url = e.data.laURL;
+            // For clearkey use the url defined in the manifest
+            if (protectionKeyController.isClearKey(keySystem)) {
+                url = keySystem.getLicenseServerUrlFromMediaInfo(mediaInfoArr);
+            } else {
+                var psshData = _CommonEncryption2['default'].getPSSHData(sessionToken.initData);
+                url = keySystem.getLicenseServerURLFromInitData(psshData);
+                if (!url) {
+                    url = e.data.laURL;
+                }
             }
         }
         // Possibly update or override the URL based on the message
@@ -1571,6 +1606,7 @@ function ProtectionController(config) {
             sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
         };
 
+        //const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         var reqPayload = keySystem.getLicenseRequestFromMessage(message);
         var reqMethod = licenseServerData.getHTTPMethod(messageType);
         var responseType = licenseServerData.getResponseType(keySystemString, messageType);
@@ -1961,13 +1997,14 @@ function ProtectionKeyController() {
         var supportedKS = [];
 
         if (cps) {
+            var cencContentProtection = _CommonEncryption2['default'].findCencContentProtection(cps);
             for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
                 ks = keySystems[ksIdx];
                 for (cpIdx = 0; cpIdx < cps.length; ++cpIdx) {
                     cp = cps[cpIdx];
                     if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
                         // Look for DRM-specific ContentProtection
-                        var initData = ks.getInitData(cp);
+                        var initData = ks.getInitData(cp, cencContentProtection);
 
                         supportedKS.push({
                             ks: keySystems[ksIdx],
@@ -2187,6 +2224,10 @@ function KeySystemClearKey(config) {
     config = config || {};
     var instance = undefined;
     var BASE64 = config.BASE64;
+    var LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
+        attributes: ['Laurl', 'laurl'],
+        prefixes: ['clearkey', 'dashif']
+    };
 
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
@@ -2219,20 +2260,89 @@ function KeySystemClearKey(config) {
         return clearkeySet;
     }
 
-    function getInitData(cp) {
-        return _CommonEncryption2['default'].parseInitDataFromContentProtection(cp, BASE64);
+    function getInitData(cp, cencContentProtection) {
+        try {
+            var initData = _CommonEncryption2['default'].parseInitDataFromContentProtection(cp, BASE64);
+
+            if (!initData && cencContentProtection) {
+                var cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection['cenc:default_KID']);
+                var data = { kids: [cencDefaultKid] };
+                initData = new TextEncoder().encode(JSON.stringify(data));
+            }
+
+            return initData;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function cencDefaultKidToBase64Representation(cencDefaultKid) {
+        try {
+            var kid = cencDefaultKid.replace(/-/g, '');
+            kid = btoa(kid.match(/\w{2}/g).map(function (a) {
+                return String.fromCharCode(parseInt(a, 16));
+            }).join(''));
+            return kid.replace(/=/g, '');
+        } catch (e) {
+            return null;
+        }
     }
 
     function getRequestHeadersFromMessage() /*message*/{
-        return null;
+        // Set content type to application/json by default
+        return {
+            'Content-Type': 'application/json'
+        };
     }
 
     function getLicenseRequestFromMessage(message) {
-        return new Uint8Array(message);
+        return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
     }
 
     function getLicenseServerURLFromInitData() /*initData*/{
         return null;
+    }
+
+    function getLicenseServerUrlFromMediaInfo(mediaInfo) {
+        try {
+            if (!mediaInfo || mediaInfo.length === 0) {
+                return null;
+            }
+            var i = 0;
+            var licenseServer = null;
+            while (i < mediaInfo.length && !licenseServer) {
+                var info = mediaInfo[i];
+                if (info && info.contentProtection && info.contentProtection.length > 0) {
+                    var clearkeyProtData = info.contentProtection.filter(function (cp) {
+                        return cp.schemeIdUri && cp.schemeIdUri === schemeIdURI;
+                    });
+                    if (clearkeyProtData && clearkeyProtData.length > 0) {
+                        var j = 0;
+                        while (j < clearkeyProtData.length && !licenseServer) {
+                            var ckData = clearkeyProtData[j];
+                            var k = 0;
+                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
+                                var l = 0;
+                                var attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
+                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
+                                    var prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
+                                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
+                                        licenseServer = ckData[attribute].__text;
+                                    }
+                                    l += 1;
+                                }
+                                k += 1;
+                            }
+                            j += 1;
+                        }
+                    }
+                }
+                i += 1;
+            }
+            return licenseServer;
+        } catch (e) {
+            return null;
+        }
     }
 
     function getCDMData() {
@@ -2253,6 +2363,7 @@ function KeySystemClearKey(config) {
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
         getSessionId: getSessionId,
+        getLicenseServerUrlFromMediaInfo: getLicenseServerUrlFromMediaInfo,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 
@@ -2661,7 +2772,7 @@ function KeySystemW3CClearKey(config) {
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
      *
-     * @param {ProtectionData} protectionData the protection data
+     * @param {ProtectionDataSet} protectionData the protection data
      * @param {ArrayBuffer} message the ClearKey CDM message
      * @returns {ClearKeyKeySet} the key set or null if none found
      * @throws {Error} if a keyID specified in the CDM message was not found in the
@@ -3700,14 +3811,17 @@ function ProtectionModel_21Jan2015(config) {
 
         // Generate initial key request.
         // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
-        var dataType = ks.systemString === _constantsProtectionConstants2['default'].CLEARKEY_KEYSTEM_STRING && protData && protData.clearkeys ? 'keyids' : 'cenc';
+        var dataType = ks.systemString === _constantsProtectionConstants2['default'].CLEARKEY_KEYSTEM_STRING && (initData || protData && protData.clearkeys) ? 'keyids' : 'cenc';
         session.generateRequest(dataType, initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
         })['catch'](function (error) {
             // TODO: Better error string
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name) });
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)
+            });
         });
     }
 
@@ -3746,11 +3860,17 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
             } else {
                 removeSession(sessionToken);
-                eventBus.trigger(events.KEY_SESSION_CREATED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')') });
+                eventBus.trigger(events.KEY_SESSION_CREATED, {
+                    data: null,
+                    error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')
+                });
             }
         })['catch'](function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, { data: null, error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name) });
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)
+            });
         });
     }
 
@@ -3761,7 +3881,10 @@ function ProtectionModel_21Jan2015(config) {
             logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_REMOVED, { data: sessionToken.getSessionID() });
         }, function (error) {
-            eventBus.trigger(events.KEY_SESSION_REMOVED, { data: null, error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name });
+            eventBus.trigger(events.KEY_SESSION_REMOVED, {
+                data: null,
+                error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name
+            });
         });
     }
 
@@ -3769,7 +3892,10 @@ function ProtectionModel_21Jan2015(config) {
         // Send our request to the key session
         closeKeySessionInternal(sessionToken)['catch'](function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: null, error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name });
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {
+                data: null,
+                error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name
+            });
         });
     }
 
@@ -4449,19 +4575,12 @@ function ClearKey() {
 
     var instance = undefined;
 
-    function getServerURLFromMessage(url, message /*, messageType*/) {
-        // Build ClearKey server query string
-        var jsonMsg = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
-        url += '/?';
-        for (var i = 0; i < jsonMsg.kids.length; i++) {
-            url += jsonMsg.kids[i] + '&';
-        }
-        url = url.substring(0, url.length - 1);
+    function getServerURLFromMessage(url /* message, messageType*/) {
         return url;
     }
 
     function getHTTPMethod() /*messageType*/{
-        return 'GET';
+        return 'POST';
     }
 
     function getResponseType() /*keySystemStr*/{

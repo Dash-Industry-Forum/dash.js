@@ -3734,7 +3734,7 @@ function MssParser(config) {
                 for (i = 0; i < adaptations.length; i++) {
                     if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
                         segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
-                        startTime = segments[0].t / adaptations[i].SegmentTemplate.timescale;
+                        startTime = segments[0].t;
                         if (timestampOffset === undefined) {
                             timestampOffset = startTime;
                         }
@@ -3745,16 +3745,16 @@ function MssParser(config) {
                     }
                 }
             }
-            // Patch segment templates timestamps and determine period start time (since audio/video should not be aligned to 0)
             if (timestampOffset > 0) {
+                // Patch segment templates timestamps and determine period start time (since audio/video should not be aligned to 0)
                 manifest.timestampOffset = timestampOffset;
                 for (i = 0; i < adaptations.length; i++) {
                     segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
                     for (j = 0; j < segments.length; j++) {
                         if (!segments[j].tManifest) {
-                            segments[j].tManifest = segments[j].t;
+                            segments[j].tManifest = segments[j].t.toString();
                         }
-                        segments[j].t -= timestampOffset * adaptations[i].SegmentTemplate.timescale;
+                        segments[j].t -= timestampOffset;
                     }
                     if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
                         period.start = Math.max(segments[0].t, period.start);
@@ -4047,6 +4047,12 @@ var MediaPlayerEvents = (function (_EventsBase) {
 
     /**
      * Triggered when a stream (period) is loaded
+     * @event MediaPlayerEvents#STREAM_UPDATED
+     */
+    this.STREAM_UPDATED = 'streamUpdated';
+
+    /**
+     * Triggered when a stream (period) is updated
      * @event MediaPlayerEvents#STREAM_INITIALIZED
      */
     this.STREAM_INITIALIZED = 'streamInitialized';
@@ -4205,6 +4211,12 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
      */
     this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
+
+    /**
+     * A gap occured in the timeline which requires a seek to the next period
+     * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
+     */
+    this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
   }
 
   return MediaPlayerEvents;
