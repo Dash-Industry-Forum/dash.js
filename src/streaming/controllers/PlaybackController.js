@@ -72,8 +72,8 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(StreamInfo, periodSwitch, seekTime) {
-        streamInfo = StreamInfo;
+    function initialize(sInfo, periodSwitch, seekTime) {
+        streamInfo = sInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
@@ -400,8 +400,10 @@ function PlaybackController() {
         if (!DVRWindow) {
             return NaN;
         }
+
+        logger.debug(`Checking DVR window for at ${currentTime} with DVR window range ${DVRWindow.start} - ${DVRWindow.end}`);
         if (currentTime > DVRWindow.end) {
-            actualTime = Math.max(DVRWindow.end - streamInfo.manifestInfo.minBufferTime * 2, DVRWindow.start);
+            actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
         } else if (currentTime > 0 && currentTime + 0.250 < DVRWindow.start && Math.abs(currentTime - DVRWindow.start) < 315360000) {
 
@@ -410,6 +412,7 @@ function PlaybackController() {
             // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             // Checking also duration of the DVR makes sense. We detected temporary situations in which currentTime
             // is bad reported by the browser which causes playback to jump to start (315360000 = 1 year)
+            //actualTime = DVRWindow.start;
             actualTime = DVRWindow.start;
         } else {
             actualTime = currentTime;
@@ -439,6 +442,7 @@ function PlaybackController() {
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
+            logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
     }
@@ -491,7 +495,6 @@ function PlaybackController() {
 
     function onPlaybackSeeking() {
         let seekTime = getTime();
-
         // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
         // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
         if (!isNaN(seekTarget) && seekTarget !== seekTime) {
@@ -561,7 +564,8 @@ function PlaybackController() {
         if (wallclockTimeIntervalId && e.isLast) {
             // PLAYBACK_ENDED was triggered elsewhere, react.
             logger.info('onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
-            videoModel.setCurrentTime(getStreamEndTime());
+            const seekTime = e.seekTime ? e.seekTime : getStreamEndTime();
+            videoModel.setCurrentTime(seekTime);
             pause();
             stopUpdatingWallclockTime();
         }
@@ -802,6 +806,7 @@ function PlaybackController() {
         isPaused: isPaused,
         pause: pause,
         isSeeking: isSeeking,
+        getStreamEndTime,
         seek: seek,
         reset: reset
     };

@@ -43,6 +43,10 @@ function KeySystemClearKey(config) {
     config = config || {};
     let instance;
     const BASE64 = config.BASE64;
+    const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
+        attributes: ['Laurl', 'laurl'],
+        prefixes: ['clearkey', 'dashif']
+    };
 
     /**
      * Returns desired clearkeys (as specified in the CDM message) from protection data
@@ -75,20 +79,90 @@ function KeySystemClearKey(config) {
         return clearkeySet;
     }
 
-    function getInitData(cp) {
-        return CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
+    function getInitData(cp, cencContentProtection) {
+        try {
+            let initData = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
+
+            if (!initData && cencContentProtection) {
+                const cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection['cenc:default_KID']);
+                const data = {kids: [cencDefaultKid]};
+                initData = new TextEncoder().encode(JSON.stringify(data));
+            }
+
+            return initData;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function cencDefaultKidToBase64Representation(cencDefaultKid) {
+        try {
+            let kid = cencDefaultKid.replace(/-/g, '');
+            kid = btoa(kid.match(/\w{2}/g).map((a) => {
+                return String.fromCharCode(parseInt(a, 16));
+            }).join(''));
+            return kid.replace(/=/g, '');
+        } catch (e) {
+            return null;
+        }
     }
 
     function getRequestHeadersFromMessage(/*message*/) {
-        return null;
+        // Set content type to application/json by default
+        return {
+            'Content-Type': 'application/json'
+        };
     }
 
     function getLicenseRequestFromMessage(message) {
-        return new Uint8Array(message);
+        return JSON.parse(String.fromCharCode.apply(null, new Uint8Array(message)));
     }
 
     function getLicenseServerURLFromInitData(/*initData*/) {
         return null;
+    }
+
+    function getLicenseServerUrlFromMediaInfo(mediaInfo) {
+        try {
+            if (!mediaInfo || mediaInfo.length === 0) {
+                return null;
+            }
+            let i = 0;
+            let licenseServer = null;
+            while (i < mediaInfo.length && !licenseServer) {
+                const info = mediaInfo[i];
+                if (info && info.contentProtection && info.contentProtection.length > 0) {
+                    const clearkeyProtData = info.contentProtection.filter((cp) => {
+                        return cp.schemeIdUri && cp.schemeIdUri === schemeIdURI;
+                    });
+                    if (clearkeyProtData && clearkeyProtData.length > 0) {
+                        let j = 0;
+                        while (j < clearkeyProtData.length && !licenseServer) {
+                            const ckData = clearkeyProtData[j];
+                            let k = 0;
+                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
+                                let l = 0;
+                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
+                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
+                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
+                                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
+                                        licenseServer = ckData[attribute].__text;
+                                    }
+                                    l += 1;
+                                }
+                                k += 1;
+                            }
+                            j += 1;
+                        }
+                    }
+                }
+                i += 1;
+            }
+            return licenseServer;
+        } catch
+            (e) {
+            return null;
+        }
     }
 
     function getCDMData() {
@@ -109,6 +183,7 @@ function KeySystemClearKey(config) {
         getLicenseServerURLFromInitData: getLicenseServerURLFromInitData,
         getCDMData: getCDMData,
         getSessionId: getSessionId,
+        getLicenseServerUrlFromMediaInfo,
         getClearKeysFromProtectionData: getClearKeysFromProtectionData
     };
 

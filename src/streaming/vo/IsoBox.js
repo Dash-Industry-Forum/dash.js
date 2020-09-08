@@ -65,6 +65,7 @@ class IsoBox {
                 break;
             case 'emsg':
                 this.id = boxData.id;
+                this.version = boxData.version === 1 ? 1 : 0;
                 this.value = boxData.value;
                 this.timescale = boxData.timescale;
                 this.scheme_id_uri = boxData.scheme_id_uri;

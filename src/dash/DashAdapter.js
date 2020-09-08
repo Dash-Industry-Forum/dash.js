@@ -110,7 +110,6 @@ function DashAdapter() {
             representationInfo.DVRWindow = voRepresentation.segmentAvailabilityRange;
             representationInfo.fragmentDuration = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length > 0 ? voRepresentation.segments[0].duration : NaN);
             representationInfo.MSETimeOffset = voRepresentation.MSETimeOffset;
-            representationInfo.useCalculatedLiveEdgeTime = voRepresentation.useCalculatedLiveEdgeTime;
             representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);
 
             return representationInfo;
@@ -392,11 +391,18 @@ function DashAdapter() {
         const schemeIdUri = eventBox.scheme_id_uri;
         const value = eventBox.value;
         const timescale = eventBox.timescale;
-        const presentationTimeDelta = eventBox.presentation_time_delta;
+        let presentationTimeDelta;
+        let calculatedPresentationTime;
+        if (eventBox.version === 0) {
+            presentationTimeDelta = eventBox.presentation_time_delta;
+            calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
+        } else {
+            presentationTimeDelta = 0;
+            calculatedPresentationTime = eventBox.presentation_time_delta;
+        }
         const duration = eventBox.event_duration;
         const id = eventBox.id;
         const messageData = eventBox.message_data;
-        const calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
 
         if (!eventStreams[schemeIdUri + '/' + value]) return null;
 
@@ -572,19 +578,6 @@ function DashAdapter() {
     }
 
     /**
-     *
-     * @param {object} mediaInfo
-     * @returns {boolean}
-     * @memberOf module:DashAdapter
-     * @instance
-     * @ignore
-     */
-    function getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo) {
-        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
-        return dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
-    }
-
-    /**
      * Checks if the manifest has a DVB profile
      * @param {object} manifest
      * @returns {boolean}
@@ -635,14 +628,14 @@ function DashAdapter() {
     /**
      * Returns the bandwidth for a given representation id
      * @param {number} representationId
-     * @param {number} periodId
+     * @param {number} periodIdx
      * @returns {number} bandwidth
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getBandwidthForRepresentation(representationId, periodId) {
+    function getBandwidthForRepresentation(representationId, periodIdx) {
         let representation;
-        let period = getPeriod(periodId);
+        let period = getPeriod(periodIdx);
 
         representation = findRepresentation(period, representationId);
 
@@ -676,6 +669,26 @@ function DashAdapter() {
         let period = getPeriod(periodIdx);
 
         return findMaxBufferIndex(period, bufferType);
+    }
+
+    /**
+     * Returns the voPeriod object for a given id
+     * @param {String} id
+     * @returns {object|null}
+     */
+    function getPeriodById(id) {
+        if (!id || voPeriods.length === 0) {
+            return null;
+        }
+        const periods = voPeriods.filter((p) => {
+            return p.id === id;
+        });
+
+        if (periods && periods.length > 0) {
+            return periods[0];
+        }
+
+        return null;
     }
 
     function reset() {
@@ -821,8 +834,8 @@ function DashAdapter() {
         }
     }
 
-    function getPeriod(periodId) {
-        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodId] : null;
+    function getPeriod(periodIdx) {
+        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodIdx] : null;
     }
 
     function findRepresentationIndex(period, representationId) {
@@ -896,9 +909,9 @@ function DashAdapter() {
         getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
+        getMpd,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
         getIsTextTrack: getIsTextTrack,
         getUTCTimingSources: getUTCTimingSources,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
@@ -914,6 +927,7 @@ function DashAdapter() {
         getCodec: getCodec,
         getVoAdaptations: getVoAdaptations,
         getVoPeriods: getVoPeriods,
+        getPeriodById,
         setCurrentMediaInfo: setCurrentMediaInfo,
         reset: reset
     };

@@ -13,12 +13,12 @@
         function init() {
             var video,
                 player,
-                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
 
-            // restart playback in muted mode when auto playback was not allowed by the browser
+            /* restart playback in muted mode when auto playback was not allowed by the browser */
             player.on(dashjs.MediaPlayer.events.PLAYBACK_NOT_ALLOWED, function (data) {
                 console.log('Playback did not start due to auto play restrictions. Muting audio and reloading');
                 video.muted = true;

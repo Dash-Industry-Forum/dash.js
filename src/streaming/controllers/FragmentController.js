@@ -52,7 +52,8 @@ function FragmentController( config ) {
 
     let instance,
         logger,
-        fragmentModels;
+        fragmentModels,
+        streamId;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -131,6 +132,8 @@ function FragmentController( config ) {
         const isInit = request.isInitializationRequest();
         const streamInfo = request.mediaInfo.streamInfo;
 
+        if (streamInfo && streamInfo.id !== streamId) return;
+
         if (e.error) {
             if (e.request.mediaType === Constants.AUDIO || e.request.mediaType === Constants.VIDEO || e.request.mediaType === Constants.FRAGMENTED_TEXT) {
                 // add service location to blacklist controller - only for audio or video. text should not set errors
@@ -149,8 +152,13 @@ function FragmentController( config ) {
         });
     }
 
+    function setStreamId (id) {
+        streamId = id;
+    }
+
     instance = {
         getModel: getModel,
+        setStreamId: setStreamId,
         reset: reset
     };
 

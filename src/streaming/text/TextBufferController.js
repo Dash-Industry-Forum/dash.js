@@ -83,8 +83,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
 
-    function createBuffer(mediaInfoArr) {
-        return _BufferControllerImpl.createBuffer(mediaInfoArr);
+    function createBuffer(mediaInfoArr, previousBuffers) {
+        return _BufferControllerImpl.createBuffer(mediaInfoArr, previousBuffers);
     }
 
     function getType() {
@@ -142,6 +142,10 @@ function TextBufferController(config) {
         }
     }
 
+    function updateAppendWindow() {
+        _BufferControllerImpl.updateAppendWindow();
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -158,7 +162,8 @@ function TextBufferController(config) {
         appendInitSegment: appendInitSegment,
         getRangeAt: getRangeAt,
         reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        updateTimestampOffset: updateTimestampOffset,
+        updateAppendWindow
     };
 
     setup();

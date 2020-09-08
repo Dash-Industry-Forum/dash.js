@@ -15,12 +15,12 @@
         function init() {
             var video,
                 player,
-                url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
 
-            // don't use dash.js default rules
+            /* don't use dash.js default rules */
             player.updateSettings({
                 'streaming': {
                     'abr': {
@@ -29,8 +29,8 @@
                 }
             });
 
-            // add my custom quality switch rule. Look at LowestBitrateRule.js to know more
-            // about the structure of a custom rule
+            /* add my custom quality switch rule. Look at LowestBitrateRule.js to know more */
+            /* about the structure of a custom rule */
             player.addABRCustomRule('qualitySwitchRules', 'LowestBitrateRule', LowestBitrateRule);
 
             player.initialize(video, url, true);

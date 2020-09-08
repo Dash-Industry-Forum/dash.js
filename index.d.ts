@@ -36,7 +36,7 @@ declare namespace dashjs {
         setMediaElement(element: HTMLMediaElement): void;
         setSessionType(type: string): void;
         setRobustnessLevel(level: string): void;
-        setProtectionData(protData: ProtectionData): void;
+        setProtectionData(protDataSet: ProtectionDataSet): void;
         getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
         getKeySystems(): KeySystem[];
         setKeySystems(keySystems: KeySystem[]): void;
@@ -111,10 +111,13 @@ declare namespace dashjs {
             liveDelay?: number;
             scheduleWhilePaused?: boolean;
             fastSwitchEnabled?: boolean;
+            flushBufferAtTrackSwitch?: boolean;
+            calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
             bufferAheadToKeep?: number;
             jumpGaps?: boolean;
+            jumpLargeGaps?: boolean;
             smallGapLimit?: number;
             stableBufferTime?: number;
             bufferTimeAtTopQuality?: number;
@@ -125,7 +128,7 @@ declare namespace dashjs {
             keepProtectionMediaKeys?: boolean;
             useManifestDateHeaderTimeSource?: boolean;
             useSuggestedPresentationDelay?: boolean;
-            useAppendWindowEnd?: boolean,
+            useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             liveCatchUpMinDrift?: number;
             liveCatchUpMaxDrift?: number;
@@ -305,7 +308,7 @@ declare namespace dashjs {
         getXHRWithCredentialsForType(type: string): boolean;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
-        setProtectionData(value: ProtectionData): void;
+        setProtectionData(value: ProtectionDataSet): void;
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -922,7 +925,11 @@ declare namespace dashjs {
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
     }
 
-    export class ProtectionData {
+    export interface ProtectionDataSet {
+        [keySystemName: string]: ProtectionData;
+    }
+
+    export interface ProtectionData {
         /**
          * A license server URL to use with this key system.
          * When specified as a string, a single URL will be used regardless of message type.
