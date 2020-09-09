@@ -111,6 +111,7 @@ declare namespace dashjs {
             liveDelay?: number;
             scheduleWhilePaused?: boolean;
             fastSwitchEnabled?: boolean;
+            reuseSourceBuffers?: boolean;
             flushBufferAtTrackSwitch?: boolean;
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;

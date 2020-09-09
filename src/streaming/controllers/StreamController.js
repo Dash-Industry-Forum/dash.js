@@ -97,6 +97,7 @@ function StreamController() {
         preloadingStreams,
         supportsChangeType,
         settings,
+        firstLicenseIsFetched,
         preBufferingCheckInProgress;
 
     function setup() {
@@ -149,6 +150,7 @@ function StreamController() {
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
     }
 
     function unRegisterEvents() {
@@ -164,6 +166,11 @@ function StreamController() {
         eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
+    }
+
+    function onKeySessionUpdated() {
+        firstLicenseIsFetched = true;
     }
 
     /*
@@ -333,7 +340,7 @@ function StreamController() {
 
     function canSourceBuffersBeReused(nextStream, previousStream) {
         try {
-            return (previousStream.isProtectionCompatible(nextStream, previousStream) &&
+            return (settings.get().streaming.reuseSourceBuffers && (previousStream.isProtectionCompatible(nextStream, previousStream) || firstLicenseIsFetched) &&
                 (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
         } catch (e) {
             return false;
@@ -530,8 +537,7 @@ function StreamController() {
         // - seek at given seek time
         // - or seek at period start if upcoming period is not prebuffered
         seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
-        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}`);
-        logger.info(`Seamless period switch is set to ${seamlessPeriodSwitch}`);
+        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${seamlessPeriodSwitch}`);
 
         activeStream = stream;
         preloadingStreams = preloadingStreams.filter((s) => {
@@ -1055,6 +1061,7 @@ function StreamController() {
         isPeriodSwitchInProgress = false;
         prebufferingCanStartInterval = null;
         preBufferingCheckInProgress = false;
+        firstLicenseIsFetched = false;
         preloadingStreams = [];
     }
 

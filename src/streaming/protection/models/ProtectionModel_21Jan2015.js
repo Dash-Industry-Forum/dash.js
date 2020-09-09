@@ -205,7 +205,7 @@ function ProtectionModel_21Jan2015(config) {
 
         // Generate initial key request.
         // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
-        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData ||  (protData && protData.clearkeys)) ? 'keyids' : 'cenc';
+        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData || (protData && protData.clearkeys)) ? 'keyids' : 'cenc';
         session.generateRequest(dataType, initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
             eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
@@ -226,9 +226,13 @@ function ProtectionModel_21Jan2015(config) {
         if (protectionKeyController.isClearKey(keySystem)) {
             message = message.toJWK();
         }
-        session.update(message).catch(function (error) {
-            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
-        });
+        session.update(message)
+            .then(() => {
+                eventBus.trigger(events.KEY_SESSION_UPDATED);
+            })
+            .catch(function (error) {
+                eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
+            });
     }
 
     function loadKeySession(sessionID, initData, sessionType) {

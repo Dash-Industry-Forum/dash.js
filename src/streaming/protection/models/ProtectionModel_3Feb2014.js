@@ -243,6 +243,7 @@ function ProtectionModel_3Feb2014(config) {
             // For clearkey, message is a ClearKeyKeySet
             session.update(new Uint8Array(message.toJWK()));
         }
+        eventBus.trigger(events.KEY_SESSION_UPDATED);
     }
 
     /**

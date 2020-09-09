@@ -239,6 +239,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
+ * @property {boolean} [reuseSourceBuffers=true] Enable reuse of existing source buffers when switching between periods
  * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=true] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
  * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
  * @property {number} [bufferToKeep=20]
@@ -393,6 +394,7 @@ function Settings() {
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
+            reuseSourceBuffers: true,
             calcSegmentAvailabilityRangeFromTimeline: true,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
