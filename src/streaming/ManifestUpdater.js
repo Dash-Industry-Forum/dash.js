@@ -45,6 +45,7 @@ function ManifestUpdater() {
         refreshDelay,
         refreshTimer,
         isPaused,
+        isStopped,
         isUpdating,
         manifestLoader,
         manifestModel,
@@ -93,6 +94,7 @@ function ManifestUpdater() {
         refreshDelay = NaN;
         isUpdating = false;
         isPaused = true;
+        isStopped = false;
         stopManifestRefreshTimer();
     }
 
@@ -115,6 +117,10 @@ function ManifestUpdater() {
 
     function startManifestRefreshTimer(delay) {
         stopManifestRefreshTimer();
+
+        if (isStopped) {
+            return;
+        }
 
         if (isNaN(delay) && !isNaN(refreshDelay)) {
             delay = refreshDelay * 1000;
@@ -143,6 +149,8 @@ function ManifestUpdater() {
         // Stop manifest update, ignore static manifest and signal end of dynamic stream to detect end of stream
         if (manifestModel.getValue() && manifestModel.getValue().type === DashConstants.DYNAMIC && manifest.type === DashConstants.STATIC) {
             eventBus.trigger(Events.DYNAMIC_STREAM_COMPLETED);
+            isUpdating = false;
+            isStopped = true;
             return;
         }
 
