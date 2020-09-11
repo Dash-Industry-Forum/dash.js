@@ -241,7 +241,7 @@ function StreamProcessor(config) {
             // Update has been postponed, update nevertheless DVR info
             const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
             if (activeStreamId === streamInfo.id) {
-                addDVRMetric();
+                playbackController.getStreamController().addDVRMetric(getType(), representationController.getCurrentRepresentation());
             }
         }
     }
@@ -261,7 +261,7 @@ function StreamProcessor(config) {
 
         const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
         if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
-            addDVRMetric();
+            playbackController.getStreamController().addDVRMetric(getType(), representationController.getCurrentRepresentation());
         }
     }
 
@@ -288,13 +288,6 @@ function StreamProcessor(config) {
             bufferingTime = e.from;
             bufferPruned = true;
         }
-    }
-
-    function addDVRMetric() {
-        const manifestInfo = streamInfo.manifestInfo;
-        const isDynamic = manifestInfo.isDynamic;
-        const range = timelineConverter.calcSegmentAvailabilityRange(representationController.getCurrentRepresentation(), isDynamic);
-        dashMetrics.addDVRInfo(getType(), playbackController.getTime(), manifestInfo, range);
     }
 
     function getType() {
