@@ -348,15 +348,6 @@ function StreamController() {
         }
     }
 
-    function addDVRMetric(type, currentRepresentation) {
-        const isDynamic = adapter.getIsDynamic();
-        const manifestInfo = getActiveStreamInfo().manifestInfo;
-        const time = playbackController.getTime();
-        const range = timelineConverter.calcSegmentAvailabilityRangeForAllPeriods(streams, currentRepresentation, isDynamic);
-        dashMetrics.addDVRInfo(type, time, manifestInfo, range);
-        console.log(`Adding DVR window for ${type} ${range.start} - ${range.end}`);
-    }
-
     function onStreamCanLoadNext(nextStream, previousStream = null) {
 
         if (mediaSource && !nextStream.getPreloaded()) {
@@ -1158,7 +1149,6 @@ function StreamController() {
         hasStreamFinishedBuffering,
         getStreams,
         getActiveStream,
-        addDVRMetric,
         reset
     };
 

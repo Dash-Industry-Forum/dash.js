@@ -228,9 +228,19 @@ function StreamProcessor(config) {
             // Update has been postponed, update nevertheless DVR info
             const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
             if (activeStreamId === streamInfo.id) {
-                playbackController.getStreamController().addDVRMetric(getType(), representationController.getCurrentRepresentation());
+                addDVRMetric(getType(), representationController.getCurrentRepresentation());
             }
         }
+    }
+
+    function addDVRMetric(type, currentRepresentation) {
+        const manifestInfo = streamInfo.manifestInfo;
+        const isDynamic = manifestInfo.isDynamic;
+        const time = playbackController.getTime();
+        const streams = playbackController.getStreamController().getStreams();
+        const range = timelineConverter.calcSegmentAvailabilityRangeForAllPeriods(streams, currentRepresentation, isDynamic);
+        dashMetrics.addDVRInfo(type, time, manifestInfo, range);
+        console.log(`Adding DVR window for ${type} ${range.start} - ${range.end}`);
     }
 
     function onQualityChanged(e) {
@@ -248,7 +258,7 @@ function StreamProcessor(config) {
 
         const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
         if (isDynamic && !manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
-            playbackController.getStreamController().addDVRMetric(getType(), representationController.getCurrentRepresentation());
+            addDVRMetric(getType(), representationController.getCurrentRepresentation());
         }
     }
 

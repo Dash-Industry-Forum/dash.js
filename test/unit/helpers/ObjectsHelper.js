@@ -8,24 +8,34 @@ class ObjectsHelper {
 
         return {
             getType: () => type,
-            getCurrentTrack: () => {},
-            getStreamInfo: () => { return { id: 'DUMMY_STREAM-01', manifestInfo: {isDynamic: true} }; },
-            getMediaInfo: () => { return { bitrateList: [
-                                                { bandwidth: 1000000 },
-                                                { bandwidth: 2000000 },
-                                                { bandwidth: 3000000 },
-                                           ],
-                                           mimeType: "video/mp4" }}
+            getCurrentTrack: () => {
+            },
+            getStreamInfo: () => {
+                return {id: 'DUMMY_STREAM-01', manifestInfo: {isDynamic: true}};
+            },
+            getMediaInfo: () => {
+                return {
+                    bitrateList: [
+                        {bandwidth: 1000000},
+                        {bandwidth: 2000000},
+                        {bandwidth: 3000000},
+                    ],
+                    mimeType: "video/mp4"
+                }
+            }
         };
     }
 
     getDummyLogger() {
-        return (message) => { console.log(message); };
+        return (message) => {
+            console.log(message);
+        };
     }
 
     getDummyIndexHandler() {
         return {
-            updateRepresentation: () => {}
+            updateRepresentation: () => {
+            }
         };
     }
 
@@ -34,24 +44,38 @@ class ObjectsHelper {
         let end = undefined;
 
         return {
-            initialize: () => {},
-            reset: () => {},
-            getClientTimeOffset: () => {},
+            initialize: () => {
+            },
+            reset: () => {
+            },
+            getClientTimeOffset: () => {
+            },
             calcAvailabilityStartTimeFromPresentationTime: () => 0,
             calcAvailabilityEndTimeFromPresentationTime: () => 0,
             calcPeriodRelativeTimeFromMpdRelativeTime: () => NaN,
             calcMediaTimeFromPresentationTime: () => undefined,
-            calcSegmentAvailabilityRange: () =>  { return {start: start, end: end};},
-            isTimeSyncCompleted: () => {return true;},
-            setExpectedLiveEdge: () => {},
-            setRange: (range) => {start = range.start; end = range.end;}
+            calcSegmentAvailabilityRangeForAllPeriods: () => {
+                return {start, end};
+            },
+            calcSegmentAvailabilityRangeForRepresentation: () => {
+                return {start: start, end: end};
+            },
+            isTimeSyncCompleted: () => {
+                return true;
+            },
+            setExpectedLiveEdge: () => {
+            },
+            setRange: (range) => {
+                start = range.start;
+                end = range.end;
+            }
         };
     }
 
     getDummyBaseURLController() {
         return {
             resolve: () => {
-                return  {
+                return {
                     url: '',
                     serviceLocation: ''
                 };
@@ -61,7 +85,8 @@ class ObjectsHelper {
 
     getDummyBlacklistController() {
         return {
-            contains: () => {}
+            contains: () => {
+            }
         };
     }
 }

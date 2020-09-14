@@ -76,6 +76,10 @@ class StreamControllerMock {
     getActiveStreamProcessors() {
         return [];
     }
+
+    getStreams() {
+        return [];
+    }
 }
 
 export default StreamControllerMock;

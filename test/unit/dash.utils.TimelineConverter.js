@@ -19,13 +19,6 @@ describe('TimelineConverter', function () {
 
     timelineConverter.initialize();
 
-    it('should set an expected live edge', function () {
-        const expectedValue = 10;
-
-        timelineConverter.setExpectedLiveEdge(expectedValue);
-        expect(timelineConverter.getExpectedLiveEdge()).to.be.equal(expectedValue);
-    });
-
     it('should calculate presentation time from media time', function () {
         const expectedValue = 0;
         const mediaTime = 10;
@@ -51,7 +44,7 @@ describe('TimelineConverter', function () {
         representation.adaptation.period.start = 0;
         representation.adaptation.period.duration = 100;
         representation.adaptation.period.mpd.manifest.type = 'static';
-        const range = timelineConverter.calcSegmentAvailabilityRange(representation, false);
+        const range = timelineConverter.calcSegmentAvailabilityRangeForRepresentation(representation, false);
         expect(range.start).to.be.equal(representation.adaptation.period.start);
         expect(range.end).to.be.equal(representation.adaptation.period.duration);
     });
@@ -76,9 +69,8 @@ describe('TimelineConverter', function () {
 
             var clock = sinon.useFakeTimers(new Date().getTime());
             representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-            timelineConverter.setExpectedLiveEdge(100);
 
-            const range = timelineConverter.calcSegmentAvailabilityRange(representation, true);
+            const range = timelineConverter.calcSegmentAvailabilityRangeForRepresentation(representation, true);
             expect(range.start).to.be.equal(0);
             expect(range.end).to.be.equal(49);
             clock.restore();
