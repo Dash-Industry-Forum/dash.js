@@ -36,7 +36,6 @@ import BufferController from './controllers/BufferController';
 import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
-import LiveEdgeFinder from './utils/LiveEdgeFinder';
 import FactoryMaker from '../core/FactoryMaker';
 import {checkInteger} from './utils/SupervisorTools';
 import EventBus from '../core/EventBus';
@@ -82,7 +81,6 @@ function StreamProcessor(config) {
         bufferController,
         scheduleController,
         representationController,
-        liveEdgeFinder,
         indexHandler,
         bufferingTime,
         bufferPruned;
@@ -122,14 +120,6 @@ function StreamProcessor(config) {
             constants: Constants,
             urlUtils: URLUtils(context).getInstance()
         });
-
-        // Create live edge finder for dynamic streams
-        isDynamic = streamInfo.manifestInfo.isDynamic;
-        if (isDynamic) {
-            liveEdgeFinder = LiveEdgeFinder(context).create({
-                timelineConverter: timelineConverter
-            });
-        }
 
         // Create/initialize controllers
         indexHandler.initialize(isDynamic);
@@ -199,11 +189,6 @@ function StreamProcessor(config) {
         if (representationController) {
             representationController.reset();
             representationController = null;
-        }
-
-        if (liveEdgeFinder) {
-            liveEdgeFinder.reset();
-            liveEdgeFinder = null;
         }
 
         if (abrController) {
@@ -619,11 +604,10 @@ function StreamProcessor(config) {
 
     function getLiveStartTime() {
         if (!isDynamic) return NaN;
-        if (!liveEdgeFinder) return NaN;
 
         let liveStartTime = NaN;
         const currentRepresentationInfo = getRepresentationInfo();
-        const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
+        const liveEdge = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end : 0;
 
         if (isNaN(liveEdge)) {
             return NaN;

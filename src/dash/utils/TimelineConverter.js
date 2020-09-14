@@ -337,11 +337,6 @@ function TimelineConverter() {
         return mpdRelativeTime - periodStartTime;
     }
 
-    /*
-    * We need to figure out if we want to timesync for segmentTimeine where useCalculatedLiveEdge = true
-    * seems we figure out client offset based on logic in liveEdgeFinder getLiveEdge timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
-    * FYI StreamController's onManifestUpdated entry point to timeSync
-    * */
     function onTimeSyncComplete(e) {
 
         if (isClientServerTimeSyncCompleted) return;
