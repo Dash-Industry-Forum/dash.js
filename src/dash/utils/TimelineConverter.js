@@ -146,7 +146,7 @@ function TimelineConverter() {
 
         // Dynamic manifests with SegmentTimeline
         if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
-            _calcAvailabilityRangeForDynamicTimelineManifest(streams, voRepresentation);
+            return _calcAvailabilityRangeForDynamicTimelineManifest(streams, voRepresentation);
         }
 
         // Other dynamic manifests
