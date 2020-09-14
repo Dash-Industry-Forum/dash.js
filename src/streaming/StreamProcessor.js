@@ -121,6 +121,8 @@ function StreamProcessor(config) {
             urlUtils: URLUtils(context).getInstance()
         });
 
+        isDynamic = streamInfo.manifestInfo.isDynamic;
+
         // Create/initialize controllers
         indexHandler.initialize(isDynamic);
         abrController.registerStreamType(type, instance);

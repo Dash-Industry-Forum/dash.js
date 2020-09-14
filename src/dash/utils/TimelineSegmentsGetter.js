@@ -42,8 +42,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
     let instance;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime') ||
-            !timelineConverter.hasOwnProperty('calcSegmentAvailabilityRange')) {
+        if (!timelineConverter) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }

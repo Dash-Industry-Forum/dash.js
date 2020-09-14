@@ -178,11 +178,6 @@ function DashHandler(config) {
         selectedMimeType = newMimeType;
     }
 
-    function setExpectedLiveEdge(liveEdge) {
-        timelineConverter.setExpectedLiveEdge(liveEdge);
-        dashMetrics.updateManifestUpdateInfo({presentationStartTime: liveEdge});
-    }
-
     function onRepresentationUpdateStarted(eventObj) {
         if (eventObj.sender.getType() !== getType()) return;
 
@@ -404,13 +399,6 @@ function DashHandler(config) {
             };
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
-
-            if (isDynamicManifest) {
-                const lastSegment = segments[segments.length - 1];
-                const liveEdge = lastSegment.presentationStartTime - 8;
-                // the last segment is the Expected, not calculated, live edge.
-                setExpectedLiveEdge(liveEdge);
-            }
         }
 
         if (!representation.hasInitialization()) {

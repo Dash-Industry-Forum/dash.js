@@ -73,14 +73,6 @@ function TimelineConverter() {
         clientServerTimeShift = value;
     }
 
-    function getExpectedLiveEdge() {
-        return expectedLiveEdge;
-    }
-
-    function setExpectedLiveEdge(value) {
-        expectedLiveEdge = value;
-    }
-
     function calcAvailabilityTimeFromPresentationTime(presentationTime, mpd, isDynamic, calculateEnd) {
         let availabilityTime = NaN;
 
@@ -364,8 +356,6 @@ function TimelineConverter() {
         setTimeSyncCompleted,
         getClientTimeOffset,
         setClientTimeOffset,
-        getExpectedLiveEdge,
-        setExpectedLiveEdge,
         calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
         calcPresentationTimeFromWallTime,
