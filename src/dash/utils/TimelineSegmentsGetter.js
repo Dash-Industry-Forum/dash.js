@@ -96,7 +96,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
-                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
+                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRangeForRepresentation(representation, isDynamic).end);
                     repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
                     representation.segmentDuration = frag.d / fTimescale;
                 }

@@ -145,36 +145,6 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    function calcSegmentAvailabilityRange(voRepresentation, isDynamic) {
-        // Static Range Finder
-        const voPeriod = voRepresentation.adaptation.period;
-        const range = {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
-        if (!isDynamic) return range;
-
-        if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
-            return voRepresentation.segmentAvailabilityRange;
-        }
-
-        // Dynamic Range Finder
-        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
-
-        // Specific use case of SegmentTimeline without timeShiftBufferDepth
-        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
-            return calcSegmentAvailabilityRangeFromTimeline(voRepresentation);
-        }
-
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        const periodEnd = voPeriod.start + voPeriod.duration;
-        range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
-
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
-        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
-
-        range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
-
-        return range;
-    }
-
     function calcSegmentAvailabilityRangeForAllPeriods(streams, voRepresentation, isDynamic) {
 
         // Static manifests
@@ -273,6 +243,36 @@ function TimelineConverter() {
         } catch (e) {
             return time;
         }
+    }
+
+    function calcSegmentAvailabilityRangeForRepresentation(voRepresentation, isDynamic) {
+        // Static Range Finder
+        const voPeriod = voRepresentation.adaptation.period;
+        const range = {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
+        if (!isDynamic) return range;
+
+        if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
+            return voRepresentation.segmentAvailabilityRange;
+        }
+
+        // Dynamic Range Finder
+        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
+
+        // Specific use case of SegmentTimeline without timeShiftBufferDepth
+        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
+            return calcSegmentAvailabilityRangeFromTimeline(voRepresentation);
+        }
+
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+        const periodEnd = voPeriod.start + voPeriod.duration;
+        range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
+
+        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
+        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
+
+        range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
+
+        return range;
     }
 
     function calcSegmentAvailabilityRangeFromTimeline(voRepresentation) {
@@ -377,7 +377,7 @@ function TimelineConverter() {
         calcPresentationTimeFromMediaTime,
         calcPeriodRelativeTimeFromMpdRelativeTime,
         calcMediaTimeFromPresentationTime,
-        calcSegmentAvailabilityRange,
+        calcSegmentAvailabilityRangeForRepresentation,
         getPeriodEnd,
         calcWallTimeForSegment,
         calcSegmentAvailabilityRangeForAllPeriods,
