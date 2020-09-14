@@ -239,7 +239,6 @@ function MetricsModel(config) {
         vo.range = range;
         vo.manifestInfo = mpd;
 
-        console.log(`Add DVR Info with range ${range.start} - ${range.end}`);
         pushAndNotify(mediaType, MetricsConstants.DVR_INFO, vo);
     }
 

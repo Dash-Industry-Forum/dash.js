@@ -260,7 +260,7 @@ function StreamProcessor(config) {
         dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
 
         const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
-        if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
+        if (isDynamic && !manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
             playbackController.getStreamController().addDVRMetric(getType(), representationController.getCurrentRepresentation());
         }
     }
