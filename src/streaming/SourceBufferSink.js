@@ -123,6 +123,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             if (!keepBuffer) {
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
+                        logger.debug(`Removing sourcebuffer from media source`);
                         mediaSource.removeSourceBuffer(buffer);
                     }
                 } catch (e) {

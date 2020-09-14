@@ -411,6 +411,12 @@ function ScheduleController(config) {
     }
 
     function onBufferCleared(e) {
+        if (replacingBuffer && settings.get().streaming.flushBufferAtTrackSwitch) {
+            // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
+            // otherwise audio track switch will be effective only once after previous buffered track is consumed
+            playbackController.seek(playbackController.getTime() + 0.001, false, true);
+        }
+
         // (Re)start schedule once buffer has been pruned after a QuotaExceededError
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             start();

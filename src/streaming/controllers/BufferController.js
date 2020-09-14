@@ -281,7 +281,7 @@ function BufferController(config) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 // Notify Schedulecontroller to stop scheduling until buffer has been pruned
-                triggerEvent(Events.QUOTA_EXCEEDED, { criticalBufferLevel: criticalBufferLevel });
+                triggerEvent(Events.QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
                 clearBuffers(getClearRanges());
             }
             return;
@@ -304,7 +304,7 @@ function BufferController(config) {
             // (and previous buffered data removed) then seek stream to current time
             const currentTime = playbackController.getTime();
             logger.debug('AppendToBuffer seek target should be ' + currentTime);
-            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
+            triggerEvent(Events.SEEK_TARGET, {time: currentTime, mediaType: type, streamId: streamInfo.id});
         }
 
         if (appendedBytesInfo) {
@@ -702,7 +702,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            triggerEvent(Events.SEEK_TARGET, {time: e.from});
+            triggerEvent(Events.SEEK_TARGET, {time: e.from, mediaType: type, streamId: streamInfo.id});
         }
 
         if (isPruningInProgress) {

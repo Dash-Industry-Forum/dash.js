@@ -72,8 +72,8 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(StreamInfo, periodSwitch, seekTime) {
-        streamInfo = StreamInfo;
+    function initialize(sInfo, periodSwitch, seekTime) {
+        streamInfo = sInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
@@ -401,6 +401,7 @@ function PlaybackController() {
             return NaN;
         }
 
+        logger.debug(`Checking DVR window for at ${currentTime} with DVR window range ${DVRWindow.start} - ${DVRWindow.end}`);
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
@@ -441,6 +442,7 @@ function PlaybackController() {
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
+            logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
     }
@@ -804,6 +806,7 @@ function PlaybackController() {
         isPaused: isPaused,
         pause: pause,
         isSeeking: isSeeking,
+        getStreamEndTime,
         seek: seek,
         reset: reset
     };

@@ -139,7 +139,7 @@ function StreamController() {
     function registerEvents() {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        eventBus.on(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, instance);
+        eventBus.on(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, instance);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
@@ -154,7 +154,7 @@ function StreamController() {
     function unRegisterEvents() {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        eventBus.off(Events.GAP_CAUSED_PLAYBACK_SEEK, onGapCausedPlaybackSeek, instance);
+        eventBus.off(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, instance);
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
@@ -282,7 +282,8 @@ function StreamController() {
                         const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), mediaType);
                         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
                         voRepresentations.forEach((voRep) => {
-                            const range = timelineConverter.calcSegmentAvailabilityRange(voRep, true);
+                            const isDynamic = adapter.getIsDynamic();
+                            const range = timelineConverter.calcSegmentAvailabilityRange(voRep, isDynamic);
 
                             if (range.end < range.start) {
                                 segmentAvailabilityRangeIsOk = false;
@@ -331,14 +332,22 @@ function StreamController() {
         }
     }
 
+    function canSourceBuffersBeReused(nextStream, previousStream) {
+        try {
+            return (previousStream.isProtectionCompatible(nextStream, previousStream) &&
+                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
+        } catch (e) {
+            return false;
+        }
+    }
+
     function onStreamCanLoadNext(nextStream, previousStream = null) {
 
         if (mediaSource && !nextStream.getPreloaded()) {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
-            let seamlessPeriodSwitch = previousStream.isProtectionCompatible(nextStream) &&
-                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream));
+            let seamlessPeriodSwitch = canSourceBuffersBeReused(nextStream, previousStream);
 
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
@@ -350,6 +359,21 @@ function StreamController() {
                     p.setBufferingTime(nextStream.getStartTime());
                 });
             }
+        }
+    }
+
+    function hasCriticalTexttracks(stream) {
+        try {
+            // if the upcoming stream has stpp or wvtt texttracks we need to reset the sourcebuffers and can not prebuffer
+            const streamInfo = stream.getStreamInfo();
+            const as = adapter.getAdaptationForType(streamInfo.index, Constants.FRAGMENTED_TEXT, streamInfo);
+            if (!as) {
+                return false;
+            }
+
+            return (as.codecs.indexOf('stpp') !== -1) || (as.codecs.indexOf('wvtt') !== -1);
+        } catch (e) {
+            return false;
         }
     }
 
@@ -370,7 +394,7 @@ function StreamController() {
 
         for (let i = 0; i < ln; i++) {
             stream = streams[i];
-            streamDuration = parseFloat(streamDuration + stream.getDuration());
+            streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
 
             if (time < streamDuration) {
                 return stream;
@@ -425,6 +449,7 @@ function StreamController() {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
             if (nextStream) {
+                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}`);
                 switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
@@ -445,9 +470,26 @@ function StreamController() {
             const duration = refStream.getStreamInfo().duration;
             const streamEnd = parseFloat((start + duration).toFixed(5));
 
-            return streams.filter(function (stream) {
-                return (Math.abs(stream.getStreamInfo().start - streamEnd) <= 0.1);
-            })[0];
+            let i = 0;
+            let targetIndex = -1;
+            let lastDiff = NaN;
+            while (i < streams.length) {
+                const s = streams[i];
+                const diff = s.getStreamInfo().start - streamEnd;
+
+                if (diff >= 0 && (isNaN(lastDiff) || diff < lastDiff)) {
+                    lastDiff = diff;
+                    targetIndex = i;
+                }
+
+                i += 1;
+            }
+
+            if (targetIndex >= 0) {
+                return streams[targetIndex];
+            }
+
+            return null;
         }
 
         return null;
@@ -472,7 +514,6 @@ function StreamController() {
     function switchStream(stream, previousStream, seekTime) {
 
         if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
-        logger.info('Switch stream to ' + stream.getId() + ' at t=' + seekTime);
         isStreamSwitchingInProgress = true;
 
         eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
@@ -482,16 +523,16 @@ function StreamController() {
 
         let seamlessPeriodSwitch = false;
         if (previousStream) {
-            seamlessPeriodSwitch = (activeStream.isProtectionCompatible(stream) &&
-                (supportsChangeType || activeStream.isMediaCodecCompatible(stream))) &&
-                !seekTime && stream.getPreloaded();
+            seamlessPeriodSwitch = canSourceBuffersBeReused(stream, previousStream);
             previousStream.deactivate(seamlessPeriodSwitch);
         }
 
         // Determine seek time when switching to new period
         // - seek at given seek time
-        // - or seek at period start if seamless period switching
+        // - or seek at period start if upcoming period is not prebuffered
         seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
+        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}`);
+        logger.info(`Seamless period switch is set to ${seamlessPeriodSwitch}`);
 
         activeStream = stream;
         preloadingStreams = preloadingStreams.filter((s) => {
@@ -499,7 +540,6 @@ function StreamController() {
         });
         playbackController.initialize(getActiveStreamInfo(), !!previousStream, seekTime);
         if (videoModel.getElement()) {
-            //TODO detect if we should close jump to activateStream.
             openMediaSource(seekTime, (previousStream === null), false, seamlessPeriodSwitch);
         } else {
             activateStream(seekTime, seamlessPeriodSwitch);
@@ -519,7 +559,7 @@ function StreamController() {
 
         function onMediaSourceOpen() {
             // Manage situations in which a call to reset happens while MediaSource is being opened
-            if (!mediaSource || mediaSource.readyState != 'open') return;
+            if (!mediaSource || mediaSource.readyState !== 'open') return;
 
             logger.debug('MediaSource is open!');
             window.URL.revokeObjectURL(sourceUrl);
@@ -560,6 +600,10 @@ function StreamController() {
         }
     }
 
+    function getActiveStream() {
+        return activeStream;
+    }
+
     function activateStream(seekTime, keepBuffers) {
         buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
 
@@ -567,21 +611,18 @@ function StreamController() {
         if (buffers) {
             const keys = Object.keys(buffers);
             if (keys.length > 0 && buffers[keys[0]].changeType) {
-                logger.debug('SourceBuffer changeType method supported. Use it to switch codecs in periods transitions');
                 supportsChangeType = true;
             }
         }
 
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
-                playbackController.seek(seekTime); //we only need to call seek here, bufferingTime was set from seeking event
-            } else {
-                // let startTime = playbackController.getStreamStartTime(true);
-                // if (!keepBuffers) {
-                //     getActiveStreamProcessors().forEach(p => {
-                //         p.setBufferingTime(startTime);
-                //     });
-                // }
+                // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
+                if (seekTime === playbackController.getTime()) {
+                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime, streamId: activeStream.getId()});
+                } else {
+                    playbackController.seek(seekTime);
+                }
             }
         }
 
@@ -631,14 +672,17 @@ function StreamController() {
             if (streams.length > 0) {
                 streams = streams.filter((stream) => {
 
-                    const isStillValid = streamsInfo.filter((sInfo) => {
+                    const isStillIncluded = streamsInfo.filter((sInfo) => {
                         return sInfo.id === stream.getId();
                     }).length > 0;
 
-                    if (!isStillValid) {
-                        logger.debug(`Removed stream ${stream.getId()}`);
+                    const shouldKeepStream = isStillIncluded || stream.getId() === activeStream.getId();
+
+                    if (!shouldKeepStream) {
+                        logger.debug(`Removing stream ${stream.getId()}`);
                     }
-                    return isStillValid;
+
+                    return shouldKeepStream;
                 });
             }
 
@@ -697,7 +741,8 @@ function StreamController() {
                     logger.debug('Dynamic stream: Trying to find the correct starting period');
                     initialStream = getInitialStream();
                 }
-                switchStream(initialStream !== null ? initialStream : streams[0], null, NaN);
+                const startStream = initialStream !== null ? initialStream : streams[0];
+                switchStream(startStream, null, NaN);
                 startPlaybackEndedTimerInterval();
                 startCheckIfPrebufferingCanStartInterval();
             }
@@ -1096,7 +1141,9 @@ function StreamController() {
         setProtectionData,
         getIsStreamSwitchInProgress,
         getHasMediaOrIntialisationError,
+        hasStreamFinishedBuffering,
         getStreams,
+        getActiveStream,
         reset
     };
 
