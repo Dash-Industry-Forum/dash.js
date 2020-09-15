@@ -73,36 +73,39 @@ function TimelineConverter() {
         clientServerTimeShift = value;
     }
 
-    function calcAvailabilityTimeFromPresentationTime(presentationTime, mpd, isDynamic, calculateEnd) {
+    function calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateEnd) {
         let availabilityTime = NaN;
+        let mpd = representation.adaptation.period.mpd;
+        const availabilityStartTime = mpd.availabilityStartTime;
 
         if (calculateEnd) {
             //@timeShiftBufferDepth specifies the duration of the time shifting buffer that is guaranteed
             // to be available for a Media Presentation with type 'dynamic'.
             // When not present, the value is infinite.
-            if (isDynamic && (mpd.timeShiftBufferDepth != Number.POSITIVE_INFINITY)) {
-                availabilityTime = new Date(mpd.availabilityStartTime.getTime() + ((presentationTime + mpd.timeShiftBufferDepth) * 1000));
+            if (isDynamic && (mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY)) {
+                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime + mpd.timeShiftBufferDepth) * 1000));
             } else {
                 availabilityTime = mpd.availabilityEndTime;
             }
         } else {
             if (isDynamic) {
-                availabilityTime = new Date(mpd.availabilityStartTime.getTime() + (presentationTime - clientServerTimeShift) * 1000);
+                const availabilityTimeOffset = representation.availabilityTimeOffset;
+                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime - clientServerTimeShift - availabilityTimeOffset) * 1000);
             } else {
                 // in static mpd, all segments are available at the same time
-                availabilityTime = mpd.availabilityStartTime;
+                availabilityTime = availabilityStartTime;
             }
         }
 
         return availabilityTime;
     }
 
-    function calcAvailabilityStartTimeFromPresentationTime(presentationTime, mpd, isDynamic) {
-        return calcAvailabilityTimeFromPresentationTime.call(this, presentationTime, mpd, isDynamic);
+    function calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic) {
+        return calcAvailabilityTimeFromPresentationTime.call(this, presentationEndTime, representation, isDynamic);
     }
 
-    function calcAvailabilityEndTimeFromPresentationTime(presentationTime, mpd, isDynamic) {
-        return calcAvailabilityTimeFromPresentationTime.call(this, presentationTime, mpd, isDynamic, true);
+    function calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, isDynamic) {
+        return calcAvailabilityTimeFromPresentationTime.call(this, presentationEndTime, representation, isDynamic, true);
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
@@ -191,7 +194,7 @@ function TimelineConverter() {
         range.end = range.end + endOffset;
 
         // Limit to period boundary
-        if(!streams) {
+        if (!streams) {
             const voPeriod = voRepresentation.adaptation.period;
             range.end = Math.min(range.end, voPeriod.start + voPeriod.duration);
         }
@@ -212,7 +215,7 @@ function TimelineConverter() {
             range.start = adjustedStartTime;
         } else {
             const voPeriod = voRepresentation.adaptation.period;
-            range.start = Math.max(range.start, voPeriod.start);
+            range.start = Math.max(start, voPeriod.start);
             range.end = Math.min(range.end, voPeriod.start + voPeriod.duration);
         }
 
@@ -313,7 +316,13 @@ function TimelineConverter() {
         return range;
     }
 
-    function getPeriodEnd(voRepresentation, isDynamic) {
+    /**
+     * Determines the anchor time to calculate the availability of a segment from. Should return either the now time or the end of the period
+     * @param voRepresentation
+     * @param isDynamic
+     * @return {number|*}
+     */
+    function getAvailabilityAnchorTime(voRepresentation, isDynamic) {
         // Static Range Finder
         const voPeriod = voRepresentation.adaptation.period;
         if (!isDynamic) {
@@ -324,15 +333,10 @@ function TimelineConverter() {
             return voRepresentation.segmentAvailabilityRange;
         }
 
-        // Dynamic Range Finder
-        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const periodEnd = voPeriod.start + voPeriod.duration;
 
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
-        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
-
-        return Math.min(now - endOffset, periodEnd);
+        return Math.min(now, periodEnd);
     }
 
     function calcPeriodRelativeTimeFromMpdRelativeTime(representation, mpdRelativeTime) {
@@ -374,7 +378,7 @@ function TimelineConverter() {
         calcPeriodRelativeTimeFromMpdRelativeTime,
         calcMediaTimeFromPresentationTime,
         calcSegmentAvailabilityRangeForRepresentation,
-        getPeriodEnd,
+        getAvailabilityAnchorTime,
         calcWallTimeForSegment,
         calcAvailabilityWindow,
         calcTimeShiftBufferWindow,

@@ -137,7 +137,7 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
     seg.presentationStartTime = presentationStartTime;
     seg.mediaStartTime = mediaStartTime;
     seg.availabilityStartTime = availabilityStartTime;
-    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation.adaptation.period.mpd, isDynamic);
+    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
     seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
     seg.replacementNumber = getNumberForSegment(seg, index);
     seg.availabilityIdx = index;
@@ -146,23 +146,19 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
 }
 
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
-    const periodEnd = timelineConverter.getPeriodEnd(representation, isDynamic);
-    const periodRelativeEnd = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, periodEnd);
 
-    const segmentTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, segment.presentationStartTime);
-    if (segmentTime >= periodRelativeEnd) {
-        if (isDynamic) {
-            // segment is not available in current period, but it may be segment available in another period that current one (in DVR window)
-            // if not (time > segmentAvailabilityRange.end), then return false
-            if (representation.segmentAvailabilityRange && segment.presentationStartTime >= representation.segmentAvailabilityRange.end) {
-                return false;
-            }
-        } else {
-            return false;
-        }
+    // For static manifests we only need to check if the presentation time of the segment is within the period
+    if (!isDynamic) {
+        const voPeriod = representation.adaptation.period;
+        return segment.presentationStartTime >= voPeriod.start && segment.presentationStartTime <= voPeriod.start + voPeriod.duration;
     }
 
-    return true;
+    // For dynamic manifests we check if availability start time and the availability end times indicate that the segment is available
+    const sast = segment.availabilityStartTime.getTime();
+    const saet = segment.availabilityEndTime.getTime();
+    const now = Date.now() - timelineConverter.getClientTimeOffset();
+
+    return sast <= now && saet >= now;
 }
 
 export function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {
@@ -184,9 +180,10 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
-    const segment = getSegment(representation, duration, presentationStartTime,
-        timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation),
-        timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation.adaptation.period.mpd, isDynamic),
+    const mediaTime = timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation);
+    const availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
+
+    const segment = getSegment(representation, duration, presentationStartTime, mediaTime, availabilityStartTime,
         timelineConverter, presentationEndTime, isDynamic, index);
 
     if (!isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
@@ -207,9 +204,11 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
     presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
     presentationEndTime = presentationStartTime + scaledDuration;
 
+    const availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
+
     seg = getSegment(representation, scaledDuration, presentationStartTime,
         scaledTime,
-        representation.adaptation.period.mpd.manifest.loadedTime,
+        availabilityStartTime,
         timelineConverter, presentationEndTime, isDynamic, index);
 
     if (!isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
