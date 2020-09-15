@@ -461,11 +461,6 @@ function ScheduleController(config) {
             start();
         }
 
-        const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
-        dashMetrics.updateManifestUpdateInfo({
-            latency: latency
-        });
-
         if (!isFragmentProcessingInProgress) {
             // No pending request, request next segment at seek target
             startScheduleTimer(0);

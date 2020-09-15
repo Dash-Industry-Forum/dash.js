@@ -145,6 +145,12 @@ function PlaybackController() {
             });
             // Seek video model
             seek(startTime, false, true);
+
+            const dvrWindow = dashMetrics.getCurrentDVRInfo();
+            const latency = dvrWindow ? dvrWindow.end - getTime() : NaN;
+            dashMetrics.updateManifestUpdateInfo({
+                latency: latency
+            });
         }
     }
 
@@ -401,6 +407,7 @@ function PlaybackController() {
             return NaN;
         }
 
+        // Idea: Add the duration of a segment here as it might just have fallen out of the DVR window.
         logger.debug(`Checking DVR window for at ${currentTime} with DVR window range ${DVRWindow.start} - ${DVRWindow.end}`);
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);

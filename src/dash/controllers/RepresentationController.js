@@ -153,8 +153,9 @@ function RepresentationController(config) {
     }
 
     function updateRepresentation(representation, isDynamic) {
+        console.log(`Update representation for stream ${representation.adaptation.period.id}`);
         representation.segmentAvailabilityRange = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
-        representation.timeshiftBufferRange = timelineConverter.calcTimeShiftBufferWindow(representation,isDynamic);
+        representation.timeshiftBufferRange = timelineConverter.calcTimeShiftBufferWindow(representation, isDynamic);
 
         if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) {
             let error = new DashJSError(errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
@@ -230,7 +231,7 @@ function RepresentationController(config) {
             err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod && playbackController.getStreamController().getStreams().length <= 1) {
+        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod) {
             // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
             postponeTimePeriod = getRepresentationUpdatePostponeTimePeriod(r, streamInfo);
         }
@@ -272,6 +273,19 @@ function RepresentationController(config) {
     function getRepresentationUpdatePostponeTimePeriod(representation, streamInfo) {
         try {
             const streamController = playbackController.getStreamController();
+
+            // This is only a problem if this is the currently active stream and we do not have upcoming periods for which the segmentAvailabilityRange is sufficient. For now we just check if there is a period announced after this one
+            if(streamId !== streamController.getActiveStreamInfo.id) {
+                return 0;
+            }
+
+            const stream = streamController.getStreamById(streamId);
+            const nextStream = streamController.getNextStream(stream);
+
+            if (nextStream) {
+                return 0;
+            }
+
             const activeStreamInfo = streamController.getActiveStreamInfo();
             let startTimeAnchor = representation.segmentAvailabilityRange.start;
 

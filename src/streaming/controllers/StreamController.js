@@ -48,6 +48,7 @@ import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
+import {usingPromise} from "sinon";
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const PREBUFFERING_CAN_START_INTERVAL = 500;
@@ -209,6 +210,7 @@ function StreamController() {
 
     function onGapCausedPlaybackSeek(e) {
         const nextStream = getNextStream();
+        console.log(`onGapPausedPlaybackSeek: Next Stream ID is ${nextStream.getId()} Current Stream Id is ${activeStream.getId()}`);
         flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
         switchStream(nextStream, activeStream, e.seekTime);
         createPlaylistMetrics(PlayList.SEEK_START_REASON);
@@ -449,6 +451,10 @@ function StreamController() {
 
     function getActiveStreamProcessors() {
         return activeStream ? activeStream.getProcessors() : [];
+    }
+
+    function getIsPeriodSwitchInProgress() {
+        return isPeriodSwitchInProgress;
     }
 
     function onEnded(e) {
@@ -1145,9 +1151,11 @@ function StreamController() {
         setConfig,
         setProtectionData,
         getIsStreamSwitchInProgress,
+        getIsPeriodSwitchInProgress,
         getHasMediaOrIntialisationError,
         hasStreamFinishedBuffering,
         getStreams,
+        getNextStream,
         getActiveStream,
         reset
     };

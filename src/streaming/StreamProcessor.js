@@ -240,6 +240,7 @@ function StreamProcessor(config) {
         const streams = playbackController.getStreamController().getStreams();
         const range = timelineConverter.calcTimeShiftBufferWindow(currentRepresentation, isDynamic, streams);
         dashMetrics.addDVRInfo(type, time, manifestInfo, range);
+        console.log(`Add DVR window for ${type} ${range.start} - ${range.end}`);
     }
 
     function onQualityChanged(e) {
