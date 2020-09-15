@@ -238,7 +238,7 @@ function StreamProcessor(config) {
         const isDynamic = manifestInfo.isDynamic;
         const time = playbackController.getTime();
         const streams = playbackController.getStreamController().getStreams();
-        const range = timelineConverter.calcSegmentAvailabilityRangeForAllPeriods(streams, currentRepresentation, isDynamic);
+        const range = timelineConverter.calcTimeShiftBufferWindow(currentRepresentation, isDynamic, streams);
         dashMetrics.addDVRInfo(type, time, manifestInfo, range);
         console.log(`Adding DVR window for ${type} ${range.start} - ${range.end}`);
     }

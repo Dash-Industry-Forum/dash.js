@@ -290,7 +290,7 @@ function StreamController() {
                         const voRepresentations = adapter.getVoRepresentations(mediaInfo);
                         voRepresentations.forEach((voRep) => {
                             const isDynamic = adapter.getIsDynamic();
-                            const range = timelineConverter.calcSegmentAvailabilityRangeForRepresentation(voRep, isDynamic);
+                            const range = timelineConverter.calcAvailabilityWindow(voRep, isDynamic);
 
                             if (range.end < range.start) {
                                 segmentAvailabilityRangeIsOk = false;

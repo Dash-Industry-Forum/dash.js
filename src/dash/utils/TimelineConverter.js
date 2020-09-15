@@ -137,23 +137,34 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    function calcSegmentAvailabilityRangeForAllPeriods(streams, voRepresentation, isDynamic) {
+    function calcAvailabilityWindow(voRepresentation, isDynamic, streams = null) {
 
         // Static manifests
         if (!isDynamic) {
-            return _calcAvailabilityRangeForStaticManifest(streams);
-        }
-
-        // Dynamic manifests with SegmentTimeline
-        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
-            return _calcAvailabilityRangeForDynamicTimelineManifest(streams, voRepresentation);
+            return _calcAvailabilityWindowForStaticManifest(voRepresentation, streams);
         }
 
         // Other dynamic manifests
-        return _calcAvailabilityRangeForDynamicManifest(streams, voRepresentation);
+        return _calcAvailabilityWindowForDynamicManifest(voRepresentation, streams);
     }
 
-    function _calcAvailabilityRangeForStaticManifest(streams) {
+    function calcTimeShiftBufferWindow(voRepresentation, isDynamic, streams) {
+
+        // Static manifests. The availability window is equal to the DVR window
+        if (!isDynamic) {
+            return _calcAvailabilityWindowForStaticManifest(voRepresentation, streams);
+        }
+
+        return _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams);
+    }
+
+    function _calcAvailabilityWindowForStaticManifest(voRepresentation, streams = null) {
+
+        if (!streams) {
+            const voPeriod = voRepresentation.adaptation.period;
+            return {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
+        }
+
         // Static Range Finder. We iterate over all periods and return the total duration
         const range = {start: NaN, end: NaN};
         let duration = 0;
@@ -173,37 +184,37 @@ function TimelineConverter() {
         return range;
     }
 
-    function _calcAvailabilityRangeForDynamicManifest(streams, voRepresentation) {
-        const range = {start: NaN, end: NaN};
-        const voPeriod = voRepresentation.adaptation.period;
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        const start = now - voPeriod.mpd.timeShiftBufferDepth;
+    function _calcAvailabilityWindowForDynamicManifest(voRepresentation, streams = null) {
+        const range = _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams);
+        const endOffset = voRepresentation.availabilityTimeOffset !== undefined && !isNaN(voRepresentation.availabilityTimeOffset) ? voRepresentation.availabilityTimeOffset : 0;
 
-        // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
-        const adjustedStartTime = _findPeriodTimeForTargetTime(streams, start);
-        range.start = adjustedStartTime;
+        range.end = range.end + endOffset;
 
-        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
-        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
-
-        const periodEnd = voPeriod.start + voPeriod.duration;
-        range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
+        // Limit to period boundary
+        if(!streams) {
+            const voPeriod = voRepresentation.adaptation.period;
+            range.end = Math.min(range.end, voPeriod.start + voPeriod.duration);
+        }
 
         return range;
     }
 
-    function _calcAvailabilityRangeForDynamicTimelineManifest(streams, voRepresentation) {
-        const range = calcSegmentAvailabilityRangeFromTimeline(voRepresentation);
+    function _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams = null) {
+        const range = {start: NaN, end: NaN};
         const voPeriod = voRepresentation.adaptation.period;
-        const tsbd = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? voPeriod.mpd.timeShiftBufferDepth : NaN;
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+        const start = !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? now - voPeriod.mpd.timeShiftBufferDepth : 0;
 
-        if (isNaN(tsbd) || range.end - range.start >= tsbd) {
-            return range;
+        range.end = now;
+        // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
+        if (streams) {
+            const adjustedStartTime = _findPeriodTimeForTargetTime(streams, start);
+            range.start = adjustedStartTime;
+        } else {
+            const voPeriod = voRepresentation.adaptation.period;
+            range.start = Math.max(range.start, voPeriod.start);
+            range.end = Math.min(range.end, voPeriod.start + voPeriod.duration);
         }
-
-        // Instead of "now" we use range.end as an anchor
-        range.start = _findPeriodTimeForTargetTime(streams, range.end - range.start);
 
         return range;
     }
@@ -365,7 +376,8 @@ function TimelineConverter() {
         calcSegmentAvailabilityRangeForRepresentation,
         getPeriodEnd,
         calcWallTimeForSegment,
-        calcSegmentAvailabilityRangeForAllPeriods,
+        calcAvailabilityWindow,
+        calcTimeShiftBufferWindow,
         reset
     };
 
