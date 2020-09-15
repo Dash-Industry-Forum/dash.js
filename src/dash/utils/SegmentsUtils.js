@@ -147,18 +147,21 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
 
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
 
+    const voPeriod = representation.adaptation.period;
     // For static manifests we only need to check if the presentation time of the segment is within the period
     if (!isDynamic) {
-        const voPeriod = representation.adaptation.period;
         return segment.presentationStartTime >= voPeriod.start && segment.presentationStartTime <= voPeriod.start + voPeriod.duration;
     }
 
     // For dynamic manifests we check if availability start time and the availability end times indicate that the segment is available
-    const sast = segment.availabilityStartTime.getTime();
-    const saet = segment.availabilityEndTime.getTime();
-    const now = Date.now() + timelineConverter.getClientTimeOffset();
+    const sast = segment.availabilityStartTime.getTime() /1000;
+    const saet = segment.availabilityEndTime.getTime() / 1000;
 
-    return sast <= now && saet >= now;
+    const referenceWindow = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
+    const referenceWindowStartInWallTime = timelineConverter.calcWallTimeFromPresentationTime(referenceWindow.start, voPeriod);
+    const referenceWindowEndInWallTime = timelineConverter.calcWallTimeFromPresentationTime(referenceWindow.end, voPeriod);
+
+    return sast <= referenceWindowEndInWallTime && saet >= referenceWindowStartInWallTime;
 }
 
 export function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {
