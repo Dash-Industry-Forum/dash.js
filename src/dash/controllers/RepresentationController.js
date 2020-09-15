@@ -142,7 +142,7 @@ function RepresentationController(config) {
     function isAllRepresentationsUpdated() {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
-            if (voAvailableRepresentations[i].segmentAvailabilityRange === null || !voAvailableRepresentations[i].hasInitialization() ||
+            if (voAvailableRepresentations[i].segmentAvailabilityRange === null || voAvailableRepresentations[i].timeshiftBufferRange === null || !voAvailableRepresentations[i].hasInitialization() ||
                 ((segmentInfoType === dashConstants.SEGMENT_BASE || segmentInfoType === dashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
             ) {
                 return false;
@@ -154,6 +154,7 @@ function RepresentationController(config) {
 
     function updateRepresentation(representation, isDynamic) {
         representation.segmentAvailabilityRange = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
+        representation.timeshiftBufferRange = timelineConverter.calcTimeShiftBufferWindow(representation,isDynamic);
 
         if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) {
             let error = new DashJSError(errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
@@ -257,7 +258,7 @@ function RepresentationController(config) {
 
         if (isAllRepresentationsUpdated()) {
             abrController.setPlaybackQuality(getType(), streamInfo, getQualityForRepresentation(currentVoRepresentation));
-            dashMetrics.updateManifestUpdateInfo({latency: currentVoRepresentation.segmentAvailabilityRange.end - playbackController.getTime()});
+            dashMetrics.updateManifestUpdateInfo({latency: currentVoRepresentation.timeshiftBufferRange.end - playbackController.getTime()});
 
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 

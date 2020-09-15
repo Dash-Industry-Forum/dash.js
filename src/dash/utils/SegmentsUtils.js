@@ -156,7 +156,7 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
     // For dynamic manifests we check if availability start time and the availability end times indicate that the segment is available
     const sast = segment.availabilityStartTime.getTime();
     const saet = segment.availabilityEndTime.getTime();
-    const now = Date.now() - timelineConverter.getClientTimeOffset();
+    const now = Date.now() + timelineConverter.getClientTimeOffset();
 
     return sast <= now && saet >= now;
 }

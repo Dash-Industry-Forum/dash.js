@@ -90,7 +90,7 @@ function TimelineConverter() {
         } else {
             if (isDynamic) {
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
-                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime - clientServerTimeShift - availabilityTimeOffset) * 1000);
+                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime + clientServerTimeShift - availabilityTimeOffset) * 1000);
             } else {
                 // in static mpd, all segments are available at the same time
                 availabilityTime = availabilityStartTime;
