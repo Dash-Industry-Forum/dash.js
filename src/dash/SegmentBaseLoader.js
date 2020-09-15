@@ -250,7 +250,7 @@ function SegmentBaseLoader() {
                     let segs = [];
                     let count = 0;
                     let offset = (sidx.offset || info.range.start) + sidx.size;
-                    const tmpCallback = function (result) {
+                    const tmpCallback = function (streamId, mediaType, result) {
                         if (result) {
                             segs = segs.concat(result);
                             count++;
