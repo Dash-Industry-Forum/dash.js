@@ -223,7 +223,7 @@ function RepresentationController(config) {
 
             updateAvailabilityWindow(playbackController.getIsDynamic(), true);
         };
-        eventBus.trigger(events.AST_IN_FUTURE, {delay: delay});
+        eventBus.trigger(events.AST_IN_FUTURE, { delay: delay });
         setTimeout(update, delay);
     }
 

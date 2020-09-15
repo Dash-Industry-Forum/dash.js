@@ -140,9 +140,7 @@ function PlaybackController() {
 
         if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
             // Trigger PLAYBACK_SEEKING event for controllers
-            eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: startTime
-            });
+            eventBus.trigger(Events.PLAYBACK_SEEKING, { seekTime: startTime });
             // Seek video model
             seek(startTime, false, true);
         }
@@ -467,30 +465,22 @@ function PlaybackController() {
         logger.info('Native video element event: play');
         updateCurrentTime();
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_STARTED, {
-            startTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_STARTED, { startTime: getTime() });
     }
 
     function onPlaybackWaiting() {
         logger.info('Native video element event: waiting');
-        eventBus.trigger(Events.PLAYBACK_WAITING, {
-            playingTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_WAITING, { playingTime: getTime() });
     }
 
     function onPlaybackPlaying() {
         logger.info('Native video element event: playing');
-        eventBus.trigger(Events.PLAYBACK_PLAYING, {
-            playingTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_PLAYING, { playingTime: getTime() });
     }
 
     function onPlaybackPaused() {
         logger.info('Native video element event: pause');
-        eventBus.trigger(Events.PLAYBACK_PAUSED, {
-            ended: getEnded()
-        });
+        eventBus.trigger(Events.PLAYBACK_PAUSED, { ended: getEnded() });
     }
 
     function onPlaybackSeeking() {
@@ -504,9 +494,7 @@ function PlaybackController() {
 
         logger.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_SEEKING, {
-            seekTime: seekTime
-        });
+        eventBus.trigger(Events.PLAYBACK_SEEKING, { seekTime: seekTime });
     }
 
     function onPlaybackSeeked() {
@@ -540,9 +528,7 @@ function PlaybackController() {
     function onPlaybackRateChanged() {
         const rate = getPlaybackRate();
         logger.info('Native video element event: ratechange: ', rate);
-        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, {
-            playbackRate: rate
-        });
+        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, { playbackRate: rate });
     }
 
     function onPlaybackMetaDataLoaded() {
@@ -556,7 +542,7 @@ function PlaybackController() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': streamController.getActiveStreamInfo().isLast});
+        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamController.getActiveStreamInfo().isLast });
     }
 
     // Handle DASH PLAYBACK_ENDED event
@@ -573,9 +559,7 @@ function PlaybackController() {
 
     function onPlaybackError(event) {
         const target = event.target || event.srcElement;
-        eventBus.trigger(Events.PLAYBACK_ERROR, {
-            error: target.error
-        });
+        eventBus.trigger(Events.PLAYBACK_ERROR, { error: target.error });
     }
 
     function onWallclockTime() {
@@ -703,9 +687,7 @@ function PlaybackController() {
     }
 
     function onPlaybackStalled(e) {
-        eventBus.trigger(Events.PLAYBACK_STALLED, {
-            e: e
-        });
+        eventBus.trigger(Events.PLAYBACK_STALLED, { e: e });
     }
 
     function onStreamInitializing(e) {

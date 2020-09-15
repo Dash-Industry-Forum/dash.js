@@ -78,9 +78,7 @@ function MetricsCollectionController(config) {
             delete metricsControllers[c];
         });
 
-        eventBus.trigger(
-            MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE
-        );
+        eventBus.trigger(MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE);
     }
 
     function resetMetricsControllers() {

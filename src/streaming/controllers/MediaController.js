@@ -195,7 +195,11 @@ function MediaController() {
         tracks[id][type].current = track;
 
         if (tracks[id][type].current && !(noSettingsSave && type === Constants.FRAGMENTED_TEXT)) {
-            eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {oldMediaInfo: current, newMediaInfo: track, switchMode: switchMode[type]});
+            eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
+                oldMediaInfo: current,
+                newMediaInfo: track,
+                switchMode: switchMode[type]
+            });
         }
 
         if (!noSettingsSave) {

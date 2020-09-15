@@ -325,7 +325,7 @@ function EventController() {
                 _sendCallbackRequest(event.messageData);
             } else {
                 logger.debug(`Starting event ${eventId} at ${currentVideoTime}`);
-                eventBus.trigger(event.eventStream.schemeIdUri, {event: event});
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: event });
             }
 
             delete events[eventId];

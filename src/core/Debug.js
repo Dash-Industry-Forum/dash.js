@@ -169,7 +169,7 @@ function Debug(config) {
         }
 
         // send log event regardless of log level
-        eventBus.trigger(Events.LOG, {message: message, level: level});
+        eventBus.trigger(Events.LOG, { message: message, level: level });
     }
 
     instance = {

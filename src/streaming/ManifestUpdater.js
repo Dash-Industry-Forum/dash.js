@@ -164,7 +164,7 @@ function ManifestUpdater() {
         if (refreshDelay * 1000 > 0x7FFFFFFF) {
             refreshDelay = 0x7FFFFFFF / 1000;
         }
-        eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
+        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
         if (!isPaused) {

@@ -119,9 +119,7 @@ function Stream(config) {
     function initialize() {
         registerEvents();
         registerProtectionEvents();
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
     function registerEvents() {
@@ -708,9 +706,7 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo });
     }
 
     function onDataUpdateCompleted(e) {
@@ -759,9 +755,7 @@ function Stream(config) {
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
 
         if (eventController) {
             addInlineEvents();

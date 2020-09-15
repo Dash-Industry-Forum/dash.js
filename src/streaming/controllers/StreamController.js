@@ -232,7 +232,7 @@ function StreamController() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
                 if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -619,7 +619,10 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
                 if (seekTime === playbackController.getTime()) {
-                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime, streamId: activeStream.getId()});
+                    eventBus.trigger(Events.SEEK_TARGET, {
+                        streamId: activeStream.getId(),
+                        time: seekTime
+                    });
                 } else {
                     playbackController.seek(seekTime);
                 }
@@ -631,9 +634,7 @@ function StreamController() {
         }
 
         isStreamSwitchingInProgress = false;
-        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
-            toStreamInfo: getActiveStreamInfo()
-        });
+        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
     }
 
     function setMediaDuration(duration) {
@@ -1098,9 +1099,7 @@ function StreamController() {
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
-                eventBus.trigger(Events.PROTECTION_DESTROYED, {
-                    data: manifestModel.getValue().url
-                });
+                eventBus.trigger(Events.PROTECTION_DESTROYED, { data: manifestModel.getValue().url });
             }
         }
 
