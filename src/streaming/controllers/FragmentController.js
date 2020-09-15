@@ -149,10 +149,13 @@ function FragmentController( config ) {
             return;
         }
         const chunk = createDataChunk(bytes, request, streamInfo.id, e.type !== Events.FRAGMENT_LOADING_PROGRESS);
-        eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED, {
-            chunk: chunk,
-            request: request
-        }, strInfo.id, request.mediaType);
+        eventBus.trigger(isInit ? Events.INIT_FRAGMENT_LOADED : Events.MEDIA_FRAGMENT_LOADED,
+            {
+                chunk: chunk,
+                request: request
+            },
+            { streamId: strInfo.id, mediaType: request.mediaType }
+        );
     }
 
     instance = {

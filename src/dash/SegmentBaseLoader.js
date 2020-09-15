@@ -166,7 +166,10 @@ function SegmentBaseLoader() {
                 representation.range = initRange;
                 // note that we don't explicitly set rep.initialization as this
                 // will be computed when all BaseURLs are resolved later
-                eventBus.trigger(events.INITIALIZATION_LOADED, { representation: representation }, streamId, mediaType);
+                eventBus.trigger(events.INITIALIZATION_LOADED,
+                    { representation: representation },
+                    { streamId: streamId, mediaType: mediaType }
+                );
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
                 loadInitialization(streamId, mediaType, representation, info);
@@ -174,7 +177,10 @@ function SegmentBaseLoader() {
         };
 
         const onerror = function () {
-            eventBus.trigger(events.INITIALIZATION_LOADED, { representation: representation });
+            eventBus.trigger(events.INITIALIZATION_LOADED,
+                { representation: representation },
+                { streamId: streamId, mediaType: mediaType }
+            );
         };
 
         urlLoader.load({request: request, success: onload, error: onerror});
@@ -341,11 +347,14 @@ function SegmentBaseLoader() {
     }
 
     function onLoaded(streamId, mediaType, segments, representation) {
-        eventBus.trigger(events.SEGMENTS_LOADED, {
-            segments: segments,
-            representation: representation,
-            error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
-        }, streamId, mediaType);
+        eventBus.trigger(events.SEGMENTS_LOADED,
+            {
+                segments: segments,
+                representation: representation,
+                error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+            },
+            { streamId: streamId, mediaType: mediaType }
+        );
     }
 
     instance = {

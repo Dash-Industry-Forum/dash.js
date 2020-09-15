@@ -176,7 +176,10 @@ function RepresentationController(config) {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             updateRepresentation(voAvailableRepresentations[i], isDynamic);
             if (notifyUpdate) {
-                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, { representation: voAvailableRepresentations[i] }, streamInfo.id, type);
+                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED,
+                    { representation: voAvailableRepresentations[i] },
+                    { streamId: streamInfo.id, mediaType: type }
+                );
             }
         }
     }
@@ -189,16 +192,22 @@ function RepresentationController(config) {
 
     function startDataUpdate() {
         updating = true;
-        eventBus.trigger(events.DATA_UPDATE_STARTED, {}, streamInfo.id, type);
+        eventBus.trigger(events.DATA_UPDATE_STARTED,
+            {},
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function endDataUpdate(error) {
         updating = false;
-        eventBus.trigger(events.DATA_UPDATE_COMPLETED, {
-            data: realAdaptation,
-            currentRepresentation: currentVoRepresentation,
-            error: error
-        }, streamInfo.id, type);
+        eventBus.trigger(events.DATA_UPDATE_COMPLETED,
+            {
+                data: realAdaptation,
+                currentRepresentation: currentVoRepresentation,
+                error: error
+            },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function postponeUpdate(postponeTimePeriod) {

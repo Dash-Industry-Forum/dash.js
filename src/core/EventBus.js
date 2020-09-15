@@ -82,7 +82,7 @@ function EventBus() {
         handlers[type][idx] = null;
     }
 
-    function trigger(type, payload = {}, streamId = undefined, mediaType = undefined) {
+    function trigger(type, payload = {}, filters = {}) {
         if (!type || !handlers[type]) return;
 
         payload = payload || {};
@@ -90,21 +90,11 @@ function EventBus() {
         if (payload.hasOwnProperty('type')) throw new Error('\'type\' is a reserved word for event dispatching');
 
         payload.type = type;
-        if (streamId) {
-            payload.streamId = streamId;
-        }
-        if (mediaType) {
-            payload.mediaType = mediaType;
-        }
 
         handlers[type] = handlers[type].filter((item) => item);
         const eventHandlers = handlers[type].filter(item => {
-            if (streamId && item.streamId && item.streamId !== streamId) {
-                return false;
-            }
-            if (mediaType && item.mediaType && item.mediaType !== mediaType) {
-                return false;
-            }
+            if (filters.streamId && item.streamId && item.streamId !== filters.streamId) return false;
+            if (filters.mediaType && item.mediaType && item.mediaType !== filters.mediaType) return false;
             return true;
         });
 

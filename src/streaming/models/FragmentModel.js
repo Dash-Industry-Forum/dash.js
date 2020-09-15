@@ -205,9 +205,10 @@ function FragmentModel(config) {
                 executedRequests.push(request);
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
                 logger.debug('STREAM_COMPLETED');
-                eventBus.trigger(events.STREAM_COMPLETED, {
-                    request: request
-                }, request.mediaInfo.streamInfo.id, request.mediaType);
+                eventBus.trigger(events.STREAM_COMPLETED,
+                    { request: request },
+                    { streamId: request.mediaInfo.streamInfo.id, mediaType: request.mediaType }
+                );
                 break;
             case FragmentRequest.ACTION_DOWNLOAD:
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
@@ -220,7 +221,10 @@ function FragmentModel(config) {
     }
 
     function loadCurrentFragment(request) {
-        eventBus.trigger(events.FRAGMENT_LOADING_STARTED, { request: request }, streamInfo.id, type);
+        eventBus.trigger(events.FRAGMENT_LOADING_STARTED,
+            { request: request },
+            { streamId: streamInfo.id, mediaType: type }
+        );
         fragmentLoader.load(request);
     }
 
@@ -286,29 +290,38 @@ function FragmentModel(config) {
 
         addSchedulingInfoMetrics(e.request, e.error ? FRAGMENT_MODEL_FAILED : FRAGMENT_MODEL_EXECUTED);
 
-        eventBus.trigger(events.FRAGMENT_LOADING_COMPLETED, {
-            request: e.request,
-            response: e.response,
-            error: e.error,
-            sender: this
-        }, streamInfo.id, type);
+        eventBus.trigger(events.FRAGMENT_LOADING_COMPLETED,
+            {
+                request: e.request,
+                response: e.response,
+                error: e.error,
+                sender: this
+            },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function onLoadingInProgress(e) {
         if (e.sender !== fragmentLoader) return;
 
-        eventBus.trigger(events.FRAGMENT_LOADING_PROGRESS, {
-            request: e.request,
-            response: e.response,
-            error: e.error,
-            sender: this
-        }, streamInfo.id, type);
+        eventBus.trigger(events.FRAGMENT_LOADING_PROGRESS,
+            {
+                request: e.request,
+                response: e.response,
+                error: e.error,
+                sender: this
+            },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function onLoadingAborted(e) {
         if (e.sender !== fragmentLoader) return;
 
-        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED, { request: e.request }, streamInfo.id, type);
+        eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED,
+            { request: e.request },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function resetInitialSettings() {

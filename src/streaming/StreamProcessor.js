@@ -527,7 +527,10 @@ function StreamProcessor(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.INBAND_EVENTS, {events: events}, streamInfo.id);
+            eventBus.trigger(Events.INBAND_EVENTS,
+                { events: events },
+                { streamId: streamInfo.id }
+            );
         }
     }
 

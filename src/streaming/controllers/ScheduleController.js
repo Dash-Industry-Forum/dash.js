@@ -190,9 +190,10 @@ function ScheduleController(config) {
                     } else {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     }
-                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-                        representationId: currentRepresentationInfo.id
-                    }, streamInfo.id, type);
+                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+                        { representationId: currentRepresentationInfo.id },
+                        { streamId: streamInfo.id, mediaType: type }
+                    );
                     lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
                 } else {
@@ -200,15 +201,16 @@ function ScheduleController(config) {
 
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
-                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-                            representationId: replacement.representationId
-                        }, streamInfo.id, type);
+                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+                            { representationId: replacement.representationId },
+                            { streamId: streamInfo.id, mediaType: type }
+                        );
                         checkPlaybackQuality = false;
                     } else {
-                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED, {
-                            seekTarget: seekTarget,
-                            replacement: replacement
-                        }, streamInfo.id, type);
+                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
+                            { seekTarget: seekTarget, replacement: replacement },
+                            { streamId: streamInfo.id, mediaType: type }
+                        );
                         checkPlaybackQuality = true;
                     }
                 }

@@ -153,9 +153,10 @@ function NotFragmentedTextBufferController(config) {
         isBufferingCompleted = false;
 
         // // Text data file is contained in initialization segment
-        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-            representationId: e.currentRepresentation.id
-        }, streamInfo.id, type);
+        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+            { representationId: e.currentRepresentation.id },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function appendInitSegment(representationId) {
@@ -171,9 +172,10 @@ function NotFragmentedTextBufferController(config) {
 
         isBufferingCompleted = true;
 
-        eventBus.trigger(Events.STREAM_COMPLETED, {
-            request: e.request
-        }, streamInfo.id, type);
+        eventBus.trigger(Events.STREAM_COMPLETED,
+            { request: e.request },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function getRangeAt() {

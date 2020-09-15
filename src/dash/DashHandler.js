@@ -198,7 +198,10 @@ function DashHandler(config) {
         // If representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
         // otherwise, it means that a request has to be made to get initialization and/or segments informations
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, { representation: voRepresentation }, streamInfo.id, type);
+            eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED,
+                { representation: voRepresentation },
+                { streamId: streamInfo.id, mediaType: type }
+            );
         } else {
             segmentsController.update(voRepresentation, selectedMimeType, hasInitialization, hasSegments);
         }
@@ -359,7 +362,10 @@ function DashHandler(config) {
         const representation = e.representation;
         if (!representation.segments) return;
 
-        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, { representation: representation }, streamInfo.id, type);
+        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED,
+            { representation: representation },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function onSegmentsLoaded(e) {
@@ -416,7 +422,10 @@ function DashHandler(config) {
             return;
         }
 
-        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, { representation: representation }, streamInfo.id, type);
+        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED,
+            { representation: representation },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function onDynamicStreamCompleted() {
