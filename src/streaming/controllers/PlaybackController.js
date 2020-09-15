@@ -448,7 +448,10 @@ function PlaybackController() {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error) return;
+        if (e.error) {
+            updateCurrentTime();
+            return;
+        }
 
         const representationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
         const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
@@ -456,7 +459,7 @@ function PlaybackController() {
         if (info === null || streamInfo.id !== info.id) return;
         streamInfo = info;
 
-        updateCurrentTime();
+
     }
 
     function onCanPlay() {
