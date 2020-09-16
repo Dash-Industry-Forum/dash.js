@@ -157,13 +157,11 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
     }
 
     if (isDynamic) {
-        // For dynamic manifests we check if availability start time and the availability end times indicate that the segment is available
-        const sast = segment.availabilityStartTime.getTime() / 1000;
-        const saet = segment.availabilityEndTime.getTime() / 1000;
+        // For dynamic manifests we check if the presentation start time + duration is included in tha availability window
+        const segmentEndTime = segment.presentationStartTime + segment.duration;
+        const periodEndTime = voPeriod.start + voPeriod.duration;
 
-        let wallTime = (Date.now() / 1000) + timelineConverter.getClientTimeOffset() - timelineConverter.getTimelineManifestDrift();
-
-        return sast <= wallTime && saet >= wallTime;
+        return Math.min(segmentEndTime, periodEndTime) <= representation.segmentAvailabilityRange.end && Math.max(segmentEndTime, voPeriod.start) >= representation.segmentAvailabilityRange.start;
     }
 
     return true;

@@ -155,11 +155,6 @@ function RepresentationController(config) {
     function updateRepresentation(representation, isDynamic) {
         console.log(`Update representation for stream ${representation.adaptation.period.id}`);
         representation.segmentAvailabilityRange = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
-
-        if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) {
-            let error = new DashJSError(errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
-            endDataUpdate(error);
-        }
     }
 
     function updateAvailabilityWindow(isDynamic, notifyUpdate) {
@@ -307,7 +302,7 @@ function RepresentationController(config) {
 
     function onWallclockTimeUpdated(e) {
         if (e.isDynamic) {
-            //updateAvailabilityWindow(e.isDynamic);
+            updateAvailabilityWindow(e.isDynamic);
         }
     }
 

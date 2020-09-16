@@ -210,7 +210,6 @@ function StreamController() {
 
     function onGapCausedPlaybackSeek(e) {
         const nextStream = getNextStream();
-        console.log(`onGapPausedPlaybackSeek: Next Stream ID is ${nextStream.getId()} Current Stream Id is ${activeStream.getId()}`);
         flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
         switchStream(nextStream, activeStream, e.seekTime);
         createPlaylistMetrics(PlayList.SEEK_START_REASON);

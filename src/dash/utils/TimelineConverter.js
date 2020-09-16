@@ -176,7 +176,7 @@ function TimelineConverter() {
 
         // Static manifests. The availability window is equal to the DVR window
         if (!isDynamic) {
-            return _calcTimeshiftBufferForStaticManifest(voRepresentation, streams);
+            return _calcTimeshiftBufferForStaticManifest(streams);
         }
 
         // Specific use case of SegmentTimeline
@@ -221,13 +221,7 @@ function TimelineConverter() {
         return range;
     }
 
-    function _calcTimeshiftBufferForStaticManifest(voRepresentation, streams = null) {
-
-        if (!streams) {
-            const voPeriod = voRepresentation.adaptation.period;
-            return {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
-        }
-
+    function _calcTimeshiftBufferForStaticManifest(streams) {
         // Static Range Finder. We iterate over all periods and return the total duration
         const range = {start: NaN, end: NaN};
         let duration = 0;
