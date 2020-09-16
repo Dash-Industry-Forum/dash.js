@@ -137,7 +137,7 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
     seg.presentationStartTime = presentationStartTime;
     seg.mediaStartTime = mediaStartTime;
     seg.availabilityStartTime = availabilityStartTime;
-    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
+    seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime + duration, representation, isDynamic);
     seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
     seg.replacementNumber = getNumberForSegment(seg, index);
     seg.availabilityIdx = index;
@@ -147,21 +147,17 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
 
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
 
-    const voPeriod = representation.adaptation.period;
-    // For static manifests we only need to check if the presentation time of the segment is within the period
+    // For static manifests everything is available
     if (!isDynamic) {
-        return segment.presentationStartTime >= voPeriod.start && segment.presentationStartTime <= voPeriod.start + voPeriod.duration;
+        return true;
     }
 
     // For dynamic manifests we check if availability start time and the availability end times indicate that the segment is available
     const sast = segment.availabilityStartTime.getTime() /1000;
     const saet = segment.availabilityEndTime.getTime() / 1000;
+    const wallTime = (Date.now() / 1000) + timelineConverter.getClientTimeOffset();
 
-    const referenceWindow = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
-    const referenceWindowStartInWallTime = timelineConverter.calcWallTimeFromPresentationTime(referenceWindow.start, voPeriod);
-    const referenceWindowEndInWallTime = timelineConverter.calcWallTimeFromPresentationTime(referenceWindow.end, voPeriod);
-
-    return sast <= referenceWindowEndInWallTime && saet >= referenceWindowStartInWallTime;
+    return sast <= wallTime && saet >= wallTime;
 }
 
 export function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {

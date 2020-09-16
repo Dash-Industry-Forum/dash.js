@@ -282,8 +282,7 @@ function StreamController() {
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
 
                 if (mediaSource) {
-                    // We can not start prebuffering if the start of the next period is in the future. This will cause problems when calculating the segmentAvailabilityRange and updating the representations in the RepresentationController
-                    // As long as the timeline converter returns an invalid range we do not start the prebuffering
+                    // We can not start prebuffering if the segments of the upcoming period are outside of the availability window
                     const mediaTypes = [Constants.VIDEO, Constants.AUDIO];
                     let segmentAvailabilityRangeIsOk = true;
 
@@ -545,6 +544,7 @@ function StreamController() {
         // - or seek at period start if upcoming period is not prebuffered
         seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
         logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${seamlessPeriodSwitch}`);
+        console.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${seamlessPeriodSwitch}`);
 
         activeStream = stream;
         preloadingStreams = preloadingStreams.filter((s) => {

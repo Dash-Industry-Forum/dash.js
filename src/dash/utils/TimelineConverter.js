@@ -90,6 +90,7 @@ function TimelineConverter() {
         } else {
             if (isDynamic) {
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
+                // presentationEndTime = Period@start + Sement@duration
                 availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime + clientServerTimeShift - availabilityTimeOffset) * 1000);
             } else {
                 // in static mpd, all segments are available at the same time
@@ -144,28 +145,53 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    function calcAvailabilityWindow(voRepresentation, isDynamic, streams = null) {
-
+    /**
+     * Calculates the presentation times of the segments in this representation which are in the availabilityWindow. This is limited to period boundaries.
+     * @param voRepresentation
+     * @param isDynamic
+     * @return {{start: *, end: *}|{start: number, end: number}}
+     */
+    function calcAvailabilityWindow(voRepresentation, isDynamic) {
         // Static manifests
         if (!isDynamic) {
-            return _calcAvailabilityWindowForStaticManifest(voRepresentation, streams);
+            return _calcAvailabilityWindowForStaticManifest(voRepresentation);
         }
 
         // Other dynamic manifests
-        return _calcAvailabilityWindowForDynamicManifest(voRepresentation, streams);
+        return _calcAvailabilityWindowForDynamicManifest(voRepresentation);
+
     }
 
     function calcTimeShiftBufferWindow(voRepresentation, isDynamic, streams) {
 
         // Static manifests. The availability window is equal to the DVR window
         if (!isDynamic) {
-            return _calcAvailabilityWindowForStaticManifest(voRepresentation, streams);
+            return _calcTimeshiftBufferForStaticManifest(voRepresentation, streams);
         }
 
         return _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams);
     }
 
-    function _calcAvailabilityWindowForStaticManifest(voRepresentation, streams = null) {
+    function _calcAvailabilityWindowForStaticManifest(voRepresentation) {
+        const voPeriod = voRepresentation.adaptation.period;
+        return {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
+    }
+
+    function _calcAvailabilityWindowForDynamicManifest(voRepresentation) {
+        const endOffset = voRepresentation.availabilityTimeOffset !== undefined && !isNaN(voRepresentation.availabilityTimeOffset) ? voRepresentation.availabilityTimeOffset : 0;
+        const range = {start: NaN, end: NaN};
+        const voPeriod = voRepresentation.adaptation.period;
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+        const start = !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? now - voPeriod.mpd.timeShiftBufferDepth : 0;
+        const end = now + endOffset;
+
+        range.start = Math.max(start, voPeriod.start);
+        range.end = Math.min(end,voPeriod.end);
+
+        return range;
+    }
+
+    function _calcTimeshiftBufferForStaticManifest(voRepresentation, streams = null) {
 
         if (!streams) {
             const voPeriod = voRepresentation.adaptation.period;
@@ -187,21 +213,6 @@ function TimelineConverter() {
 
         range.start = start;
         range.end = start + duration;
-
-        return range;
-    }
-
-    function _calcAvailabilityWindowForDynamicManifest(voRepresentation, streams = null) {
-        const range = _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams);
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined && !isNaN(voRepresentation.availabilityTimeOffset) ? voRepresentation.availabilityTimeOffset : 0;
-
-        range.end = range.end + endOffset;
-
-        // Limit to period boundary
-        if (!streams) {
-            const voPeriod = voRepresentation.adaptation.period;
-            range.end = Math.min(range.end, voPeriod.start + voPeriod.duration);
-        }
 
         return range;
     }

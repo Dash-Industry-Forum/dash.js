@@ -305,7 +305,7 @@ function RepresentationController(config) {
 
     function onWallclockTimeUpdated(e) {
         if (e.isDynamic) {
-            updateAvailabilityWindow(e.isDynamic);
+            //updateAvailabilityWindow(e.isDynamic);
         }
     }
 
