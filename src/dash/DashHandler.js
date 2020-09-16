@@ -388,7 +388,7 @@ function DashHandler(config) {
         }
 
         if (segments.length > 0) {
-            representation.timeshiftBufferRange = {
+            representation.segmentAvailabilityRange = {
                 start: segments[0].presentationStartTime,
                 end: segments[segments.length - 1].presentationStartTime
             };
