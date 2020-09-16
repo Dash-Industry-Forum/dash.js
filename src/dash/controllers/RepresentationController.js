@@ -142,7 +142,7 @@ function RepresentationController(config) {
     function isAllRepresentationsUpdated() {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
-            if (voAvailableRepresentations[i].segmentAvailabilityRange === null || voAvailableRepresentations[i].timeshiftBufferRange === null || !voAvailableRepresentations[i].hasInitialization() ||
+            if (voAvailableRepresentations[i].segmentAvailabilityRange === null || !voAvailableRepresentations[i].hasInitialization() ||
                 ((segmentInfoType === dashConstants.SEGMENT_BASE || segmentInfoType === dashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
             ) {
                 return false;
@@ -155,7 +155,6 @@ function RepresentationController(config) {
     function updateRepresentation(representation, isDynamic) {
         console.log(`Update representation for stream ${representation.adaptation.period.id}`);
         representation.segmentAvailabilityRange = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
-        representation.timeshiftBufferRange = timelineConverter.calcTimeShiftBufferWindow(representation, isDynamic);
 
         if (representation.segmentAvailabilityRange.end < representation.segmentAvailabilityRange.start) {
             let error = new DashJSError(errors.SEGMENTS_UNAVAILABLE_ERROR_CODE, errors.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE, {availabilityDelay: representation.segmentAvailabilityRange.start - representation.segmentAvailabilityRange.end});
@@ -259,7 +258,10 @@ function RepresentationController(config) {
 
         if (isAllRepresentationsUpdated()) {
             abrController.setPlaybackQuality(getType(), streamInfo, getQualityForRepresentation(currentVoRepresentation));
-            dashMetrics.updateManifestUpdateInfo({latency: currentVoRepresentation.timeshiftBufferRange.end - playbackController.getTime()});
+            const dvrInfo = dashMetrics.getCurrentDVRInfo();
+            if (dvrInfo) {
+                dashMetrics.updateManifestUpdateInfo({latency: dvrInfo.range.end - playbackController.getTime()});
+            }
 
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);
 
@@ -275,7 +277,7 @@ function RepresentationController(config) {
             const streamController = playbackController.getStreamController();
 
             // This is only a problem if this is the currently active stream and we do not have upcoming periods for which the segmentAvailabilityRange is sufficient. For now we just check if there is a period announced after this one
-            if(streamId !== streamController.getActiveStreamInfo.id) {
+            if (streamId !== streamController.getActiveStreamInfo.id) {
                 return 0;
             }
 

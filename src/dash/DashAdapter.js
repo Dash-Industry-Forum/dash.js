@@ -107,7 +107,6 @@ function DashAdapter() {
             representationInfo.id = voRepresentation.id;
             representationInfo.quality = voRepresentation.index;
             representationInfo.bandwidth = dashManifestModel.getBandwidth(realRepresentation);
-            representationInfo.DVRWindow = voRepresentation.timeshiftBufferRange;
             representationInfo.fragmentDuration = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length > 0 ? voRepresentation.segments[0].duration : NaN);
             representationInfo.MSETimeOffset = voRepresentation.MSETimeOffset;
             representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);

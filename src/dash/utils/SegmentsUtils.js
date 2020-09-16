@@ -30,6 +30,8 @@
  */
 
 import Segment from './../vo/Segment';
+import DashConstants from "../constants/DashConstants";
+
 
 function zeroPadToLength(numStr, minStrLength) {
     while (numStr.length < minStrLength) {
@@ -149,7 +151,7 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
     const voPeriod = representation.adaptation.period;
 
     // Avoid requesting segments that overlap the period boundary
-    if(isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
+    if (isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
         console.log(`Period duration is finite and we are trying to request a segment that is outside of this period`);
         return false;
     }
@@ -158,7 +160,8 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
         // For dynamic manifests we check if availability start time and the availability end times indicate that the segment is available
         const sast = segment.availabilityStartTime.getTime() / 1000;
         const saet = segment.availabilityEndTime.getTime() / 1000;
-        const wallTime = (Date.now() / 1000) + timelineConverter.getClientTimeOffset();
+
+        let wallTime = (Date.now() / 1000) + timelineConverter.getClientTimeOffset() - timelineConverter.getTimelineManifestDrift();
 
         return sast <= wallTime && saet >= wallTime;
     }

@@ -146,7 +146,8 @@ function PlaybackController() {
             // Seek video model
             seek(startTime, false, true);
 
-            const dvrWindow = dashMetrics.getCurrentDVRInfo();
+            const dvrInfo = dashMetrics.getCurrentDVRInfo();
+            const dvrWindow = dvrInfo ? dvrInfo.range : null;
             const latency = dvrWindow ? dvrWindow.end - getTime() : NaN;
             dashMetrics.updateManifestUpdateInfo({
                 latency: latency

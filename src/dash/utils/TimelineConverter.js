@@ -44,6 +44,7 @@ function TimelineConverter() {
     let instance,
         dashManifestModel,
         clientServerTimeShift,
+        timelineManifestDrift,
         isClientServerTimeSyncCompleted,
         expectedLiveEdge;
 
@@ -67,6 +68,10 @@ function TimelineConverter() {
 
     function getClientTimeOffset() {
         return clientServerTimeShift;
+    }
+
+    function getTimelineManifestDrift() {
+        return timelineManifestDrift;
     }
 
     function setClientTimeOffset(value) {
@@ -157,6 +162,11 @@ function TimelineConverter() {
             return _calcAvailabilityWindowForStaticManifest(voRepresentation);
         }
 
+        // Specific use case of SegmentTimeline
+        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
+            return _calcAvailabilityWindowForDynamicTimelineManifest(voRepresentation);
+        }
+
         // Other dynamic manifests
         return _calcAvailabilityWindowForDynamicManifest(voRepresentation);
 
@@ -167,6 +177,11 @@ function TimelineConverter() {
         // Static manifests. The availability window is equal to the DVR window
         if (!isDynamic) {
             return _calcTimeshiftBufferForStaticManifest(voRepresentation, streams);
+        }
+
+        // Specific use case of SegmentTimeline
+        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
+            return _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation, streams);
         }
 
         return _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams);
@@ -186,7 +201,22 @@ function TimelineConverter() {
         const end = now + endOffset;
 
         range.start = Math.max(start, voPeriod.start);
-        range.end = Math.min(end,voPeriod.end);
+        range.end = Math.min(end, voPeriod.start + voPeriod.duration);
+
+        return range;
+    }
+
+    function _calcAvailabilityWindowForDynamicTimelineManifest(voRepresentation) {
+        const endOffset = voRepresentation.availabilityTimeOffset !== undefined && !isNaN(voRepresentation.availabilityTimeOffset) ? voRepresentation.availabilityTimeOffset : 0;
+        const range = _calcRangeForTimeline(voRepresentation);
+        const voPeriod = voRepresentation.adaptation.period;
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+
+        const end = range.end > now + endOffset ? now : range.end;
+        const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
+
+        range.start = Math.max(start, voPeriod.start);
+        range.end = Math.min(end, voPeriod.start + voPeriod.duration);
 
         return range;
     }
@@ -217,7 +247,7 @@ function TimelineConverter() {
         return range;
     }
 
-    function _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams = null) {
+    function _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams) {
         const range = {start: NaN, end: NaN};
         const voPeriod = voRepresentation.adaptation.period;
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
@@ -225,14 +255,21 @@ function TimelineConverter() {
 
         range.end = now;
         // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
-        if (streams) {
-            const adjustedStartTime = _findPeriodTimeForTargetTime(streams, start);
-            range.start = adjustedStartTime;
-        } else {
-            const voPeriod = voRepresentation.adaptation.period;
-            range.start = Math.max(start, voPeriod.start);
-            range.end = Math.min(range.end, voPeriod.start + voPeriod.duration);
-        }
+        range.start = _findPeriodTimeForTargetTime(streams, start);
+
+        return range;
+    }
+
+    function _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation) {
+        const range = _calcRangeForTimeline(voRepresentation);
+        const voPeriod = voRepresentation.adaptation.period;
+        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
+
+        const end = range.end > now ? now : range.end;
+        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? end - voPeriod.mpd.timeShiftBufferDepth : range.start;
+        range.end = end;
+
+        timelineManifestDrift = now - range.end;
 
         return range;
     }
@@ -266,37 +303,7 @@ function TimelineConverter() {
         }
     }
 
-    function calcSegmentAvailabilityRangeForRepresentation(voRepresentation, isDynamic) {
-        // Static Range Finder
-        const voPeriod = voRepresentation.adaptation.period;
-        const range = {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
-        if (!isDynamic) return range;
-
-        if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
-            return voRepresentation.segmentAvailabilityRange;
-        }
-
-        // Dynamic Range Finder
-        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
-
-        // Specific use case of SegmentTimeline without timeShiftBufferDepth
-        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
-            return calcSegmentAvailabilityRangeFromTimeline(voRepresentation);
-        }
-
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        const periodEnd = voPeriod.start + voPeriod.duration;
-        range.start = Math.max((now - voPeriod.mpd.timeShiftBufferDepth), voPeriod.start);
-
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined &&
-        voRepresentation.availabilityTimeOffset < d ? d - voRepresentation.availabilityTimeOffset : d;
-
-        range.end = now >= periodEnd && now - endOffset < periodEnd ? periodEnd : now - endOffset;
-
-        return range;
-    }
-
-    function calcSegmentAvailabilityRangeFromTimeline(voRepresentation) {
+    function _calcRangeForTimeline(voRepresentation) {
         const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
         const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
         const timeline = representation.SegmentTemplate.SegmentTimeline;
@@ -321,12 +328,6 @@ function TimelineConverter() {
         }
 
         range.end = range.start + d;
-
-        const voPeriod = voRepresentation.adaptation.period;
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-
-        range.end = range.end > now ? now : range.end;
-        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, range.end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
 
         return range;
     }
@@ -371,6 +372,7 @@ function TimelineConverter() {
 
     function resetInitialSettings() {
         clientServerTimeShift = 0;
+        timelineManifestDrift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
     }
@@ -392,12 +394,12 @@ function TimelineConverter() {
         calcPresentationTimeFromMediaTime,
         calcPeriodRelativeTimeFromMpdRelativeTime,
         calcMediaTimeFromPresentationTime,
-        calcSegmentAvailabilityRangeForRepresentation,
         getAvailabilityAnchorTime,
         calcWallTimeForSegment,
         calcAvailabilityWindow,
         calcTimeShiftBufferWindow,
         calcWallTimeFromPresentationTime,
+        getTimelineManifestDrift,
         reset
     };
 

@@ -618,7 +618,8 @@ function StreamProcessor(config) {
 
         let liveStartTime = NaN;
         const currentRepresentationInfo = getRepresentationInfo();
-        const liveEdge = currentRepresentationInfo.DVRWindow ? currentRepresentationInfo.DVRWindow.end : 0;
+        const dvrInfo = dashMetrics.getCurrentDVRInfo();
+        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
 
         if (isNaN(liveEdge)) {
             return NaN;
