@@ -152,14 +152,17 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
 
     // Avoid requesting segments that overlap the period boundary
     if (isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
-        console.log(`Period duration is finite and we are trying to request a segment that is outside of this period`);
         return false;
     }
 
     if (isDynamic) {
 
+        if (representation.availabilityTimeOffset === 'INF') {
+            return true;
+        }
+
         // Nothing available yet
-        if(representation.segmentAvailabilityRange.start > representation.segmentAvailabilityRange.end) {
+        if (representation.segmentAvailabilityRange.start > representation.segmentAvailabilityRange.end) {
             return false;
         }
         // For dynamic manifests we check if the presentation start time + duration is included in tha availability window
