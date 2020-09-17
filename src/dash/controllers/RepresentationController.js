@@ -153,7 +153,6 @@ function RepresentationController(config) {
     }
 
     function updateRepresentation(representation, isDynamic) {
-        console.log(`Update representation for stream ${representation.adaptation.period.id}`);
         representation.segmentAvailabilityRange = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
     }
 

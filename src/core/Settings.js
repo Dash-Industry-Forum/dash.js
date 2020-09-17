@@ -405,7 +405,7 @@ function Settings() {
             bufferTimeAtTopQuality: 30,
             bufferTimeAtTopQualityLongForm: 60,
             longFormContentDurationThreshold: 600,
-            wallclockTimeUpdateInterval: 50,
+            wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,

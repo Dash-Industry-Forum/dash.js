@@ -172,6 +172,13 @@ function TimelineConverter() {
 
     }
 
+    /**
+     * Calculates the timeshiftbuffer range. This range might overlap multiple periods and is not limited to period boundaries. However, we make sure that the range is potentially covered by period.
+     * @param voRepresentation
+     * @param isDynamic
+     * @param streams
+     * @return {{start: number, end: number}}
+     */
     function calcTimeShiftBufferWindow(voRepresentation, isDynamic, streams) {
 
         // Static manifests. The availability window is equal to the DVR window
@@ -247,9 +254,9 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const start = !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? now - voPeriod.mpd.timeShiftBufferDepth : 0;
 
-        range.end = now;
         // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
-        range.start = _findPeriodTimeForTargetTime(streams, start);
+        range.start = _adjustTimeBasedOnPeriodRanges(streams, start);
+        range.end = _adjustTimeBasedOnPeriodRanges(streams, now, true);
 
         return range;
     }
@@ -268,30 +275,35 @@ function TimelineConverter() {
         return range;
     }
 
-    function _findPeriodTimeForTargetTime(streams, time) {
+    function _adjustTimeBasedOnPeriodRanges(streams, time, isEndOfDvrWindow = false) {
         try {
             let i = 0;
             let found = false;
-            let adjustedStartTime = NaN;
+            let adjustedTime = NaN;
 
             while (!found && i < streams.length) {
                 const streamInfo = streams[i].getStreamInfo();
 
                 // We found a period which contains the target time.
                 if (streamInfo.start <= time && (!isFinite(streamInfo.duration) || (streamInfo.start + streamInfo.duration >= time))) {
-                    adjustedStartTime = time;
+                    adjustedTime = time;
                     found = true;
                 }
 
-                // The current period starts after the target time. We use the starttime of this period as adjustedtime
-                if (streamInfo.start > time && (isNaN(adjustedStartTime) || streamInfo.start < adjustedStartTime)) {
-                    adjustedStartTime = streamInfo.start;
+                // Adjust the time for the start of the DVR window. The current period starts after the target time. We use the starttime of this period as adjusted time
+                else if (!isEndOfDvrWindow && (streamInfo.start > time && (isNaN(adjustedTime) || streamInfo.start < adjustedTime))) {
+                    adjustedTime = streamInfo.start;
+                }
+
+                // Adjust the time for the end of the DVR window. The current period ends before the targettime. We use the end time of this period as the adjusted time
+                else if(isEndOfDvrWindow && ((streamInfo.start + streamInfo.duration) < time && (isNaN(adjustedTime) || (streamInfo.start + streamInfo.duration > adjustedTime)))) {
+                    adjustedTime = streamInfo.start + streamInfo.duration;
                 }
 
                 i += 1;
             }
 
-            return adjustedStartTime;
+            return adjustedTime;
         } catch (e) {
             return time;
         }

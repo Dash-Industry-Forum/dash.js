@@ -651,11 +651,13 @@ function Stream(config) {
         } else if (!isStreamInitialized) {
             isStreamInitialized = true;
             timelineConverter.setTimeSyncCompleted(true);
+            const liveStartTime = !playbackController.getInitialLiveEdgeCalculated() ? getLiveStartTime() : NaN;
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo: streamInfo,
-                liveStartTime: !preloaded ? getLiveStartTime() : NaN
+                streamInfo,
+                liveStartTime
             });
+            playbackController.setInitialLiveEdgeCalculated(true);
         }
 
         // (Re)start ScheduleController:

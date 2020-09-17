@@ -64,6 +64,7 @@ function PlaybackController() {
         playbackStalled,
         minPlaybackRateChange,
         uriFragmentModel,
+        initialLiveEdgeCalculated,
         settings;
 
     function setup() {
@@ -80,6 +81,10 @@ function PlaybackController() {
         playbackStalled = false;
         streamSwitch = periodSwitch === true;
         streamSeekTime = seekTime;
+
+        if (!periodSwitch) {
+            initialLiveEdgeCalculated = false;
+        }
 
         const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
 
@@ -179,6 +184,14 @@ function PlaybackController() {
         if (streamInfo && videoModel) {
             videoModel.pause();
         }
+    }
+
+    function setInitialLiveEdgeCalculated(value) {
+        initialLiveEdgeCalculated = value;
+    }
+
+    function getInitialLiveEdgeCalculated() {
+        return initialLiveEdgeCalculated;
     }
 
     function isSeeking() {
@@ -818,6 +831,8 @@ function PlaybackController() {
         pause: pause,
         isSeeking: isSeeking,
         getStreamEndTime,
+        setInitialLiveEdgeCalculated,
+        getInitialLiveEdgeCalculated,
         seek: seek,
         reset: reset
     };
