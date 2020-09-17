@@ -44,7 +44,6 @@ function TimelineConverter() {
     let instance,
         dashManifestModel,
         clientServerTimeShift,
-        timelineManifestDrift,
         isClientServerTimeSyncCompleted,
         expectedLiveEdge;
 
@@ -68,10 +67,6 @@ function TimelineConverter() {
 
     function getClientTimeOffset() {
         return clientServerTimeShift;
-    }
-
-    function getTimelineManifestDrift() {
-        return timelineManifestDrift;
     }
 
     function setClientTimeOffset(value) {
@@ -219,7 +214,7 @@ function TimelineConverter() {
         const voPeriod = voRepresentation.adaptation.period;
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
-        const end = range.end > now + endOffset ? now : range.end;
+        const end = range.end > now + endOffset ? now + endOffset : range.end;
         const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
 
         range.start = Math.max(start, voPeriod.start);
@@ -261,16 +256,32 @@ function TimelineConverter() {
         return range;
     }
 
-    function _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation) {
+    function _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation, streams) {
         const range = _calcRangeForTimeline(voRepresentation);
         const voPeriod = voRepresentation.adaptation.period;
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
-        const end = range.end > now ? now : range.end;
+        let end = range.end > now ? now : range.end;
+
+        // if end is smaller than now we need to check if upcoming periods extend the timeline
+        if (end < now && isFinite(voPeriod.duration) && streams.length > 1) {
+            const periodEnd = voPeriod.start + voPeriod.duration;
+            streams.forEach((stream) => {
+                const streamInfo = stream.getStreamInfo();
+                if (streamInfo.start >= periodEnd && streamInfo.start < now && end <= now) {
+                    if (!isNaN(streamInfo.duration)) {
+                        end += streamInfo.duration;
+                    }
+                    else if(!isFinite(streamInfo.duration)) {
+                        end = now;
+                    }
+                    end = Math.min(end, now);
+                }
+            });
+        }
+
         range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? end - voPeriod.mpd.timeShiftBufferDepth : range.start;
         range.end = end;
-
-        timelineManifestDrift = now - range.end;
 
         return range;
     }
@@ -296,7 +307,7 @@ function TimelineConverter() {
                 }
 
                 // Adjust the time for the end of the DVR window. The current period ends before the targettime. We use the end time of this period as the adjusted time
-                else if(isEndOfDvrWindow && ((streamInfo.start + streamInfo.duration) < time && (isNaN(adjustedTime) || (streamInfo.start + streamInfo.duration > adjustedTime)))) {
+                else if (isEndOfDvrWindow && ((streamInfo.start + streamInfo.duration) < time && (isNaN(adjustedTime) || (streamInfo.start + streamInfo.duration > adjustedTime)))) {
                     adjustedTime = streamInfo.start + streamInfo.duration;
                 }
 
@@ -378,7 +389,6 @@ function TimelineConverter() {
 
     function resetInitialSettings() {
         clientServerTimeShift = 0;
-        timelineManifestDrift = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
     }
@@ -405,7 +415,6 @@ function TimelineConverter() {
         calcAvailabilityWindow,
         calcTimeShiftBufferWindow,
         calcWallTimeFromPresentationTime,
-        getTimelineManifestDrift,
         reset
     };
 

@@ -460,29 +460,11 @@ function StreamProcessor(config) {
     function findNextRequest(seekTarget, requestToReplace) {
         const representationInfo = getRepresentationInfo();
         const hasSeekTarget = !isNaN(seekTarget);
-        const currentTime = playbackController.getNormalizedTime();
         let time = hasSeekTarget ? seekTarget : bufferingTime;
-        let bufferIsDivided = false;
         let request;
 
         if (isNaN(time) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
             return null;
-        }
-        /**
-         * This is critical for IE/Safari/EDGE
-         * */
-        if (bufferController) {
-            let range = bufferController.getRangeAt(time);
-            const playingRange = bufferController.getRangeAt(currentTime);
-            if ((range !== null || playingRange !== null) && !hasSeekTarget) {
-                if (!range || (playingRange && playingRange.start != range.start && playingRange.end != range.end)) {
-                    const hasDiscontinuities = bufferController.getBuffer().hasDiscontinuitiesAfter(currentTime);
-                    if (hasDiscontinuities && getType() !== Constants.FRAGMENTED_TEXT) {
-                        fragmentModel.removeExecutedRequestsAfterTime(playingRange.end);
-                        bufferIsDivided = true;
-                    }
-                }
-            }
         }
 
         if (requestToReplace) {
@@ -493,7 +475,7 @@ function StreamProcessor(config) {
             });
         } else {
             // Use time just whenever is strictly needed
-            const useTime = hasSeekTarget || bufferPruned || bufferIsDivided;
+            const useTime = hasSeekTarget || bufferPruned ;
             request = getFragmentRequest(representationInfo,
                 useTime ? time : undefined, {
                     keepIdx: !useTime
