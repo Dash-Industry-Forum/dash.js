@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../../streaming/constants/Constants';
 
-import { replaceTokenForTemplate, getIndexBasedSegment } from './SegmentsUtils';
+import {replaceTokenForTemplate, getIndexBasedSegment} from './SegmentsUtils';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
@@ -53,8 +53,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
 
         index = Math.max(index, 0);
 
@@ -72,8 +71,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         const availabilityWindow = representation.segmentAvailabilityRange;
         if (isNaN(duration)) {
             representation.availableSegmentsNumber = 1;
-        }
-        else {
+        } else {
             representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
         }
 
@@ -94,6 +92,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
+        // This should be ok as the EPT Delta should be smaller than one segment
         const index = Math.floor(periodTime / duration);
 
         return getSegmentByIndex(representation, index);

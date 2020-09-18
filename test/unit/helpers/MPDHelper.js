@@ -1,20 +1,22 @@
 import SpecHelper from './SpecHelper.js';
+import DashConstants from "../../../src/dash/constants/DashConstants";
 
 class MpdHelper {
     constructor() {
         this.SEGMENT_TEMPLATE = 0;
+        this.SEGMENT_TIMELINE = 1;
         this.idCounter = -1;
         this.baseUrl = 'https://dash.akamaized.net/envivio/dashpr/clear/Manifest.mpd';
         this.specHelper = new SpecHelper();
     }
 
-    getMpd(type) {
+    getMpd(type, segInfoType) {
         var mpd = {};
 
         mpd.type = type;
         mpd.minimumUpdatePeriod = 10;
         mpd.loadedTime = this.specHelper.getUnixTime();
-        mpd.Period_asArray = [this.composePeriod()];
+        mpd.Period_asArray = [this.composePeriod(segInfoType)];
 
         return mpd;
     }
@@ -69,10 +71,11 @@ class MpdHelper {
         return codecs;
     }
 
-    composePeriod() {
+    composePeriod(segInfoType) {
         var period = {};
+        let type = !isNaN(segInfoType) ? segInfoType : this.SEGMENT_TEMPLATE;
 
-        period.AdaptationSet_asArray = [this.getAdaptationForSegmentInfoType('video', this.SEGMENT_TEMPLATE)];
+        period.AdaptationSet_asArray = [this.getAdaptationForSegmentInfoType('video', type)];
 
         return period;
     }
@@ -191,12 +194,49 @@ class MpdHelper {
         return adaptation;
     }
 
+    addSegmentTimelineToAdaptation(adaptation) {
+        let objSegmentTemplate = {};
+        let reps = adaptation.Representation_asArray;
+        let ln = reps.length;
+        let i = 0;
+        let r;
+
+        objSegmentTemplate.__cnt = 6;
+        objSegmentTemplate.duration = 360000;
+        objSegmentTemplate.initialization = '$RepresentationID$/Header.m4s';
+        objSegmentTemplate.media = '$RepresentationID$/$Number$.m4s';
+        objSegmentTemplate.presentationTimeOffset = 0;
+        objSegmentTemplate.startNumber = 0;
+        objSegmentTemplate.timescale = 90000;
+        const S_asArray = [{
+            t: 0,
+            d: 180000,
+            r: 29
+        }];
+        objSegmentTemplate.SegmentTimeline_asArray= {S_asArray};
+        objSegmentTemplate.SegmentTimeline = {S_asArray};
+
+        adaptation.SegmentTemplate = objSegmentTemplate;
+        adaptation.SegmentTemplate_asArray = objSegmentTemplate;
+
+        for (i; i < ln; i++) {
+            r = reps[i];
+            r.SegmentTemplate = objSegmentTemplate;
+        }
+
+        return adaptation;
+    }
+
     getAdaptationForSegmentInfoType(type, segmentInfo) {
         var adaptation = this.composeAdaptation(type);
 
         switch (segmentInfo) {
             case this.SEGMENT_TEMPLATE: {
                 adaptation = this.addSegmentTemplateToAdaptation(adaptation);
+                return adaptation;
+            }
+            case this.SEGMENT_TIMELINE: {
+                adaptation = this.addSegmentTimelineToAdaptation(adaptation);
                 return adaptation;
             }
             default: {

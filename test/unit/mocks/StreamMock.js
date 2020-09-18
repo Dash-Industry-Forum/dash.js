@@ -1,6 +1,14 @@
 function StreamMock () {
+
+    this.streamInfo = {};
+
+
     this.getStreamInfo = function () {
-        return {};
+        return this.streamInfo;
+    };
+
+    this.setStreamInfo = function (streamInfo) {
+        this.streamInfo = streamInfo;
     };
 
     this.getFragmentController = function () {

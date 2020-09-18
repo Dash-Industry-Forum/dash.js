@@ -215,7 +215,7 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
         const end = range.end > now + endOffset ? now + endOffset : range.end;
-        const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
+        const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, now - voPeriod.mpd.timeShiftBufferDepth) : range.start;
 
         range.start = Math.max(start, voPeriod.start);
         range.end = Math.min(end, voPeriod.start + voPeriod.duration);
