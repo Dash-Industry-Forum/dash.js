@@ -65,6 +65,7 @@ function PlaybackController() {
         minPlaybackRateChange,
         uriFragmentModel,
         initialLiveEdgeCalculated,
+        lastSeekWasInternal,
         settings;
 
     function setup() {
@@ -209,10 +210,12 @@ function PlaybackController() {
         if (internalSeek === true) {
             // Internal seek = seek video model only (disable 'seeking' listener)
             // buffer(s) are already appended at requested time
-            videoModel.removeEventListener('seeking', onPlaybackSeeking);
+            //videoModel.removeEventListener('seeking', onPlaybackSeeking);
+            lastSeekWasInternal = true;
             logger.info('Requesting internal seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
         } else {
+            lastSeekWasInternal = false;
             seekTarget = time;
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             logger.info('Requesting seek to time: ' + time);
@@ -520,26 +523,28 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeking() {
-        let seekTime = getTime();
-        // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
-        // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
-        if (!isNaN(seekTarget) && seekTarget !== seekTime) {
-            seekTime = seekTarget;
-        }
-        seekTarget = NaN;
+        if (!lastSeekWasInternal) {
+            let seekTime = getTime();
+            // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
+            // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
+            if (!isNaN(seekTarget) && seekTarget !== seekTime) {
+                seekTime = seekTarget;
+            }
+            seekTarget = NaN;
 
-        logger.info('Seeking to: ' + seekTime);
-        startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_SEEKING, {
-            seekTime: seekTime
-        });
+            logger.info('Seeking to: ' + seekTime);
+            startUpdatingWallclockTime();
+            eventBus.trigger(Events.PLAYBACK_SEEKING, {
+                seekTime: seekTime
+            });
+        }
     }
 
     function onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
         eventBus.trigger(Events.PLAYBACK_SEEKED);
         // Reactivate 'seeking' event listener (see seek())
-        videoModel.addEventListener('seeking', onPlaybackSeeking);
+        //videoModel.addEventListener('seeking', onPlaybackSeeking);
     }
 
     function onPlaybackTimeUpdated() {
