@@ -292,16 +292,14 @@ function Stream(config) {
     }
 
     function getLiveStartTime() {
-        if (!streamInfo.manifestInfo.isDynamic) return NaN;
-        // Get live start time of the video stream (1st in array of streams)
-        // or audio if no video stream
-        for (let i = 0; i < streamProcessors.length; i++) {
-            if (streamProcessors[i].getType() === Constants.AUDIO ||
-                streamProcessors[i].getType() === Constants.VIDEO) {
-                return streamProcessors[i].getLiveStartTime();
-            }
+        if (!streamInfo.manifestInfo.isDynamic) {
+            return NaN;
         }
-        return NaN;
+        const dvrInfo = dashMetrics.getCurrentDVRInfo();
+        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
+
+        // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
+        return Math.min(Math.max(liveEdge - playbackController.getLiveDelay(), streamInfo.start), streamInfo.start + streamInfo.duration);
     }
 
     function getId() {
@@ -904,6 +902,10 @@ function Stream(config) {
         return preloaded;
     }
 
+    function getAdapter() {
+        return adapter;
+    }
+
     function preload(mediaSource, previousBuffers) {
         if (!getPreloaded()) {
             addInlineEvents();
@@ -952,7 +954,8 @@ function Stream(config) {
         getPreloadingScheduled,
         setPreloadingScheduled,
         getIsEndedEventSignaled,
-        setIsEndedEventSignaled
+        setIsEndedEventSignaled,
+        getAdapter
     };
 
     setup();

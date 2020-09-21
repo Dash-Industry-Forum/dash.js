@@ -48,7 +48,6 @@ import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
-import {usingPromise} from "sinon";
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const PREBUFFERING_CAN_START_INTERVAL = 500;
@@ -152,6 +151,7 @@ function StreamController() {
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.on(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
     }
 
     function unRegisterEvents() {
@@ -168,10 +168,17 @@ function StreamController() {
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.off(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
     }
 
     function onKeySessionUpdated() {
         firstLicenseIsFetched = true;
+    }
+
+    function onWallclockTimeUpdated() {
+        if (adapter.getIsDynamic()) {
+            addDVRMetric();
+        }
     }
 
     /*
@@ -213,6 +220,27 @@ function StreamController() {
         flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
         switchStream(nextStream, activeStream, e.seekTime);
         createPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    function addDVRMetric() {
+        try {
+            const streamsInfo = adapter.getStreamsInfo();
+            const manifestInfo = streamsInfo[0].manifestInfo;
+            const isDynamic = adapter.getIsDynamic();
+            const time = playbackController.getTime();
+            const range = timelineConverter.calcTimeShiftBufferWindow(streams, isDynamic);
+            const activeStreamProcessors = getActiveStreamProcessors();
+
+            if (!activeStreamProcessors || activeStreamProcessors.length === 0) {
+                dashMetrics.addDVRInfo(Constants.VIDEO, time, manifestInfo, range);
+            } else {
+                activeStreamProcessors.forEach((sp) => {
+                    dashMetrics.addDVRInfo(sp.getType(), time, manifestInfo, range);
+                });
+            }
+        } catch (e) {
+            logger.warning(e);
+        }
     }
 
     function onPlaybackStarted( /*e*/) {
@@ -732,28 +760,7 @@ function StreamController() {
             }
 
             if (!activeStream) {
-                if (adapter.getIsDynamic() && streams.length) {
-                    // Compute and set live delay
-                    const manifestInfo = streamsInfo[0].manifestInfo;
-                    const fragmentDuration = getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-                    playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
-                }
-
-                // we need to figure out what the correct starting period is
-                let initialStream = null;
-                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
-
-                initialStream = getStreamForTime(startTimeFromUri);
-
-                // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
-                if (!initialStream && adapter.getIsDynamic() && streams.length) {
-                    logger.debug('Dynamic stream: Trying to find the correct starting period');
-                    initialStream = getInitialStream();
-                }
-                const startStream = initialStream !== null ? initialStream : streams[0];
-                switchStream(startStream, null, NaN);
-                startPlaybackEndedTimerInterval();
-                startCheckIfPrebufferingCanStartInterval();
+                _initializeForFirstStream(streamsInfo);
             }
 
             eventBus.trigger(Events.STREAMS_COMPOSED);
@@ -765,9 +772,40 @@ function StreamController() {
         }
     }
 
+    function _initializeForFirstStream(streamsInfo) {
+        // Add the DVR window so we can calculate the right starting point
+        addDVRMetric();
+        if (adapter.getIsDynamic() && streams.length) {
+            // Compute and set live delay
+            const manifestInfo = streamsInfo[0].manifestInfo;
+            const fragmentDuration = getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+        }
+
+        // we need to figure out what the correct starting period is
+        const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
+        let initialStream = getStreamForTime(startTimeFromUri);
+
+        // For multiperiod streams we should avoid a switch of streams after the seek to the live edge. So we do a calculation of the expected seek time to find the right stream object.
+        if (!initialStream && adapter.getIsDynamic() && streams.length) {
+            logger.debug('Dynamic stream: Trying to find the correct starting period');
+            initialStream = getInitialStream();
+        }
+
+        const startStream = initialStream !== null ? initialStream : streams[0];
+        switchStream(startStream, null, NaN);
+        startPlaybackEndedTimerInterval();
+        startCheckIfPrebufferingCanStartInterval();
+    }
+
     function getInitialStream() {
         try {
-            const liveEdge = timelineConverter.calcPresentationTimeFromWallTime(new Date(), adapter.getRegularPeriods()[0]);
+            const liveEdge = dashMetrics.getCurrentDVRInfo().range.end;
+
+            if (isNaN(liveEdge)) {
+                return null;
+            }
+
             const targetDelay = playbackController.getLiveDelay();
             const targetTime = liveEdge - targetDelay;
 
@@ -1156,6 +1194,7 @@ function StreamController() {
         getStreams,
         getNextStream,
         getActiveStream,
+        addDVRMetric,
         reset
     };
 

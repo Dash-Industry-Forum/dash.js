@@ -30,7 +30,6 @@
  */
 
 import Segment from './../vo/Segment';
-import DashConstants from "../constants/DashConstants";
 
 
 function zeroPadToLength(numStr, minStrLength) {
@@ -171,7 +170,7 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
 
         // SAST = Period@start + seg@presentationStartTime + seg@duration
         // ASAST = SAST - ATO We account for this by adding the ATO to the availabilityWindow
-        // SAET = SAST + TSBD + seg@duration
+        // SAET = SAST + TSBD + seg@duration Still not sure why we are supposed to add seg@duration here
         return Math.min(segmentEndTime, periodEndTime) <= representation.segmentAvailabilityRange.end && Math.max(segmentEndTime, voPeriod.start) >= representation.segmentAvailabilityRange.start;
     }
 

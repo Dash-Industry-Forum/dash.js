@@ -91,16 +91,15 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        // This should be ok as the EPT Delta should be smaller than one segment
+        let periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = Math.floor(periodTime / duration);
 
         return getSegmentByIndex(representation, index);
     }
 
     instance = {
-        getSegmentByIndex: getSegmentByIndex,
-        getSegmentByTime: getSegmentByTime
+        getSegmentByIndex,
+        getSegmentByTime
     };
 
     return instance;

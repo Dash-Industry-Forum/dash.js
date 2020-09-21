@@ -228,19 +228,9 @@ function StreamProcessor(config) {
             // Update has been postponed, update nevertheless DVR info
             const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
             if (activeStreamId === streamInfo.id) {
-                addDVRMetric(getType(), representationController.getCurrentRepresentation());
+                playbackController.getStreamController().addDVRMetric(getType());
             }
         }
-    }
-
-    function addDVRMetric(type, currentRepresentation) {
-        const manifestInfo = streamInfo.manifestInfo;
-        const isDynamic = manifestInfo.isDynamic;
-        const time = playbackController.getTime();
-        const streams = playbackController.getStreamController().getStreams();
-        const range = timelineConverter.calcTimeShiftBufferWindow(currentRepresentation, isDynamic, streams);
-        console.log(`Adding DVR Info for ${type} ${range.start} - ${range.end}`);
-        dashMetrics.addDVRInfo(type, time, manifestInfo, range);
     }
 
     function onQualityChanged(e) {
@@ -255,11 +245,6 @@ function StreamProcessor(config) {
         if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
 
         dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
-
-        const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
-        if (isDynamic && !manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
-            addDVRMetric(getType(), representationController.getCurrentRepresentation());
-        }
     }
 
     function onBufferLevelStateChanged(e) {
@@ -475,7 +460,7 @@ function StreamProcessor(config) {
             });
         } else {
             // Use time just whenever is strictly needed
-            const useTime = hasSeekTarget || bufferPruned ;
+            const useTime = hasSeekTarget || bufferPruned;
             request = getFragmentRequest(representationInfo,
                 useTime ? time : undefined, {
                     keepIdx: !useTime
@@ -595,69 +580,6 @@ function StreamProcessor(config) {
         return controller;
     }
 
-
-    function getLiveStartTime() {
-        if (!isDynamic) return NaN;
-
-        let liveStartTime = NaN;
-        const currentRepresentationInfo = getRepresentationInfo();
-        const dvrInfo = dashMetrics.getCurrentDVRInfo();
-        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
-
-        if (isNaN(liveEdge)) {
-            return NaN;
-        }
-
-        const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
-
-        if (request) {
-            // When low latency mode is selected but browser doesn't support fetch
-            // start at the beginning of the segment to avoid consuming the whole buffer
-            if (settings.get().streaming.lowLatencyEnabled) {
-                liveStartTime = request.duration < mediaPlayerModel.getLiveDelay() ? request.startTime : request.startTime + request.duration - mediaPlayerModel.getLiveDelay();
-            } else {
-                liveStartTime = request.startTime;
-            }
-        }
-
-        return liveStartTime;
-    }
-
-    function findRequestForLiveEdge(liveEdge, currentRepresentationInfo) {
-        try {
-            let request = null;
-            let liveDelay = playbackController.getLiveDelay();
-            const dvrWindowSize = !isNaN(streamInfo.manifestInfo.DVRWindowSize) ? streamInfo.manifestInfo.DVRWindowSize : liveDelay;
-            const dvrWindowSafetyMargin = 0.1 * dvrWindowSize;
-            let startTime;
-
-            // Make sure that we have at least a valid request for the end of the DVR window, otherwise we might try forever
-            if (!isFinite(dvrWindowSize) || getFragmentRequest(currentRepresentationInfo, liveEdge - dvrWindowSize + dvrWindowSafetyMargin, {
-                ignoreIsFinished: true
-            })) {
-
-                // Try to find a request as close as possible to the targeted live edge
-                while (!request && liveDelay <= dvrWindowSize) {
-                    startTime = liveEdge - liveDelay;
-                    request = getFragmentRequest(currentRepresentationInfo, startTime, {
-                        ignoreIsFinished: true
-                    });
-                    if (!request) {
-                        liveDelay += 1; // Increase by one second for each iteration
-                    }
-                }
-            }
-
-            if (request) {
-                playbackController.setLiveDelay(liveDelay, true);
-            }
-            logger.debug('live edge: ' + liveEdge + ', live delay: ' + liveDelay + ', live target: ' + startTime);
-            return request;
-        } catch (e) {
-            return null;
-        }
-    }
-
     function onSeekTarget(e) {
         if ((e.mediaType && e.mediaType !== type) || e.streamId !== streamInfo.id) return;
 
@@ -719,7 +641,6 @@ function StreamProcessor(config) {
         getStreamInfo: getStreamInfo,
         selectMediaInfo: selectMediaInfo,
         addMediaInfo: addMediaInfo,
-        getLiveStartTime: getLiveStartTime,
         switchTrackAsked: switchTrackAsked,
         getMediaInfoArr: getMediaInfoArr,
         getMediaInfo: getMediaInfo,

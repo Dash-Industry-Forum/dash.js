@@ -174,19 +174,21 @@ function TimelineConverter() {
      * @param streams
      * @return {{start: number, end: number}}
      */
-    function calcTimeShiftBufferWindow(voRepresentation, isDynamic, streams) {
-
+    function calcTimeShiftBufferWindow(streams, isDynamic) {
         // Static manifests. The availability window is equal to the DVR window
         if (!isDynamic) {
             return _calcTimeshiftBufferForStaticManifest(streams);
         }
 
         // Specific use case of SegmentTimeline
+        /*
         if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
             return _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation, streams);
         }
+        */
 
-        return _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams);
+
+        return _calcTimeShiftBufferWindowForDynamicManifest(streams);
     }
 
     function _calcAvailabilityWindowForStaticManifest(voRepresentation) {
@@ -243,12 +245,16 @@ function TimelineConverter() {
         return range;
     }
 
-    function _calcTimeShiftBufferWindowForDynamicManifest(voRepresentation, streams) {
+    function _calcTimeShiftBufferWindowForDynamicManifest(streams) {
         const range = {start: NaN, end: NaN};
-        const voPeriod = voRepresentation.adaptation.period;
+
+        if(!streams || streams.length === 0) {
+            return range;
+        }
+
+        const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const start = !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? now - voPeriod.mpd.timeShiftBufferDepth : 0;
-
         // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
         range.start = _adjustTimeBasedOnPeriodRanges(streams, start);
         range.end = _adjustTimeBasedOnPeriodRanges(streams, now, true);
@@ -271,8 +277,7 @@ function TimelineConverter() {
                 if (streamInfo.start >= periodEnd && streamInfo.start < now && end <= now) {
                     if (!isNaN(streamInfo.duration)) {
                         end += streamInfo.duration;
-                    }
-                    else if(!isFinite(streamInfo.duration)) {
+                    } else if (!isFinite(streamInfo.duration)) {
                         end = now;
                     }
                     end = Math.min(end, now);
