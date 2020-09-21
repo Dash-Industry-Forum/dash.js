@@ -224,13 +224,6 @@ function StreamProcessor(config) {
             // Update representation if no error
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
         }
-        if (!e.error || e.error.code === Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
-            // Update has been postponed, update nevertheless DVR info
-            const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
-            if (activeStreamId === streamInfo.id) {
-                playbackController.getStreamController().addDVRMetric(getType());
-            }
-        }
     }
 
     function onQualityChanged(e) {

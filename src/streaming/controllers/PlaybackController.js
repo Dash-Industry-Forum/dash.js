@@ -133,10 +133,12 @@ function PlaybackController() {
                 }
             } else {
                 // For static stream, start by default at period start
-                startTime = streamInfo.start;
+                const streams = streamController.getStreams();
+                const targetStreamInfo = streams[0].getStreamInfo();
+                startTime = targetStreamInfo.start;
                 // If start time in URI, take max value between period start and time from URI (if in period range)
-                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, false);
-                if (!isNaN(startTimeFromUri) && startTimeFromUri < (startTime + streamInfo.duration)) {
+                const startTimeFromUri = getStartTimeFromUriParameters(targetStreamInfo.start, false);
+                if (!isNaN(startTimeFromUri) && startTimeFromUri < (streamInfo.start + streamInfo.duration)) {
                     logger.info('Start time from URI parameters: ' + startTimeFromUri);
                     startTime = Math.max(startTime, startTimeFromUri);
                 }
