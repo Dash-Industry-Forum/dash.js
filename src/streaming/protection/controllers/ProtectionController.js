@@ -171,7 +171,7 @@ function ProtectionController(config) {
             const currentInitData = protectionModel.getAllInitData();
             for (let i = 0; i < currentInitData.length; i++) {
                 if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                    logger.warn('DRM: Ignoring initData because we have already seen it!');
+                    logger.debug('DRM: Ignoring initData because we have already seen it!');
                     return;
                 }
             }
@@ -789,7 +789,7 @@ function ProtectionController(config) {
                 const currentInitData = protectionModel.getAllInitData();
                 for (let i = 0; i < currentInitData.length; i++) {
                     if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                        logger.warn('DRM: Ignoring initData because we have already seen it!');
+                        logger.debug('DRM: Ignoring initData because we have already seen it!');
                         return;
                     }
                 }

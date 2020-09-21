@@ -34,6 +34,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import DashConstants from '../constants/DashConstants';
 import DashManifestModel from '../models/DashManifestModel';
 import Settings from '../../core/Settings';
+import Constants from '../../streaming/constants/Constants';
 
 function TimelineConverter() {
 
@@ -181,12 +182,10 @@ function TimelineConverter() {
         }
 
         // Specific use case of SegmentTimeline
-        /*
-        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
-            return _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation, streams);
-        }
-        */
 
+        if (settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
+            return _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
+        }
 
         return _calcTimeShiftBufferWindowForDynamicManifest(streams);
     }
@@ -217,7 +216,7 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
         const end = range.end > now + endOffset ? now + endOffset : range.end;
-        const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, now - voPeriod.mpd.timeShiftBufferDepth) : range.start;
+        const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
 
         range.start = Math.max(start, voPeriod.start);
         range.end = Math.min(end, voPeriod.start + voPeriod.duration);
@@ -248,7 +247,7 @@ function TimelineConverter() {
     function _calcTimeShiftBufferWindowForDynamicManifest(streams) {
         const range = {start: NaN, end: NaN};
 
-        if(!streams || streams.length === 0) {
+        if (!streams || streams.length === 0) {
             return range;
         }
 
@@ -262,31 +261,43 @@ function TimelineConverter() {
         return range;
     }
 
-    function _calcTimeShiftBufferWindowForDynamicTimelineManifest(voRepresentation, streams) {
-        const range = _calcRangeForTimeline(voRepresentation);
-        const voPeriod = voRepresentation.adaptation.period;
+    function _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams) {
+        const range = {start: NaN, end: NaN};
+        const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
-        let end = range.end > now ? now : range.end;
-
-        // if end is smaller than now we need to check if upcoming periods extend the timeline
-        if (end < now && isFinite(voPeriod.duration) && streams.length > 1) {
-            const periodEnd = voPeriod.start + voPeriod.duration;
-            streams.forEach((stream) => {
-                const streamInfo = stream.getStreamInfo();
-                if (streamInfo.start >= periodEnd && streamInfo.start < now && end <= now) {
-                    if (!isNaN(streamInfo.duration)) {
-                        end += streamInfo.duration;
-                    } else if (!isFinite(streamInfo.duration)) {
-                        end = now;
-                    }
-                    end = Math.min(end, now);
-                }
-            });
+        if (!streams || streams.length === 0) {
+            return range;
         }
 
-        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? end - voPeriod.mpd.timeShiftBufferDepth : range.start;
-        range.end = end;
+        streams.forEach((stream) => {
+            const adapter = stream.getAdapter();
+            const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
+            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+            const voRepresentation = voRepresentations[0];
+            let periodRange = {start: NaN, end: NaN};
+
+            if (voRepresentation) {
+                if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+                    periodRange = _calcRangeForTimeline(voRepresentation);
+                } else {
+                    const currentVoPeriod = voRepresentation.adaptation.period;
+                    periodRange.start = currentVoPeriod.start;
+                    periodRange.end = Math.max(now, currentVoPeriod.start + currentVoPeriod.duration);
+                }
+            }
+
+            if (!isNaN(periodRange.start) && (isNaN(range.start) || range.start > periodRange.start)) {
+                range.start = periodRange;
+            }
+            if (!isNaN(periodRange.end) && (isNaN(range.end) || range.end < periodRange.end)) {
+                range.end = periodRange.end;
+            }
+        });
+
+
+        range.end = range.end > now ? now : range.end;
+        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? range.end - voPeriod.mpd.timeShiftBufferDepth : range.start;
 
         return range;
     }
