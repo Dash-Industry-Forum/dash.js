@@ -30,13 +30,35 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import ObjectIron from './objectiron';
-import X2JS from '../../../externals/xml2json';
 import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
 import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
+import { xml } from 'txml';
+
+// List of node that shall be represented as arrays
+const arrayNodes = [
+    'Period',
+    'BaseURL',
+    'AdaptationSet',
+    'Representation',
+    'ContentProtection',
+    'Role',
+    'Accessibility',
+    'AudioChannelConfiguration',
+    'ContentComponent',
+    'EssentialProperty',
+    'S',
+    'SegmentURL',
+    'Event',
+    'EventStream',
+    'Location',
+    'ServiceDescription',
+    'SupplementalProperty',
+    'Metrics'
+];
 
 function DashParser(config) {
 
@@ -47,7 +69,6 @@ function DashParser(config) {
     let instance,
         logger,
         matchers,
-        converter,
         objectIron;
 
     function setup() {
@@ -58,17 +79,6 @@ function DashParser(config) {
             new NumericMatcher(),
             new StringMatcher()   // last in list to take precedence over NumericMatcher
         ];
-
-        converter = new X2JS({
-            escapeMode:         false,
-            attributePrefix:    '',
-            arrayAccessForm:    'property',
-            emptyNodeForm:      'object',
-            stripWhitespaces:   false,
-            enableToStringFunc: true,
-            ignoreRoot:         true,
-            matchers:           matchers
-        });
 
         objectIron = ObjectIron(context).create({
             adaptationset: new RepresentationBaseValuesMap(),
@@ -88,21 +98,69 @@ function DashParser(config) {
         let manifest;
         const startTime = window.performance.now();
 
-        manifest = converter.xml_str2json(data);
+        let root = xml(data);
+        // let root = xml.simplify(xml(data));
+        let mpd = root[0].tagName === '?xml' ? root[0].children[0] : root[0];
+        manifest = processXml(mpd);
 
         if (!manifest) {
             throw new Error('parsing the manifest failed');
         }
 
-        const jsonTime = window.performance.now();
+        const parsedTime = window.performance.now();
         objectIron.run(manifest);
 
         const ironedTime = window.performance.now();
-        logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
+        logger.info('Parsing complete: (xml parsing: ' + (parsedTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - parsedTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
 
         manifest.protocol = 'DASH';
 
         return manifest;
+    }
+
+    function processAttr(tagName, attrName, value) {
+        matchers.forEach(matcher => {
+            if (matcher.test(tagName, attrName, value)) {
+                value = matcher.converter(value);
+            }
+        });
+    }
+
+    function processXml (xmlNode) {
+        let tag = {};
+
+        // Process attributes with matchers
+        for (let key in xmlNode.attributes) {
+            tag[key] = processAttr(xmlNode.tagName, key, xmlNode.attributes[key]);
+        }
+
+        // Process children
+        xmlNode.children.forEach(child => {
+            if (typeof child === 'string') {
+                // Tag with text as body
+                if (Object.keys(xmlNode.attributes).length === 0) {
+                    // Set tag value with text if no attribute
+                    tag = child;
+                } else {
+                    // Or add an attribute '__text'
+                    tag.__text = child;
+                }
+            } else {
+                let name = child.tagName;
+                let childTag = processXml(child);
+                // Set child as an array according to DASH spec
+                if (arrayNodes.indexOf(name) !== -1) {
+                    if (!tag[name]) {
+                        tag[name] = [];
+                    }
+                    tag[name].push(childTag);
+                } else {
+                    tag[name] = childTag;
+                }
+            }
+        });
+
+        return tag;
     }
 
     instance = {

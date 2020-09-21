@@ -37,7 +37,7 @@ import DashConstants from '../../constants/DashConstants';
 class StringMatcher extends BaseMatcher {
     constructor() {
         super(
-            (attr, nodeName) => {
+            (tagName, attrName/*, value*/) => {
                 const stringAttrsInElements = {
                     [DashConstants.MPD]:                            [ DashConstants.ID, DashConstants.PROFILES ],
                     [DashConstants.PERIOD]:                         [ DashConstants.ID ],
@@ -68,10 +68,10 @@ class StringMatcher extends BaseMatcher {
                     [DashConstants.METRICS]:                        [ DashConstants.METRICS_MINUS ],
                     [DashConstants.REPORTING]:                      [ DashConstants.VALUE, DashConstants.ID ]
                 };
-                if (stringAttrsInElements.hasOwnProperty(nodeName)) {
-                    let attrNames = stringAttrsInElements[nodeName];
+                if (stringAttrsInElements.hasOwnProperty(tagName)) {
+                    let attrNames = stringAttrsInElements[tagName];
                     if (attrNames !== undefined) {
-                        return attrNames.indexOf(attr.name) >= 0;
+                        return attrNames.indexOf(attrName) >= 0;
                     } else {
                         return false;
                     }

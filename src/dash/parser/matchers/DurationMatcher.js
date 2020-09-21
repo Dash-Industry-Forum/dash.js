@@ -46,7 +46,7 @@ const SECONDS_IN_MIN = 60;
 class DurationMatcher extends BaseMatcher {
     constructor() {
         super(
-            attr => {
+            (tagName, attrName, value) => {
                 const attributeList = [
                     DashConstants.MIN_BUFFER_TIME, DashConstants.MEDIA_PRESENTATION_DURATION,
                     DashConstants.MINIMUM_UPDATE_PERIOD, DashConstants.TIMESHIFT_BUFFER_DEPTH, DashConstants.MAX_SEGMENT_DURATION,
@@ -56,8 +56,8 @@ class DurationMatcher extends BaseMatcher {
                 const len = attributeList.length;
 
                 for (let i = 0; i < len; i++) {
-                    if (attr.nodeName === attributeList[i]) {
-                        return durationRegex.test(attr.value);
+                    if (attrName === attributeList[i]) {
+                        return durationRegex.test(value);
                     }
                 }
 
