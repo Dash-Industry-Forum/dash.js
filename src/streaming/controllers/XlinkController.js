@@ -97,7 +97,7 @@ function XlinkController(config) {
         });
 
         manifest = mpd;
-        elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+        elements = getElementsToResolve(manifest.Period, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
         resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
     }
 
@@ -172,13 +172,13 @@ function XlinkController(config) {
             switch (resolveObject.type) {
                 // Start resolving the other elements. We can do Adaptation Set and EventStream in parallel
                 case DashConstants.PERIOD:
-                    for (i = 0; i < manifest[DashConstants.PERIOD + '_asArray'].length; i++) {
-                        obj = manifest[DashConstants.PERIOD + '_asArray'][i];
-                        if (obj.hasOwnProperty(DashConstants.ADAPTATION_SET + '_asArray')) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ADAPTATION_SET + '_asArray'], obj, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD));
+                    for (i = 0; i < manifest[DashConstants.PERIOD].length; i++) {
+                        obj = manifest[DashConstants.PERIOD][i];
+                        if (obj.hasOwnProperty(DashConstants.ADAPTATION_SET)) {
+                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ADAPTATION_SET], obj, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD));
                         }
-                        if (obj.hasOwnProperty(DashConstants.EVENT_STREAM + '_asArray')) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.EVENT_STREAM + '_asArray'], obj, DashConstants.EVENT_STREAM, RESOLVE_TYPE_ONLOAD));
+                        if (obj.hasOwnProperty(DashConstants.EVENT_STREAM)) {
+                            elements = elements.concat(getElementsToResolve(obj[DashConstants.EVENT_STREAM], obj, DashConstants.EVENT_STREAM, RESOLVE_TYPE_ONLOAD));
                         }
                     }
                     resolve(elements, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD);
@@ -226,7 +226,7 @@ function XlinkController(config) {
         // Start merging back from the end because of index shifting. Note that the elements with the same parent have to be ordered by index ascending
         for (i = resolveObject.elements.length - 1; i >= 0; i --) {
             element = resolveObject.elements[i];
-            type = element.type + '_asArray';
+            type = element.type;
 
             // Element couldn't be resolved or is TODO Inappropriate target: Remove all Xlink attributes
             if (!element.resolvedContent || isInappropriateTarget()) {

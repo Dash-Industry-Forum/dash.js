@@ -101,7 +101,7 @@ function DashAdapter() {
     function convertRepresentationToRepresentationInfo(voRepresentation) {
         if (voRepresentation) {
             let representationInfo = new RepresentationInfo();
-            const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
+            const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period[voRepresentation.adaptation.period.index].AdaptationSet[voRepresentation.adaptation.index];
             const realRepresentation = dashManifestModel.getRepresentationFor(voRepresentation.index, realAdaptation);
 
             representationInfo.id = voRepresentation.id;
@@ -749,7 +749,7 @@ function DashAdapter() {
         }
 
         let mediaInfo = new MediaInfo();
-        const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
+        const realAdaptation = adaptation.period.mpd.manifest.Period[adaptation.period.index].AdaptationSet[adaptation.index];
         let viewpoint;
 
         mediaInfo.id = adaptation.id;
@@ -779,8 +779,8 @@ function DashAdapter() {
             return audioChannelConfiguration.value;
         });
 
-        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
+        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation) && realAdaptation.Representation.length > 0) {
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]).map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
         }
@@ -828,7 +828,7 @@ function DashAdapter() {
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
-        streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isLast = period.mpd.manifest.Period.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
 
         return streamInfo;
     }
@@ -856,7 +856,7 @@ function DashAdapter() {
     }
 
     function getPeriod(periodIdx) {
-        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodIdx] : null;
+        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period[periodIdx] : null;
     }
 
     function findRepresentationIndex(period, representationId) {
@@ -874,10 +874,10 @@ function DashAdapter() {
             representationArrayIndex;
 
         if (period) {
-            adaptationSetArray = period.AdaptationSet_asArray;
+            adaptationSetArray = period.AdaptationSet;
             for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
                 adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                representationArray = adaptationSet.Representation_asArray;
+                representationArray = adaptationSet.Representation;
                 for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
                     representation = representationArray[representationArrayIndex];
                     if (representationId === representation.id) {
@@ -902,10 +902,10 @@ function DashAdapter() {
 
         if (!period || !bufferType) return -1;
 
-        adaptationSetArray = period.AdaptationSet_asArray;
+        adaptationSetArray = period.AdaptationSet;
         for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
             adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation_asArray;
+            representationArray = adaptationSet.Representation;
             if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
                 return representationArray.length;
             }

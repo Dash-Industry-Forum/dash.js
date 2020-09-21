@@ -603,10 +603,10 @@ function Stream(config) {
     function filterCodecs(type) {
         const realAdaptation = adapter.getAdaptationForType(streamInfo ? streamInfo.index : null, type, streamInfo);
 
-        if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
+        if (!realAdaptation || !Array.isArray(realAdaptation.Representation)) return;
 
         // Filter codecs that are not supported
-        realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
+        realAdaptation.Representation = realAdaptation.Representation.filter((_, i) => {
             // keep at least codec from lowest representation
             if (i === 0) return true;
 
@@ -861,11 +861,11 @@ function Stream(config) {
         }
 
         const sameMimeType = newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
-        const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
+        const oldCodecs = currentAdaptation.Representation.map((representation) => {
             return representation.codecs;
         });
 
-        const newCodecs = newAdaptation.Representation_asArray.map((representation) => {
+        const newCodecs = newAdaptation.Representation.map((representation) => {
             return representation.codecs;
         });
 

@@ -93,17 +93,17 @@ function MssParser(config) {
             adaptation;
 
         // For each StreamIndex node, create an AdaptationSet element
-        period.AdaptationSet_asArray = [];
+        period.AdaptationSet = [];
         streams = smoothStreamingMedia.getElementsByTagName('StreamIndex');
         for (let i = 0; i < streams.length; i++) {
             adaptation = mapAdaptationSet(streams[i], timescale);
             if (adaptation !== null) {
-                period.AdaptationSet_asArray.push(adaptation);
+                period.AdaptationSet.push(adaptation);
             }
         }
 
-        if (period.AdaptationSet_asArray.length > 0) {
-            period.AdaptationSet = (period.AdaptationSet_asArray.length > 1) ? period.AdaptationSet_asArray : period.AdaptationSet_asArray[0];
+        if (period.AdaptationSet.length > 0) {
+            period.AdaptationSet = (period.AdaptationSet.length > 1) ? period.AdaptationSet : period.AdaptationSet[0];
         }
 
         return period;
@@ -139,7 +139,7 @@ function MssParser(config) {
                     value: ROLE[adaptationSet.subType]
                 };
                 adaptationSet.Role = role;
-                adaptationSet.Role_asArray = [role];
+                adaptationSet.Role = [role];
             }
             if (ACCESSIBILITY[adaptationSet.subType]) {
                 let accessibility = {
@@ -147,7 +147,7 @@ function MssParser(config) {
                     value: ACCESSIBILITY[adaptationSet.subType]
                 };
                 adaptationSet.Accessibility = accessibility;
-                adaptationSet.Accessibility_asArray = [accessibility];
+                adaptationSet.Accessibility = [accessibility];
             }
         }
 
@@ -180,12 +180,12 @@ function MssParser(config) {
         }
 
         adaptationSet.Representation = (representations.length > 1) ? representations : representations[0];
-        adaptationSet.Representation_asArray = representations;
+        adaptationSet.Representation = representations;
 
         // Set SegmentTemplate
         adaptationSet.SegmentTemplate = segmentTemplate;
 
-        segments = segmentTemplate.SegmentTimeline.S_asArray;
+        segments = segmentTemplate.SegmentTimeline.S;
 
         return adaptationSet;
     }
@@ -421,7 +421,7 @@ function MssParser(config) {
         }
 
         segmentTimeline.S = segments;
-        segmentTimeline.S_asArray = segments;
+        segmentTimeline.S = segments;
         segmentTimeline.duration = duration / timescale;
 
         return segmentTimeline;
@@ -523,8 +523,7 @@ function MssParser(config) {
         return {
             schemeIdUri: 'urn:uuid:9a04f079-9840-4286-ab92-e65be0885f95',
             value: 'com.microsoft.playready',
-            pro: pro,
-            pro_asArray: pro
+            pro: pro
         };
     }
 
@@ -636,11 +635,10 @@ function MssParser(config) {
         }
 
         // Map period node to manifest root node
-        manifest.Period = mapPeriod(smoothStreamingMedia, manifest.timescale);
-        manifest.Period_asArray = [manifest.Period];
+        period = mapPeriod(smoothStreamingMedia, manifest.timescale);
+        manifest.Period = [period];
 
         // Initialize period start time
-        period = manifest.Period;
         period.start = 0;
 
         // Uncomment to test live to static manifests
@@ -672,28 +670,28 @@ function MssParser(config) {
             contentProtections.push(contentProtection);
 
             manifest.ContentProtection = contentProtections;
-            manifest.ContentProtection_asArray = contentProtections;
+            manifest.ContentProtection = contentProtections;
         }
 
-        adaptations = period.AdaptationSet_asArray;
+        adaptations = period.AdaptationSet;
 
         for (i = 0; i < adaptations.length; i += 1) {
             adaptations[i].SegmentTemplate.initialization = '$Bandwidth$';
             // Propagate content protection information into each adaptation
             if (manifest.ContentProtection !== undefined) {
                 adaptations[i].ContentProtection = manifest.ContentProtection;
-                adaptations[i].ContentProtection_asArray = manifest.ContentProtection_asArray;
+                adaptations[i].ContentProtection = manifest.ContentProtection;
             }
 
             if (adaptations[i].contentType === 'video') {
                 // Get video segment duration
-                segmentDuration = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray[0].d / adaptations[i].SegmentTemplate.timescale;
+                segmentDuration = adaptations[i].SegmentTemplate.SegmentTimeline.S[0].d / adaptations[i].SegmentTemplate.timescale;
                 // Set minBufferTime to one segment duration
                 manifest.minBufferTime = segmentDuration;
 
                 if (manifest.type === 'dynamic' ) {
                     // Set availabilityStartTime
-                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
+                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S;
                     let endTime = (segments[segments.length - 1].t + segments[segments.length - 1].d) / adaptations[i].SegmentTemplate.timescale * 1000;
                     manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - endTime);
 
@@ -746,7 +744,7 @@ function MssParser(config) {
 
         // Delete Content Protection under root manifest node
         delete manifest.ContentProtection;
-        delete manifest.ContentProtection_asArray;
+        delete manifest.ContentProtection;
 
         // In case of VOD streams, check if start time is greater than 0
         // Then determine timestamp offset according to higher audio/video start time
@@ -760,7 +758,7 @@ function MssParser(config) {
             } else {
                 for (i = 0; i < adaptations.length; i++) {
                     if (adaptations[i].contentType === constants.AUDIO || adaptations[i].contentType === constants.VIDEO) {
-                        segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
+                        segments = adaptations[i].SegmentTemplate.SegmentTimeline.S;
                         startTime = segments[0].t;
                         if (timestampOffset === undefined) {
                             timestampOffset = startTime;
@@ -776,7 +774,7 @@ function MssParser(config) {
                 // Patch segment templates timestamps and determine period start time (since audio/video should not be aligned to 0)
                 manifest.timestampOffset = timestampOffset;
                 for (i = 0; i < adaptations.length; i++) {
-                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
+                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S;
                     for (j = 0; j < segments.length; j++) {
                         if (!segments[j].tManifest) {
                             segments[j].tManifest = segments[j].t.toString();

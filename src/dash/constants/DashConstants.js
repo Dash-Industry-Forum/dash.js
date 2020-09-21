@@ -97,10 +97,10 @@ class DashConstants {
         this.SUBSET = 'Subset';
         this.LANG = 'lang';
         this.VIEWPOINT = 'Viewpoint';
-        this.ROLE_ASARRAY = 'Role_asArray';
-        this.ACCESSIBILITY_ASARRAY = 'Accessibility_asArray';
-        this.AUDIOCHANNELCONFIGURATION_ASARRAY = 'AudioChannelConfiguration_asArray';
-        this.CONTENTPROTECTION_ASARRAY = 'ContentProtection_asArray';
+        this.ROLE = 'Role';
+        this.ACCESSIBILITY = 'Accessibility';
+        this.AUDIOCHANNELCONFIGURATION = 'AudioChannelConfiguration';
+        this.CONTENTPROTECTION = 'ContentProtection';
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
         this.STATIC = 'static';

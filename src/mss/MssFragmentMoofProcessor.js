@@ -61,7 +61,7 @@ function MssFragmentMoofProcessor(config) {
         const representation = representationController.getCurrentRepresentation();
 
         const manifest = representation.adaptation.period.mpd.manifest;
-        const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
+        const adaptation = manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index];
         const timescale = adaptation.SegmentTemplate.timescale;
 
         type = streamProcessor.getType();
