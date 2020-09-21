@@ -63,7 +63,8 @@
     "html-entities": "^1.2.1",
     "localforage": "^1.7.1",
     "request": "^2.87.0",
-    "request-promise": "^4.2.2"
+    "request-promise": "^4.2.2",
+    "txml": "3.2.5"
   },
   "repository": {
     "type": "git",
