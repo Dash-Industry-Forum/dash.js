@@ -305,10 +305,11 @@ function StreamController() {
         while (i < upcomingStreams.length) {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
+
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
-
                 if (mediaSource) {
+
                     // We can not start prebuffering if the segments of the upcoming period are outside of the availability window
                     const mediaTypes = [Constants.VIDEO, Constants.AUDIO];
                     let segmentAvailabilityRangeIsOk = true;
@@ -773,8 +774,10 @@ function StreamController() {
     }
 
     function _initializeForFirstStream(streamsInfo) {
+
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
+
         if (adapter.getIsDynamic() && streams.length) {
             // Compute and set live delay
             const manifestInfo = streamsInfo[0].manifestInfo;

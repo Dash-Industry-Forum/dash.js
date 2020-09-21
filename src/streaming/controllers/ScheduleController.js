@@ -475,6 +475,9 @@ function ScheduleController(config) {
     }
 
     function setSeekTarget(value) {
+        if(!isNaN(value)) {
+            console.log('seek');
+        }
         seekTarget = value;
     }
 
