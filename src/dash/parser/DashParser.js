@@ -36,7 +36,7 @@ import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
-import { xml } from 'txml';
+import tXml from '../../../externals/txml';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [
