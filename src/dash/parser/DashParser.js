@@ -119,11 +119,13 @@ function DashParser(config) {
     }
 
     function processAttr(tagName, attrName, value) {
+        let attrValue = value;
         matchers.forEach(matcher => {
             if (matcher.test(tagName, attrName, value)) {
-                value = matcher.converter(value);
+                attrValue = matcher.converter(value);
             }
         });
+        return attrValue;
     }
 
     function processXml (xmlNode) {
