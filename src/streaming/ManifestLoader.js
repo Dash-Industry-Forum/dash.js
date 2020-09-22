@@ -159,9 +159,8 @@ function ManifestLoader(config) {
                     return;
                 }
 
-                // init xlinkcontroller with matchers and iron object from created parser
-                xlinkController.setMatchers(parser.getMatchers());
-                xlinkController.setIron(parser.getIron());
+                // init xlinkcontroller with created parser
+                xlinkController.setParser(parser);
 
                 try {
                     manifest = parser.parse(data);

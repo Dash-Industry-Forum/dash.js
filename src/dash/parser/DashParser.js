@@ -86,10 +86,6 @@ function DashParser(config) {
         });
     }
 
-    function getMatchers() {
-        return matchers;
-    }
-
     function getIron() {
         return objectIron;
     }
@@ -98,24 +94,27 @@ function DashParser(config) {
         let manifest;
         const startTime = window.performance.now();
 
-        let root = xml(data);
-        // let root = xml.simplify(xml(data));
-        let mpd = root[0].tagName === '?xml' ? root[0].children[0] : root[0];
-        manifest = processXml(mpd);
+        manifest = parseXml(data);
 
         if (!manifest) {
-            throw new Error('parsing the manifest failed');
+            throw new Error('failed to parse the manifest');
         }
 
-        const parsedTime = window.performance.now();
         objectIron.run(manifest);
 
-        const ironedTime = window.performance.now();
-        logger.info('Parsing complete: (xml parsing: ' + (parsedTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - parsedTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
+        const parsedTime = window.performance.now();
+        logger.info('Parsing complete: ' + (parsedTime - startTime).toPrecision(3) + 'ms');
 
         manifest.protocol = 'DASH';
 
         return manifest;
+    }
+
+
+    function parseXml(data) {
+        let root = tXml(data);
+        root = root[0].tagName === '?xml' ? root[0].children[0] : root[0];
+        return processXml(root);
     }
 
     function processAttr(tagName, attrName, value) {
@@ -128,7 +127,7 @@ function DashParser(config) {
         return attrValue;
     }
 
-    function processXml (xmlNode) {
+    function processXml(xmlNode) {
         let tag = {};
 
         // Process attributes with matchers
@@ -166,9 +165,9 @@ function DashParser(config) {
     }
 
     instance = {
-        parse: parse,
-        getMatchers: getMatchers,
-        getIron: getIron
+        getIron: getIron,
+        parseXml: parseXml,
+        parse: parse
     };
 
     setup();

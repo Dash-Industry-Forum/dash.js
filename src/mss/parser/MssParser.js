@@ -813,10 +813,6 @@ function MssParser(config) {
         return xmlDoc;
     }
 
-    function getMatchers() {
-        return null;
-    }
-
     function getIron() {
         return null;
     }
@@ -855,7 +851,6 @@ function MssParser(config) {
 
     instance = {
         parse: internalParse,
-        getMatchers: getMatchers,
         getIron: getIron,
         reset: reset
     };
