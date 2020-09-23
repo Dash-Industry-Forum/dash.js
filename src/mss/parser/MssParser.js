@@ -102,10 +102,6 @@ function MssParser(config) {
             }
         }
 
-        if (period.AdaptationSet.length > 0) {
-            period.AdaptationSet = (period.AdaptationSet.length > 1) ? period.AdaptationSet : period.AdaptationSet[0];
-        }
-
         return period;
     }
 
@@ -134,20 +130,16 @@ function MssParser(config) {
         // Map text tracks subTypes to MPEG-DASH AdaptationSet role and accessibility (see ETSI TS 103 285 v1.1.1, section 7.1.2)
         if (adaptationSet.subType) {
             if (ROLE[adaptationSet.subType]) {
-                let role = {
+                adaptationSet.Role = [{
                     schemeIdUri: 'urn:mpeg:dash:role:2011',
                     value: ROLE[adaptationSet.subType]
-                };
-                adaptationSet.Role = role;
-                adaptationSet.Role = [role];
+                }];
             }
             if (ACCESSIBILITY[adaptationSet.subType]) {
-                let accessibility = {
+                adaptationSet.Accessibility = [{
                     schemeIdUri: 'urn:tva:metadata:cs:AudioPurposeCS:2007',
                     value: ACCESSIBILITY[adaptationSet.subType]
-                };
-                adaptationSet.Accessibility = accessibility;
-                adaptationSet.Accessibility = [accessibility];
+                }];
             }
         }
 
@@ -179,7 +171,6 @@ function MssParser(config) {
             return null;
         }
 
-        adaptationSet.Representation = (representations.length > 1) ? representations : representations[0];
         adaptationSet.Representation = representations;
 
         // Set SegmentTemplate
@@ -420,7 +411,6 @@ function MssParser(config) {
             }
         }
 
-        segmentTimeline.S = segments;
         segmentTimeline.S = segments;
         segmentTimeline.duration = duration / timescale;
 
@@ -670,7 +660,6 @@ function MssParser(config) {
             contentProtections.push(contentProtection);
 
             manifest.ContentProtection = contentProtections;
-            manifest.ContentProtection = contentProtections;
         }
 
         adaptations = period.AdaptationSet;
@@ -743,7 +732,6 @@ function MssParser(config) {
         }
 
         // Delete Content Protection under root manifest node
-        delete manifest.ContentProtection;
         delete manifest.ContentProtection;
 
         // In case of VOD streams, check if start time is greater than 0
