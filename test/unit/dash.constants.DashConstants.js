@@ -65,10 +65,10 @@ describe('DashConstants', function () {
         expect(DashConstants.SUBSET).to.equal('Subset');
         expect(DashConstants.LANG).to.equal('lang');
         expect(DashConstants.VIEWPOINT).to.equal('Viewpoint');
-        expect(DashConstants.ROLE_ASARRAY).to.equal('Role_asArray');
-        expect(DashConstants.ACCESSIBILITY_ASARRAY).to.equal('Accessibility_asArray');
-        expect(DashConstants.AUDIOCHANNELCONFIGURATION_ASARRAY).to.equal('AudioChannelConfiguration_asArray');
-        expect(DashConstants.CONTENTPROTECTION_ASARRAY).to.equal('ContentProtection_asArray');
+        expect(DashConstants.ROLE).to.equal('Role');
+        expect(DashConstants.ACCESSIBILITY).to.equal('Accessibility');
+        expect(DashConstants.AUDIOCHANNELCONFIGURATION).to.equal('AudioChannelConfiguration');
+        expect(DashConstants.CONTENTPROTECTION).to.equal('ContentProtection');
         expect(DashConstants.MAIN).to.equal('main');
         expect(DashConstants.DYNAMIC).to.equal('dynamic');
         expect(DashConstants.MEDIA_PRESENTATION_DURATION).to.equal('mediaPresentationDuration');

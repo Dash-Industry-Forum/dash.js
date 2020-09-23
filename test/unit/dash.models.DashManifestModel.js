@@ -29,14 +29,6 @@ const mpd_sample = {
                 'id': '153202'
             }
         ],
-        'Period_asArray': [
-            {
-                'id': '153199'
-            },
-            {
-                'id': '153202'
-            }
-        ],
         'type': 'static'
     },
     'maxSegmentDuration': 4.5,
@@ -152,28 +144,28 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getAdaptationForId is called and id and periodIndex are undefined', () => {
-            const manifest = {Period_asArray: []};
+            const manifest = {Period: []};
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, undefined);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForId is called and id is undefined', () => {
-            const manifest = {Period_asArray: []};
+            const manifest = {Period: []};
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 2);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForId is called and id is undefined and periodIndex = 0', () => {
-            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
+            const manifest = {Period: [{AdaptationSet: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 0);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return valid value when getAdaptationForId is called and id is 0 and periodIndex = 0', () => {
-            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
+            const manifest = {Period: [{AdaptationSet: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForId(0, manifest, 0);
 
             expect(adaptation.id).to.equal(0); // jshint ignore:line
@@ -186,28 +178,28 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getAdaptationForIndex is called and id and periodIndex are undefined', () => {
-            const manifest = {Period_asArray: []};
+            const manifest = {Period: []};
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, undefined);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForIndex is called and id is undefined', () => {
-            const manifest = {Period_asArray: []};
+            const manifest = {Period: []};
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 2);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForIndex is called and id is undefined and periodIndex = 0', () => {
-            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
+            const manifest = {Period: [{AdaptationSet: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 0);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return valid value when getAdaptationForIndex is called and id is 0 and periodIndex = 0', () => {
-            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
+            const manifest = {Period: [{AdaptationSet: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForIndex(0, manifest, 0);
 
             expect(adaptation.id).to.equal(0); // jshint ignore:line
@@ -220,7 +212,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return -1 when getIndexForAdaptation is called and manifest and periodIndex are undefined', () => {
-            const manifest = {Period_asArray: []};
+            const manifest = {Period: []};
             var adaptation = mpdHelper.composeAdaptation('video');
             const index = dashManifestModel.getIndexForAdaptation(adaptation, manifest, undefined);
 
@@ -242,7 +234,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return an empty array when getAdaptationsForType is called and periodIndex and type are undefined', () => {
-            const manifest = {Period_asArray: []};
+            const manifest = {Period: []};
             const adaptationsArray = dashManifestModel.getAdaptationsForType(manifest, undefined, undefined);
 
             expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
@@ -250,7 +242,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
-            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
+            const manifest = {Period: [{AdaptationSet: [{id: 0}]}]};
 
             expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw('type is not defined');
         });
@@ -261,27 +253,27 @@ describe('DashManifestModel', function () {
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getCodec is called and adaptation.Representation_asArray is undefined', () => {
+        it('should return null when getCodec is called and adaptation.Representation is undefined', () => {
             const codec = dashManifestModel.getCodec({});
 
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getCodec is called and adaptation.Representation_asArray.length is -1', () => {
-            const codec = dashManifestModel.getCodec({Representation_asArray: {length: -1}});
+        it('should return null when getCodec is called and adaptation.Representation.length is -1', () => {
+            const codec = dashManifestModel.getCodec({Representation: {length: -1}});
 
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getCodec is called and representationId is not an integer', () => {
-            const codec = dashManifestModel.getCodec({Representation_asArray: {length: 1}}, true);
+            const codec = dashManifestModel.getCodec({Representation: {length: 1}}, true);
 
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
         it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is true', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -294,7 +286,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -307,7 +299,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct codec without a correct mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4 profiles="cmfc,cfhd"',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -320,7 +312,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct codec without an invalid mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
             const codec = dashManifestModel.getCodec({
-                Representation_asArray: [{
+                Representation: [{
                     mimeType: 'video/mp4 profiles="cmfc,cf',
                     codecs: 'avc1.4D400D',
                     width: 1080,
@@ -337,14 +329,14 @@ describe('DashManifestModel', function () {
             expect(mimeType).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getMimeType is called and adaptation.Representation_asArray is undefined', () => {
+        it('should return null when getMimeType is called and adaptation.Representation is undefined', () => {
             const mimeType = dashManifestModel.getMimeType({});
 
             expect(mimeType).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getMimeType is called and adaptation.Representation_asArray.length is -1', () => {
-            const mimeType = dashManifestModel.getMimeType({Representation_asArray: {length: -1}});
+        it('should return null when getMimeType is called and adaptation.Representation.length is -1', () => {
+            const mimeType = dashManifestModel.getMimeType({Representation: {length: -1}});
 
             expect(mimeType).to.be.null;    // jshint ignore:line
         });
@@ -376,14 +368,14 @@ describe('DashManifestModel', function () {
         });
 
         it('should return empty array when getLabelsForAdaptation is called and adaptation is not well defined', () => {
-            const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: true});
+            const labels = dashManifestModel.getLabelsForAdaptation({Label: true});
 
             expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
             expect(labels).to.be.empty;                // jshint ignore:line
         });
 
-        it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label_asArray', () => {
-            const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: []});
+        it('should return empty array when getLabelsForAdaptation is called and adaptation is well defined with an empty Label', () => {
+            const labels = dashManifestModel.getLabelsForAdaptation({Label: []});
 
             expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
             expect(labels).to.be.empty;                // jshint ignore:line
@@ -391,7 +383,7 @@ describe('DashManifestModel', function () {
 
         it('should return correct array when getLabelsForAdaptation is called and adaptation is well defined', () => {
             const labels = dashManifestModel.getLabelsForAdaptation({
-                Label_asArray: [{
+                Label: [{
                     lang: 'fre',
                     __text: 'french'
                 }, {lang: 'eng', __text: 'english'}]
@@ -408,8 +400,8 @@ describe('DashManifestModel', function () {
             expect(contentProtection).to.be.null;    // jshint ignore:line
         });
 
-        it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection_asArray is an empty array', () => {
-            const adaptation = {ContentProtection_asArray: []};
+        it('should return null when getContentProtectionData is called and adaptation is defined, but ContentProtection is an empty array', () => {
+            const adaptation = {ContentProtection: []};
             const contentProtection = dashManifestModel.getContentProtectionData(adaptation);
 
             expect(contentProtection).to.be.null;    // jshint ignore:line
@@ -465,7 +457,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should not return empty array when getBitrateListForAdaptation is called and adaptation is defined', () => {
-            const realAdaptation = {Representation_asArray: [{}]};
+            const realAdaptation = {Representation: [{}]};
 
             const bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
 
@@ -479,7 +471,7 @@ describe('DashManifestModel', function () {
             expect(representation).to.be.null; // jshint ignore:line
         });
 
-        it('should return null when getRepresentationFor is called and index and andadaptation.Representation_asArray are undefined', () => {
+        it('should return null when getRepresentationFor is called and index and andadaptation.Representation are undefined', () => {
             const adaptation = {};
             const representation = dashManifestModel.getRepresentationFor(undefined, adaptation);
 
@@ -513,7 +505,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return valid location when getLocation is called and manifest is a valid object', () => {
-            const location = dashManifestModel.getLocation({Location: '', Location_asArray: ['location_1']});
+            const location = dashManifestModel.getLocation({Location: ['location_1']});
 
             expect(location).to.be.equal('location_1'); // jshint ignore:line
         });
@@ -542,16 +534,6 @@ describe('DashManifestModel', function () {
                     {
                         'id': '153202',
                         AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
-                    }
-                ],
-                Period_asArray: [
-                    {
-                        'id': '153199',
-                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
-                    },
-                    {
-                        'id': '153202',
-                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
                     }
                 ],
                 'type': 'static'
@@ -614,14 +596,6 @@ describe('DashManifestModel', function () {
                             'id': '153202'
                         }
                     ],
-                    'Period_asArray': [
-                        {
-                            'id': '153199'
-                        },
-                        {
-                            'id': '153202'
-                        }
-                    ],
                     'type': 'static',
                     'mediaPresentationDuration': 300.0
                 },
@@ -641,19 +615,6 @@ describe('DashManifestModel', function () {
             const manifest = {
                 'manifest': {
                     'Period': [
-                        {
-                            'id': '153199',
-                            'duration': 100
-                        },
-                        {
-                            'id': '153200',
-                            'duration': 50
-                        },
-                        {
-                            'id': '153201'
-                        }
-                    ],
-                    'Period_asArray': [
                         {
                             'id': '153199',
                             'duration': 100
@@ -691,19 +652,6 @@ describe('DashManifestModel', function () {
             const manifest = {
                 'manifest': {
                     'Period': [
-                        {
-                            'id': '153199'
-                        },
-                        {
-                            'id': '153200',
-                            'start': 80
-                        },
-                        {
-                            'id': '153201',
-                            'start': 120
-                        }
-                    ],
-                    'Period_asArray': [
                         {
                             'id': '153199'
                         },
@@ -766,12 +714,12 @@ describe('DashManifestModel', function () {
                     index: 0,
                     mpd: {
                         manifest: {
-                            Period_asArray: [{
-                                AdaptationSet_asArray: [{
-                                    Representation_asArray: [{
+                            Period: [{
+                                AdaptationSet: [{
+                                    Representation: [{
                                         SegmentTemplate: {
                                             SegmentTimeline: {
-                                                S_asArray: [{
+                                                S: [{
                                                     d: 2,
                                                     r: 2
                                                 }]
@@ -871,7 +819,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with BaseURL[0] serviceLocation set to URL when no serviceLocation was specified', () => {
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL
                     }]
                 };
@@ -887,7 +835,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with length 1 when multiple relative BaseUrls were specified', () => {
                 const node = {
-                    BaseURL_asArray: [
+                    BaseURL: [
                         {
                             __text: RELATIVE_TEST_URL + '0'
                         },
@@ -907,7 +855,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs when multiple BaseUrls were specified', () => {
                 const node = {
-                    BaseURL_asArray: [
+                    BaseURL: [
                         {
                             __text: TEST_URL + '0'
                         },
@@ -929,7 +877,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with BaseURL[0] serviceLocation set when serviceLocation was specified', () => {
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL,
                         serviceLocation: SERVICE_LOCATION
                     }]
@@ -946,7 +894,7 @@ describe('DashManifestModel', function () {
 
             it('returns an Array of BaseURLs with BaseURL[0] having correct defaults for DVB extensions when not specified', () => {
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL
                     }]
                 };
@@ -963,7 +911,7 @@ describe('DashManifestModel', function () {
                 const TEST_PRIORITY = 3;
                 const TEST_WEIGHT = 2;
                 const node = {
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL,
                         'dvb:priority': TEST_PRIORITY,
                         'dvb:weight': TEST_WEIGHT
@@ -981,7 +929,7 @@ describe('DashManifestModel', function () {
             it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is specified and the input url is relative', () => {
                 const node = {
                     baseUri: TEST_URL,
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: RELATIVE_TEST_URL
                     }]
                 };
@@ -996,7 +944,7 @@ describe('DashManifestModel', function () {
             it('returns an Array of BaseURLs with BaseURL[0] resolved to the document base uri when the base uri is the mpd and the input url is relative', () => {
                 const node = {
                     baseUri: TEST_URL + 'example.mpd',
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: RELATIVE_TEST_URL
                     }]
                 };
@@ -1011,7 +959,7 @@ describe('DashManifestModel', function () {
             it('returns an Array of BaseURLs with BaseURL[0] ignoring the document base uri when the base uri is specified and the input url is absolute', () => {
                 const node = {
                     baseUri: TEST_URL,
-                    BaseURL_asArray: [{
+                    BaseURL: [{
                         __text: TEST_URL
                     }]
                 };

@@ -109,6 +109,10 @@ function AdapterMock () {
     this.convertDataToRepresentationInfo = function () {
         return null;
     };
+
+    this.getCodec = function () {
+        return 'audio/mp4;codecs="mp4a.40.2"';
+    };
 }
 
 export default AdapterMock;

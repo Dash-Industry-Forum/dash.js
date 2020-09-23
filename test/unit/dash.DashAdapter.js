@@ -12,10 +12,10 @@ const context = {};
 const voHelper = new VoHelper();
 const dashAdapter = DashAdapter(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
-const manifest_with_audio = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: Constants.AUDIO, lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
-const manifest_with_video_with_embedded_subtitles = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, Accessibility: {schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}, Accessibility_asArray: [{schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}]}, { id: 1, mimeType: Constants.VIDEO}] }] };
-const manifest_with_ll_service_description = { loadedTime: new Date(), mediaPresentationDuration: 10, ServiceDescription: {}, ServiceDescription_asArray: [{ Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' }, Latency: { target: 3000, max: 5000, min: 2000}, PlaybackRate: { max: 1.5, min: 0.5 } }], Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, SupplementalProperty: {}, SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }] }] }] };
-const manifest_without_supplemental_properties = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }] };
+const manifest_with_audio = { loadedTime: new Date(), mediaPresentationDuration: 10, Period: [{ AdaptationSet: [{ id: undefined, mimeType: Constants.AUDIO, lang: 'eng', Role: [{ value: 'main' }] }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role: [{ value: 'main' }] }] }] };
+const manifest_with_video_with_embedded_subtitles = { loadedTime: new Date(), mediaPresentationDuration: 10, Period: [{ AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO, Accessibility: [{schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}]}, { id: 1, mimeType: Constants.VIDEO}] }] };
+const manifest_with_ll_service_description = { loadedTime: new Date(), mediaPresentationDuration: 10, ServiceDescription: [{ Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' }, Latency: { target: 3000, max: 5000, min: 2000}, PlaybackRate: { max: 1.5, min: 0.5 } }], Period: [{ AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO, SupplementalProperty: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }] }] }] };
+const manifest_without_supplemental_properties = { loadedTime: new Date(), mediaPresentationDuration: 10, Period: [{ AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO }] }] };
 
 
 describe('DashAdapter', function () {
@@ -178,7 +178,7 @@ describe('DashAdapter', function () {
         });
 
         it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
-            const manifest_with_video = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO}, { id: 1, mimeType: Constants.VIDEO}] }] };
+            const manifest_with_video = { loadedTime: new Date(), mediaPresentationDuration: 10, Period: [{ AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO}, { id: 1, mimeType: Constants.VIDEO}] }] };
             dashAdapter.updatePeriods(manifest_with_video);
             const adaptation = dashAdapter.getAdaptationForType(0, Constants.VIDEO);
 
