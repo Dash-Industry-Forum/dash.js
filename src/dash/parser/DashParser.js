@@ -112,9 +112,13 @@ function DashParser(config) {
 
 
     function parseXml(data) {
-        let root = tXml(data);
-        root = root[0].tagName === '?xml' ? root[0].children[0] : root[0];
-        return processXml(root);
+        try {
+            let root = tXml(data);
+            root = root[0].tagName === '?xml' ? root[0].children[0] : root[0];
+            return processXml(root);
+        } catch (e) {
+            return null;
+        }
     }
 
     function processAttr(tagName, attrName, value) {
