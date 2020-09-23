@@ -185,11 +185,11 @@ function DashManifestModel() {
     }
 
     function getAudioChannelConfigurationForAdaptation(adaptation) {
-        return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION) ? adaptation.AudioChannelConfiguration : [];
+        return adaptation && adaptation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) ? adaptation.AudioChannelConfiguration : [];
     }
 
     function getAudioChannelConfigurationForRepresentation(representation) {
-        return representation && representation.hasOwnProperty(DashConstants.AUDIOCHANNELCONFIGURATION) ? representation.AudioChannelConfiguration : [];
+        return representation && representation.hasOwnProperty(DashConstants.AUDIO_CHANNEL_CONFIGURATION) ? representation.AudioChannelConfiguration : [];
     }
 
     function getRepresentationSortFunction() {

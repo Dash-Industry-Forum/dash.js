@@ -67,7 +67,6 @@ describe('DashConstants', function () {
         expect(DashConstants.VIEWPOINT).to.equal('Viewpoint');
         expect(DashConstants.ROLE).to.equal('Role');
         expect(DashConstants.ACCESSIBILITY).to.equal('Accessibility');
-        expect(DashConstants.AUDIOCHANNELCONFIGURATION).to.equal('AudioChannelConfiguration');
         expect(DashConstants.CONTENTPROTECTION).to.equal('ContentProtection');
         expect(DashConstants.MAIN).to.equal('main');
         expect(DashConstants.DYNAMIC).to.equal('dynamic');

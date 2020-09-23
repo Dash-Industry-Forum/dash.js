@@ -43,6 +43,7 @@ class DashConstants {
         this.SEGMENT_LIST = 'SegmentList';
         this.SEGMENT_URL = 'SegmentURL';
         this.SEGMENT_TIMELINE = 'SegmentTimeline';
+        this.S = 'S';
         this.SEGMENT_PROFILES = 'segmentProfiles';
         this.ADAPTATION_SET = 'AdaptationSet';
         this.REPRESENTATION = 'Representation';
@@ -54,8 +55,10 @@ class DashConstants {
         this.PERIOD = 'Period';
         this.ASSET_IDENTIFIER = 'AssetIdentifier';
         this.EVENT_STREAM = 'EventStream';
+        this.EVENT = 'Event';
         this.ID = 'id';
         this.PROFILES = 'profiles';
+        this.LOCATION = 'Location';
         this.SERVICE_LOCATION = 'serviceLocation';
         this.RANGE = 'range';
         this.INDEX = 'index';
@@ -99,7 +102,6 @@ class DashConstants {
         this.VIEWPOINT = 'Viewpoint';
         this.ROLE = 'Role';
         this.ACCESSIBILITY = 'Accessibility';
-        this.AUDIOCHANNELCONFIGURATION = 'AudioChannelConfiguration';
         this.CONTENTPROTECTION = 'ContentProtection';
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
