@@ -31,7 +31,6 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import DashConstants from '../constants/DashConstants';
 import ObjectIron from './objectiron';
-import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
 import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
@@ -78,8 +77,7 @@ function DashParser(config) {
         matchers = [
             new DurationMatcher(),
             new DateTimeMatcher(),
-            new NumericMatcher(),
-            new StringMatcher()   // last in list to take precedence over NumericMatcher
+            new NumericMatcher()
         ];
 
         objectIron = ObjectIron(context).create({
