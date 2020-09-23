@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import DashConstants from '../constants/DashConstants';
 import ObjectIron from './objectiron';
 import StringMatcher from './matchers/StringMatcher';
 import DurationMatcher from './matchers/DurationMatcher';
@@ -36,28 +37,29 @@ import DateTimeMatcher from './matchers/DateTimeMatcher';
 import NumericMatcher from './matchers/NumericMatcher';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
 import SegmentValuesMap from './maps/SegmentValuesMap';
-import tXml from '../../../externals/txml';
+import tXml from '../../../externals/tXml';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [
-    'Period',
-    'BaseURL',
-    'AdaptationSet',
-    'Representation',
-    'ContentProtection',
-    'Role',
-    'Accessibility',
-    'AudioChannelConfiguration',
-    'ContentComponent',
-    'EssentialProperty',
-    'S',
-    'SegmentURL',
-    'Event',
-    'EventStream',
-    'Location',
-    'ServiceDescription',
-    'SupplementalProperty',
-    'Metrics'
+    DashConstants.PERIOD,
+    DashConstants.BASE_URL,
+    DashConstants.ADAPTATION_SET,
+    DashConstants.REPRESENTATION,
+    DashConstants.CONTENT_PROTECTION,
+    DashConstants.ROLE,
+    DashConstants.ACCESSIBILITY,
+    DashConstants.AUDIO_CHANNEL_CONFIGURATION,
+    DashConstants.CONTENT_COMPONENT,
+    DashConstants.ESSENTIAL_PROPERTY,
+    DashConstants.S,
+    DashConstants.SEGMENT_URL,
+    DashConstants.EVENT,
+    DashConstants.EVENT_STREAM,
+    DashConstants.LOCATION,
+    DashConstants.SERVICE_DESCRIPTION,
+    DashConstants.SUPPLEMENTAL_PROPERTY,
+    DashConstants.METRICS,
+    DashConstants.REPORTING
 ];
 
 function DashParser(config) {
@@ -94,7 +96,7 @@ function DashParser(config) {
         let manifest;
         const startTime = window.performance.now();
 
-        manifest = parseXml(data);
+        manifest = parseXml(data, DashConstants.MPD);
 
         if (!manifest) {
             throw new Error('failed to parse the manifest');
@@ -111,61 +113,16 @@ function DashParser(config) {
     }
 
 
-    function parseXml(data) {
+    function parseXml(data, tagName) {
         try {
-            let root = tXml(data);
-            root = root[0].tagName === '?xml' ? root[0].children[0] : root[0];
-            return processXml(root);
+            let root = tXml(data, { parseNode: true }, matchers, arrayNodes);
+            if (tagName && root.tagName !== tagName) {
+                root = root[tagName];
+            }
+            return root;
         } catch (e) {
             return null;
         }
-    }
-
-    function processAttr(tagName, attrName, value) {
-        let attrValue = value;
-        matchers.forEach(matcher => {
-            if (matcher.test(tagName, attrName, value)) {
-                attrValue = matcher.converter(value);
-            }
-        });
-        return attrValue;
-    }
-
-    function processXml(xmlNode) {
-        let tag = {};
-
-        // Process attributes with matchers
-        for (let key in xmlNode.attributes) {
-            tag[key] = processAttr(xmlNode.tagName, key, xmlNode.attributes[key]);
-        }
-
-        // Process children
-        xmlNode.children.forEach(child => {
-            if (typeof child === 'string') {
-                // Tag with text as body
-                if (Object.keys(xmlNode.attributes).length === 0) {
-                    // Set tag value with text if no attribute
-                    tag = child;
-                } else {
-                    // Or add an attribute '__text'
-                    tag.__text = child;
-                }
-            } else {
-                let name = child.tagName;
-                let childTag = processXml(child);
-                // Set child as an array according to DASH spec
-                if (arrayNodes.indexOf(name) !== -1) {
-                    if (!tag[name]) {
-                        tag[name] = [];
-                    }
-                    tag[name].push(childTag);
-                } else {
-                    tag[name] = childTag;
-                }
-            }
-        });
-
-        return tag;
     }
 
     instance = {

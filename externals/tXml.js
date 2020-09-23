@@ -43,9 +43,11 @@
 
  * @return {tNode[]}
  */
-function tXml(S, options) {
+function tXml(S, options, attrMatchers, arrayChildNames) {
     "use strict";
     options = options || {};
+    attrMatchers = attrMatchers || {};
+    arrayChildNames = arrayChildNames || [];
 
     var pos = options.pos || 0;
 
@@ -72,7 +74,7 @@ function tXml(S, options) {
     /**
      * parsing a list of entries
      */
-    function parseChildren() {
+    function parseChildren(parent) {
         var children = [];
         while (S[pos]) {
             if (S.charCodeAt(pos) == openBracketCC) {
@@ -114,16 +116,46 @@ function tXml(S, options) {
                     pos++;
                     continue;
                 }
-                var node = parseNode();
-                children.push(node);
+                // if parent is provided then add children as object(s)
+                var child = parseNode();
+                if (parent) {
+                    let tagName = child.tagName;
+                    delete child.tagName;
+                    if (arrayChildNames.indexOf(tagName) !== -1) {
+                        if (!parent[tagName]) {
+                            parent[tagName] = [];
+                        }
+                        parent[tagName].push(child);
+                    } else {
+                        parent[tagName] = child;
+                    }
+                }
+                children.push(child);
             } else {
                 var text = parseText()
                 if (text.trim().length > 0)
-                    children.push(text);
+                    if (parent) parent.__text = text;
+                    else children.push(text);
                 pos++;
             }
         }
         return children;
+    }
+
+    function processAttr(tagName, attrName, value) {
+
+        // Specific use case for SegmentTimeline <S> tag
+        if (tagName === 'S') {
+            return parseInt(value);
+        }
+
+        let attrValue = value;
+        attrMatchers.forEach(matcher => {
+            if (matcher.test(tagName, attrName, value)) {
+                attrValue = matcher.converter(value);
+            }
+        });
+        return attrValue;
     }
 
     /**
@@ -152,13 +184,12 @@ function tXml(S, options) {
      *    is parsing a node, including tagName, Attributes and its children,
      * to parse children it uses the parseChildren again, that makes the parsing recursive
      */
-    var NoChildNodes = options.noChildNodes || ['img', 'br', 'input', 'meta', 'link'];
 
     function parseNode() {
         pos++;
-        const tagName = parseName();
-        const attributes = {};
-        let children = [];
+        let node = {
+            tagName: parseName()
+        };
 
         // parsing attributes
         while (S.charCodeAt(pos) !== closeBracketCC && S[pos]) {
@@ -175,44 +206,25 @@ function tXml(S, options) {
                 if (code === singleQuoteCC || code === doubleQuoteCC) {
                     var value = parseString();
                     if (pos === -1) {
-                        return {
-                            tagName,
-                            attributes,
-                            children,
-                        };
+                        return node;
                     }
                 } else {
                     value = null;
                     pos--;
                 }
-                attributes[name] = value;
+                value = processAttr(node.tagName, name, value);
+                node[name] = value;
             }
             pos++;
         }
         // optional parsing of children
         if (S.charCodeAt(pos - 1) !== slashCC) {
-            if (tagName == "script") {
-                var start = pos + 1;
-                pos = S.indexOf('</script>', pos);
-                children = [S.slice(start, pos)];
-                pos += 9;
-            } else if (tagName == "style") {
-                var start = pos + 1;
-                pos = S.indexOf('</style>', pos);
-                children = [S.slice(start, pos)];
-                pos += 8;
-            } else if (NoChildNodes.indexOf(tagName) == -1) {
-                pos++;
-                children = parseChildren(name);
-            }
+            pos++;
+            parseChildren(node);
         } else {
             pos++;
         }
-        return {
-            tagName,
-            attributes,
-            children,
-        };
+        return node;
     }
 
     /**
@@ -257,10 +269,6 @@ function tXml(S, options) {
         out = parseChildren();
     }
 
-    if (options.filter) {
-        out = tXml.filter(out, options.filter);
-    }
-
     if (options.setPos) {
         out.pos = pos;
     }
@@ -268,287 +276,9 @@ function tXml(S, options) {
     return out;
 }
 
-/**
- * transform the DomObject to an object that is like the object of PHP`s simple_xmp_load_*() methods.
- * this format helps you to write that is more likely to keep your program working, even if there a small changes in the XML schema.
- * be aware, that it is not possible to reproduce the original xml from a simplified version, because the order of elements is not saved.
- * therefore your program will be more flexible and easier to read.
- *
- * @param {tNode[]} children the childrenList
- */
-tXml.simplify = function simplify(children) {
-    var out = {};
-    if (!children.length) {
-        return '';
-    }
-
-    if (children.length === 1 && typeof children[0] == 'string') {
-        return children[0];
-    }
-    // map each object
-    children.forEach(function(child) {
-        if (typeof child !== 'object') {
-            return;
-        }
-        if (!out[child.tagName])
-            out[child.tagName] = [];
-        var kids = tXml.simplify(child.children);
-        out[child.tagName].push(kids);
-        if (Object.keys(child.attributes).length) {
-            kids._attributes = child.attributes;
-        }
-    });
-
-    for (var i in out) {
-        if (out[i].length == 1) {
-            out[i] = out[i][0];
-        }
-    }
-
-    return out;
-};
-
-
-/**
- * similar to simplify, but lost less
- *
- * @param {tNode[]} children the childrenList
- */
-tXml.simplifyLostLess = function simplify(children, parentAttributes={}) {
-    var out = {};
-    if (!children.length) {
-        return '';
-    }
-
-    if (children.length === 1 && typeof children[0] == 'string') {
-        return Object.keys(parentAttributes).length ? {
-            _attributes: parentAttributes,
-            value: children[0]
-        } :children[0];
-    }
-    // map each object
-    children.forEach(function(child) {
-        if (typeof child !== 'object') {
-            return;
-        }
-        if (!out[child.tagName])
-            out[child.tagName] = [];
-        var kids = tXml.simplifyLostLess(child.children||[], child.attributes);
-        out[child.tagName].push(kids);
-        if (Object.keys(child.attributes).length) {
-            kids._attributes = child.attributes;
-        }
-    });
-
-    return out;
-};
-
-/**
- * behaves the same way as Array.filter, if the filter method return true, the element is in the resultList
- * @params children{Array} the children of a node
- * @param f{function} the filter method
- */
-tXml.filter = function(children, f, dept=0,path='') {
-    var out = [];
-    children.forEach(function(child, i) {
-        if (typeof(child) === 'object' && f(child, i, dept, path)) out.push(child);
-        if (child.children) {
-            var kids = tXml.filter(child.children, f, dept+1, (path?path+'.':'')+i+'.'+child.tagName);
-            out = out.concat(kids);
-        }
-    });
-    return out;
-};
-
-/**
- * stringify a previously parsed string object.
- * this is useful,
- *  1. to remove whitespace
- * 2. to recreate xml data, with some changed data.
- * @param {tNode} O the object to Stringify
- */
-tXml.stringify = function stringify(O) {
-    var out = '';
-
-    function writeChildren(O) {
-        if (O)
-            for (var i = 0; i < O.length; i++) {
-                if (typeof O[i] == 'string') {
-                    out += O[i].trim();
-                } else {
-                    writeNode(O[i]);
-                }
-            }
-    }
-
-    function writeNode(N) {
-        out += "<" + N.tagName;
-        for (var i in N.attributes) {
-            if (N.attributes[i] === null) {
-                out += ' ' + i;
-            } else if (N.attributes[i].indexOf('"') === -1) {
-                out += ' ' + i + '="' + N.attributes[i].trim() + '"';
-            } else {
-                out += ' ' + i + "='" + N.attributes[i].trim() + "'";
-            }
-        }
-        out += '>';
-        writeChildren(N.children);
-        out += '</' + N.tagName + '>';
-    }
-    writeChildren(O);
-
-    return out;
-};
-
-
-/**
- * use this method to read the text content, of some node.
- * It is great if you have mixed content like:
- * this text has some <b>big</b> text and a <a href=''>link</a>
- * @return {string}
- */
-tXml.toContentString = function(tDom) {
-    if (Array.isArray(tDom)) {
-        var out = '';
-        tDom.forEach(function(e) {
-            out += ' ' + tXml.toContentString(e);
-            out = out.trim();
-        });
-        return out;
-    } else if (typeof tDom === 'object') {
-        return tXml.toContentString(tDom.children)
-    } else {
-        return ' ' + tDom;
-    }
-};
-
-tXml.getElementById = function(S, id, simplified) {
-    var out = tXml(S, {
-        attrValue: id
-    });
-    return simplified ? tXml.simplify(out) : out[0];
-};
-
-tXml.getElementsByClassName = function(S, classname, simplified) {
-    const out = tXml(S, {
-        attrName: 'class',
-        attrValue: '[a-zA-Z0-9- ]*' + classname + '[a-zA-Z0-9- ]*'
-    });
-    return simplified ? tXml.simplify(out) : out;
-};
-
-tXml.parseStream = function(stream, offset) {
-    if (typeof offset === 'string') {
-        offset = offset.length + 2;
-    }
-    if (typeof stream === 'string') {
-        var fs = require('fs');
-        stream = fs.createReadStream(stream, { start: offset });
-        offset = 0;
-    }
-
-    var position = offset;
-    var data = '';
-    stream.on('data', function(chunk) {
-        data += chunk;
-        var lastPos = 0;
-        do {
-            position = data.indexOf('<', position) + 1;
-            if(!position) {
-                position = lastPos;
-                return;
-            }
-            if (data[position + 1] === '/') {
-                position = position + 1;
-                lastPos = pos;
-                continue;
-            }
-            var res = tXml(data, { pos: position-1, parseNode: true, setPos: true });
-            position = res.pos;
-            if (position > (data.length - 1) || position < lastPos) {
-                data = data.slice(lastPos);
-                position = 0;
-                lastPos = 0;
-                return;
-            } else {
-                stream.emit('xml', res);
-                lastPos = position;
-            }
-        } while (1);
-    });
-    // stream.on('end', function() {
-    //     console.log('end')
-    // });
-    return stream;
-}
-
-tXml.transformStream = function (offset) {
-    // require through here, so it will not get added to webpack/browserify
-    const through2 = require('through2');
-    if (typeof offset === 'string') {
-        offset = offset.length + 2;
-    }
-
-    var position = offset || 0;
-    var data = '';
-    const stream = through2({ readableObjectMode: true }, function (chunk, enc, callback) {
-        data += chunk;
-        var lastPos = 0;
-        do {
-            position = data.indexOf('<', position) + 1;
-            if (!position) {
-                position = lastPos;
-                return callback();;
-            }
-            if (data[position + 1] === '/') {
-                position = position + 1;
-                lastPos = pos;
-                continue;
-            }
-            var res = tXml(data, { pos: position - 1, parseNode: true, setPos: true });
-            position = res.pos;
-            if (position > (data.length - 1) || position < lastPos) {
-                data = data.slice(lastPos);
-                position = 0;
-                return callback();;
-            } else {
-                this.push(res);
-                lastPos = position;
-            }
-        } while (1);
-        callback();
-    });
-
-    return stream;
-}
 
 if ('object' === typeof module) {
     module.exports = tXml;
     tXml.xml = tXml;
 }
-//console.clear();
-//console.log('here:',tXml.getElementById('<some><xml id="test">dada</xml><that id="test">value</that></some>','test'));
-//console.log('here:',tXml.getElementsByClassName('<some><xml id="test" class="sdf test jsalf">dada</xml><that id="test">value</that></some>','test'));
 
-/*
-console.clear();
-tXml(d,'content');
- //some testCode
-var s = document.body.innerHTML.toLowerCase();
-var start = new Date().getTime();
-var o = tXml(s,'content');
-var end = new Date().getTime();
-//console.log(JSON.stringify(o,undefined,'\t'));
-console.log("MILLISECONDS",end-start);
-var nodeCount=document.querySelectorAll('*').length;
-console.log('node count',nodeCount);
-console.log("speed:",(1000/(end-start))*nodeCount,'Nodes / second')
-//console.log(JSON.stringify(tXml('<html><head><title>testPage</title></head><body><h1>TestPage</h1><p>this is a <b>test</b>page</p></body></html>'),undefined,'\t'));
-var p = new DOMParser();
-var s2='<body>'+s+'</body>'
-var start2= new Date().getTime();
-var o2 = p.parseFromString(s2,'text/html').querySelector('#content')
-var end2=new Date().getTime();
-console.log("MILLISECONDS",end2-start2);
-// */
