@@ -297,7 +297,7 @@ function TimelineConverter() {
 
 
         range.end = range.end > now ? now : range.end;
-        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? range.end - voPeriod.mpd.timeShiftBufferDepth : range.start;
+        range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.end - voPeriod.mpd.timeShiftBufferDepth, range.start) : range.start;
 
         return range;
     }
