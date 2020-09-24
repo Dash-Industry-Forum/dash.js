@@ -53,10 +53,13 @@ class ObjectsHelper {
             calcAvailabilityStartTimeFromPresentationTime: () => 0,
             calcAvailabilityEndTimeFromPresentationTime: () => 0,
             calcPeriodRelativeTimeFromMpdRelativeTime: () => NaN,
-            calcMediaTimeFromPresentationTime: () => undefined,
-            calcSegmentAvailabilityRangeForAllPeriods: () => {
+            calcTimeShiftBufferWindow : () => {
                 return {start, end};
             },
+            calcAvailabilityWindow  : () => {
+                return {start, end};
+            },
+            calcMediaTimeFromPresentationTime: () => undefined,
             calcSegmentAvailabilityRangeForRepresentation: () => {
                 return {start: start, end: end};
             },

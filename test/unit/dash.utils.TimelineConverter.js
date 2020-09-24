@@ -379,14 +379,14 @@ describe('TimelineConverter', function () {
 
             it('with SegmentTemplate and one period', function () {
                 streams.push(streamOneMock);
-                const range = timelineConverter.calcTimeShiftBufferWindow(representation, false, streams);
+                const range = timelineConverter.calcTimeShiftBufferWindow(streams, false);
                 expect(range.start).to.be.equal(0);
                 expect(range.end).to.be.equal(50);
             });
 
             it('with SegmentTemplate and two periods', function () {
                 streams.push(streamOneMock, streamTwoMock);
-                const range = timelineConverter.calcTimeShiftBufferWindow(representation, false, streams);
+                const range = timelineConverter.calcTimeShiftBufferWindow(streams, false);
                 expect(range.start).to.be.equal(0);
                 expect(range.end).to.be.equal(100);
             });
@@ -398,7 +398,7 @@ describe('TimelineConverter', function () {
                     }
                 });
                 streams.push(streamOneMock);
-                const range = timelineConverter.calcTimeShiftBufferWindow(representation, false, streams);
+                const range = timelineConverter.calcTimeShiftBufferWindow(streams, false);
                 expect(range.start).to.be.equal(0);
                 expect(range.end).to.be.equal(50);
             });
@@ -410,13 +410,13 @@ describe('TimelineConverter', function () {
                     }
                 });
                 streams.push(streamOneMock, streamTwoMock);
-                const range = timelineConverter.calcTimeShiftBufferWindow(representation, false, streams);
+                const range = timelineConverter.calcTimeShiftBufferWindow(streams, false);
                 expect(range.start).to.be.equal(0);
                 expect(range.end).to.be.equal(100);
             });
         });
 
-        describe('for a dynamic MPD',() => {
+        describe('for a dynamic MPD', () => {
 
             describe('with SegmentTemplate', function () {
 
@@ -425,22 +425,22 @@ describe('TimelineConverter', function () {
                     streams.push(streamOneMock);
                     representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
 
-                    const range = timelineConverter.calcTimeShiftBufferWindow(representation, true, streams);
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(0);
                     expect(range.end).to.be.equal(50);
                     clock.restore();
                 });
 
-                it('with single period period duration larger than "now"', function () {
+                it('with single period and period duration larger than "now"', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
                     streamOneMock.setStreamInfo({
-                       start: 0,
-                       end: 100
+                        start: 0,
+                        end: 100
                     });
                     streams.push(streamOneMock);
                     representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
 
-                    const range = timelineConverter.calcTimeShiftBufferWindow(representation, true, streams);
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(0);
                     expect(range.end).to.be.equal(50);
                     clock.restore();
