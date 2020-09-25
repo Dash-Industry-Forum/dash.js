@@ -288,7 +288,7 @@ function TimelineConverter() {
             }
 
             if (!isNaN(periodRange.start) && (isNaN(range.start) || range.start > periodRange.start)) {
-                range.start = periodRange;
+                range.start = periodRange.start;
             }
             if (!isNaN(periodRange.end) && (isNaN(range.end) || range.end < periodRange.end)) {
                 range.end = periodRange.end;
