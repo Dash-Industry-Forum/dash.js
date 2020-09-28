@@ -61,7 +61,32 @@ describe('CmcdModel', function () {
             expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
         });
 
-        it('getQueryParameter() returns correct metrics for media request', function () {
+        it('getQueryParameter() returns correct metrics for init segments', function () {
+            const REQUEST_TYPE = HTTPRequest.INIT_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const MANIFEST_OBJECT_TYPE = 'i';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            let parameters = cmcdModel.getQueryParameter(request);
+            expect(parameters).to.have.property('key');
+            expect(parameters.key).to.equal('CMCD');
+            expect(parameters).to.have.property('value');
+            expect(typeof parameters.value).to.equal('string');
+
+            let metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.have.property('cid');
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
+            expect(metrics).to.have.property('su');
+            expect(metrics.su).to.equal(true);
+        });
+
+        it('getQueryParameter() returns correct metrics for media segments', function () {
             const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
             const MEDIA_TYPE = 'video';
             const BITRATE = 10000;
@@ -105,6 +130,29 @@ describe('CmcdModel', function () {
             expect(metrics).to.have.property('tb');
             expect(metrics.tb).to.equal(TOP_BITRATE);
         });
+
+        it('getQueryParameter() returns correct metrics for other type', function () {
+            const REQUEST_TYPE = HTTPRequest.OTHER_TYPE;
+            const MEDIA_TYPE = 'video';
+            const MANIFEST_OBJECT_TYPE = 'o';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            let parameters = cmcdModel.getQueryParameter(request);
+            expect(parameters).to.have.property('key');
+            expect(parameters.key).to.equal('CMCD');
+            expect(parameters).to.have.property('value');
+            expect(typeof parameters.value).to.equal('string');
+
+            let metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.have.property('cid');
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
+        });
     });
 });
 
@@ -114,13 +162,25 @@ function parseQuery(query) {
     return keyValues.map(keyValue => keyValue.indexOf('=') === -1 ? [keyValue, true] : keyValue.split('='))
         .map(keyValue => isInt(keyValue[1]) ? [keyValue[0], parseInt(keyValue[1])] : keyValue)
         .map(keyValue => isString(keyValue[1]) && keyValue[1].indexOf('"') !== -1 ? [keyValue[0], keyValue[1].replace(/"/g, '')] : keyValue)
+        .map(keyValue => isBoolean(keyValue[1]) ? [keyValue[0], parseBoolean(keyValue[1])] : keyValue)
         .reduce((acc, keyValue) => { acc[keyValue[0]] = keyValue[1]; return acc; }, {});
 }
 
 function isInt(value) {
+    if (typeof value === 'boolean') return false;
     return !isNaN(value);
 }
 
 function isString(value) {
     return typeof value === 'string';
+}
+
+function isBoolean(value) {
+    if (typeof value === 'string') return value.toLowerCase() === 'true' || value.toLowerCase() === 'false';
+    return typeof value === 'boolean';
+}
+
+function parseBoolean(value) {
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return !!value;
 }
