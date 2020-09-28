@@ -38,6 +38,29 @@ describe('CmcdModel', function () {
             });
         });
 
+        it('getQueryParameter() returns correct metrics for MPD', function () {
+            const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
+            const MEDIA_TYPE = 'video';
+            const MANIFEST_OBJECT_TYPE = 'm';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            let parameters = cmcdModel.getQueryParameter(request);
+            expect(parameters).to.have.property('key');
+            expect(parameters.key).to.equal('CMCD');
+            expect(parameters).to.have.property('value');
+            expect(typeof parameters.value).to.equal('string');
+
+            let metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.have.property('cid');
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
+        });
+
         it('getQueryParameter() returns correct metrics for media request', function () {
             const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
             const MEDIA_TYPE = 'video';
@@ -46,6 +69,7 @@ describe('CmcdModel', function () {
             const TOP_BITRATE = 20000;
             const MEASURED_THROUGHPUT = 8327641;
             const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
+            const VIDEO_OBJECT_TYPE = 'v';
 
             abrControllerMock.setTopBitrateInfo({ bitrate: TOP_BITRATE });
             abrControllerMock.setThroughputHistory({ getSafeAverageThroughput: function () { return MEASURED_THROUGHPUT; }});
@@ -69,7 +93,7 @@ describe('CmcdModel', function () {
             expect(metrics).to.have.property('br');
             expect(metrics.br).to.equal(parseInt(BITRATE / 1000));
             expect(metrics).to.have.property('ot');
-            expect(metrics.ot).to.equal('v');
+            expect(metrics.ot).to.equal(VIDEO_OBJECT_TYPE);
             expect(metrics).to.have.property('d');
             expect(metrics.d).to.equal(parseInt(DURATION * 1000));
             expect(metrics).to.have.property('mtp');
@@ -88,7 +112,15 @@ function parseQuery(query) {
     query = decodeURIComponent(query);
     let keyValues = query.split(',');
     return keyValues.map(keyValue => keyValue.indexOf('=') === -1 ? [keyValue, true] : keyValue.split('='))
-        .map(keyValue => keyValue[1].indexOf('"') === -1 ? [keyValue[0], parseInt(keyValue[1])] : keyValue)
-        .map(keyValue => typeof keyValue[1] === 'string' && keyValue[1].indexOf('"') !== -1 ? [keyValue[0], keyValue[1].replace(/'/g, '')] : keyValue)
+        .map(keyValue => isInt(keyValue[1]) ? [keyValue[0], parseInt(keyValue[1])] : keyValue)
+        .map(keyValue => isString(keyValue[1]) && keyValue[1].indexOf('"') !== -1 ? [keyValue[0], keyValue[1].replace(/"/g, '')] : keyValue)
         .reduce((acc, keyValue) => { acc[keyValue[0]] = keyValue[1]; return acc; }, {});
+}
+
+function isInt(value) {
+    return !isNaN(value);
+}
+
+function isString(value) {
+    return typeof value === 'string';
 }
