@@ -87,6 +87,7 @@ describe('CmcdModel', function () {
         });
 
         it('getQueryParameter() returns correct metrics for media segments', function () {
+            dashMetricsMock.setCurrentBufferLevel(15.34511);
             const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
             const MEDIA_TYPE = 'video';
             const BITRATE = 10000;
