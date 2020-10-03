@@ -370,6 +370,10 @@ function ScheduleController(config) {
         completeQualityChange(true);
     }
 
+    function getIsReplacingBuffer() {
+        return replacingBuffer;
+    }
+
     function onBytesAppended(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
@@ -558,7 +562,8 @@ function ScheduleController(config) {
         reset: reset,
         getBufferTarget: getBufferTarget,
         processInitRequest: processInitRequest,
-        processMediaRequest: processMediaRequest
+        processMediaRequest: processMediaRequest,
+        getIsReplacingBuffer
     };
 
     setup();

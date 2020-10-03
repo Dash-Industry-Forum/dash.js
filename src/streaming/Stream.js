@@ -383,7 +383,9 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) return;
+        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) {
+            return;
+        }
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
 

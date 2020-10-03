@@ -116,10 +116,26 @@ function GapController() {
         }
     }
 
+    function _isTrackSwitchInProgess() {
+        try {
+            const processors = streamController.getActiveStream().getProcessors();
+            const isTrackSwitchInProgess = processors.filter((processor) => {
+                return processor.getScheduleController().getIsReplacingBuffer();
+            }).length;
+
+            console.log(`IsTrackSwitchInProgress ${isTrackSwitchInProgess}`);
+
+            return isTrackSwitchInProgess;
+        } catch (e) {
+            return false;
+        }
+
+    }
+
     function _shouldCheckForGaps() {
         return settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
             (!playbackController.isSeeking() || streamController.hasStreamFinishedBuffering(streamController.getActiveStream())) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
-            !streamController.getHasMediaOrIntialisationError();
+            !streamController.getHasMediaOrIntialisationError() && !_isTrackSwitchInProgess();
     }
 
     function onWallclockTimeUpdated(/*e*/) {
