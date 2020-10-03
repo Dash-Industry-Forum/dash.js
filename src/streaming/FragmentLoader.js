@@ -42,6 +42,7 @@ function FragmentLoader(config) {
     const events = config.events;
     const urlUtils = config.urlUtils;
     const errors = config.errors;
+    const streamId = config.streamId;
 
     let instance,
         urlLoader;
@@ -103,7 +104,8 @@ function FragmentLoader(config) {
                 progress: function (event) {
                     eventBus.trigger(events.LOADING_PROGRESS, {
                         request: request,
-                        stream: event.stream
+                        stream: event.stream,
+                        streamId
                     });
                     if (event.data) {
                         eventBus.trigger(events.LOADING_DATA_PROGRESS, {

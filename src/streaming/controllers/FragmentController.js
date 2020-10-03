@@ -79,7 +79,8 @@ function FragmentController( config ) {
                     events: Events,
                     errors: Errors,
                     dashConstants: config.dashConstants,
-                    urlUtils: config.urlUtils
+                    urlUtils: config.urlUtils,
+                    streamId
                 }),
                 debug: debug,
                 eventBus: eventBus,

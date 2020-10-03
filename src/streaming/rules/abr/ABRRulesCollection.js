@@ -159,8 +159,8 @@ function ABRRulesCollection(config) {
         return maxQuality || SwitchRequest(context).create();
     }
 
-    function shouldAbandonFragment(rulesContext) {
-        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
+    function shouldAbandonFragment(rulesContext, streamId) {
+        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
         const activeRules = getActiveRules(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
 

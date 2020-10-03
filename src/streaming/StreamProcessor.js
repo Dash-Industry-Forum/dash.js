@@ -194,7 +194,7 @@ function StreamProcessor(config) {
         }
 
         if (abrController) {
-            abrController.unRegisterStreamType(type);
+            abrController.unRegisterStreamType(type, instance);
         }
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
@@ -320,9 +320,9 @@ function StreamProcessor(config) {
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
-                quality = abrController.getQualityForBitrate(mediaInfo, bitrate);
+                quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
             } else {
-                quality = abrController.getQualityFor(type);
+                quality = abrController.getQualityFor(type, streamInfo.id);
             }
 
             if (minIdx !== undefined && quality < minIdx) {

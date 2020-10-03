@@ -69,6 +69,7 @@ function ThroughputRule(config) {
         const scheduleController = rulesContext.getScheduleController();
         const abrController = rulesContext.getAbrController();
         const streamInfo = rulesContext.getStreamInfo();
+        const streamId = streamInfo ? streamInfo.id : null;
         const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
         const throughputHistory = abrController.getThroughputHistory();
         const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
@@ -82,7 +83,7 @@ function ThroughputRule(config) {
 
         if (abrController.getAbandonmentStateFor(mediaType) !== MetricsConstants.ABANDON_LOAD) {
             if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, latency);
+                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
                 scheduleController.setTimeToLoadDelay(0);
                 logger.debug('[' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
                 switchRequest.reason = {throughput: throughput, latency: latency};

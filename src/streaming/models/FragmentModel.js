@@ -295,7 +295,8 @@ function FragmentModel(config) {
             request: e.request,
             response: e.response,
             error: e.error,
-            sender: this
+            sender: this,
+            streamId
         });
     }
 
