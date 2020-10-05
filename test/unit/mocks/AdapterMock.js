@@ -109,6 +109,16 @@ function AdapterMock () {
     this.convertDataToRepresentationInfo = function () {
         return null;
     };
+
+    this.getRegularPeriods = function () {
+        return this.regularPeriods || [];
+    };
+
+    this.setRegularPeriods = function (periods) {
+        this.regularPeriods = periods;
+    };
+
+
 }
 
 export default AdapterMock;

@@ -420,10 +420,495 @@ describe('TimelineConverter', function () {
 
             describe('with SegmentTemplate', function () {
 
-                it('with single period and period duration matching tsbd', function () {
+                before(() => {
+                    settings.update({
+                        streaming: {
+                            calcSegmentAvailabilityRangeFromTimeline: false
+                        }
+                    });
+                });
+
+                it('with single period and period covering whole tsbd', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
                     streams.push(streamOneMock);
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period and period start larger than AST', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 10,
+                        duration: 50
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(10);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period and period end smaller than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 20
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(20);
+                    clock.restore();
+                });
+
+                it('with single period and period end infinite', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period start larger than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 40,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(40);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period end smaller than now minus tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 5;
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 30 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.NaN;
+                    expect(range.end).to.be.NaN;
+                    clock.restore();
+                });
+
+                it('with two periods covering whole tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 100;
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(100);
+                    clock.restore();
+                });
+
+                it('with two periods and period start larger than AST', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 100;
+
+                    streamOneMock.setStreamInfo({
+                        start: 10,
+                        duration: 40
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(10);
+                    expect(range.end).to.be.equal(100);
+                    clock.restore();
+                });
+
+                it('with two periods and second period end smaller than tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 80;
+
+                    streamTwoMock.setStreamInfo({
+                        start: 50,
+                        duration: 20
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(70);
+                    clock.restore();
+                });
+
+                it('with two periods and second period end infinite', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 120;
+
+                    streamTwoMock.setStreamInfo({
+                        start: 50,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(120);
+                    clock.restore();
+                });
+
+                it('with two periods, both start times larger than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 40,
+                        duration: 10
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(40);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with two periods, end time of second period larger than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 80,
+                        duration: 10
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(10);
+                    clock.restore();
+                });
+
+                it('with two periods both ending before tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 5;
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 10
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 30 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+                    streams.push(streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.NaN;
+                    expect(range.end).to.be.NaN;
+                    clock.restore();
+                });
+            });
+            describe('with SegmentTimeline and calcSegmentAvailabilityRangeFromTimeline set to true', function () {
+
+                before(() => {
+                    settings.update({
+                        streaming: {
+                            calcSegmentAvailabilityRangeFromTimeline: true
+                        }
+                    });
+                });
+
+                beforeEach(() => {
+                    streamOneMock.setRepresentation(voHelper.getDummyTimelineRepresentation(testType));
+                    streamTwoMock.setRepresentation(voHelper.getDummyTimelineRepresentation(testType));
+                });
+
+                it('with single period and period covering whole tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period and period start greater than 0', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 10;
+                    dummyRep.adaptation.period.duration = 50;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 10,
+                        duration: 50
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(10);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period and period start greater than 0 and end infinite', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 10;
+                    dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 10,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(10);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period and period end smaller than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 20;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 20
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(20);
+                    clock.restore();
+                });
+
+                it('with single period and period end out of the "normal" TSBD', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 20;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 20
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 2000 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(20);
+                    clock.restore();
+                });
+
+                it('with single period and last segments out of the "normal" TSBD', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 300;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 300
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 2000 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(20);
+                    expect(range.end).to.be.equal(50);
+                    clock.restore();
+                });
+
+                it('with single period and last segments out of the "normal" large TSBD', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 300;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 300;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 300
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 2000 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
 
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(0);
@@ -431,18 +916,431 @@ describe('TimelineConverter', function () {
                     clock.restore();
                 });
 
-                it('with single period and period duration larger than "now"', function () {
+                it('with single period and period end infinite', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 300;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;
+                    streamOneMock.setRepresentation(dummyRep);
+
                     streamOneMock.setStreamInfo({
                         start: 0,
-                        end: 100
+                        duration: Number.POSITIVE_INFINITY
                     });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
                     streams.push(streamOneMock);
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
 
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(0);
                     expect(range.end).to.be.equal(50);
+                    clock.restore();
+                });
+
+                it('with single period start larger than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 40;
+                    dummyRep.adaptation.period.duration = Number.POSITIVE_INFINITY;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 40,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(40);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with single period end smaller than now minus tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 5;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 30 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(5);
+                    expect(range.end).to.be.equal(10);
+                    clock.restore();
+                });
+
+                it('with two periods covering whole tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 20;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 20
+                    });
+
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with two periods and period start greater than 0', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 10;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 20;
+                    dummyRepTwo.adaptation.period.duration = 20;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 10,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 20,
+                        duration: 20
+                    });
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(10);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with two periods and period start greater than 0 and end infinite', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 50;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 10;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);;
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 20;
+                    dummyRepTwo.adaptation.period.duration = Number.POSITIVE_INFINITY;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 10,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 20,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(10);
+                    expect(range.end).to.be.equal(50);
+                    clock.restore();
+                });
+
+                it('with two periods and period end smaller than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);;
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 10;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 10
+                    });
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(20);
+                    clock.restore();
+                });
+
+                it('with two periods and period end out of the "normal" TSBD', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 20;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 20
+                    });
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 2000 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with two periods and last segments out of the "normal" TSBD', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 300;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 300
+                    });
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 2000 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(30);
+                    expect(range.end).to.be.equal(60);
+                    clock.restore();
+                });
+
+                it('with two periods and last segments out of the "normal" large TSBD', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 300;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 300;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 300
+                    });
+
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 2000 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(60);
+                    clock.restore();
+                });
+
+                it('with two periods no tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 300;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 300
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 300 * 1000),
+                            timeShiftBufferDepth: NaN
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(60);
+                    clock.restore();
+                });
+
+                it('with two periods start larger than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 40;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 50;
+                    dummyRepTwo.adaptation.period.duration = 300;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 40,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 50,
+                        duration: 300
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(40);
+                    expect(range.end).to.be.equal(30);
+                    clock.restore();
+                });
+
+                it('with two periods end smaller than now minus tsbd', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 5;
+                    const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRep.adaptation.period.start = 0;
+                    dummyRep.adaptation.period.duration = 10;
+                    streamOneMock.setRepresentation(dummyRep);
+                    const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
+                    dummyRepTwo.adaptation.period.start = 10;
+                    dummyRepTwo.adaptation.period.duration = 10;
+                    streamTwoMock.setRepresentation(dummyRepTwo);
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: 10
+                    });
+                    streamTwoMock.setStreamInfo({
+                        start: 10,
+                        duration: 10
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() - 30 * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock, streamTwoMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(15);
+                    expect(range.end).to.be.equal(20);
                     clock.restore();
                 });
             });
