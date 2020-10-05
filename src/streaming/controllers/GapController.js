@@ -123,8 +123,6 @@ function GapController() {
                 return processor.getScheduleController().getIsReplacingBuffer();
             }).length;
 
-            console.log(`IsTrackSwitchInProgress ${isTrackSwitchInProgess}`);
-
             return isTrackSwitchInProgess;
         } catch (e) {
             return false;

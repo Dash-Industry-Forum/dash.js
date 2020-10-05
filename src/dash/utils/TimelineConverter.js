@@ -148,8 +148,8 @@ function TimelineConverter() {
 
     /**
      * Calculates the presentation times of the segments in this representation which are in the availabilityWindow. This is limited to period boundaries.
-     * @param voRepresentation
-     * @param isDynamic
+     * @param {Object} voRepresentation
+     * @param {boolean} isDynamic
      * @return {{start: *, end: *}|{start: number, end: number}}
      */
     function calcAvailabilityWindow(voRepresentation, isDynamic) {
@@ -170,9 +170,8 @@ function TimelineConverter() {
 
     /**
      * Calculates the timeshiftbuffer range. This range might overlap multiple periods and is not limited to period boundaries. However, we make sure that the range is potentially covered by period.
-     * @param voRepresentation
-     * @param isDynamic
-     * @param streams
+     * @param {Array} streams
+     * @param {boolean} isDynamic
      * @return {{start: number, end: number}}
      */
     function calcTimeShiftBufferWindow(streams, isDynamic) {
@@ -258,7 +257,7 @@ function TimelineConverter() {
         range.start = _adjustTimeBasedOnPeriodRanges(streams, start);
         range.end = !isNaN(range.start) && now < range.start ? now : _adjustTimeBasedOnPeriodRanges(streams, now, true);
 
-        if(!isNaN(timeShiftBufferDepth) && range.end < now - timeShiftBufferDepth) {
+        if (!isNaN(timeShiftBufferDepth) && range.end < now - timeShiftBufferDepth) {
             range.end = NaN;
         }
 
@@ -377,8 +376,8 @@ function TimelineConverter() {
 
     /**
      * Determines the anchor time to calculate the availability of a segment from. Should return either the now time or the end of the period
-     * @param voRepresentation
-     * @param isDynamic
+     * @param {Object} voRepresentation
+     * @param {boolean} isDynamic
      * @return {number|*}
      */
     function getAvailabilityAnchorTime(voRepresentation, isDynamic) {

@@ -4,7 +4,7 @@ import Events from '../../src/core/events/Events';
 
 import SpecHelper from './helpers/SpecHelper';
 import VoHelper from './helpers/VOHelper';
-import DashConstants from "../../src/dash/constants/DashConstants";
+import DashConstants from '../../src/dash/constants/DashConstants';
 import Settings from '../../src/core/Settings';
 import StreamMock from './mocks/StreamMock';
 
@@ -551,8 +551,8 @@ describe('TimelineConverter', function () {
                     streams.push(streamOneMock);
 
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
-                    expect(range.start).to.be.NaN;
-                    expect(range.end).to.be.NaN;
+                    expect(range.start).to.be.NaN; // jshint ignore:line
+                    expect(range.end).to.be.NaN; // jshint ignore:line
                     clock.restore();
                 });
 
@@ -716,8 +716,8 @@ describe('TimelineConverter', function () {
                     streams.push(streamTwoMock);
 
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
-                    expect(range.start).to.be.NaN;
-                    expect(range.end).to.be.NaN;
+                    expect(range.start).to.be.NaN; // jshint ignore:line
+                    expect(range.end).to.be.NaN; // jshint ignore:line
                     clock.restore();
                 });
             });
@@ -1075,7 +1075,7 @@ describe('TimelineConverter', function () {
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
                     dummyRep.adaptation.period.start = 10;
                     dummyRep.adaptation.period.duration = 10;
-                    streamOneMock.setRepresentation(dummyRep);;
+                    streamOneMock.setRepresentation(dummyRep);
                     const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
                     dummyRepTwo.adaptation.period.start = 20;
                     dummyRepTwo.adaptation.period.duration = Number.POSITIVE_INFINITY;
@@ -1110,7 +1110,7 @@ describe('TimelineConverter', function () {
                     const dummyRep = voHelper.getDummyTimelineRepresentation(testType);
                     dummyRep.adaptation.period.start = 0;
                     dummyRep.adaptation.period.duration = 10;
-                    streamOneMock.setRepresentation(dummyRep);;
+                    streamOneMock.setRepresentation(dummyRep);
                     const dummyRepTwo = voHelper.getDummyTimelineRepresentation(testType);
                     dummyRepTwo.adaptation.period.start = 10;
                     dummyRepTwo.adaptation.period.duration = 10;

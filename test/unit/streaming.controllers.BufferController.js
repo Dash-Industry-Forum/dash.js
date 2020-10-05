@@ -22,7 +22,7 @@ const expect = chai.expect;
 const context = {};
 const testType = 'video';
 const streamInfo = {
-    id: 'streamId'
+    id: 'DUMMY_STREAM-01'
 };
 const eventBus = EventBus(context).getInstance();
 // const objectUtils = ObjectUtils(context).getInstance();

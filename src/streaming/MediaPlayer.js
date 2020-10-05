@@ -61,7 +61,7 @@ import Settings from '../core/Settings';
 import {
     getVersionString
 }
-from './../core/Version';
+    from './../core/Version';
 
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
@@ -74,7 +74,7 @@ import {
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
-import { checkParameterType } from './utils/SupervisorTools';
+import {checkParameterType} from './utils/SupervisorTools';
 import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
@@ -84,6 +84,7 @@ import BoxParser from './utils/BoxParser';
  * The media types
  * @typedef {("video" | "audio" | "text" | "fragmentedText" | "embeddedText" | "image")} MediaType
  */
+
 /* jscs:enable */
 
 /**
@@ -94,29 +95,29 @@ import BoxParser from './utils/BoxParser';
  */
 function MediaPlayer() {
     /**
-    * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-    * @inner
-    */
+     * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+     * @inner
+     */
     const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
     /**
-    * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-    * @inner
-    */
+     * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+     * @inner
+     */
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
     /**
-    * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
-    * @inner
-    */
+     * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
+     * @inner
+     */
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     /**
-    * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
-    * @inner
-    */
+     * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
+     * @inner
+     */
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     /**
-    * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
-    * @inner
-    */
+     * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
+     * @inner
+     */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
     const context = this.context;
@@ -733,7 +734,7 @@ function MediaPlayer() {
             let metric = dashMetrics.getCurrentDVRInfo();
             t = (metric === null) ? 0 : metric.time - metric.range.start;
 
-            if(t < 0) {
+            if (t < 0) {
                 t = 0;
             }
         }

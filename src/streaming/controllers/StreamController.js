@@ -231,7 +231,6 @@ function StreamController() {
             const range = timelineConverter.calcTimeShiftBufferWindow(streams, isDynamic);
             const activeStreamProcessors = getActiveStreamProcessors();
 
-            console.log(`Current DVR window ${range.start} - ${range.end}`);
             if (!activeStreamProcessors || activeStreamProcessors.length === 0) {
                 dashMetrics.addDVRInfo(Constants.VIDEO, time, manifestInfo, range);
             } else {

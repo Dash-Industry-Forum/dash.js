@@ -4,7 +4,7 @@ class StreamControllerMock {
     }
 
     setup() {
-        this.streamId = 'streamId';
+        this.streamId = 'DUMMY_STREAM-01';
     }
 
     initialize() {
@@ -39,7 +39,7 @@ class StreamControllerMock {
 
     getActiveStreamInfo() {
         return {
-            id: 'streamId'
+            id: 'DUMMY_STREAM-01'
         };
     }
 

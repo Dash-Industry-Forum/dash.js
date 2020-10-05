@@ -219,10 +219,13 @@ function AbrController() {
     /**
      * Gets top BitrateInfo for the player
      * @param {string} type - 'video' or 'audio' are the type options.
+     * @param {string} streamId - Id of the stream
      * @returns {BitrateInfo | null}
      */
-    function getTopBitrateInfoFor(type) {
-        const streamId = streamController.getActiveStreamInfo().id;
+    function getTopBitrateInfoFor(type, streamId = null) {
+        if (!streamId) {
+            streamId = streamController.getActiveStreamInfo().id;
+        }
         if (type && streamProcessorDict && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             if (streamInfo && streamInfo.id) {
@@ -291,7 +294,7 @@ function AbrController() {
             const mediaInfo = streamProcessorDict[streamId][type].getMediaInfo();
             const bitrateList = getBitrateList(mediaInfo);
             // This returns the quality index <= for the given bitrate
-            let minIdx = getQualityForBitrate(mediaInfo, minBitrate,streamId);
+            let minIdx = getQualityForBitrate(mediaInfo, minBitrate, streamId);
             if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
                 minIdx++; // Go to the next bitrate
             }
@@ -390,6 +393,7 @@ function AbrController() {
     /**
      * @param {MediaInfo} mediaInfo
      * @param {number} bitrate A bitrate value, kbps
+     * @param {String} streamId Period ID
      * @param {number} latency Expected latency of connection, ms
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
@@ -507,7 +511,10 @@ function AbrController() {
         return isAtTop;
     }
 
-    function getQualityFor(type, streamId) {
+    function getQualityFor(type, streamId = null) {
+        if (!streamId) {
+            streamId = streamController.getActiveStreamInfo().id;
+        }
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             let quality;
 

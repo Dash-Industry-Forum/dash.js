@@ -560,7 +560,7 @@ describe('MediaPlayer', function () {
 
             it('should configure quality for type', function () {
                 let qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'streamId'
+                    id: 'DUMMY_STREAM-01'
                 });
                 expect(qualityFor).to.equal(abrControllerMock.QUALITY_DEFAULT());
 
@@ -570,7 +570,7 @@ describe('MediaPlayer', function () {
                 player.setQualityFor('video', 10);
 
                 qualityFor = abrControllerMock.getQualityFor('video', {
-                    id: 'streamId'
+                    id: 'DUMMY_STREAM-01'
                 });
                 expect(qualityFor).to.equal(10);
 

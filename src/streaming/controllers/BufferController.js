@@ -479,7 +479,7 @@ function BufferController(config) {
         let len,
             i;
 
-        const toler = !isNaN(tolerance) ? tolerance : !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : 0.15;
+        const toler = !isNaN(tolerance) ? tolerance : 0.15;
 
         if (ranges !== null && ranges !== undefined) {
             for (i = 0, len = ranges.length; i < len; i++) {
@@ -535,7 +535,8 @@ function BufferController(config) {
 
     function updateBufferLevel() {
         if (playbackController) {
-            bufferLevel = getBufferLength(getWorkingTime() || 0);
+            const tolerance = !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : NaN;
+            bufferLevel = getBufferLength(getWorkingTime() || 0, tolerance);
             triggerEvent(Events.BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
             checkIfSufficientBuffer();
         }

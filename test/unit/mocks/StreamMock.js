@@ -1,6 +1,6 @@
 import AdapterMock from './AdapterMock';
 
-function StreamMock () {
+function StreamMock() {
 
     this.streamInfo = {};
     this.dashAdapter = new AdapterMock();
@@ -15,9 +15,14 @@ StreamMock.prototype.setStreamInfo = function (streamInfo) {
 };
 
 StreamMock.prototype.getFragmentController = function () {
-    return { getModel: () => {
-            return { setStreamProcessor: () => {} };
-        } };
+    return {
+        getModel: () => {
+            return {
+                setStreamProcessor: () => {
+                }
+            };
+        }
+    };
 };
 
 StreamMock.prototype.getAdapter = function () {
@@ -25,15 +30,12 @@ StreamMock.prototype.getAdapter = function () {
 };
 
 StreamMock.prototype.setRegularPeriods = function (periods) {
-   this.dashAdapter.setRegularPeriods(periods);
+    this.dashAdapter.setRegularPeriods(periods);
 };
 
 StreamMock.prototype.setRepresentation = function (representation) {
     this.dashAdapter.setRepresentation(representation);
 };
-
-
-
 
 
 export default StreamMock;

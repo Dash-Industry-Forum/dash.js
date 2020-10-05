@@ -271,8 +271,8 @@ function ScheduleController(config) {
         scheduleTimeout = setTimeout(schedule, value);
     }
 
-    function setFragmentProcessState (state) {
-        if (isFragmentProcessingInProgress !== state ) {
+    function setFragmentProcessState(state) {
+        if (isFragmentProcessingInProgress !== state) {
             isFragmentProcessingInProgress = state;
         } else {
             logger.debug('isFragmentProcessingInProgress is already equal to', state);
@@ -479,9 +479,6 @@ function ScheduleController(config) {
     }
 
     function setSeekTarget(value) {
-        if(!isNaN(value)) {
-            console.log('seek');
-        }
         seekTarget = value;
     }
 
