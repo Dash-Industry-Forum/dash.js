@@ -87,7 +87,11 @@ function AbrController() {
 
     function registerStreamType(type, streamProcessor) {
         const streamId = streamProcessor.getStreamInfo().id;
-        streamProcessorDict[streamId] = {};
+
+        if (!streamProcessorDict[streamId]) {
+            streamProcessorDict[streamId] = {};
+        }
+
         switchHistoryDict[type] = switchHistoryDict[type] || SwitchRequestHistory(context).create();
         streamProcessorDict[streamId][type] = streamProcessor;
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
