@@ -797,7 +797,7 @@ function DashManifestModel() {
                     if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
                         event.presentationTime = eventStreams[i].Event_asArray[j].presentationTime;
                         const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset * eventStream.timescale : 0;
-                        event.calculatedPresentationTime = event.presentationTime + (period.start * eventStream.timescale) + presentationTimeOffset;
+                        event.calculatedPresentationTime = event.presentationTime + (period.start * eventStream.timescale) - presentationTimeOffset;
                     }
                     if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.DURATION)) {
                         event.duration = eventStreams[i].Event_asArray[j].duration;
