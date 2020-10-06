@@ -355,6 +355,9 @@ function BufferController(config) {
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
     function onPlaybackSeeking(e) {
+        if (streamInfo.id !== e.streamId) {
+            return;
+        }
         seekTarget = e.seekTime;
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
@@ -405,6 +408,7 @@ function BufferController(config) {
         // There is no request in current time position yet. Let's remove everything
         if (!currentTimeRequest) {
             logger.debug(`getAllRangesWithSafetyFactor - No request found in current time position, removing full buffer 0 - ${endOfBuffer}`);
+            console.debug(`getAllRangesWithSafetyFactor - No request found in current time position, removing full buffer 0 - ${endOfBuffer}`);
             clearRanges.push({
                 start: 0,
                 end: endOfBuffer

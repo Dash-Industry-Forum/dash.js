@@ -61,7 +61,9 @@ function PreBufferSink(onAppendedCallback) {
     function append(chunk) {
         if (chunk.segmentType !== 'InitializationSegment') { //Init segments are stored in the initCache.
             chunks.push(chunk);
-            chunks.sort(function (a, b) { return a.start - b.start; });
+            chunks.sort(function (a, b) {
+                return a.start - b.start;
+            });
             outstandingInit = null;
         } else {//We need to hold an init chunk for when a corresponding media segment is being downloaded when the discharge happens.
             outstandingInit = chunk;
@@ -76,7 +78,7 @@ function PreBufferSink(onAppendedCallback) {
     }
 
     function remove(start, end) {
-        chunks = chunks.filter( a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start))); //The opposite of the getChunks predicate.
+        chunks = chunks.filter(a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start))); //The opposite of the getChunks predicate.
     }
 
     //Nothing async, nothing to abort.
@@ -89,7 +91,7 @@ function PreBufferSink(onAppendedCallback) {
         for (let i = 0; i < chunks.length; i++) {
             let chunk = chunks[i];
             if (ranges.length === 0 || chunk.start > ranges[ranges.length - 1].end) {
-                ranges.push({ start: chunk.start, end: chunk.end });
+                ranges.push({start: chunk.start, end: chunk.end});
             } else {
                 ranges[ranges.length - 1].end = chunk.end;
             }
@@ -112,10 +114,6 @@ function PreBufferSink(onAppendedCallback) {
         });
 
         return timeranges;
-    }
-
-    function hasDiscontinuitiesAfter() {
-        return false;
     }
 
     function updateTimestampOffset() {
@@ -148,7 +146,7 @@ function PreBufferSink(onAppendedCallback) {
     }
 
     function getChunksAt(start, end) {
-        return chunks.filter( a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)) );
+        return chunks.filter(a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)));
     }
 
     function waitForUpdateEnd(callback) {
@@ -163,7 +161,6 @@ function PreBufferSink(onAppendedCallback) {
         discharge: discharge,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
-        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
         waitForUpdateEnd: waitForUpdateEnd,
         getBuffer: getBuffer
     };

@@ -36,8 +36,6 @@ import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
 
-const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
-
 /**
  * @class SourceBufferSink
  * @ignore
@@ -51,6 +49,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         logger,
         buffer,
         isAppendingInProgress,
+        removeInProgress,
         intervalId;
 
     let callbacks = [];
@@ -60,6 +59,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         isAppendingInProgress = false;
+        removeInProgress = false;
 
         const codec = mediaInfo.codec;
         try {
@@ -73,14 +73,16 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             buffer = oldBuffer ? oldBuffer : mediaSource.addSourceBuffer(codec);
             if (buffer.changeType && oldBuffer) {
                 logger.debug('Doing period transition with changeType');
-                buffer.changeType(codec);
+                waitForUpdateEnd(() => {
+                    buffer.changeType(codec);
+                });
             }
 
             updateAppendWindow();
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
-            if (typeof buffer.addEventListener === 'function') {
+            if (typeof buffer.addEventListener === 'function' && !oldBuffer) {
                 try {
                     buffer.addEventListener('updateend', updateEndHandler, false);
                     buffer.addEventListener('error', errHandler, false);
@@ -107,14 +109,14 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     function reset(keepBuffer) {
         if (buffer) {
-            if (typeof buffer.removeEventListener === 'function') {
-                buffer.removeEventListener('updateend', updateEndHandler, false);
-                buffer.removeEventListener('error', errHandler, false);
-                buffer.removeEventListener('abort', errHandler, false);
-            }
-            clearInterval(intervalId);
-            callbacks = [];
             if (!keepBuffer) {
+                clearInterval(intervalId);
+                callbacks = [];
+                if (typeof buffer.removeEventListener === 'function') {
+                    buffer.removeEventListener('updateend', updateEndHandler, false);
+                    buffer.removeEventListener('error', errHandler, false);
+                    buffer.removeEventListener('abort', errHandler, false);
+                }
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
                         logger.debug(`Removing sourcebuffer from media source`);
@@ -142,24 +144,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             logger.error('getAllBufferRanges exception: ' + e.message);
             return null;
         }
-    }
-
-    function hasDiscontinuitiesAfter(time) {
-        try {
-            const ranges = getAllBufferRanges();
-            if (ranges && ranges.length > 1) {
-                for (let i = 0, len = ranges.length; i < len; i++) {
-                    if (i > 0) {
-                        if (time < ranges.start(i) && ranges.start(i) > ranges.end(i - 1) + MAX_ALLOWED_DISCONTINUITY) {
-                            return true;
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            logger.error('hasDiscontinuities exception: ' + e.message);
-        }
-        return false;
     }
 
     function append(chunk) {
@@ -218,6 +202,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             try {
                 if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
+                    removeInProgress = true;
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(function () {
@@ -291,7 +276,9 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function abort() {
         try {
             if (mediaSource.readyState === 'open') {
-                buffer.abort();
+                waitForUpdateEnd(() => {
+                    buffer.abort();
+                });
             } else if (buffer.setTextTrack && mediaSource.readyState === 'ended') {
                 buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
             }
@@ -327,7 +314,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         executeCallback();
     }
 
-    function errHandler() {
+    function errHandler(e) {
         logger.error('SourceBufferSink error', mediaInfo.type);
     }
 
@@ -347,7 +334,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         abort: abort,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
-        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
         waitForUpdateEnd: waitForUpdateEnd,
         updateAppendWindow
     };

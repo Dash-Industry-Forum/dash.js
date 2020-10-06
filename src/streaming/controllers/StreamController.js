@@ -197,8 +197,8 @@ function StreamController() {
     function onPlaybackSeeking(e) {
         const seekingStream = getStreamForTime(e.seekTime);
 
+        // On every seek the buffer is cleared. All the prebuffered stuff is lost so we deactivate all preloading streams.
         if (preloadingStreams && preloadingStreams.length > 0) {
-            // Seeking to the current period was requested while preloading the next one, deactivate preloading one
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
             });
@@ -210,7 +210,7 @@ function StreamController() {
                 }
             });
         }
-        // If we're preloading other stream, the active one was deactivated and we need to switch back
+
         if (seekingStream && seekingStream !== activeStream) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(seekingStream, activeStream, e.seekTime);
@@ -558,9 +558,11 @@ function StreamController() {
 
     function switchStream(stream, previousStream, seekTime) {
 
-        if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) return;
-        isStreamSwitchingInProgress = true;
+        if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) {
+            return;
+        }
 
+        isStreamSwitchingInProgress = true;
         eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
             fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
             toStreamInfo: stream.getStreamInfo()

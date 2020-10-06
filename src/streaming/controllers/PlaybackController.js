@@ -149,7 +149,8 @@ function PlaybackController() {
         if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
             // Trigger PLAYBACK_SEEKING event for controllers
             eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: startTime
+                seekTime: startTime,
+                streamId: streamInfo.id
             });
             // Seek video model
             seek(startTime, false, true);
@@ -535,7 +536,8 @@ function PlaybackController() {
             logger.info('Seeking to: ' + seekTime);
             startUpdatingWallclockTime();
             eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: seekTime
+                seekTime: seekTime,
+                streamId: streamInfo.id
             });
         }
     }

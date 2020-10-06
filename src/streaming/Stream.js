@@ -244,7 +244,6 @@ function Stream(config) {
         hasAudioTrack = false;
         updateError = {};
         isUpdating = false;
-        preloadingScheduled = false;
         isEndedEventSignaled = false;
     }
 
@@ -265,7 +264,6 @@ function Stream(config) {
 
         unRegisterProtectionEvents();
 
-        setPreloaded(false);
     }
 
     function getDuration() {
