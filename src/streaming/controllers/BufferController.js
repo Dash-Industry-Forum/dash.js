@@ -117,7 +117,7 @@ function BufferController(config) {
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.on(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
@@ -404,7 +404,7 @@ function BufferController(config) {
 
         // There is no request in current time position yet. Let's remove everything
         if (!currentTimeRequest) {
-            logger.debug('getAllRangesWithSafetyFactor - No request found in current time position, removing full buffer 0 -', endOfBuffer);
+            logger.debug(`getAllRangesWithSafetyFactor - No request found in current time position, removing full buffer 0 - ${endOfBuffer}`);
             clearRanges.push({
                 start: 0,
                 end: endOfBuffer
@@ -671,6 +671,7 @@ function BufferController(config) {
 
         const range = pendingPruningRanges.shift();
         logger.debug('Removing buffer from:', range.start, 'to', range.end);
+        console.debug(`${type}: Removing buffer from: ${range.start} to ${range.end}`);
         isPruningInProgress = true;
 
         // If removing buffer ahead current playback position, update maxAppendedIndex

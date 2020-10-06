@@ -197,21 +197,21 @@ function StreamController() {
     function onPlaybackSeeking(e) {
         const seekingStream = getStreamForTime(e.seekTime);
 
+        if (preloadingStreams && preloadingStreams.length > 0) {
+            // Seeking to the current period was requested while preloading the next one, deactivate preloading one
+            preloadingStreams.forEach((s) => {
+                s.deactivate(true);
+            });
+            // Set all previous preloaded streams to preloaded = false
+            streams.forEach((stream) => {
+                if (stream.getId() !== seekingStream.getId()) {
+                    stream.setPreloadingScheduled(false);
+                    stream.setPreloaded(false);
+                }
+            });
+        }
+        // If we're preloading other stream, the active one was deactivated and we need to switch back
         if (seekingStream && seekingStream !== activeStream) {
-            if (preloadingStreams && preloadingStreams.length > 0) {
-                // Seeking to the current period was requested while preloading the next one, deactivate preloading one
-                preloadingStreams.forEach((s) => {
-                    s.deactivate(true);
-                });
-                // Set all previous preloaded streams to preloaded = false
-                streams.forEach((stream) => {
-                    if(stream.getId() !== seekingStream.getId()) {
-                        stream.setPreloadingScheduled(false);
-                        stream.setPreloaded(false);
-                    }
-                });
-            }
-            // If we're preloading other stream, the active one was deactivated and we need to switch back
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(seekingStream, activeStream, e.seekTime);
         } else {
