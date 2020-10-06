@@ -181,6 +181,7 @@ function CmcdModel() {
         const dl = _getDeadlineByType(request.mediaType);
         const bl = _getBufferLevelByType(request.mediaType);
         const tb = _getTopBitrateByType(request.mediaType);
+        const pr = internalData.pr;
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -208,6 +209,10 @@ function CmcdModel() {
 
         if (!isNaN(tb)) {
             data.tb = tb;
+        }
+
+        if (!isNaN(pr) && pr !== 1) {
+            data.pr = pr;
         }
 
         if (_bufferLevelStarved) {
@@ -278,8 +283,12 @@ function CmcdModel() {
     }
 
     function _getTopBitrateByType(mediaType) {
-        const info = abrController.getTopBitrateInfoFor(mediaType);
-        return info.bitrate;
+        try {
+            const info = abrController.getTopBitrateInfoFor(mediaType);
+            return info.bitrate;
+        } catch (e) {
+            return null;
+        }
     }
 
     function _getObjectDurationByRequest(request) {
@@ -349,7 +358,7 @@ function CmcdModel() {
 
     function _onBufferLevelStateChanged(data) {
         try {
-            if (data.state && data.mediaType) {
+            if (data.state) {
                 if (data.state === MediaPlayerEvents.BUFFER_EMPTY) {
                     if (!_bufferLevelStarved) {
                         _bufferLevelStarved = true;
