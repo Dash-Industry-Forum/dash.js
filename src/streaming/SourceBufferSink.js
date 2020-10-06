@@ -36,6 +36,8 @@ import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
 
+const MAX_ALLOWED_DISCONTINUITY = 0.1; // 100 milliseconds
+
 /**
  * @class SourceBufferSink
  * @ignore
@@ -49,7 +51,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         logger,
         buffer,
         isAppendingInProgress,
-        removeInProgress,
         intervalId;
 
     let callbacks = [];
@@ -59,7 +60,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         isAppendingInProgress = false;
-        removeInProgress = false;
 
         const codec = mediaInfo.codec;
         try {
@@ -82,7 +82,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
-            if (typeof buffer.addEventListener === 'function' && !oldBuffer) {
+            if (typeof buffer.addEventListener === 'function') {
                 try {
                     buffer.addEventListener('updateend', updateEndHandler, false);
                     buffer.addEventListener('error', errHandler, false);
@@ -109,14 +109,14 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
 
     function reset(keepBuffer) {
         if (buffer) {
+            if (typeof buffer.removeEventListener === 'function') {
+                buffer.removeEventListener('updateend', updateEndHandler, false);
+                buffer.removeEventListener('error', errHandler, false);
+                buffer.removeEventListener('abort', errHandler, false);
+            }
+            clearInterval(intervalId);
+            callbacks = [];
             if (!keepBuffer) {
-                clearInterval(intervalId);
-                callbacks = [];
-                if (typeof buffer.removeEventListener === 'function') {
-                    buffer.removeEventListener('updateend', updateEndHandler, false);
-                    buffer.removeEventListener('error', errHandler, false);
-                    buffer.removeEventListener('abort', errHandler, false);
-                }
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
                         logger.debug(`Removing sourcebuffer from media source`);
@@ -144,6 +144,24 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             logger.error('getAllBufferRanges exception: ' + e.message);
             return null;
         }
+    }
+
+    function hasDiscontinuitiesAfter(time) {
+        try {
+            const ranges = getAllBufferRanges();
+            if (ranges && ranges.length > 1) {
+                for (let i = 0, len = ranges.length; i < len; i++) {
+                    if (i > 0) {
+                        if (time < ranges.start(i) && ranges.start(i) > ranges.end(i - 1) + MAX_ALLOWED_DISCONTINUITY) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            logger.error('hasDiscontinuities exception: ' + e.message);
+        }
+        return false;
     }
 
     function append(chunk) {
@@ -202,7 +220,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             try {
                 if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
                     buffer.remove(start, end);
-                    removeInProgress = true;
                 }
                 // updating is in progress, we should wait for it to complete before signaling that this operation is done
                 waitForUpdateEnd(function () {
@@ -226,11 +243,17 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     function appendNextInQueue() {
+        const sourceBufferSink = this;
+
         if (appendQueue.length > 0) {
             isAppendingInProgress = true;
             const nextChunk = appendQueue[0];
             appendQueue.splice(0, 1);
+            let oldRanges = [];
             const afterSuccess = function () {
+                // Safari sometimes drops a portion of a buffer after appending. Handle these situations here
+                const newRanges = getAllBufferRanges();
+                checkBufferGapsAfterAppend(sourceBufferSink, oldRanges, newRanges, nextChunk);
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);
                 } else {
@@ -247,6 +270,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 if (nextChunk.bytes.length === 0) {
                     afterSuccess.call(this);
                 } else {
+                    oldRanges = getAllBufferRanges();
                     if (buffer.appendBuffer) {
                         buffer.appendBuffer(nextChunk.bytes);
                     } else {
@@ -271,6 +295,30 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 }
             }
         }
+    }
+
+    function checkBufferGapsAfterAppend(buffer, oldRanges, newRanges, chunk) {
+        if (oldRanges && oldRanges.length > 0 && oldRanges.length < newRanges.length &&
+            isChunkAlignedWithRange(oldRanges, chunk)) {
+            // A split in the range was created while appending
+            eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
+                buffer: buffer,
+                from: newRanges.end(newRanges.length - 2),
+                to: newRanges.start(newRanges.length - 1),
+                unintended: true
+            });
+        }
+    }
+
+    function isChunkAlignedWithRange(oldRanges, chunk) {
+        for (let i = 0; i < oldRanges.length; i++) {
+            const start = Math.round(oldRanges.start(i));
+            const end = Math.round(oldRanges.end(i));
+            if (end === chunk.start || start === chunk.end || (chunk.start >= start && chunk.end <= end)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function abort() {
@@ -314,7 +362,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         executeCallback();
     }
 
-    function errHandler(e) {
+    function errHandler() {
         logger.error('SourceBufferSink error', mediaInfo.type);
     }
 
@@ -334,6 +382,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         abort: abort,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
+        hasDiscontinuitiesAfter: hasDiscontinuitiesAfter,
         waitForUpdateEnd: waitForUpdateEnd,
         updateAppendWindow
     };

@@ -408,7 +408,7 @@ describe('BufferController', function () {
             eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, this);
 
             // send event
-            eventBus.trigger(Events.PLAYBACK_SEEKING);
+            eventBus.trigger(Events.PLAYBACK_SEEKING, {streamId: 'DUMMY_STREAM-01'});
         });
 
         /*
