@@ -35,6 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import CmcdModel from '../models/CmcdModel';
 import Utils from '../../core/Utils';
+import Debug from '../../core/Debug';
 
 /**
  * @module HTTPLoader
@@ -61,9 +62,11 @@ function HTTPLoader(cfg) {
         delayedRequests,
         retryRequests,
         downloadErrorToRequestTypeMap,
-        cmcdModel;
+        cmcdModel,
+        logger;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         requests = [];
         delayedRequests = [];
         retryRequests = [];
