@@ -101,7 +101,7 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);

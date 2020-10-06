@@ -720,6 +720,7 @@ function BufferController(config) {
                 from: e.from,
                 to: e.to,
                 unintended: e.unintended,
+                mediaType: type,
                 hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(),
                 quotaExceeded: isQuotaExceeded
             });

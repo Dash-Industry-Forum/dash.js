@@ -212,8 +212,25 @@ function StreamController() {
         }
 
         if (seekingStream && seekingStream !== activeStream) {
-            flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
-            switchStream(seekingStream, activeStream, e.seekTime);
+            const processedMediaTypes = {};
+            // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
+            const _initiateStreamSwitchAfterSeek = (e) => {
+                if (!e.mediaType) {
+                    return;
+                }
+                processedMediaTypes[e.mediaType] = true;
+                const streamProcessors = activeStream.getProcessors();
+                const unfinishedStreamProcessorsCount = streamProcessors.filter((sp) => {
+                    return !processedMediaTypes[sp.getType()];
+                }).length;
+
+                if (unfinishedStreamProcessorsCount === 0) {
+                    flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
+                    switchStream(seekingStream, activeStream, e.seekTime);
+                    eventBus.off(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
+                }
+            };
+            eventBus.on(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
         } else {
             flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
         }
