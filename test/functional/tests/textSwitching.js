@@ -3,6 +3,8 @@ PLAY:
 - for each stream:
     - load test page
     - load stream
+    - switch Text Language
+    - check Text Language
     - check playing state
     - check if playback progressing
 **/
@@ -16,14 +18,18 @@ define([
 ], function(intern, registerSuite, assert, require, player, utils) {
 
     // Suite name
-    var NAME = 'textSwitching';
+    var NAME = 'TEXTSWITCHING';
 
     var command = null;
+
+    var mediaType = "fragmentedText";
 
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
     var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
     var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
+    var SWITCH_DURATION = 3; // Time between track switches
+    var SKIPPABLE = false; // if there is only one track skipp this test suite
 
     var load = function(stream) {
         registerSuite({
@@ -33,9 +39,64 @@ define([
                 if (!stream.available) this.skip();
                 utils.log(NAME, 'Load stream');
                 command = this.remote.get(require.toUrl(intern.config.testPage));
-                return command.execute(player.loadStream, [stream]);
+                
+                return command.execute(player.setTextDefaultEnabled, [true])
+                .then(function (){
+                    return command.findById("ttml-rendering-div")
+                })
+                .then(function(TTMLRenderingDiv){
+                    return command.execute(player.attachTTMLRenderingDiv, [TTMLRenderingDiv])
+                })
+                .then(function(){
+                    return command.execute(player.loadStream, [stream])
+                })
+                .then(function() {
+                    // Check if playing
+                    utils.log(NAME, 'Check if playing');
+                    return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
+                });
             }
         })
+    };
+
+    var switchTrack = function (stream, mediaInf) {
+            
+        var curr = mediaInf.shift();
+
+        return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
+        .then(function(){
+            //switch track
+            return command.execute(player.setCurrentTrack, [curr]).sleep(SWITCH_DURATION*1000)
+        })
+        .then(function(){
+            return command.execute(player.getCurrentTrackFor, [mediaType])
+        })
+        .then(function(currTrack){
+            // check if correct text track
+            assert.equal(curr.lang, currTrack.lang)
+        })
+        .then(function(){
+            if(mediaInf.length > 0) return switchTrack(stream, mediaInf);
+            else return;
+        });
+    };
+
+    var switchText = function(stream){
+        registerSuite({
+            name: utils.testName(NAME, stream),
+
+            switchText: function(){
+                if (!stream.available) this.skip();
+                utils.log(NAME, 'SwitchText');
+                var thisRef = this;
+
+                return command.execute(player.getTracksFor,[mediaType])
+                .then(function(mediaInf) {     
+                    
+                    return switchTrack(stream, mediaInf);
+                });
+            }
+        });
     };
 
     var play = function(stream) {
@@ -43,7 +104,7 @@ define([
             name: utils.testName(NAME, stream),
 
             play: function() {
-                if (!stream.available) this.skip();
+                if (!stream.available || SKIPPABLE) this.skip();
                 utils.log(NAME, 'Play');
                 return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
                 .then(function (playing) {
@@ -53,7 +114,7 @@ define([
             },
 
             progress: function() {
-                if (!stream.available) this.skip();
+                if (!stream.available || SKIPPABLE) this.skip();
                 utils.log(NAME, 'Progress');
                 return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
                 .then(function (progressing) {
@@ -64,58 +125,12 @@ define([
         });
     };
 
-    var getInfos = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            isDynamic: function() {
-                if (!stream.available) this.skip();
-                return command.execute(player.isDynamic)
-                .then(function (dynamic) {
-                    utils.log(NAME, 'dynamic: ' + dynamic);
-                    stream.dynamic = dynamic;
-                    return command.execute(player.getDVRWindowSize)
-                })
-                .then(function (dvrWindow) {
-                    if (dvrWindow > 0) {
-                        stream.dvrWindow = dvrWindow;
-                    }
-                });
-            },
-
-            getDuration: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                return command.execute(player.getDuration)
-                .then(function (duration) {
-                    utils.log(NAME, 'duration: ' + duration);
-                    stream.duration = duration;
-                });
-            },
-
-            getPeriods: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                return command.execute(player.getStreams)
-                .then(function (streams) {
-                    utils.log(NAME, 'Nb periods: ' + streams.length);
-                    stream.periods = [];
-                    for(let i=0; i < streams.length; i++ ){
-                        stream.periods.push({start: streams[i].start});
-                    }
-                });
-            }
-        });
-    };
-
 
     return {
         register: function (stream) {
             load(stream);
+            switchText(stream);
             play(stream);
-            getInfos(stream);
         }
     }
 });

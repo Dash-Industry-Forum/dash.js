@@ -126,6 +126,26 @@ define([], function () {
 
             _timeout = setTimeout(_onTimeout, timeout * 1000);
             player.on(event, _onEvent);
+        },
+        
+        getTracksFor: function(mediaType){
+            return player.getTracksFor(mediaType);
+        },
+
+        setCurrentTrack: function(track){
+            player.setCurrentTrack(track);
+        },
+
+        getCurrentTrackFor: function(mediaType){
+            return player.getCurrentTrackFor(mediaType);
+        },
+        
+        setTextDefaultEnabled: function(enabled) {
+            player.setTextDefaultEnabled(enabled);
+        },
+
+        attachTTMLRenderingDiv: function(TTMLRenderingDiv) {
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
         }
     };
 });
