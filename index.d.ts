@@ -196,6 +196,11 @@ declare namespace dashjs {
                     audio?: boolean;
                     video?: boolean;
                 };
+            },
+            cmcd?: {
+                enabled?: boolean,
+                sid?: string,
+                cid?: string
             }
         }
     }

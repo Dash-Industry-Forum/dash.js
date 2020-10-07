@@ -607,7 +607,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
-        config.streaming.cmcd.did = $scope.cmcdDeviceId ? $scope.cmcdDeviceId : null;
 
         $scope.player.updateSettings(config);
 
