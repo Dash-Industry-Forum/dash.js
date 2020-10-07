@@ -69,7 +69,8 @@ function CmcdModel() {
         dashMetrics,
         playbackController,
         _isStartup,
-        _bufferLevelStarved;
+        _bufferLevelStarved,
+        _initialMediaRequestsDone;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -115,7 +116,8 @@ function CmcdModel() {
             cid: null
         };
         _bufferLevelStarved = {};
-        _isStartup = false;
+        _isStartup = {};
+        _initialMediaRequestsDone = {};
     }
 
     function getQueryParameter(request) {
@@ -227,9 +229,10 @@ function CmcdModel() {
             _bufferLevelStarved[request.mediaType] = false;
         }
 
-        if (_isStartup) {
+        if (_isStartup[request.mediaType] || !_initialMediaRequestsDone[request.mediaType]) {
             data.su = true;
-            _isStartup = false;
+            _isStartup[request.mediaType] = false;
+            _initialMediaRequestsDone[request.mediaType] = true;
         }
 
         return data;
@@ -367,11 +370,12 @@ function CmcdModel() {
         try {
             if (data.state && data.mediaType) {
                 if (data.state === MediaPlayerEvents.BUFFER_EMPTY) {
+
                     if (!_bufferLevelStarved[data.mediaType]) {
                         _bufferLevelStarved[data.mediaType] = true;
                     }
-                    if (!_isStartup) {
-                        _isStartup = true;
+                    if (!_isStartup[data.mediaType]) {
+                        _isStartup[data.mediaType] = true;
                     }
                 }
             }
@@ -387,8 +391,10 @@ function CmcdModel() {
             }
         }
 
-        if (!_isStartup) {
-            _isStartup = true;
+        for (let key in _isStartup) {
+            if (_isStartup.hasOwnProperty(key)) {
+                _isStartup[key] = true;
+            }
         }
     }
 
