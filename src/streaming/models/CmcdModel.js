@@ -114,6 +114,8 @@ function CmcdModel() {
             sid: `${Utils.generateUuid()}`,
             cid: null
         };
+        _bufferLevelStarved = {};
+        _isStartup = false;
     }
 
     function getQueryParameter(request) {
@@ -122,7 +124,12 @@ function CmcdModel() {
                 const cmcdData = _getCmcdData(request);
                 const finalPayloadString = _buildFinalString(cmcdData);
 
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, { url: request.url, mediaType: request.mediaType, cmcdData, cmcdString: finalPayloadString });
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
+                    url: request.url,
+                    mediaType: request.mediaType,
+                    cmcdData,
+                    cmcdString: finalPayloadString
+                });
                 return {
                     key: CMCD_REQUEST_FIELD_NAME,
                     value: finalPayloadString
@@ -215,9 +222,9 @@ function CmcdModel() {
             data.pr = pr;
         }
 
-        if (_bufferLevelStarved) {
+        if (_bufferLevelStarved[request.mediaType]) {
             data.bs = true;
-            _bufferLevelStarved = false;
+            _bufferLevelStarved[request.mediaType] = false;
         }
 
         if (_isStartup) {
@@ -358,10 +365,10 @@ function CmcdModel() {
 
     function _onBufferLevelStateChanged(data) {
         try {
-            if (data.state) {
+            if (data.state && data.mediaType) {
                 if (data.state === MediaPlayerEvents.BUFFER_EMPTY) {
-                    if (!_bufferLevelStarved) {
-                        _bufferLevelStarved = true;
+                    if (!_bufferLevelStarved[data.mediaType]) {
+                        _bufferLevelStarved[data.mediaType] = true;
                     }
                     if (!_isStartup) {
                         _isStartup = true;
@@ -374,8 +381,10 @@ function CmcdModel() {
     }
 
     function _onPlaybackSeeked() {
-        if (!_bufferLevelStarved) {
-            _bufferLevelStarved = true;
+        for (let key in _bufferLevelStarved) {
+            if (_bufferLevelStarved.hasOwnProperty(key)) {
+                _bufferLevelStarved[key] = true;
+            }
         }
 
         if (!_isStartup) {
