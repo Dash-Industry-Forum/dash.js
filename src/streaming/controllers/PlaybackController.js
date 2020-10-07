@@ -76,20 +76,26 @@ function PlaybackController() {
 
     function initialize(sInfo, periodSwitch, seekTime) {
         streamInfo = sInfo;
-        addAllListeners();
-        isDynamic = streamInfo.manifestInfo.isDynamic;
-        isLowLatencySeekingInProgress = false;
-        playbackStalled = false;
-        streamSwitch = periodSwitch === true;
-        streamSeekTime = seekTime;
 
-        if (!periodSwitch) {
-            initialLiveEdgeCalculated = false;
+        if (periodSwitch !== true) {
+            _initializeForFirstStream();
+        } else {
+            _initializeAfterStreamSwitch();
         }
 
-        const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
+        streamSeekTime = seekTime;
+    }
+
+    function _initializeForFirstStream() {
+        addAllListeners();
+        isDynamic = streamInfo.manifestInfo.isDynamic;
+        streamSwitch = false;
+        initialLiveEdgeCalculated = false;
+        isLowLatencySeekingInProgress = false;
+        playbackStalled = false;
 
         // Detect safari browser (special behavior for low latency streams)
+        const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
         const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
         minPlaybackRateChange = isSafari ? 0.25 : 0.02;
 
@@ -106,6 +112,10 @@ function PlaybackController() {
             playOnceInitialized = false;
             play();
         }
+    }
+
+    function _initializeAfterStreamSwitch() {
+        streamSwitch = true;
     }
 
     function onStreamInitialized(e) {
@@ -209,9 +219,6 @@ function PlaybackController() {
         if (time === currentTime) return;
 
         if (internalSeek === true) {
-            // Internal seek = seek video model only (disable 'seeking' listener)
-            // buffer(s) are already appended at requested time
-            //videoModel.removeEventListener('seeking', onPlaybackSeeking);
             lastSeekWasInternal = true;
             logger.info('Requesting internal seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
