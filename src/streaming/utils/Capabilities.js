@@ -83,5 +83,6 @@ function Capabilities() {
 
     return instance;
 }
+
 Capabilities.__dashjs_factory_name = 'Capabilities';
 export default FactoryMaker.getSingletonFactory(Capabilities);

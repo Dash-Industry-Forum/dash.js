@@ -181,10 +181,6 @@ function StreamController() {
         }
     }
 
-    /*
-     * Called when current playback position is changed.
-     * Used to determine the time current stream is finished and we should switch to the next stream.
-     */
     function onPlaybackTimeUpdated(/*e*/) {
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
@@ -201,13 +197,6 @@ function StreamController() {
         if (preloadingStreams && preloadingStreams.length > 0) {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
-            });
-            // Set all previous preloaded streams to preloaded = false
-            streams.forEach((stream) => {
-                if (stream.getId() !== seekingStream.getId()) {
-                    stream.setPreloadingScheduled(false);
-                    stream.setPreloaded(false);
-                }
             });
         }
 
@@ -720,6 +709,7 @@ function StreamController() {
     function composeStreams() {
         try {
             const streamsInfo = adapter.getStreamsInfo();
+
             if (streamsInfo.length === 0) {
                 throw new Error('There are no streams');
             }
@@ -733,20 +723,7 @@ function StreamController() {
 
             // Filter streams that are outdated and not included in the MPD anymore
             if (streams.length > 0) {
-                streams = streams.filter((stream) => {
-
-                    const isStillIncluded = streamsInfo.filter((sInfo) => {
-                        return sInfo.id === stream.getId();
-                    }).length > 0;
-
-                    const shouldKeepStream = isStillIncluded || stream.getId() === activeStream.getId();
-
-                    if (!shouldKeepStream) {
-                        logger.debug(`Removing stream ${stream.getId()}`);
-                    }
-
-                    return shouldKeepStream;
-                });
+                _filterOutdatedStreams(streamsInfo);
             }
 
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
@@ -794,6 +771,23 @@ function StreamController() {
             hasInitialisationError = true;
             reset();
         }
+    }
+
+    function _filterOutdatedStreams(streamsInfo) {
+        streams = streams.filter((stream) => {
+
+            const isStillIncluded = streamsInfo.filter((sInfo) => {
+                return sInfo.id === stream.getId();
+            }).length > 0;
+
+            const shouldKeepStream = isStillIncluded || stream.getId() === activeStream.getId();
+
+            if (!shouldKeepStream) {
+                logger.debug(`Removing stream ${stream.getId()}`);
+            }
+
+            return shouldKeepStream;
+        });
     }
 
     function _initializeForFirstStream(streamsInfo) {

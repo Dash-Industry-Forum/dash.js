@@ -516,24 +516,29 @@ function AbrController() {
     }
 
     function getQualityFor(type, streamId = null) {
-        if (!streamId) {
-            streamId = streamController.getActiveStreamInfo().id;
-        }
-        if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
-            let quality;
-
-            if (streamId) {
-                qualityDict[streamId] = qualityDict[streamId] || {};
-
-                if (!qualityDict[streamId].hasOwnProperty(type)) {
-                    qualityDict[streamId][type] = QUALITY_DEFAULT;
-                }
-
-                quality = qualityDict[streamId][type];
-                return quality;
+        try {
+            if (!streamId) {
+                streamId = streamController.getActiveStreamInfo().id;
             }
+            if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+                let quality;
+
+                if (streamId) {
+                    qualityDict[streamId] = qualityDict[streamId] || {};
+
+                    if (!qualityDict[streamId].hasOwnProperty(type)) {
+                        qualityDict[streamId][type] = QUALITY_DEFAULT;
+                    }
+
+                    quality = qualityDict[streamId][type];
+                    return quality;
+                }
+            }
+            return QUALITY_DEFAULT;
         }
-        return QUALITY_DEFAULT;
+        catch(e) {
+            return QUALITY_DEFAULT;
+        }
     }
 
     function setQualityFor(type, id, value) {
