@@ -22,7 +22,7 @@ describe('CmcdModel', function () {
     let playbackControllerMock = new PlaybackControllerMock();
 
     let settings = Settings(context).getInstance();
-    settings.update({ streaming: { cmcd: { enabled: true }}});
+    settings.update({streaming: {cmcd: {enabled: true}}});
 
     beforeEach(function () {
         cmcdModel = CmcdModel(context).getInstance();
@@ -103,13 +103,17 @@ describe('CmcdModel', function () {
             const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
             const VIDEO_OBJECT_TYPE = 'v';
 
-            abrControllerMock.setTopBitrateInfo({ bitrate: TOP_BITRATE });
-            abrControllerMock.setThroughputHistory({ getSafeAverageThroughput: function () { return MEASURED_THROUGHPUT; }});
+            abrControllerMock.setTopBitrateInfo({bitrate: TOP_BITRATE});
+            abrControllerMock.setThroughputHistory({
+                getSafeAverageThroughput: function () {
+                    return MEASURED_THROUGHPUT;
+                }
+            });
             let request = {
                 type: REQUEST_TYPE,
                 mediaType: MEDIA_TYPE,
                 quality: 0,
-                mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
                 duration: DURATION
             };
 
@@ -172,14 +176,14 @@ describe('CmcdModel', function () {
                 type: REQUEST_TYPE,
                 mediaType: MEDIA_TYPE,
                 quality: 0,
-                mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
                 duration: DURATION
             };
             let parameters = cmcdModel.getQueryParameter(request);
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.not.have.property('pr');
 
-            eventBus.trigger(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, { playbackRate: CHANGED_PLAYBACK_RATE });
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, {playbackRate: CHANGED_PLAYBACK_RATE});
 
             parameters = cmcdModel.getQueryParameter(request);
             metrics = parseQuery(parameters.value);
@@ -197,9 +201,10 @@ describe('CmcdModel', function () {
                 type: REQUEST_TYPE,
                 mediaType: MEDIA_TYPE,
                 quality: 0,
-                mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
                 duration: DURATION
             };
+            cmcdModel.getQueryParameter(request); // first initial request will set startup to true
             let parameters = cmcdModel.getQueryParameter(request);
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.not.have.property('bs');
@@ -225,15 +230,19 @@ describe('CmcdModel', function () {
                 type: REQUEST_TYPE,
                 mediaType: MEDIA_TYPE,
                 quality: 0,
-                mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
                 duration: DURATION
             };
+            cmcdModel.getQueryParameter(request); // first initial request will set startup to true
             let parameters = cmcdModel.getQueryParameter(request);
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.not.have.property('bs');
             expect(metrics).to.not.have.property('su');
 
-            eventBus.trigger(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, { state: MediaPlayerEvents.BUFFER_EMPTY });
+            eventBus.trigger(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, {
+                state: MediaPlayerEvents.BUFFER_EMPTY,
+                mediaType: request.mediaType
+            });
 
             parameters = cmcdModel.getQueryParameter(request);
             metrics = parseQuery(parameters.value);
@@ -253,7 +262,7 @@ describe('CmcdModel', function () {
                 type: REQUEST_TYPE,
                 mediaType: MEDIA_TYPE,
                 quality: 0,
-                mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] },
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
                 duration: DURATION
             };
             let parameters = cmcdModel.getQueryParameter(request);
@@ -261,7 +270,7 @@ describe('CmcdModel', function () {
             expect(metrics).to.not.have.property('st');
             expect(metrics).to.not.have.property('sf');
 
-            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { protocol: 'MSS', data: { type: DashConstants.DYNAMIC }});
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, {protocol: 'MSS', data: {type: DashConstants.DYNAMIC}});
 
             parameters = cmcdModel.getQueryParameter(request);
             metrics = parseQuery(parameters.value);
@@ -280,7 +289,10 @@ function parseQuery(query) {
         .map(keyValue => isNumber(keyValue[1]) ? [keyValue[0], Number(keyValue[1])] : keyValue)
         .map(keyValue => isString(keyValue[1]) && keyValue[1].indexOf('"') !== -1 ? [keyValue[0], keyValue[1].replace(/"/g, '')] : keyValue)
         .map(keyValue => isBoolean(keyValue[1]) ? [keyValue[0], parseBoolean(keyValue[1])] : keyValue)
-        .reduce((acc, keyValue) => { acc[keyValue[0]] = keyValue[1]; return acc; }, {});
+        .reduce((acc, keyValue) => {
+            acc[keyValue[0]] = keyValue[1];
+            return acc;
+        }, {});
 }
 
 function isNumber(value) {

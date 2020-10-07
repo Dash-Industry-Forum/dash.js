@@ -152,6 +152,7 @@ function CmcdModel() {
                 _setDefaultContentId(request);
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                _initForMediaType(request.mediaType);
                 return _getCmcdDataForMediaSegment(request);
             } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
                 return _getCmcdDataForInitSegment(request);
@@ -236,6 +237,21 @@ function CmcdModel() {
         }
 
         return data;
+    }
+
+    function _initForMediaType(mediaType) {
+
+        if (!_initialMediaRequestsDone.hasOwnProperty(mediaType)) {
+            _initialMediaRequestsDone[mediaType] = false;
+        }
+
+        if (!_isStartup.hasOwnProperty(mediaType)) {
+            _isStartup[mediaType] = false;
+        }
+
+        if (!_bufferLevelStarved.hasOwnProperty(mediaType)) {
+            _bufferLevelStarved[mediaType] = false;
+        }
     }
 
     function _getCmcdDataForInitSegment() {
