@@ -68,7 +68,7 @@ function ABRRulesCollection(config) {
                     settings: settings
                 })
             );
-            
+
             qualitySwitchRules.push(
                 ThroughputRule(context).create({
                     dashMetrics: dashMetrics
@@ -85,17 +85,15 @@ function ABRRulesCollection(config) {
             qualitySwitchRules.push(
                 DroppedFramesRule(context).create()
             );
-            abandonFragmentRules.push(
-                AbandonRequestsRule(context).create({
+            qualitySwitchRules.push(
+                L2ARule(context).create({
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     settings: settings
                 })
             );
-        }
-        else if (settings.get().streaming.abr.ABRStrategy == 'abrL2A') {
-            qualitySwitchRules.push(
-                L2ARule(context).create({
+            abandonFragmentRules.push(
+                AbandonRequestsRule(context).create({
                     dashMetrics: dashMetrics,
                     mediaPlayerModel: mediaPlayerModel,
                     settings: settings
