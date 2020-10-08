@@ -76,8 +76,7 @@ function SegmentBaseGetter(config) {
     function getSegmentByTime(representation, requestedTime) {
         checkConfig();
 
-        const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const index = getIndexByTime(representation, periodTime);
+        const index = getIndexByTime(representation, requestedTime);
 
         return getSegmentByIndex(representation, index);
     }

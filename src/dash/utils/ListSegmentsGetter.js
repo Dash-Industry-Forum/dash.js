@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../../streaming/constants/Constants';
 
-import { getIndexBasedSegment } from './SegmentsUtils';
+import {getIndexBasedSegment} from './SegmentsUtils';
 
 function ListSegmentsGetter(config, isDynamic) {
 
@@ -54,14 +54,16 @@ function ListSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         const len = list.SegmentURL_asArray.length;
+
+        const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
+        const offsetToSubtract = Math.max(startNumber - 1, 0);
 
         const start = representation.startNumber;
         let segment = null;
-        if (index < len) {
-            const s = list.SegmentURL_asArray[index];
+        if ((index - offsetToSubtract) < len) {
+            const s = list.SegmentURL_asArray[index - offsetToSubtract];
 
             segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
             if (segment) {
@@ -90,6 +92,7 @@ function ListSegmentsGetter(config, isDynamic) {
         if (isNaN(duration)) {
             return null;
         }
+
 
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = Math.floor(periodTime / duration);

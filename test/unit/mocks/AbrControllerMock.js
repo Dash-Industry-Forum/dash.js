@@ -9,6 +9,8 @@ function AbrControllerMock () {
     this.windowResizeEventCalled = false;
     this.throughputHistory = undefined;
     this.currentStreamId = undefined;
+    this.topBitrateInfo = null;
+    let self = this;
 
     this.QUALITY_DEFAULT = function () {
         return QUALITY_DEFAULT;
@@ -25,8 +27,13 @@ function AbrControllerMock () {
 
     this.getTopQualityIndexFor = function () {};
 
+
     this.getTopBitrateInfoFor = function () {
-        return null;
+        return self.topBitrateInfo;
+    };
+
+    this.setTopBitrateInfo = function (info) {
+        self.topBitrateInfo = info;
     };
 
     this.getInitialBitrateFor = function (/*type*/) {
@@ -50,7 +57,11 @@ function AbrControllerMock () {
     };
 
     this.getThroughputHistory = function () {
-        return this.throughputHistory;
+        return self.throughputHistory;
+    };
+
+    this.setThroughputHistory = function (history) {
+        self.throughputHistory = history;
     };
 
     this.updateTopQualityIndex = function () {};

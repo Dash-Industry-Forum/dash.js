@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventsBase from '../core/events/EventsBase';
+
 /**
  * @class
  * @implements EventsBase
@@ -177,6 +178,12 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when a stream (period) is loaded
+         * @event MediaPlayerEvents#STREAM_UPDATED
+         */
+        this.STREAM_UPDATED = 'streamUpdated';
+
+        /**
+         * Triggered when a stream (period) is updated
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
@@ -335,6 +342,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
          */
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
+
+        /**
+         * A gap occured in the timeline which requires a seek to the next period
+         * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
+         */
+        this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
     }
 }
 

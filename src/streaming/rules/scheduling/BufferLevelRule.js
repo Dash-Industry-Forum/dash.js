@@ -44,15 +44,15 @@ function BufferLevelRule(config) {
     function setup() {
     }
 
-    function execute(type, representationInfo, hasVideoTrack) {
+    function execute(type, representationInfo) {
         if (!type || !representationInfo) {
             return true;
         }
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-        return bufferLevel < getBufferTarget(type, representationInfo, hasVideoTrack);
+        return bufferLevel < getBufferTarget(type, representationInfo);
     }
 
-    function getBufferTarget(type, representationInfo, hasVideoTrack) {
+    function getBufferTarget(type, representationInfo) {
         let bufferTarget = NaN;
 
         if (!type || !representationInfo) {
@@ -72,14 +72,7 @@ function BufferLevelRule(config) {
             } else { // text is disabled, rule will return false
                 bufferTarget = 0;
             }
-        } else if (type === Constants.AUDIO && hasVideoTrack) {
-            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
-            if (isNaN(representationInfo.fragmentDuration)) {
-                bufferTarget = videoBufferLevel;
-            } else {
-                bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
-            }
-        } else {
+        }  else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.longFormContentDurationThreshold;

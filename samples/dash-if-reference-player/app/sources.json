@@ -10,16 +10,16 @@
             "name": "Unified Streaming",
             "url": "https://www.unified-streaming.com/"
         },
-        "bbc":{
+        "bbc": {
             "acronym": "BBC",
             "name": "British Broadcasting Corporation",
             "url": "https://www.bbc.com/"
         },
-        "envivio":{
+        "envivio": {
             "acronym": "Envivio",
             "name": "Envivio"
         },
-        "irt":{
+        "irt": {
             "acronym": "IRT",
             "name": "Institut fuer Rundfunktechnik",
             "url": "https://www.irt.de/de/home"
@@ -27,7 +27,7 @@
         "akamai": {
             "acronym": "Akamai",
             "name": "Akamai",
-            "url": "https://www.akamai.com/de/de/"   
+            "url": "https://www.akamai.com/de/de/"
         },
         "cta": {
             "acronym": "CTA",
@@ -42,7 +42,7 @@
         "microsoft": {
             "acronym": "Microsoft",
             "name": "Microsoft",
-            "url": "https://www.microsoft.com/de-de/"    
+            "url": "https://www.microsoft.com/de-de/"
         },
         "streamroot": {
             "acronym": "Streamroot",
@@ -53,6 +53,11 @@
             "acronym": "Wowza",
             "name": "Wowza",
             "url": "https://www.wowza.com/"
+        },
+        "aws": {
+            "acronym": "AWS",
+            "name": "AWS",
+            "url": "https://www.elemental.com/"
         }
     },
     "items": [
@@ -181,37 +186,10 @@
                     "provider": "dashif"
                 },
                 {
-                    "url": "https://livesim.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
-                    "name": "Low Latency (Single-Rate) (livesim-chunked)",
-                    "bufferConfig": {
-                        "lowLatencyMode": true,
-                        "liveDelay": 4
-                    },
-                    "provider": "dashif"
-                },
-                {
-                    "url": "https://livesim.dashif.org/livesim-chunked/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
-                    "name": "Low Latency (Multi-Rate) (livesim-chunked)",
-                    "bufferConfig": {
-                        "lowLatencyMode": true,
-                        "liveDelay": 4
-                    },
-                    "provider": "dashif"
-                },
-                {
                     "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
                     "name": "Unified Streaming reference stream with scte35 markers",
                     "moreInfo": "http://demo.unified-streaming.com/features.html",
                     "provider": "unified"
-                },
-                {
-                    "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
-                    "name": "Low Latency Stream",
-                    "bufferConfig": {
-                        "lowLatencyMode": true,
-                        "liveDelay": 3
-                    },
-                    "provider": "akamai"
                 },
                 {
                     "name": "Clear Dynamic SegmentTimeline",
@@ -227,6 +205,67 @@
                     "name": "Clear Dynamic SegmentList",
                     "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
                     "provider": "wowza"
+                },
+                {
+                    "name": "Multiperiod SegmentTimeline/$Time$, full manifest. 31s ad pod every 3 minutes",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/6ba06d17f65b4e1cbd1238eaa05c02c1/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "Multiperiod SegmentTimeline/$Time$, compact manifest. 31s ad pod every 3 minutes",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/91d37b0389de47e0b5266736d3633077/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "Multiperiod SegmentTimeline/$Number$, full manifest. 31s ad pod every 3 minutes",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/ee565ea510cb4b4d8df5f48918c3d6dc/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": " Multiperiod SegmentTimeline/$Number$, compact manifest. 31s ad pod every 3 minutes",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
+                    "provider": "aws"
+                }
+            ]
+        },
+        {
+            "name": "Live Low Latency",
+            "submenu": [
+                {
+                    "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
+                    "name": "Akamai Low Latency Stream (Single Rate)",
+                    "bufferConfig": {
+                        "lowLatencyMode": true,
+                        "liveDelay": 3
+                    },
+                    "provider": "akamai"
+                },
+                {
+                    "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd",
+                    "name": "Akamai Low Latency Stream (Multi Rate)",
+                    "bufferConfig": {
+                        "lowLatencyMode": true,
+                        "liveDelay": 3
+                    },
+                    "provider": "akamai"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
+                    "name": "Low Latency (Single-Rate) (livesim-chunked)",
+                    "bufferConfig": {
+                        "lowLatencyMode": true,
+                        "liveDelay": 4
+                    },
+                    "provider": "dashif"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
+                    "name": "Low Latency (Multi-Rate) (livesim-chunked)",
+                    "bufferConfig": {
+                        "lowLatencyMode": true,
+                        "liveDelay": 4
+                    },
+                    "provider": "dashif"
                 }
             ]
         },
@@ -800,6 +839,25 @@
                         }
                     },
                     "provider": "wowza"
+                },
+                {
+                    "name": "Live Multiperiod SegmentTimeline/$Number$, full manifest. 31s ad pod every 3 minutes, with PlayReady and Widevine DRM, single key",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/2fc23947945841b9b1be9768f9c13e75/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICIgYXdzLWVsZW1lbnRhbDo6c3Bla2UtdGVzdGluZyAiLAogICAgInNlc3Npb25JZCI6ICJkYXNoanN0ZXN0IiwKICAgICJtZXJjaGFudCI6ICJhd3MtZWxlbWVudGFsIgp9"
+                            },
+                            "com.microsoft.playready": {
+                                "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                                "httpRequestHeaders": {
+                                    "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICIgYXdzLWVsZW1lbnRhbDo6c3Bla2UtdGVzdGluZyAiLAogICAgInNlc3Npb25JZCI6ICJkYXNoanN0ZXN0IiwKICAgICJtZXJjaGFudCI6ICJhd3MtZWxlbWVudGFsIgp9"
+                                }
+                            }
+                        }
+                    },
+                    "provider": "aws"
                 }
             ]
         },

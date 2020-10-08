@@ -137,6 +137,7 @@ function ScheduleController(config) {
         if (isStopped) return;
 
         logger.debug('Schedule Controller stops');
+        logger.debug(type + ' Schedule Controller stops');
         isStopped = true;
         clearTimeout(scheduleTimeout);
     }
@@ -169,7 +170,6 @@ function ScheduleController(config) {
         if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamId) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
-
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
@@ -343,7 +343,7 @@ function ScheduleController(config) {
 
         stop();
         setFragmentProcessState(false);
-        logger.info('Stream is complete');
+        logger.info(`Stream ${streamId} is complete`);
     }
 
     function onFragmentLoadingCompleted(e) {
@@ -422,7 +422,14 @@ function ScheduleController(config) {
     function onBufferCleared(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded && isStopped) {
+        if (replacingBuffer && settings.get().streaming.flushBufferAtTrackSwitch) {
+            // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
+            // otherwise audio track switch will be effective only once after previous buffered track is consumed
+            playbackController.seek(playbackController.getTime() + 0.001, false, true);
+        }
+
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             start();
         }
     }
@@ -430,6 +437,7 @@ function ScheduleController(config) {
     function onQuotaExceeded(e) {
         if (e.streamId !== streamId || e.mediaType !== type) return;
 
+        // Stop scheduler (will be restarted once buffer is pruned)
         stop();
         setFragmentProcessState(false);
     }
@@ -459,11 +467,10 @@ function ScheduleController(config) {
         });
 
         if (!isFragmentProcessingInProgress) {
-            // Restart scheduler if in pending state
+            // No pending request, request next segment at seek target
             startScheduleTimer(0);
         } else {
-            // Abort current requests
-            logger.debug('Abort requests');
+            // Abort current request
             fragmentModel.abortRequests();
         }
     }
@@ -485,7 +492,7 @@ function ScheduleController(config) {
     }
 
     function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
+        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo);
     }
 
     function getType() {

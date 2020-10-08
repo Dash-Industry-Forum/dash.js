@@ -73,7 +73,6 @@ function BolaRule(config) {
 
         eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.on(Events.METRIC_ADDED, onMetricAdded, instance);
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
@@ -278,10 +277,6 @@ function BolaRule(config) {
                 }
             }
         }
-    }
-
-    function onPeriodSwitchStarted() {
-        // TODO: does this have to be handled here?
     }
 
     function onMediaFragmentLoaded(e) {
@@ -521,7 +516,6 @@ function BolaRule(config) {
 
         eventBus.off(Events.BUFFER_EMPTY, onBufferEmpty, instance);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
-        eventBus.off(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.off(Events.METRIC_ADDED, onMetricAdded, instance);
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
