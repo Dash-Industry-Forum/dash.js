@@ -22,7 +22,10 @@ define([
 
     var command = null;
 
-    var mediaType = "fragmentedText";
+    var mediaTypes = [
+        "text",
+        "fragmentedText"
+    ]
 
     // Test constants
     var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
@@ -59,7 +62,20 @@ define([
         })
     };
 
-    var switchTrack = function (stream, mediaInf) {
+    var switchType = function(stream, types) {
+
+        type = types.shift();
+
+        return command.execute(player.getTracksFor,[type])
+        .then(function(mediaInf) {     
+            if(mediaInf.length != 0) return switchTrack(stream, mediaInf, type);
+        })
+        .then(function(){
+            if(types.length > 0) return switchType(stream, types)
+        });
+    }
+
+    var switchTrack = function (stream, mediaInf, type) {
             
         var curr = mediaInf.shift();
 
@@ -69,14 +85,14 @@ define([
             return command.execute(player.setCurrentTrack, [curr]).sleep(SWITCH_DURATION*1000)
         })
         .then(function(){
-            return command.execute(player.getCurrentTrackFor, [mediaType])
+            return command.execute(player.getCurrentTrackFor, [type])
         })
         .then(function(currTrack){
             // check if correct text track
             assert.equal(curr.lang, currTrack.lang)
         })
         .then(function(){
-            if(mediaInf.length > 0) return switchTrack(stream, mediaInf);
+            if(mediaInf.length > 0) return switchTrack(stream, mediaInf, type);
             else return;
         });
     };
@@ -90,11 +106,11 @@ define([
                 utils.log(NAME, 'SwitchText');
                 var thisRef = this;
 
-                return command.execute(player.getTracksFor,[mediaType])
-                .then(function(mediaInf) {     
-                    
-                    return switchTrack(stream, mediaInf);
+                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
+                .then(function(){
+                    return switchType(stream, mediaTypes.slice()); 
                 });
+                
             }
         });
     };
