@@ -40,7 +40,7 @@ function RulesContext(config) {
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
     const bufferOccupancyABR = config.useBufferOccupancyABR;
-    const L2AABR = config.useL2AABR;
+    const l2AABR = config.useL2AABR;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
     const representationInfo = config.streamProcessor ? config.streamProcessor.getRepresentationInfo() : null;
 
@@ -86,7 +86,7 @@ function RulesContext(config) {
         return bufferOccupancyABR;
     }
     function useL2AABR() {
-        return L2AABR;
+        return l2AABR;
     }
 
     instance = {
