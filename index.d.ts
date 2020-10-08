@@ -168,7 +168,6 @@ declare namespace dashjs {
                 ABRStrategy?: 'abrDynamic' | 'abrBola';
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
-                useBufferOccupancyABR?: boolean;
                 useDeadTimeLatency?: boolean;
                 limitBitrateByPortal?: boolean;
                 usePixelRatioInLimitBitrateByPortal?: boolean;
