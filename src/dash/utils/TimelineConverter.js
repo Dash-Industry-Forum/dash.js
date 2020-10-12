@@ -199,8 +199,7 @@ function TimelineConverter() {
         const voPeriod = voRepresentation.adaptation.period;
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const start = !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? now - voPeriod.mpd.timeShiftBufferDepth : 0;
-        const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
-        const end = now + endOffset - d;
+        const end = now + endOffset;
 
         range.start = Math.max(start, voPeriod.start);
         range.end = Math.min(end, voPeriod.start + voPeriod.duration);
