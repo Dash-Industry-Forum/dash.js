@@ -2,120 +2,65 @@
 SEEK:
 - load test page
 - load stream
-- check playing status
-- get stream duration (player.getDuration())
 - repeat N times:
     - seek at a random position (player.seek())
     - check if playback is seeked at new position
     - check if playback is progressing
 **/
-define([
-    'intern',
-    'intern!object',
-    'intern/chai!assert',
-    'require',
-    'test/functional/tests/scripts/player',
-    'test/functional/tests/scripts/utils'
-], function(intern, registerSuite, assert, require, player, utils) {
+const intern = require('intern').default;
+const { suite, before, test } = intern.getPlugin('interface.tdd');
+const { assert } = intern.getPlugin('chai');
 
-    // Suite name
-    var NAME = 'SEEK';
+const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.js');
+const player = require('./scripts/player.js');
 
-    // Test constants
-    var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
-    var SEEK_TIMEOUT = 10; // Timeout (in sec.) for checking seek to be completed
-    var DURATION_TOLERANCE = 3; // Tolerance (in sec.) for duration difference between manifest and media
-    var SEEK_COUNT = 3; // Number of seek tests
+// Suite name
+const NAME = 'SEEK';
 
-    // Test variables
-    var seekPos;
+// Test constants
+const SEEK_COUNT = 3; // Number of seek tests
 
-    var round = function (value) {
-        return Math.round(value * 1000) / 1000;
-    }
+// Test variables
+var seekPos;
 
-    var generateSeekPos = function(duration) {
-        var pos = round(Math.random() * duration);
-        if (pos > (duration - PROGRESS_VALUE)) {
-            pos -= PROGRESS_VALUE;
-        }
-        if (pos < PROGRESS_VALUE) {
-            pos += PROGRESS_VALUE;
-        }
-        return pos;
-    };
+exports.register = function(stream) {
 
-    var load = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
+    suite(utils.testName(NAME, stream), (suite) => {
 
-            load: function() {
-                if (!stream.available) this.skip();
-                if (stream.dynamic) this.skip();
-                utils.log(NAME, 'Setup');
-                command = this.remote.get(require.toUrl(intern.config.testPage));
-                return command.execute(player.loadStream, [stream])
-                .then(function() {
-                    // Check if playing
-                    utils.log(NAME, 'Check if playing');
-                    return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                })
-                .then(function(playing) {
-                    assert.isTrue(playing);
-                });
-            }
-        })
-    };
-
-    var seek = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            seek: function() {
-                if (!stream.available) this.skip();
-                if (stream.dynamic) this.skip();
-                // Get the stream duration (applies for static and dynamic streams)
-                return command.execute(player.getDuration)
-                .then(function(duration) {
-                    utils.log(NAME, 'Duration: ' + duration);
-                    // Generate randomly a seek position
-                    seekPos = generateSeekPos(duration - DURATION_TOLERANCE);
-                    utils.log(NAME, 'Seek: ' + seekPos);
-                    // Seek the player
-                    return command.executeAsync(player.seek, [seekPos, SEEK_TIMEOUT]);
-                })
-                .then(function(seeked) {
-                    assert.isTrue(seeked);
-                    // Check if correctly seeked
-                    return command.execute(player.getTime);
-                })
-                .then(function(time) {
-                    utils.log(NAME, 'Playback time: ' + time);
-                    return assert.isAtLeast(round(time), seekPos);
-                });
-            },
-
-            playing: function() {
-                if (!stream.available) this.skip();
-                if (stream.dynamic) this.skip();
-                utils.log(NAME, 'Check if playing');
-                return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
-                .then(function(progressing) {
-                    return assert.isTrue(progressing);
-                });
-            }
+        before(async ({ remote }) => {
+            if (!stream.available || stream.dynamic) suite.skip();
+            utils.log(NAME, 'Load stream');
+            command = remote.get(intern.config.testPage);
+            await command.execute(player.loadStream, [stream]);
+            await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
         });
-    };
 
-    return {
-        register: function (stream) {
-            load(stream);
-            for (var i = 0; i < SEEK_COUNT; i++) {
-                seek(stream);
-            }
+        for (let i = 0; i < SEEK_COUNT; i++) {
+            test('seek_' + i, async () => {
+                // Get the stream duration (applies for static and dynamic streams)
+                const duration = await command.execute(player.getDuration);
+                utils.log(NAME, 'Duration: ' + stream.duration);
+
+                // Generate randomly a seek position
+                seekPos = utils.generateSeekPos(duration);
+                utils.log(NAME, 'Seek: ' + seekPos);
+
+                // Seek the player
+                const seeked = await command.executeAsync(player.seek, [seekPos, constants.EVENT_TIMEOUT]);
+                assert.isTrue(seeked);
+
+                // Check if seeked at seeking time
+                const time = await command.execute(player.getTime);
+                utils.log(NAME, 'Playback time: ' + time);
+                assert.isAtLeast(time, seekPos);
+            });
+
+            test('playing_' + i, async () => {
+                utils.log(NAME, 'Check if playing');
+                const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                assert.isTrue(progressing);
+            });
         }
-    }
-
-});
+    });
+}

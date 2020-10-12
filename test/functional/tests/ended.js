@@ -2,90 +2,45 @@
 ENDED:
 - load test page
 - load stream
-- check playing status
-- get stream duration (player.getDuration())
 - seek before end of stream
 - wait for 'ended' event
 **/
-define([
-    'intern',
-    'intern!object',
-    'intern/chai!assert',
-    'require',
-    'test/functional/tests/scripts/player',
-    'test/functional/tests/scripts/utils'
-], function(intern, registerSuite, assert, require, player, utils) {
+const intern = require('intern').default;
+const { suite, before, test } = intern.getPlugin('interface.tdd');
+const { assert } = intern.getPlugin('chai');
 
-    // Suite name
-    var NAME = 'ENDED';
+const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.js');
+const player = require('./scripts/player.js');
 
-    // Test constants
-    var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var SEEK_SHIFT = 10; // Timeout (in sec.) for checking playback progress
-    var SEEK_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
-    var ENDED_TIMEOUT = SEEK_SHIFT + 10; // Timeout (in sec.) for checking seek to be completed
+// Suite name
+var NAME = 'ENDED';
 
-    var load = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
+exports.register = function(stream) {
 
-            load: function() {
-                if (!stream.available) this.skip();
-                if (stream.dynamic) this.skip();
-                utils.log(NAME, 'Setup');
-                command = this.remote.get(require.toUrl(intern.config.testPage));
-                return command.execute(player.loadStream, [stream])
-                .then(function() {
-                    // Check if playing
-                    utils.log(NAME, 'Check if playing');
-                    return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                })
-                .then(function(playing) {
-                    assert.isTrue(playing);
-                });
-            }
-        })
-    };
+    suite(utils.testName(NAME, stream), (suite) => {
 
-    var seek = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            seek: function() {
-                if (!stream.available) this.skip();
-                if (stream.dynamic) this.skip();
-                // Seek the player before end
-                utils.log(NAME, 'Seek before end: ' + (stream.duration - SEEK_SHIFT));
-                return command.executeAsync(player.seek, [(stream.duration - SEEK_SHIFT), SEEK_TIMEOUT])
-                .then(function(seeked) {
-                    assert.isTrue(seeked);
-                });
-            }
+        before(async ({ remote }) => {
+            if (!stream.available || stream.dynamic) suite.skip();
+            utils.log(NAME, 'Load stream');
+            command = remote.get(intern.config.testPage);
+            await command.execute(player.loadStream, [stream]);
+            await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
         });
-    }
 
-    var ended = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            ended: function() {
-                if (!stream.available) this.skip();
-                if (stream.dynamic) this.skip();
-                // Wait for 'ended' event
-                return command.executeAsync(player.waitForEvent, ['playbackEnded', ENDED_TIMEOUT])
-                .then(function(ended) {
-                    assert.isTrue(ended);
-                });
-            }
+        test('seek', async () => {
+            // Seek the player before end
+            let seekTime = (stream.duration - constants.SEEK_END_SHIFT);
+            utils.log(NAME, 'Seek before end: ' + seekTime);
+            const seeked = await command.executeAsync(player.seek, [seekTime, constants.EVENT_TIMEOUT]);
+            assert.isTrue(seeked)
         });
-    };
 
-    return {
-        register: function (stream) {
-            load(stream);
-            seek(stream);
-            ended(stream);
-        }
-    }
+        test('ended', async () => {
+            // Wait for 'ended' event
+            const ended = await command.executeAsync(player.waitForEvent, ['playbackEnded', constants.SEEK_END_SHIFT + constants.EVENT_TIMEOUT]);
+            assert.isTrue(ended);
+        });
+    });
+};
 
-});

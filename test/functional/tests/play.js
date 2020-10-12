@@ -1,121 +1,56 @@
 /**
 PLAY:
-- for each stream:
-    - load test page
-    - load stream
-    - check playing state
-    - check if playback progressing
+- load test page
+- load stream
+- check playing state
+- check if playback progressing
 **/
-define([
-    'intern',
-    'intern!object',
-    'intern/chai!assert',
-    'require',
-    'test/functional/tests/scripts/player',
-    'test/functional/tests/scripts/utils'
-], function(intern, registerSuite, assert, require, player, utils) {
+const intern = require('intern').default;
+const { suite, before, test, after } = intern.getPlugin('interface.tdd');
+const { assert } = intern.getPlugin('chai');
 
-    // Suite name
-    var NAME = 'PLAY';
+const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.js');
+const player = require('./scripts/player.js');
 
-    var command = null;
+// Suite name
+const NAME = 'PLAY';
 
-    // Test constants
-    var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
+exports.register = function (stream) {
 
-    var load = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
+    suite(utils.testName(NAME, stream), (suite) => {
 
-            load: function() {
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'Load stream');
-                command = this.remote.get(require.toUrl(intern.config.testPage));
-                return command.execute(player.loadStream, [stream]);
-            }
-        })
-    };
+        before(async ({ remote }) => {
+            if (!stream.available) suite.skip();
+            utils.log(NAME, 'Load stream');
+            command = remote.get(intern.config.testPage);
+            await command.execute(player.loadStream, [stream]);
+        });
 
-    var play = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
+        test('play', async () => {
+            utils.log(NAME, 'Play');
+            const playing = await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
+            stream.available = playing;
+            assert.isTrue(playing);
+        });
 
-            play: function() {
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'Play');
-                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-                .then(function (playing) {
-                    stream.available = playing;
-                    return assert.isTrue(playing);
-                });
-            },
+        test('progress', async () => {
+            utils.log(NAME, 'Progress');
+            const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+            assert.isTrue(progressing);
+        });
 
-            progress: function() {
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'Progress');
-                return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
-                .then(function (progressing) {
-                    stream.available = progressing;
-                    return assert.isTrue(progressing);
+        after(async () => {
+            stream.dynamic = await command.execute(player.isDynamic);
+            stream.duration = await command.execute(player.getDuration);
+            stream.periods = [];
+            let streams = await command.execute(player.getStreams);
+            for(let i = 0; i < streams.length; i++ ) {
+                stream.periods.push({
+                    start: streams[i].start,
+                    duration: streams[i].duration
                 });
             }
         });
-    };
-
-    var getInfos = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            isDynamic: function() {
-                if (!stream.available) this.skip();
-                return command.execute(player.isDynamic)
-                .then(function (dynamic) {
-                    utils.log(NAME, 'dynamic: ' + dynamic);
-                    stream.dynamic = dynamic;
-                    return command.execute(player.getDVRWindowSize)
-                })
-                .then(function (dvrWindow) {
-                    if (dvrWindow > 0) {
-                        stream.dvrWindow = dvrWindow;
-                    }
-                });
-            },
-
-            getDuration: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                return command.execute(player.getDuration)
-                .then(function (duration) {
-                    utils.log(NAME, 'duration: ' + duration);
-                    stream.duration = duration;
-                });
-            },
-
-            getPeriods: function() {
-                if (!stream.available) {
-                    this.skip();
-                }
-                return command.execute(player.getStreams)
-                .then(function (streams) {
-                    utils.log(NAME, 'Nb periods: ' + streams.length);
-                    stream.periods = [];
-                    for(let i=0; i < streams.length; i++ ){
-                        stream.periods.push({start: streams[i].start});
-                    }
-                });
-            }
-        });
-    };
-
-
-    return {
-        register: function (stream) {
-            load(stream);
-            play(stream);
-            getInfos(stream);
-        }
-    }
-});
+    });
+}
