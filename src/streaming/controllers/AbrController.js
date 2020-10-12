@@ -535,8 +535,7 @@ function AbrController() {
                 }
             }
             return QUALITY_DEFAULT;
-        }
-        catch(e) {
+        } catch (e) {
             return QUALITY_DEFAULT;
         }
     }
