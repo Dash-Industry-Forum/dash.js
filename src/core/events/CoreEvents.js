@@ -72,6 +72,7 @@ class CoreEvents extends EventsBase {
         this.SOURCEBUFFER_REMOVE_COMPLETED = 'sourceBufferRemoveCompleted';
         this.STREAMS_COMPOSED = 'streamsComposed';
         this.STREAM_BUFFERING_COMPLETED = 'streamBufferingCompleted';
+        this.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT = 'streamSwitchCausedTimeAdjustment';
         this.STREAM_COMPLETED = 'streamCompleted';
         this.TEXT_TRACKS_QUEUE_INITIALIZED = 'textTracksQueueInitialized';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';

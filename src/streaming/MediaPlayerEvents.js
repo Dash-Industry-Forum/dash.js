@@ -305,6 +305,18 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_SEEKING = 'playbackSeeking';
 
         /**
+         * Sent when a seek operation within current period range begins
+         * @event MediaPlayerEvents#PLAYBACK_SEEKING
+         */
+        this.INNER_PERIOD_PLAYBACK_SEEKING = 'innerPeriodPlaybackSeeking';
+
+        /**
+         * Sent when a seek operation outside of current period range begins
+         * @event MediaPlayerEvents#PLAYBACK_SEEKING
+         */
+        this.OUTER_PERIOD_PLAYBACK_SEEKING = 'outerPeriodPlaybackSeeking';
+
+        /**
          * Sent when a seek operation has been asked.
          * @event MediaPlayerEvents#PLAYBACK_SEEK_ASKED
          */

@@ -164,7 +164,7 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
         if (representation.segmentAvailabilityRange.start > representation.segmentAvailabilityRange.end) {
             return false;
         }
-        // For dynamic manifests we check if the presentation start time + duration is included in tha availability window
+        // For dynamic manifests we check if the presentation start time + duration is included in the availability window
         const segmentEndTime = segment.presentationStartTime + segment.duration;
         const periodEndTime = voPeriod.start + voPeriod.duration;
 
@@ -181,6 +181,7 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     let duration,
         presentationStartTime,
         presentationEndTime;
+
 
     duration = representation.segmentDuration;
 

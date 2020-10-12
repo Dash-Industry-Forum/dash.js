@@ -198,33 +198,51 @@ function StreamController() {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
             });
+            preloadingStreams = [];
         }
 
-        if (seekingStream && seekingStream !== activeStream) {
-            const processedMediaTypes = {};
-            // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
-            const _initiateStreamSwitchAfterSeek = (e) => {
-                if (!e.mediaType) {
-                    return;
-                }
-                processedMediaTypes[e.mediaType] = true;
-                const streamProcessors = activeStream.getProcessors();
-                const unfinishedStreamProcessorsCount = streamProcessors.filter((sp) => {
-                    return !processedMediaTypes[sp.getType()];
-                }).length;
-
-                if (unfinishedStreamProcessorsCount === 0) {
-                    flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
-                    switchStream(seekingStream, activeStream, e.seekTime);
-                    eventBus.off(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
-                }
-            };
-            eventBus.on(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
-        } else {
-            flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
+        if (!seekingStream || seekingStream === activeStream) {
+            _handleInnerPeriodSeek(e);
+        } else if (seekingStream && seekingStream !== activeStream) {
+            _handleOuterPeriodSeek(e, seekingStream);
         }
 
         createPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    function _handleInnerPeriodSeek(e) {
+        eventBus.trigger(Events.INNER_PERIOD_PLAYBACK_SEEKING, {
+            streamId: e.streamId,
+            seekTime: e.seekTime
+        });
+        flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
+    }
+
+    function _handleOuterPeriodSeek(e, seekingStream) {
+        const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
+        eventBus.trigger(Events.OUTER_PERIOD_PLAYBACK_SEEKING, {
+            streamId: e.streamId,
+            seekTime
+        });
+        const processedMediaTypes = {};
+        // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
+        const _initiateStreamSwitchAfterSeek = (innerEvent) => {
+            if (!innerEvent.mediaType) {
+                return;
+            }
+            processedMediaTypes[innerEvent.mediaType] = true;
+            const streamProcessors = activeStream.getProcessors();
+            const unfinishedStreamProcessorsCount = streamProcessors.filter((sp) => {
+                return !processedMediaTypes[sp.getType()];
+            }).length;
+
+            if (unfinishedStreamProcessorsCount === 0) {
+                flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
+                switchStream(seekingStream, activeStream, seekTime);
+                eventBus.off(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
+            }
+        };
+        eventBus.on(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
     }
 
     function onGapCausedPlaybackSeek(e) {
@@ -590,7 +608,7 @@ function StreamController() {
         preloadingStreams = preloadingStreams.filter((s) => {
             return s.getId() !== activeStream.getId();
         });
-        playbackController.initialize(getActiveStreamInfo(), !!previousStream, seekTime);
+        playbackController.initialize(getActiveStreamInfo(), !!previousStream);
         if (videoModel.getElement()) {
             openMediaSource(seekTime, (previousStream === null), false, seamlessPeriodSwitch);
         } else {
@@ -670,10 +688,13 @@ function StreamController() {
         if (!initialPlayback) {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
-                if (seekTime === playbackController.getTime()) {
-                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime, streamId: activeStream.getId()});
-                } else {
+                if (seekTime !== playbackController.getTime()) {
                     playbackController.seek(seekTime);
+                } else if (!activeStream.getPreloaded()) {
+                    eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, {
+                        streamId: activeStream.getStreamInfo().id,
+                        seekTarget: seekTime
+                    });
                 }
             }
         }

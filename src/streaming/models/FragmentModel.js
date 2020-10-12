@@ -58,6 +58,7 @@ function FragmentModel(config) {
         eventBus.on(events.LOADING_COMPLETED, onLoadingCompleted, instance);
         eventBus.on(events.LOADING_DATA_PROGRESS, onLoadingInProgress, instance);
         eventBus.on(events.LOADING_ABANDONED, onLoadingAborted, instance);
+        eventBus.on(events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
     }
 
     function isFragmentLoaded(request) {
@@ -311,10 +312,19 @@ function FragmentModel(config) {
         loadingRequests = [];
     }
 
+    function onInnerPeriodPlaybackSeeking(e) {
+        if (streamId !== e.streamId) {
+            return;
+        }
+
+        executedRequests = [];
+    }
+
     function reset() {
         eventBus.off(events.LOADING_COMPLETED, onLoadingCompleted, this);
         eventBus.off(events.LOADING_DATA_PROGRESS, onLoadingInProgress, this);
         eventBus.off(events.LOADING_ABANDONED, onLoadingAborted, this);
+        eventBus.off(events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
 
         if (fragmentLoader) {
             fragmentLoader.reset();
@@ -336,6 +346,7 @@ function FragmentModel(config) {
         abortRequests: abortRequests,
         executeRequest: executeRequest,
         reset: reset,
+        resetInitialSettings,
         addExecutedRequest: addExecutedRequest
     };
 

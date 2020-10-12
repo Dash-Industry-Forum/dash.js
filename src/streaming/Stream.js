@@ -197,7 +197,7 @@ function Stream(config) {
         const errored = false;
         for (let i = 0; i < ln; i++) {
             let fragmentModel = streamProcessors[i].getFragmentModel();
-            fragmentModel.removeExecutedRequestsBeforeTime(getStartTime() + getDuration());
+            fragmentModel.resetInitialSettings();
             streamProcessors[i].reset(errored, keepBuffers);
         }
         streamProcessors = [];

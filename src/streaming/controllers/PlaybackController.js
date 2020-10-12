@@ -50,7 +50,6 @@ function PlaybackController() {
         videoModel,
         timelineConverter,
         streamSwitch,
-        streamSeekTime,
         wallclockTimeIntervalId,
         liveDelay,
         streamInfo,
@@ -74,7 +73,7 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(sInfo, periodSwitch, seekTime) {
+    function initialize(sInfo, periodSwitch) {
         streamInfo = sInfo;
 
         if (periodSwitch !== true) {
@@ -82,8 +81,6 @@ function PlaybackController() {
         } else {
             _initializeAfterStreamSwitch();
         }
-
-        streamSeekTime = seekTime;
     }
 
     function _initializeForFirstStream() {
@@ -119,67 +116,56 @@ function PlaybackController() {
     }
 
     function onStreamInitialized(e) {
-        // Seamless period switch
-        if (streamSwitch && isNaN(streamSeekTime)) return;
+        // We only call this function once when playback is started
+        if (streamSwitch) {
+            streamSwitch = false;
+            return;
+        }
 
         // Seek new stream in priority order:
-        // - at seek time (streamSeekTime) when switching period
         // - at start time provided in URI parameters
         // - at stream/period start time (for static streams) or live start time (for dynamic streams)
-        let startTime = streamSeekTime;
-        if (isNaN(startTime)) {
-            if (isDynamic) {
-                // For dynamic stream, start by default at (live edge - live delay)
-                startTime = e.liveStartTime;
-                // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
-                const dvrInfo = dashMetrics.getCurrentDVRInfo();
-                const dvrWindow = dvrInfo ? dvrInfo.range : null;
-                if (dvrWindow) {
-                    // #t shall be relative to period start
-                    const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, true);
-                    if (!isNaN(startTimeFromUri)) {
-                        logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                        startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
-                    }
-                }
-            } else {
-                // For static stream, start by default at period start
-                const streams = streamController.getStreams();
-                const firstStreamInfo = streams && streams.length > 0 ? streams[0].getStreamInfo() : streamInfo;
-                startTime = firstStreamInfo.start;
-                // If start time in URI, take max value between period start and time from URI (if in period range)
-                const startTimeFromUri = getStartTimeFromUriParameters(firstStreamInfo.start, false);
-                if (!isNaN(startTimeFromUri) && startTimeFromUri < (streamInfo.start + streamInfo.duration)) {
+        let startTime;
+        if (isDynamic) {
+            // For dynamic stream, start by default at (live edge - live delay)
+            startTime = e.liveStartTime;
+            // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
+            const dvrInfo = dashMetrics.getCurrentDVRInfo();
+            const dvrWindow = dvrInfo ? dvrInfo.range : null;
+            if (dvrWindow) {
+                // #t shall be relative to period start
+                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, true);
+                if (!isNaN(startTimeFromUri)) {
                     logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                    startTime = Math.max(startTime, startTimeFromUri);
+                    startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
                 }
+            }
+        } else {
+            // For static stream, start by default at period start
+            const streams = streamController.getStreams();
+            const firstStreamInfo = streams && streams.length > 0 ? streams[0].getStreamInfo() : streamInfo;
+            startTime = firstStreamInfo.start;
+            // If start time in URI, take max value between period start and time from URI (if in period range)
+            const startTimeFromUri = getStartTimeFromUriParameters(firstStreamInfo.start, false);
+            if (!isNaN(startTimeFromUri) && startTimeFromUri < (streamInfo.start + streamInfo.duration)) {
+                logger.info('Start time from URI parameters: ' + startTimeFromUri);
+                startTime = Math.max(startTime, startTimeFromUri);
             }
         }
 
         if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
-            // Trigger PLAYBACK_SEEKING event for controllers
-            eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: startTime,
-                streamId: streamInfo.id
-            });
             // Seek video model
-            seek(startTime, false, true);
-
-            const dvrInfo = dashMetrics.getCurrentDVRInfo();
-            const dvrWindow = dvrInfo ? dvrInfo.range : null;
-            const latency = dvrWindow ? dvrWindow.end - getTime() : NaN;
-            dashMetrics.updateManifestUpdateInfo({
-                latency: latency
-            });
+            seek(startTime, false, false);
         }
     }
 
-    function getTimeToStreamEnd() {
-        return parseFloat((getStreamEndTime() - getTime()).toFixed(5));
+    function getTimeToStreamEnd(sInfo = null) {
+        return parseFloat((getStreamEndTime(sInfo) - getTime()).toFixed(5));
     }
 
-    function getStreamEndTime() {
-        return streamInfo.start + streamInfo.duration;
+    function getStreamEndTime(sInfo) {
+        const refInfo = sInfo ? sInfo : streamInfo;
+        return refInfo.start + refInfo.duration;
     }
 
     function play() {
@@ -355,7 +341,6 @@ function PlaybackController() {
     function reset() {
         playOnceInitialized = false;
         streamSwitch = false;
-        streamSeekTime = NaN;
         liveDelay = 0;
         availabilityStartTime = 0;
         seekTarget = NaN;

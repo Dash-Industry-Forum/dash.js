@@ -101,12 +101,14 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
+        eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
+        eventBus.on(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, onStreamSwitchCausedTimeAdjustment, this);
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
     }
 
@@ -457,7 +459,10 @@ function ScheduleController(config) {
         }
     }
 
-    function onPlaybackSeeking(e) {
+    function onInnerPeriodPlaybackSeeking(e) {
+        if (streamId !== e.streamId) {
+            return;
+        }
         setSeekTarget(e.seekTime);
         setTimeToLoadDelay(0);
 
@@ -465,6 +470,16 @@ function ScheduleController(config) {
             start();
         }
 
+        if (!isFragmentProcessingInProgress) {
+            // No pending request, request next segment at seek target
+            startScheduleTimer(0);
+        } else {
+            // Abort current request
+            fragmentModel.abortRequests();
+        }
+    }
+
+    function onOuterPeriodPlaybackSeeking() {
         if (!isFragmentProcessingInProgress) {
             // No pending request, request next segment at seek target
             startScheduleTimer(0);
@@ -502,6 +517,12 @@ function ScheduleController(config) {
         return streamId;
     }
 
+    function onStreamSwitchCausedTimeAdjustment(e) {
+        if (streamId === e.streamId) {
+            seekTarget = e.seekTarget;
+        }
+    }
+
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         isFragmentProcessingInProgress = false;
@@ -531,13 +552,15 @@ function ScheduleController(config) {
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
+        eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
+        eventBus.off(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, onStreamSwitchCausedTimeAdjustment, this);
 
         stop();
         completeQualityChange(false);

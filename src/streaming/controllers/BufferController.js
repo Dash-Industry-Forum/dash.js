@@ -86,7 +86,6 @@ function BufferController(config) {
         isQuotaExceeded,
         initCache,
         seekTarget,
-        seekClearedBufferingCompleted,
         pendingPruningRanges,
         replacingBuffer,
         mediaChunk;
@@ -117,7 +116,8 @@ function BufferController(config) {
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
+        eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.on(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
@@ -220,7 +220,7 @@ function BufferController(config) {
         if (replacingBuffer) {
             mediaChunk = chunk;
             const ranges = buffer && buffer.getAllBufferRanges();
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > STALL_THRESHOLD) {
                 logger.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
@@ -354,13 +354,12 @@ function BufferController(config) {
     //**********************************************************************
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
-    function onPlaybackSeeking(e) {
+    function onInnerPeriodPlaybackSeeking(e) {
         if (streamInfo.id !== e.streamId) {
             return;
         }
         seekTarget = e.seekTime;
         if (isBufferingCompleted) {
-            seekClearedBufferingCompleted = true;
             isBufferingCompleted = false;
             //a seek command has occured, reset lastIndex value, it will be set next time that onStreamCompleted will be called.
             lastIndex = Number.POSITIVE_INFINITY;
@@ -370,6 +369,17 @@ function BufferController(config) {
             pruneAllSafely();
         } else {
             onPlaybackProgression();
+        }
+    }
+
+    function onOuterPeriodPlaybackSeeking(e) {
+        if (streamInfo.id !== e.streamId) {
+            return;
+        }
+
+        if (type !== Constants.FRAGMENTED_TEXT) {
+            // remove buffer after seeking operations
+            pruneAllSafely();
         }
     }
 
@@ -559,10 +569,8 @@ function BufferController(config) {
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
 
-        if (seekClearedBufferingCompleted && !isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd() - bufferLevel < STALL_THRESHOLD) {
-            seekClearedBufferingCompleted = false;
+        if (!isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel < STALL_THRESHOLD) {
             isBufferingCompleted = true;
-            logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
             logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
             triggerEvent(Events.BUFFERING_COMPLETED);
         }
@@ -765,7 +773,7 @@ function BufferController(config) {
 
         logger.info('Track change asked');
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > STALL_THRESHOLD) {
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
             }
@@ -865,7 +873,6 @@ function BufferController(config) {
         isBufferingCompleted = false;
         isPruningInProgress = false;
         isQuotaExceeded = false;
-        seekClearedBufferingCompleted = false;
         bufferLevel = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
@@ -892,7 +899,8 @@ function BufferController(config) {
         eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
+        eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
+        eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.off(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);

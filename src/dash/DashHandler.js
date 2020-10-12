@@ -32,10 +32,10 @@ import FragmentRequest from '../streaming/vo/FragmentRequest';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
 import {
+    getTimeBasedSegment,
     replaceIDForTemplate,
-    unescapeDollarsInTemplate,
     replaceTokenForTemplate,
-    getTimeBasedSegment
+    unescapeDollarsInTemplate
 } from './utils/SegmentsUtils';
 
 import SegmentsController from './controllers/SegmentsController';
@@ -169,8 +169,7 @@ function DashHandler(config) {
 
     function getInitRequest(mediaInfo, representation) {
         if (!representation) return null;
-        const request = generateInitRequest(mediaInfo, representation, getType());
-        return request;
+        return generateInitRequest(mediaInfo, representation, getType());
     }
 
     function setMimeType(newMimeType) {
@@ -267,7 +266,7 @@ function DashHandler(config) {
 
         const idx = segmentIndex;
         const keepIdx = options ? options.keepIdx : false;
-        const ignoreIsFinished = (options && options.ignoreIsFinished) ? true : false;
+        const ignoreIsFinished = !!(options && options.ignoreIsFinished);
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
