@@ -36,7 +36,6 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
-import MediaController from './MediaController';
 
 function ScheduleController(config) {
 
@@ -174,7 +173,7 @@ function ScheduleController(config) {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
                         logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
-                        replacingBuffer = mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
+                        replacingBuffer = mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
                         if (replacingBuffer && bufferController.replaceBuffer) {
                             bufferController.replaceBuffer();
                         }

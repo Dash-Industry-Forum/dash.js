@@ -81,10 +81,10 @@ describe('MediaController', function () {
             let switchmode = mediaController.getSwitchMode('test');
             expect(switchmode).to.not.exist; // jshint ignore:line
 
-            mediaController.setSwitchMode('test', MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+            mediaController.setSwitchMode('test', Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
             switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.equal(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
         });
     });
 
