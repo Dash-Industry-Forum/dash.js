@@ -1548,11 +1548,11 @@ function MediaPlayer() {
     /**
      * This method sets the current track switch mode. Available options are:
      *
-     * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
+     * Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
      * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
      * Defers to fastSwitchEnabled for placement of new data. Default for video)
      *
-     * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
+     * Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
      *
      * @param {MediaType} type
@@ -1572,10 +1572,10 @@ function MediaPlayer() {
      * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
-     * MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+     * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
-     * MediaController.TRACK_SELECTION_MODE_WIDEST_RANGE
+     * Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
      * this mode makes the player select the track with a widest range of bitrates
      *
      * @param {string} mode
@@ -1939,7 +1939,8 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            domStorage: domStorage
+            domStorage: domStorage,
+            settings: settings
         });
 
         streamController.setConfig({

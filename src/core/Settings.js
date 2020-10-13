@@ -235,7 +235,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
  * or stall in playback.
  * @property {boolean} [flushBufferAtTrackSwitch=false]
- * When enabled, after a track switch and in case buffer is being replaced (see MEdiaPlayer.setTrackSwitchModeFor(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE)),
+ * When enabled, after a track switch and in case buffer is being replaced (see MEdiaPlayer.setTrackSwitchModeFor(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE)),
  * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
@@ -417,6 +417,8 @@ function Settings() {
             lastBitrateCachingInfo: {enabled: true, ttl: 360000},
             lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
             cacheLoadThresholds: {video: 50, audio: 5},
+            trackSwitchMode: {audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE, video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE},
+            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
