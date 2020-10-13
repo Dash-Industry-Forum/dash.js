@@ -79,6 +79,16 @@ describe('MediaController', function () {
             expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
         });
 
+        it('should not set switch mode if type is not supported', function () {
+            let switchmode = mediaController.getSwitchMode('test');
+            expect(switchmode).to.not.exist; // jshint ignore:line
+
+            mediaController.setSwitchMode('test', Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+
+            switchmode = mediaController.getSwitchMode('test');
+            expect(switchmode).to.not.exist; // jshint ignore:line
+        });
+
         it('should set and get switch mode for video', function () {
             let switchmode = mediaController.getSwitchMode('video');
             expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
