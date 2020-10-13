@@ -291,7 +291,7 @@ function StreamProcessor(config) {
 
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
-        if (settings.get().streaming.useAppendWindow) {
+        if (settings.get().streaming.useAppendWindow && !isBufferingCompleted()) {
             bufferController.updateAppendWindow();
         }
     }

@@ -34,7 +34,7 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 
 const GAP_HANDLER_INTERVAL = 100;
-const THRESHOLD_TO_STALLS = 10;
+const THRESHOLD_TO_STALLS = 30;
 const GAP_THRESHOLD = 0.1;
 
 function GapController() {
@@ -154,23 +154,23 @@ function GapController() {
         }
     }
 
-    function getNextRangeStartTime(currentTime) {
+    function getNextRangeIndex(ranges, currentTime) {
         try {
-            const ranges = videoModel.getBufferRange();
+
             if (!ranges || (ranges.length <= 1 && currentTime > 0)) {
-                return null;
+                return NaN;
             }
-            let nextRangeStartTime = null;
+            let nextRangeIndex = NaN;
             let j = 0;
 
-            while (!nextRangeStartTime && j < ranges.length) {
+            while (isNaN(nextRangeIndex) && j < ranges.length) {
                 const rangeEnd = j > 0 ? ranges.end(j - 1) : 0;
                 if (currentTime < ranges.start(j) && rangeEnd - currentTime < GAP_THRESHOLD) {
-                    nextRangeStartTime = ranges.start(j);
+                    nextRangeIndex = j;
                 }
                 j += 1;
             }
-            return nextRangeStartTime;
+            return nextRangeIndex;
 
         } catch (e) {
             return null;
@@ -206,24 +206,26 @@ function GapController() {
     function jumpGap(currentTime, playbackStalled = false) {
         const smallGapLimit = settings.get().streaming.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
-        let nextRangeStartTime;
+        const ranges = videoModel.getBufferRange();
+        let nextRangeIndex;
         let seekToPosition = NaN;
         let jumpToStreamEnd = false;
 
 
         // Get the range just after current time position
-        nextRangeStartTime = getNextRangeStartTime(currentTime);
+        nextRangeIndex = getNextRangeIndex(ranges, currentTime);
 
-        if (nextRangeStartTime && nextRangeStartTime > 0) {
-            const gap = nextRangeStartTime - currentTime;
+        if (!isNaN(nextRangeIndex)) {
+            const start = ranges.start(nextRangeIndex);
+            const gap = start - currentTime;
             if (gap > 0 && (gap <= smallGapLimit || jumpLargeGaps)) {
-                seekToPosition = nextRangeStartTime;
+                seekToPosition = start;
             }
         }
 
         // Playback has stalled before period end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit ) {
+        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit) {
             seekToPosition = parseFloat(playbackController.getStreamEndTime().toFixed(5));
             jumpToStreamEnd = true;
         }
@@ -231,9 +233,9 @@ function GapController() {
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime) {
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
-                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, {seekTime: seekToPosition});
+                playbackController.seek(seekToPosition, true, true);
             } else {
-                logger.warn(`Jumping gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
+                logger.warn(`Jumping gap starting at ${ranges.end(nextRangeIndex - 1)} and ending at ${seekToPosition}. Jumping by: ${seekToPosition - currentTime}`);
                 playbackController.seek(seekToPosition, true, true);
             }
             lastGapJumpPosition = seekToPosition;

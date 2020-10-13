@@ -162,9 +162,6 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     function updateTimestampOffset(MSETimeOffset) {
         if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
             waitForUpdateEnd(() => {
-                if (MSETimeOffset < 0) {
-                    MSETimeOffset += 0.001;
-                }
                 buffer.timestampOffset = MSETimeOffset;
             });
         }
@@ -184,10 +181,12 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 if (sInfo && !isNaN(sInfo.start)) {
                     appendWindowStart = sInfo.start;
                 }
-                buffer.appendWindowStart = 0;
-                buffer.appendWindowEnd = appendWindowEnd;
-                buffer.appendWindowStart = appendWindowStart;
-                logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+                if (buffer.appendWindowEnd !== appendWindowEnd || buffer.appendWindowStart !== buffer.appendWindowStart) {
+                    buffer.appendWindowStart = 0;
+                    buffer.appendWindowEnd = appendWindowEnd;
+                    buffer.appendWindowStart = appendWindowStart;
+                    logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+                }
             } catch (e) {
                 logger.warn(`Failed to set append window`);
             }
