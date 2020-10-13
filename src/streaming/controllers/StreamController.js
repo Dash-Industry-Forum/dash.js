@@ -144,7 +144,7 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
+        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
@@ -161,7 +161,7 @@ function StreamController() {
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
+        eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
         eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
@@ -513,7 +513,7 @@ function StreamController() {
         return isPeriodSwitchInProgress;
     }
 
-    function onEnded(e) {
+    function onPlaybackEnded(e) {
         if (!activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
@@ -699,7 +699,7 @@ function StreamController() {
             }
         }
 
-        if (autoPlay || !initialPlayback) {
+        if (autoPlay && initialPlayback) {
             playbackController.play();
         }
 
