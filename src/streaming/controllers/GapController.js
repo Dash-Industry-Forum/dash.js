@@ -206,7 +206,7 @@ function GapController() {
     function jumpGap(currentTime, playbackStalled = false) {
         const smallGapLimit = settings.get().streaming.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
-        let nextRangeStartTime = null;
+        let nextRangeStartTime;
         let seekToPosition = NaN;
         let jumpToStreamEnd = false;
 
@@ -223,7 +223,7 @@ function GapController() {
 
         // Playback has stalled before period end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && ((timeToStreamEnd < smallGapLimit) || streamController.hasStreamFinishedBuffering(streamController.getActiveStream()))) {
+        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && timeToStreamEnd < smallGapLimit ) {
             seekToPosition = parseFloat(playbackController.getStreamEndTime().toFixed(5));
             jumpToStreamEnd = true;
         }
