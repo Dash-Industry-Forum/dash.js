@@ -31,6 +31,8 @@ describe('MediaController', function () {
 
     afterEach(function () {
         mediaController.reset();
+        mediaController.setSwitchMode('video', Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+        mediaController.setSwitchMode('audio', Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
         mediaController = null;
     });
 
@@ -68,23 +70,37 @@ describe('MediaController', function () {
 
     describe('Switch Mode', function () {
         it('should not set switch mode if mode is not supported', function () {
-            let switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist; // jshint ignore:line
+            let switchmode = mediaController.getSwitchMode('video');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
 
-            mediaController.setSwitchMode('test', 'unsupported');
+            mediaController.setSwitchMode('video', 'unsupported');
 
-            switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist; // jshint ignore:line
+            switchmode = mediaController.getSwitchMode('video');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
         });
 
-        it('should set and get switch mode', function () {
-            let switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist; // jshint ignore:line
+        it('should set and get switch mode for video', function () {
+            let switchmode = mediaController.getSwitchMode('video');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
 
-            mediaController.setSwitchMode('test', Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+            mediaController.setSwitchMode('video', Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
-            switchmode = mediaController.getSwitchMode('test');
+            switchmode = mediaController.getSwitchMode('video');
+
             expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+
+        });
+
+        it('should set and get switch mode for audio', function () {
+            let switchmode = mediaController.getSwitchMode('audio');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+
+            mediaController.setSwitchMode('audio', Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+
+            switchmode = mediaController.getSwitchMode('audio');
+
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+
         });
     });
 
