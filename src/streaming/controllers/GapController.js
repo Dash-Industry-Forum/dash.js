@@ -233,7 +233,9 @@ function GapController() {
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime) {
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
-                playbackController.seek(seekToPosition, true, true);
+                const nextStream = streamController.getStreamForTime(seekToPosition);
+                const internalSeek = !!nextStream.getPreloaded();
+                playbackController.seek(seekToPosition, true, internalSeek);
             } else {
                 logger.warn(`Jumping gap starting at ${ranges.end(nextRangeIndex - 1)} and ending at ${seekToPosition}. Jumping by: ${seekToPosition - currentTime}`);
                 playbackController.seek(seekToPosition, true, true);
