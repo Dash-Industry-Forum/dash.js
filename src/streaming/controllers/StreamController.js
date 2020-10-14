@@ -248,6 +248,7 @@ function StreamController() {
         if (unfinishedStreamProcessorsCount === 0) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
             switchStream(dataForStreamSwitchAfterSeek.seekingStream, activeStream, dataForStreamSwitchAfterSeek.seekTime);
+            dataForStreamSwitchAfterSeek = null;
         }
     }
 
