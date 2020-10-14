@@ -154,7 +154,6 @@ function PlaybackController() {
         }
 
         if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
-            // Seek video model
             seek(startTime, false, false);
         }
     }

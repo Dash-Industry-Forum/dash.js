@@ -98,7 +98,8 @@ function StreamController() {
         supportsChangeType,
         settings,
         firstLicenseIsFetched,
-        preBufferingCheckInProgress;
+        preBufferingCheckInProgress,
+        dataForStreamSwitchAfterSeek;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -152,6 +153,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.on(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
     }
 
     function unRegisterEvents() {
@@ -169,6 +171,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.off(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
     }
 
     function onKeySessionUpdated() {
@@ -219,32 +222,36 @@ function StreamController() {
     }
 
     function _handleOuterPeriodSeek(e, seekingStream) {
+        dataForStreamSwitchAfterSeek = null;
         const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
+
         eventBus.trigger(Events.OUTER_PERIOD_PLAYBACK_SEEKING, {
             streamId: e.streamId,
             seekTime
         });
-        const processedMediaTypes = {};
-        // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
-        const _initiateStreamSwitchAfterSeek = (innerEvent) => {
-            if (!innerEvent.mediaType) {
-                return;
-            }
-            processedMediaTypes[innerEvent.mediaType] = true;
-            const streamProcessors = activeStream.getProcessors();
-            const unfinishedStreamProcessorsCount = streamProcessors.filter((sp) => {
-                return !processedMediaTypes[sp.getType()];
-            }).length;
 
-            if (unfinishedStreamProcessorsCount === 0) {
-                flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
-                switchStream(seekingStream, activeStream, seekTime);
-                eventBus.off(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
-            }
-        };
-        eventBus.on(Events.BUFFER_CLEARED, _initiateStreamSwitchAfterSeek, this);
+        dataForStreamSwitchAfterSeek = {};
+        dataForStreamSwitchAfterSeek.processedMediaTypes = {};
+        dataForStreamSwitchAfterSeek.seekingStream = seekingStream;
+        dataForStreamSwitchAfterSeek.seekTime = seekTime;
     }
 
+    function _initiateStreamSwitchAfterSeek(e)  {
+        // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
+        if (!e.mediaType || !dataForStreamSwitchAfterSeek || !dataForStreamSwitchAfterSeek.seekingStream) {
+            return;
+        }
+        dataForStreamSwitchAfterSeek.processedMediaTypes[e.mediaType] = true;
+        const streamProcessors = activeStream.getProcessors();
+        const unfinishedStreamProcessorsCount = streamProcessors.filter((sp) => {
+            return !dataForStreamSwitchAfterSeek.processedMediaTypes[sp.getType()];
+        }).length;
+
+        if (unfinishedStreamProcessorsCount === 0) {
+            flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
+            switchStream(dataForStreamSwitchAfterSeek.seekingStream, activeStream, dataForStreamSwitchAfterSeek.seekTime);
+        }
+    }
     function onGapCausedPlaybackSeek(e) {
         const nextStream = getNextStream();
         flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
@@ -1148,6 +1155,7 @@ function StreamController() {
         preBufferingCheckInProgress = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
+        dataForStreamSwitchAfterSeek = null;
     }
 
     function reset() {

@@ -379,7 +379,9 @@ function BufferController(config) {
 
         if (type !== Constants.FRAGMENTED_TEXT) {
             // remove buffer after seeking operations
-            pruneAllSafely();
+            pruneAllSafely(true);
+        } else {
+            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, {mediaType: type});
         }
     }
 
@@ -388,10 +390,13 @@ function BufferController(config) {
     }
 
     // Prune full buffer but what is around current time position
-    function pruneAllSafely() {
+    function pruneAllSafely(pruneForStreamSwitch = false) {
         buffer.waitForUpdateEnd(() => {
             const ranges = getAllRangesWithSafetyFactor();
             if (!ranges || ranges.length === 0) {
+                if (pruneForStreamSwitch) {
+                    eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, {mediaType: type});
+                }
                 onPlaybackProgression();
             }
             clearBuffers(ranges);
@@ -731,6 +736,7 @@ function BufferController(config) {
                 hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(),
                 quotaExceeded: isQuotaExceeded
             });
+            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, {mediaType: type});
         }
     }
 
