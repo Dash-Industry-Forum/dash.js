@@ -45,7 +45,7 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 
-const STALL_THRESHOLD = 0.5;
+const STALL_THRESHOLD = 0.05;
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
