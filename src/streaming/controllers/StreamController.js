@@ -222,21 +222,19 @@ function StreamController() {
     }
 
     function _handleOuterPeriodSeek(e, seekingStream) {
-        dataForStreamSwitchAfterSeek = null;
         const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
+        dataForStreamSwitchAfterSeek = {};
+        dataForStreamSwitchAfterSeek.processedMediaTypes = {};
+        dataForStreamSwitchAfterSeek.seekingStream = seekingStream;
+        dataForStreamSwitchAfterSeek.seekTime = seekTime;
 
         eventBus.trigger(Events.OUTER_PERIOD_PLAYBACK_SEEKING, {
             streamId: e.streamId,
             seekTime
         });
-
-        dataForStreamSwitchAfterSeek = {};
-        dataForStreamSwitchAfterSeek.processedMediaTypes = {};
-        dataForStreamSwitchAfterSeek.seekingStream = seekingStream;
-        dataForStreamSwitchAfterSeek.seekTime = seekTime;
     }
 
-    function _initiateStreamSwitchAfterSeek(e)  {
+    function _initiateStreamSwitchAfterSeek(e) {
         // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
         if (!e.mediaType || !dataForStreamSwitchAfterSeek || !dataForStreamSwitchAfterSeek.seekingStream) {
             return;
@@ -252,6 +250,7 @@ function StreamController() {
             switchStream(dataForStreamSwitchAfterSeek.seekingStream, activeStream, dataForStreamSwitchAfterSeek.seekTime);
         }
     }
+
     function onGapCausedPlaybackSeek(e) {
         const nextStream = getNextStream();
         flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
@@ -303,7 +302,7 @@ function StreamController() {
     function startPlaybackEndedTimerInterval() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
-                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
+                if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
                     eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
