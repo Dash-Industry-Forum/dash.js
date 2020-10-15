@@ -150,6 +150,7 @@ declare namespace dashjs {
                 audio?: TrackSwitchMode;
             }
             selectionModeForInitialTrack?: TrackSelectionMode
+            fragmentRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?:                       number;
                 'XLinkExpansion'?:            number;
