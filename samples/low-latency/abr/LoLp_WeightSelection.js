@@ -89,7 +89,7 @@ class DynamicWeightsSelector {
                 let weightedSwitch = wt * neuron.state.switch;
 
                 let totalQoE = this.qoeEvaluator.calculateSingleUseQoe(neuron.bitrate, weightedRebuffer, weightedLatency, playbackRate);
-                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(currentLatency, nextBuffer, rebuffer, deltaLatency)){
+                if ((maxQoE == null || totalQoE > maxQoE) && this.checkConstraints(currentLatency, nextBuffer, deltaLatency)){
                     maxQoE = totalQoE;
                     winnerWeights = weightVector;
                     winnerBitrate = neuron.bitrate;
@@ -106,7 +106,7 @@ class DynamicWeightsSelector {
         return winnerWeights;
     }
 
-    checkConstraints(nextLatency, nextBuffer, rebuffer, deltaLatency) {
+    checkConstraints(nextLatency, nextBuffer, deltaLatency) {
         // A1
         // disabled till we find a better way of estimating latency
         // fails for all with current value
@@ -117,15 +117,8 @@ class DynamicWeightsSelector {
         }
 
         // A2
-
         if (nextBuffer < this.bufferMin) {
             // console.log('[DynamicWeightsSelector] Failed A2!');
-            return false;
-        }
-
-        // A3
-        if (rebuffer>0) {
-            // console.log('[DynamicWeightsSelector] Failed A3!');
             return false;
         }
         
