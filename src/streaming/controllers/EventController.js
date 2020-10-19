@@ -121,6 +121,7 @@ function EventController() {
                     let event = values[i];
                     inlineEvents[event.id] = event;
                     logger.debug('Add inline event with id ' + event.id);
+                    _startEvent(event.id, event, values);
                 }
             }
             logger.debug(`Added ${values.length} inline events`);
@@ -145,6 +146,7 @@ function EventController() {
                     }
                     inbandEvents[event.id] = event;
                     logger.debug('Add inband event with id ' + event.id);
+                    _startEvent(event.id, event, values);
                 } else {
                     logger.debug('Repeated event with id ' + event.id);
                 }
@@ -207,6 +209,7 @@ function EventController() {
     function _onEventTimer() {
         try {
             if (!eventHandlingInProgress) {
+                eventHandlingInProgress = true;
                 const currentVideoTime = playbackController.getTime();
                 let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
 
@@ -218,8 +221,8 @@ function EventController() {
                 _removeEvents();
 
                 lastEventTimerCall = currentVideoTime;
+                eventHandlingInProgress = false;
             }
-            eventHandlingInProgress = false;
         } catch (e) {
             eventHandlingInProgress = false;
         }
@@ -310,8 +313,10 @@ function EventController() {
     function _startEvent(eventId, event, events) {
         try {
             const currentVideoTime = playbackController.getTime();
+            const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
+            const isEventStart = Math.floor(currentVideoTime) === calculatedPresentationTimeInSeconds;
 
-            if (event.duration > 0) {
+            if (isEventStart && event.duration > 0) {
                 activeEvents[eventId] = event;
             }
 
@@ -325,10 +330,10 @@ function EventController() {
                 _sendCallbackRequest(event.messageData);
             } else {
                 logger.debug(`Starting event ${eventId} at ${currentVideoTime}`);
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: event });
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { isEventStart });
             }
 
-            delete events[eventId];
+            if (isEventStart) delete events[eventId];
         } catch (e) {
         }
     }

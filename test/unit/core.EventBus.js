@@ -1,4 +1,5 @@
 import EventBus from '../../src/core/EventBus';
+import { EVENT_MODE_ON_START, EVENT_MODE_ON_RECEIVE } from '../../src/streaming/MediaPlayerEvents';
 
 const chai = require('chai');
 const sinon = require('sinon');
@@ -31,9 +32,24 @@ describe('EventBus', function () {
         const spy2 = sinon.spy();
 
         eventBus.on('EVENT_TEST', spy);
-        eventBus.on('EVENT_TEST', spy2, this, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on('EVENT_TEST', spy2, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
 
         eventBus.trigger('EVENT_TEST', {});
+
+        assert.equal(spy.calledOnce, true);
+        assert.equal(spy2.calledOnce, true);
+        assert.equal(spy2.calledBefore(spy), true);
+    });
+
+    it('should respect mode parameter in the on function in order to trigger events according to isEventStart option in trigger function', function () {
+        const spy = sinon.spy();
+        const spy2 = sinon.spy();
+
+        eventBus.on('EVENT_TEST', spy, null, { mode: EVENT_MODE_ON_START });
+        eventBus.on('EVENT_TEST', spy2, null, { mode: EVENT_MODE_ON_RECEIVE });
+
+        eventBus.trigger('EVENT_TEST', {}, { isEventStart: false });
+        eventBus.trigger('EVENT_TEST', {}, { isEventStart: true });
 
         assert.equal(spy.calledOnce, true);
         assert.equal(spy2.calledOnce, true);

@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from './FactoryMaker';
+import { EVENT_MODE_ON_START, EVENT_MODE_ON_RECEIVE } from '../streaming/MediaPlayerEvents';
 
 const EVENT_PRIORITY_LOW = 0;
 const EVENT_PRIORITY_HIGH = 5000;
@@ -37,7 +38,7 @@ function EventBus() {
 
     let handlers = {};
 
-    function on(type, listener, scope, priority = EVENT_PRIORITY_LOW) {
+    function on(type, listener, scope, options = {}) {
 
         if (!type) {
             throw new Error('event type cannot be null or undefined');
@@ -46,6 +47,9 @@ function EventBus() {
             throw new Error('listener must be a function: ' + listener);
         }
 
+        let priority = options.priority || EVENT_PRIORITY_LOW;
+        let mode = options.mode || EVENT_MODE_ON_START;
+
         if (getHandlerIdx(type, listener, scope) >= 0) return;
 
         handlers[type] = handlers[type] || [];
@@ -53,7 +57,8 @@ function EventBus() {
         const handler = {
             callback: listener,
             scope: scope,
-            priority: priority
+            priority: priority,
+            mode
         };
 
         if (scope && scope.getStreamId) {
@@ -85,20 +90,23 @@ function EventBus() {
     function trigger(type, payload = {}, filters = {}) {
         if (!type || !handlers[type]) return;
 
+        let isEventStart = true;
+        if (typeof filters.isEventStart === 'boolean') isEventStart = filters.isEventStart;
+
         payload = payload || {};
 
         if (payload.hasOwnProperty('type')) throw new Error('\'type\' is a reserved word for event dispatching');
 
         payload.type = type;
 
-        handlers[type] = handlers[type].filter((item) => item);
-        const eventHandlers = handlers[type].filter(item => {
-            if (filters.streamId && item.streamId && item.streamId !== filters.streamId) return false;
-            if (filters.mediaType && item.mediaType && item.mediaType !== filters.mediaType) return false;
-            return true;
-        });
+        const mode = isEventStart ? EVENT_MODE_ON_START : EVENT_MODE_ON_RECEIVE;
 
-        eventHandlers.forEach(handler => handler && handler.callback.call(handler.scope, payload));
+        handlers[type]
+            .filter((item) => item)
+            .filter(item => !(filters.streamId && item.streamId && item.streamId !== filters.streamId))
+            .filter(item => !(filters.mediaType && item.mediaType && item.mediaType !== filters.mediaType))
+            .filter(handler => handler.mode === mode)
+            .forEach(handler => handler && handler.callback.call(handler.scope, payload));
     }
 
     function getHandlerIdx(type, listener, scope) {
