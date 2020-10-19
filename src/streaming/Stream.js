@@ -659,6 +659,10 @@ function Stream(config) {
             playbackController.setInitialLiveEdgeCalculated(true);
         }
 
+        eventBus.trigger(Events.STREAM_SWITCHED, {
+            streamInfo
+        });
+
         // (Re)start ScheduleController:
         // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
         // - in case stream is complete but a track switch has been requested

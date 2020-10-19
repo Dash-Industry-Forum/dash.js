@@ -686,8 +686,7 @@ function BufferController(config) {
         }
 
         const range = pendingPruningRanges.shift();
-        logger.debug('Removing buffer from:', range.start, 'to', range.end);
-        console.debug(`${type}: Removing buffer from: ${range.start} to ${range.end}`);
+        logger.debug(`${type}: Removing buffer from: ${range.start} to ${range.end}`);
         isPruningInProgress = true;
 
         // If removing buffer ahead current playback position, update maxAppendedIndex
@@ -777,6 +776,9 @@ function BufferController(config) {
         if (!ranges) return;
 
         logger.info('Track change asked');
+        if (settings.get().streaming.useAppendWindow) {
+            updateAppendWindow();
+        }
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > STALL_THRESHOLD) {
                 isBufferingCompleted = false;

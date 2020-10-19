@@ -51,6 +51,7 @@ function MediaController() {
         initialSettings,
         selectionMode,
         switchMode,
+        lastSelectedTracks,
         domStorage;
 
     const validTrackSwitchModes = [
@@ -74,7 +75,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function checkInitialMediaSettingsForType(type, streamInfo) {
-        let settings = getInitialSettings(type);
+        let settings = lastSelectedTracks[type] || getInitialSettings(type);
         const tracksForType = getTracksFor(type, streamInfo);
         const tracks = [];
 
@@ -97,7 +98,7 @@ function MediaController() {
             setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks));
+                setTrack(selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
             } else {
                 setTrack(tracks[0]);
             }
@@ -217,6 +218,7 @@ function MediaController() {
                 settings.audioChannelConfiguration = settings.audioChannelConfiguration[0];
             }
 
+            lastSelectedTracks[type] = settings;
             domStorage.setSavedMediaSettings(type, settings);
         }
     }
@@ -345,6 +347,7 @@ function MediaController() {
      */
     function reset() {
         tracks = {};
+        lastSelectedTracks = {};
         resetInitialSettings();
         resetSwitchMode();
     }
@@ -363,7 +366,7 @@ function MediaController() {
         return notEmpty ? settings : null;
     }
 
-    function matchSettings(settings, track) {
+    function matchSettings(settings, track, isTrackActive = false) {
         const matchLang = !settings.lang || (track.lang.match(settings.lang));
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
@@ -376,7 +379,7 @@ function MediaController() {
             return item === settings.audioChannelConfiguration;
         })[0];
 
-        return (matchLang && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
+        return (matchLang && matchViewPoint && (matchRole || track.type === Constants.AUDIO && isTrackActive) && matchAccessibility && matchAudioChannelConfiguration);
     }
 
     function resetSwitchMode() {

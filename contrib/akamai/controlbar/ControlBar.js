@@ -436,7 +436,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.exitFullscreen) {
-           document.exitFullscreen(); 
+           document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {
@@ -500,7 +500,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         startedPlaying = false;
     };
 
-    var onStreamInitialized = function (/*e*/) {
+    var onStreamSwitched = function (/*e*/) {
         updateDuration();
         var contentFunc;
         //Bitrate Menu
@@ -874,7 +874,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
             player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
-            player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+            player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamSwitched, this);
             player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
             player.on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
 
@@ -964,7 +964,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
             player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
             player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
-            player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+            player.off(dashjs.MediaPlayer.events.STREAM_SWITCHED, onStreamSwitched, this);
             player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
             player.off(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
 
