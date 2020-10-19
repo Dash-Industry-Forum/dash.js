@@ -466,18 +466,11 @@ function PlaybackController() {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.error) {
-            updateCurrentTime();
-            return;
-        }
-
         const representationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
         const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
 
         if (info === null || streamInfo.id !== info.id) return;
         streamInfo = info;
-
-
     }
 
     function onCanPlay() {
@@ -608,9 +601,14 @@ function PlaybackController() {
 
         // Updates playback time for paused dynamic streams
         // (video element doesn't call timeupdate when the playback is paused)
-        if (getIsDynamic() && isPaused()) {
-            updateLivePlaybackTime();
+        if (getIsDynamic()) {
+            if (isPaused()) {
+                updateLivePlaybackTime();
+            } else {
+                updateCurrentTime();
+            }
         }
+
     }
 
     function onPlaybackProgression() {
