@@ -174,8 +174,8 @@ function Stream(config) {
     function activate(mediaSource, previousBuffers) {
         if (!isStreamActivated) {
             let result;
-            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             if (!getPreloaded()) {
+                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
                 result = initializeMedia(mediaSource, previousBuffers);
             } else {
                 initializeAfterPreload();
@@ -382,12 +382,30 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) {
+        let mediaInfo = e.newMediaInfo;
+
+        if (!streamInfo || !mediaInfo) {
             return;
         }
-        let mediaInfo = e.newMediaInfo;
-        let manifest = manifestModel.getValue();
 
+        if (e.newMediaInfo.streamInfo.id === streamInfo.id) {
+            // hanlde track change of active period here
+            _handleTrackChangeOfActiveStream(e, mediaInfo);
+        } else if (e.newMediaInfo.streamInfo.id !== streamInfo.id && preloaded) {
+            // handle track change of non active period here
+            _handleTrackChangeOfPreloadingStream(mediaInfo);
+        }
+    }
+
+    function _handleTrackChangeOfPreloadingStream(mediaInfo) {
+        let processor = getProcessorForMediaInfo(mediaInfo);
+        if (!processor) {
+            return;
+        }
+    }
+
+    function _handleTrackChangeOfActiveStream(e, mediaInfo) {
+        let manifest = manifestModel.getValue();
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
         let processor = getProcessorForMediaInfo(mediaInfo);

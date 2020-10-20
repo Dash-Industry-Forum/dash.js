@@ -770,7 +770,10 @@ function BufferController(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (e.newMediaInfo.streamInfo.id !== streamInfo.id || e.newMediaInfo.type !== type) return;
+        if (e.newMediaInfo.streamInfo.id !== streamInfo.id || e.newMediaInfo.type !== type) {
+            // Handle track change of preloading period here
+            return;
+        }
 
         const ranges = buffer && buffer.getAllBufferRanges();
         if (!ranges) return;

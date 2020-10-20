@@ -154,7 +154,6 @@ function StreamController() {
         eventBus.on(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
     }
 
     function unRegisterEvents() {
@@ -173,7 +172,6 @@ function StreamController() {
         eventBus.off(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     function onKeySessionUpdated() {
@@ -183,24 +181,6 @@ function StreamController() {
     function onWallclockTimeUpdated() {
         if (adapter.getIsDynamic()) {
             addDVRMetric();
-        }
-    }
-
-    function _onCurrentTrackChanged(e) {
-        try {
-            // Reset the preloading streams and clear their buffered content. We should consider resetting only the corresponding StreamProcessor of the preloading streams
-            if (!e.newMediaInfo || !e.newMediaInfo.type || (e.newMediaInfo.type !== Constants.AUDIO && e.newMediaInfo.type !== Constants.VIDEO)) {
-                return;
-            }
-
-            if (preloadingStreams && preloadingStreams.length > 0) {
-                preloadingStreams.forEach((s) => {
-                    s.deactivate(true);
-                });
-                preloadingStreams = [];
-            }
-        } catch (e) {
-            logger.error(e);
         }
     }
 
