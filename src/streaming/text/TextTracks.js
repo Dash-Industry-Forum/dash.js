@@ -57,7 +57,8 @@ function TextTracks() {
         fullscreenAttribute,
         displayCCOnTop,
         previousISDState,
-        topZIndex;
+        topZIndex,
+        resizeObserver;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -537,7 +538,14 @@ function TextTracks() {
 
         if (track && track.renderingType === 'html') {
             checkVideoSize.call(this, track, true);
-            videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+            if (window.ResizeObserver) {
+                resizeObserver = new window.ResizeObserver(() => {
+                    checkVideoSize.call(this, track, true);
+                });
+                resizeObserver.observe(videoModel.getElement());
+            } else {
+                videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+            }
         }
     }
 
@@ -592,6 +600,10 @@ function TextTracks() {
         if (videoSizeCheckInterval) {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
+        }
+        if (resizeObserver && videoModel) {
+            resizeObserver.unobserve(videoModel.getElement());
+            resizeObserver = null;
         }
         currentTrackIdx = -1;
         clearCaptionContainer.call(this);
