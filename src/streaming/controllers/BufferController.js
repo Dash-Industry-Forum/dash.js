@@ -771,7 +771,6 @@ function BufferController(config) {
 
     function onCurrentTrackChanged(e) {
         if (e.newMediaInfo.streamInfo.id !== streamInfo.id || e.newMediaInfo.type !== type) {
-            // Handle track change of preloading period here
             return;
         }
 
@@ -779,11 +778,14 @@ function BufferController(config) {
         if (!ranges) return;
 
         logger.info('Track change asked');
-        if (settings.get().streaming.useAppendWindow) {
-            updateAppendWindow();
-        }
+
         if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > STALL_THRESHOLD) {
+
+                if (settings.get().streaming.useAppendWindow) {
+                    updateAppendWindow();
+                }
+
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
             }

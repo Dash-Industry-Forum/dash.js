@@ -154,6 +154,7 @@ function StreamController() {
         eventBus.on(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
     }
 
     function unRegisterEvents() {
@@ -172,6 +173,7 @@ function StreamController() {
         eventBus.off(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
     }
 
     function onKeySessionUpdated() {
@@ -250,6 +252,19 @@ function StreamController() {
             switchStream(dataForStreamSwitchAfterSeek.seekingStream, activeStream, dataForStreamSwitchAfterSeek.seekTime);
             dataForStreamSwitchAfterSeek = null;
         }
+    }
+
+    function _onCurrentTrackChanged(e) {
+        // Track was changed in non active stream. No need to do anything, this only happens when a stream starts preloading
+        if (e.newMediaInfo.streamInfo.id !== activeStream.getId()) {
+            return;
+        }
+
+        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of
+        // specific AdaptationSets yet we need to remove everything
+        preloadingStreams.forEach((ps) => {
+            ps.deactivate(true);
+        });
     }
 
     function onGapCausedPlaybackSeek(e) {

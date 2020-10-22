@@ -88,7 +88,7 @@ function MediaController() {
 
         if (settings) {
             tracksForType.forEach(function (track) {
-                if (matchSettings(settings, track)) {
+                if (matchSettings(settings, track, !!lastSelectedTracks[type])) {
                     tracks.push(track);
                 }
             });
@@ -379,7 +379,7 @@ function MediaController() {
             return item === settings.audioChannelConfiguration;
         })[0];
 
-        return (matchLang && matchViewPoint && (matchRole || track.type === Constants.AUDIO && isTrackActive) && matchAccessibility && matchAudioChannelConfiguration);
+        return (matchLang && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
     }
 
     function resetSwitchMode() {

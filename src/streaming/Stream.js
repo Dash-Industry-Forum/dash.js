@@ -382,30 +382,13 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
+        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) {
+            return;
+        }
+
         let mediaInfo = e.newMediaInfo;
-
-        if (!streamInfo || !mediaInfo) {
-            return;
-        }
-
-        if (e.newMediaInfo.streamInfo.id === streamInfo.id) {
-            // hanlde track change of active period here
-            _handleTrackChangeOfActiveStream(e, mediaInfo);
-        } else if (e.newMediaInfo.streamInfo.id !== streamInfo.id && preloaded) {
-            // handle track change of non active period here
-            _handleTrackChangeOfPreloadingStream(mediaInfo);
-        }
-    }
-
-    function _handleTrackChangeOfPreloadingStream(mediaInfo) {
-        let processor = getProcessorForMediaInfo(mediaInfo);
-        if (!processor) {
-            return;
-        }
-    }
-
-    function _handleTrackChangeOfActiveStream(e, mediaInfo) {
         let manifest = manifestModel.getValue();
+
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
         let processor = getProcessorForMediaInfo(mediaInfo);
