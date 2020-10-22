@@ -134,6 +134,7 @@ declare namespace dashjs {
             liveCatchUpMinDrift?: number;
             liveCatchUpMaxDrift?: number;
             liveCatchUpPlaybackRate?: number;
+            waitingOffsetIfAstIsGreaterThanNow?: number;
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
                 ttl?: number;

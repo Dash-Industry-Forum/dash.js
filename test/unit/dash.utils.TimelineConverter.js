@@ -512,6 +512,28 @@ describe('TimelineConverter', function () {
                     clock.restore();
                 });
 
+                it('with single period AST larger than now', function () {
+                    const clock = sinon.useFakeTimers(new Date().getTime());
+                    const tsbd = 30;
+
+                    streamOneMock.setStreamInfo({
+                        start: 0,
+                        duration: Number.POSITIVE_INFINITY
+                    });
+                    streamOneMock.setRegularPeriods([{
+                        mpd: {
+                            availabilityStartTime: new Date(new Date().getTime() + tsbd * 1000),
+                            timeShiftBufferDepth: tsbd
+                        }
+                    }]);
+                    streams.push(streamOneMock);
+
+                    const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
+                    expect(range.start).to.be.equal(0);
+                    expect(range.end).to.be.equal(- 30);
+                    clock.restore();
+                });
+
                 it('with single period start larger than now', function () {
                     const clock = sinon.useFakeTimers(new Date().getTime());
                     const tsbd = 30;

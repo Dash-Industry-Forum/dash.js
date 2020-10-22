@@ -99,7 +99,8 @@ function StreamController() {
         settings,
         firstLicenseIsFetched,
         preBufferingCheckInProgress,
-        dataForStreamSwitchAfterSeek;
+        dataForStreamSwitchAfterSeek,
+        waitForPlaybackStartTimeout;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -838,6 +839,21 @@ function StreamController() {
         // Add the DVR window so we can calculate the right starting point
         addDVRMetric();
 
+        // If the start is in the future we need to wait
+        const dvrRange = dashMetrics.getCurrentDVRInfo().range;
+
+        if (dvrRange.end < dvrRange.start) {
+            if (waitForPlaybackStartTimeout) {
+                clearTimeout(waitForPlaybackStartTimeout);
+            }
+            const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + settings.get().streaming.waitingOffsetIfAstIsGreaterThanNow) * 1000, 2147483647);
+            logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
+            waitForPlaybackStartTimeout = setTimeout(() => {
+                _initializeForFirstStream(streamsInfo);
+            }, waitingTime);
+            return;
+        }
+
         if (adapter.getIsDynamic() && streams.length) {
             // Compute and set live delay
             const manifestInfo = streamsInfo[0].manifestInfo;
@@ -1171,6 +1187,7 @@ function StreamController() {
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         dataForStreamSwitchAfterSeek = null;
+        waitForPlaybackStartTimeout = null;
     }
 
     function reset() {
