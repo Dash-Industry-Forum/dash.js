@@ -72,7 +72,7 @@ describe('TimelineConverter', function () {
 
                 const range = timelineConverter.calcAvailabilityWindow(representation, false);
                 expect(range.start).to.be.equal(representation.adaptation.period.start);
-                expect(range.end).to.be.equal(representation.adaptation.period.duration);
+                expect(range.end).to.be.equal(Number.POSITIVE_INFINITY);
             });
 
             it('with SegmentTimeline and shouldCalculateFromTimeline set to false', function () {
@@ -80,7 +80,7 @@ describe('TimelineConverter', function () {
                 timelineRepresentation.adaptation.period.duration = 100;
                 const range = timelineConverter.calcAvailabilityWindow(representation, false);
                 expect(range.start).to.be.equal(representation.adaptation.period.start);
-                expect(range.end).to.be.equal(representation.adaptation.period.duration);
+                expect(range.end).to.be.equal(Number.POSITIVE_INFINITY);
             });
 
             it('with SegmentTimeline and shouldCalculateFromTimeline set to true', function () {
@@ -93,7 +93,7 @@ describe('TimelineConverter', function () {
                 timelineRepresentation.adaptation.period.duration = 100;
                 const range = timelineConverter.calcAvailabilityWindow(representation, false);
                 expect(range.start).to.be.equal(representation.adaptation.period.start);
-                expect(range.end).to.be.equal(representation.adaptation.period.duration);
+                expect(range.end).to.be.equal(Number.POSITIVE_INFINITY);
             });
 
         });
@@ -141,7 +141,7 @@ describe('TimelineConverter', function () {
 
                     const range = timelineConverter.calcAvailabilityWindow(representation, true);
                     expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(30);
+                    expect(range.end).to.be.equal(representation.adaptation.period.mpd.timeShiftBufferDepth );
                     clock.restore();
                 });
 
@@ -165,7 +165,7 @@ describe('TimelineConverter', function () {
 
                     const range = timelineConverter.calcAvailabilityWindow(representation, true);
                     expect(range.start).to.be.equal(20);
-                    expect(range.end).to.be.equal(40);
+                    expect(range.end).to.be.equal(representation.adaptation.period.mpd.timeShiftBufferDepth);
                     clock.restore();
                 });
 
@@ -210,7 +210,7 @@ describe('TimelineConverter', function () {
                     representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.availabilityTimeOffset = 100;
+                    representation.availabilityTimeOffset = 60;
 
                     const range = timelineConverter.calcAvailabilityWindow(representation, true);
                     expect(range.start).to.be.equal(10);
@@ -261,7 +261,7 @@ describe('TimelineConverter', function () {
 
                     const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
                     expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(30);
+                    expect(range.end).to.be.equal(50);
                     clock.restore();
                 });
 
@@ -285,7 +285,7 @@ describe('TimelineConverter', function () {
 
                     const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
                     expect(range.start).to.be.equal(20);
-                    expect(range.end).to.be.equal(40);
+                    expect(range.end).to.be.equal(50);
                     clock.restore();
                 });
 

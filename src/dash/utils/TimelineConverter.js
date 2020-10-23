@@ -190,7 +190,7 @@ function TimelineConverter() {
 
     function _calcAvailabilityWindowForStaticManifest(voRepresentation) {
         const voPeriod = voRepresentation.adaptation.period;
-        return {start: voPeriod.start, end: voPeriod.start + voPeriod.duration};
+        return {start: voPeriod.start, end: Number.POSITIVE_INFINITY};
     }
 
     function _calcAvailabilityWindowForDynamicManifest(voRepresentation) {
@@ -202,7 +202,7 @@ function TimelineConverter() {
         const end = now + endOffset;
 
         range.start = Math.max(start, voPeriod.start);
-        range.end = Math.min(end, voPeriod.start + voPeriod.duration);
+        range.end = end;
 
         return range;
     }
@@ -217,7 +217,7 @@ function TimelineConverter() {
         const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
 
         range.start = Math.max(start, voPeriod.start);
-        range.end = Math.min(end, voPeriod.start + voPeriod.duration);
+        range.end = end;
 
         return range;
     }
