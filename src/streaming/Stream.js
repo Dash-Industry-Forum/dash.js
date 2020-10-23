@@ -205,6 +205,7 @@ function Stream(config) {
         isMediaInitialized = false;
         setPreloaded(false);
         setPreloadingScheduled(false);
+        setIsEndedEventSignaled(false);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 

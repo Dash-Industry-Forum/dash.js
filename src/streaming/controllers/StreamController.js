@@ -616,6 +616,8 @@ function StreamController() {
         });
 
         let seamlessPeriodSwitch = false;
+        activeStream = stream;
+
         if (previousStream) {
             seamlessPeriodSwitch = canSourceBuffersBeReused(stream, previousStream);
             previousStream.deactivate(seamlessPeriodSwitch);
@@ -627,7 +629,6 @@ function StreamController() {
         seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
         logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${seamlessPeriodSwitch}`);
 
-        activeStream = stream;
         preloadingStreams = preloadingStreams.filter((s) => {
             return s.getId() !== activeStream.getId();
         });
