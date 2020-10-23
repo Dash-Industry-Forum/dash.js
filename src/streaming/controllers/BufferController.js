@@ -298,7 +298,7 @@ function BufferController(config) {
             // (and previous buffered data removed) then seek stream to current time
             const currentTime = playbackController.getTime();
             logger.debug('AppendToBuffer seek target should be ' + currentTime);
-            triggerEvent(Events.SEEK_TARGET, {time: currentTime, mediaType: type, streamId: streamInfo.id});
+            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
         if (appendedBytesInfo) {
@@ -306,8 +306,7 @@ function BufferController(config) {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,
-                bufferedRanges: ranges,
-                mediaType: type
+                bufferedRanges: ranges
             });
         }
     }
@@ -472,9 +471,10 @@ function BufferController(config) {
         return isNaN(seekTarget) ? playbackController.getTime() : seekTarget;
     }
 
-    function onPlaybackProgression() {
+    function onPlaybackProgression(e) {
         if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
-            updateBufferLevel();
+            const streamId = e && e.streamId ? e.streamId : null;
+            updateBufferLevel(streamId);
         }
     }
 
@@ -551,11 +551,13 @@ function BufferController(config) {
         return length;
     }
 
-    function updateBufferLevel() {
+    function updateBufferLevel(streamId = null) {
         if (playbackController) {
             const tolerance = !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : NaN;
             bufferLevel = getBufferLength(getWorkingTime() || 0, tolerance);
-            triggerEvent(Events.BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
+            if (!streamId || streamId === streamInfo.id) {
+                triggerEvent(Events.BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
+            }
             checkIfSufficientBuffer();
         }
     }
@@ -704,8 +706,10 @@ function BufferController(config) {
 
         logger.debug('onRemoved buffer from:', e.from, 'to', e.to);
 
-        const ranges = buffer.getAllBufferRanges();
-        showBufferRanges(ranges);
+        if (e.streamId === streamInfo.id) {
+            const ranges = buffer.getAllBufferRanges();
+            showBufferRanges(ranges);
+        }
 
         if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;
@@ -713,14 +717,14 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            triggerEvent(Events.SEEK_TARGET, {time: e.from, mediaType: type, streamId: streamInfo.id});
+            triggerEvent(Events.SEEK_TARGET, {time: e.from});
         }
 
         if (isPruningInProgress) {
             clearNextRange();
         } else {
             if (!replacingBuffer) {
-                updateBufferLevel();
+                updateBufferLevel(streamInfo.id);
             } else {
                 replacingBuffer = false;
                 if (mediaChunk) {
@@ -731,7 +735,6 @@ function BufferController(config) {
                 from: e.from,
                 to: e.to,
                 unintended: e.unintended,
-                mediaType: type,
                 hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(),
                 quotaExceeded: isQuotaExceeded
             });

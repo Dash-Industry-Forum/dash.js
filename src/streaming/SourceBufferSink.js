@@ -205,6 +205,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 waitForUpdateEnd(function () {
                     eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                         buffer: sourceBufferSink,
+                        streamId: mediaInfo.streamInfo.id,
                         from: start,
                         to: end,
                         unintended: false
@@ -213,6 +214,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             } catch (err) {
                 eventBus.trigger(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
                     buffer: sourceBufferSink,
+                    streamId: mediaInfo.streamInfo.id,
                     from: start,
                     to: end,
                     unintended: false,

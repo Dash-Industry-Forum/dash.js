@@ -209,7 +209,10 @@ describe('SourceBufferSink', function () {
         it('should remove data from buffer', function (done) {
 
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo: {
+                    streamId: 'dummyStreamId'
+                }
             };
 
             function onAppend() {

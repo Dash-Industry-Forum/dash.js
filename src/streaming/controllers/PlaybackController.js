@@ -533,7 +533,8 @@ function PlaybackController() {
         if (streamInfo) {
             eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, {
                 timeToEnd: getTimeToStreamEnd(),
-                time: getTime()
+                time: getTime(),
+                streamId: streamInfo.id
             });
         }
     }
@@ -547,7 +548,7 @@ function PlaybackController() {
     }
 
     function onPlaybackProgress() {
-        eventBus.trigger(Events.PLAYBACK_PROGRESS);
+        eventBus.trigger(Events.PLAYBACK_PROGRESS, {streamId: streamInfo.id});
     }
 
     function onPlaybackRateChanged() {
