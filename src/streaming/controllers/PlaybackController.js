@@ -73,6 +73,11 @@ function PlaybackController() {
         reset();
     }
 
+    /**
+     * Initializes the PlaybackController. This function is called whenever the stream is switched.
+     * @param {object} sInfo
+     * @param {boolean} periodSwitch
+     */
     function initialize(sInfo, periodSwitch) {
         streamInfo = sInfo;
 
@@ -83,6 +88,10 @@ function PlaybackController() {
         }
     }
 
+    /**
+     * Initializes the PlaybackController when the first stream is to be played.
+     * @private
+     */
     function _initializeForFirstStream() {
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
@@ -111,10 +120,19 @@ function PlaybackController() {
         }
     }
 
+    /**
+     * Initializes the PlaybackController after the stream is switched. This will only happen with multiperiod MPDs.
+     * @private
+     */
     function _initializeAfterStreamSwitch() {
         streamSwitch = true;
     }
 
+    /**
+     * Called once a stream has been intialized. We only use this function once after the first stream has been initialized to seek to the right start time.
+     * When a streamswitch is performed we do nothing here.
+     * @param {object} e
+     */
     function onStreamInitialized(e) {
         // We only call this function once when playback is started
         if (streamSwitch) {
@@ -452,7 +470,7 @@ function PlaybackController() {
     }
 
     function updateCurrentTime() {
-        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
+        if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking()) return;
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
