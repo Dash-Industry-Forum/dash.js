@@ -103,18 +103,45 @@ function GapController() {
     }
 
     function registerEvents() {
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, this);
+        eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
     }
 
     function unregisterEvents() {
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, this);
+        eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
     }
 
-    function onBytesAppended() {
+    function _onPlaybackSeeking() {
+        if (jumpTimeoutHandler) {
+            clearTimeout(jumpTimeoutHandler);
+            jumpTimeoutHandler = null;
+        }
+    }
+
+    function _onBytesAppended() {
         if (!gapHandlerInterval) {
             startGapHandler();
+        }
+    }
+
+    function _onWallclockTimeUpdated(/*e*/) {
+        if (!_shouldCheckForGaps()) {
+            return;
+        }
+
+        wallclockTicked++;
+        if (wallclockTicked >= THRESHOLD_TO_STALLS) {
+            const currentTime = playbackController.getTime();
+            if (lastPlaybackTime === currentTime) {
+                jumpGap(currentTime, true);
+            } else {
+                lastPlaybackTime = currentTime;
+                lastGapJumpPosition = NaN;
+            }
+            wallclockTicked = 0;
         }
     }
 
@@ -136,24 +163,6 @@ function GapController() {
         return settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
             (!playbackController.isSeeking() || streamController.hasStreamFinishedBuffering(streamController.getActiveStream())) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
             !streamController.getHasMediaOrIntialisationError() && !_isTrackSwitchInProgess();
-    }
-
-    function onWallclockTimeUpdated(/*e*/) {
-        if (!_shouldCheckForGaps()) {
-            return;
-        }
-
-        wallclockTicked++;
-        if (wallclockTicked >= THRESHOLD_TO_STALLS) {
-            const currentTime = playbackController.getTime();
-            if (lastPlaybackTime === currentTime) {
-                jumpGap(currentTime, true);
-            } else {
-                lastPlaybackTime = currentTime;
-                lastGapJumpPosition = NaN;
-            }
-            wallclockTicked = 0;
-        }
     }
 
     function getNextRangeIndex(ranges, currentTime) {
@@ -240,6 +249,7 @@ function GapController() {
                 const internalSeek = nextStream && !!nextStream.getPreloaded();
 
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
+                console.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
                 playbackController.seek(seekToPosition, true, internalSeek);
             } else {
                 const isDynamic = playbackController.getIsDynamic();
@@ -249,6 +259,7 @@ function GapController() {
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
                     logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
+                    console.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }
