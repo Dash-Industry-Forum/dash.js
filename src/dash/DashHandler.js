@@ -155,7 +155,7 @@ function DashHandler(config) {
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
         request.range = representation.range;
-        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime + period.duration, representation, isDynamicManifest);
+        request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, isDynamicManifest);
         request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, representation, isDynamicManifest);
         request.quality = representation.index;
         request.mediaInfo = mediaInfo;
@@ -391,10 +391,6 @@ function DashHandler(config) {
         }
 
         if (segments.length > 0) {
-            representation.segmentAvailabilityRange = {
-                start: segments[0].presentationStartTime,
-                end: segments[segments.length - 1].presentationStartTime
-            };
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
         }

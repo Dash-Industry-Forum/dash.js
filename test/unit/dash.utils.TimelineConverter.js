@@ -1,10 +1,6 @@
-import EventBus from '../../src/core/EventBus';
 import TimelineConverter from '../../src/dash/utils/TimelineConverter';
-import Events from '../../src/core/events/Events';
-
 import SpecHelper from './helpers/SpecHelper';
 import VoHelper from './helpers/VOHelper';
-import DashConstants from '../../src/dash/constants/DashConstants';
 import Settings from '../../src/core/Settings';
 import StreamMock from './mocks/StreamMock';
 
@@ -16,7 +12,6 @@ describe('TimelineConverter', function () {
     const testType = 'video';
     const voHelper = new VoHelper();
     const specHelper = new SpecHelper();
-    const eventBus = EventBus(context).getInstance();
     const timelineConverter = TimelineConverter(context).getInstance();
     const settings = Settings(context).getInstance();
     let representation;
@@ -49,187 +44,124 @@ describe('TimelineConverter', function () {
         expect(timelineConverter.calcPresentationTimeFromWallTime(wallClock, representation.adaptation.period)).to.be.equal(expectedValue);
     });
 
-    describe('should calculate availability window for', () => {
+    describe('should calcAvailabilityStartTimeFromPresentationTime() for a segment and ', () => {
 
-        describe('a static MPD', () => {
+        describe('a static MPD and ', () => {
 
             before(() => {
-                representation.adaptation.period.mpd.manifest.type = 'static';
-                timelineRepresentation.adaptation.period.mpd.manifest.type = 'static';
+                settings.update({
+                    streaming: {
+                        calcSegmentAvailabilityWindowFromTimeline: false
+                    }
+                });
             });
 
             beforeEach(() => {
-                settings.update({
-                    streaming: {
-                        calcSegmentAvailabilityRangeFromTimeline: false
-                    }
-                });
+                representation.adaptation.period.mpd.manifest.type = 'static';
+
             });
 
-            it('with SegmentTemplate', function () {
+            it('an init segment', function () {
                 representation.adaptation.period.start = 0;
                 representation.adaptation.period.duration = 100;
+                const presentationStartTime = representation.adaptation.period.start;
 
-                const range = timelineConverter.calcAvailabilityWindow(representation, false);
-                expect(range.start).to.be.equal(representation.adaptation.period.start);
-                expect(range.end).to.be.equal(Number.POSITIVE_INFINITY);
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, false);
+                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
 
-            it('with SegmentTimeline and shouldCalculateFromTimeline set to false', function () {
-                timelineRepresentation.adaptation.period.start = 0;
-                timelineRepresentation.adaptation.period.duration = 100;
-                const range = timelineConverter.calcAvailabilityWindow(representation, false);
-                expect(range.start).to.be.equal(representation.adaptation.period.start);
-                expect(range.end).to.be.equal(Number.POSITIVE_INFINITY);
+            it('an init segment and period@start > 0', function () {
+                representation.adaptation.period.start = 10;
+                representation.adaptation.period.duration = 100;
+                const presentationStartTime = representation.adaptation.period.start;
+
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, false);
+                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
 
-            it('with SegmentTimeline and shouldCalculateFromTimeline set to true', function () {
-                settings.update({
-                    streaming: {
-                        calcSegmentAvailabilityRangeFromTimeline: true
-                    }
-                });
-                timelineRepresentation.adaptation.period.start = 0;
-                timelineRepresentation.adaptation.period.duration = 100;
-                const range = timelineConverter.calcAvailabilityWindow(representation, false);
-                expect(range.start).to.be.equal(representation.adaptation.period.start);
-                expect(range.end).to.be.equal(Number.POSITIVE_INFINITY);
+            it('media segment with presentationEndTime inside period boundary and period start set to 0', function () {
+                representation.adaptation.period.start = 0;
+                representation.adaptation.period.duration = 100;
+                const presentationEndTime = 8;
+
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, false);
+                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
             });
+
+            it('media segment with presentationEndTime inside period boundary and period start > 0', function () {
+                representation.adaptation.period.start = 10;
+                representation.adaptation.period.duration = 100;
+                const presentationEndTime = 20;
+
+                const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, false);
+                expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
+            });
+
 
         });
 
-        describe('a dynamic MPD', () => {
+        describe('a dynamic MPD and ', () => {
 
             before(() => {
-                representation.adaptation.period.mpd.manifest.type = 'dynamic';
-                timelineRepresentation.adaptation.period.mpd.manifest.type = 'dynamic';
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityRangeFromTimeline: false
+                        calcSegmentAvailabilityWindowFromTimeline: false
                     }
                 });
             });
 
-            beforeEach(function (done) {
-                setTimeout(() => {
-                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {offset: 0});
-                    done();
-                }, specHelper.getExecutionDelay());
+            beforeEach(function () {
+                representation.adaptation.period.mpd.manifest.type = 'dynamic';
             });
 
-            it('should set isTimeSyncCompleted', function () {
-                expect(timelineConverter.isTimeSyncCompleted()).to.be.ok; // jshint ignore:line
-            });
 
-            describe('with SegmentTemplate', function () {
+            describe('SegmentTemplate and ', function () {
 
-                it('with period duration matching tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
+                it('an init segment', function () {
                     representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationStartTime = representation.adaptation.period.start;
 
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, true);
+                    expect(ast.getTime()).to.be.equal(new Date(representation.adaptation.period.mpd.availabilityStartTime).getTime());
                 });
 
-                it('with period duration smaller than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    representation.adaptation.period.start = 0;
-                    representation.adaptation.period.duration = 30;
-
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(representation.adaptation.period.mpd.timeShiftBufferDepth );
-                    clock.restore();
-                });
-
-                it('with period duration greater than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    representation.adaptation.period.start = 0;
-                    representation.adaptation.period.duration = 80;
-
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
-                });
-
-                it('with period start greater 0 and duration smaller than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    representation.adaptation.period.start = 20;
-                    representation.adaptation.period.duration = 20;
-
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(20);
-                    expect(range.end).to.be.equal(representation.adaptation.period.mpd.timeShiftBufferDepth);
-                    clock.restore();
-                });
-
-                it('with period start greater 0 and duration greater than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    representation.adaptation.period.start = 20;
-                    representation.adaptation.period.duration = 100;
-
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(20);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
-                });
-
-                it('with period start out of the availability window', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    representation.adaptation.period.start = 100;
-                    representation.adaptation.period.duration = 20;
-
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.end).to.be.below(range.start);
-                    clock.restore();
-                });
-
-                it('with period infinite duration ', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    representation.adaptation.period.start = 10;
-                    representation.adaptation.period.duration = Number.POSITIVE_INFINITY;
-                    representation.segmentInfoType = DashConstants.SEGMENT_TEMPLATE;
-
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(10);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
-                });
-
-                it('with an ATO present', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                it('an init segment and period@start > 0', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.availabilityTimeOffset = 60;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationStartTime = representation.adaptation.period.start;
 
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(10);
-                    expect(range.end).to.be.equal(110);
-                    clock.restore();
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationStartTime);
+                    expect(ast.getTime()).to.be.equal(targetDate.getTime());
                 });
 
-                it('with an ATO present but not covering the whole period', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                it('a media segment and period@start > 0', function () {
                     representation.adaptation.period.start = 10;
                     representation.adaptation.period.duration = 100;
-                    representation.availabilityTimeOffset = 40;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const range = timelineConverter.calcAvailabilityWindow(representation, true);
-                    expect(range.start).to.be.equal(10);
-                    expect(range.end).to.be.equal(90);
-                    clock.restore();
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime);
+                    expect(ast.getTime()).to.be.equal(targetDate.getTime());
                 });
+
+                it('a media segment and period@start > 0 and availabilityTimeOffset > 0', function () {
+                    representation.adaptation.period.start = 10;
+                    representation.adaptation.period.duration = 100;
+                    representation.availabilityTimeOffset = 10;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationEndTime = representation.adaptation.period.start + 8;
+
+                    const ast = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime - representation.availabilityTimeOffset);
+                    expect(ast.getTime()).to.be.equal(targetDate.getTime());
+                });
+
 
             });
 
@@ -238,122 +170,149 @@ describe('TimelineConverter', function () {
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityRangeFromTimeline: true
+                            calcSegmentAvailabilityWindowFromTimeline: true
                         }
                     });
                 });
+            });
+        });
+    });
 
-                it('with period duration matching tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+    describe('should calcAvailabilityEndTimeFromPresentationTime() for a segment and ', () => {
 
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
+        describe('a static MPD and ', () => {
+
+            before(() => {
+                settings.update({
+                    streaming: {
+                        calcSegmentAvailabilityWindowFromTimeline: false
+                    }
+                });
+            });
+
+            beforeEach(() => {
+                representation.adaptation.period.mpd.manifest.type = 'static';
+            });
+
+            it('an init segment', function () {
+                representation.adaptation.period.start = 0;
+                representation.adaptation.period.duration = 100;
+                const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.start;
+
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
+            });
+
+            it('an init segment and period@start > 0', function () {
+                representation.adaptation.period.start = 10;
+                representation.adaptation.period.duration = 100;
+                const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.start;
+
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
+            });
+
+            it('media segment with presentationEndTime inside period boundary and period start set to 0', function () {
+                representation.adaptation.period.start = 0;
+                representation.adaptation.period.duration = 100;
+                const presentationEndTime = 8;
+
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
+            });
+
+            it('media segment with presentationEndTime inside period boundary and period start > 0', function () {
+                representation.adaptation.period.start = 10;
+                representation.adaptation.period.duration = 100;
+                const presentationEndTime = 20;
+
+                const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, false);
+                expect(aet).to.be.equal(representation.adaptation.period.mpd.availabilityEndTime);
+            });
+
+
+        });
+
+        describe('a dynamic MPD and ', () => {
+
+            before(() => {
+                settings.update({
+                    streaming: {
+                        calcSegmentAvailabilityWindowFromTimeline: false
+                    }
+                });
+            });
+
+            beforeEach(function () {
+                representation.adaptation.period.mpd.manifest.type = 'dynamic';
+            });
+
+
+            describe('SegmentTemplate and ', function () {
+
+                it('an init segment', function () {
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.duration;
+
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
-                it('with period duration smaller than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 0;
-                    timelineRepresentation.adaptation.period.duration = 30;
+                it('an init segment and period@start > 0', function () {
+                    representation.adaptation.period.start = 10;
+                    representation.adaptation.period.duration = 100;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationEndTime = representation.adaptation.period.start + representation.adaptation.period.duration;
 
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
-                it('with period duration greater than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 0;
-                    timelineRepresentation.adaptation.period.duration = 80;
+                it('a media segment and period@start > 0', function () {
+                    representation.adaptation.period.start = 10;
+                    representation.adaptation.period.duration = 100;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
-                it('with period start greater 0 and duration smaller than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 20;
-                    timelineRepresentation.adaptation.period.duration = 20;
+                it('a media segment and period@start > 0 and availabilityTimeOffset > 0', function () {
+                    representation.adaptation.period.start = 10;
+                    representation.adaptation.period.duration = 100;
+                    representation.availabilityTimeOffset = 10;
+                    representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
+                    const presentationEndTime = representation.adaptation.period.start + 8;
 
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(20);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
+                    const aet = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, true);
+                    const targetDate = new Date(representation.adaptation.period.mpd.availabilityStartTime);
+                    targetDate.setSeconds(targetDate.getSeconds() + presentationEndTime + representation.adaptation.period.mpd.timeShiftBufferDepth);
+                    expect(aet.getTime()).to.be.equal(targetDate.getTime());
                 });
 
-                it('with period start greater 0 and duration greater than tsbd', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 20;
-                    timelineRepresentation.adaptation.period.duration = 100;
 
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(20);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
-                });
+            });
 
-                it('with period start out of the availability window', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 100;
-                    timelineRepresentation.adaptation.period.duration = 20;
+            describe('with SegmentTimeline and shouldCalculateFromTimeline is true', function () {
 
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.end).to.be.below(range.start);
-                    clock.restore();
-                });
-
-                it('with period infinite duration ', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 10;
-                    timelineRepresentation.adaptation.period.duration = Number.POSITIVE_INFINITY;
-
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(10);
-                    expect(range.end).to.be.equal(50);
-                    clock.restore();
-                });
-
-                it('with an ATO present', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 10;
-                    timelineRepresentation.adaptation.period.duration = 100;
-                    timelineRepresentation.availabilityTimeOffset = 100;
-
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(10);
-                    expect(range.end).to.be.equal(60);
-                    clock.restore();
-                });
-
-                it('with an ATO present but not covering the whole period', function () {
-                    const clock = sinon.useFakeTimers(new Date().getTime());
-                    timelineRepresentation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
-                    timelineRepresentation.adaptation.period.start = 10;
-                    timelineRepresentation.adaptation.period.duration = 100;
-                    timelineRepresentation.availabilityTimeOffset = 4;
-
-                    const range = timelineConverter.calcAvailabilityWindow(timelineRepresentation, true);
-                    expect(range.start).to.be.equal(10);
-                    expect(range.end).to.be.equal(54);
-                    clock.restore();
+                before(() => {
+                    settings.update({
+                        streaming: {
+                            calcSegmentAvailabilityWindowFromTimeline: true
+                        }
+                    });
                 });
             });
         });
-
-
     });
+
 
     describe('should calculate the time shift buffer window', () => {
 
@@ -394,7 +353,7 @@ describe('TimelineConverter', function () {
             it('with SegmentTimeline and one period and shouldCalculateFromTimeline set to true', function () {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityRangeFromTimeline: true
+                        calcSegmentAvailabilityWindowFromTimeline: true
                     }
                 });
                 streams.push(streamOneMock);
@@ -406,7 +365,7 @@ describe('TimelineConverter', function () {
             it('with SegmentTimeline and two periods and shouldCalculateFromTimeline set to true', function () {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityRangeFromTimeline: true
+                        calcSegmentAvailabilityWindowFromTimeline: true
                     }
                 });
                 streams.push(streamOneMock, streamTwoMock);
@@ -423,7 +382,7 @@ describe('TimelineConverter', function () {
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityRangeFromTimeline: false
+                            calcSegmentAvailabilityWindowFromTimeline: false
                         }
                     });
                 });
@@ -530,7 +489,7 @@ describe('TimelineConverter', function () {
 
                     const range = timelineConverter.calcTimeShiftBufferWindow(streams, true);
                     expect(range.start).to.be.equal(0);
-                    expect(range.end).to.be.equal(- 30);
+                    expect(range.end).to.be.equal(-30);
                     clock.restore();
                 });
 
@@ -743,12 +702,12 @@ describe('TimelineConverter', function () {
                     clock.restore();
                 });
             });
-            describe('with SegmentTimeline and calcSegmentAvailabilityRangeFromTimeline set to true', function () {
+            describe('with SegmentTimeline and calcSegmentAvailabilityWindowFromTimeline set to true', function () {
 
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityRangeFromTimeline: true
+                            calcSegmentAvailabilityWindowFromTimeline: true
                         }
                     });
                 });

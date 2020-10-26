@@ -46,6 +46,7 @@ function TimelineConverter() {
         dashManifestModel,
         clientServerTimeShift,
         isClientServerTimeSyncCompleted,
+        availabilityWindowAnchorOffset,
         expectedLiveEdge;
 
     function setup() {
@@ -74,24 +75,27 @@ function TimelineConverter() {
         clientServerTimeShift = value;
     }
 
-    function calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateEnd) {
-        let availabilityTime = NaN;
+    function calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateAvailabilityEndTime) {
+        let availabilityTime;
         let mpd = representation.adaptation.period.mpd;
         const availabilityStartTime = mpd.availabilityStartTime;
 
-        if (calculateEnd) {
+        if (calculateAvailabilityEndTime) {
             //@timeShiftBufferDepth specifies the duration of the time shifting buffer that is guaranteed
             // to be available for a Media Presentation with type 'dynamic'.
             // When not present, the value is infinite.
-            if (isDynamic && (mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY)) {
-                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime + mpd.timeShiftBufferDepth) * 1000));
+            if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
+                // SAET = SAST + TSBD + seg@duration
+                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime + clientServerTimeShift + mpd.timeShiftBufferDepth) * 1000));
             } else {
                 availabilityTime = mpd.availabilityEndTime;
             }
         } else {
-            if (isDynamic) {
+            if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
+                // SAST = Period@start + seg@presentationStartTime + seg@duration
+                // ASAST = SAST - ATO
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
-                // presentationEndTime = Period@start + Sement@duration
+                // presentationEndTime = Period@start + seg@presentationStartTime + Segment@duration
                 availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime + clientServerTimeShift - availabilityTimeOffset) * 1000);
             } else {
                 // in static mpd, all segments are available at the same time
@@ -146,26 +150,10 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    /**
-     * Calculates the presentation times of the segments in this representation which are in the availabilityWindow. This is limited to period boundaries.
-     * @param {Object} voRepresentation
-     * @param {boolean} isDynamic
-     * @return {{start: *, end: *}|{start: number, end: number}}
-     */
-    function calcAvailabilityWindow(voRepresentation, isDynamic) {
-        // Static manifests
-        if (!isDynamic) {
-            return _calcAvailabilityWindowForStaticManifest(voRepresentation);
-        }
+    function getAvailabilityWindowAnchorTime() {
+        const now = (Date.now() + clientServerTimeShift * 1000);
 
-        // Specific use case of SegmentTimeline
-        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
-            return _calcAvailabilityWindowForDynamicTimelineManifest(voRepresentation);
-        }
-
-        // Other dynamic manifests
-        return _calcAvailabilityWindowForDynamicManifest(voRepresentation);
-
+        return now;
     }
 
     /**
@@ -181,45 +169,11 @@ function TimelineConverter() {
         }
 
         // Specific use case of SegmentTimeline
-        if (settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
+        if (settings.get().streaming.calcSegmentAvailabilityWindowFromTimeline) {
             return _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
         }
 
         return _calcTimeShiftBufferWindowForDynamicManifest(streams);
-    }
-
-    function _calcAvailabilityWindowForStaticManifest(voRepresentation) {
-        const voPeriod = voRepresentation.adaptation.period;
-        return {start: voPeriod.start, end: Number.POSITIVE_INFINITY};
-    }
-
-    function _calcAvailabilityWindowForDynamicManifest(voRepresentation) {
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined && !isNaN(voRepresentation.availabilityTimeOffset) ? voRepresentation.availabilityTimeOffset : 0;
-        const range = {start: NaN, end: NaN};
-        const voPeriod = voRepresentation.adaptation.period;
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        const start = !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? now - voPeriod.mpd.timeShiftBufferDepth : 0;
-        const end = now + endOffset;
-
-        range.start = Math.max(start, voPeriod.start);
-        range.end = end;
-
-        return range;
-    }
-
-    function _calcAvailabilityWindowForDynamicTimelineManifest(voRepresentation) {
-        const endOffset = voRepresentation.availabilityTimeOffset !== undefined && !isNaN(voRepresentation.availabilityTimeOffset) ? voRepresentation.availabilityTimeOffset : 0;
-        const range = _calcRangeForTimeline(voRepresentation);
-        const voPeriod = voRepresentation.adaptation.period;
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-
-        const end = range.end > now + endOffset ? now + endOffset : range.end;
-        const start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) ? Math.max(range.start, end - voPeriod.mpd.timeShiftBufferDepth) : range.start;
-
-        range.start = Math.max(start, voPeriod.start);
-        range.end = end;
-
-        return range;
     }
 
     function _calcTimeshiftBufferForStaticManifest(streams) {
@@ -374,29 +328,6 @@ function TimelineConverter() {
         return range;
     }
 
-    /**
-     * Determines the anchor time to calculate the availability of a segment from. Should return either the now time or the end of the period
-     * @param {Object} voRepresentation
-     * @param {boolean} isDynamic
-     * @return {number|*}
-     */
-    function getAvailabilityAnchorTime(voRepresentation, isDynamic) {
-        // Static Range Finder
-        const voPeriod = voRepresentation.adaptation.period;
-        if (!isDynamic) {
-            return voPeriod.start + voPeriod.duration;
-        }
-
-        if (!isClientServerTimeSyncCompleted && voRepresentation.segmentAvailabilityRange) {
-            return voRepresentation.segmentAvailabilityRange;
-        }
-
-        const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        const periodEnd = voPeriod.start + voPeriod.duration;
-
-        return Math.min(now, periodEnd);
-    }
-
     function calcPeriodRelativeTimeFromMpdRelativeTime(representation, mpdRelativeTime) {
         const periodStartTime = representation.adaptation.period.start;
         return mpdRelativeTime - periodStartTime;
@@ -414,6 +345,7 @@ function TimelineConverter() {
 
     function resetInitialSettings() {
         clientServerTimeShift = 0;
+        availabilityWindowAnchorOffset = 0;
         isClientServerTimeSyncCompleted = false;
         expectedLiveEdge = NaN;
     }
@@ -435,11 +367,10 @@ function TimelineConverter() {
         calcPresentationTimeFromMediaTime,
         calcPeriodRelativeTimeFromMpdRelativeTime,
         calcMediaTimeFromPresentationTime,
-        getAvailabilityAnchorTime,
         calcWallTimeForSegment,
-        calcAvailabilityWindow,
         calcTimeShiftBufferWindow,
         calcWallTimeFromPresentationTime,
+        getAvailabilityWindowAnchorTime,
         reset
     };
 

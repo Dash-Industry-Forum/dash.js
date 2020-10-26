@@ -52,7 +52,6 @@ class Representation {
         this.presentationTimeOffset = 0;
         // Set the source buffer timeOffset to this
         this.MSETimeOffset = NaN;
-        this.segmentAvailabilityRange = null;
         this.availableSegmentsNumber = 0;
         this.bandwidth = NaN;
         this.width = NaN;

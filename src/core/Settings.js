@@ -240,7 +240,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
  * @property {boolean} [reuseSourceBuffers=true] Enable reuse of existing source buffers when switching between periods
- * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=true] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
+ * @property {boolean} [calcSegmentAvailabilityWindowFromTimeline=true] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
  * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
@@ -397,7 +397,7 @@ function Settings() {
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
             reuseSourceBuffers: true,
-            calcSegmentAvailabilityRangeFromTimeline: false,
+            calcSegmentAvailabilityWindowFromTimeline: false,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
             jumpGaps: true,

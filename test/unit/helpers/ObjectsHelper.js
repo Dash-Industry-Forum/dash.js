@@ -60,7 +60,7 @@ class ObjectsHelper {
                 return {start, end};
             },
             calcMediaTimeFromPresentationTime: () => undefined,
-            calcSegmentAvailabilityRangeForRepresentation: () => {
+            calcSegmentAvailabilityWindowForRepresentation: () => {
                 return {start: start, end: end};
             },
             isTimeSyncCompleted: () => {

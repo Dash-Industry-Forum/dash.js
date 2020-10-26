@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../../streaming/constants/Constants';
-import DashJSError from '../../streaming/vo/DashJSError';
 import FactoryMaker from '../../core/FactoryMaker';
 
 function RepresentationController(config) {
@@ -37,7 +36,6 @@ function RepresentationController(config) {
     config = config || {};
     const eventBus = config.eventBus;
     const events = config.events;
-    const errors = config.errors;
     const abrController = config.abrController;
     const dashMetrics = config.dashMetrics;
     const playbackController = config.playbackController;
@@ -57,7 +55,6 @@ function RepresentationController(config) {
 
         eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
-        eventBus.on(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
@@ -89,7 +86,6 @@ function RepresentationController(config) {
 
         eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.off(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
-        eventBus.off(events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
         eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
@@ -118,7 +114,12 @@ function RepresentationController(config) {
             return;
         }
 
-        updateAvailabilityWindow(playbackController.getIsDynamic(), true);
+        for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
+            eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, {
+                sender: instance,
+                representation: voAvailableRepresentations[i]
+            });
+        }
     }
 
     function addRepresentationSwitch() {
@@ -142,7 +143,7 @@ function RepresentationController(config) {
     function isAllRepresentationsUpdated() {
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             let segmentInfoType = voAvailableRepresentations[i].segmentInfoType;
-            if (voAvailableRepresentations[i].segmentAvailabilityRange === null || !voAvailableRepresentations[i].hasInitialization() ||
+            if (!voAvailableRepresentations[i].hasInitialization() ||
                 ((segmentInfoType === dashConstants.SEGMENT_BASE || segmentInfoType === dashConstants.BASE_URL) && !voAvailableRepresentations[i].segments)
             ) {
                 return false;
@@ -150,30 +151,6 @@ function RepresentationController(config) {
         }
 
         return true;
-    }
-
-    function updateRepresentation(representation, isDynamic) {
-        representation.segmentAvailabilityRange = timelineConverter.calcAvailabilityWindow(representation, isDynamic);
-    }
-
-    function updateAvailabilityWindow(isDynamic, notifyUpdate) {
-        checkConfig();
-
-        for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            updateRepresentation(voAvailableRepresentations[i], isDynamic);
-            if (notifyUpdate) {
-                eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, {
-                    sender: instance,
-                    representation: voAvailableRepresentations[i]
-                });
-            }
-        }
-    }
-
-    function resetAvailabilityWindow() {
-        voAvailableRepresentations.forEach(rep => {
-            rep.segmentAvailabilityRange = null;
-        });
     }
 
     function startDataUpdate() {
@@ -190,23 +167,6 @@ function RepresentationController(config) {
         eventBus.trigger(events.DATA_UPDATE_COMPLETED, eventArg);
     }
 
-    function postponeUpdate(postponeTimePeriod) {
-        let delay = postponeTimePeriod;
-        let update = function () {
-            if (isUpdating()) return;
-
-            startDataUpdate();
-
-            // clear the segmentAvailabilityRange for all reps.
-            // this ensures all are updated before the live edge search starts
-            resetAvailabilityWindow();
-
-            updateAvailabilityWindow(playbackController.getIsDynamic(), true);
-        };
-        eventBus.trigger(events.AST_IN_FUTURE, {delay: delay});
-        setTimeout(update, delay);
-    }
-
     function onRepresentationUpdated(e) {
         if (e.sender.getType() !== getType() || e.sender.getStreamInfo().id !== streamId || !isUpdating()) return;
 
@@ -219,22 +179,9 @@ function RepresentationController(config) {
         let r = e.representation;
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
-        let postponeTimePeriod = 0;
         let repInfo,
-            err,
             repSwitch;
 
-        if (r.adaptation.period.mpd.manifest.type === dashConstants.DYNAMIC && !r.adaptation.period.mpd.manifest.ignorePostponeTimePeriod) {
-            // We must put things to sleep unless till e.g. the startTime calculation in ScheduleController.onLiveEdgeSearchCompleted fall after the segmentAvailabilityRange.start
-            postponeTimePeriod = getRepresentationUpdatePostponeTimePeriod(r, streamInfo);
-        }
-
-        if (postponeTimePeriod > 0) {
-            postponeUpdate(postponeTimePeriod);
-            err = new DashJSError(errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE, errors.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE);
-            endDataUpdate(err);
-            return;
-        }
 
         if (manifestUpdateInfo) {
             for (let i = 0; i < manifestUpdateInfo.representationInfo.length; i++) {
@@ -266,45 +213,6 @@ function RepresentationController(config) {
         }
     }
 
-    function getRepresentationUpdatePostponeTimePeriod(representation, streamInfo) {
-        try {
-            const streamController = playbackController.getStreamController();
-
-            // This is only a problem if this is the currently active stream and we do not have upcoming periods for which the segmentAvailabilityRange is sufficient. For now we just check if there is a period announced after this one
-            if (streamId !== streamController.getActiveStreamInfo.id) {
-                return 0;
-            }
-
-            const stream = streamController.getStreamById(streamId);
-            const nextStream = streamController.getNextStream(stream);
-
-            if (nextStream) {
-                return 0;
-            }
-
-            const activeStreamInfo = streamController.getActiveStreamInfo();
-            let startTimeAnchor = representation.segmentAvailabilityRange.start;
-
-            if (activeStreamInfo && activeStreamInfo.id && activeStreamInfo.id !== streamInfo.id) {
-                // We need to consider the currently playing period if a period switch is performed.
-                startTimeAnchor = Math.min(playbackController.getTime(), startTimeAnchor);
-            }
-
-            let segmentAvailabilityTimePeriod = representation.segmentAvailabilityRange.end - startTimeAnchor;
-            let liveDelay = playbackController.getLiveDelay();
-
-            return (liveDelay - segmentAvailabilityTimePeriod) * 1000;
-        } catch (e) {
-            return 0;
-        }
-    }
-
-    function onWallclockTimeUpdated(e) {
-        if (e.isDynamic) {
-            updateAvailabilityWindow(e.isDynamic);
-        }
-    }
-
     function onQualityChanged(e) {
         if (e.mediaType !== getType() || streamId !== e.streamInfo.id) return;
 
@@ -326,7 +234,6 @@ function RepresentationController(config) {
         getData: getData,
         isUpdating: isUpdating,
         updateData: updateData,
-        updateRepresentation: updateRepresentation,
         getCurrentRepresentation: getCurrentRepresentation,
         getRepresentationForQuality: getRepresentationForQuality,
         getType: getType,

@@ -142,7 +142,6 @@ function StreamController() {
     function registerEvents() {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.on(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, this);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -154,14 +153,13 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.on(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
+        eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
     }
 
     function unRegisterEvents() {
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, this);
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
@@ -173,7 +171,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
         eventBus.off(Events.KEY_SESSION_UPDATED, onKeySessionUpdated, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _initiateStreamSwitchAfterSeek, this);
+        eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
     }
 
@@ -237,7 +235,7 @@ function StreamController() {
         });
     }
 
-    function _initiateStreamSwitchAfterSeek(e) {
+    function _onBufferClearedForStreamSwitch(e) {
         // we need to wait until the buffer has been pruned and the executed requests from the fragment models have been cleared before switching the stream
         if (!e.mediaType || !dataForStreamSwitchAfterSeek || !dataForStreamSwitchAfterSeek.seekingStream) {
             return;
@@ -266,13 +264,6 @@ function StreamController() {
         preloadingStreams.forEach((ps) => {
             ps.deactivate(true);
         });
-    }
-
-    function onGapCausedPlaybackSeek(e) {
-        const nextStream = getNextStream();
-        flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
-        switchStream(nextStream, activeStream, e.seekTime);
-        createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
     function addDVRMetric() {
@@ -363,21 +354,26 @@ function StreamController() {
                 if (mediaSource) {
 
                     // We can not start prebuffering if the segments of the upcoming period are outside of the availability window
-                    const mediaTypes = [Constants.VIDEO, Constants.AUDIO];
+                    const isDynamic = adapter.getIsDynamic();
                     let segmentAvailabilityRangeIsOk = true;
 
-                    mediaTypes.forEach((mediaType) => {
-                        const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), mediaType);
-                        const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-                        voRepresentations.forEach((voRep) => {
-                            const isDynamic = adapter.getIsDynamic();
-                            const range = timelineConverter.calcAvailabilityWindow(voRep, isDynamic);
+                    if (isDynamic) {
+                        const mediaTypes = [Constants.VIDEO, Constants.AUDIO];
 
-                            if (range.end < range.start) {
-                                segmentAvailabilityRangeIsOk = false;
-                            }
+                        mediaTypes.forEach((mediaType) => {
+                            const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), mediaType);
+                            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+                            voRepresentations.forEach((voRep) => {
+
+                                const periodStartAvailTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(voRep.adaptation.period.start, voRep,isDynamic);
+                                const availWindowAnchorTime = timelineConverter.getAvailabilityWindowAnchorTime();
+
+                                if (periodStartAvailTime > availWindowAnchorTime) {
+                                    segmentAvailabilityRangeIsOk = false;
+                                }
+                            });
                         });
-                    });
+                    }
 
                     if (segmentAvailabilityRangeIsOk) {
                         onStreamCanLoadNext(stream, previousStream);
@@ -713,6 +709,7 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
                 if (seekTime !== playbackController.getTime()) {
+                    logger.debug(`Stream activation requires seek to ${seekTime}`);
                     playbackController.seek(seekTime);
                 } else if (!activeStream.getPreloaded()) {
                     eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, {
@@ -849,6 +846,7 @@ function StreamController() {
             }
             const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + settings.get().streaming.waitingOffsetIfAstIsGreaterThanNow) * 1000, 2147483647);
             logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
+            eventBus.trigger(Events.AST_IN_FUTURE, {delay: waitingTime});
             waitForPlaybackStartTimeout = setTimeout(() => {
                 _initializeForFirstStream(streamsInfo);
             }, waitingTime);

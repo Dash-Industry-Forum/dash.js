@@ -160,18 +160,14 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
             return true;
         }
 
-        // Nothing available yet
-        if (representation.segmentAvailabilityRange.start > representation.segmentAvailabilityRange.end) {
-            return false;
-        }
         // For dynamic manifests we check if the presentation start time + duration is included in the availability window
-        const segmentEndTime = segment.presentationStartTime + segment.duration;
-
         // SAST = Period@start + seg@presentationStartTime + seg@duration
-        // ASAST = SAST - ATO We account for this by adding the ATO to the availabilityWindow
-        // SAET = SAST + TSBD + seg@duration Still not sure why we are supposed to add seg@duration here
+        // ASAST = SAST - ATO
+        // SAET = SAST + TSBD + seg@duration
 
-        return segmentEndTime <= representation.segmentAvailabilityRange.end && segmentEndTime >= representation.segmentAvailabilityRange.start;
+        const refTime = timelineConverter.getAvailabilityWindowAnchorTime();
+        return segment.availabilityStartTime.getTime() <= refTime && segment.availabilityEndTime.getTime() >= refTime;
+
     }
 
     return true;

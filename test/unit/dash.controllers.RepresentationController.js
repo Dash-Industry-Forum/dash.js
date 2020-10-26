@@ -147,23 +147,6 @@ describe('RepresentationController', function () {
                 expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
             });
 
-            it('when a WALLCLOCK_TIME_UPDATED event occurs, should update availability window for dynamic content', function () {
-                const firstRepresentation = representationController.getRepresentationForQuality(0);
-
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined); // jshint ignore:line
-
-                timelineConverter.setRange({start: 0, end: 4});
-
-                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {
-                    isDynamic: true,
-                    time: new Date()
-                });
-
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(0); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(4); // jshint ignore:line
-            });
-
             it('when a QUALITY_CHANGE_REQUESTED event occurs, should update current representation', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
                 expect(currentRepresentation.index).to.equal(0); // jshint ignore:line

@@ -68,11 +68,11 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         const duration = representation.segmentDuration;
-        const availabilityWindow = representation.segmentAvailabilityRange;
+
         if (isNaN(duration)) {
             representation.availableSegmentsNumber = 1;
         } else {
-            representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+            representation.availableSegmentsNumber = Math.ceil((representation.adaptation.period.start + representation.adaptation.period.duration - representation.adaptation.period.start) / duration);
         }
 
         return seg;
