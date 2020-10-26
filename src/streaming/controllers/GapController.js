@@ -52,6 +52,7 @@ function GapController() {
         videoModel,
         timelineConverter,
         adapter,
+        jumpTimeoutHandler,
         logger;
 
     function initialize() {
@@ -74,6 +75,7 @@ function GapController() {
         gapHandlerInterval = null;
         lastGapJumpPosition = NaN;
         wallclockTicked = 0;
+        jumpTimeoutHandler = null;
     }
 
     function setConfig(config) {
@@ -230,16 +232,25 @@ function GapController() {
             jumpToStreamEnd = true;
         }
 
-        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime) {
+        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime && !jumpTimeoutHandler) {
+            const timeUntilGapEnd = seekToPosition - currentTime;
+
             if (jumpToStreamEnd) {
-                logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 const nextStream = streamController.getStreamForTime(seekToPosition);
                 const internalSeek = nextStream && !!nextStream.getPreloaded();
+
+                logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
                 playbackController.seek(seekToPosition, true, internalSeek);
             } else {
+                const isDynamic = playbackController.getIsDynamic();
                 const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
-                logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${seekToPosition - currentTime}`);
-                playbackController.seek(seekToPosition, true, true);
+                const timeToWait = !isDynamic ? 0 : timeUntilGapEnd * 1000;
+
+                jumpTimeoutHandler = window.setTimeout(() => {
+                    playbackController.seek(seekToPosition, true, true);
+                    logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
+                    jumpTimeoutHandler = null;
+                }, timeToWait);
             }
             lastGapJumpPosition = seekToPosition;
         }

@@ -113,7 +113,7 @@ declare namespace dashjs {
             fastSwitchEnabled?: boolean;
             reuseSourceBuffers?: boolean;
             flushBufferAtTrackSwitch?: boolean;
-            calcSegmentAvailabilityRangeFromTimeline?: boolean,
+            calcSegmentAvailabilityWindowFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
             bufferAheadToKeep?: number;
