@@ -183,6 +183,13 @@ class Constants {
         this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
         this.XML = 'XML';
         this.ARRAY_BUFFER = 'ArrayBuffer';
+        this.VIDEO_ELEMENT_READY_STATES = {
+            HAVE_NOTHING: 0,
+            HAVE_METADATA: 1,
+            HAVE_CURRENT_DATA: 2,
+            HAVE_FUTURE_DATA: 3,
+            HAVE_ENOUGH_DATA: 4
+        };
     }
 
     constructor () {

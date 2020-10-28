@@ -245,6 +245,12 @@ class MediaPlayerEvents extends EventsBase {
         this.CAN_PLAY = 'canPlay';
 
         /**
+         * This corresponds to the CAN_PLAY_THROUGH readyState.
+         * @event MediaPlayerEvents#CAN_PLAY_THROUGH
+         */
+        this.CAN_PLAY_THROUGH = 'canPlayThrough';
+
+        /**
          * Sent when playback completes.
          * @event MediaPlayerEvents#PLAYBACK_ENDED
          */
@@ -269,6 +275,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
          */
         this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
+
+        /**
+         * The media's metadata has finished loading; all attributes now
+         * contain as much useful information as they're going to.
+         * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+         */
+        this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
 
         /**
          * Sent when playback is paused.

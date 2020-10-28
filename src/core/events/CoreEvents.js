@@ -45,6 +45,7 @@ class CoreEvents extends EventsBase {
         this.BUFFER_CLEARED_FOR_STREAM_SWITCH = 'bufferClearedForStreamSwitch';
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
         this.BYTES_APPENDED = 'bytesAppended';
+        this.BYTES_APPENDED_IN_SINK = 'bytesAppendedInSink';
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -52,9 +53,11 @@ class CoreEvents extends EventsBase {
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.INBAND_EVENTS = 'inbandEvents';
         this.INITIALIZATION_LOADED = 'initializationLoaded';
+        this.INITIAL_STREAM_SWITCH = 'initialStreamSwitch';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
+        this.INTERNAL_BUFFER_UPDATED = 'internalBufferUpdated';
         this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
         this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
         this.LOADING_COMPLETED = 'loadingCompleted';

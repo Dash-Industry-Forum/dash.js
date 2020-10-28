@@ -291,17 +291,6 @@ function Stream(config) {
         preloadingScheduled = value;
     }
 
-    function getLiveStartTime() {
-        if (!streamInfo.manifestInfo.isDynamic) {
-            return NaN;
-        }
-        const dvrInfo = dashMetrics.getCurrentDVRInfo();
-        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
-
-        // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
-        return Math.min(Math.max(liveEdge - playbackController.getLiveDelay(), streamInfo.start), streamInfo.start + streamInfo.duration);
-    }
-
     function getId() {
         return streamInfo ? streamInfo.id : null;
     }
@@ -652,13 +641,10 @@ function Stream(config) {
         } else if (!isStreamInitialized) {
             isStreamInitialized = true;
             timelineConverter.setTimeSyncCompleted(true);
-            const liveStartTime = !playbackController.getInitialLiveEdgeCalculated() ? getLiveStartTime() : NaN;
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo,
-                liveStartTime
+                streamInfo
             });
-            playbackController.setInitialLiveEdgeCalculated(true);
         }
 
         eventBus.trigger(Events.STREAM_SWITCHED, {
@@ -692,7 +678,7 @@ function Stream(config) {
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             const buffer = streamProcessors[i].createBuffer(previousBuffers);
             if (buffer) {
-                buffers[streamProcessors[i].getType()] = buffer.getBuffer();
+                buffers[streamProcessors[i].getType()] = buffer;
             }
         }
         return buffers;

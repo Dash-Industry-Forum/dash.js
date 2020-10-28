@@ -63,7 +63,6 @@ function PlaybackController() {
         playbackStalled,
         minPlaybackRateChange,
         uriFragmentModel,
-        initialLiveEdgeCalculated,
         lastSeekWasInternal,
         settings;
 
@@ -96,7 +95,6 @@ function PlaybackController() {
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         streamSwitch = false;
-        initialLiveEdgeCalculated = false;
         isLowLatencySeekingInProgress = false;
         playbackStalled = false;
 
@@ -105,7 +103,6 @@ function PlaybackController() {
         const isSafari = /safari/.test(ua) && !/chrome/.test(ua);
         minPlaybackRateChange = isSafari ? 0.25 : 0.02;
 
-        eventBus.on(Events.STREAM_INITIALIZED, onStreamInitialized, this);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
@@ -126,54 +123,6 @@ function PlaybackController() {
      */
     function _initializeAfterStreamSwitch() {
         streamSwitch = true;
-    }
-
-    /**
-     * Called once a stream has been intialized. We only use this function once after the first stream has been initialized to seek to the right start time.
-     * When a streamswitch is performed we do nothing here.
-     * @param {object} e
-     */
-    function onStreamInitialized(e) {
-        // We only call this function once when playback is started
-        if (streamSwitch) {
-            streamSwitch = false;
-            return;
-        }
-
-        // Seek new stream in priority order:
-        // - at start time provided in URI parameters
-        // - at stream/period start time (for static streams) or live start time (for dynamic streams)
-        let startTime;
-        if (isDynamic) {
-            // For dynamic stream, start by default at (live edge - live delay)
-            startTime = e.liveStartTime;
-            // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
-            const dvrInfo = dashMetrics.getCurrentDVRInfo();
-            const dvrWindow = dvrInfo ? dvrInfo.range : null;
-            if (dvrWindow) {
-                // #t shall be relative to period start
-                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, true);
-                if (!isNaN(startTimeFromUri)) {
-                    logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                    startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
-                }
-            }
-        } else {
-            // For static stream, start by default at period start
-            const streams = streamController.getStreams();
-            const firstStreamInfo = streams && streams.length > 0 ? streams[0].getStreamInfo() : streamInfo;
-            startTime = firstStreamInfo.start;
-            // If start time in URI, take max value between period start and time from URI (if in period range)
-            const startTimeFromUri = getStartTimeFromUriParameters(firstStreamInfo.start, false);
-            if (!isNaN(startTimeFromUri) && startTimeFromUri < (streamInfo.start + streamInfo.duration)) {
-                logger.info('Start time from URI parameters: ' + startTimeFromUri);
-                startTime = Math.max(startTime, startTimeFromUri);
-            }
-        }
-
-        if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
-            seek(startTime, false, false);
-        }
     }
 
     function getTimeToStreamEnd(sInfo = null) {
@@ -203,35 +152,27 @@ function PlaybackController() {
         }
     }
 
-    function setInitialLiveEdgeCalculated(value) {
-        initialLiveEdgeCalculated = value;
-    }
-
-    function getInitialLiveEdgeCalculated() {
-        return initialLiveEdgeCalculated;
-    }
-
     function isSeeking() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
     function seek(time, stickToBuffered, internalSeek) {
-        if (!streamInfo || !videoModel) return;
+            if (!streamInfo || !videoModel) return;
 
-        let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
-        if (time === currentTime) return;
+            let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
+            if (time === currentTime) return;
 
-        if (internalSeek === true) {
-            lastSeekWasInternal = true;
-            logger.info('Requesting internal seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
-        } else {
-            lastSeekWasInternal = false;
-            seekTarget = time;
-            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-            logger.info('Requesting seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
-        }
+            if (internalSeek === true) {
+                lastSeekWasInternal = true;
+                logger.info('Requesting internal seek to time: ' + time);
+                videoModel.setCurrentTime(time, stickToBuffered);
+            } else {
+                lastSeekWasInternal = false;
+                seekTarget = time;
+                eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+                logger.info('Requesting seek to time: ' + time);
+                videoModel.setCurrentTime(time, stickToBuffered);
+            }
     }
 
     function seekToLive() {
@@ -362,7 +303,6 @@ function PlaybackController() {
         availabilityStartTime = 0;
         seekTarget = NaN;
         if (videoModel) {
-            eventBus.off(Events.STREAM_INITIALIZED, onStreamInitialized, this);
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
             eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
@@ -492,6 +432,10 @@ function PlaybackController() {
         eventBus.trigger(Events.CAN_PLAY);
     }
 
+    function onCanPlayThrough() {
+        eventBus.trigger(Events.CAN_PLAY_THROUGH);
+    }
+
     function onPlaybackStart() {
         logger.info('Native video element event: play');
         updateCurrentTime();
@@ -580,6 +524,11 @@ function PlaybackController() {
         logger.info('Native video element event: loadedmetadata');
         eventBus.trigger(Events.PLAYBACK_METADATA_LOADED);
         startUpdatingWallclockTime();
+    }
+
+    function onPlaybackLoadedData() {
+        logger.info('Native video element event: loadeddata');
+        eventBus.trigger(Events.PLAYBACK_LOADED_DATA);
     }
 
     // Event to handle the native video element ended event
@@ -790,6 +739,7 @@ function PlaybackController() {
 
     function addAllListeners() {
         videoModel.addEventListener('canplay', onCanPlay);
+        videoModel.addEventListener('canplaythrough', onCanPlayThrough);
         videoModel.addEventListener('play', onPlaybackStart);
         videoModel.addEventListener('waiting', onPlaybackWaiting);
         videoModel.addEventListener('playing', onPlaybackPlaying);
@@ -801,12 +751,14 @@ function PlaybackController() {
         videoModel.addEventListener('progress', onPlaybackProgress);
         videoModel.addEventListener('ratechange', onPlaybackRateChanged);
         videoModel.addEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
+        videoModel.addEventListener('loadeddata', onPlaybackLoadedData);
         videoModel.addEventListener('stalled', onPlaybackStalled);
         videoModel.addEventListener('ended', onNativePlaybackEnded);
     }
 
     function removeAllListeners() {
         videoModel.removeEventListener('canplay', onCanPlay);
+        videoModel.removeEventListener('canplaythrough', onCanPlayThrough);
         videoModel.removeEventListener('play', onPlaybackStart);
         videoModel.removeEventListener('waiting', onPlaybackWaiting);
         videoModel.removeEventListener('playing', onPlaybackPlaying);
@@ -818,6 +770,7 @@ function PlaybackController() {
         videoModel.removeEventListener('progress', onPlaybackProgress);
         videoModel.removeEventListener('ratechange', onPlaybackRateChanged);
         videoModel.removeEventListener('loadedmetadata', onPlaybackMetaDataLoaded);
+        videoModel.removeEventListener('loadeddata', onPlaybackLoadedData);
         videoModel.removeEventListener('stalled', onPlaybackStalled);
         videoModel.removeEventListener('ended', onNativePlaybackEnded);
     }
@@ -843,8 +796,6 @@ function PlaybackController() {
         pause: pause,
         isSeeking: isSeeking,
         getStreamEndTime,
-        setInitialLiveEdgeCalculated,
-        getInitialLiveEdgeCalculated,
         seek: seek,
         reset: reset
     };

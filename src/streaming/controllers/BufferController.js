@@ -123,6 +123,7 @@ function BufferController(config) {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
     }
 
     function getRepresentationInfo(quality) {
@@ -134,17 +135,19 @@ function BufferController(config) {
         const mediaInfo = mediaInfoArr[0];
         if (mediaSource) {
             try {
+                const selectedRepresentation = this.getRepresentationInfo(requiredQuality);
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type]);
+                    buffer = oldBuffers[type];
+                    buffer.initializeForStreamSwitch(mediaInfo, selectedRepresentation);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), null);
+                    buffer = SourceBufferSink(context).create(mediaSource);
+                    buffer.initializedForFirstUse(mediaInfo, selectedRepresentation);
                 }
-                if (settings.get().streaming.useAppendWindow) {
-                    buffer.updateAppendWindow(streamInfo);
-                }
+
                 if (typeof buffer.getBuffer().initialize === 'function') {
                     buffer.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
                 }
+
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
                 errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
@@ -152,7 +155,7 @@ function BufferController(config) {
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-        updateBufferTimestampOffset(this.getRepresentationInfo(requiredQuality));
+
         return buffer;
     }
 
@@ -250,6 +253,11 @@ function BufferController(config) {
     }
 
     function onAppended(e) {
+
+        if(e.streamId !== streamInfo.id || e.mediaType !== type) {
+            return;
+        }
+
         if (e.error) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
                 isQuotaExceeded = true;
@@ -575,12 +583,6 @@ function BufferController(config) {
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
 
-        if (!isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel < STALL_THRESHOLD) {
-            isBufferingCompleted = true;
-            logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
-            triggerEvent(Events.BUFFERING_COMPLETED);
-        }
-
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
@@ -894,7 +896,7 @@ function BufferController(config) {
         seekTarget = NaN;
 
         if (buffer) {
-            if (!errored) {
+            if (!errored && !keepBuffers) {
                 buffer.abort();
             }
             buffer.reset(keepBuffers);
@@ -921,6 +923,7 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
 
         resetInitialSettings(errored, keepBuffers);
     }

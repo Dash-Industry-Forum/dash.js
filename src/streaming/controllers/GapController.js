@@ -104,13 +104,13 @@ function GapController() {
 
     function registerEvents() {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, this);
+        eventBus.on(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
     }
 
     function unregisterEvents() {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, this);
+        eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
     }
 
@@ -121,7 +121,7 @@ function GapController() {
         }
     }
 
-    function _onBytesAppended() {
+    function _onInitialStreamSwitch() {
         if (!gapHandlerInterval) {
             startGapHandler();
         }
@@ -249,7 +249,6 @@ function GapController() {
                 const internalSeek = nextStream && !!nextStream.getPreloaded();
 
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
-                console.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
                 playbackController.seek(seekToPosition, true, internalSeek);
             } else {
                 const isDynamic = playbackController.getIsDynamic();
@@ -259,7 +258,6 @@ function GapController() {
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
                     logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
-                    console.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }

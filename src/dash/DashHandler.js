@@ -248,11 +248,14 @@ function DashHandler(config) {
                 isFinished = true;
             } else if (lastSegment) {
                 const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
-                const endTime = lastSegment.duration > 0 ? time + 1.5 * lastSegment.duration : time;
+                const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
                 const duration = representation.adaptation.period.duration;
 
                 isFinished = endTime >= duration;
             }
+        }
+        if(isFinished) {
+            console.log('finished');
         }
         return isFinished;
     }
@@ -274,6 +277,9 @@ function DashHandler(config) {
         }
 
         const segment = segmentsController.getSegmentByTime(representation, time);
+        if(!segment) {
+            console.log('no segment');
+        }
         if (segment) {
             segmentIndex = segment.availabilityIdx;
             lastSegment = segment;

@@ -148,11 +148,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (!seeking) {
             setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
             if (seekbarPlay) {
-                if (player.isDynamic() && (player.duration() - player.time() < liveThresholdSecs)) {
-                    seekbarPlay.style.width = '100%';
-                } else {
-                    seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
-                }
+                seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
             }
             if (seekbarBuffer) {
                 seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
@@ -436,7 +432,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.exitFullscreen) {
-           document.exitFullscreen();
+            document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {
@@ -483,7 +479,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
                 return element.lang + ' : ' + element.kind;
             };
-            captionMenu = createMenu({ menuType: 'caption', arr: e.tracks }, contentFunc);
+            captionMenu = createMenu({menuType: 'caption', arr: e.tracks}, contentFunc);
 
             var func = function () {
                 onMenuClick(captionMenu, captionBtn);
@@ -506,7 +502,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         //Bitrate Menu
         if (bitrateListBtn) {
             destroyBitrateMenu();
-            var availableBitrates = { menuType: 'bitrate' };
+            var availableBitrates = {menuType: 'bitrate'};
             availableBitrates.audio = player.getBitrateInfoListFor('audio') || [];
             availableBitrates.video = player.getBitrateInfoListFor('video') || [];
             availableBitrates.images = player.getBitrateInfoListFor('image') || [];
@@ -531,7 +527,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
         //Track Switch Menu
         if (!trackSwitchMenu && trackSwitchBtn) {
-            var availableTracks = { menuType: 'track' };
+            var availableTracks = {menuType: 'track'};
             availableTracks.audio = player.getTracksFor('audio');
             availableTracks.video = player.getTracksFor('video'); // these return empty arrays so no need to check for null
 
@@ -746,8 +742,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     var cfg = {
                         'streaming': {
                             'abr': {
-                                'autoSwitchBitrate': {
-                                }
+                                'autoSwitchBitrate': {}
                             }
                         }
                     };
@@ -884,7 +879,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             seekbar.addEventListener('mousedown', onSeeking, true);
             seekbar.addEventListener('mousemove', onSeekBarMouseMove, true);
             // set passive to true for scroll blocking listeners (https://www.chromestatus.com/feature/5745543795965952)
-            seekbar.addEventListener('touchmove', onSeekBarMouseMove, { passive: true });
+            seekbar.addEventListener('touchmove', onSeekBarMouseMove, {passive: true});
             seekbar.addEventListener('mouseout', onSeekBarMouseMoveOut, true);
             seekbar.addEventListener('touchcancel', onSeekBarMouseMoveOut, true);
             seekbar.addEventListener('touchend', onSeekBarMouseMoveOut, true);
