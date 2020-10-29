@@ -42,4 +42,4 @@ dashjs.MediaPlayerFactory = MediaPlayerFactory;
 dashjs.Debug = Debug;
 
 export default dashjs;
-export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory, Debug};
+export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory, Debug };
