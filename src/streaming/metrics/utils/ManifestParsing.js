@@ -88,10 +88,16 @@ function ManifestParsing (config) {
                             return;
                         }
 
-                        for (const prop in reporting) {
-                            if (reporting.hasOwnProperty(prop)) {
-                                reportingEntry[prop] = reporting[prop];
-                            }
+                        if (reporting.hasOwnProperty('value')) {
+                            reportingEntry.value = reporting.value;
+                        }
+
+                        if (reporting.hasOwnProperty(constants.DVB_REPORTING_URL)) {
+                            reportingEntry.dvb_reportingUrl = reporting[constants.DVB_REPORTING_URL];
+                        }
+
+                        if (reporting.hasOwnProperty(constants.DVB_PROBABILITY)) {
+                            reportingEntry.dvb_probability = reporting[constants.DVB_PROBABILITY];
                         }
 
                         metricEntry.Reporting.push(reportingEntry);
