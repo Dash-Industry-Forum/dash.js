@@ -157,10 +157,14 @@ function PlaybackController() {
     }
 
     function seek(time, stickToBuffered, internalSeek) {
-            if (!streamInfo || !videoModel) return;
+            if (!streamInfo || !videoModel) {
+                return;
+            }
 
             let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
-            if (time === currentTime) return;
+            if (time === currentTime) {
+                return;
+            }
 
             if (internalSeek === true) {
                 lastSeekWasInternal = true;

@@ -81,6 +81,7 @@ function StreamProcessor(config) {
         bufferController,
         scheduleController,
         representationController,
+        seekTime,
         indexHandler,
         bufferingTime,
         bufferPruned;
@@ -95,9 +96,11 @@ function StreamProcessor(config) {
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, onMediaFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, onSeekTarget, instance);
+        eventBus.on(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack) {
@@ -164,6 +167,7 @@ function StreamProcessor(config) {
         scheduleController.initialize(hasVideoTrack);
 
         bufferingTime = 0;
+        seekTime = NaN;
         bufferPruned = false;
     }
 
@@ -171,6 +175,7 @@ function StreamProcessor(config) {
         mediaInfoArr = [];
         mediaInfo = null;
         bufferingTime = 0;
+        seekTime = NaN;
     }
 
     function reset(errored, keepBuffers) {
@@ -204,8 +209,10 @@ function StreamProcessor(config) {
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
+        eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, onSeekTarget, instance);
+        eventBus.off(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
 
         resetInitialSettings();
         type = null;
@@ -216,6 +223,40 @@ function StreamProcessor(config) {
         return representationController ? representationController.isUpdating() : false;
     }
 
+    function _onInnerPeriodPlaybackSeeking(e) {
+        if (e.streamId !== streamInfo.id) {
+            return;
+        }
+
+        seekTime = e.seekTime;
+
+        console.log(`${type} Inner period playback seek to ${seekTime}`);
+
+        bufferController.prepareForPlaybackSeek();
+
+        // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
+        scheduleController.stop();
+        fragmentModel.abortRequests();
+
+        // Clear the buffer. We need to prune everything which is not in the target interval.
+        const clearRanges = bufferController.getAllRangesWithSafetyFactor(seekTime);
+        // When everything has been pruned _onBufferClearedForSeek will be triggered
+        bufferController.clearBuffers(clearRanges);
+    }
+
+    function _onBufferClearedForSeek(e) {
+        if(e.streamId !== streamInfo.id || e.mediaType !== type || isNaN(seekTime)) {
+            return;
+        }
+
+        bufferController.updateBufferLevel()
+
+        // Figure out the correct segment request time
+        const targetTime = bufferController.getContiniousBufferTimeForTargetTime(seekTime);
+        scheduleController.setSeekTarget(targetTime);
+        scheduleController.start();
+        seekTime = NaN;
+    }
 
     function onDataUpdateCompleted(e) {
         if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id) return;

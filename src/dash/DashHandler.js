@@ -251,12 +251,10 @@ function DashHandler(config) {
                 const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
                 const duration = representation.adaptation.period.duration;
 
-                isFinished = endTime >= duration;
+                isFinished = endTime >= duration || (isFinite(duration) && segmentIndex >= representation.availableSegmentsNumber);
             }
         }
-        if(isFinished) {
-            console.log('finished');
-        }
+
         return isFinished;
     }
 
@@ -277,9 +275,6 @@ function DashHandler(config) {
         }
 
         const segment = segmentsController.getSegmentByTime(representation, time);
-        if(!segment) {
-            console.log('no segment');
-        }
         if (segment) {
             segmentIndex = segment.availabilityIdx;
             lastSegment = segment;

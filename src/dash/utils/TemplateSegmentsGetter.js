@@ -72,7 +72,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         if (isNaN(duration)) {
             representation.availableSegmentsNumber = 1;
         } else {
-            representation.availableSegmentsNumber = Math.ceil((representation.adaptation.period.start + representation.adaptation.period.duration - representation.adaptation.period.start) / duration);
+            representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
         }
 
         return seg;

@@ -70,11 +70,11 @@ function SourceBufferSink(mSource) {
         mediaInfo = mInfo;
         const codec = mediaInfo.codec;
 
-        _abortBeforeAppend();
-
         if (settings.get().streaming.useAppendWindow) {
             updateAppendWindow(mediaInfo.streamInfo);
         }
+
+        _abortBeforeAppend();
 
         if (buffer.changeType) {
             buffer.changeType(codec);
@@ -167,12 +167,11 @@ function SourceBufferSink(mSource) {
                 if (sInfo && !isNaN(sInfo.start)) {
                     appendWindowStart = sInfo.start;
                 }
-                if (buffer.appendWindowEnd !== appendWindowEnd || buffer.appendWindowStart !== buffer.appendWindowStart) {
+                if (buffer.appendWindowEnd !== appendWindowEnd || buffer.appendWindowStart !== appendWindowStart) {
                     buffer.appendWindowStart = 0;
-                    buffer.appendWindowEnd = appendWindowEnd + 0.01;
-                    buffer.appendWindowStart = Math.max(appendWindowStart - 0.1, 0);
+                    buffer.appendWindowEnd = appendWindowEnd;
+                    buffer.appendWindowStart = Math.max(appendWindowStart, 0);
                     logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
-                    console.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
                 }
             } catch (e) {
                 logger.warn(`Failed to set append window`);
@@ -288,9 +287,8 @@ function SourceBufferSink(mSource) {
             const afterSuccess = function () {
                 // Safari sometimes drops a portion of a buffer after appending. Handle these situations here
                 const ranges = buffer.buffered;
-                console.log(`Appended to buffer`);
                 for (let i = 0; i < ranges.length; i++) {
-                    console.log(`Buffered from ${ranges.start(i)} - ${ranges.end(i)}`);
+                    //console.log(`${mediaInfo.type} Buffered from ${ranges.start(i)} - ${ranges.end(i)}`);
                 }
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);

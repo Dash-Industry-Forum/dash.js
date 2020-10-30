@@ -101,7 +101,6 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
         eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
@@ -125,6 +124,7 @@ function ScheduleController(config) {
         if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
 
         logger.debug('Schedule Controller starts');
+        console.debug('Schedule Controller starts');
         isStopped = false;
         dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
 
@@ -459,26 +459,6 @@ function ScheduleController(config) {
         }
     }
 
-    function onInnerPeriodPlaybackSeeking(e) {
-        if (streamId !== e.streamId) {
-            return;
-        }
-        setSeekTarget(e.seekTime);
-        setTimeToLoadDelay(0);
-
-        if (isStopped) {
-            start();
-        }
-
-        if (!isFragmentProcessingInProgress) {
-            // No pending request, request next segment at seek target
-            startScheduleTimer(0);
-        } else {
-            // Abort current request
-            fragmentModel.abortRequests();
-        }
-    }
-
     function onOuterPeriodPlaybackSeeking() {
         if (!isFragmentProcessingInProgress) {
             // No pending request, request next segment at seek target
@@ -552,7 +532,6 @@ function ScheduleController(config) {
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, onInnerPeriodPlaybackSeeking, this);
         eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
