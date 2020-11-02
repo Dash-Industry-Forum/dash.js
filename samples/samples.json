@@ -78,6 +78,11 @@
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
                 "href": "low-latency/index.html"
+            },
+            {
+                "title": "Low latency with L2ALL",
+                "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
+                "href": "low-latency/l2all_index.html"
             }
         ]
     },
