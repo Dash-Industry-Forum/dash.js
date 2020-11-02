@@ -27,5 +27,7 @@ describe('Constants', function () {
         expect(Constants.START_TIME).to.equal('starttime');
         expect(Constants.BAD_ARGUMENT_ERROR).to.equal('Invalid Arguments');
         expect(Constants.MISSING_CONFIG_ERROR).to.equal('Missing config parameter(s)');
+        expect(Constants.DVB_REPORTING_URL).to.equal('dvb:reportingUrl');
+        expect(Constants.DVB_PROBABILITY).to.equal('dvb:probability');
     });
 });

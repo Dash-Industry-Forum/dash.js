@@ -32,11 +32,19 @@
  * @class
  * @ignore
  */
+
+// TS 103 285 Clause 10.12.3.3
+const DEFAULT_DVB_PROBABILITY = 1000;
+
 class Reporting {
     constructor() {
-        // Reporting is a DescriptorType and doesn't have any additional fields
+
         this.schemeIdUri = '';
         this.value = '';
+
+        // DVB Extensions
+        this.dvb_reportingUrl = '';
+        this.dvb_probability = DEFAULT_DVB_PROBABILITY;
     }
 }
 

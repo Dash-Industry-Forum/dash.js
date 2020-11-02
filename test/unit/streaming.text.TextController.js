@@ -37,12 +37,16 @@ describe('TextController', function () {
                 }
             };
         }
+        if (typeof window === 'undefined') {
+            global.window = {};
+        }
     });
 
     afterEach(function () {
         if (typeof window !== 'undefined' && global !== window) {
             delete global.document;
         }
+        delete global.window;
     });
 
     beforeEach(function () {

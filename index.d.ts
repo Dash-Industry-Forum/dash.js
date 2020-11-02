@@ -145,6 +145,12 @@ declare namespace dashjs {
                 video?: number;
                 audio?: number;
             };
+            trackSwitchMode?: {
+                video?: TrackSwitchMode;
+                audio?: TrackSwitchMode;
+            }
+            selectionModeForInitialTrack?: TrackSelectionMode
+            fragmentRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?:                       number;
                 'XLinkExpansion'?:            number;
