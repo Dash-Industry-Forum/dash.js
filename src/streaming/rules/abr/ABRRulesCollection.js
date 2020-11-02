@@ -37,9 +37,11 @@ import BolaRule from './BolaRule';
 import L2ARule from './L2ARule.js';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest';
+import Constants from '../../constants/Constants';
 
 const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
 const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
+
 
 function ABRRulesCollection(config) {
 
@@ -59,47 +61,54 @@ function ABRRulesCollection(config) {
         abandonFragmentRules = [];
 
         if (settings.get().streaming.abr.useDefaultABRRules) {
-            // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
-            // This is controlled by useBufferOccupancyABR mechanism in AbrController.
-            qualitySwitchRules.push(
-                BolaRule(context).create({
-                    dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel,
-                    settings: settings
-                })
-            );
 
-            qualitySwitchRules.push(
-                ThroughputRule(context).create({
-                    dashMetrics: dashMetrics
-                })
-            );
-            qualitySwitchRules.push(
-                InsufficientBufferRule(context).create({
-                    dashMetrics: dashMetrics
-                })
-            );
-            qualitySwitchRules.push(
-                SwitchHistoryRule(context).create()
-            );
-            qualitySwitchRules.push(
-                DroppedFramesRule(context).create()
-            );
-            qualitySwitchRules.push(
-                L2ARule(context).create({
-                    dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel,
-                    settings: settings
-                })
-            );
-            abandonFragmentRules.push(
-                AbandonRequestsRule(context).create({
-                    dashMetrics: dashMetrics,
-                    mediaPlayerModel: mediaPlayerModel,
-                    settings: settings
-                })
-            );
+            // If L2A is used we only need this one rule
+            if (settings.get().streaming.abr.ABRStrategy === Constants.ABR_STRATEGY_L2A) {
+                qualitySwitchRules.push(
+                    L2ARule(context).create({
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel,
+                        settings: settings
+                    })
+                );
+            } else {
+                // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
+                // This is controlled by useBufferOccupancyABR mechanism in AbrController.
+                qualitySwitchRules.push(
+                    BolaRule(context).create({
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel,
+                        settings: settings
+                    })
+                );
+
+                qualitySwitchRules.push(
+                    ThroughputRule(context).create({
+                        dashMetrics: dashMetrics
+                    })
+                );
+                qualitySwitchRules.push(
+                    InsufficientBufferRule(context).create({
+                        dashMetrics: dashMetrics
+                    })
+                );
+                qualitySwitchRules.push(
+                    SwitchHistoryRule(context).create()
+                );
+                qualitySwitchRules.push(
+                    DroppedFramesRule(context).create()
+                );
+
+                abandonFragmentRules.push(
+                    AbandonRequestsRule(context).create({
+                        dashMetrics: dashMetrics,
+                        mediaPlayerModel: mediaPlayerModel,
+                        settings: settings
+                    })
+                );
+            }
         }
+
         // add custom ABR rules if any
         const customRules = mediaPlayerModel.getABRCustomRules();
         customRules.forEach(function (rule) {
@@ -185,11 +194,16 @@ function ABRRulesCollection(config) {
         abandonFragmentRules = [];
     }
 
+    function getQualitySwitchRules() {
+        return qualitySwitchRules;
+    }
+
     instance = {
-        initialize: initialize,
-        reset: reset,
-        getMaxQuality: getMaxQuality,
-        shouldAbandonFragment: shouldAbandonFragment
+        initialize,
+        reset,
+        getMaxQuality,
+        shouldAbandonFragment,
+        getQualitySwitchRules
     };
 
     return instance;
