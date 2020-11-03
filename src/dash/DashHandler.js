@@ -76,7 +76,7 @@ function DashHandler(config) {
         eventBus.on(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
         eventBus.on(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
-        eventBus.on(events.DYNAMIC_STREAM_COMPLETED, onDynamicStreamCompleted, instance);
+        eventBus.on(events.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
     }
 
     function initialize(isDynamic) {
@@ -119,7 +119,7 @@ function DashHandler(config) {
         eventBus.off(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
         eventBus.off(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
-        eventBus.off(events.DYNAMIC_STREAM_COMPLETED, onDynamicStreamCompleted, instance);
+        eventBus.off(events.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -420,7 +420,7 @@ function DashHandler(config) {
         eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
     }
 
-    function onDynamicStreamCompleted() {
+    function onDynamicToStatic() {
         logger.debug('Dynamic stream complete');
         dynamicStreamCompleted = true;
     }

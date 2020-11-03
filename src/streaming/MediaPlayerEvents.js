@@ -70,6 +70,12 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
         /**
+         * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
+         * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
+         */
+        this.DYNAMIC_TO_STATIC = 'dynamicToStatic';
+
+        /**
          * Triggered when there is an error from the element or MSE source buffer.
          * @event MediaPlayerEvents#ERROR
          */
