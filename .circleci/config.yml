@@ -93,6 +93,11 @@ workflows:
   commit-workflow:
     jobs:
       - build
+      - functional-tests:
+          filters:
+            branches:
+              only: pull/3372
+
   scheduled-workflow:
     triggers:
       - schedule:
