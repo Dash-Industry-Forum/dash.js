@@ -41,6 +41,8 @@ function SegmentsController(config) {
     const events = config.events;
     const eventBus = config.eventBus;
     const dashConstants = config.dashConstants;
+    const streamInfo = config.streamInfo;
+    const type = config.type;
 
     let instance,
         getters;
@@ -56,13 +58,23 @@ function SegmentsController(config) {
         getters[dashConstants.SEGMENT_BASE] = SegmentBaseGetter(context).create(config, isDynamic);
     }
 
-    function update(voRepresentation, type, mimeType, hasInitialization, hasSegments) {
+    function update(voRepresentation, mimeType, hasInitialization, hasSegments) {
         if (!hasInitialization) {
-            eventBus.trigger(events.SEGMENTBASE_INIT_REQUEST_NEEDED, {mimeType: mimeType, representation: voRepresentation});
+            eventBus.trigger(events.SEGMENTBASE_INIT_REQUEST_NEEDED, {
+                streamId: streamInfo.id,
+                mediaType: type,
+                mimeType: mimeType,
+                representation: voRepresentation
+            });
         }
 
         if (!hasSegments) {
-            eventBus.trigger(events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {mimeType: mimeType, mediaType: type, representation: voRepresentation});
+            eventBus.trigger(events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {
+                streamId: streamInfo.id,
+                mediaType: type,
+                mimeType: mimeType,
+                representation: voRepresentation
+            });
         }
     }
 

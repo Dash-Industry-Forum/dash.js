@@ -304,7 +304,7 @@ function WebmSegmentBaseLoader() {
         }
     }
 
-    function loadInitialization(representation, loadingInfo) {
+    function loadInitialization(streamId, mediaType, representation, loadingInfo) {
         checkConfig();
         let request = null;
         let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
@@ -317,7 +317,7 @@ function WebmSegmentBaseLoader() {
             request: request,
             url: baseUrl ? baseUrl.url : undefined,
             init: true,
-            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
+            mediaType: mediaType
         };
 
         logger.info('Start loading initialization.');
@@ -327,15 +327,17 @@ function WebmSegmentBaseLoader() {
         const onload = function () {
             // note that we don't explicitly set rep.initialization as this
             // will be computed when all BaseURLs are resolved later
-            eventBus.trigger(events.INITIALIZATION_LOADED, {
-                representation: representation
-            });
+            eventBus.trigger(events.INITIALIZATION_LOADED,
+                { representation: representation },
+                { streamId: streamId, mediaType: mediaType }
+            );
         };
 
         const onloadend = function () {
-            eventBus.trigger(events.INITIALIZATION_LOADED, {
-                representation: representation
-            });
+            eventBus.trigger(events.INITIALIZATION_LOADED,
+                { representation: representation },
+                { streamId: streamId, mediaType: mediaType }
+            );
         };
 
         urlLoader.load({
@@ -347,7 +349,7 @@ function WebmSegmentBaseLoader() {
         logger.debug('Perform init load: ' + info.url);
     }
 
-    function loadSegments(representation, type, theRange, callback) {
+    function loadSegments(streamId, mediaType, representation, theRange, callback) {
         checkConfig();
         let request = null;
         let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
@@ -363,7 +365,7 @@ function WebmSegmentBaseLoader() {
             request: request,
             url: media,
             init: false,
-            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
+            mediaType: mediaType
         };
 
         callback = !callback ? onLoaded : callback;
@@ -376,12 +378,12 @@ function WebmSegmentBaseLoader() {
 
         const onload = function (response) {
             parseEbmlHeader(response, media, theRange, function (segments) {
-                callback(segments, representation, type);
+                callback(streamId, mediaType, segments, representation);
             });
         };
 
         const onloadend = function () {
-            callback(null, representation, type);
+            callback(streamId, mediaType, null, representation);
         };
 
         urlLoader.load({
@@ -391,21 +393,15 @@ function WebmSegmentBaseLoader() {
         });
     }
 
-    function onLoaded(segments, representation, type) {
-        if (segments) {
-            eventBus.trigger(events.SEGMENTS_LOADED, {
+    function onLoaded(streamId, mediaType, segments, representation) {
+        eventBus.trigger(events.SEGMENTS_LOADED,
+            {
                 segments: segments,
                 representation: representation,
-                mediaType: type
-            });
-        } else {
-            eventBus.trigger(events.SEGMENTS_LOADED, {
-                segments: null,
-                representation: representation,
-                mediaType: type,
-                error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
-            });
-        }
+                error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+            },
+            { streamId: streamId, mediaType: mediaType }
+        );
     }
 
     function getFragmentRequest(info) {

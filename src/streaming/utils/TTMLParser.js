@@ -125,7 +125,7 @@ function TTMLParser() {
             errorMsg = msg;
         }, metadataHandler);
 
-        eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
+        eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 
         const mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 

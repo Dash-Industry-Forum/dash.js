@@ -137,7 +137,7 @@ function SegmentBaseLoader() {
         }
     }
 
-    function loadInitialization(representation, loadingInfo) {
+    function loadInitialization(streamId, mediaType, representation, loadingInfo) {
         checkConfig();
         let initRange = null;
         const baseUrl = representation ? baseURLController.resolve(representation.path) : null;
@@ -151,7 +151,7 @@ function SegmentBaseLoader() {
             searching: false,
             bytesLoaded: 0,
             bytesToLoad: 1500,
-            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
+            mediaType: mediaType
         };
 
         logger.debug('Start searching for initialization.');
@@ -166,15 +166,21 @@ function SegmentBaseLoader() {
                 representation.range = initRange;
                 // note that we don't explicitly set rep.initialization as this
                 // will be computed when all BaseURLs are resolved later
-                eventBus.trigger(events.INITIALIZATION_LOADED, {representation: representation});
+                eventBus.trigger(events.INITIALIZATION_LOADED,
+                    { representation: representation },
+                    { streamId: streamId, mediaType: mediaType }
+                );
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
-                loadInitialization(representation, info);
+                loadInitialization(streamId, mediaType, representation, info);
             }
         };
 
         const onerror = function () {
-            eventBus.trigger(events.INITIALIZATION_LOADED, {representation: representation});
+            eventBus.trigger(events.INITIALIZATION_LOADED,
+                { representation: representation },
+                { streamId: streamId, mediaType: mediaType }
+            );
         };
 
         urlLoader.load({request: request, success: onload, error: onerror});
@@ -182,7 +188,7 @@ function SegmentBaseLoader() {
         logger.debug('Perform init search: ' + info.url);
     }
 
-    function loadSegments(representation, type, range, callback, loadingInfo) {
+    function loadSegments(streamId, mediaType, representation, range, callback, loadingInfo) {
         checkConfig();
         if (range && (range.start === undefined || range.end === undefined)) {
             const parts = range ? range.toString().split('-') : null;
@@ -201,7 +207,7 @@ function SegmentBaseLoader() {
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
             bytesToLoad: 1500,
-            mediaType: representation && representation.adaptation ? representation.adaptation.type : null
+            mediaType: mediaType
         };
 
         const request = getFragmentRequest(info);
@@ -220,7 +226,7 @@ function SegmentBaseLoader() {
                     info.range.end = info.range.start + (sidx.size || extraBytes);
                 } else if (loadedLength < info.bytesLoaded) {
                     // if we have reached a search limit or if we have reached the end of the file we have to stop trying to find sidx
-                    callback(null, representation, type);
+                    callback(streamId, mediaType, null, representation);
                     return;
                 } else {
                     const lastBox = isoFile.getLastBox();
@@ -232,7 +238,7 @@ function SegmentBaseLoader() {
                         info.range.end += extraBytes;
                     }
                 }
-                loadSegments(representation, type, info.range, callback, info);
+                loadSegments(streamId, mediaType, representation, info.range, callback, info);
             } else {
                 const ref = sidx.references;
                 let loadMultiSidx,
@@ -250,7 +256,7 @@ function SegmentBaseLoader() {
                     let segs = [];
                     let count = 0;
                     let offset = (sidx.offset || info.range.start) + sidx.size;
-                    const tmpCallback = function (result) {
+                    const tmpCallback = function (streamId, mediaType, result) {
                         if (result) {
                             segs = segs.concat(result);
                             count++;
@@ -260,10 +266,10 @@ function SegmentBaseLoader() {
                                 segs.sort(function (a, b) {
                                     return a.startTime - b.startTime < 0 ? -1 : 0;
                                 });
-                                callback(segs, representation, type);
+                                callback(streamId, mediaType, segs, representation);
                             }
                         } else {
-                            callback(null, representation, type);
+                            callback(streamId, mediaType, null, representation);
                         }
                     };
 
@@ -272,19 +278,19 @@ function SegmentBaseLoader() {
                         se = offset + ref[j].referenced_size - 1;
                         offset = offset + ref[j].referenced_size;
                         r = {start: ss, end: se};
-                        loadSegments(representation, null, r, tmpCallback, info);
+                        loadSegments(streamId, mediaType, representation, r, tmpCallback, info);
                     }
 
                 } else {
-                    logger.debug('Parsing segments from SIDX. representation ' + representation.adaptation.type + ' - id: ' + representation.id + ' for range : ' + info.range.start + ' - ' + info.range.end);
+                    logger.debug('Parsing segments from SIDX. representation ' + mediaType + ' - id: ' + representation.id + ' for range : ' + info.range.start + ' - ' + info.range.end);
                     segments = getSegmentsForSidx(sidx, info);
-                    callback(segments, representation, type);
+                    callback(streamId, mediaType, segments, representation);
                 }
             }
         };
 
         const onerror = function () {
-            callback(null, representation, type);
+            callback(streamId, mediaType, null, representation);
         };
 
         urlLoader.load({request: request, success: onload, error: onerror});
@@ -340,12 +346,15 @@ function SegmentBaseLoader() {
         return request;
     }
 
-    function onLoaded(segments, representation, type) {
-        if (segments) {
-            eventBus.trigger(events.SEGMENTS_LOADED, {segments: segments, representation: representation, mediaType: type});
-        } else {
-            eventBus.trigger(events.SEGMENTS_LOADED, {segments: null, representation: representation, mediaType: type, error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)});
-        }
+    function onLoaded(streamId, mediaType, segments, representation) {
+        eventBus.trigger(events.SEGMENTS_LOADED,
+            {
+                segments: segments,
+                representation: representation,
+                error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+            },
+            { streamId: streamId, mediaType: mediaType }
+        );
     }
 
     instance = {

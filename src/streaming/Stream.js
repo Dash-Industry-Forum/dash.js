@@ -62,12 +62,13 @@ function Stream(config) {
     const eventController = config.eventController;
     const mediaController = config.mediaController;
     const textController = config.textController;
+    const protectionController = config.protectionController;
     const videoModel = config.videoModel;
     const settings = config.settings;
+    let streamInfo = config.streamInfo;
 
     let instance,
         logger,
-        streamInfo,
         streamProcessors,
         isStreamInitialized,
         isStreamActivated,
@@ -76,7 +77,6 @@ function Stream(config) {
         hasAudioTrack,
         updateError,
         isUpdating,
-        protectionController,
         fragmentController,
         thumbnailController,
         preloaded,
@@ -105,6 +105,7 @@ function Stream(config) {
         boxParser = BoxParser(context).getInstance();
 
         fragmentController = FragmentController(context).create({
+            streamInfo: streamInfo,
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
@@ -113,8 +114,12 @@ function Stream(config) {
             dashConstants: DashConstants,
             urlUtils: urlUtils
         });
+    }
 
+    function initialize() {
         registerEvents();
+        registerProtectionEvents();
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
     function registerEvents() {
@@ -151,18 +156,8 @@ function Stream(config) {
         }
     }
 
-    function initialize(strInfo, prtctnController) {
-        streamInfo = strInfo;
-        if (strInfo) {
-            fragmentController.setStreamId(strInfo.id);
-        }
-        protectionController = prtctnController;
-        registerProtectionEvents();
-
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
-
+    function getStreamId() {
+        return streamInfo ? streamInfo.id : null;
     }
 
     /**
@@ -237,7 +232,6 @@ function Stream(config) {
 
     function resetInitialSettings() {
         deactivate();
-        streamInfo = null;
         isStreamInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
@@ -257,6 +251,8 @@ function Stream(config) {
             fragmentController.reset();
             fragmentController = null;
         }
+
+        streamInfo = null;
 
         resetInitialSettings();
 
@@ -418,7 +414,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(), mediaInfo ? mediaInfo.type : null);
+        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -691,9 +687,7 @@ function Stream(config) {
         return buffers;
     }
 
-    function onBufferingCompleted(e) {
-        if (e.streamId !== streamInfo.id) return;
-
+    function onBufferingCompleted() {
         let processors = getProcessors();
         const ln = processors.length;
 
@@ -712,20 +706,15 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo });
     }
 
     function onDataUpdateCompleted(e) {
-        if (!streamInfo || e.sender.getStreamId() !== streamInfo.id) return;
-
-        updateError[e.sender.getType()] = e.error;
+        updateError[e.mediaType] = e.error;
         checkIfInitializationCompleted();
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
@@ -766,9 +755,7 @@ function Stream(config) {
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
 
         if (eventController) {
             addInlineEvents();
@@ -928,6 +915,7 @@ function Stream(config) {
 
     instance = {
         initialize: initialize,
+        getStreamId: getStreamId,
         activate: activate,
         deactivate: deactivate,
         isActive: isActive,

@@ -271,7 +271,7 @@ function TextTracks() {
                         containerStyle.width = actualVideoWidth + 'px';
                         containerStyle.height = actualVideoHeight + 'px';
                         containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                        eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                        eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE);
                     }
                 }
 
@@ -392,7 +392,7 @@ function TextTracks() {
                 //TODO add ErrorHandler management
             }, previousISDState, true /*enableRollUp*/);
             finalCue.id = cue.cueID;
-            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: finalCue, currentTrackIdx});
+            eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
         }
     }
 
@@ -445,7 +445,7 @@ function TextTracks() {
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
-                            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: this.cueHTMLElement, currentTrackIdx});
+                            eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: this.cueHTMLElement, currentTrackIdx });
                         }
                     }
                 };
@@ -481,7 +481,7 @@ function TextTracks() {
                     }
                     cue.onenter = function () {
                         if (track.mode === Constants.TEXT_SHOWING) {
-                            eventBus.trigger(Events.CAPTION_RENDERED, {currentTrackIdx});
+                            eventBus.trigger(Events.CAPTION_RENDERED, { currentTrackIdx });
                         }
                     };
                 }

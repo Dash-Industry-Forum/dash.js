@@ -64,8 +64,7 @@ function FragmentLoader(config) {
 
     function checkForExistence(request) {
         const report = function (success) {
-            eventBus.trigger(
-                events.CHECK_FOR_EXISTENCE_COMPLETED, {
+            eventBus.trigger(events.CHECK_FOR_EXISTENCE_COMPLETED, {
                     request: request,
                     exists: success
                 }
@@ -130,7 +129,11 @@ function FragmentLoader(config) {
                 },
                 abort: function (request) {
                     if (request) {
-                        eventBus.trigger(events.LOADING_ABANDONED, {request: request, mediaType: request.mediaType, sender: instance});
+                        eventBus.trigger(events.LOADING_ABANDONED, {
+                            mediaType: request.mediaType,
+                            request: request,
+                            sender: instance
+                        });
                     }
                 }
             });

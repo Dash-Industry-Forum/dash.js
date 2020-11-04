@@ -32,6 +32,8 @@ describe('DashHandler', function () {
     const dashMetricsMock = new DashMetricsMock();
 
     const config = {
+        streamInfo: { id: 'id' },
+        type: 'video',
         mimeType: streamProcessor.getMediaInfo().mimeType,
         timelineConverter: timelineConverter,
         baseURLController: baseURLController,
