@@ -303,7 +303,7 @@ function BufferController(config) {
             // (and previous buffered data removed) then seek stream to current time
             const currentTime = playbackController.getTime();
             logger.debug('AppendToBuffer seek target should be ' + currentTime);
-            triggerEvent(Events.SEEK_TARGET, {time: currentTime, mediaType: type, streamId: streamInfo.id});
+            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
         if (appendedBytesInfo) {
