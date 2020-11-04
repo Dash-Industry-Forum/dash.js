@@ -102,6 +102,10 @@ function NotFragmentedTextBufferController(config) {
         }
     }
 
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
     function getType() {
         return type;
     }
@@ -192,6 +196,7 @@ function NotFragmentedTextBufferController(config) {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
+        getStreamId: getStreamId,
         getType: getType,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,
