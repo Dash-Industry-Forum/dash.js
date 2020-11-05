@@ -8,137 +8,137 @@ Proposed functional tests are based upon Intern framework (https://theintern.io/
 To install Intern, perform a ```npm install``` command in dash.js root folder.
 
 ## Web application for tests
-To run the tests you have to serve a web application that is able to run the dash.js player.
+To run the tests, you have to serve a web application that is able to run the dash.js player.
 This web application must declare the video element and the dash.js MediaPlayer instance, respectively with the ids ```'video'``` and ```'player'```.
 
+The sample application ```samples/functional-tests/index.html``` provides an example of such as application which is used by default to run the tests.
+
+By default, the web application https://reference.dashif.org/dash.js/nightly/samples/functional-tests/index.html is loaded for executing the tests.
+
 ## Tests scripts
-The folder ```tests/functional``` contains the different functional tests suites for testing each functionality/scenario.
-For example the suite in file ```test/play.js``` is used to test the ability to play a stream.
+The folder ```/test/functional``` contains the different functional tests suites for testing each playback functionality/scenario.
+For example the suite in file ```tests/play.js``` is used to test the ability to play a stream.
 
 When writing a functional test, instead of executing application code directly, we do use the Leadfoot Command object, provided by the Intern framework, to automate interactions to test the application (see https://theintern.github.io/leadfoot/module-leadfoot_Command.html).
-All the tests can then execute script source code within the test web application and then interact with the MediaPlayer instantiated in the web application.
-The file ```tests/scripts/player.js``` provide a set of script functions to interact with the player.
+All the tests can therefore execute script source code within the test web application and then interact with the MediaPlayer and/or HTML video element instantiated in the web application.
+
+The file ```tests/scripts/player.js``` provide a set of script functions to interact with the dahs.js MediaPlayer.
+The file ```tests/scripts/video.js``` provide a set of script functions to interact with the HTML video element.
 
 Also in order to automate and check the tests results we do use the Chai Assertion Library (http://chaijs.com/) which is also bundled with Intern.
 
-## Selenium and tests configuration
-In ```config``` folder, you will multiple configurations files that are used by the ```runTests.js``` script to run tests:
-- ```browsers.json``` provides the configuration for available browsers and CDMs for each platform (OSx and windows)
+## Selenium and tests environment/configuration
+In ```config``` folder, you will find configurations files that are used by the ```runTests.js``` script to configure tests execution environment:
+- ```browsers.json``` provides the configuration for available browsers and CDMs for each platform (Windows and Mac)
 - ```applications.json``` provides the configuration for some web application that can be used to execute the tests
 
-The script ```runTests.js``` is used to complete the intern and tests configuration, and to run the tests.
+The script ```runTests.js``` is used to complete the intern and tests environment and configuration, and to run the tests.
 
-## Running tests on Windows
-#### WebDrivers
-In ```selenium``` folder, the following web drivers are available:
-- Chrome
-- Firefox
-- Chromium Edge
+## Running test on local desktop
 
-#### Legacy Edge
+### WebDrivers
+
+According to the browser(s) on which you want to execute the tests, you need to download the browser's web driver.
+
+Download and copy the appropriate drivers (browser and version) in the ```selenium``` folder.
+
+#### Chrome driver
+Download the latest chrome driver from https://chromedriver.chromium.org/
+
+#### Firefox driver
+Download the latest Firefox (geckodriver) driver from https://github.com/mozilla/geckodriver/releases
+
+#### Edge driver
 Download the matching Edge driver (MicrosoftWebDriver) from https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
 
-For Edge version <=17 you need to adjust the "Dwebdriver.edge.driver" property in startClient.bat. 
+For Edge version <=17 you need to adjust the "Dwebdriver.edge.driver" property in Selenium node configuration (see next section). 
 
 For Version 18 and 19 follow the instructions in the link above and remove the "Dwebdriver.edge.driver" property and the MicrosoftWebDriver.exe in the selenium folder.
 
-#### Launch the tests
-1. Start selenium hub. Open a new terminal and launch the command:
+### Selenium
+
+Before executing tests on your local desktop you need to run Selenium grid:
+
+1. Start selenium hub. Open a new terminal at folder ```selenium``` and launch the command:
 ```sh
-cd test/functional/selenium
-startHub.bat
+> java -jar selenium-server-standalone-3.4.0.jar -role hub
 ```
 
-2. Start selenium node. Open a new terminal and launch the command:
+2. Start selenium node. Open a new terminal at folder ```selenium``` and launch the command:
 ```sh
-cd test/functional/selenium
-startClient.bat
+> java -jar selenium-server-standalone-3.4.0.jar -role node
+```
+On Windows you need to provide the node configuration:
+```sh
+> java -jar selenium-server-standalone-3.4.0.jar -role node -nodeConfig Win10nodeConfig.json
 ```
 
-3. Start Intern runner. Open a new terminal and launch the command:
+When using driver for Edge version <=17 you need to adjust the "Dwebdriver.edge.driver" property in Selenium node configuration. 
+
 ```sh
-cd test/functional
-./runTestsWin.bat
+> java -jar selenium-server-standalone-3.4.0.jar -role node -nodeConfig Win10nodeConfig.json -Dwebdriver.edge.driver="msedgedriver.exe" 
 ```
 
-This last command contains a script for running tests on all browsers.
-The script can be modified and executed (from project root folder) in order to run the tests (see ```runTests.js```):
-- on specific browsers,
+## Executing the tests
+
+To execute the tests you need to launch the intern runner. Open a new terminal at project root folder and launch the command:
 ```sh
---browsers=<browser_names_separated_by_comma>
-```
-- on a specific testing web application
-```sh
---app=<app_name_from_config_file> or --appurl=<app_url>
-```
-- using http or https protocol for accessing application and streams (https by default),
-```sh
---protocol=<http or https>
-```
-- only for some specific suite of tests (Note: at least 'play' test is executed in order to retrieve stream metadata)
-```sh
---testSuites=<test_suite_names_separated_by_comma>
-```
-- only for a specific stream or group of streams
-```sh
---stream=<stream or group name>
-```
-- to specify reporters
-```sh
---repoerters=<reporter_names_separated_by_comma>
+> node test/functional/runTests.js
 ```
 
-For example:
-- run all tests on chrome with pretty and junit reporters
+For the list fo available options run:
 ```sh
-node test/functional/runTests.js --os=windows --browsers=chrome --reporters=\"pretty,junit\"
-```
-- run only play and seek test suites
-```sh
-node test/functional/runTests.js --os=windows --browsers=chrome --testSuites=\"play,seek\"
-```
-- run all tests on stream "VOD (Static MPD) / SegmentBase, ondemand profile"
-```sh
-node test/functional/runTests.js --os=windows --browsers=chrome --stream=\"VOD (Static MPD) / SegmentBase, ondemand profile\"
+> node test/functional/runTests.js --help
 ```
 
-
-## Running tests on Mac OSX
-#### Chrome
-Download latest chrome driver (chromedriver) from https://sites.google.com/a/chromium.org/chromedriver/downloads
-Make sure installation path is available in PATH variable.
-You can follow this article : http://www.kenst.com/2015/03/installing-chromedriver-on-mac-osx/
-
-#### Firefox
-Download last firefox driver (geckodriver) from https://github.com/mozilla/geckodriver/releases
-Make sure installation path is available in PATH variable.
-
-#### Launch the tests
-1. Start selenium hub. Open a new terminal and launch the command :
+The available options for running the tests are:
 ```sh
-cd test/functional/selenium
-java -jar selenium-server-standalone-3.4.0.jar -role hub
+runTests.js [options]
+
+Options:
+      --selenium    The selenium configuration preset name
+                                 [choices: "local", "remote"] [default: "local"]
+      --reporters   Reporters types (separated by ",", see intern.io
+                    documentation)                           [default: "pretty"]
+      --os          The OS platform on which tests must be executed (for test on
+                    local desktop, os is detected)
+                                [choices: "windows", "osx"] [default: "windows"]
+      --browsers    Browser names among "chrome", "firefox" and "edge"
+                    (separated by ",")                       [default: "chrome"]
+      --app         Application names
+                                 [choices: "local", "remote"] [default: "local"]
+      --protocol    The http protocol for loading application
+                                   [choices: "https", "http"] [default: "https"]
+      --testSuites  The test suites names ("play", "playFromTime", "pause", ...)
+                    to execute (separated by ",")               [default: "all"]
+      --streams     Name filter for streams to be tested        [default: "all"]
+      --debug       Output log/debug messages       [boolean] [default: "false"]
 ```
 
-2. Start selenium node. Open a new terminal and launch the command :
-```sh
-cd test/functional/selenium
-java -jar selenium-server-standalone-3.4.0.jar -role node
-```
-3. Start Intern runner. Open a new terminal and launch the command:
-```sh
-cd test/functional
-./runTestsMac.sh
-```
+Note: for complete of available reporters refer to Intern documentation: https://theintern.io/docs.html#Intern/4/api/lib%2Fcommon%2Fconfig/reporters
 
-As for Windows, the script can be modified to setup the tests.
+As an example, to execute tests:
+  - using remote selenium (Browserstack)
+  - using junit reporter
+  - on windows platform
+  - with firefox
+  - using remote application (integrating nightly build of dash.js)
+  - using https (to enable playback of DRM protected streams)
+  - play and pause tes suites only
+  - for streams in the group "DRM (mordern)"
+
+enter command:
+```sh
+> node .\test\functional\runTests.js --selenium=remote --os=windows --browser=firefox --app=remote --protocol=https --reporters=junit --testSuites="play,pause" --streams="DRM (modern)"
+```
 
 #### Troubleshooting
-Question: The localhost:3000 webserver is not available and all tests fail.  
-Answer: A local webserver needs to run on port 3000. In order to launch a debug server launch the following command in the root folder of the project:
+
+\# Question: The localhost:3000 webserver is not available and all tests fail.  
+Answer: A local webserver needs to run on port 3000 when using local application. In order to launch local server that serves debug version of dash.js launch the following command in the root folder of the project:
 ```
 npm run dev
 ```
 
-Question: The webserver responds with "cannot establish a secure connection"  
+\# Question: The webserver responds with "cannot establish a secure connection"  
 Answer: You need to install a local certificate to run the tests under https. Or you set the protocol to http as described above.

@@ -21,9 +21,9 @@ module.exports.getStreams = function () {
     streams = streams.filter(stream => /^(https?|)/.exec(stream.url)[0] === intern.config.protocol)
 
     // Filter streams if input stream name is set
-    if (intern.config.stream) {
+    if (intern.config.streams) {
         streams = streams.filter(stream => {
-            return stream.name.indexOf(intern.config.stream) !== -1;
+            return stream.name.indexOf(intern.config.streams) !== -1;
         });
     };
 

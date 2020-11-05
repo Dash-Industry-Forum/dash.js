@@ -1,13 +1,59 @@
-var intern = require('intern').default;
-var browsers = require('./config/browsers.json');
-var applications = require('./config/applications.json');
-var yargs = require('yargs');
-var args = yargs
-    .usage('$0 --os [--type major|minor|patch] [--ver <version>] \n$0 --finish')
-    .default('type', 'minor')
-    .argv;
+const intern = require('intern').default;
+const browsers = require('./config/browsers.json');
+const applications = require('./config/applications.json');
+const yargs = require('yargs');
+const os = require('os');
 
-// console.log(args);
+var args = yargs
+    .usage('$0 [options]')
+    .alias('h', 'help')
+    .help(true)
+    .options({
+        'selenium': {
+            describe: 'The selenium configuration preset name',
+            choices: ['local', 'remote'],
+            default: 'local'
+        },
+        'reporters': {
+            describe: 'Reporters types (separated by \",\", see intern.io documentation)',
+            default: 'pretty'
+        },
+        'os': {
+            describe: 'The OS platform on which tests must be executed (for test on local desktop, os is detected)',
+            choices: ['windows', 'osx'],
+            default: 'windows'
+        },
+        'browsers': {
+            describe: 'Browser names among \"chrome\", \"firefox\" and \"edge\" (separated by \",\")',
+            default: 'chrome'
+        },
+        'app': {
+            describe: 'Application names',
+            choices: ['local', 'remote'],
+            default: 'local'
+        },
+        'protocol': {
+            describe: 'The http protocol for loading application',
+            choices: ['https', 'http'],
+            default: 'https'
+        },
+        'testSuites': {
+            describe: 'The test suites names (\"play\", \"playFromTime\", \"pause\", ...) to execute (separated by \",\")',
+            default: 'all'
+        },
+        'streams': {
+            describe: 'Name filter for streams to be tested',
+            default: 'all'
+        },
+        'debug': {
+            describe: 'Output log/debug messages',
+            type: 'boolean',
+            default: 'false'
+        }
+    })
+    .parse();
+
+console.log(args);
 
 var config = {
 
@@ -26,55 +72,70 @@ var config = {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Selenium configuration
-var local = {
-    proxyUrl: 'http://127.0.0.1:3555',
-    proxyPort: 3555,
-    tunnel: 'null',
-    tunnelOptions: {
-        hostname: '127.0.0.1',
-        port: '4444',
-        verbose: true
+var seleniumConfig = {
+    local: {
+        proxyUrl: 'http://127.0.0.1:3555',
+        proxyPort: 3555,
+        tunnel: 'null',
+        tunnelOptions: {
+            hostname: '127.0.0.1',
+            port: '4444',
+            verbose: true
+        },
+        capabilities: {
+            'selenium-version': '3.4.0'
+        },
+        leaveRemoteOpen:'fail'
     },
-    capabilities: {
-        'selenium-version': '3.4.0'
-    },
-    leaveRemoteOpen:'fail'
-};
-
-var remote = {
-    capabilities: {
-        name: 'Tests DashJS',
-        build: process.env.BROWSERSTACK_LOCAL_IDENTIFIER || 'BROWSERSTACK_LOCAL_IDENTIFIER',
-        'browserstack.local': false,
-        'browserstack.debug': true,
-        fixSessionCapabilities: false
-    },
-    tunnel: 'browserstack',
-    tunnelOptions: {
-        username: process.env.BROWSERSTACK_USER || 'BROWSERSTACK_USER',
-        accessKey: process.env.BROWSERSTACK_ACCESS_KEY || 'BROWSERSTACK_ACCESS_KEY',
-        verbose: true
+    remote: {
+        capabilities: {
+            name: 'Tests DashJS',
+            build: process.env.BROWSERSTACK_LOCAL_IDENTIFIER || 'BROWSERSTACK_LOCAL_IDENTIFIER',
+            'browserstack.local': false,
+            'browserstack.debug': true,
+            fixSessionCapabilities: false
+        },
+        tunnel: 'browserstack',
+        tunnelOptions: {
+            username: process.env.BROWSERSTACK_USER || 'BROWSERSTACK_USER',
+            accessKey: process.env.BROWSERSTACK_ACCESS_KEY || 'BROWSERSTACK_ACCESS_KEY',
+            verbose: true
+        }
     }
 };
 
-var seleniumConfig = args.selenium === 'remote' ? remote : local;
-config = Object.assign(config, seleniumConfig);
+config = Object.assign(config, seleniumConfig[args.selenium]);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Browsers / OS configuration
-var os = 'windows';
-if (args.os) {
-    os = args.os;
+
+var osName = args.os;
+
+// For local testing, detect the OS
+if (args.selenium === 'local') {
+    const platform = os.platform();
+    switch (platform) {
+        case 'win32':
+        case 'win64':
+            osName = 'windows';
+            break;
+        case 'darwin':
+            osName = 'mac';
+            break;
+        default:
+            console.log('Unsupported platform: ' + platform);
+            process.exit();
+    }
 }
 
-var browserNames = Object.keys(browsers[os]);
+var browserNames = Object.keys(browsers[osName]);
 if (args.browsers) {
     browserNames = browserNames.filter(name => args.browsers.split(',').includes(name));
 }
 
 config.environments = [];
 browserNames.forEach(name => {
-    config.environments = config.environments.concat(browsers[os][name]);
+    config.environments = config.environments.concat(browsers[osName][name]);
 });
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,17 +160,10 @@ reportersNames.forEach(name => {
 // Tests configuration from command line
 
 // protocol
-config.protocol = 'https';
-if (args.protocol) {
-    config.protocol = args.protocol;
-}
+config.protocol = args.protocol;
 
 // application
-config.testPage = applications.local;
-if (args.app) {
-    config.testPage = applications[args.app];
-    // config.smoothEnabled = decodeURIComponent((new RegExp('[?|&]mss=' + '([^&;]+?)(&|#|;|$)').exec(config.testPage)||[,''])[1].replace(/\+/g, '%20')) || 'false';
-}
+config.testPage = applications[args.app];
 
 if (args.appurl) {
     config.testPage = args.appurl;
@@ -122,17 +176,17 @@ if (!config.testPage.startsWith('http')) {
 
 
 // tests suites
-if (args.testSuites) {
+if (args.testSuites !== 'all') {
     config.testSuites = args.testSuites;
 }
 
 // Test stream
-if (args.stream) {
-    config.stream = args.stream;
+if (args.streams !== 'all') {
+    config.streams = args.streams;
 }
 
 // Debug logs
-config.debug = args.debug ? true : false;
+config.debug = args.debug;
 
 // console.log(JSON.stringify(config, null, '  '));
 
