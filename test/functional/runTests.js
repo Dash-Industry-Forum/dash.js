@@ -20,7 +20,7 @@ var args = yargs
         },
         'os': {
             describe: 'The OS platform on which tests must be executed (for test on local desktop, os is detected)',
-            choices: ['windows', 'osx'],
+            choices: ['windows', 'mac'],
             default: 'windows'
         },
         'browsers': {

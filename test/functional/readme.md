@@ -102,7 +102,7 @@ Options:
                     documentation)                           [default: "pretty"]
       --os          The OS platform on which tests must be executed (for test on
                     local desktop, os is detected)
-                                [choices: "windows", "osx"] [default: "windows"]
+                                [choices: "windows", "mac"] [default: "windows"]
       --browsers    Browser names among "chrome", "firefox" and "edge"
                     (separated by ",")                       [default: "chrome"]
       --app         Application names
