@@ -129,7 +129,7 @@ As an example, to execute tests:
 
 enter command:
 ```sh
-> node .\test\functional\runTests.js --selenium=remote --os=windows --browser=firefox --app=remote --protocol=https --reporters=junit --testSuites="play,pause" --streams="DRM (modern)"
+> node .\test\functional\runTests.js --selenium=remote --os=windows --browsers=firefox --app=remote --protocol=https --reporters=junit --testSuites="play,pause" --streams="DRM (modern)"
 ```
 
 #### Troubleshooting
