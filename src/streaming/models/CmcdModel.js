@@ -423,7 +423,6 @@ function CmcdModel() {
             const length = keys.length;
 
             let cmcdString = keys.reduce((acc, key, index) => {
-                if (key === 'v' && cmcdData[key] === 1) return acc;
                 if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
                     let string = cmcdData[key].replace(/"/g, '\"');
                     acc += `${key}="${string}"`;
@@ -438,7 +437,6 @@ function CmcdModel() {
             }, '');
 
             cmcdString = cmcdString.replace(/=true/g, '');
-            cmcdString = encodeURIComponent(cmcdString);
 
             return cmcdString;
         } catch (e) {
