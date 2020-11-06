@@ -45,7 +45,7 @@ exports.register = function (stream) {
             stream.duration = await command.execute(player.getDuration);
             stream.periods = [];
             let streams = await command.execute(player.getStreams);
-            for(let i = 0; i < streams.length; i++ ) {
+            for (let i = 0; i < streams.length; i++ ) {
                 stream.periods.push({
                     start: streams[i].start,
                     duration: streams[i].duration

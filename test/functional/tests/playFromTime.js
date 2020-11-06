@@ -16,7 +16,9 @@ const constants = require('./scripts/constants.js');
 const NAME = 'PLAY_FROM_TIME';
 
 // Test constants
-const OFFSET_TO_START = 15; // time offset (in sec.) from the beginning of the period
+const TIME_OFFSET = 30; // time offset (in sec.) from the beginning of the period or before live edge (for live streams)
+
+let startTime;
 
 exports.register = function (stream) {
 
@@ -28,14 +30,14 @@ exports.register = function (stream) {
             command = remote.get(intern.config.testPage);
             let stream_ = stream;
             if (!stream.dynamic) {
-                let timeToStart = stream.periods[stream.periods.length - 1].start + OFFSET_TO_START;
-                stream_.url += '#t=' + timeToStart;
+                let period = stream.periods[stream.periods.length - 1];
+                startTime = period.start + Math.min(TIME_OFFSET, period.duration - 5);
+                stream_.url += '#t=' + startTime;
             } else {
-                if (stream.dvrWindow > 0) {
-                    let relativePosition = stream.dvrWindow / 2;
-                    stream_.url += '#r=' + relativePosition;
-                }
+                startTime = Math.floor(Date.now() / 1000) - TIME_OFFSET;
+                stream_.url += '#t=' + startTime;
             }
+            utils.log(NAME, 'Playback start time: ' + startTime);
             await command.execute(player.loadStream, [stream_]);
         });
 
@@ -43,9 +45,10 @@ exports.register = function (stream) {
             utils.log(NAME, 'Play');
             const playing = await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
             assert.isTrue(playing);
-            const time = await command.execute(player.getTime);
+            const time = await command.execute(stream.dynamic ? player.getTimeAsUTC : player.getTime);
             utils.log(NAME, 'Playback time: ' + time);
-            assert.isAtLeast(time, stream.periods[stream.periods.length - 1].start + OFFSET_TO_START);
+            assert.isAtLeast(time, startTime);
+            assert.isAtMost(time, (startTime + 5));
         });
     });
 }

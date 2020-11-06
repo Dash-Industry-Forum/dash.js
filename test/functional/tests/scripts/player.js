@@ -12,6 +12,10 @@ module.exports = {
         return player.time();
     },
 
+    getTimeAsUTC: function() {
+        return player.timeAsUTC();
+    },
+
     isDynamic: function () {
         return player.isDynamic();
     },
