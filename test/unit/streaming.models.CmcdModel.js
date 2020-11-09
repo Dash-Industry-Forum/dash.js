@@ -35,7 +35,7 @@ describe('CmcdModel', function () {
         abrControllerMock.setTopBitrateInfo(null);
     });
 
-    describe('if confgured', function () {
+    describe('if configured', function () {
         beforeEach(function () {
             cmcdModel.setConfig({
                 abrController: abrControllerMock,
@@ -139,7 +139,7 @@ describe('CmcdModel', function () {
             expect(metrics).to.have.property('bl');
             expect(metrics.bl).to.equal(BUFFER_LEVEL);
             expect(metrics).to.have.property('tb');
-            expect(metrics.tb).to.equal(TOP_BITRATE);
+            expect(metrics.tb).to.equal(parseInt(TOP_BITRATE / 1000));
         });
 
         it('getQueryParameter() returns correct metrics for other type', function () {
