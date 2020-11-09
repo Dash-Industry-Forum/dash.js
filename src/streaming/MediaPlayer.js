@@ -1737,7 +1737,7 @@ function MediaPlayer() {
             manifestLoader.reset();
         };
 
-        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, { scope: self });
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
 
         uriFragmentModel.initialize(url);
         manifestLoader.load(url);
