@@ -149,7 +149,6 @@ function CmcdModel() {
             let cmcdData = null;
 
             if (request.type === HTTPRequest.MPD_TYPE) {
-                _setDefaultContentId(request);
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                 _initForMediaType(request.mediaType);
@@ -163,14 +162,6 @@ function CmcdModel() {
             return cmcdData;
         } catch (e) {
             return null;
-        }
-    }
-
-    function _setDefaultContentId(request) {
-        try {
-            internalData.cid = `${Utils.generateHashCode(request.url)}`;
-        } catch (e) {
-
         }
     }
 
@@ -275,12 +266,16 @@ function CmcdModel() {
     function _getGenericCmcdData() {
         const data = {};
 
+        let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
+
         data.v = CMCD_VERSION;
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-        data.cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
 
         data.sid = `${data.sid}`;
-        data.cid = `${data.cid}`;
+
+        if (cid) {
+            data.cid = `${cid}`;
+        }
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;

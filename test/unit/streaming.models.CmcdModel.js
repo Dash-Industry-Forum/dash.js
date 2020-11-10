@@ -62,7 +62,7 @@ describe('CmcdModel', function () {
 
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.have.property('sid');
-            expect(metrics).to.have.property('cid');
+            expect(metrics).to.not.have.property('cid');
             expect(metrics).to.have.property('ot');
             expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
         });
@@ -85,7 +85,7 @@ describe('CmcdModel', function () {
 
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.have.property('sid');
-            expect(metrics).to.have.property('cid');
+            expect(metrics).to.not.have.property('cid');
             expect(metrics).to.have.property('ot');
             expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
             expect(metrics).to.have.property('su');
@@ -125,7 +125,7 @@ describe('CmcdModel', function () {
 
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.have.property('sid');
-            expect(metrics).to.have.property('cid');
+            expect(metrics).to.not.have.property('cid');
             expect(metrics).to.have.property('br');
             expect(metrics.br).to.equal(parseInt(BITRATE / 1000));
             expect(metrics).to.have.property('ot');
@@ -160,7 +160,7 @@ describe('CmcdModel', function () {
 
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.have.property('sid');
-            expect(metrics).to.have.property('cid');
+            expect(metrics).to.not.have.property('cid');
             expect(metrics).to.have.property('ot');
             expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
         });
@@ -278,6 +278,29 @@ describe('CmcdModel', function () {
             expect(metrics.st).to.equal('l');
             expect(metrics).to.have.property('sf');
             expect(metrics.sf).to.equal('s');
+        });
+
+        it('getQueryParameter() returns CID in metrics if expicitly set', function () {
+            const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
+            const MEDIA_TYPE = 'video';
+            const CID = 'content_id';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            settings.update({streaming: {cmcd: {enabled: true, cid: CID}}});
+
+            let parameters = cmcdModel.getQueryParameter(request);
+            expect(parameters).to.have.property('key');
+            expect(parameters.key).to.equal('CMCD');
+            expect(parameters).to.have.property('value');
+            expect(typeof parameters.value).to.equal('string');
+
+            let metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('cid');
+            expect(metrics.cid).to.equal(CID);
         });
     });
 });
