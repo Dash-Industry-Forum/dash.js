@@ -359,13 +359,13 @@ class MediaPlayerEvents extends EventsBase {
          * Dash events are triggered at their respective start points on the timeline.
          * @event MediaPlayerEvents#EVENT_MODE_ON_START
          */
-        this.EVENT_MODE_ON_START = 'onStart';
+        this.EVENT_MODE_ON_START = 'eventModeOnStart';
 
         /**
          * Dash events are triggered as soon as they were parsed.
          * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
          */
-        this.EVENT_MODE_ON_RECEIVE = 'onReceive';
+        this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
     }
 }
 

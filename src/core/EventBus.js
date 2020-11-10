@@ -48,7 +48,7 @@ function EventBus() {
         }
 
         let priority = options.priority || EVENT_PRIORITY_LOW;
-        let mode = options.mode || EVENT_MODE_ON_START;
+        let mode = options.mode || undefined;
 
         if (getHandlerIdx(type, listener, scope) >= 0) return;
 
@@ -102,10 +102,13 @@ function EventBus() {
         const mode = isEventStart ? EVENT_MODE_ON_START : EVENT_MODE_ON_RECEIVE;
 
         handlers[type]
-            .filter((item) => item)
-            .filter(item => !(filters.streamId && item.streamId && item.streamId !== filters.streamId))
-            .filter(item => !(filters.mediaType && item.mediaType && item.mediaType !== filters.mediaType))
-            .filter(handler => handler.mode === mode)
+            .filter((item) => {
+                if (!item) return false;
+                if (filters.streamId && item.streamId && item.streamId !== filters.streamId) return false;
+                if (filters.mediaType && item.mediaType && item.mediaType !== filters.mediaType) return false;
+                if (item.mode !== mode || (!item.mode && mode === EVENT_MODE_ON_RECEIVE)) return false;
+                return true;
+            })
             .forEach(handler => handler && handler.callback.call(handler.scope, payload));
     }
 

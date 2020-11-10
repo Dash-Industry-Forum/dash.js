@@ -316,7 +316,13 @@ function EventController() {
             const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
             const isEventStart = Math.floor(currentVideoTime) === calculatedPresentationTimeInSeconds;
 
-            if (isEventStart && event.duration > 0) {
+            if (!isEventStart) {
+                logger.debug(`Received event ${eventId}`);
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { isEventStart });
+                return;
+            }
+
+            if (event.duration > 0) {
                 activeEvents[eventId] = event;
             }
 
