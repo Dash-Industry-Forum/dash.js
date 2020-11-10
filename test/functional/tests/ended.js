@@ -30,7 +30,7 @@ exports.register = function(stream) {
 
         test('seek', async () => {
             // Seek the player before end
-            let seekTime = Mah.max(0, (stream.duration - constants.SEEK_END_SHIFT));
+            let seekTime = Math.max(0, (stream.duration - constants.SEEK_END_SHIFT));
             utils.log(NAME, 'Seek before end: ' + seekTime);
             const seeked = await command.executeAsync(player.seek, [seekTime, constants.EVENT_TIMEOUT]);
             assert.isTrue(seeked)
