@@ -106,7 +106,25 @@ function AdapterMock () {
         return false;
     };
 
+    this.getIsPatch = function () {
+        return false;
+    };
+
+    this.isPatchValid = function () {
+        return false;
+    };
+
+    this.applyPatchToManifest = function () {};
+
     this.convertDataToRepresentationInfo = function () {
+        return null;
+    };
+
+    this.getLocation = function () {
+        return null;
+    };
+
+    this.getPatchLocation = function () {
         return null;
     };
 }

@@ -66,7 +66,7 @@ function DashParser(config) {
             emptyNodeForm:      'object',
             stripWhitespaces:   false,
             enableToStringFunc: true,
-            ignoreRoot:         true,
+            ignoreRoot:         false,
             matchers:           matchers
         });
 
@@ -95,7 +95,22 @@ function DashParser(config) {
         }
 
         const jsonTime = window.performance.now();
-        objectIron.run(manifest);
+
+        // handle full MPD and Patch ironing separately
+        if (manifest.Patch) {
+            manifest = manifest.Patch; // drop root reference
+            // apply iron to patch operations individually
+            if (manifest.add_asArray) {
+                manifest.add_asArray.forEach((operand) => objectIron.run(operand));
+            }
+            if (manifest.replace_asArray) {
+                manifest.replace_asArray.forEach((operand) => objectIron.run(operand));
+            }
+            // note that we don't need to iron remove as they contain no children
+        } else {
+            manifest = manifest.MPD; // drop root reference
+            objectIron.run(manifest);
+        }
 
         const ironedTime = window.performance.now();
         logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');

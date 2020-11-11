@@ -34,11 +34,13 @@ import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
 import DashConstants from '../dash/constants/DashConstants';
+import URLUtils from './utils/URLUtils';
 
 function ManifestUpdater() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
 
     let instance,
         logger,
@@ -135,15 +137,46 @@ function ManifestUpdater() {
     function refreshManifest() {
         isUpdating = true;
         const manifest = manifestModel.getValue();
+
+        // default to the original url in the manifest
         let url = manifest.url;
+
+        // Check for PatchLocation and Location alternatives
+        const patchLocation = adapter.getPatchLocation(manifest);
         const location = adapter.getLocation(manifest);
-        if (location) {
+        if (patchLocation) {
+            url = patchLocation;
+        } else if (location) {
             url = location;
         }
+
+        // if one of the alternatives was relative, convert to absolute
+        if (urlUtils.isRelative(url)) {
+            url = urlUtils.resolve(url, manifest.url);
+        }
+
         manifestLoader.load(url);
     }
 
     function update(manifest) {
+        if (!manifest) {
+            // successful update with no content implies existing manifest remains valid
+            manifest = manifestModel.getValue();
+
+            // override load time to avoid invalid latency tracking
+            manifest.loadedTime = new Date();
+        } else if (adapter.getIsPatch(manifest)) {
+            // with patches the in-memory manifest is our base
+            let patch = manifest;
+            manifest = manifestModel.getValue();
+
+            // if the patch received is valid we apply it to the manifest
+            if (adapter.isPatchValid(manifest, patch)) {
+                adapter.applyPatchToManifest(manifest, patch);
+            } else {
+                logger.debug('Invalid patch provided, cannot apply');
+            }
+        }
 
         // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
         // Stop manifest update, ignore static manifest and signal end of dynamic stream to detect end of stream

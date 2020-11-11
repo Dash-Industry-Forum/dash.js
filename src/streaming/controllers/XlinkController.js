@@ -97,8 +97,13 @@ function XlinkController(config) {
         });
 
         manifest = mpd;
-        elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
-        resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+
+        if (manifest.Period_asArray) {
+            elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+            resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+        } else {
+            eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
+        }
     }
 
     function reset() {
