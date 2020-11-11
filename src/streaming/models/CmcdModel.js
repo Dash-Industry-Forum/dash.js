@@ -414,10 +414,11 @@ function CmcdModel() {
             if (!cmcdData) {
                 return null;
             }
-            const keys = Object.keys(cmcdData).sort((a, b) => a > b);
+            const keys = Object.keys(cmcdData).sort((a, b) =>a.localeCompare(b));
             const length = keys.length;
 
             let cmcdString = keys.reduce((acc, key, index) => {
+                if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
                 if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
                     let string = cmcdData[key].replace(/"/g, '\"');
                     acc += `${key}="${string}"`;
