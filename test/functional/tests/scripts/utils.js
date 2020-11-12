@@ -7,7 +7,6 @@ module.exports = {
         return stream.name + ' # ' + name;
     },
 
-
     info: function (tag, message) {
         console.info('[' + tag + ']', message);
     },
