@@ -383,9 +383,9 @@ function PlaybackController() {
         // TODO: consider end time of MediaRange to stop playback at provided end time
         fragData.t = fragData.t.split(',')[0];
 
-        // "t=<time>" : time is relative to period start (for static streams) or DVR window range start (for dynamic streams)
+        // "t=<time>" : time is relative to 1st period start (for static streams) or DVR window range start (for dynamic streams)
         // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
-        startTime = (isDynamic && fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (rangeStart + parseInt(fragData.t));
+        startTime = (isDynamic && fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : parseInt(fragData.t);
 
         return startTime;
     }
