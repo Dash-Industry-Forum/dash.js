@@ -256,10 +256,13 @@ describe('Thumbnails', function () {
         });
 
         it('addTracks method doesn\'t add any track if config not set properly', function () {
-            thumbnailTracks = ThumbnailTracks(context).create({debug: Debug(context).getInstance(),
-                                                            eventBus: EventBus(context).getInstance(),
-                                                            events: Events,
-                                                            dashConstants: DashConstants});
+            thumbnailTracks = ThumbnailTracks(context).create({
+                streamInfo: streamInfo,
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
+            });
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
             expect(tracks).to.be.empty; // jshint ignore:line

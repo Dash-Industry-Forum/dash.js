@@ -62,12 +62,13 @@ function Stream(config) {
     const eventController = config.eventController;
     const mediaController = config.mediaController;
     const textController = config.textController;
+    const protectionController = config.protectionController;
     const videoModel = config.videoModel;
     const settings = config.settings;
+    let streamInfo = config.streamInfo;
 
     let instance,
         logger,
-        streamInfo,
         streamProcessors,
         isStreamInitialized,
         isStreamActivated,
@@ -76,7 +77,6 @@ function Stream(config) {
         hasAudioTrack,
         updateError,
         isUpdating,
-        protectionController,
         fragmentController,
         thumbnailController,
         preloaded,
@@ -105,6 +105,7 @@ function Stream(config) {
         boxParser = BoxParser(context).getInstance();
 
         fragmentController = FragmentController(context).create({
+            streamInfo: streamInfo,
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
@@ -113,8 +114,12 @@ function Stream(config) {
             dashConstants: DashConstants,
             urlUtils: urlUtils
         });
+    }
 
+    function initialize() {
         registerEvents();
+        registerProtectionEvents();
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
     function registerEvents() {
@@ -151,18 +156,8 @@ function Stream(config) {
         }
     }
 
-    function initialize(strInfo, prtctnController) {
-        streamInfo = strInfo;
-        if (strInfo) {
-            fragmentController.setStreamId(strInfo.id);
-        }
-        protectionController = prtctnController;
-        registerProtectionEvents();
-
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
-
+    function getStreamId() {
+        return streamInfo ? streamInfo.id : null;
     }
 
     /**
@@ -237,7 +232,6 @@ function Stream(config) {
 
     function resetInitialSettings() {
         deactivate();
-        streamInfo = null;
         isStreamInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
@@ -257,6 +251,8 @@ function Stream(config) {
             fragmentController.reset();
             fragmentController = null;
         }
+
+        streamInfo = null;
 
         resetInitialSettings();
 
@@ -418,7 +414,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(), mediaInfo ? mediaInfo.type : null);
+        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -654,7 +650,7 @@ function Stream(config) {
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
                 streamInfo: streamInfo,
-                liveStartTime: getLiveStartTime()
+                liveStartTime: !preloaded ? getLiveStartTime() : NaN
             });
         }
 
@@ -691,9 +687,7 @@ function Stream(config) {
         return buffers;
     }
 
-    function onBufferingCompleted(e) {
-        if (e.streamId !== streamInfo.id) return;
-
+    function onBufferingCompleted() {
         let processors = getProcessors();
         const ln = processors.length;
 
@@ -712,20 +706,15 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo });
     }
 
     function onDataUpdateCompleted(e) {
-        if (!streamInfo || e.sender.getStreamId() !== streamInfo.id) return;
-
-        updateError[e.sender.getType()] = e.error;
+        updateError[e.mediaType] = e.error;
         checkIfInitializationCompleted();
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
@@ -766,9 +755,7 @@ function Stream(config) {
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
 
         if (eventController) {
             addInlineEvents();
@@ -799,20 +786,20 @@ function Stream(config) {
         checkIfInitializationCompleted();
     }
 
-    function isMediaCodecCompatible(newStream) {
-        return compareCodecs(newStream, Constants.VIDEO) && compareCodecs(newStream, Constants.AUDIO);
+    function isMediaCodecCompatible(newStream, previousStream = null) {
+        return compareCodecs(newStream, Constants.VIDEO, previousStream) && compareCodecs(newStream, Constants.AUDIO, previousStream);
     }
 
-    function isProtectionCompatible(stream) {
-        return compareProtectionConfig(stream, Constants.VIDEO) && compareProtectionConfig(stream, Constants.AUDIO);
+    function isProtectionCompatible(stream, previousStream = null) {
+        return compareProtectionConfig(stream, Constants.VIDEO, previousStream) && compareProtectionConfig(stream, Constants.AUDIO, previousStream);
     }
 
-    function compareProtectionConfig(stream, type) {
+    function compareProtectionConfig(stream, type, previousStream = null) {
         if (!stream) {
             return false;
         }
         const newStreamInfo = stream.getStreamInfo();
-        const currentStreamInfo = getStreamInfo();
+        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
@@ -826,20 +813,27 @@ function Stream(config) {
             return !newAdaptation && !currentAdaptation;
         }
 
-        // If any of the periods requires EME, we can't do smooth transition
-        if (newAdaptation.ContentProtection || currentAdaptation.ContentProtection) {
+        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
+        return !(!isAdaptationDrmProtected(currentAdaptation) && isAdaptationDrmProtected(newAdaptation));
+    }
+
+    function isAdaptationDrmProtected(adaptation) {
+
+        if (!adaptation) {
+            // If there is no adaptation for neither the old or the new stream they're compatible
             return false;
         }
 
-        return true;
+        // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
+        return !!(adaptation.ContentProtection || (adaptation.Representation && adaptation.Representation.length > 0 && adaptation.Representation[0].ContentProtection));
     }
 
-    function compareCodecs(newStream, type) {
+    function compareCodecs(newStream, type, previousStream = null) {
         if (!newStream || !newStream.hasOwnProperty('getStreamInfo')) {
             return false;
         }
         const newStreamInfo = newStream.getStreamInfo();
-        const currentStreamInfo = getStreamInfo();
+        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
             return false;
@@ -921,6 +915,7 @@ function Stream(config) {
 
     instance = {
         initialize: initialize,
+        getStreamId: getStreamId,
         activate: activate,
         deactivate: deactivate,
         isActive: isActive,

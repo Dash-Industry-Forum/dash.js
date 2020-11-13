@@ -72,8 +72,8 @@ function PlaybackController() {
         reset();
     }
 
-    function initialize(StreamInfo, periodSwitch, seekTime) {
-        streamInfo = StreamInfo;
+    function initialize(sInfo, periodSwitch, seekTime) {
+        streamInfo = sInfo;
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
@@ -93,7 +93,7 @@ function PlaybackController() {
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
+        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this, EventBus.EVENT_PRIORITY_HIGH);
         eventBus.on(Events.STREAM_INITIALIZING, onStreamInitializing, this);
 
         if (playOnceInitialized) {
@@ -140,9 +140,7 @@ function PlaybackController() {
 
         if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
             // Trigger PLAYBACK_SEEKING event for controllers
-            eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: startTime
-            });
+            eventBus.trigger(Events.PLAYBACK_SEEKING, { seekTime: startTime });
             // Seek video model
             seek(startTime, false, true);
         }
@@ -401,6 +399,7 @@ function PlaybackController() {
             return NaN;
         }
 
+        logger.debug(`Checking DVR window for at ${currentTime} with DVR window range ${DVRWindow.start} - ${DVRWindow.end}`);
         if (currentTime > DVRWindow.end) {
             actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
 
@@ -441,6 +440,7 @@ function PlaybackController() {
         const actualTime = getActualPresentationTime(currentTime);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
+            logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
     }
@@ -465,30 +465,22 @@ function PlaybackController() {
         logger.info('Native video element event: play');
         updateCurrentTime();
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_STARTED, {
-            startTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_STARTED, { startTime: getTime() });
     }
 
     function onPlaybackWaiting() {
         logger.info('Native video element event: waiting');
-        eventBus.trigger(Events.PLAYBACK_WAITING, {
-            playingTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_WAITING, { playingTime: getTime() });
     }
 
     function onPlaybackPlaying() {
         logger.info('Native video element event: playing');
-        eventBus.trigger(Events.PLAYBACK_PLAYING, {
-            playingTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_PLAYING, { playingTime: getTime() });
     }
 
     function onPlaybackPaused() {
         logger.info('Native video element event: pause');
-        eventBus.trigger(Events.PLAYBACK_PAUSED, {
-            ended: getEnded()
-        });
+        eventBus.trigger(Events.PLAYBACK_PAUSED, { ended: getEnded() });
     }
 
     function onPlaybackSeeking() {
@@ -502,9 +494,7 @@ function PlaybackController() {
 
         logger.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_SEEKING, {
-            seekTime: seekTime
-        });
+        eventBus.trigger(Events.PLAYBACK_SEEKING, { seekTime: seekTime });
     }
 
     function onPlaybackSeeked() {
@@ -538,9 +528,7 @@ function PlaybackController() {
     function onPlaybackRateChanged() {
         const rate = getPlaybackRate();
         logger.info('Native video element event: ratechange: ', rate);
-        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, {
-            playbackRate: rate
-        });
+        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, { playbackRate: rate });
     }
 
     function onPlaybackMetaDataLoaded() {
@@ -554,7 +542,7 @@ function PlaybackController() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': streamController.getActiveStreamInfo().isLast});
+        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamController.getActiveStreamInfo().isLast });
     }
 
     // Handle DASH PLAYBACK_ENDED event
@@ -571,9 +559,7 @@ function PlaybackController() {
 
     function onPlaybackError(event) {
         const target = event.target || event.srcElement;
-        eventBus.trigger(Events.PLAYBACK_ERROR, {
-            error: target.error
-        });
+        eventBus.trigger(Events.PLAYBACK_ERROR, { error: target.error });
     }
 
     function onWallclockTime() {
@@ -701,9 +687,7 @@ function PlaybackController() {
     }
 
     function onPlaybackStalled(e) {
-        eventBus.trigger(Events.PLAYBACK_STALLED, {
-            e: e
-        });
+        eventBus.trigger(Events.PLAYBACK_STALLED, { e: e });
     }
 
     function onStreamInitializing(e) {
@@ -804,6 +788,7 @@ function PlaybackController() {
         isPaused: isPaused,
         pause: pause,
         isSeeking: isSeeking,
+        getStreamEndTime,
         seek: seek,
         reset: reset
     };

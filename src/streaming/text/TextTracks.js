@@ -57,7 +57,8 @@ function TextTracks() {
         fullscreenAttribute,
         displayCCOnTop,
         previousISDState,
-        topZIndex;
+        topZIndex,
+        resizeObserver;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -270,7 +271,7 @@ function TextTracks() {
                         containerStyle.width = actualVideoWidth + 'px';
                         containerStyle.height = actualVideoHeight + 'px';
                         containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                        eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE, {});
+                        eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE);
                     }
                 }
 
@@ -391,7 +392,7 @@ function TextTracks() {
                 //TODO add ErrorHandler management
             }, previousISDState, true /*enableRollUp*/);
             finalCue.id = cue.cueID;
-            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: finalCue, currentTrackIdx});
+            eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
         }
     }
 
@@ -444,7 +445,7 @@ function TextTracks() {
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
-                            eventBus.trigger(Events.CAPTION_RENDERED, {captionDiv: this.cueHTMLElement, currentTrackIdx});
+                            eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: this.cueHTMLElement, currentTrackIdx });
                         }
                     }
                 };
@@ -480,7 +481,7 @@ function TextTracks() {
                     }
                     cue.onenter = function () {
                         if (track.mode === Constants.TEXT_SHOWING) {
-                            eventBus.trigger(Events.CAPTION_RENDERED, {currentTrackIdx});
+                            eventBus.trigger(Events.CAPTION_RENDERED, { currentTrackIdx });
                         }
                     };
                 }
@@ -537,7 +538,14 @@ function TextTracks() {
 
         if (track && track.renderingType === 'html') {
             checkVideoSize.call(this, track, true);
-            videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+            if (window.ResizeObserver) {
+                resizeObserver = new window.ResizeObserver(() => {
+                    checkVideoSize.call(this, track, true);
+                });
+                resizeObserver.observe(videoModel.getElement());
+            } else {
+                videoSizeCheckInterval = setInterval(checkVideoSize.bind(this, track), 500);
+            }
         }
     }
 
@@ -592,6 +600,10 @@ function TextTracks() {
         if (videoSizeCheckInterval) {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
+        }
+        if (resizeObserver && videoModel) {
+            resizeObserver.unobserve(videoModel.getElement());
+            resizeObserver = null;
         }
         currentTrackIdx = -1;
         clearCaptionContainer.call(this);

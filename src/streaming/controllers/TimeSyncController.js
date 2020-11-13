@@ -282,7 +282,11 @@ function TimeSyncController() {
 
     function completeTimeSyncSequence(failed, time, offset) {
         setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, { time: time, offset: offset, error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {
+            time: time,
+            offset: offset,
+            error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null
+        });
     }
 
     function calculateTimeOffset(serverTime, deviceTime) {

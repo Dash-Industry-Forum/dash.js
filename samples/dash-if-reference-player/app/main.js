@@ -330,8 +330,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
     }
 
-    var initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
-    var initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
+    var currentConfig = $scope.player.getSettings();
+
+    var initVideoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
+    var initAudioTrackSwitchMode = currentConfig.streaming.trackSwitchMode.audio;
 
     //get default track switch mode
     if (initVideoTrackSwitchMode === 'alwaysReplace') {
@@ -607,7 +609,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
-        config.streaming.cmcd.did = $scope.cmcdDeviceId ? $scope.cmcdDeviceId : null;
 
         $scope.player.updateSettings(config);
 
@@ -648,7 +649,9 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     };
 
     $scope.changeTrackSwitchMode = function (mode, type) {
-        $scope.player.setTrackSwitchModeFor(type, mode);
+        var switchMode = {};
+        switchMode[type] = mode;
+        $scope.player.updateSettings({'streaming': {'trackSwitchMode' : switchMode}});
     };
 
     $scope.setLogLevel = function () {

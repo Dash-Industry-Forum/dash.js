@@ -110,7 +110,6 @@ function DashAdapter() {
             representationInfo.DVRWindow = voRepresentation.segmentAvailabilityRange;
             representationInfo.fragmentDuration = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length > 0 ? voRepresentation.segments[0].duration : NaN);
             representationInfo.MSETimeOffset = voRepresentation.MSETimeOffset;
-            representationInfo.useCalculatedLiveEdgeTime = voRepresentation.useCalculatedLiveEdgeTime;
             representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);
 
             return representationInfo;
@@ -177,7 +176,7 @@ function DashAdapter() {
 
             if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
                 for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (currentMediaInfo[streamInfo.id][type].isMediaInfoEqual(allMediaInfoForType[i])) {
+                    if (areMediaInfosEqual(currentMediaInfo[streamInfo.id][type], allMediaInfoForType[i])) {
                         return adaptations[i];
                     }
                 }
@@ -191,6 +190,27 @@ function DashAdapter() {
         }
 
         return adaptations[0];
+    }
+
+    /**
+     * Compares two mediaInfo objects
+     * @param {MediaInfo} mInfoOne
+     * @param {MediaInfo} mInfoTwo
+     * @returns {boolean}
+     */
+    function areMediaInfosEqual(mInfoOne, mInfoTwo) {
+        if (!mInfoOne || !mInfoTwo) {
+            return false;
+        }
+
+        const sameId = mInfoOne.id === mInfoTwo.id;
+        const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
+        const sameLang = mInfoOne.lang === mInfoTwo.lang;
+        const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
+        const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
+        const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
+
+        return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
     /**
@@ -579,19 +599,6 @@ function DashAdapter() {
     }
 
     /**
-     *
-     * @param {object} mediaInfo
-     * @returns {boolean}
-     * @memberOf module:DashAdapter
-     * @instance
-     * @ignore
-     */
-    function getUseCalculatedLiveEdgeTimeForMediaInfo(mediaInfo) {
-        const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
-        return dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
-    }
-
-    /**
      * Checks if the manifest has a DVB profile
      * @param {object} manifest
      * @returns {boolean}
@@ -926,7 +933,6 @@ function DashAdapter() {
         getMpd,
         setConfig: setConfig,
         updatePeriods: updatePeriods,
-        getUseCalculatedLiveEdgeTimeForMediaInfo: getUseCalculatedLiveEdgeTimeForMediaInfo,
         getIsTextTrack: getIsTextTrack,
         getUTCTimingSources: getUTCTimingSources,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,

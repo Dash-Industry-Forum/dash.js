@@ -97,17 +97,17 @@ function SegmentBaseController(config) {
 
     function onInitSegmentBaseNeeded(e) {
         if (isWebM(e.mimeType)) {
-            webmSegmentBaseLoader.loadInitialization(e.representation);
+            webmSegmentBaseLoader.loadInitialization(e.streamId, e.mediaType, e.representation);
         } else {
-            segmentBaseLoader.loadInitialization(e.representation);
+            segmentBaseLoader.loadInitialization(e.streamId, e.mediaType, e.representation);
         }
     }
 
     function onSegmentsListSegmentBaseNeeded(e) {
         if (isWebM(e.mimeType)) {
-            webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, e.callback);
+            webmSegmentBaseLoader.loadSegments(e.streamId, e.mediaType, e.representation, e.representation ? e.representation.indexRange : null, e.callback);
         } else {
-            segmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null, e.callback);
+            segmentBaseLoader.loadSegments(e.streamId, e.mediaType, e.representation, e.representation ? e.representation.indexRange : null, e.callback);
         }
     }
 

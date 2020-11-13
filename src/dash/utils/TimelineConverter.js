@@ -33,11 +33,13 @@ import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import DashConstants from '../constants/DashConstants';
 import DashManifestModel from '../models/DashManifestModel';
+import Settings from '../../core/Settings';
 
 function TimelineConverter() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         dashManifestModel,
@@ -157,7 +159,7 @@ function TimelineConverter() {
         const d = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length ? voRepresentation.segments[voRepresentation.segments.length - 1].duration : 0);
 
         // Specific use case of SegmentTimeline without timeShiftBufferDepth
-        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+        if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
             return calcSegmentAvailabilityRangeFromTimeline(voRepresentation);
         }
 

@@ -48,6 +48,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     const eventBus = EventBus(context).getInstance();
 
     let instance,
+        type,
         logger,
         buffer,
         isAppendingInProgress,
@@ -61,6 +62,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         logger = Debug(context).getInstance().getLogger(instance);
         isAppendingInProgress = false;
 
+        type = mediaInfo.type;
         const codec = mediaInfo.codec;
         try {
             // Safari claims to support anything starting 'application/mp4'.
@@ -75,6 +77,8 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
                 logger.debug('Doing period transition with changeType');
                 buffer.changeType(codec);
             }
+
+            updateAppendWindow();
 
             const CHECK_INTERVAL = 50;
             // use updateend event if possible
@@ -103,6 +107,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
         }
     }
 
+    function getType() {
+        return type;
+    }
+
     function reset(keepBuffer) {
         if (buffer) {
             if (typeof buffer.removeEventListener === 'function') {
@@ -112,15 +120,10 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             }
             clearInterval(intervalId);
             callbacks = [];
-            try {
-                buffer.appendWindowEnd = Infinity;
-                buffer.appendWindowStart = 0;
-            } catch (e) {
-                logger.error('Failed to reset append window');
-            }
             if (!keepBuffer) {
                 try {
                     if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
+                        logger.debug(`Removing sourcebuffer from media source`);
                         mediaSource.removeSourceBuffer(buffer);
                     }
                 } catch (e) {
@@ -195,18 +198,22 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
             return;
         }
         waitForUpdateEnd(() => {
-            let appendWindowEnd = mediaSource.duration;
-            let appendWindowStart = 0;
-            if (!isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
-                appendWindowEnd = sInfo.start + sInfo.duration;
+            try {
+                let appendWindowEnd = mediaSource.duration;
+                let appendWindowStart = 0;
+                if (sInfo && !isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
+                    appendWindowEnd = sInfo.start + sInfo.duration;
+                }
+                if (sInfo && !isNaN(sInfo.start)) {
+                    appendWindowStart = sInfo.start;
+                }
+                buffer.appendWindowStart = 0;
+                buffer.appendWindowEnd = appendWindowEnd;
+                buffer.appendWindowStart = appendWindowStart;
+                logger.debug(`Updated append window. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+            } catch (e) {
+                logger.warn(`Failed to set append window`);
             }
-            if (!isNaN(sInfo.start)) {
-                appendWindowStart = sInfo.start;
-            }
-            buffer.appendWindowStart = 0;
-            buffer.appendWindowEnd = appendWindowEnd;
-            buffer.appendWindowStart = appendWindowStart;
-            logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
         });
     }
 
@@ -358,7 +365,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     function errHandler() {
-        logger.error('SourceBufferSink error', mediaInfo.type);
+        logger.error('SourceBufferSink error');
     }
 
     function waitForUpdateEnd(callback) {
@@ -370,6 +377,7 @@ function SourceBufferSink(mediaSource, mediaInfo, onAppendedCallback, oldBuffer)
     }
 
     instance = {
+        getType: getType,
         getAllBufferRanges: getAllBufferRanges,
         getBuffer: getBuffer,
         append: append,

@@ -50,6 +50,8 @@ function GapController() {
         playbackController,
         streamController,
         videoModel,
+        timelineConverter,
+        adapter,
         logger;
 
     function initialize() {
@@ -90,16 +92,22 @@ function GapController() {
         if (config.videoModel) {
             videoModel = config.videoModel;
         }
+        if (config.timelineConverter) {
+            timelineConverter = config.timelineConverter;
+        }
+        if (config.adapter) {
+            adapter = config.adapter;
+        }
     }
 
     function registerEvents() {
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
     }
 
     function unregisterEvents() {
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
     }
 
     function onBytesAppended() {
@@ -110,7 +118,7 @@ function GapController() {
 
     function _shouldCheckForGaps() {
         return settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
-            !playbackController.isSeeking() && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
+            (!playbackController.isSeeking() || streamController.hasStreamFinishedBuffering(streamController.getActiveStream())) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
             !streamController.getHasMediaOrIntialisationError();
     }
 
@@ -126,6 +134,7 @@ function GapController() {
                 jumpGap(currentTime, true);
             } else {
                 lastPlaybackTime = currentTime;
+                lastGapJumpPosition = NaN;
             }
             wallclockTicked = 0;
         }
@@ -198,17 +207,17 @@ function GapController() {
             }
         }
 
-        // Playback has stalled before pperiod end. We seek to the end of the period
+        // Playback has stalled before period end. We seek to the end of the period
         const timeToStreamEnd = playbackController.getTimeToStreamEnd();
-        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && (timeToStreamEnd < smallGapLimit)) {
-            seekToPosition = parseFloat((currentTime + timeToStreamEnd).toFixed(5));
+        if (isNaN(seekToPosition) && playbackStalled && isFinite(timeToStreamEnd) && !isNaN(timeToStreamEnd) && ((timeToStreamEnd < smallGapLimit) || streamController.hasStreamFinishedBuffering(streamController.getActiveStream()))) {
+            seekToPosition = parseFloat(playbackController.getStreamEndTime().toFixed(5));
             jumpToStreamEnd = true;
         }
 
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition) {
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
-                eventBus.trigger(Events.GAP_CAUSED_PLAYBACK_SEEK, {seekTime: seekToPosition});
+                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, { seekTime: seekToPosition });
             } else {
                 logger.warn(`Jumping gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 playbackController.seek(seekToPosition, true, true);

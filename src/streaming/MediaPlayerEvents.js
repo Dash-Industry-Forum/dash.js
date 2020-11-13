@@ -70,6 +70,12 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
         /**
+         * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
+         * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
+         */
+        this.DYNAMIC_TO_STATIC = 'dynamicToStatic';
+
+        /**
          * Triggered when there is an error from the element or MSE source buffer.
          * @event MediaPlayerEvents#ERROR
          */
@@ -344,10 +350,10 @@ class MediaPlayerEvents extends EventsBase {
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
 
         /**
-         * A gap occured in the timeline which requires a seek
-         * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
+         * A gap occured in the timeline which requires a seek to the next period
+         * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
          */
-        this.GAP_CAUSED_PLAYBACK_SEEK = 'gapCausedPlaybackSeek';
+        this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
     }
 }
 

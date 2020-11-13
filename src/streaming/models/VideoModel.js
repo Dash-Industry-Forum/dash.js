@@ -347,7 +347,7 @@ function VideoModel() {
 
     function getVideoRelativeOffsetTop() {
         const parentElement = element.parentNode.host || element.parentNode;
-        return parentElement ? element.getBoundingClientRect().top - parentElement.parentNode.getBoundingClientRect().top : NaN;
+        return parentElement ? element.getBoundingClientRect().top - parentElement.getBoundingClientRect().top : NaN;
     }
 
     function getVideoRelativeOffsetLeft() {

@@ -5,6 +5,10 @@ const expect = chai.expect;
 
 const context = {};
 
+const streamInfo = {
+    id: 'streamId'
+};
+
 describe('TextBufferController', function () {
 
     let textBufferController;
@@ -13,6 +17,7 @@ describe('TextBufferController', function () {
 
 
         textBufferController = TextBufferController(context).create({
+            streamInfo: streamInfo,
             type: 'fragmentedText'
         });
 
@@ -22,6 +27,7 @@ describe('TextBufferController', function () {
     it('should create a buffer of type "NotFragmentedTextBufferController" if type is not "fragmentedText"', function () {
 
         textBufferController = TextBufferController(context).create({
+            streamInfo: streamInfo,
             type: 'other'
         });
 

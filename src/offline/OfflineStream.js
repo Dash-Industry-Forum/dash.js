@@ -97,7 +97,11 @@ function OfflineStream(config) {
      */
     function initialize(initStreamInfo) {
         streamInfo = initStreamInfo;
-        eventBus.on(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     /**
@@ -239,9 +243,6 @@ function OfflineStream(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        let repCtrl = e.sender;
-        if (!streamInfo || repCtrl.getStreamId() !== streamInfo.id) return;
-
         if (e.currentRepresentation.segments && e.currentRepresentation.segments.length > 0) {
             representationsToUpdate.push(e.currentRepresentation);
         }
@@ -249,7 +250,7 @@ function OfflineStream(config) {
         let sp;
         // data are ready fr stream processor, let's start download
         for (let i = 0; i < offlineStreamProcessors.length; i++ ) {
-            if (offlineStreamProcessors[i].getRepresentationController().getType() === repCtrl.getType()) {
+            if (offlineStreamProcessors[i].getRepresentationController().getType() === e.mediaType) {
                 sp = offlineStreamProcessors[i];
                 break;
             }
@@ -319,11 +320,12 @@ function OfflineStream(config) {
         deactivate();
         resetInitialSettings();
 
-        eventBus.off(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
     }
 
     instance = {
         initialize: initialize,
+        getStreamId: getStreamId,
         getMediaInfos: getMediaInfos,
         initializeAllMediasInfoList: initializeAllMediasInfoList,
         getStreamInfo: getStreamInfo,

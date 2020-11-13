@@ -51,13 +51,7 @@ function LiveEdgeFinder(config) {
 
     function getLiveEdge(representationInfo) {
         checkConfig();
-        const dvrEnd = representationInfo.DVRWindow ? representationInfo.DVRWindow.end : 0;
-        let liveEdge = dvrEnd;
-        if (representationInfo.useCalculatedLiveEdgeTime) {
-            liveEdge = timelineConverter.getExpectedLiveEdge();
-            timelineConverter.setClientTimeOffset(liveEdge - dvrEnd);
-        }
-        return liveEdge;
+        return representationInfo.DVRWindow ? representationInfo.DVRWindow.end : 0;
     }
 
     function reset() {

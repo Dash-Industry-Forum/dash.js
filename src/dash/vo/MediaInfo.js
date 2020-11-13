@@ -52,20 +52,6 @@ class MediaInfo {
         this.bitrateList = null;
     }
 
-    isMediaInfoEqual(mediaInfo) {
-        if (!mediaInfo) {
-            return false;
-        }
-
-        const sameId = this.id === mediaInfo.id;
-        const sameViewpoint = this.viewpoint === mediaInfo.viewpoint;
-        const sameLang = this.lang === mediaInfo.lang;
-        const sameRoles = this.roles.toString() === mediaInfo.roles.toString();
-        const sameAccessibility = this.accessibility.toString() === mediaInfo.accessibility.toString();
-        const sameAudioChannelConfiguration = this.audioChannelConfiguration.toString() === mediaInfo.audioChannelConfiguration.toString();
-
-        return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
-    }
 }
 
 export default MediaInfo;
