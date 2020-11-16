@@ -92,13 +92,12 @@ function EventBus() {
         payload.type = type;
 
         handlers[type] = handlers[type].filter((item) => item);
-        const eventHandlers = handlers[type].filter(item => {
-            if (filters.streamId && item.streamId && item.streamId !== filters.streamId) return false;
-            if (filters.mediaType && item.mediaType && item.mediaType !== filters.mediaType) return false;
-            return true;
+        handlers[type].forEach(handler => {
+            if (!handler) return;
+            if (filters.streamId && handler.streamId && handler.streamId !== filters.streamId) return;
+            if (filters.mediaType && handler.mediaType && handler.mediaType !== filters.mediaType) return;
+            handler.callback.call(handler.scope, payload);
         });
-
-        eventHandlers.forEach(handler => handler && handler.callback.call(handler.scope, payload));
     }
 
     function getHandlerIdx(type, listener, scope) {
