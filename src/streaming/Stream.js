@@ -637,7 +637,10 @@ function Stream(config) {
                 if (streamProcessors[i].getType() === Constants.AUDIO ||
                     streamProcessors[i].getType() === Constants.VIDEO ||
                     streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
-                    protectionController.initializeForMedia(streamProcessors[i].getMediaInfo());
+                    let mediaInfo = streamProcessors[i].getMediaInfo();
+                    if (mediaInfo) {
+                        protectionController.initializeForMedia(mediaInfo);
+                    }
                 }
             }
         }
@@ -768,8 +771,11 @@ function Stream(config) {
             let streamProcessor = streamProcessors[i];
             streamProcessor.updateStreamInfo(streamInfo);
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
-            abrController.updateTopQualityIndex(mediaInfo);
-            streamProcessor.addMediaInfo(mediaInfo, true);
+            // Check if AdaptationSet has not been removed in MPD update
+            if (mediaInfo) {
+                abrController.updateTopQualityIndex(mediaInfo);
+                streamProcessor.addMediaInfo(mediaInfo, true);
+            }
         }
 
         if (trackChangedEvent) {
