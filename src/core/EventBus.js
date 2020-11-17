@@ -97,6 +97,13 @@ function EventBus() {
 
         payload.type = type;
 
+        if (filters.streamId) {
+            payload.streamId = filters.streamId;
+        }
+        if (filters.mediaType) {
+            payload.mediaType = filters.mediaType;
+        }
+
         handlers[type]
             .filter((handler) => {
                 if (!handler) {
