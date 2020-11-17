@@ -8,14 +8,48 @@ PLAY:
     - check playing state
     - check if playback progressing
 **/
-define([
-    'intern',
-    'intern!object',
-    'intern/chai!assert',
-    'require',
-    'test/functional/tests/scripts/player',
-    'test/functional/tests/scripts/utils'
-], function(intern, registerSuite, assert, require, player, utils) {
+const intern = require('intern').default;
+const { suite, before, test, after } = intern.getPlugin('interface.tdd');
+const { assert } = intern.getPlugin('chai');
+
+const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.js');
+const player = require('./scripts/player.js');
+
+// Suite name
+const NAME = 'TEXTSWITCHING';
+
+var Tracks;
+var type  = "text";
+exports.register = function (stream) {
+
+    suite(utils.testName(NAME, stream), (suite) => {
+
+        before(async ({ remote }) => {
+            if (!stream.available) suite.skip();
+            utils.log(NAME, 'Load stream');
+            command = remote.get(intern.config.testPage);
+            await command.execute(player.loadStream, [stream]);
+            
+        });
+
+        test('switchTrack', async () => {
+            utils.log(NAME, 'switchTrack');
+            Tracks = await command.execute(player.getTracksFor,[type]);
+            /*
+            trackOne = Tracks[0];
+            console.log(trackOne);
+            */
+            await command.execute(player.setCurrentTrack, [trackOne]);
+            var curr = await command.execute(player.getCurrentTrackFor, [type]);
+            console.log(curr);
+            assert.deepEqual(curr,trackOne);
+            
+        });
+    });
+}
+/*
+function(intern, registerSuite, assert, require, player, utils) {
 
     // Suite name
     var NAME = 'TEXTSWITCHING';
@@ -149,4 +183,4 @@ define([
             play(stream);
         }
     }
-});
+};*/
