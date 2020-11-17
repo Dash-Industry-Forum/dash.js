@@ -11,6 +11,10 @@ const eventBus = EventBus(context).getInstance();
 
 describe('EventBus', function () {
 
+    beforeEach(() => {
+        eventBus.reset();
+    });
+
     it('should throw an exception when attempting to register the on callback with an undefined type', function () {
         expect(eventBus.on.bind(eventBus)).to.throw('event type cannot be null or undefined');
     });
@@ -48,11 +52,31 @@ describe('EventBus', function () {
         eventBus.on('EVENT_TEST', spy, null, { mode: EVENT_MODE_ON_START });
         eventBus.on('EVENT_TEST', spy2, null, { mode: EVENT_MODE_ON_RECEIVE });
 
-        eventBus.trigger('EVENT_TEST', {}, { isEventStart: false });
-        eventBus.trigger('EVENT_TEST', {}, { isEventStart: true });
+        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_START });
+        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_RECEIVE });
 
         assert.equal(spy.calledOnce, true);
         assert.equal(spy2.calledOnce, true);
-        assert.equal(spy2.calledBefore(spy), true);
+    });
+
+    it('should ignore onReceive events if no mode was specified in the callback handler', function () {
+        const spy = sinon.spy();
+
+        eventBus.on('EVENT_TEST', spy, null);
+
+        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_RECEIVE });
+
+        assert.equal(spy.notCalled, true);
+    });
+
+    it('should trigger onStart event if no mode was specified in the callback handler', function () {
+        const spy = sinon.spy();
+
+        eventBus.on('EVENT_TEST', spy, null);
+
+        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_START });
+        eventBus.trigger('EVENT_TEST', {}, { mode: EVENT_MODE_ON_RECEIVE });
+
+        assert.equal(spy.calledOnce, true);
     });
 });
