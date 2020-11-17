@@ -190,7 +190,7 @@ function ScheduleController(config) {
                         logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
                     }
                     eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-                        { representationId: currentRepresentationInfo.id },
+                        { representationId: currentRepresentationInfo.id, sender: instance },
                         { streamId: streamInfo.id, mediaType: type }
                     );
                     lastInitQuality = currentRepresentationInfo.quality;
@@ -201,7 +201,7 @@ function ScheduleController(config) {
                     if (replacement && replacement.isInitializationRequest()) {
                         // To be sure the specific init segment had not already been loaded
                         eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-                            { representationId: replacement.representationId },
+                            { representationId: replacement.representationId, sender: instance },
                             { streamId: streamInfo.id, mediaType: type }
                         );
                         checkPlaybackQuality = false;
