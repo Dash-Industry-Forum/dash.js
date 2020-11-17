@@ -34,6 +34,7 @@ import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import XHRLoader from '../net/XHRLoader';
+import {EVENT_MODE_ON_START, EVENT_MODE_ON_RECEIVE} from '../MediaPlayerEvents';
 
 function EventController() {
 
@@ -121,6 +122,7 @@ function EventController() {
                     let event = values[i];
                     inlineEvents[event.id] = event;
                     logger.debug('Add inline event with id ' + event.id);
+                    _startEvent(event.id, event, values, EVENT_MODE_ON_RECEIVE);
                 }
             }
             logger.debug(`Added ${values.length} inline events`);
@@ -145,6 +147,7 @@ function EventController() {
                     }
                     inbandEvents[event.id] = event;
                     logger.debug('Add inband event with id ' + event.id);
+                    _startEvent(event.id, event, values, EVENT_MODE_ON_RECEIVE);
                 } else {
                     logger.debug('Repeated event with id ' + event.id);
                 }
@@ -172,6 +175,8 @@ function EventController() {
                     validUntil: validUntil,
                     newDuration: newDuration,
                     newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+                }, {
+                    mode: EVENT_MODE_ON_START
                 });
             }
         } catch (e) {
@@ -207,6 +212,7 @@ function EventController() {
     function _onEventTimer() {
         try {
             if (!eventHandlingInProgress) {
+                eventHandlingInProgress = true;
                 const currentVideoTime = playbackController.getTime();
                 let presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
 
@@ -218,8 +224,8 @@ function EventController() {
                 _removeEvents();
 
                 lastEventTimerCall = currentVideoTime;
+                eventHandlingInProgress = false;
             }
-            eventHandlingInProgress = false;
         } catch (e) {
             eventHandlingInProgress = false;
         }
@@ -248,7 +254,7 @@ function EventController() {
                         const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
 
                         if (calculatedPresentationTimeInSeconds <= currentVideoTime && calculatedPresentationTimeInSeconds + presentationTimeThreshold >= currentVideoTime) {
-                            _startEvent(eventId, event, events);
+                            _startEvent(eventId, event, events, EVENT_MODE_ON_START);
                         } else if (_eventHasExpired(currentVideoTime, presentationTimeThreshold, calculatedPresentationTimeInSeconds) || _eventIsInvalid(event)) {
                             logger.debug(`Deleting event ${eventId} as it is expired or invalid`);
                             delete events[eventId];
@@ -299,7 +305,7 @@ function EventController() {
                 const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
 
                 if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
-                    _startEvent(eventId, event, events);
+                    _startEvent(eventId, event, events, EVENT_MODE_ON_START);
                 }
             });
         } catch (e) {
@@ -307,28 +313,35 @@ function EventController() {
         }
     }
 
-    function _startEvent(eventId, event, events) {
+    function _startEvent(eventId, event, events, mode) {
         try {
             const currentVideoTime = playbackController.getTime();
+
+            if (mode === EVENT_MODE_ON_RECEIVE) {
+                logger.debug(`Received event ${eventId}`);
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
+                return;
+            }
 
             if (event.duration > 0) {
                 activeEvents[eventId] = event;
             }
 
-            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
+            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value === MPD_RELOAD_VALUE) {
                 if (event.duration !== 0 || event.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                     logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
                     _refreshManifest();
                 }
-            } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
+            } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value === MPD_CALLBACK_VALUE) {
                 logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
                 _sendCallbackRequest(event.messageData);
             } else {
                 logger.debug(`Starting event ${eventId} at ${currentVideoTime}`);
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: event });
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
             }
 
             delete events[eventId];
+
         } catch (e) {
         }
     }
