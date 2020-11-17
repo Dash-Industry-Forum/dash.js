@@ -568,7 +568,6 @@ function BufferController(config) {
             seekClearedBufferingCompleted = false;
             isBufferingCompleted = true;
             logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
-            logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
             triggerEvent(Events.BUFFERING_COMPLETED);
         }
 
