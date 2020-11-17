@@ -19,7 +19,7 @@
         function init() {
             player = dashjs.MediaPlayer().create();
             player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
-            player.on(SCHEMEIDURI, showStartEvent, null, { mode: EVENT_MODE_ON_START });
+            player.on(SCHEMEIDURI, showStartEvent, null); /* Default mode is onStart, no need to specify a mode */
             player.on(SCHEMEIDURI, showReceiveEvent, null, { mode: EVENT_MODE_ON_RECEIVE });
             player.initialize(document.querySelector("video"), URL, true);
         }
