@@ -768,6 +768,10 @@ function Stream(config) {
             let streamProcessor = streamProcessors[i];
             streamProcessor.updateStreamInfo(streamInfo);
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
+            if (!mediaInfo) {
+                // This can happen if AdaptationSet has been remove in refreshed MPD
+                break;
+            }
             abrController.updateTopQualityIndex(mediaInfo);
             streamProcessor.addMediaInfo(mediaInfo, true);
         }
