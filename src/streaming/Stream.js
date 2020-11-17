@@ -771,7 +771,7 @@ function Stream(config) {
             let streamProcessor = streamProcessors[i];
             streamProcessor.updateStreamInfo(streamInfo);
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
-            // Check if AdaptationSet has not been remove in MPD update
+            // Check if AdaptationSet has not been removed in MPD update
             if (mediaInfo) {
                 abrController.updateTopQualityIndex(mediaInfo);
                 streamProcessor.addMediaInfo(mediaInfo, true);
