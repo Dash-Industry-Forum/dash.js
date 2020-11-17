@@ -91,6 +91,13 @@ function EventBus() {
 
         payload.type = type;
 
+        if (filters.streamId) {
+            payload.streamId = filters.streamId;
+        }
+        if (filters.mediaType) {
+            payload.mediaType = filters.mediaType;
+        }
+
         handlers[type] = handlers[type].filter((item) => item);
         handlers[type].forEach(handler => {
             if (!handler) return;
