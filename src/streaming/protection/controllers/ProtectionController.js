@@ -109,7 +109,7 @@ function ProtectionController(config) {
         // Once Keysystem is selected and before creating the session, we will do that check
         // so we create the strictly necessary DRM sessions
         if (!mediaInfo) {
-            return;
+            throw new Error('mediaInfo can not be null or undefined');
         }
 
         checkConfig();

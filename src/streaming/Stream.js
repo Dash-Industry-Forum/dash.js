@@ -637,7 +637,10 @@ function Stream(config) {
                 if (streamProcessors[i].getType() === Constants.AUDIO ||
                     streamProcessors[i].getType() === Constants.VIDEO ||
                     streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
-                    protectionController.initializeForMedia(streamProcessors[i].getMediaInfo());
+                    let mediaInfo = streamProcessors[i].getMediaInfo();
+                    if (mediaInfo) {
+                        protectionController.initializeForMedia(mediaInfo);
+                    }
                 }
             }
         }
