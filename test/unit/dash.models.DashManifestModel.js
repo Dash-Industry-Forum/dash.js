@@ -106,28 +106,6 @@ describe('DashManifestModel', function () {
             expect(availabilityStartTime).to.be.equal(now.getTime());  // jshint ignore:line
         });
 
-        it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and adaptation is undefined', () => {
-            const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation();
-
-            expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
-        });
-
-        it('should return false when getUseCalculatedLiveEdgeTimeForAdaptation is called and voAdaptation is defined, but without reference to real adaptation', () => {
-            const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{}]}]}}}, index: 0, type: 'video'};
-
-            const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
-
-            expect(useCalculatedLiveEdge).to.be.false;  // jshint ignore:line
-        });
-
-        it('should return true when getUseCalculatedLiveEdgeTimeForAdaptation is called and voAdaptation is defined, with reference to real adaptation', () => {
-            const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
-
-            const useCalculatedLiveEdge = dashManifestModel.getUseCalculatedLiveEdgeTimeForAdaptation(voAdaptation);
-
-            expect(useCalculatedLiveEdge).to.be.true;  // jshint ignore:line
-        });
-
         it('should return false when getIsTextTrack is called and type is undefined', () => {
             const isTextTrack = dashManifestModel.getIsTextTrack();
 
@@ -174,28 +152,28 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getAdaptationForId is called and id and periodIndex are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = {Period_asArray: []};
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, undefined);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForId is called and id is undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = {Period_asArray: []};
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 2);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForId is called and id is undefined and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForId(undefined, manifest, 0);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return valid value when getAdaptationForId is called and id is 0 and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForId(0, manifest, 0);
 
             expect(adaptation.id).to.equal(0); // jshint ignore:line
@@ -208,28 +186,28 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getAdaptationForIndex is called and id and periodIndex are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = {Period_asArray: []};
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, undefined);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForIndex is called and id is undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = {Period_asArray: []};
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 2);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getAdaptationForIndex is called and id is undefined and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForIndex(undefined, manifest, 0);
 
             expect(adaptation).to.be.null;    // jshint ignore:line
         });
 
         it('should return valid value when getAdaptationForIndex is called and id is 0 and periodIndex = 0', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
             const adaptation = dashManifestModel.getAdaptationForIndex(0, manifest, 0);
 
             expect(adaptation.id).to.equal(0); // jshint ignore:line
@@ -242,7 +220,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return -1 when getIndexForAdaptation is called and manifest and periodIndex are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = {Period_asArray: []};
             var adaptation = mpdHelper.composeAdaptation('video');
             const index = dashManifestModel.getIndexForAdaptation(adaptation, manifest, undefined);
 
@@ -264,7 +242,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return an empty array when getAdaptationsForType is called and periodIndex and type are undefined', () => {
-            const manifest = { Period_asArray: [] };
+            const manifest = {Period_asArray: []};
             const adaptationsArray = dashManifestModel.getAdaptationsForType(manifest, undefined, undefined);
 
             expect(adaptationsArray).to.be.instanceOf(Array);    // jshint ignore:line
@@ -272,7 +250,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return an empty array when getAdaptationsForType is called and type is undefined', () => {
-            const manifest = { Period_asArray: [{ AdaptationSet_asArray: [{ id: 0 }] }] };
+            const manifest = {Period_asArray: [{AdaptationSet_asArray: [{id: 0}]}]};
 
             expect(dashManifestModel.getAdaptationsForType.bind(dashManifestModel, manifest, 0, undefined)).to.throw('type is not defined');
         });
@@ -290,25 +268,65 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getCodec is called and adaptation.Representation_asArray.length is -1', () => {
-            const codec = dashManifestModel.getCodec({ Representation_asArray: { length: -1 } });
+            const codec = dashManifestModel.getCodec({Representation_asArray: {length: -1}});
 
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
         it('should return null when getCodec is called and representationId is not an integer', () => {
-            const codec = dashManifestModel.getCodec({ Representation_asArray: { length: 1 } }, true);
+            const codec = dashManifestModel.getCodec({Representation_asArray: {length: 1}}, true);
 
             expect(codec).to.be.null;    // jshint ignore:line
         });
 
         it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is true', () => {
-            const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, true);
+            const codec = dashManifestModel.getCodec({
+                Representation_asArray: [{
+                    mimeType: 'video/mp4',
+                    codecs: 'avc1.4D400D',
+                    width: 1080,
+                    height: 960
+                }]
+            }, 0, true);
 
             expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D";width="1080";height="960"');    // jshint ignore:line
         });
 
         it('should return correct codec when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
-            const codec = dashManifestModel.getCodec({ Representation_asArray: [{mimeType: 'video/mp4', codecs: 'avc1.4D400D', width: 1080, height: 960}] }, 0, false);
+            const codec = dashManifestModel.getCodec({
+                Representation_asArray: [{
+                    mimeType: 'video/mp4',
+                    codecs: 'avc1.4D400D',
+                    width: 1080,
+                    height: 960
+                }]
+            }, 0, false);
+
+            expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
+        });
+
+        it('should return correct codec without a correct mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
+            const codec = dashManifestModel.getCodec({
+                Representation_asArray: [{
+                    mimeType: 'video/mp4 profiles="cmfc,cfhd"',
+                    codecs: 'avc1.4D400D',
+                    width: 1080,
+                    height: 960
+                }]
+            }, 0, false);
+
+            expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
+        });
+
+        it('should return correct codec without an invalid mime type profile when getCodec is called and representationId is an integer and addResolutionInfo is false', () => {
+            const codec = dashManifestModel.getCodec({
+                Representation_asArray: [{
+                    mimeType: 'video/mp4 profiles="cmfc,cf',
+                    codecs: 'avc1.4D400D',
+                    width: 1080,
+                    height: 960
+                }]
+            }, 0, false);
 
             expect(codec).to.be.equal('video/mp4;codecs="avc1.4D400D"');    // jshint ignore:line
         });
@@ -326,7 +344,7 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getMimeType is called and adaptation.Representation_asArray.length is -1', () => {
-            const mimeType = dashManifestModel.getMimeType({ Representation_asArray: { length: -1 } });
+            const mimeType = dashManifestModel.getMimeType({Representation_asArray: {length: -1}});
 
             expect(mimeType).to.be.null;    // jshint ignore:line
         });
@@ -372,7 +390,12 @@ describe('DashManifestModel', function () {
         });
 
         it('should return correct array when getLabelsForAdaptation is called and adaptation is well defined', () => {
-            const labels = dashManifestModel.getLabelsForAdaptation({Label_asArray: [{lang: 'fre',  __text: 'french'}, {lang: 'eng',  __text: 'english'}]});
+            const labels = dashManifestModel.getLabelsForAdaptation({
+                Label_asArray: [{
+                    lang: 'fre',
+                    __text: 'french'
+                }, {lang: 'eng', __text: 'english'}]
+            });
 
             expect(labels).to.be.instanceOf(Array);    // jshint ignore:line
             expect(labels.length).to.equal(2);         // jshint ignore:line
@@ -511,28 +534,28 @@ describe('DashManifestModel', function () {
 
         it('should not return an empty Array when getEventStreamForRepresentation is called and manifest and representation are well defined', () => {
             const manifest = {
-                    Period: [
-                        {
-                            'id': '153199',
-                            AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
-                        },
-                        {
-                            'id': '153202',
-                            AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
-                        }
-                    ],
-                    Period_asArray: [
-                        {
-                            'id': '153199',
-                            AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
-                        },
-                        {
-                            'id': '153202',
-                            AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
-                        }
-                    ],
-                    'type': 'static'
-                };
+                Period: [
+                    {
+                        'id': '153199',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet: [{Representation: [{InbandEventStream: []}]}]
+                    }
+                ],
+                Period_asArray: [
+                    {
+                        'id': '153199',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    },
+                    {
+                        'id': '153202',
+                        AdaptationSet_asArray: [{Representation_asArray: [{InbandEventStream_asArray: []}]}]
+                    }
+                ],
+                'type': 'static'
+            };
             const representation = {adaptation: {index: 0, period: {index: 0}}, index: 0};
             const eventsStream = dashManifestModel.getEventStreamForRepresentation(manifest, representation);
 
@@ -738,7 +761,29 @@ describe('DashManifestModel', function () {
         });
 
         it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
-            const voAdaptation = {period: {index: 0, mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{Representation_asArray: [{SegmentTemplate: {SegmentTimeline: {S_asArray: [{r: 2}]}}}]}]}]}}}, index: 0, type: 'video'};
+            const voAdaptation = {
+                period: {
+                    index: 0,
+                    mpd: {
+                        manifest: {
+                            Period_asArray: [{
+                                AdaptationSet_asArray: [{
+                                    Representation_asArray: [{
+                                        SegmentTemplate: {
+                                            SegmentTimeline: {
+                                                S_asArray: [{
+                                                    d: 2,
+                                                    r: 2
+                                                }]
+                                            }
+                                        }
+                                    }]
+                                }]
+                            }]
+                        }
+                    }
+                }, index: 0, type: 'video'
+            };
             const representationArray = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
 
             expect(representationArray).to.be.instanceOf(Array);    // jshint ignore:line
@@ -786,7 +831,7 @@ describe('DashManifestModel', function () {
         it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is defined', () => {
             const minimumUpdatePeriod = 30;
             const latencyOfLastUpdate = 0.5;
-            const manifest = { minimumUpdatePeriod: minimumUpdatePeriod };
+            const manifest = {minimumUpdatePeriod: minimumUpdatePeriod};
             const expectedResult = minimumUpdatePeriod - latencyOfLastUpdate;
             const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest, latencyOfLastUpdate);
             expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line
@@ -794,7 +839,7 @@ describe('DashManifestModel', function () {
 
         it('should return valid value when minimumUpdatePeriod is present in manifest and latencyOfLastUpdate is not defined', () => {
             const minimumUpdatePeriod = 30;
-            const manifest = { minimumUpdatePeriod: minimumUpdatePeriod };
+            const manifest = {minimumUpdatePeriod: minimumUpdatePeriod};
             const expectedResult = minimumUpdatePeriod;
             const updatePeriod = dashManifestModel.getManifestUpdatePeriod(manifest);
             expect(updatePeriod).to.equal(expectedResult); // jshint ignore:line

@@ -31,13 +31,6 @@
 
 import OfflineConstants from '../constants/OfflineConstants';
 
-/**
- * @module OfflineUrlUtils
- * @description Provides utility functions for operating on offline URLs.
- * Initially this is simply a method to determine the Base URL of a URL, but
- * should probably include other things provided all over the place such as
- * determining whether a URL is relative/absolute, resolving two paths etc.
- */
 function OfflineUrlUtils() {
 
     function setup() {

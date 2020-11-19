@@ -54,19 +54,24 @@ function TextController() {
         vttParser,
         ttmlParser,
         eventBus,
-        defaultLanguage,
+        defaultSettings,
+        initialSettingsSet,
         lastEnabledIndex,
         textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
         forceTextStreaming,
+        textTracksAdded,
+        disableTextBeforeTextTracksAdded,
         previousPeriodSelectedTrack;
 
     function setup() {
 
-        defaultLanguage = '';
+        defaultSettings = null;
         lastEnabledIndex = -1;
-        textDefaultEnabled = true;
         forceTextStreaming = false;
+        textTracksAdded = false;
+        initialSettingsSet = false;
+        disableTextBeforeTextTracksAdded = false;
         textTracks = TextTracks(context).getInstance();
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
@@ -75,6 +80,7 @@ function TextController() {
 
         textTracks.initialize();
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
 
         /*
         * register those event callbacks in order to detect switch of periods and set
@@ -170,27 +176,39 @@ function TextController() {
 
     function setTextDefaultLanguage(lang) {
         checkParameterType(lang, 'string');
-        defaultLanguage = lang;
+        if (!defaultSettings) {
+            defaultSettings = {};
+        }
+        defaultSettings.lang = lang;
+        initialSettingsSet = true;
+    }
+
+    function setInitialSettings(settings) {
+        defaultSettings = settings;
+        initialSettingsSet = true;
     }
 
     function getTextDefaultLanguage() {
-        return defaultLanguage;
+        return defaultSettings && defaultSettings.lang || '';
     }
 
     function onTextTracksAdded(e) {
         let tracks = e.tracks;
         let index = e.index;
 
-        tracks.some((item, idx) => {
-            if (item.lang === defaultLanguage) {
-                this.setTextTrack(idx);
-                index = idx;
-                return true;
-            }
-        });
+        if (defaultSettings) {
+            tracks.some((item, idx) => {
+                // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
+                if (mediaController.matchSettings(defaultSettings, item)) {
+                    this.setTextTrack(idx);
+                    index = idx;
+                    return true;
+                }
+            });
+        }
 
-        if (!textDefaultEnabled) {
-            // disable text at startup
+        if (textDefaultEnabled === false || ( textDefaultEnabled === undefined && !defaultSettings ) || disableTextBeforeTextTracksAdded) {
+            // disable text at startup if explicitely configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             this.setTextTrack(-1);
         }
 
@@ -200,6 +218,20 @@ function TextController() {
             index: index,
             tracks: tracks
         });
+        textTracksAdded = true;
+    }
+
+    function onCurrentTrackChanged(event) {
+        if (!initialSettingsSet && event && event.newMediaInfo) {
+            let mediaInfo = event.newMediaInfo;
+            if (mediaInfo.type === Constants.FRAGMENTED_TEXT) {
+                defaultSettings = {
+                    lang: mediaInfo.lang,
+                    role: mediaInfo.roles[0],
+                    accessibility: mediaInfo.accessibility[0]
+                };
+            }
+        }
     }
 
     function setTextDefaultEnabled(enable) {
@@ -209,27 +241,35 @@ function TextController() {
         if (!textDefaultEnabled) {
             // disable text at startup
             this.setTextTrack(-1);
+        } else {
+            allTracksAreDisabled = false;
         }
     }
 
     function getTextDefaultEnabled() {
-        return textDefaultEnabled;
+        return textDefaultEnabled === undefined ? false : textDefaultEnabled;
     }
 
     function enableText(enable) {
         checkParameterType(enable,'boolean');
-
+        if (!textDefaultEnabled && enable) {
+            textDefaultEnabled = true;
+        }
         if (isTextEnabled() !== enable) {
             // change track selection
             if (enable) {
-                // apply last enabled tractk
+                // apply last enabled track
                 this.setTextTrack(lastEnabledIndex);
             }
 
             if (!enable) {
                 // keep last index and disable text track
                 lastEnabledIndex = this.getCurrentTrackIdx();
-                this.setTextTrack(-1);
+                if (!textTracksAdded) {
+                    disableTextBeforeTextTracksAdded = true;
+                } else {
+                    this.setTextTrack(-1);
+                }
             }
         }
     }
@@ -242,14 +282,14 @@ function TextController() {
         return enabled;
     }
 
-    // when set to true NextFragmentRequestRule will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
+    // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
         checkParameterType(enable,'boolean');
         forceTextStreaming = enable;
     }
 
     function setTextTrack(idx) {
-        //For external time text file,  the only action needed to change a track is marking the track mode to showing.
+        //For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
@@ -262,6 +302,9 @@ function TextController() {
 
         let oldTrackIdx = textTracks.getCurrentTrackIdx();
         if (oldTrackIdx !== idx) {
+            if (allTracksAreDisabled && mediaController) {
+                mediaController.saveTextSettingsDisabled();
+            }
             textTracks.setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
             textTracks.setCurrentTrackIdx(idx);
             textTracks.setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
@@ -292,7 +335,7 @@ function TextController() {
                                     break;
                                 }
                             }
-                            streamProcessor.setIndexHandlerTime(videoModel.getTime());
+                            streamProcessor.setBufferingTime(videoModel.getTime());
                             streamProcessor.getScheduleController().start();
                         }
                     }
@@ -324,7 +367,9 @@ function TextController() {
     }
 
     function resetInitialSettings() {
-        allTracksAreDisabled = false;
+        allTracksAreDisabled = true;
+        textTracksAdded = false;
+        disableTextBeforeTextTracksAdded = false;
     }
 
     function reset() {
@@ -342,6 +387,7 @@ function TextController() {
         setTextDefaultLanguage: setTextDefaultLanguage,
         setTextDefaultEnabled: setTextDefaultEnabled,
         getTextDefaultEnabled: getTextDefaultEnabled,
+        setInitialSettings: setInitialSettings,
         enableText: enableText,
         isTextEnabled: isTextEnabled,
         setTextTrack: setTextTrack,

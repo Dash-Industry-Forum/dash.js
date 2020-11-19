@@ -13,24 +13,75 @@
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script class="code">
-        var EXTERNAL_CAPTION_URL = "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", // need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml
-            FRAGMENTED_CAPTION_URL = "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+        var EXTERNAL_CAPTION_URL = "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/1/ED_OnDemand_5SecSeg_Subtitles.mpd", /* need to manually seek to get stream to start... issue with MPD but only sample with multi adaptations for external sidecar caption text xml */
+            FRAGMENTED_CAPTION_URL = "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
             videoElement,
             controlbar,
             player;
 
-        function startVideo() {
-            var url = FRAGMENTED_CAPTION_URL,
-                TTMLRenderingDiv;
-
+        function init() {
+            var TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
             videoElement = document.querySelector(".videoContainer video");
-            TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
-
             player = dashjs.MediaPlayer().create();
-            player.initialize(videoElement, url, true);
+            player.initialize(videoElement);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
-            controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
+            player.on('currentTrackChanged', function(e) { 
+                if (e.newMediaInfo.type === 'fragmentedText') {
+                    setTimeout(showDomStorage, 0);
+                }
+            });
+            controlbar = new ControlBar(player); /* Checkout ControlBar.js for more info on how to target/add text tracks to UI */
             controlbar.initialize();
+            document.getElementById("lastMediaSettingsCachingInfoEnabled").checked = player.getSettings().streaming.lastMediaSettingsCachingInfo.enabled;
+            showDomStorage();
+        }
+
+        function showDomStorage() {
+            document.getElementById("domStorage").innerHTML = localStorage.getItem('dashjs_fragmentedText_settings');
+        }
+
+        function play() {
+            var url = FRAGMENTED_CAPTION_URL;
+            player.attachSource(url);
+            setTextDefaultEnabled();
+            setLang();
+            player.play();
+            showDomStorage();
+        }
+
+        function setTextDefaultEnabled() {
+            var checkbox = document.getElementById("textDefaultEnabled");
+            player.setTextDefaultEnabled(checkbox.checked);
+        }
+
+        function setLang() {
+            var lang = document.getElementById("textSettings").value;
+            var role = null;
+            if (lang) {
+                if (lang.indexOf('-') != -1) {
+                    var values = lang.split('-');
+                    lang = values[0];
+                    role = values[1];
+                }
+                player.setInitialMediaSettingsFor('fragmentedText', { 
+                    lang: lang,
+                    role: role
+                });
+            }
+        }
+
+        function setLastMediaSettingsCachingInfoEnabled() {
+            var checkbox = document.getElementById("lastMediaSettingsCachingInfoEnabled");
+            player.updateSettings({
+                streaming: {
+                    lastMediaSettingsCachingInfo: { enabled: checkbox.checked }
+                }
+            })
+        }
+
+        function clearDomStorage() {
+            localStorage.removeItem('dashjs_fragmentedText_settings');
+            showDomStorage();
         }
 
     </script>
@@ -43,12 +94,24 @@
         .dash-video-player {
             width: 640px;
         }
+
+        .settings {
+            clear: both;
+        }
+        .settings>div {
+            padding: 5px 0;
+        }
+
+        label {
+            font-size: 1.1em;
+        }
+
     </style>
 
-    <body onload="startVideo()">
+    <body onload="init()">
         <div class="dash-video-player code">
             <div class="videoContainer" id="videoContainer">
-                <video preload="auto" autoplay="true" > </video>
+                <video preload="auto"> </video>
                 <div id="ttml-rendering-div"></div>
 
                 <div id="videoController" class="video-controller unselectable">
@@ -79,6 +142,35 @@
                             <div id="seekbar-play" class="seekbar seekbar-play"></div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="settings">
+                <div>
+                    <button onclick="play()">play</button>
+                </div>
+                <div>
+                    <input type="checkbox" id="textDefaultEnabled" onchange="setTextDefaultEnabled()" checked>
+                    <label>textDefaultEnabled</label>
+                </div>
+                <div>
+                    <label>initial settings Language/Role </label>
+                    <select onchange="setLang()" id="textSettings">
+                        <option value="">-- unset initial lang and role --</option>
+                        <option value="eng-subtitle">eng - subtitles</option>
+                        <option value="eng-caption">eng - captions</option>
+                        <option value="swe">swe - subtitles</option>
+                        <option value="qbb">qbb - subtitles</option>
+                        <option value="nor">nor - subtitles</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="checkbox" id="lastMediaSettingsCachingInfoEnabled" onchange="setLastMediaSettingsCachingInfoEnabled()"/>
+                    <label>streaming.lastMediaSettingsCachingInfo.enabled</label>
+                </div>
+                <div>
+                    <label>localStorage content</label>
+                    <div id="domStorage"></div>
+                    <button onclick="clearDomStorage()">Clear localStorage</button>
                 </div>
             </div>
         </div>

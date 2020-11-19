@@ -86,8 +86,9 @@ describe('Thumbnails', function () {
         });
 
         it('should return null if not initialized', function () {
-            const thumbnail = thumbnailController.get(0);
-            expect(thumbnail).to.be.null; // jshint ignore:line
+            thumbnailController.provide(0, (thumbnail) => {
+                expect(thumbnail).to.be.null; // jshint ignore:line
+            });
 
             expect(thumbnailController.getBitrateList()).to.be.empty; // jshint ignore:line
         });
@@ -116,10 +117,11 @@ describe('Thumbnails', function () {
         });
 
         it('should return a thumbnail', function () {
-            let thumbnail = thumbnailController.get();
-            expect(thumbnail).to.be.null; // jshint ignore:line
+            thumbnailController.provide(undefined, thumbnail => {
+                expect(thumbnail).to.be.null; // jshint ignore:line
+            });
 
-            thumbnailController.get(0, thumbnail => {
+            thumbnailController.provide(0, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
@@ -128,7 +130,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
 
-            thumbnailController.get(11, thumbnail => {
+            thumbnailController.provide(11, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(320);
                 expect(thumbnail.y).to.equal(0);
@@ -137,7 +139,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
 
-            thumbnailController.get(101, thumbnail => {
+            thumbnailController.provide(101, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
@@ -149,7 +151,7 @@ describe('Thumbnails', function () {
 
         it('shouldn\'t return any thumbnail after reset', function () {
             thumbnailController.reset();
-            thumbnailController.get(0, thumbnail => {
+            thumbnailController.provide(0, thumbnail => {
                 expect(thumbnail).to.be.null; // jshint ignore:line
             });
         });
@@ -191,7 +193,7 @@ describe('Thumbnails', function () {
         });
 
         it('should return a thumbnail when using multiple rows sprites ', function () {
-            thumbnailController.get(0, thumbnail => {
+            thumbnailController.provide(0, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(0);
                 expect(thumbnail.y).to.equal(0);
@@ -201,7 +203,7 @@ describe('Thumbnails', function () {
             });
 
 
-            thumbnailController.get(15, thumbnail => {
+            thumbnailController.provide(15, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(409.6);
                 expect(thumbnail.y).to.equal(0);
@@ -210,7 +212,7 @@ describe('Thumbnails', function () {
                 expect(thumbnail.url).to.equal('http://media/rep_id/1.jpg');
             });
 
-            thumbnailController.get(40, thumbnail => {
+            thumbnailController.provide(40, thumbnail => {
                 expect(thumbnail).to.be.not.null; // jshint ignore:line
                 expect(thumbnail.x).to.equal(204.8);
                 expect(thumbnail.y).to.equal(57.6);
@@ -254,10 +256,13 @@ describe('Thumbnails', function () {
         });
 
         it('addTracks method doesn\'t add any track if config not set properly', function () {
-            thumbnailTracks = ThumbnailTracks(context).create({debug: Debug(context).getInstance(),
-                                                            eventBus: EventBus(context).getInstance(),
-                                                            events: Events,
-                                                            dashConstants: DashConstants});
+            thumbnailTracks = ThumbnailTracks(context).create({
+                streamInfo: streamInfo,
+                debug: Debug(context).getInstance(),
+                eventBus: EventBus(context).getInstance(),
+                events: Events,
+                dashConstants: DashConstants
+            });
             thumbnailTracks.initialize();
             const tracks = thumbnailTracks.getTracks();
             expect(tracks).to.be.empty; // jshint ignore:line

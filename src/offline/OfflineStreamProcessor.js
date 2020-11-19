@@ -28,79 +28,117 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import OfflineEvents from './events/OfflineEvents';
+import DashHandler from '../dash/DashHandler';
+import RepresentationController from '../dash/controllers/RepresentationController';
+import FragmentModel from '../streaming/models/FragmentModel';
+import FragmentLoader from '../streaming/FragmentLoader';
+import URLUtils from '../streaming/utils/URLUtils';
+import RequestModifier from '../streaming/utils/RequestModifier';
 
-/**
- * @module OfflineStreamProcessor
- * @param {object} config configuration
- * @description Arrange downloading for each type
- */
+
 function OfflineStreamProcessor(config) {
 
     config = config || {};
+    const context = this.context;
     const eventBus = config.eventBus;
     const events = config.events;
+    const errors = config.errors;
     const debug = config.debug;
     const constants = config.constants;
+    const settings = config.settings;
+    const dashConstants = config.dashConstants;
     const manifestId = config.id;
+    const type = config.type;
+    const streamInfo = config.streamInfo;
+    const errHandler = config.errHandler;
+    const mediaPlayerModel = config.mediaPlayerModel;
+    const abrController = config.abrController;
+    const playbackController = config.playbackController;
+    const adapter = config.adapter;
+    const dashMetrics = config.dashMetrics;
+    const baseURLController = config.baseURLController;
+    const timelineConverter = config.timelineConverter;
+    const bitrate = config.bitrate;
+    const offlineStoreController = config.offlineStoreController;
     const completedCb = config.callbacks && config.callbacks.completed;
     const progressCb = config.callbacks && config.callbacks.progression;
 
     let instance,
-        adapter,
         logger,
+        mediaInfo,
         indexHandler,
         representationController,
-        type,
-        mimeType,
         fragmentModel,
-        mediaInfo,
-        bitrate,
         updating,
-        offlineStoreController,
         downloadedSegments,
         isInitialized,
-        isStopped,
-        stream;
-
-    function setConfig(config) {
-
-        if (!config) return;
-
-        if (config.type) {
-            type = config.type;
-        }
-
-        if (config.stream) {
-            stream = config.stream;
-        }
-
-        if (config.mimeType) {
-            mimeType = config.mimeType;
-        }
-
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
-
-        if (config.mediaInfo) {
-            mediaInfo = config.mediaInfo;
-        }
-
-        if (config.bitrate) {
-            bitrate = config.bitrate;
-        }
-
-        if (config.offlineStoreController) {
-            offlineStoreController = config.offlineStoreController;
-        }
-    }
+        isStopped;
 
     function setup() {
         resetInitialSettings();
         logger = debug.getLogger(instance);
+
+        indexHandler = DashHandler(context).create({
+            streamInfo: streamInfo,
+            type: type,
+            timelineConverter: timelineConverter,
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            baseURLController: baseURLController,
+            errHandler: errHandler,
+            settings: settings,
+            // boxParser: boxParser,
+            eventBus: eventBus,
+            events: events,
+            debug: debug,
+            requestModifier: RequestModifier(context).getInstance(),
+            dashConstants: dashConstants,
+            constants: constants,
+            urlUtils: URLUtils(context).getInstance()
+        });
+
+        representationController = RepresentationController(context).create({
+            streamInfo: streamInfo,
+            type: type,
+            abrController: abrController,
+            dashMetrics: dashMetrics,
+            playbackController: playbackController,
+            timelineConverter: timelineConverter,
+            dashConstants: dashConstants,
+            events: events,
+            eventBus: eventBus,
+            errors: errors
+        });
+
+        fragmentModel = FragmentModel(context).create({
+            streamId: streamInfo.id,
+            dashMetrics: dashMetrics,
+            fragmentLoader: FragmentLoader(context).create({
+                dashMetrics: dashMetrics,
+                mediaPlayerModel: mediaPlayerModel,
+                errHandler: errHandler,
+                requestModifier: RequestModifier(context).getInstance(),
+                settings: settings,
+                eventBus: eventBus,
+                events: events,
+                errors: errors,
+                constants: constants,
+                dashConstants: dashConstants,
+                urlUtils: URLUtils(context).getInstance()
+            }),
+            debug: debug,
+            eventBus: eventBus,
+            events: events
+        });
+
         eventBus.on(events.STREAM_COMPLETED, onStreamCompleted, instance);
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
+    }
+
+    function initialize(_mediaInfo) {
+        mediaInfo = _mediaInfo;
+        indexHandler.initialize(false);
+        updateRepresentation(mediaInfo);
     }
 
     function isInitRequest(request) {
@@ -164,29 +202,6 @@ function OfflineStreamProcessor(config) {
         isStopped = true;
     }
 
-    function initializeDownloader () {
-        updateRepresentation(mediaInfo);
-    }
-
-    function setDashElements(handler, fragModel, repController) {
-        indexHandler = handler;
-        indexHandler.initialize(false);
-
-        fragmentModel = fragModel;
-        representationController = repController;
-
-        initializeDownloader();
-    }
-
-    /**
-     * Initialization
-     * @memberof OfflineStreamProcessor#
-    */
-    function initialize() {
-        eventBus.trigger(OfflineEvents.DASH_ELEMENTS_CREATION_NEEDED, {sender: instance, config: {type: type,
-            mimeType: mimeType,
-            streamInfo: getStreamInfo()}} );
-    }
 
     function removeExecutedRequestsBeforeTime(time) {
         if (fragmentModel) {
@@ -292,10 +307,6 @@ function OfflineStreamProcessor(config) {
         representationController.updateData(null, voRepresentations, type, quality);
     }
 
-    function getStreamInfo() {
-        return stream ? stream.getStreamInfo() : null;
-    }
-
     function isUpdating() {
         return updating;
     }
@@ -321,12 +332,7 @@ function OfflineStreamProcessor(config) {
     function resetInitialSettings() {
         isInitialized = false;
         downloadedSegments = 0;
-        mimeType = null;
-        mediaInfo = null;
-        bitrate = null;
         updating = false;
-        type = null;
-        stream = null;
     }
 
     /**
@@ -343,8 +349,6 @@ function OfflineStreamProcessor(config) {
 
     instance = {
         initialize: initialize,
-        setConfig: setConfig,
-        getStreamInfo: getStreamInfo,
         getMediaInfo: getMediaInfo,
         getRepresentationController: getRepresentationController,
         removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
@@ -354,7 +358,6 @@ function OfflineStreamProcessor(config) {
         start: start,
         stop: stop,
         getAvailableSegmentsNumber: getAvailableSegmentsNumber,
-        setDashElements: setDashElements,
         reset: reset
     };
 

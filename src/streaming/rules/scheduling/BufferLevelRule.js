@@ -44,22 +44,21 @@ function BufferLevelRule(config) {
     function setup() {
     }
 
-    function execute(streamProcessor, videoTrackPresent) {
-        if (!streamProcessor) {
+    function execute(type, representationInfo, hasVideoTrack) {
+        if (!type || !representationInfo) {
             return true;
         }
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(streamProcessor.getType());
-        return bufferLevel < getBufferTarget(streamProcessor, videoTrackPresent);
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        return bufferLevel < getBufferTarget(type, representationInfo, hasVideoTrack);
     }
 
-    function getBufferTarget(streamProcessor, videoTrackPresent) {
+    function getBufferTarget(type, representationInfo, hasVideoTrack) {
         let bufferTarget = NaN;
 
-        if (!streamProcessor) {
+        if (!type || !representationInfo) {
             return bufferTarget;
         }
-        const type = streamProcessor.getType();
-        const representationInfo = streamProcessor.getRepresentationInfo();
+
         if (type === Constants.FRAGMENTED_TEXT) {
             if (textController.isTextEnabled()) {
                 if (isNaN(representationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
@@ -73,7 +72,7 @@ function BufferLevelRule(config) {
             } else { // text is disabled, rule will return false
                 bufferTarget = 0;
             }
-        } else if (type === Constants.AUDIO && videoTrackPresent) {
+        }  else if (type === Constants.AUDIO && hasVideoTrack) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             if (isNaN(representationInfo.fragmentDuration)) {
                 bufferTarget = videoBufferLevel;

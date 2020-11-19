@@ -32,9 +32,10 @@ import FactoryMaker from '../../core/FactoryMaker';
 import SchemeLoaderFactory from '../../streaming/net/SchemeLoaderFactory';
 
 /**
- * @module URLLoader
+ * @class URLLoader
  * @description  Call Offline Loader or Online Loader dependaing on URL
  * @param {Object} cfg - dependances
+ * @ignore
 */
 function URLLoader(cfg) {
 
@@ -60,6 +61,7 @@ function URLLoader(cfg) {
             constants: cfg.constants ? cfg.constants : null,
             dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
             urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
+            requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
             errors: cfg.errors
         });
 

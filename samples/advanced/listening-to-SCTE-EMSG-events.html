@@ -11,37 +11,48 @@
 
     <script class="code">
         var player;
-        const URL = "https://vm2.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
+        const URL = "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
         const SCHEMEIDURI = "urn:scte:scte35:2013:xml";
+        const EVENT_MODE_ON_START = dashjs.MediaPlayer.events.EVENT_MODE_ON_START;
+        const EVENT_MODE_ON_RECEIVE = dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE; 
 
         function init() {
             player = dashjs.MediaPlayer().create();
             player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
-            player.on(SCHEMEIDURI, showEvent);
+            player.on(SCHEMEIDURI, showStartEvent, null); /* Default mode is onStart, no need to specify a mode */
+            player.on(SCHEMEIDURI, showReceiveEvent, null, { mode: EVENT_MODE_ON_RECEIVE });
             player.initialize(document.querySelector("video"), URL, true);
         }
 
-        function showEvent(e) {
-            log("EVENT RECEIVED: " + e.type);
-            // We double process in order to pretty-print. Only two levels of object properties are exposed.
+        function showStartEvent(e) {
+            showEvent(e, "start");
+        }
+
+        function showReceiveEvent(e) {
+            showEvent(e, "receive");
+        }
+
+        function showEvent(e, output) {
+            /* We double process in order to pretty-print. Only two levels of object properties are exposed. */
             for (var name in e) {
                 if (typeof e[name] != 'object') {
-                    log("    " + name + ": " + e[name]);
+                    log("    " + name + ": " + e[name], output);
                 }
             }
             for (name in e) {
                 if (typeof e[name] == 'object' ) {
-                    log("    " + name + ":");
+                    log("    " + name + ":", output);
                     for (name2 in e[name]) {
-                        log("        " + name2 + ": " + JSON.stringify(e[name][name2]));
+                        log("        " + name2 + ": " + JSON.stringify(e[name][name2]), output);
                     }
                 }
             }
+            log("", output);
         }
 
-        function log(msg) {
-            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; // to avoid repeated wrapping with large objects
-            var tracePanel = document.getElementById("trace");
+        function log(msg, output) {
+            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; /* to avoid repeated wrapping with large objects */
+            var tracePanel = document.getElementById(output);
             tracePanel.innerHTML += msg + "\n";
             tracePanel.scrollTop = tracePanel.scrollHeight;
             console.log(msg);
@@ -68,7 +79,16 @@
         <div>
             <video controls="true">
             </video>
-            <textarea id="trace" placeholder="Trapped events will be displayed here"></textarea>
+        </div>
+        <div style="display:flex">
+            <div>
+                <p>Received Events</p>
+                <textarea id="receive" placeholder="Trapped on_receive events will be displayed here"></textarea>
+            </div>
+            <div>
+                <p>Started Events</p>
+                <textarea id="start" placeholder="Trapped on_start events will be displayed here"></textarea>
+            </div>
         </div>
         <script>
             document.addEventListener("DOMContentLoaded", function () {

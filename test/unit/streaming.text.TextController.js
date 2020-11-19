@@ -8,6 +8,8 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import VideoModelMock from './mocks/VideoModelMock';
 import StreamControllerMock from './mocks/StreamControllerMock';
+import MediaControllerMock from './mocks/MediaControllerMock';
+
 
 const expect = require('chai').expect;
 const context = {};
@@ -19,6 +21,7 @@ describe('TextController', function () {
 
     let videoModelMock = new VideoModelMock();
     let streamControllerMock = new StreamControllerMock();
+    let mediaControllerMock = new MediaControllerMock();
     let textTracks;
     let textController;
 
@@ -34,10 +37,16 @@ describe('TextController', function () {
                 }
             };
         }
+        if (typeof window === 'undefined') {
+            global.window = {};
+        }
     });
 
     afterEach(function () {
-        delete global.document;
+        if (typeof window !== 'undefined' && global !== window) {
+            delete global.document;
+        }
+        delete global.window;
     });
 
     beforeEach(function () {
@@ -49,7 +58,8 @@ describe('TextController', function () {
         textController = TextController(context).getInstance();
         textController.setConfig({
             videoModel: videoModelMock,
-            streamController: streamControllerMock
+            streamController: streamControllerMock,
+            mediaController: mediaControllerMock
         });
     });
 
@@ -84,10 +94,10 @@ describe('TextController', function () {
     describe('Method setTextDefaultEnabled', function () {
         it('should not set text default enabled if enable is not a boolean', function () {
             expect(textController.setTextDefaultEnabled.bind(textController, -1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
 
             expect(textController.setTextDefaultEnabled.bind(textController)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textController.getTextDefaultEnabled()).to.equal(true); // jshint ignore:line
+            expect(textController.getTextDefaultEnabled()).to.equal(false); // jshint ignore:line
         });
 
         it('should set text default enabled if enable is a boolean', function () {
@@ -144,13 +154,13 @@ describe('TextController', function () {
         it('should enable/disable text', function () {
 
             let textEnabled = textController.isTextEnabled();
-            expect(textEnabled).to.equal(true); // jshint ignore:line
-
-            textController.enableText(false);
-            expect(textController.isTextEnabled()).to.equal(false); // jshint ignore:line
+            expect(textEnabled).to.equal(false); // jshint ignore:line
 
             textController.enableText(true);
             expect(textController.isTextEnabled()).to.equal(true); // jshint ignore:line
+
+            textController.enableText(false);
+            expect(textController.isTextEnabled()).to.equal(false); // jshint ignore:line
         });
     });
 
@@ -208,15 +218,22 @@ describe('TextController', function () {
 
             textTracksQueue.push({
                 index: 0,
-                kind: 'subtitles',
+                roles: ['subtitles'],
                 label: 'sub_en',
                 lang: 'eng'
             });
 
             textTracksQueue.push({
                 index: 1,
-                kind: 'subtitles',
+                roles: ['subtitles'],
                 label: 'sub_fr',
+                lang: 'fr'
+            });
+
+            textTracksQueue.push({
+                index: 2,
+                roles: ['captions'],
+                label: 'sub_fr_hoh',
                 lang: 'fr'
             });
         });
@@ -242,7 +259,7 @@ describe('TextController', function () {
             eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, event);
         });
 
-        it('should choose langauge according to default language', function (done) {
+        it('should choose language according to default language', function (done) {
             // init test
             textController.setTextDefaultLanguage('fr');
 
@@ -274,6 +291,26 @@ describe('TextController', function () {
                 expect(e.index).to.equal(1); // jshint ignore:line
                 expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
                 expect(e.enabled).to.equal(false);
+                eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+                done();
+            };
+            eventBus.on(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+
+            // send event
+            eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, event);
+        });
+
+        it('should choose track according to default settings', function (done) {
+            // init test
+            textController.setInitialSettings({ lang: 'fr', role: 'captions' });
+
+            const event = {
+                index: initialIndex,
+                tracks: textTracksQueue
+            };
+            const onTracksAdded = function (e) {
+                expect(e.index).to.equal(2); // jshint ignore:line
+                expect(e.tracks.length).to.equal(textTracksQueue.length); // jshint ignore:line
                 eventBus.off(Events.TEXT_TRACKS_ADDED, onTracksAdded, this);
                 done();
             };

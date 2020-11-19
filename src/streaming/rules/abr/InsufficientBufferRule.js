@@ -40,6 +40,7 @@ function InsufficientBufferRule(config) {
 
     config = config || {};
     const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
+    const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
 
@@ -54,6 +55,7 @@ function InsufficientBufferRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
         eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onEndFragment, instance);
     }
 
     function checkConfig() {
@@ -61,6 +63,7 @@ function InsufficientBufferRule(config) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
+
     /*
      * InsufficientBufferRule does not kick in before the first BUFFER_LOADED event happens. This is reset at every seek.
      *
@@ -71,7 +74,7 @@ function InsufficientBufferRule(config) {
      * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      */
-    function getMaxIndex (rulesContext) {
+    function getMaxIndex(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
@@ -86,11 +89,11 @@ function InsufficientBufferRule(config) {
         const fragmentDuration = representationInfo.fragmentDuration;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-        if (!currentBufferState || !wasFirstBufferLoadedEventTriggered(mediaType, currentBufferState) || !fragmentDuration) {
+        if (shouldIgnore(mediaType) || !fragmentDuration) {
             return switchRequest;
         }
 
-        if (currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
+        if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
@@ -111,30 +114,32 @@ function InsufficientBufferRule(config) {
         return switchRequest;
     }
 
-    function wasFirstBufferLoadedEventTriggered(mediaType, currentBufferState) {
-        bufferStateDict[mediaType] = bufferStateDict[mediaType] || {};
-
-        let wasTriggered = false;
-        if (bufferStateDict[mediaType].firstBufferLoadedEvent) {
-            wasTriggered = true;
-        } else if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_LOADED) {
-            bufferStateDict[mediaType].firstBufferLoadedEvent = true;
-            wasTriggered = true;
-        }
-        return wasTriggered;
+    function shouldIgnore(mediaType) {
+        return bufferStateDict[mediaType].ignoreCount > 0;
     }
 
     function resetInitialSettings() {
         bufferStateDict = {};
+        bufferStateDict[Constants.VIDEO] = {ignoreCount: SEGMENT_IGNORE_COUNT};
+        bufferStateDict[Constants.AUDIO] = {ignoreCount: SEGMENT_IGNORE_COUNT};
     }
 
     function onPlaybackSeeking() {
         resetInitialSettings();
     }
 
+    function onEndFragment(e) {
+        if (!isNaN(e.startTime) && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
+            if (bufferStateDict[e.mediaType].ignoreCount > 0) {
+                bufferStateDict[e.mediaType].ignoreCount--;
+            }
+        }
+    }
+
     function reset() {
         resetInitialSettings();
         eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onEndFragment, instance);
     }
 
     instance = {

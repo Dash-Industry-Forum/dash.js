@@ -28,14 +28,14 @@
             //Example adding video and source
             video = document.querySelector("#video3");
             source = document.createElement("source");
-            source.src = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+            source.src = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
             source.type = "application/dash+xml";
             player = dashjs.MediaPlayerFactory.create(video, source);
 
             //Example adding video, source and context
             video = document.querySelector("#video4");
             source = document.createElement("source");
-            source.src = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+            source.src = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
             source.type = "application/dash+xml";
             context = {}
             player = dashjs.MediaPlayerFactory.create(video, source, context);
@@ -51,10 +51,10 @@
     <body>
         <div>
             <video id="video1" autoplay controls="true">
-                <source src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" type="application/dash+xml"/>
+                <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" type="application/dash+xml"/>
             </video>
             <p/>
-            <video id="video2" autoplay src="https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd" controls="true"/>
+            <video id="video2" autoplay src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"/>
             <p/>
             <video id="video3" autoplay controls="true">
             </video>

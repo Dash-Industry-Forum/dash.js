@@ -37,6 +37,7 @@ import FactoryMaker from '../../core/FactoryMaker';
  * Initially this is simply a method to determine the Base URL of a URL, but
  * should probably include other things provided all over the place such as
  * determining whether a URL is relative/absolute, resolving two paths etc.
+ * @ignore
  */
 function DefaultURLUtils() {
 

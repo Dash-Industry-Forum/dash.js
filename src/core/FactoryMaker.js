@@ -35,7 +35,7 @@
 const FactoryMaker = (function () {
 
     let instance;
-    const singletonContexts = [];
+    let singletonContexts = [];
     const singletonFactories = {};
     const classFactories = {};
 
@@ -92,6 +92,17 @@ const FactoryMaker = (function () {
             context: context,
             instance: instance
         });
+    }
+
+    /**
+     * Use this method to remove all singleton instances associated with a particular context.
+     *
+     * @param {Object} context
+     * @memberof module:FactoryMaker
+     * @instance
+     */
+    function deleteSingletonInstances(context) {
+        singletonContexts = singletonContexts.filter(x => x.context !== context);
     }
 
     /*------------------------------------------------------------------------------------------*/
@@ -239,6 +250,7 @@ const FactoryMaker = (function () {
         extend: extend,
         getSingletonInstance: getSingletonInstance,
         setSingletonInstance: setSingletonInstance,
+        deleteSingletonInstances: deleteSingletonInstances,
         getSingletonFactory: getSingletonFactory,
         getSingletonFactoryByName: getSingletonFactoryByName,
         updateSingletonFactory: updateSingletonFactory,

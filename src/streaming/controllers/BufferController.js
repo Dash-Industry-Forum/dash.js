@@ -34,16 +34,14 @@ import FragmentModel from '../models/FragmentModel';
 import SourceBufferSink from '../SourceBufferSink';
 import PreBufferSink from '../PreBufferSink';
 import AbrController from './AbrController';
-import MediaController from './MediaController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import BoxParser from '../utils/BoxParser';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import InitCache from '../utils/InitCache';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 const STALL_THRESHOLD = 0.05;
 const BUFFER_END_THRESHOLD = 0.5;
@@ -57,18 +55,16 @@ function BufferController(config) {
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const dashMetrics = config.dashMetrics;
     const errHandler = config.errHandler;
     const fragmentModel = config.fragmentModel;
-    const streamController = config.streamController;
+    const representationController = config.representationController;
     const mediaController = config.mediaController;
     const adapter = config.adapter;
     const textController = config.textController;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
-    const streamId = config.streamId;
+    const streamInfo = config.streamInfo;
     const type = config.type;
-    const streamProcessor = config.streamProcessor;
     const settings = config.settings;
 
     let instance,
@@ -88,10 +84,10 @@ function BufferController(config) {
         isPruningInProgress,
         isQuotaExceeded,
         initCache,
-        seekStartTime,
+        seekTarget,
         seekClearedBufferingCompleted,
         pendingPruningRanges,
-        bufferResetInProgress,
+        replacingBuffer,
         mediaChunk;
 
 
@@ -124,21 +120,38 @@ function BufferController(config) {
         eventBus.on(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.on(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
     }
 
-    function createBuffer(mediaInfo, oldBuffers) {
-        if (!initCache || !mediaInfo || !streamProcessor) return null;
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
+    }
+
+
+    function getRepresentationInfo(quality) {
+        return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
+    }
+
+    function createBuffer(mediaInfoArr, oldBuffers) {
+        if (!initCache || !mediaInfoArr) return null;
+        const mediaInfo = mediaInfoArr[0];
         if (mediaSource) {
             try {
                 if (oldBuffers && oldBuffers[type]) {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd, oldBuffers[type]);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), oldBuffers[type]);
                 } else {
-                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), settings.get().streaming.useAppendWindowEnd);
+                    buffer = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppended.bind(this), null);
+                }
+                if (settings.get().streaming.useAppendWindow) {
+                    buffer.updateAppendWindow(streamInfo);
                 }
                 if (typeof buffer.getBuffer().initialize === 'function') {
-                    buffer.getBuffer().initialize(type, streamProcessor);
+                    buffer.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
                 }
             } catch (e) {
                 logger.fatal('Caught error on create SourceBuffer: ' + e);
@@ -147,7 +160,7 @@ function BufferController(config) {
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(requiredQuality).MSETimeOffset);
+        updateBufferTimestampOffset(this.getRepresentationInfo(requiredQuality));
         return buffer;
     }
 
@@ -184,54 +197,32 @@ function BufferController(config) {
         }
     }
 
-    function isActive() {
-        return streamProcessor && streamController && streamProcessor.getStreamInfo();
-    }
-
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type !== type) return;
-
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality,  ', data size:', e.chunk.bytes.byteLength);
+        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         appendToBuffer(e.chunk);
     }
 
-    function switchInitData(streamId, representationId, bufferResetEnabled) {
-        const chunk = initCache.extract(streamId, representationId);
-        bufferResetInProgress = bufferResetEnabled === true ? bufferResetEnabled : false;
-        if (chunk) {
-            logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
-            appendToBuffer(chunk);
-        } else {
-            eventBus.trigger(Events.INIT_REQUESTED, { mediaType: type, sender: instance });
+    function appendInitSegment(representationId) {
+        // Get init segment from cache
+        const chunk = initCache.extract(streamInfo.id, representationId);
+
+        if (!chunk) {
+            // Init segment not in cache, shall be requested
+            return false;
         }
+
+        // Append init segment into buffer
+        logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
+        appendToBuffer(chunk);
+        return true;
     }
 
     function onMediaFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamId || e.chunk.mediaInfo.type !== type) return;
-
         const chunk = e.chunk;
-        const bytes = chunk.bytes;
-        const quality = chunk.quality;
-        const currentRepresentation = streamProcessor.getRepresentationInfo(quality);
-        const representationController = streamProcessor.getRepresentationController();
-        const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
-        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
-        if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
-            const request = fragmentModel.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                quality: quality,
-                index: chunk.index
-            })[0];
-
-            const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.INBAND_EVENTS, { sender: instance, streamInfo: streamProcessor.getStreamInfo(), events: events });
-        }
-
-        if (bufferResetInProgress) {
+        if (replacingBuffer) {
             mediaChunk = chunk;
             const ranges = buffer && buffer.getAllBufferRanges();
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
@@ -251,14 +242,14 @@ function BufferController(config) {
         buffer.append(chunk);
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
-            eventBus.trigger(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
+            triggerEvent(Events.VIDEO_CHUNK_RECEIVED, {chunk: chunk});
         }
     }
 
     function showBufferRanges(ranges) {
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
-                logger.debug('Buffered Range', ranges.start(i), ' - ', ranges.end(i), ' currentTime = ', playbackController.getTime());
+                logger.debug('Buffered range: ' + ranges.start(i) + ' - ' + ranges.end(i) + ', currentTime = ', playbackController.getTime());
             }
         }
     }
@@ -271,18 +262,26 @@ function BufferController(config) {
                 logger.warn('Quota exceeded, Critical Buffer: ' + criticalBufferLevel);
 
                 if (criticalBufferLevel > 0) {
-                    // recalculate buffer lengths to keep (bufferToKeep, bufferAheadToKeep, bufferTimeAtTopQuality) according to criticalBufferLevel
+                    // recalculate buffer lengths according to criticalBufferLevel
                     const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
                     const bufferAhead = criticalBufferLevel - bufferToKeep;
-                    const s = { streaming: { bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
-                                           bufferAheadToKeep: parseFloat(bufferAhead.toFixed(5))}};
+                    const bufferTimeAtTopQuality = Math.min(settings.get().streaming.bufferTimeAtTopQuality, bufferAhead * 0.9);
+                    const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
+                    const s = {
+                        streaming: {
+                            bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
+                            bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
+                            bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
+                        }
+                    };
                     settings.update(s);
                 }
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
-                eventBus.trigger(Events.QUOTA_EXCEEDED, { sender: instance, criticalBufferLevel: criticalBufferLevel }); //Tells ScheduleController to stop scheduling.
-                pruneAllSafely(); // Then we clear the buffer and onCleared event will tell ScheduleController to start scheduling again.
+                // Notify Schedulecontroller to stop scheduling until buffer has been pruned
+                triggerEvent(Events.QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                clearBuffers(getClearRanges());
             }
             return;
         }
@@ -298,40 +297,70 @@ function BufferController(config) {
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             showBufferRanges(ranges);
             onPlaybackProgression();
-        } else {
-            if (bufferResetInProgress) {
-                const currentTime = playbackController.getTime();
-                logger.debug('AppendToBuffer seek target should be ' + currentTime);
-                streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                streamProcessor.setIndexHandlerTime(currentTime);
-            }
+            adjustSeekTarget();
+        } else if (replacingBuffer) {
+            // When replacing buffer due to switch track, and once new initialization segment has been appended
+            // (and previous buffered data removed) then seek stream to current time
+            const currentTime = playbackController.getTime();
+            logger.debug('AppendToBuffer seek target should be ' + currentTime);
+            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
-        const dataEvent = {
-            sender: instance,
-            quality: appendedBytesInfo.quality,
-            startTime: appendedBytesInfo.start,
-            index: appendedBytesInfo.index,
-            bufferedRanges: ranges
-        };
-        if (appendedBytesInfo && !appendedBytesInfo.endFragment) {
-            eventBus.trigger(Events.BYTES_APPENDED, dataEvent);
-        } else if (appendedBytesInfo) {
-            eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, dataEvent);
+        if (appendedBytesInfo) {
+            triggerEvent(appendedBytesInfo.endFragment ? Events.BYTES_APPENDED_END_FRAGMENT : Events.BYTES_APPENDED, {
+                quality: appendedBytesInfo.quality,
+                startTime: appendedBytesInfo.start,
+                index: appendedBytesInfo.index,
+                bufferedRanges: ranges,
+                mediaType: type
+            });
+        }
+    }
+
+    function adjustSeekTarget() {
+        // Check buffered data only for audio and video
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
+        if (isNaN(seekTarget)) return;
+
+        // Check if current buffered range already contains seek target (and current video element time)
+        const currentTime = playbackController.getTime();
+        let range = getRangeAt(seekTarget, 0);
+        if (currentTime === seekTarget && range) return;
+
+        // Get buffered range corresponding to the seek target
+        const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
+        range = getRangeAt(seekTarget, segmentDuration);
+        if (!range) return;
+
+        if (Math.abs(currentTime - seekTarget) > segmentDuration) {
+            // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
+            // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
+
+            // Check if appended segment is not anterior from seek target (segments timeline/template tolerance)
+            if (seekTarget <= range.end) {
+                // Seek video element to seek target or range start if appended buffer starts after seek target (segments timeline/template tolerance)
+                playbackController.seek(Math.max(seekTarget, range.start), false, true);
+                seekTarget = NaN;
+            }
+        } else if (currentTime < range.start) {
+            // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
+            playbackController.seek(range.start, false, true);
+            seekTarget = NaN;
         }
     }
 
     function onQualityChanged(e) {
-        if (requiredQuality === e.newQuality || type !== e.mediaType || streamProcessor.getStreamInfo().id !== e.streamInfo.id) return;
+        if (requiredQuality === e.newQuality) return;
 
-        updateBufferTimestampOffset(streamProcessor.getRepresentationInfo(e.newQuality).MSETimeOffset);
+        updateBufferTimestampOffset(this.getRepresentationInfo(e.newQuality));
         requiredQuality = e.newQuality;
     }
 
     //**********************************************************************
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
-    function onPlaybackSeeking(/*e*/) {
+    function onPlaybackSeeking(e) {
+        seekTarget = e.seekTime;
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
             isBufferingCompleted = false;
@@ -347,7 +376,7 @@ function BufferController(config) {
     }
 
     function onPlaybackSeeked() {
-        setSeekStartTime(undefined);
+        seekTarget = NaN;
     }
 
     // Prune full buffer but what is around current time position
@@ -427,23 +456,12 @@ function BufferController(config) {
     }
 
     function getWorkingTime() {
-        // This function returns current working time for buffer (either start time or current time if playback has started)
-        let ret = playbackController.getTime();
-
-        if (seekStartTime) {
-            // if there is a seek start time, the first buffer data will be available on maximum value between first buffer range value and seek start time.
-            let ranges = buffer.getAllBufferRanges();
-            if (ranges && ranges.length) {
-                ret = Math.max(ranges.start(0), seekStartTime);
-            }
-        }
-        return ret;
+        return isNaN(seekTarget) ? playbackController.getTime() : seekTarget;
     }
 
     function onPlaybackProgression() {
-        if (!bufferResetInProgress || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
+        if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
             updateBufferLevel();
-            addBufferMetrics();
         }
     }
 
@@ -452,9 +470,7 @@ function BufferController(config) {
     }
 
     function onPlaybackPlaying() {
-        if (seekStartTime !== undefined) {
-            setSeekStartTime(undefined);
-        }
+        seekTarget = NaN;
         checkIfSufficientBuffer();
     }
 
@@ -468,7 +484,7 @@ function BufferController(config) {
         let len,
             i;
 
-        const toler = (tolerance || 0.15);
+        const toler = !isNaN(tolerance) ? tolerance : 0.15;
 
         if (ranges !== null && ranges !== undefined) {
             for (i = 0, len = ranges.length; i < len; i++) {
@@ -511,6 +527,11 @@ function BufferController(config) {
         let range,
             length;
 
+        // Consider gap/discontinuity limit as tolerance
+        if (settings.get().streaming.jumpGaps) {
+            tolerance = settings.get().streaming.smallGapLimit;
+        }
+
         range = getRangeAt(time, tolerance);
 
         if (range === null) {
@@ -525,23 +546,17 @@ function BufferController(config) {
     function updateBufferLevel() {
         if (playbackController) {
             bufferLevel = getBufferLength(getWorkingTime() || 0);
-            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { sender: instance, bufferLevel: bufferLevel });
+            triggerEvent(Events.BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
             checkIfSufficientBuffer();
         }
-    }
-
-    function addBufferMetrics() {
-        if (!isActive()) return;
-        dashMetrics.addBufferState(type, bufferState, streamProcessor.getScheduleController().getBufferTarget());
-        dashMetrics.addBufferLevel(type, new Date(), bufferLevel * 1000);
     }
 
     function checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= lastIndex - 1; // Handles 0 and non 0 based request index
         if (isLastIdxAppended && !isBufferingCompleted && buffer.discharge === undefined) {
             isBufferingCompleted = true;
-            logger.debug('checkIfBufferingCompleted trigger BUFFERING_COMPLETED');
-            eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
+            logger.debug('checkIfBufferingCompleted trigger BUFFERING_COMPLETED for ' + type);
+            triggerEvent(Events.BUFFERING_COMPLETED);
         }
     }
 
@@ -552,8 +567,8 @@ function BufferController(config) {
         if (seekClearedBufferingCompleted && !isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd() - bufferLevel < STALL_THRESHOLD) {
             seekClearedBufferingCompleted = false;
             isBufferingCompleted = true;
-            logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED');
-            eventBus.trigger(Events.BUFFERING_COMPLETED, { sender: instance, streamInfo: streamProcessor.getStreamInfo() });
+            logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
+            triggerEvent(Events.BUFFERING_COMPLETED);
         }
 
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
@@ -562,7 +577,7 @@ function BufferController(config) {
         if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= streamProcessor.getStreamInfo().manifestInfo.minBufferTime) {
+            if (isBufferingCompleted || bufferLevel >= streamInfo.manifestInfo.minBufferTime) {
                 notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
             }
         }
@@ -576,36 +591,10 @@ function BufferController(config) {
         }
 
         bufferState = state;
-        addBufferMetrics();
 
-        eventBus.trigger(Events.BUFFER_LEVEL_STATE_CHANGED, { sender: instance, state: state, mediaType: type, streamInfo: streamProcessor.getStreamInfo() });
-        eventBus.trigger(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY, { mediaType: type });
+        triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, {state: state});
+        triggerEvent(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY);
         logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
-    }
-
-    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
-        const fragmentStartTime = Math.max(!request || isNaN(request.startTime) ? 0 : request.startTime, 0);
-        const eventStreams = [];
-        const events = [];
-
-        /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
-        const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
-        for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
-            eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
-        }
-
-        const isoFile = BoxParser(context).getInstance().parse(data);
-        const eventBoxes = isoFile.getBoxes('emsg');
-
-        for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
-            const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
-
-            if (event) {
-                events.push(event);
-            }
-        }
-
-        return events;
     }
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
@@ -627,10 +616,7 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        const rangeToKeep = {
-            start: Math.max(0, currentTime - settings.get().streaming.bufferToKeep),
-            end: currentTime + settings.get().streaming.bufferAheadToKeep
-        };
+        let startRangeToKeep = Math.max(0, currentTime - settings.get().streaming.bufferToKeep);
 
         const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -640,34 +626,22 @@ function BufferController(config) {
 
         // Ensure we keep full range of current fragment
         if (currentTimeRequest) {
-            rangeToKeep.start = Math.min(currentTimeRequest.startTime, rangeToKeep.start);
-            rangeToKeep.end = Math.max(currentTimeRequest.startTime + currentTimeRequest.duration, rangeToKeep.end);
+            startRangeToKeep = Math.min(currentTimeRequest.startTime, startRangeToKeep);
         } else if (currentTime === 0 && playbackController.getIsDynamic()) {
             // Don't prune before the live stream starts, it messes with low latency
             return [];
         }
 
-        if (ranges.start(0) <= rangeToKeep.start) {
+        if (ranges.start(0) <= startRangeToKeep) {
             const behindRange = {
                 start: 0,
-                end: rangeToKeep.start
+                end: startRangeToKeep
             };
-            for (let i = 0; i < ranges.length && ranges.end(i) <= rangeToKeep.start; i++) {
+            for (let i = 0; i < ranges.length && ranges.end(i) <= startRangeToKeep; i++) {
                 behindRange.end = ranges.end(i);
             }
             if (behindRange.start < behindRange.end) {
                 clearRanges.push(behindRange);
-            }
-        }
-
-        if (ranges.end(ranges.length - 1) >= rangeToKeep.end) {
-            const aheadRange = {
-                start: rangeToKeep.end,
-                end: ranges.end(ranges.length - 1) + BUFFER_RANGE_CALCULATION_THRESHOLD
-            };
-
-            if (aheadRange.start < aheadRange.end) {
-                clearRanges.push(aheadRange);
             }
         }
 
@@ -712,10 +686,6 @@ function BufferController(config) {
         if (currentTime < range.end) {
             isBufferingCompleted = false;
             maxAppendedIndex = 0;
-            if (!bufferResetInProgress) {
-                streamProcessor.getScheduleController().setSeekTarget(currentTime);
-                streamProcessor.setIndexHandlerTime(currentTime);
-            }
         }
 
         buffer.remove(range.start, range.end, range.force);
@@ -735,52 +705,63 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            streamProcessor.setIndexHandlerTime(e.from);
+            triggerEvent(Events.SEEK_TARGET, {time: e.from, mediaType: type, streamId: streamInfo.id});
         }
 
         if (isPruningInProgress) {
             clearNextRange();
         } else {
-            if (!bufferResetInProgress) {
-                logger.debug('onRemoved : call updateBufferLevel');
+            if (!replacingBuffer) {
                 updateBufferLevel();
-                addBufferMetrics();
             } else {
-                bufferResetInProgress = false;
+                replacingBuffer = false;
                 if (mediaChunk) {
                     appendToBuffer(mediaChunk);
                 }
             }
-            eventBus.trigger(Events.BUFFER_CLEARED, { sender: instance, from: e.from, to: e.to, unintended: e.unintended,  hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(), quotaExceeded: isQuotaExceeded });
+            triggerEvent(Events.BUFFER_CLEARED, {
+                from: e.from,
+                to: e.to,
+                unintended: e.unintended,
+                hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(),
+                quotaExceeded: isQuotaExceeded
+            });
         }
-        //TODO - REMEMBER removed a timerout hack calling clearBuffer after manifestInfo.minBufferTime * 1000 if !hasEnoughSpaceToAppend() Aug 04 2016
     }
 
-    function updateBufferTimestampOffset(MSETimeOffset) {
+    function updateBufferTimestampOffset(representationInfo) {
+        if (!representationInfo || representationInfo.MSETimeOffset === undefined) return;
         // Each track can have its own @presentationTimeOffset, so we should set the offset
         // if it has changed after switching the quality or updating an mpd
         if (buffer && buffer.updateTimestampOffset) {
-            buffer.updateTimestampOffset(MSETimeOffset);
+            buffer.updateTimestampOffset(representationInfo.MSETimeOffset);
+        }
+    }
+
+    function updateAppendWindow() {
+        if (buffer && !isBufferingCompleted) {
+            buffer.updateAppendWindow(streamInfo);
         }
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== streamProcessor.getType() || e.sender.getStreamId() !== streamProcessor.getStreamInfo().id || e.error) return;
-        updateBufferTimestampOffset(e.currentRepresentation.MSETimeOffset);
+        if (e.error || isBufferingCompleted) return;
+        updateBufferTimestampOffset(e.currentRepresentation);
     }
 
     function onStreamCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamId || e.request.mediaType !== type) return;
         lastIndex = e.request.index;
         checkIfBufferingCompleted();
     }
 
     function onCurrentTrackChanged(e) {
+        if (e.newMediaInfo.streamInfo.id !== streamInfo.id || e.newMediaInfo.type !== type) return;
+
         const ranges = buffer && buffer.getAllBufferRanges();
-        if (!ranges || (e.newMediaInfo.type !== type) || (e.newMediaInfo.streamInfo.id !== streamProcessor.getStreamInfo().id)) return;
+        if (!ranges) return;
 
         logger.info('Track change asked');
-        if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
+        if (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
             if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
@@ -799,18 +780,6 @@ function BufferController(config) {
 
     function onPlaybackRateChanged() {
         checkIfSufficientBuffer();
-    }
-
-    function getType() {
-        return type;
-    }
-
-    function getStreamProcessor() {
-        return streamProcessor;
-    }
-
-    function setSeekStartTime(value) {
-        seekStartTime = value;
     }
 
     function getBuffer() {
@@ -837,6 +806,10 @@ function BufferController(config) {
 
     function getMediaSource() {
         return mediaSource;
+    }
+
+    function replaceBuffer() {
+        replacingBuffer = true;
     }
 
     function getIsBufferingCompleted() {
@@ -867,6 +840,11 @@ function BufferController(config) {
         return (totalBufferedTime < criticalBufferLevel);
     }
 
+    function triggerEvent(eventType, data) {
+        let payload = data || {};
+        eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
+    }
+
     function resetInitialSettings(errored, keepBuffers) {
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = undefined;
@@ -881,6 +859,7 @@ function BufferController(config) {
         bufferLevel = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
+        seekTarget = NaN;
 
         if (buffer) {
             if (!errored) {
@@ -890,16 +869,15 @@ function BufferController(config) {
             buffer = null;
         }
 
-        bufferResetInProgress = false;
+        replacingBuffer = false;
     }
 
     function reset(errored, keepBuffers) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaybackPlaying, this);
         eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
@@ -908,29 +886,32 @@ function BufferController(config) {
         eventBus.off(Events.PLAYBACK_SEEKED, onPlaybackSeeked, this);
         eventBus.off(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
         resetInitialSettings(errored, keepBuffers);
     }
 
     instance = {
-        getBufferControllerType: getBufferControllerType,
-        initialize: initialize,
-        createBuffer: createBuffer,
-        dischargePreBuffer: dischargePreBuffer,
-        getType: getType,
-        getStreamProcessor: getStreamProcessor,
-        setSeekStartTime: setSeekStartTime,
-        getBuffer: getBuffer,
-        setBuffer: setBuffer,
-        getBufferLevel: getBufferLevel,
-        getRangeAt: getRangeAt,
-        setMediaSource: setMediaSource,
-        getMediaSource: getMediaSource,
-        getIsBufferingCompleted: getIsBufferingCompleted,
-        switchInitData: switchInitData,
-        getIsPruningInProgress: getIsPruningInProgress,
-        reset: reset
+        initialize,
+        getStreamId,
+        getType,
+        getBufferControllerType,
+        getRepresentationInfo,
+        createBuffer,
+        dischargePreBuffer,
+        getBuffer,
+        setBuffer,
+        getBufferLevel,
+        getRangeAt,
+        setMediaSource,
+        getMediaSource,
+        appendInitSegment,
+        replaceBuffer,
+        getIsBufferingCompleted,
+        getIsPruningInProgress,
+        reset,
+        updateAppendWindow
     };
 
     setup();

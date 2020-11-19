@@ -93,32 +93,22 @@ describe('StreamController', function () {
         it('should return an empty array when attempting to call getActiveStreamProcessors while no activeStream has been defined', function () {
             const activeStreamProcessorsArray = streamController.getActiveStreamProcessors();
 
-            expect(activeStreamProcessorsArray).to.be.instanceOf(Array);    // jshint ignore:line
-            expect(activeStreamProcessorsArray).to.be.empty;                // jshint ignore:line
+            expect(activeStreamProcessorsArray).to.be.instanceOf(Array); // jshint ignore:line
+            expect(activeStreamProcessorsArray).to.be.empty; // jshint ignore:line
         });
 
-        it('should return undefined when attempting to call isTrackTypePresent with no track type', function () {
-            const isAudioTrackPresent = streamController.isTrackTypePresent();
-
-            expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
+        it('should return false when attempting to call hasAudioTrack, while no activeStream has been defined', function () {
+            expect(streamController.hasAudioTrack()).to.be.false; // jshint ignore:line
         });
 
-        it('should return undefined when attempting to call isTrackTypePresent, for audio type, while no activeStream has been defined', function () {
-            const isAudioTrackPresent = streamController.isTrackTypePresent('audio');
-
-            expect(isAudioTrackPresent).to.be.undefined;    // jshint ignore:line
-        });
-
-        it('should return undefined when attempting to call isTrackTypePresent, for video type, while no activeStream has been defined', function () {
-            const isVideoTrackPresent = streamController.isTrackTypePresent('video');
-
-            expect(isVideoTrackPresent).to.be.undefined;    // jshint ignore:line
+        it('should return false when attempting to call hasVideoTrack, while no activeStream has been defined', function () {
+            expect(streamController.hasVideoTrack()).to.be.false; // jshint ignore:line
         });
 
         it('should return null when attempting to call getStreamForTime, and no stream has been composed', function () {
             const stream = streamController.getStreamForTime(10);
 
-            expect(stream).to.be.null;    // jshint ignore:line
+            expect(stream).to.be.null; // jshint ignore:line
         });
     });
 

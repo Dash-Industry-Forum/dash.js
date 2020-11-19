@@ -29,10 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
- /**
-  * @class
-  * @ignore
-  */
+/**
+ * @class
+ * @ignore
+ */
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
@@ -47,7 +47,7 @@ class CommonEncryption {
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
             if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
-                    cp.value.toLowerCase() === 'cenc')
+                (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs'))
                 retVal = cp;
         }
         return retVal;
@@ -104,6 +104,10 @@ class CommonEncryption {
      */
     static parseInitDataFromContentProtection(cpData, BASE64) {
         if ('pssh' in cpData) {
+
+            // Remove whitespaces and newlines from pssh text
+            cpData.pssh.__text = cpData.pssh.__text.replace(/\r?\n|\r/g, '').replace(/\s+/g, '');
+
             return BASE64.decodeArray(cpData.pssh.__text).buffer;
         }
         return null;

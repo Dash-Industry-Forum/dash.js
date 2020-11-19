@@ -37,7 +37,7 @@
                     'liveDelay': targetLatency,
                     'liveCatchUpMinDrift': minDrift,
                     'liveCatchUpPlaybackRate': catchupPlaybackRate,
-                    "liveCatchupLatencyThreshold": liveCatchupLatencyThreshold,
+                    'liveCatchupLatencyThreshold': liveCatchupLatencyThreshold,
                 }
             });
         }
@@ -175,13 +175,14 @@
 
             var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
             document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
-
+            
             document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchupLatencyThreshold + " secs";
-
+            
         }, 200);
     });
 </script>
 <script src="../highlighter.js"></script>
 </body>
 </html>
+
 

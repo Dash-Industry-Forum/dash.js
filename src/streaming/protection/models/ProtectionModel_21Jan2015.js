@@ -155,7 +155,7 @@ function ProtectionModel_21Jan2015(config) {
             }
 
         }).catch(function () {
-            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, {error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO'});
+            eventBus.trigger(events.INTERNAL_KEY_SYSTEM_SELECTED, { error: 'Error selecting keys system (' + keySystemAccess.keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
         });
     }
 
@@ -190,7 +190,7 @@ function ProtectionModel_21Jan2015(config) {
             logger.info('DRM: License server certificate successfully updated.');
             eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
         }).catch(function (error) {
-            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name)});
+            eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
         });
     }
 
@@ -205,14 +205,17 @@ function ProtectionModel_21Jan2015(config) {
 
         // Generate initial key request.
         // keyids type is used for clearkey when keys are provided directly in the protection data and then request to a license server is not needed
-        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && protData && protData.clearkeys ? 'keyids' : 'cenc';
+        const dataType = ks.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (initData ||  (protData && protData.clearkeys)) ? 'keyids' : 'cenc';
         session.generateRequest(dataType, initData).then(function () {
             logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionID());
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+            eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
         }).catch(function (error) {
             // TODO: Better error string
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Error generating key request -- ' + error.name)
+            });
         });
     }
 
@@ -224,7 +227,7 @@ function ProtectionModel_21Jan2015(config) {
             message = message.toJWK();
         }
         session.update(message).catch(function (error) {
-            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
+            eventBus.trigger(events.KEY_ERROR, { data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken) });
         });
     }
 
@@ -248,14 +251,20 @@ function ProtectionModel_21Jan2015(config) {
         session.load(sessionID).then(function (success) {
             if (success) {
                 logger.debug('DRM: Session loaded.  SessionID = ' + sessionToken.getSessionID());
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+                eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
             } else {
                 removeSession(sessionToken);
-                eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')});
+                eventBus.trigger(events.KEY_SESSION_CREATED, {
+                    data: null,
+                    error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session! Invalid Session ID (' + sessionID + ')')
+                });
             }
         }).catch(function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CREATED, {data: null, error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)});
+            eventBus.trigger(events.KEY_SESSION_CREATED, {
+                data: null,
+                error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Could not load session (' + sessionID + ')! ' + error.name)
+            });
         });
     }
 
@@ -264,9 +273,12 @@ function ProtectionModel_21Jan2015(config) {
 
         session.remove().then(function () {
             logger.debug('DRM: Session removed.  SessionID = ' + sessionToken.getSessionID());
-            eventBus.trigger(events.KEY_SESSION_REMOVED, {data: sessionToken.getSessionID()});
+            eventBus.trigger(events.KEY_SESSION_REMOVED, { data: sessionToken.getSessionID() });
         }, function (error) {
-            eventBus.trigger(events.KEY_SESSION_REMOVED, {data: null, error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_REMOVED, {
+                data: null,
+                error: 'Error removing session (' + sessionToken.getSessionID() + '). ' + error.name
+            });
 
         });
     }
@@ -275,7 +287,10 @@ function ProtectionModel_21Jan2015(config) {
         // Send our request to the key session
         closeKeySessionInternal(sessionToken).catch(function (error) {
             removeSession(sessionToken);
-            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: null, error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name});
+            eventBus.trigger(events.KEY_SESSION_CLOSED, {
+                data: null,
+                error: 'Error closing session (' + sessionToken.getSessionID() + ') ' + error.name
+            });
         });
     }
 
@@ -283,7 +298,7 @@ function ProtectionModel_21Jan2015(config) {
 
         if (navigator.requestMediaKeySystemAccess === undefined ||
             typeof navigator.requestMediaKeySystemAccess !== 'function') {
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Insecure origins are not allowed'});
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Insecure origins are not allowed' });
             return;
         }
 
@@ -300,16 +315,16 @@ function ProtectionModel_21Jan2015(config) {
             navigator.requestMediaKeySystemAccess(systemString, configs).then(function (mediaKeySystemAccess) {
                 // Chrome 40 does not currently implement MediaKeySystemAccess.getConfiguration()
                 const configuration = (typeof mediaKeySystemAccess.getConfiguration === 'function') ?
-                        mediaKeySystemAccess.getConfiguration() : null;
+                    mediaKeySystemAccess.getConfiguration() : null;
                 const keySystemAccess = new KeySystemAccess(keySystem, configuration);
                 keySystemAccess.mksa = mediaKeySystemAccess;
-                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {data: keySystemAccess});
+                eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { data: keySystemAccess });
 
             }).catch(function (error) {
                 if (++i < ksConfigurations.length) {
                     requestKeySystemAccessInternal(ksConfigurations, i);
                 } else {
-                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! ' + error.message});
+                    eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! ' + error.message });
                 }
             });
         })(idx);
@@ -336,7 +351,7 @@ function ProtectionModel_21Jan2015(config) {
                     case 'encrypted':
                         if (event.initData) {
                             let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, event.initDataType)});
+                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, event.initDataType) });
                         }
                         break;
                 }
@@ -348,7 +363,7 @@ function ProtectionModel_21Jan2015(config) {
         // Remove from our session list
         for (let i = 0; i < sessions.length; i++) {
             if (sessions[i] === token) {
-                sessions.splice(i,1);
+                sessions.splice(i, 1);
                 break;
             }
         }
@@ -394,12 +409,12 @@ function ProtectionModel_21Jan2015(config) {
             handleEvent: function (event) {
                 switch (event.type) {
                     case 'keystatuseschange':
-                        eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: this});
+                        eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: this });
                         event.target.keyStatuses.forEach(function () {
                             let keyStatus = parseKeyStatus(arguments);
                             switch (keyStatus.status) {
                                 case 'expired':
-                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, {error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE)});
+                                    eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, { error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) });
                                     break;
                                 default:
                                     eventBus.trigger(events.INTERNAL_KEY_STATUS_CHANGED, keyStatus);
@@ -410,7 +425,7 @@ function ProtectionModel_21Jan2015(config) {
 
                     case 'message':
                         let message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(this, message, undefined, event.messageType)});
+                        eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(this, message, undefined, event.messageType) });
                         break;
                 }
             },
@@ -428,7 +443,7 @@ function ProtectionModel_21Jan2015(config) {
             },
 
             getUsable: function () {
-                let usable  = false;
+                let usable = false;
                 session.keyStatuses.forEach(function () {
                     let keyStatus = parseKeyStatus(arguments);
                     if (keyStatus.status === 'usable') {
@@ -451,7 +466,7 @@ function ProtectionModel_21Jan2015(config) {
         session.closed.then(function () {
             removeSession(token);
             logger.debug('DRM: Session closed.  SessionID = ' + token.getSessionID());
-            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: token.getSessionID()});
+            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: token.getSessionID() });
         });
 
         // Add to our session list

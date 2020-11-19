@@ -55,15 +55,16 @@ class VideoModelMock {
 
     getPlaybackQuality() {
         let element = this.element;
-        if (!element) { return null; }
+        if (!element) {
+            return null;
+        }
         let hasWebKit = ('webkitDroppedFrameCount' in element) && ('webkitDecodedFrameCount' in element);
         let hasQuality = ('getVideoPlaybackQuality' in element);
         let result = null;
 
         if (hasQuality) {
             result = element.getVideoPlaybackQuality();
-        }
-        else if (hasWebKit) {
+        } else if (hasWebKit) {
             result = {
                 droppedVideoFrames: element.webkitDroppedFrameCount,
                 totalVideoFrames: element.webkitDroppedFrameCount + element.webkitDecodedFrameCount,
@@ -180,6 +181,10 @@ class VideoModelMock {
 
     getSource() {
         return this.source;
+    }
+
+    isStalled() {
+        return false;
     }
 }
 

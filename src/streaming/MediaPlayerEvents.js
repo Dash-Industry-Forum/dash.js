@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventsBase from '../core/events/EventsBase';
+
 /**
  * @class
  * @implements EventsBase
@@ -67,6 +68,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#BUFFER_LEVEL_STATE_CHANGED
          */
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
+
+        /**
+         * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
+         * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
+         */
+        this.DYNAMIC_TO_STATIC = 'dynamicToStatic';
 
         /**
          * Triggered when there is an error from the element or MSE source buffer.
@@ -177,6 +184,12 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when a stream (period) is loaded
+         * @event MediaPlayerEvents#STREAM_UPDATED
+         */
+        this.STREAM_UPDATED = 'streamUpdated';
+
+        /**
+         * Triggered when a stream (period) is updated
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
@@ -335,6 +348,24 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#MANIFEST_VALIDITY_CHANGED
          */
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
+
+        /**
+         * A gap occured in the timeline which requires a seek to the next period
+         * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
+         */
+        this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
+
+        /**
+         * Dash events are triggered at their respective start points on the timeline.
+         * @event MediaPlayerEvents#EVENT_MODE_ON_START
+         */
+        this.EVENT_MODE_ON_START = 'eventModeOnStart';
+
+        /**
+         * Dash events are triggered as soon as they were parsed.
+         * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
+         */
+        this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
     }
 }
 

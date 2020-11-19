@@ -113,7 +113,7 @@ function StreamProcessorMock (testType, streamInfo) {
         return this.bufferController.getIsBufferingCompleted();
     };
 
-    this.switchInitData = function () {};
+    this.appendInitSegment = function () {};
 
     this.reset = function () {};
 }

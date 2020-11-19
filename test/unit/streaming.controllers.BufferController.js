@@ -1,4 +1,3 @@
-import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import BufferController from '../../src/streaming/controllers/BufferController';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
@@ -7,7 +6,6 @@ import Settings from '../../src/core/Settings';
 
 import StreamControllerMock from './mocks/StreamControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
-import StreamProcessorMock from './mocks/StreamProcessorMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import AdapterMock from './mocks/AdapterMock';
 import MediaSourceMock from './mocks/MediaSourceMock';
@@ -16,6 +14,7 @@ import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import TextControllerMock from './mocks/TextControllerMock';
+import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 
 const chai = require('chai');
 const expect = chai.expect;
@@ -23,16 +22,16 @@ const expect = chai.expect;
 const context = {};
 const testType = 'video';
 const streamInfo = {
-    id: 'id'
+    id: 'streamId'
 };
 const eventBus = EventBus(context).getInstance();
-const objectUtils = ObjectUtils(context).getInstance();
+// const objectUtils = ObjectUtils(context).getInstance();
 const initCache = InitCache(context).getInstance();
 
 describe('BufferController', function () {
     // disable log
     let settings = Settings(context).getInstance();
-    const streamProcessor = new StreamProcessorMock(testType, streamInfo);
+    // const streamProcessor = new StreamProcessorMock(testType, streamInfo);
     const streamControllerMock = new StreamControllerMock();
     const adapterMock = new AdapterMock();
     const dashMetricsMock = new DashMetricsMock();
@@ -42,9 +41,10 @@ describe('BufferController', function () {
     const mediaControllerMock = new MediaControllerMock();
     const abrControllerMock = new AbrControllerMock();
     const textControllerMock = new TextControllerMock();
+    const representationControllerMock = new RepresentationControllerMock();
     let bufferController;
     let mediaSourceMock;
-    const mediaInfo = { codec: 'video/webm; codecs="vp8, vorbis"' };
+    const mediaInfo = [{ codec: 'video/webm; codecs="vp8, vorbis"'}];
 
     beforeEach(function () {
         global.navigator = {
@@ -53,7 +53,7 @@ describe('BufferController', function () {
 
         mediaSourceMock = new MediaSourceMock();
         bufferController = BufferController(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             type: testType,
             dashMetrics: dashMetricsMock,
             errHandler: errorHandlerMock,
@@ -62,7 +62,7 @@ describe('BufferController', function () {
             adapter: adapterMock,
             textController: textControllerMock,
             abrController: abrControllerMock,
-            streamProcessor: streamProcessor,
+            representationController: representationControllerMock,
             playbackController: playbackControllerMock,
             mediaPlayerModel: mediaPlayerModelMock,
             settings: settings
@@ -74,14 +74,12 @@ describe('BufferController', function () {
 
         bufferController.reset();
         bufferController = null;
-        streamProcessor.reset();
     });
 
     describe('Method initialize', function () {
         it('should initialize the controller', function () {
             expect(bufferController.getType()).to.equal(testType);
             bufferController.initialize({});
-
         });
     });
 
@@ -105,13 +103,6 @@ describe('BufferController', function () {
         });
     });
 
-    describe('Method getStreamProcessor', function () {
-        it('should return configured stream processor', function () {
-            const configuredSP = bufferController.getStreamProcessor();
-            expect(objectUtils.areEqual(configuredSP, streamProcessor)).to.be.true; // jshint ignore:line
-        });
-    });
-
     describe('Methods get/set Media Source', function () {
         it('should update media source', function () {
             bufferController.setMediaSource(mediaSourceMock);
@@ -119,7 +110,7 @@ describe('BufferController', function () {
         });
     });
 
-    describe('Method switchInitData', function () {
+    describe('Method appendInitSegment', function () {
         beforeEach(function () {
             bufferController.initialize(mediaSourceMock);
             bufferController.createBuffer(mediaInfo);
@@ -132,27 +123,20 @@ describe('BufferController', function () {
                 mediaInfo: {
                     type: 'video'
                 },
-                streamId: 'streamId',
+                streamId: streamInfo.id,
                 representationId: 'representationId'
             };
 
             initCache.save(chunk);
 
-            bufferController.switchInitData('streamId', 'representationId');
+            bufferController.appendInitSegment('representationId');
             expect(mediaSourceMock.buffers[0].chunk).to.equal(chunk.bytes);
         });
 
-        it('should trigger INIT_REQUESTED if no init data is cached', function (done) {
+        it('should return false if no init data is cached', function () {
             // reset cache
             initCache.reset();
-
-            const onInitRequest = function () {
-                eventBus.off(Events.INIT_REQUESTED, onInitRequest);
-                done();
-            };
-            eventBus.on(Events.INIT_REQUESTED, onInitRequest, this);
-
-            bufferController.switchInitData('streamId', 'representationId');
+            expect(bufferController.appendInitSegment('representationId')).to.equal(false);
         });
     });
 
@@ -176,34 +160,10 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong streamId', function (done) {
-            const event = {
-                chunk: {
-                    streamId: 'wrong',
-                    mediaInfo: {
-                        type: 'video'
-                    },
-                    bytes: 'initData',
-                    quality: 2,
-                    representationId: 'representationId'
-                }
-            };
-            const onInitDataLoaded = function () {
-                eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
-                expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-                done();
-            };
-            eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded, this);
-
-            expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-            // send event
-            eventBus.trigger(Events.INIT_FRAGMENT_LOADED, event);
-        });
-
         it('should append data to source buffer ', function (done) {
             const event = {
                 chunk: {
-                    streamId: 'id',
+                    streamId: streamInfo.id,
                     mediaInfo: {
                         type: 'video'
                     },
@@ -226,7 +186,7 @@ describe('BufferController', function () {
 
         it('should save init data into cache', function (done) {
             const chunk = {
-                streamId: 'id',
+                streamId: streamInfo.id,
                 mediaInfo: {
                     type: 'video'
                 },
@@ -261,34 +221,10 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong stream id', function (done) {
-            const event = {
-                chunk: {
-                    streamId: 'wrong',
-                    mediaInfo: {
-                        type: 'video'
-                    },
-                    bytes: 'data',
-                    quality: 2,
-                    representationId: 'representationId'
-                }
-            };
-            const onMediaFragmentLoaded = function () {
-                eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
-                expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-                done();
-            };
-            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-
-            expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-            // send event
-            eventBus.trigger(Events.MEDIA_FRAGMENT_LOADED, event);
-        });
-
         it('should append data to source buffer ', function (done) {
             const event = {
                 chunk: {
-                    streamId: 'id',
+                    streamId: streamInfo.id,
                     mediaInfo: {
                         type: 'video'
                     },
@@ -311,12 +247,12 @@ describe('BufferController', function () {
         it('should trigger VIDEO_CHUNK_RECEIVED if event is video', function (done) {
             const event = {
                 chunk: {
+                    streamId: streamInfo.id,
                     bytes: 'data',
                     quality: 2,
                     mediaInfo: {
                         type: 'video'
-                    },
-                    streamId: 'id'
+                    }
                 }
             };
             const onVideoChunk = function () {
@@ -334,48 +270,22 @@ describe('BufferController', function () {
         beforeEach(function () {
             bufferController.initialize(mediaSourceMock);
             bufferController.createBuffer(mediaInfo);
-        });
-
-        it('should not update buffer timestamp offset - wrong stream processor id', function () {
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
-
-            const event = {
-                newQuality: 2,
-                mediaType: testType,
-                streamInfo: {
-                    id: 'wrongid'
-                }
+            bufferController.getRepresentationInfo = function (quality) {
+                return {
+                    MSETimeOffset: quality
+                };
             };
-
-            // send event
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, event);
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
-        });
-
-        it('should not update buffer timestamp offset - wrong media type', function () {
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
-
-            const event = {
-                newQuality: 2,
-                mediaType: 'wrongMediaType',
-                streamInfo: {
-                    id: streamProcessor.getStreamInfo().id
-                }
-            };
-
-            // send event
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, event);
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
         });
 
         it('should not update buffer timestamp offset - wrong quality', function () {
+
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
             const event = {
                 newQuality: 0,
                 mediaType: testType,
                 streamInfo: {
-                    id: streamProcessor.getStreamInfo().id
+                    id: streamInfo.id
                 }
             };
 
@@ -391,7 +301,7 @@ describe('BufferController', function () {
                 newQuality: 2,
                 mediaType: testType,
                 streamInfo: {
-                    id: streamProcessor.getStreamInfo().id
+                    id: streamInfo.id
                 }
             };
 
@@ -453,10 +363,6 @@ describe('BufferController', function () {
     describe('Method getBufferRange', function () {
         let buffer;
         beforeEach(function () {
-            let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
-            };
-
             bufferController.initialize(mediaSourceMock);
             bufferController.createBuffer(mediaInfo);
             const sink = bufferController.getBuffer();

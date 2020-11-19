@@ -15,12 +15,11 @@
 
     <script class="code">
         /* TEST CONTENT.
-         https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd
-         https://vm2.dashif.org/dash/vod/testpic_2s/stpp_two_regions_multi_color.mpd
-         https://vm2.dashif.org/livesimg//testpic_2s/multi_subs.mpd
-         https://vm2.dashif.org/livesimg//testpic_2s/stpp_two_regions_multi_color.mpd
+         https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd
+         https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd
+         https://livesim.dashif.org/livesim/testpic_2s/multi_subs.mpd
         */
-        var CAPTION_URL = "https://vm2.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+        var CAPTION_URL = "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
             videoElement,
             player;
 
@@ -33,6 +32,7 @@
 
             player = dashjs.MediaPlayer().create();
             player.initialize(videoElement, url, true);
+            player.setTextDefaultEnabled(true);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
             controlbar.initialize();
@@ -52,7 +52,7 @@
     <body onload="startVideo()">
         <div class="dash-video-player code">
             <div class="videoContainer" id="videoContainer">
-                <video preload="auto" autoplay="true" > </video>
+                <video preload="auto" autoplay > </video>
                 <div id="ttml-rendering-div"></div>
 
                 <div id="videoController" class="video-controller unselectable">
