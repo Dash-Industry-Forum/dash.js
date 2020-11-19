@@ -144,6 +144,13 @@ class Constants {
         this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
 
         /**
+         *  @constant {string} ABR_STRATEGY_LOL_PLUS Adaptive bitrate algorithm based on LoL+
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_LOL_PLUS = 'abrLoLPlus';
+
+        /**
          *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
          *  @memberof Constants#
          *  @static
