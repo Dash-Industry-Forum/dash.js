@@ -77,6 +77,7 @@ function AbrController() {
         droppedFramesHistory,
         throughputHistory,
         isUsingBufferOccupancyABRDict,
+        isUsingL2AABRDict,
         dashMetrics,
         settings;
 
@@ -91,8 +92,9 @@ function AbrController() {
         abandonmentStateDict[type] = abandonmentStateDict[type] || {};
         abandonmentStateDict[type].state = MetricsConstants.ALLOW_LOAD;
         isUsingBufferOccupancyABRDict[type] = false;
+        isUsingL2AABRDict[type] = false;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
-        if (type == Constants.VIDEO) {
+        if (type === Constants.VIDEO) {
             eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, instance);
             droppedFramesHistory = droppedFramesHistory || DroppedFramesHistory(context).create();
             setElementSize();
@@ -126,6 +128,7 @@ function AbrController() {
         streamProcessorDict = {};
         switchHistoryDict = {};
         isUsingBufferOccupancyABRDict = {};
+        isUsingL2AABRDict = {};
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -195,7 +198,7 @@ function AbrController() {
         }
 
         if (e.metric === MetricsConstants.BUFFER_LEVEL && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
-            updateIsUsingBufferOccupancyABR(e.mediaType, 0.001 * e.value.level);
+            _updateAbrStrategy(e.mediaType, 0.001 * e.value.level);
         }
     }
 
@@ -219,7 +222,7 @@ function AbrController() {
      * @returns {BitrateInfo | null}
      */
     function getTopBitrateInfoFor(type) {
-        if (type  && streamProcessorDict && streamProcessorDict[type]) {
+        if (type && streamProcessorDict && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             if (streamInfo && streamInfo.id) {
                 const idx = getTopQualityIndexFor(type, streamInfo.id);
@@ -298,7 +301,7 @@ function AbrController() {
     }
 
     function checkPlaybackQuality(type) {
-        if (type  && streamProcessorDict && streamProcessorDict[type]) {
+        if (type && streamProcessorDict && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const streamId = streamInfo ? streamInfo.id : null;
             const oldQuality = getQualityFor(type);
@@ -308,7 +311,9 @@ function AbrController() {
                 currentValue: oldQuality,
                 switchHistory: switchHistoryDict[type],
                 droppedFramesHistory: droppedFramesHistory,
-                useBufferOccupancyABR: useBufferOccupancyABR(type)
+                useBufferOccupancyABR: useBufferOccupancyABR(type),
+                useL2AABR: useL2AABR(type)
+
             });
 
             if (droppedFramesHistory) {
@@ -336,7 +341,7 @@ function AbrController() {
                         changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
                     }
                 } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
-                    const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+                    const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
                     logger.debug('[' + type + '] stay on ' + oldQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ')');
                 }
             }
@@ -356,7 +361,7 @@ function AbrController() {
     }
 
     function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason) {
-        if (type  && streamProcessorDict[type]) {
+        if (type && streamProcessorDict[type]) {
             const streamInfo = streamProcessorDict[type].getStreamInfo();
             const id = streamInfo ? streamInfo.id : null;
             if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
@@ -447,18 +452,27 @@ function AbrController() {
         return infoList;
     }
 
-    function updateIsUsingBufferOccupancyABR(mediaType, bufferLevel) {
+    function _updateAbrStrategy(mediaType, bufferLevel) {
         const strategy = settings.get().streaming.abr.ABRStrategy;
 
-        if (strategy === Constants.ABR_STRATEGY_BOLA) {
+        if (strategy === Constants.ABR_STRATEGY_L2A) {
+            isUsingBufferOccupancyABRDict[mediaType] = false;
+            isUsingL2AABRDict[mediaType] = true;
+            return;
+        } else if (strategy === Constants.ABR_STRATEGY_BOLA) {
             isUsingBufferOccupancyABRDict[mediaType] = true;
+            isUsingL2AABRDict[mediaType] = false;
             return;
         } else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
             isUsingBufferOccupancyABRDict[mediaType] = false;
+            isUsingL2AABRDict[mediaType] = false;
             return;
         }
         // else ABR_STRATEGY_DYNAMIC
+        _updateDynamicAbrStrategy(mediaType, bufferLevel);
+    }
 
+    function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
         const stableBufferTime = mediaPlayerModel.getStableBufferTime();
         const switchOnThreshold = stableBufferTime;
         const switchOffThreshold = 0.5 * stableBufferTime;
@@ -480,20 +494,22 @@ function AbrController() {
         return isUsingBufferOccupancyABRDict[mediaType];
     }
 
+    function useL2AABR(mediaType) {
+        return isUsingL2AABRDict[mediaType];
+    }
+
     function getThroughputHistory() {
         return throughputHistory;
     }
 
     function updateTopQualityIndex(mediaInfo) {
-        if (mediaInfo) {
-            const type = mediaInfo.type;
-            const streamId = mediaInfo.streamInfo.id;
-            const max = mediaInfo.representationCount - 1;
+        const type = mediaInfo.type;
+        const streamId = mediaInfo.streamInfo.id;
+        const max = mediaInfo.representationCount - 1;
 
-            setTopQualityIndex(type, streamId, max);
+        setTopQualityIndex(type, streamId, max);
 
-            return max;
-        }
+        return max;
     }
 
     function isPlayingAtTopQuality(streamInfo) {
@@ -546,12 +562,12 @@ function AbrController() {
 
         const minIdx = getMinAllowedIndexFor(type);
         if (minIdx !== undefined) {
-            newIdx = Math.max (idx , minIdx);
+            newIdx = Math.max(idx, minIdx);
         }
 
         const maxIdx = getMaxAllowedIndexFor(type);
         if (maxIdx !== undefined) {
-            newIdx = Math.min (newIdx , maxIdx);
+            newIdx = Math.min(newIdx, maxIdx);
         }
 
         return newIdx;
@@ -562,7 +578,7 @@ function AbrController() {
         if (isNaN(maxRepresentationRatio) || maxRepresentationRatio >= 1 || maxRepresentationRatio < 0) {
             return idx;
         }
-        return Math.min(idx , Math.round(maxIdx * maxRepresentationRatio) );
+        return Math.min(idx, Math.round(maxIdx * maxRepresentationRatio));
     }
 
     function setWindowResizeEventCalled(value) {
@@ -619,24 +635,36 @@ function AbrController() {
                 abrController: instance,
                 streamProcessor: streamProcessor,
                 currentRequest: e.request,
-                useBufferOccupancyABR: useBufferOccupancyABR(type)
+                useBufferOccupancyABR: useBufferOccupancyABR(type),
+                useL2AABR: useL2AABR(type)
             });
             const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
             if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
                 const fragmentModel = streamProcessor.getFragmentModel();
-                const request = fragmentModel.getRequests({state: FragmentModel.FRAGMENT_MODEL_LOADING, index: e.request.index})[0];
+                const request = fragmentModel.getRequests({
+                    state: FragmentModel.FRAGMENT_MODEL_LOADING,
+                    index: e.request.index
+                })[0];
                 if (request) {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
                     fragmentModel.abortRequests();
                     setAbandonmentStateFor(type, MetricsConstants.ABANDON_LOAD);
                     switchHistoryDict[type].reset();
-                    switchHistoryDict[type].push({oldValue: getQualityFor(type), newValue: switchRequest.quality, confidence: 1, reason: switchRequest.reason});
+                    switchHistoryDict[type].push({
+                        oldValue: getQualityFor(type),
+                        newValue: switchRequest.quality,
+                        confidence: 1,
+                        reason: switchRequest.reason
+                    });
                     setPlaybackQuality(type, streamController.getActiveStreamInfo(), switchRequest.quality, switchRequest.reason);
 
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(
-                        () => {setAbandonmentStateFor(type, MetricsConstants.ALLOW_LOAD); abandonmentTimeout = null;},
+                        () => {
+                            setAbandonmentStateFor(type, MetricsConstants.ALLOW_LOAD);
+                            abandonmentTimeout = null;
+                        },
                         settings.get().streaming.abandonLoadTimeout
                     );
                 }

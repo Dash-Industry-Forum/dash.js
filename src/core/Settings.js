@@ -175,7 +175,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,
  * with lower values giving less rebuffering (but also lower quality).
  * @property {boolean} [useDefaultABRRules=true] Should the default ABR rules be used, or the custom ones added.
- * @property {boolean} [useBufferOccupancyABR=false] Whether to use the BOLA abr rule.
  * @property {boolean} [useDeadTimeLatency=true]
  * If true, only the download portion will be considered part of the download bitrate
  * and latency will be regarded as static. If false, the reciprocal of the whole
@@ -447,7 +446,6 @@ function Settings() {
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
-                useBufferOccupancyABR: false,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,

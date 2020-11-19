@@ -37,7 +37,7 @@
  */
 class Constants {
 
-    init () {
+    init() {
         /**
          *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
          *  @memberof Constants#
@@ -137,6 +137,13 @@ class Constants {
         this.ABR_STRATEGY_BOLA = 'abrBola';
 
         /**
+         *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_L2A = 'abrL2A';
+
+        /**
          *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
          *  @memberof Constants#
          *  @static
@@ -216,7 +223,7 @@ class Constants {
         this.DVB_PROBABILITY = 'dvb:probability';
     }
 
-    constructor () {
+    constructor() {
         this.init();
     }
 }
