@@ -98,7 +98,7 @@ function OfflineStreamProcessor(config) {
         });
 
         representationController = RepresentationController(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             type: type,
             abrController: abrController,
             dashMetrics: dashMetrics,

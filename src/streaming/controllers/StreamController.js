@@ -137,33 +137,33 @@ function StreamController() {
     }
 
     function registerEvents() {
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.on(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, this);
-        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
-        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
-        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
+        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, instance);
+        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
+        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
+        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
     }
 
     function unRegisterEvents() {
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        eventBus.off(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, this);
-        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.off(Events.PLAYBACK_ENDED, onEnded, this);
-        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, this);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
+        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, onGapCausedPlaybackSeek, instance);
+        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
+        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
+        eventBus.off(Events.PLAYBACK_ENDED, onEnded, instance);
+        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
+        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
     }
 
     /*
@@ -232,7 +232,7 @@ function StreamController() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
                 if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0) {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -619,7 +619,7 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
                 if (seekTime === playbackController.getTime()) {
-                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime, streamId: activeStream.getId()});
+                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime}, {streamId: activeStream.getId()});
                 } else {
                     playbackController.seek(seekTime);
                 }
@@ -631,9 +631,7 @@ function StreamController() {
         }
 
         isStreamSwitchingInProgress = false;
-        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
-            toStreamInfo: getActiveStreamInfo()
-        });
+        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
     }
 
     function setMediaDuration(duration) {
@@ -708,11 +706,13 @@ function StreamController() {
                         eventController: eventController,
                         mediaController: mediaController,
                         textController: textController,
+                        protectionController: protectionController,
                         videoModel: videoModel,
+                        streamInfo: streamInfo,
                         settings: settings
                     });
                     streams.push(stream);
-                    stream.initialize(streamInfo, protectionController);
+                    stream.initialize();
                 } else {
                     stream.updateData(streamInfo);
                 }
@@ -1096,9 +1096,7 @@ function StreamController() {
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
-                eventBus.trigger(Events.PROTECTION_DESTROYED, {
-                    data: manifestModel.getValue().url
-                });
+                eventBus.trigger(Events.PROTECTION_DESTROYED, { data: manifestModel.getValue().url });
             }
         }
 

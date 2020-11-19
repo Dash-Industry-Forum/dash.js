@@ -406,11 +406,12 @@ function MediaPlayer() {
      * @param {string} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
+     * @param {Object} options - object to define various options such as priority and mode
      * @memberof module:MediaPlayer
      * @instance
      */
-    function on(type, listener, scope) {
-        eventBus.on(type, listener, scope);
+    function on(type, listener, scope, options) {
+        eventBus.on(type, listener, scope, options);
     }
 
     /**

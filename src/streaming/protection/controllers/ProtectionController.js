@@ -171,7 +171,7 @@ function ProtectionController(config) {
             const currentInitData = protectionModel.getAllInitData();
             for (let i = 0; i < currentInitData.length; i++) {
                 if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                    logger.warn('DRM: Ignoring initData because we have already seen it!');
+                    logger.info('DRM: Ignoring initData because we have already seen it!');
                     return;
                 }
             }
@@ -437,11 +437,11 @@ function ProtectionController(config) {
                         eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
                         if (event.error) {
                             if (!fromManifest) {
-                                eventBus.trigger(events.KEY_SYSTEM_SELECTED, {error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)});
+                                eventBus.trigger(events.KEY_SYSTEM_SELECTED, { error: new DashJSError(ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, ProtectionErrors.KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error) });
                             }
                         } else {
                             logger.info('DRM: KeySystem Access Granted');
-                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: event.data});
+                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: event.data });
                             const protData = getProtData(keySystem);
                             if (protectionKeyController.isClearKey(keySystem)) {
                                 // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
@@ -504,7 +504,7 @@ function ProtectionController(config) {
                         return;
                     }
                     keySystem = protectionModel.getKeySystem();
-                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, {data: keySystemAccess});
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
                     // Set server certificate from protData
                     const protData = getProtData(keySystem);
                     if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
@@ -552,12 +552,12 @@ function ProtectionController(config) {
     }
 
     function sendLicenseRequestCompleteEvent(data, error) {
-        eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, {data: data, error: error});
+        eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, { data: data, error: error });
     }
 
     function onKeyStatusChanged(e) {
         if (e.error) {
-            eventBus.trigger(events.KEY_STATUSES_CHANGED, {data: null, error: e.error});
+            eventBus.trigger(events.KEY_STATUSES_CHANGED, { data: null, error: e.error });
         } else {
             logger.debug('DRM: key status = ' + e.status);
         }
@@ -568,7 +568,7 @@ function ProtectionController(config) {
 
         // Dispatch event to applications indicating we received a key message
         const keyMessage = e.data;
-        eventBus.trigger(events.KEY_MESSAGE, {data: keyMessage});
+        eventBus.trigger(events.KEY_MESSAGE, { data: keyMessage });
         const messageType = (keyMessage.messageType) ? keyMessage.messageType : 'license-request';
         const message = keyMessage.message;
         const sessionToken = keyMessage.sessionToken;

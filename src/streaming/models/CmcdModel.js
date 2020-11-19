@@ -149,7 +149,6 @@ function CmcdModel() {
             let cmcdData = null;
 
             if (request.type === HTTPRequest.MPD_TYPE) {
-                _setDefaultContentId(request);
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                 _initForMediaType(request.mediaType);
@@ -163,14 +162,6 @@ function CmcdModel() {
             return cmcdData;
         } catch (e) {
             return null;
-        }
-    }
-
-    function _setDefaultContentId(request) {
-        try {
-            internalData.cid = `${Utils.generateHashCode(request.url)}`;
-        } catch (e) {
-
         }
     }
 
@@ -275,12 +266,16 @@ function CmcdModel() {
     function _getGenericCmcdData() {
         const data = {};
 
+        let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
+
         data.v = CMCD_VERSION;
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-        data.cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
 
         data.sid = `${data.sid}`;
-        data.cid = `${data.cid}`;
+
+        if (cid) {
+            data.cid = `${cid}`;
+        }
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;
@@ -311,7 +306,7 @@ function CmcdModel() {
     function _getTopBitrateByType(mediaType) {
         try {
             const info = abrController.getTopBitrateInfoFor(mediaType);
-            return info.bitrate;
+            return Math.round(info.bitrate / 1000);
         } catch (e) {
             return null;
         }
@@ -419,11 +414,11 @@ function CmcdModel() {
             if (!cmcdData) {
                 return null;
             }
-            const keys = Object.keys(cmcdData).sort((a, b) => a > b);
+            const keys = Object.keys(cmcdData).sort((a, b) =>a.localeCompare(b));
             const length = keys.length;
 
             let cmcdString = keys.reduce((acc, key, index) => {
-                if (key === 'v' && cmcdData[key] === 1) return acc;
+                if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
                 if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
                     let string = cmcdData[key].replace(/"/g, '\"');
                     acc += `${key}="${string}"`;
@@ -438,7 +433,6 @@ function CmcdModel() {
             }, '');
 
             cmcdString = cmcdString.replace(/=true/g, '');
-            cmcdString = encodeURIComponent(cmcdString);
 
             return cmcdString;
         } catch (e) {

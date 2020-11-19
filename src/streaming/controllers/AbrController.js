@@ -43,8 +43,8 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import Debug from '../../core/Debug';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import {checkInteger} from '../utils/SupervisorTools';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import { checkInteger } from '../utils/SupervisorTools';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
@@ -93,14 +93,14 @@ function AbrController() {
         abandonmentStateDict[type].state = MetricsConstants.ALLOW_LOAD;
         isUsingBufferOccupancyABRDict[type] = false;
         isUsingL2AABRDict[type] = false;
-        eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
+        eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
         if (type === Constants.VIDEO) {
-            eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
+            eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, instance);
             droppedFramesHistory = droppedFramesHistory || DroppedFramesHistory(context).create();
             setElementSize();
         }
-        eventBus.on(Events.METRIC_ADDED, onMetricAdded, this);
-        eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
+        eventBus.on(Events.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, instance);
 
         throughputHistory = throughputHistory || ThroughputHistory(context).create({
             settings: settings
@@ -143,10 +143,10 @@ function AbrController() {
 
         resetInitialSettings();
 
-        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, this);
-        eventBus.off(Events.METRIC_ADDED, onMetricAdded, this);
-        eventBus.off(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, this);
+        eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
+        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, instance);
+        eventBus.off(Events.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.off(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, instance);
 
         if (abrRulesCollection) {
             abrRulesCollection.reset();
@@ -369,13 +369,14 @@ function AbrController() {
                 logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
             setQualityFor(type, id, newQuality);
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {
-                mediaType: type,
-                streamInfo: streamInfo,
-                oldQuality: oldQuality,
-                newQuality: newQuality,
-                reason: reason
-            });
+            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
+                {
+                    oldQuality: oldQuality,
+                    newQuality: newQuality,
+                    reason: reason
+                },
+                { streamId: streamInfo.id, mediaType: type }
+            );
             const bitrate = throughputHistory.getAverageThroughput(type);
             if (!isNaN(bitrate)) {
                 domStorage.setSavedBitrateSettings(type, bitrate);

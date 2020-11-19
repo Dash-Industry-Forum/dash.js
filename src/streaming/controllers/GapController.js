@@ -101,13 +101,13 @@ function GapController() {
     }
 
     function registerEvents() {
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
     }
 
     function unregisterEvents() {
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
     }
 
     function onBytesAppended() {
@@ -217,7 +217,7 @@ function GapController() {
         if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition) {
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
-                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, {seekTime: seekToPosition});
+                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, { seekTime: seekToPosition });
             } else {
                 logger.warn(`Jumping gap from ${currentTime} to ${seekToPosition}. Gap duration: ${seekToPosition - currentTime}`);
                 playbackController.seek(seekToPosition, true, true);

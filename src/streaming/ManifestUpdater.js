@@ -148,7 +148,7 @@ function ManifestUpdater() {
         // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
         // Stop manifest update, ignore static manifest and signal end of dynamic stream to detect end of stream
         if (manifestModel.getValue() && manifestModel.getValue().type === DashConstants.DYNAMIC && manifest.type === DashConstants.STATIC) {
-            eventBus.trigger(Events.DYNAMIC_STREAM_COMPLETED);
+            eventBus.trigger(Events.DYNAMIC_TO_STATIC);
             isUpdating = false;
             isStopped = true;
             return;
@@ -164,7 +164,7 @@ function ManifestUpdater() {
         if (refreshDelay * 1000 > 0x7FFFFFFF) {
             refreshDelay = 0x7FFFFFFF / 1000;
         }
-        eventBus.trigger(Events.MANIFEST_UPDATED, {manifest: manifest});
+        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
         if (!isPaused) {

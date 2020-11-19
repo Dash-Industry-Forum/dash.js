@@ -176,7 +176,7 @@ function OfflineDownload(config) {
         if (!e.error && manifestId !== null) {
             _status = OfflineConstants.OFFLINE_STATUS_STARTED;
             offlineStoreController.setDownloadingStatus(manifestId, _status).then(function () {
-                eventBus.trigger(events.OFFLINE_RECORD_STARTED, {id: manifestId, message: 'Downloading started for this stream !'});
+                eventBus.trigger(events.OFFLINE_RECORD_STARTED, { id: manifestId, message: 'Downloading started for this stream !' });
             });
         } else {
             _status = OfflineConstants.OFFLINE_STATUS_ERROR;
@@ -234,7 +234,7 @@ function OfflineDownload(config) {
             _status = OfflineConstants.OFFLINE_STATUS_FINISHED;
             offlineStoreController.setDownloadingStatus(manifestId, _status)
             .then(function () {
-                eventBus.trigger(events.OFFLINE_RECORD_FINISHED, {id: manifestId, message: 'Downloading has been successfully completed for this stream !'});
+                eventBus.trigger(events.OFFLINE_RECORD_FINISHED, { id: manifestId, message: 'Downloading has been successfully completed for this stream !' });
                 resetDownload();
             });
         } else {
