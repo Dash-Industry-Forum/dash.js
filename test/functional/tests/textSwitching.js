@@ -30,16 +30,14 @@ exports.register = function (stream) {
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
             await command.execute(player.loadStream, [stream]);
+            await command.execute(player.setTextDefaultEnabled, [true]);
             
         });
 
         test('switchTrack', async () => {
             utils.log(NAME, 'switchTrack');
-            Tracks = await command.execute(player.getTracksFor,[type]);
-            /*
+            Tracks = await command.execute(player.getTracksFor,[type]);          
             trackOne = Tracks[0];
-            console.log(trackOne);
-            */
             await command.execute(player.setCurrentTrack, [trackOne]);
             var curr = await command.execute(player.getCurrentTrackFor, [type]);
             console.log(curr);
