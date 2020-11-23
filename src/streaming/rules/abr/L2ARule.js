@@ -34,10 +34,12 @@
 import MetricsConstants from '../../constants/MetricsConstants';
 import SwitchRequest from '../SwitchRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
-import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
+import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
+import MediaPlayer from '../../../streaming/MediaPlayer';
+
 
 
 const L2A_STATE_ONE_BITRATE = 0; // If there is only one bitrate (or initialization failed), always return NO_CHANGE.
@@ -103,14 +105,13 @@ function L2ARule(config) {
         if (!mediaInfo || !mediaInfo.type) {
             return;
         }
-
         l2AParameterDict[mediaInfo.type] = {};
-        l2AParameterDict[mediaInfo.type].w = [];//Vector of probabilities associated with bitrate decisions
-        l2AParameterDict[mediaInfo.type].prev_w = [];//Vector of probabilities associated with bitrate decisions calculated in the previous step
-        l2AParameterDict[mediaInfo.type].Q = 0;//Initialization of Lagrangian multiplier (This keeps track of the buffer displacement)
+        l2AParameterDict[mediaInfo.type].w = []; //Vector of probabilities associated with bitrate decisions
+        l2AParameterDict[mediaInfo.type].prev_w = []; //Vector of probabilities associated with bitrate decisions calculated in the previous step
+        l2AParameterDict[mediaInfo.type].Q = 0; //Initialization of Lagrangian multiplier (This keeps track of the buffer displacement)
         l2AParameterDict[mediaInfo.type].segment_request_start_s = 0;
         l2AParameterDict[mediaInfo.type].segment_download_finish_s = 0;
-        l2AParameterDict[mediaInfo.type].B_target = 1.5;//Target buffer level
+        l2AParameterDict[mediaInfo.type].B_target = 1.5; //Target buffer level
     }
 
 
@@ -241,33 +242,13 @@ function L2ARule(config) {
     }
 
     /**
-     * Calculates the index of the minimum value of an array
-     * @param {array} arr
-     * @return {number} minIndex
-     * @private
-     */
-    function _indexOfMin(arr) {
-        if (arr.length === 0) {
-            return -1;
-        }
-        let min = arr[0];
-        let minIndex = 0;
-        for (let i = 0; i < arr.length; i++) {
-            if (arr[i] <= min) {
-                minIndex = i;
-                min = arr[i];
-            }
-        }
-        return minIndex;
-    }
-
-    /**
      * Dot multiplication of two arrays
      * @param {array} arr1
      * @param {array} arr2
      * @return {number} sumdot
      * @private
      */
+
     function _dotmultiplication(arr1, arr2) {
         if (arr1.length !== arr2.length) {
             return -1;
@@ -290,7 +271,7 @@ function L2ARule(config) {
     function euclideanProjection(arr) {
         const m = arr.length;
         let bget = false;
-        let arr2 = [];
+        var arr2 = [];
         for (let ii = 0; ii < m; ++ii) {
             arr2[ii] = arr[ii];
         }
@@ -324,9 +305,9 @@ function L2ARule(config) {
      */
     function getMaxIndex(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
-        const horizon = 8;//Optimization horizon
-        const vl = Math.pow(horizon, 0.2);//Cautiousness parameter
-        const alpha = Math.max(Math.pow(horizon, 0.7), vl * Math.sqrt(horizon));//Step size
+        const horizon = 4; // Optimization horizon (The amount of steps required to achieve convergence)
+        const vl = Math.pow(horizon, 0.99);// Cautiousness parameter, used to control aggressiveness of the bitrate decision process.
+        const alpha = Math.max(Math.pow(horizon, 1), vl * Math.sqrt(horizon));// Step size, used for gradient descent exploration granularity
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
         const bitrates = mediaInfo.bitrateList.map(b => b.bandwidth);
@@ -339,11 +320,12 @@ function L2ARule(config) {
         const useL2AABR = rulesContext.useL2AABR();
         const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
         const safeThroughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
-        const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
-        const cThroughput = throughput / 1000; //Throughput in Mbps
-        const react = 20;///Reactiveness to throughput drops
+        const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic); // In kbits/s
+        const react = 2; // Reactiveness to volatility (abrupt throughput drops), used to re-calibrate Lagrangian multiplier Q
         const latency = throughputHistory.getAverageLatency(mediaType);
         let quality;
+        let player = MediaPlayer(context).create();
+        let currentPlaybackRate = player.getPlaybackRate();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
             !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') ||
@@ -353,19 +335,21 @@ function L2ARule(config) {
 
         switchRequest.reason = switchRequest.reason || {};
 
-        if (!useL2AABR) {
+        if ((!useL2AABR) || (mediaType === 'audio')) {// L2A decides bitrate only for video. Audio to be included in decision process in a later stage
             return switchRequest;
         }
 
         scheduleController.setTimeToLoadDelay(0);
 
         const l2AState = _getL2AState(rulesContext);
+
         if (l2AState.state === L2A_STATE_ONE_BITRATE) {
             // shouldn't even have been called
             return switchRequest;
         }
 
         const l2AParameter = l2AParameterDict[mediaType];
+
         if (!l2AParameter) {
             return switchRequest;
         }
@@ -373,6 +357,7 @@ function L2ARule(config) {
         switchRequest.reason.state = l2AState.state;
         switchRequest.reason.throughput = throughput;
         switchRequest.reason.latency = latency;
+
         if (isNaN(throughput)) {
             // still starting up - not enough information
             return switchRequest;
@@ -380,64 +365,102 @@ function L2ARule(config) {
 
         switch (l2AState.state) {
             case L2A_STATE_STARTUP:
-                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
+                //console.log("Welcome to the initial state of L2A. Buffer level:", bufferLevel);
+                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);//During strat-up phase abr.controller is responsible for bitrate decisions.
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = safeThroughput;
                 l2AState.lastQuality = quality;
-                if (!isNaN(l2AState.lastSegmentDurationS) && bufferLevel >= l2AState.lastSegmentDurationS) {
+
+                if (!isNaN(l2AState.lastSegmentDurationS) && bufferLevel >= l2AParameter.B_target) {
                     l2AState.state = L2A_STATE_STEADY;
-                }
-                break; // L2A_STATE_STARTUP
-            case L2A_STATE_STEADY:
-                /////////////////////////////Main adaptation logic of L2A-LL
-                let V = l2AState.lastSegmentDurationS;
-                let diff1 = [];//Used to calculate the difference between consecutive decisions (w-w_prev)
-                if (l2AParameter.w.length === 0) {//Initialization of w and w_prev
-                    l2AParameter.Q = 0;
+                    l2AParameter.Q = vl;// Initialization of Q langrangian multiplier
+                    // Update of probability vector w, to be used in main adaptation logic of L2A below (steady state)
                     for (let i = 0; i < bitrateCount; ++i) {
-                        if (i === 0) {
-                            l2AParameter.w[i] = 0.33;
+                        if (i === l2AState.lastQuality) {
                             l2AParameter.prev_w[i] = 1;
-                        } else {
-                            l2AParameter.w[i] = 0.33;
+                        }
+                        else {
                             l2AParameter.prev_w[i] = 0;
                         }
                     }
                 }
+
+                break; // L2A_STATE_STARTUP
+            case L2A_STATE_STEADY:
+                let diff1 = [];//Used to calculate the difference between consecutive decisions (w-w_prev)
+
+                // Manual calculation of latency and throughput during previous request
+                //let lastlatency = (dashMetrics.getCurrentHttpRequest(mediaType).tresponse.getTime() - dashMetrics.getCurrentHttpRequest(mediaType).trequest.getTime()) / 1000;
+                let throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.d, 0); //let throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType)._tfinish.getTime() - dashMetrics.getCurrentHttpRequest(mediaType).tresponse.getTime();
+                const downloadBytes = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.b[0], 0);
+                let lastthroughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+
+                if (lastthroughput < 1) {
+                    lastthroughput = 1;
+                }//To avoid division with 0 (avoid infinity) in case of an absolute network outage
+
+                let V = l2AState.lastSegmentDurationS;
+                let sign = 1;
+                // console.log("Welcome to L2A's steady state with chunk size: ",V,", current buffer: ",bufferLevel," and playback rate: ",currentPlaybackRate);
+
+                ////Main adaptation logic of L2A-LL
                 for (let i = 0; i < bitrateCount; ++i) {
-                    bitrates[i] = bitrates[i] / (1000 * 1000);   //Bitrates in Mbps
-                    l2AParameter.w[i] = l2AParameter.prev_w[i] - (1 / (2 * alpha)) * (V * bitrates[i]) * ((l2AParameter.Q - vl) / Math.min(2 * bitrates[bitrateCount - 1], cThroughput));//Lagrangian descent
-                    diff1[i] = l2AParameter.w[i] - l2AParameter.prev_w[i];
-                }
-                l2AParameter.w = euclideanProjection(l2AParameter.w);
-                if (bitrates[l2AState.lastQuality] > ((bitrates[l2AState.lastQuality] * V / (l2AParameter.segment_download_finish_s - l2AParameter.segment_request_start_s)))) {
-                    if (l2AParameter.Q < vl) {
-                        l2AParameter.Q = horizon * vl * react;
+                    bitrates[i] = bitrates[i] / 1000; // Originally in bps, now in Kbps
+                    if (currentPlaybackRate * bitrates[i] > lastthroughput) {// In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
+                        sign = -1;
                     }
-                }//Reset Lagrangian multiplier (Q) to speed up potential bitrate switch based on previous throughput measurement
-                l2AParameter.Q = Math.max(0, l2AParameter.Q + V * _dotmultiplication(bitrates, l2AParameter.prev_w) / Math.min(2 * bitrates[bitrateCount - 1], cThroughput) - (react / 2) * V + V * (_dotmultiplication(bitrates, diff1) / Math.min(2 * bitrates[bitrateCount - 1], cThroughput)));
+                    // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
+                    l2AParameter.w[i] = l2AParameter.prev_w[i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[i] / lastthroughput));//Lagrangian descent
+                }
+                //console.log('w prep proj:',l2AParameter.w);
+
+                // Apply euclidean projection on w to ensure w expresses a probability distribution
+                l2AParameter.w = euclideanProjection(l2AParameter.w);
+
+                for (let i = 0; i < bitrateCount; ++i) {
+                    diff1[i] = l2AParameter.w[i] - l2AParameter.prev_w[i];
+                    l2AParameter.prev_w[i] = l2AParameter.w[i];
+                }
+
+                // Lagrangian multiplier Q calculation:
+                //console.log('Q:',l2AParameter.Q);
+                l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput));
+
+                //console.log('prev_w:',l2AParameter.prev_w);
+                //console.log('w:',l2AParameter.w);
+                //console.log('vl:',vl);
+                //console.log('alpha:',alpha);
+                //console.log('Throughput:', lastthroughput)
+                //console.log('Latency:',lastlatency);
+
+                // Quality is calculated as argmin of the aboslute differnce between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
                 let temp = [];
                 for (let i = 0; i < bitrateCount; ++i) {
-                    l2AParameter.prev_w[i] = l2AParameter.w[i];
                     temp[i] = Math.abs(bitrates[i] - _dotmultiplication(l2AParameter.w, bitrates));
-                }//// Quality is calculated as argmin of the aboslute differnce between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)). We employ a stepwise ascent/descent
-                if (_indexOfMin(temp) > l2AState.lastQuality) {
-                    quality = l2AState.lastQuality + 1;
-                } else if (_indexOfMin(temp) < l2AState.lastQuality) {
-                    quality = l2AState.lastQuality - 1;
-                } else {
-                    quality = _indexOfMin(temp);
                 }
-                /// Provision againts over-estimation.
-                if ((bitrates[quality] >= cThroughput) && (bufferLevel < l2AParameter.B_target)) {
-                    quality = l2AState.lastQuality;
+
+                // Quality is caluclated based on the probability distribution w (the ourput of L2A)
+                quality = temp.indexOf(Math.min(...temp));
+
+                // We employ a cautious -stepwise- ascent
+                if (quality > l2AState.lastQuality) {
+                    if (bitrates[l2AState.lastQuality + 1] <= lastthroughput) {
+                        quality = l2AState.lastQuality + 1;
+                    }
                 }
+
+                // Provision against bitrate over-estimation, by re-calibrating the Lagrangian multiplier Q, to be taken into account for the next chunk
+                if (bitrates[quality] >= lastthroughput) {
+                    l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
+                }
+
+                //console.log('Selected bitrate:', bitrates[quality])
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = throughput;
                 switchRequest.reason.latency = latency;
                 switchRequest.reason.bufferLevel = bufferLevel;
-                l2AState.lastQuality = quality;
-                break; // L2A_STATE_STEADY
+                l2AState.lastQuality = switchRequest.quality;
+                break;
             default:
                 logger.debug('L2A ABR rule invoked in bad state.');// should not arrive here, try to recover
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
@@ -449,7 +472,6 @@ function L2ARule(config) {
         }
         return switchRequest;
     }
-
 
     /**
      * Reset objects to their initial state
