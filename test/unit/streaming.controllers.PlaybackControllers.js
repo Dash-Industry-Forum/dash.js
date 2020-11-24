@@ -357,7 +357,7 @@ describe('PlaybackController', function () {
             let uriStartTime = 10;
             uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
 
-            expectedSeekTime = staticStreamInfo.start + uriStartTime;
+            expectedSeekTime = uriStartTime;
 
             playbackController.initialize(staticStreamInfo);
             eventBus.trigger(Events.STREAM_INITIALIZED, {});
@@ -422,10 +422,10 @@ describe('PlaybackController', function () {
         it('should start dynamic stream at #t', function (done) {
             doneFn = done;
 
-            let uriStartTime = (dvrWindowRange.start - dynamicStreamInfo.start) + 10;
+            let uriStartTime = 80;
             uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
 
-            expectedSeekTime = dynamicStreamInfo.start + uriStartTime;
+            expectedSeekTime = uriStartTime;
 
             playbackController.initialize(dynamicStreamInfo);
             eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
