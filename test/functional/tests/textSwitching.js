@@ -15,12 +15,16 @@ const { assert } = intern.getPlugin('chai');
 const constants = require('./scripts/constants.js');
 const utils = require('./scripts/utils.js');
 const player = require('./scripts/player.js');
+const { beforeEach } = require('intern/lib/interfaces/tdd');
+const { default: Test, SKIP } = require('intern/lib/Test');
 
 // Suite name
 const NAME = 'TEXTSWITCHING';
 
-var Tracks;
-var type  = "text";
+// test constants
+const mediaTypes  = ["text","fragmentedText"]; //Caption types do be tested "text" for VTT and "fragmentedText" for TTML
+const SWITCH_DURATION = 3; // Number of seconds between text switches
+
 exports.register = function (stream) {
 
     suite(utils.testName(NAME, stream), (suite) => {
@@ -29,156 +33,40 @@ exports.register = function (stream) {
             if (!stream.available) suite.skip();
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
-            await command.execute(player.loadStream, [stream]);
+
+            //Load needed elements into doc for Captions to function
+            let ttml =  await command.findById("ttml-rendering-div");
+            await command.execute(player.attachTTMLRenderingDiv, [ttml]);
             await command.execute(player.setTextDefaultEnabled, [true]);
             
+            await command.execute(player.loadStream, [stream]);
+            await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);     
         });
-
-        test('switchTrack', async () => {
-            utils.log(NAME, 'switchTrack');
-            Tracks = await command.execute(player.getTracksFor,[type]);          
-            trackOne = Tracks[0];
-            await command.execute(player.setCurrentTrack, [trackOne]);
-            var curr = await command.execute(player.getCurrentTrackFor, [type]);
-            console.log(curr);
-            assert.deepEqual(curr,trackOne);
+        
+        let Tracks = [] // all Tracks will be added during the test
+        //Check for every media type (VTT, etc..)
+        for(let i = 0; i < mediaTypes.length; i++){
             
-        });
+            test('switchMediaTypes_' + mediaTypes[i], async(test) =>{
+                utils.log(NAME, 'switchType');
+                Tracks.push(await command.execute(player.getTracksFor,[mediaTypes[i]]));
+                if(Tracks[i].length == 0) test.skip();
+
+                //Set Track and check if correct
+                for(let j = 0; j < Tracks[i].length; j++){  
+                    utils.log(NAME, 'switchTrack');
+                    await command.execute(player.setCurrentTrack, [Tracks[i][j]]).sleep(SWITCH_DURATION*1000);
+                    var curr = await command.execute(player.getCurrentTrackFor, [mediaTypes[i]]);
+                    assert.deepEqual(curr, Tracks[i][j]);        
+                }         
+            });
+            test('playing_' + i, async (test) => {
+                //Check if progressing
+                if(Tracks[i].length == 0) test.skip();
+                utils.log(NAME, 'Check if playing');
+                const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                assert.isTrue(progressing);
+            });
+        } ;
     });
 }
-/*
-function(intern, registerSuite, assert, require, player, utils) {
-
-    // Suite name
-    var NAME = 'TEXTSWITCHING';
-
-    var command = null;
-
-    var mediaTypes = [
-        "text",
-        "fragmentedText"
-    ]
-
-    // Test constants
-    var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
-    var SWITCH_DURATION = 3; // Time between track switches
-    var SKIPPABLE = false; // if there is only one track skipp this test suite
-
-    var load = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            load: function() {
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'Load stream');
-                command = this.remote.get(require.toUrl(intern.config.testPage));
-                
-                return command.execute(player.setTextDefaultEnabled, [true])
-                .then(function (){
-                    return command.findById("ttml-rendering-div")
-                })
-                .then(function(TTMLRenderingDiv){
-                    return command.execute(player.attachTTMLRenderingDiv, [TTMLRenderingDiv])
-                })
-                .then(function(){
-                    return command.execute(player.loadStream, [stream])
-                })
-                .then(function() {
-                    // Check if playing
-                    utils.log(NAME, 'Check if playing');
-                    return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                });
-            }
-        })
-    };
-
-    var switchType = function(stream, types) {
-
-        type = types.shift();
-
-        return command.execute(player.getTracksFor,[type])
-        .then(function(mediaInf) {     
-            if(mediaInf.length != 0) return switchTrack(stream, mediaInf, type);
-        })
-        .then(function(){
-            if(types.length > 0) return switchType(stream, types)
-        });
-    }
-
-    var switchTrack = function (stream, mediaInf, type) {
-            
-        var curr = mediaInf.shift();
-
-        return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-        .then(function(){
-            //switch track
-            return command.execute(player.setCurrentTrack, [curr]).sleep(SWITCH_DURATION*1000)
-        })
-        .then(function(){
-            return command.execute(player.getCurrentTrackFor, [type])
-        })
-        .then(function(currTrack){
-            // check if correct text track
-            assert.equal(curr.lang, currTrack.lang)
-        })
-        .then(function(){
-            if(mediaInf.length > 0) return switchTrack(stream, mediaInf, type);
-            else return;
-        });
-    };
-
-    var switchText = function(stream){
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            switchText: function(){
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'SwitchText');
-                var thisRef = this;
-
-                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-                .then(function(){
-                    return switchType(stream, mediaTypes.slice()); 
-                });
-                
-            }
-        });
-    };
-
-    var play = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            play: function() {
-                if (!stream.available || SKIPPABLE) this.skip();
-                utils.log(NAME, 'Play');
-                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-                .then(function (playing) {
-                    stream.available = playing;
-                    return assert.isTrue(playing);
-                });
-            },
-
-            progress: function() {
-                if (!stream.available || SKIPPABLE) this.skip();
-                utils.log(NAME, 'Progress');
-                return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
-                .then(function (progressing) {
-                    stream.available = progressing;
-                    return assert.isTrue(progressing);
-                });
-            }
-        });
-    };
-
-
-    return {
-        register: function (stream) {
-            load(stream);
-            switchText(stream);
-            play(stream);
-        }
-    }
-};*/
