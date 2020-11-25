@@ -14,27 +14,39 @@
  *      let currentPerSegmentQoe = qoeEvaluator.getPerSegmentQoe(); // returns QoeInfo object
  */
 
-class QoeEvaluator {
+import FactoryMaker from '../../../../core/FactoryMaker';
+import QoeInfo from './QoeInfo';
 
-    constructor() {
-        this.voPerSegmentQoeInfo = null;
+function LoLpQoeEvaluator() {
 
-        // Store in case of later use
-        // e.g. in calculateSingleUseQoe()
-        this.segmentDuration = null;
-        this.maxBitrateKbps = null;
-        this.minBitrateKbps = null;
+    let instance,
+        voPerSegmentQoeInfo,
+        segmentDuration,
+        maxBitrateKbps,
+        minBitrateKbps;
+
+    function setup() {
+        _resetInitialSettings();
     }
 
-    setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps) {
+    function _resetInitialSettings() {
+        voPerSegmentQoeInfo = null;
+        segmentDuration = null;
+        maxBitrateKbps = null;
+        minBitrateKbps = null;
+    }
+
+    function setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps)
+    {
         // Set up Per Segment QoeInfo
-        this.voPerSegmentQoeInfo = this.createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
-        this.segmentDuration = segmentDuration;
-        this.maxBitrateKbps = maxBitrateKbps;
-        this.minBitrateKbps = minBitrateKbps;
+        voPerSegmentQoeInfo = _createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
+        segmentDuration = segmentDuration;
+        maxBitrateKbps = maxBitrateKbps;
+        minBitrateKbps = minBitrateKbps;
     }
 
-    createQoeInfo(fragmentType, fragmentDuration, maxBitrateKbps, minBitrateKbps) {
+    function _createQoeInfo(fragmentType, fragmentDuration, maxBitrateKbps, minBitrateKbps)
+    {
         /*
          * [Weights][Source: Abdelhak Bentaleb, 2020 (last updated: 30 Mar 2020)]
          * bitrateReward:           segment duration, e.g. 0.5s
@@ -45,7 +57,7 @@ class QoeEvaluator {
          */
 
         // Create new QoeInfo object
-        let qoeInfo = new QoeInfo();
+        let qoeInfo = QoeInfo().create();
         qoeInfo.type = fragmentType;
 
         // Set weight: bitrateReward
@@ -72,13 +84,15 @@ class QoeEvaluator {
         return qoeInfo;
     }
 
-    logSegmentMetrics(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
+    function logSegmentMetrics(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed)
+    {
         if (this.voPerSegmentQoeInfo) {
             this.logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, this.voPerSegmentQoeInfo);
         }
     }
 
-    logMetricsInQoeInfo(bitrate, rebufferTime, latency, playbackSpeed, qoeInfo) {
+    function _logMetricsInQoeInfo(bitrate, rebufferTime, latency, playbackSpeed, qoeInfo)
+    {
         // Update: bitrate Weighted Sum value
         qoeInfo.bitrateWSum += (qoeInfo.weights.bitrateReward * bitrate);
 
@@ -108,13 +122,15 @@ class QoeEvaluator {
     }
 
     // Returns current Per Segment QoeInfo
-    getPerSegmentQoe() {
-        return this.voPerSegmentQoeInfo;
+    function getPerSegmentQoe()
+    {
+        return voPerSegmentQoeInfo;
     }
 
     // For one-time use only
     // Returns totalQoe based on a single set of metrics.
-    calculateSingleUseQoe(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
+    function _calculateSingleUseQoe(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed)
+    {
         let singleUseQoeInfo = null;
 
         if (this.segmentDuration && this.maxBitrateKbps && this.minBitrateKbps) {
@@ -124,56 +140,23 @@ class QoeEvaluator {
         if (singleUseQoeInfo) {
             this.logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, singleUseQoeInfo);
             return singleUseQoeInfo.totalQoe;
-        }
-        else {
+        } else {
             // Something went wrong..
             return 0;
         }
     }
 
-    // copy(qoeEvaluator) {
-    //     let qoeInfo = qoeEvaluator.getPerSegmentQoe();
-    //     this.voPerSegmentQoeInfo = {};
-    //     for (var key in qoeInfo) {
-    //         if (qoeInfo.hasOwnProperty(key)) {
-    //             // copy each key over
-    //             this.voPerSegmentQoeInfo[key] = qoeInfo[key];
-    //         }
-    //     }
-    // }
+    instance = {
+        setupPerSegmentQoe,
+        logSegmentMetrics,
+        getPerSegmentQoe
+    };
+
+    setup();
+
+    return instance;
 }
 
-class QoeInfo {
+LoLpQoeEvaluator.__dashjs_factory_name = 'LoLpQoeEvaluator';
+export default FactoryMaker.getClassFactory(LoLpQoeEvaluator);
 
-    constructor() {
-        // Type e.g. 'segment'
-        this.type = null;
-
-        // Store lastBitrate for calculation of bitrateSwitchWSum
-        this.lastBitrate = null;
-
-        // Weights for each Qoe factor
-        this.weights = {};
-        this.weights.bitrateReward = null;
-        this.weights.bitrateSwitchPenalty = null;
-        this.weights.rebufferPenalty = null;
-        this.weights.latencyPenalty = null;
-        this.weights.playbackSpeedPenalty = null;
-
-        // Weighted Sum for each Qoe factor
-        this.bitrateWSum = 0;           // kbps
-        this.bitrateSwitchWSum = 0;     // kbps
-        this.rebufferWSum = 0;          // seconds
-        this.latencyWSum = 0;           // seconds
-        this.playbackSpeedWSum = 0;     // e.g. 0.95, 1.0, 1.05
-
-        // Store total Qoe value based on current Weighted Sum values
-        this.totalQoe = 0;
-    }
-}
-
-// Additional for run.js invocation of QoeEvaluator
-if (typeof exports !== 'undefined') {
-    exports.QoeEvaluator = QoeEvaluator;
-    exports.QoeInfo = QoeInfo;
-}
