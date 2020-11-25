@@ -34,13 +34,11 @@
 import MetricsConstants from '../../constants/MetricsConstants';
 import SwitchRequest from '../SwitchRequest';
 import FactoryMaker from '../../../core/FactoryMaker';
-import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
-import MediaPlayer from '../../../streaming/MediaPlayer';
-
-
+import Constants from '../../constants/Constants';
 
 const L2A_STATE_ONE_BITRATE = 0; // If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 const L2A_STATE_STARTUP = 1; // Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -271,7 +269,7 @@ function L2ARule(config) {
     function euclideanProjection(arr) {
         const m = arr.length;
         let bget = false;
-        var arr2 = [];
+        let arr2 = [];
         for (let ii = 0; ii < m; ++ii) {
             arr2[ii] = arr[ii];
         }
@@ -323,9 +321,9 @@ function L2ARule(config) {
         const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic); // In kbits/s
         const react = 2; // Reactiveness to volatility (abrupt throughput drops), used to re-calibrate Lagrangian multiplier Q
         const latency = throughputHistory.getAverageLatency(mediaType);
+        const videoModel = rulesContext.getVideoModel();
         let quality;
-        let player = MediaPlayer(context).create();
-        let currentPlaybackRate = player.getPlaybackRate();
+        let currentPlaybackRate = videoModel.getPlaybackRate();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaInfo') || !rulesContext.hasOwnProperty('getMediaType') ||
             !rulesContext.hasOwnProperty('getScheduleController') || !rulesContext.hasOwnProperty('getStreamInfo') ||
@@ -335,7 +333,7 @@ function L2ARule(config) {
 
         switchRequest.reason = switchRequest.reason || {};
 
-        if ((!useL2AABR) || (mediaType === 'audio')) {// L2A decides bitrate only for video. Audio to be included in decision process in a later stage
+        if ((!useL2AABR) || (mediaType === Constants.AUDIO)) {// L2A decides bitrate only for video. Audio to be included in decision process in a later stage
             return switchRequest;
         }
 
@@ -365,7 +363,6 @@ function L2ARule(config) {
 
         switch (l2AState.state) {
             case L2A_STATE_STARTUP:
-                //console.log("Welcome to the initial state of L2A. Buffer level:", bufferLevel);
                 quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);//During strat-up phase abr.controller is responsible for bitrate decisions.
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = safeThroughput;
@@ -378,8 +375,7 @@ function L2ARule(config) {
                     for (let i = 0; i < bitrateCount; ++i) {
                         if (i === l2AState.lastQuality) {
                             l2AParameter.prev_w[i] = 1;
-                        }
-                        else {
+                        } else {
                             l2AParameter.prev_w[i] = 0;
                         }
                     }
@@ -390,8 +386,7 @@ function L2ARule(config) {
                 let diff1 = [];//Used to calculate the difference between consecutive decisions (w-w_prev)
 
                 // Manual calculation of latency and throughput during previous request
-                //let lastlatency = (dashMetrics.getCurrentHttpRequest(mediaType).tresponse.getTime() - dashMetrics.getCurrentHttpRequest(mediaType).trequest.getTime()) / 1000;
-                let throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.d, 0); //let throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType)._tfinish.getTime() - dashMetrics.getCurrentHttpRequest(mediaType).tresponse.getTime();
+                let throughputMeasureTime = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.d, 0);
                 const downloadBytes = dashMetrics.getCurrentHttpRequest(mediaType).trace.reduce((a, b) => a + b.b[0], 0);
                 let lastthroughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
 
@@ -401,9 +396,8 @@ function L2ARule(config) {
 
                 let V = l2AState.lastSegmentDurationS;
                 let sign = 1;
-                // console.log("Welcome to L2A's steady state with chunk size: ",V,", current buffer: ",bufferLevel," and playback rate: ",currentPlaybackRate);
 
-                ////Main adaptation logic of L2A-LL
+                //Main adaptation logic of L2A-LL
                 for (let i = 0; i < bitrateCount; ++i) {
                     bitrates[i] = bitrates[i] / 1000; // Originally in bps, now in Kbps
                     if (currentPlaybackRate * bitrates[i] > lastthroughput) {// In this case buffer would deplete, leading to a stall, which increases latency and thus the particular probability of selsection of bitrate[i] should be decreased.
@@ -412,7 +406,6 @@ function L2ARule(config) {
                     // The objective of L2A is to minimize the overall latency=request-response time + buffer length after download+ potential stalling (if buffer less than chunk downlad time)
                     l2AParameter.w[i] = l2AParameter.prev_w[i] + sign * (V / (2 * alpha)) * ((l2AParameter.Q + vl) * (currentPlaybackRate * bitrates[i] / lastthroughput));//Lagrangian descent
                 }
-                //console.log('w prep proj:',l2AParameter.w);
 
                 // Apply euclidean projection on w to ensure w expresses a probability distribution
                 l2AParameter.w = euclideanProjection(l2AParameter.w);
@@ -423,23 +416,15 @@ function L2ARule(config) {
                 }
 
                 // Lagrangian multiplier Q calculation:
-                //console.log('Q:',l2AParameter.Q);
                 l2AParameter.Q = Math.max(0, l2AParameter.Q - V + V * currentPlaybackRate * ((_dotmultiplication(bitrates, l2AParameter.prev_w) + _dotmultiplication(bitrates, diff1)) / lastthroughput));
 
-                //console.log('prev_w:',l2AParameter.prev_w);
-                //console.log('w:',l2AParameter.w);
-                //console.log('vl:',vl);
-                //console.log('alpha:',alpha);
-                //console.log('Throughput:', lastthroughput)
-                //console.log('Latency:',lastlatency);
-
-                // Quality is calculated as argmin of the aboslute differnce between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
+                // Quality is calculated as argmin of the absolute difference between available bitrates (bitrates[i]) and bitrate estimation (dotmultiplication(w,bitrates)).
                 let temp = [];
                 for (let i = 0; i < bitrateCount; ++i) {
                     temp[i] = Math.abs(bitrates[i] - _dotmultiplication(l2AParameter.w, bitrates));
                 }
 
-                // Quality is caluclated based on the probability distribution w (the ourput of L2A)
+                // Quality is calculated based on the probability distribution w (the output of L2A)
                 quality = temp.indexOf(Math.min(...temp));
 
                 // We employ a cautious -stepwise- ascent
@@ -454,7 +439,6 @@ function L2ARule(config) {
                     l2AParameter.Q = react * Math.max(vl, l2AParameter.Q);
                 }
 
-                //console.log('Selected bitrate:', bitrates[quality])
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = throughput;
                 switchRequest.reason.latency = latency;
@@ -462,7 +446,8 @@ function L2ARule(config) {
                 l2AState.lastQuality = switchRequest.quality;
                 break;
             default:
-                logger.debug('L2A ABR rule invoked in bad state.');// should not arrive here, try to recover
+                // should not arrive here, try to recover
+                logger.debug('L2A ABR rule invoked in bad state.');
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
                 switchRequest.reason.state = l2AState.state;
                 switchRequest.reason.throughput = safeThroughput;
