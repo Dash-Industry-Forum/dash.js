@@ -312,8 +312,8 @@ function AbrController() {
                 switchHistory: switchHistoryDict[type],
                 droppedFramesHistory: droppedFramesHistory,
                 useBufferOccupancyABR: useBufferOccupancyABR(type),
-                useL2AABR: useL2AABR(type)
-
+                useL2AABR: useL2AABR(type),
+                videoModel
             });
 
             if (droppedFramesHistory) {
@@ -636,7 +636,8 @@ function AbrController() {
                 streamProcessor: streamProcessor,
                 currentRequest: e.request,
                 useBufferOccupancyABR: useBufferOccupancyABR(type),
-                useL2AABR: useL2AABR(type)
+                useL2AABR: useL2AABR(type),
+                videoModel
             });
             const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
