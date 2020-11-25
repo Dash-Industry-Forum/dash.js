@@ -13,18 +13,18 @@
 
         function init() {
             var video,
-                url = 'https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd';
+                url = 'https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd';
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            player.updateSettings({'streaming': {'lowLatencyEnabled': true}});
-            player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_WARNING}});
+            player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true } });
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
 
             player.updateSettings({
                 'streaming': {
                     'abr': {
-                        'useDefaultABRRules': true, 
+                        'useDefaultABRRules': true,
                         'ABRStrategy': 'abrL2A'
                     }
                 }
@@ -112,7 +112,8 @@
                                                      step="0.01"></p>
                         <p>Catch-up playback rate (%): <input type="number" id="catchup-playback-rate" value="0.3"
                                                               min="0.0" max="0.5" step="0.01"></p>
-                        <p>Live catchup latency threshold (secs): <input type="number" id="catchup-threshold" value="30">
+                        <p>Live catchup latency threshold (secs): <input type="number" id="catchup-threshold"
+                                                                         value="30">
                         </p>
                         <button type="submit">Apply</button>
                     </fieldset>
@@ -267,7 +268,7 @@
                 if (prev) {
                     prev.end = videoNow;
                 }
-                switchHistory.push({start: videoNow, end: null, quality});
+                switchHistory.push({ start: videoNow, end: null, quality });
             }
 
             function checkStallResolution() {
