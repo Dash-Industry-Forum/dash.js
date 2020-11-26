@@ -50,7 +50,9 @@ function AbrControllerMock () {
 
     this.getAbandonmentStateFor = function () {};
 
-    this.getQualityForBitrate = function () {};
+    this.getQualityForBitrate = function () {
+        return this.QUALITY_DEFAULT();
+    };
 
     this.getBitrateList = function () {
         return [];

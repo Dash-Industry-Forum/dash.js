@@ -617,8 +617,8 @@ function PlaybackController() {
     function startPlaybackCatchUp() {
         if (videoModel) {
             const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
-            const liveDelay = mediaPlayerModel.getLiveDelay();
-            const deltaLatency = getCurrentLiveLatency() - liveDelay;
+            const playerLiveDelay = mediaPlayerModel.getLiveDelay();
+            const deltaLatency = getCurrentLiveLatency() - playerLiveDelay;
             const d = deltaLatency * 5;
             // Playback rate must be between (1 - cpr) - (1 + cpr)
             // ex: if cpr is 0.5, it can have values between 0.5 - 1.5
@@ -629,7 +629,7 @@ function PlaybackController() {
             // just cause more and more stall situations
             if (playbackStalled) {
                 const bufferLevel = getBufferLevel();
-                if (bufferLevel > liveDelay / 2) {
+                if (bufferLevel > playerLiveDelay / 2) {
                     playbackStalled = false;
                 } else if (deltaLatency > 0) {
                     newRate = 1.0;

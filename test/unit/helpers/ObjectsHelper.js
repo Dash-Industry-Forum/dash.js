@@ -44,7 +44,8 @@ class ObjectsHelper {
             calcSegmentAvailabilityRange: () =>  { return {start: start, end: end};},
             isTimeSyncCompleted: () => {return true;},
             setExpectedLiveEdge: () => {},
-            setRange: (range) => {start = range.start; end = range.end;}
+            setRange: (range) => {start = range.start; end = range.end;},
+            setTimeSyncCompleted: () => {}
         };
     }
 

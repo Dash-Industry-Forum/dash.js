@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Constants from '../../../constants/Constants';
 import HandlerHelpers from '../../utils/HandlerHelpers';
 
 function BufferLevelHandler(config) {
@@ -47,6 +48,7 @@ function BufferLevelHandler(config) {
     let storedVOs = [];
 
     const metricsConstants = config.metricsConstants;
+    const textController = config.textController || {};
 
     function getLowestBufferLevelVO() {
         try {
@@ -93,8 +95,14 @@ function BufferLevelHandler(config) {
     }
 
     function handleNewMetric(metric, vo, type) {
+
         if (metric === metricsConstants.BUFFER_LEVEL) {
-            storedVOs[type] = vo;
+            const isTextVo = type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT;
+            const storeTextVo = isTextVo && (textController.isTextEnabled() || false);
+
+            if (!isTextVo || storeTextVo) {
+                storedVOs[type] = vo;
+            }
         }
     }
 
