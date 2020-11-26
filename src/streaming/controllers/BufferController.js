@@ -44,6 +44,7 @@ import Errors from '../../core/errors/Errors';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 const STALL_THRESHOLD = 0.5;
+const BUFFERING_COMPLETED_THRESHOLD = 0.1;
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
@@ -564,7 +565,7 @@ function BufferController(config) {
         // No need to check buffer if type is not audio or video (for example if several errors occur during text parsing, so that the buffer cannot be filled, no error must occur on video playback)
         if (type !== Constants.AUDIO && type !== Constants.VIDEO) return;
 
-        if (seekClearedBufferingCompleted && !isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd() - bufferLevel < STALL_THRESHOLD) {
+        if (seekClearedBufferingCompleted && !isBufferingCompleted && bufferLevel > 0 && playbackController && playbackController.getTimeToStreamEnd() - bufferLevel < BUFFERING_COMPLETED_THRESHOLD) {
             seekClearedBufferingCompleted = false;
             isBufferingCompleted = true;
             logger.debug('checkIfSufficientBuffer trigger BUFFERING_COMPLETED for type ' + type);
