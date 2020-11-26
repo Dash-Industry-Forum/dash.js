@@ -1,19 +1,40 @@
-/*
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
  * Authors:
  * Abdelhak Bentaleb | National University of Singapore | bentaleb@comp.nus.edu.sg
  * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
  * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
- *
- * [Usage]:
- * 1. Setup -
- *      let qoeEvaluator = new QoeEvaluator();
- *      qoeEvaluator.setupPerSegmentQoe(segmentDurationSec, maxBitrateKbps, minBitrateKbps);
- * 2. For each segment, log the metrics -
- *      qoeEvaluator.logSegmentMetrics(segmentBitrateKbps, segmentRebufferTimeSec, latencySec, playbackSpeed);
- * 3. To obtain the current Qoe value -
- *      let currentPerSegmentQoe = qoeEvaluator.getPerSegmentQoe(); // returns QoeInfo object
  */
-
 import FactoryMaker from '../../../../core/FactoryMaker';
 import QoeInfo from './QoeInfo';
 
@@ -25,7 +46,7 @@ function LoLpQoeEvaluator() {
         maxBitrateKbps,
         minBitrateKbps;
 
-    function setup() {
+    function _setup() {
         _resetInitialSettings();
     }
 
@@ -36,17 +57,15 @@ function LoLpQoeEvaluator() {
         minBitrateKbps = null;
     }
 
-    function setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps)
-    {
+    function setupPerSegmentQoe(sDuration, maxBrKbps, minBrKbps) {
         // Set up Per Segment QoeInfo
         voPerSegmentQoeInfo = _createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
-        segmentDuration = segmentDuration;
-        maxBitrateKbps = maxBitrateKbps;
-        minBitrateKbps = minBitrateKbps;
+        segmentDuration = sDuration;
+        maxBitrateKbps = maxBrKbps;
+        minBitrateKbps = minBrKbps;
     }
 
-    function _createQoeInfo(fragmentType, fragmentDuration, maxBitrateKbps, minBitrateKbps)
-    {
+    function _createQoeInfo(fragmentType, fragmentDuration, maxBitrateKbps, minBitrateKbps) {
         /*
          * [Weights][Source: Abdelhak Bentaleb, 2020 (last updated: 30 Mar 2020)]
          * bitrateReward:           segment duration, e.g. 0.5s
@@ -57,20 +76,30 @@ function LoLpQoeEvaluator() {
          */
 
         // Create new QoeInfo object
-        let qoeInfo = QoeInfo().create();
+        let qoeInfo = new QoeInfo();
         qoeInfo.type = fragmentType;
 
         // Set weight: bitrateReward
-        if (!fragmentDuration) qoeInfo.weights.bitrateReward = 1;      // set some safe value, else consider throwing error
-        else qoeInfo.weights.bitrateReward = fragmentDuration;
+        // set some safe value, else consider throwing error
+        if (!fragmentDuration) {
+            qoeInfo.weights.bitrateReward = 1;
+        }
+        else {
+            qoeInfo.weights.bitrateReward = fragmentDuration;
+        }
 
         // Set weight: bitrateSwitchPenalty
         // qoeInfo.weights.bitrateSwitchPenalty = 0.02;
         qoeInfo.weights.bitrateSwitchPenalty = 1;
 
         // Set weight: rebufferPenalty
-        if (!maxBitrateKbps) qoeInfo.weights.rebufferPenalty = 1000;   // set some safe value, else consider throwing error
-        else qoeInfo.weights.rebufferPenalty = maxBitrateKbps;
+        // set some safe value, else consider throwing error
+        if (!maxBitrateKbps) {
+            qoeInfo.weights.rebufferPenalty = 1000;
+        }
+        else {
+            qoeInfo.weights.rebufferPenalty = maxBitrateKbps;
+        }
 
         // Set weight: latencyPenalty
         qoeInfo.weights.latencyPenalty = [];
@@ -84,15 +113,13 @@ function LoLpQoeEvaluator() {
         return qoeInfo;
     }
 
-    function logSegmentMetrics(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed)
-    {
-        if (this.voPerSegmentQoeInfo) {
-            this.logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, this.voPerSegmentQoeInfo);
+    function logSegmentMetrics(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
+        if (voPerSegmentQoeInfo) {
+            _logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, voPerSegmentQoeInfo);
         }
     }
 
-    function _logMetricsInQoeInfo(bitrate, rebufferTime, latency, playbackSpeed, qoeInfo)
-    {
+    function _logMetricsInQoeInfo(bitrate, rebufferTime, latency, playbackSpeed, qoeInfo) {
         // Update: bitrate Weighted Sum value
         qoeInfo.bitrateWSum += (qoeInfo.weights.bitrateReward * bitrate);
 
@@ -122,23 +149,21 @@ function LoLpQoeEvaluator() {
     }
 
     // Returns current Per Segment QoeInfo
-    function getPerSegmentQoe()
-    {
+    function getPerSegmentQoe() {
         return voPerSegmentQoeInfo;
     }
 
     // For one-time use only
     // Returns totalQoe based on a single set of metrics.
-    function _calculateSingleUseQoe(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed)
-    {
+    function calculateSingleUseQoe(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed) {
         let singleUseQoeInfo = null;
 
-        if (this.segmentDuration && this.maxBitrateKbps && this.minBitrateKbps) {
-            singleUseQoeInfo = this.createQoeInfo('segment', this.segmentDuration, this.maxBitrateKbps, this.minBitrateKbps);
+        if (segmentDuration && maxBitrateKbps && minBitrateKbps) {
+            singleUseQoeInfo = _createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
         }
 
         if (singleUseQoeInfo) {
-            this.logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, singleUseQoeInfo);
+            _logMetricsInQoeInfo(segmentBitrate, segmentRebufferTime, currentLatency, currentPlaybackSpeed, singleUseQoeInfo);
             return singleUseQoeInfo.totalQoe;
         } else {
             // Something went wrong..
@@ -146,13 +171,19 @@ function LoLpQoeEvaluator() {
         }
     }
 
+    function reset() {
+        _resetInitialSettings();
+    }
+
     instance = {
         setupPerSegmentQoe,
         logSegmentMetrics,
-        getPerSegmentQoe
+        getPerSegmentQoe,
+        calculateSingleUseQoe,
+        reset
     };
 
-    setup();
+    _setup();
 
     return instance;
 }

@@ -1,4 +1,35 @@
-/*
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
  * Authors:
  * Abdelhak Bentaleb | National University of Singapore | bentaleb@comp.nus.edu.sg
  * Mehmet N. Akcay | Ozyegin University | necmettin.akcay@ozu.edu.tr
@@ -11,14 +42,16 @@ import LearningAbrController from './LearningAbrController';
 import LoLpQoeEvaluator from './LoLpQoEEvaluator';
 import SwitchRequest from '../../SwitchRequest';
 import MetricsConstants from '../../../constants/MetricsConstants';
+import LoLpWeightSelector from './LoLpWeightSelector';
 
-function LoLpBitrateSelection(config) {
+const DWS_TARGET_LATENCY = 1.5;
+const DWS_BUFFER_MIN = 0.3;
+
+function LoLPRule(config) {
 
     config = config || {};
 
-    let factory = dashjs.FactoryMaker;
     let dashMetrics = config.dashMetrics;
-    let PlaybackController = factory.getSingletonFactoryByName('PlaybackController');
     let context = this.context;
 
     let logger,
@@ -35,7 +68,6 @@ function LoLpBitrateSelection(config) {
     function getMaxIndex(rulesContext) {
         let switchRequest = SwitchRequest(context).create();
         let mediaType = rulesContext.getMediaInfo().type;
-        let playbackController = PlaybackController(context).getInstance();
         let abrController = rulesContext.getAbrController();
         const streamInfo = rulesContext.getStreamInfo();
         let currentQuality = abrController.getQualityFor(mediaType, streamInfo);
@@ -44,7 +76,12 @@ function LoLpBitrateSelection(config) {
         const scheduleController = rulesContext.getScheduleController();
         const currentBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
         const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
+        const playbackController = scheduleController.getPlaybackController();
         let latency = playbackController.getCurrentLiveLatency();
+
+        if (!rulesContext.useLoLPABR()) {
+            return switchRequest;
+        }
 
         if (!latency) {
             latency = 0;
@@ -85,20 +122,12 @@ function LoLpBitrateSelection(config) {
         let segmentRebufferTime = lastFragmentDownloadTime > segmentDuration ? lastFragmentDownloadTime - segmentDuration : 0;
         qoeEvaluator.setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps);
         qoeEvaluator.logSegmentMetrics(currentBitrateKbps, segmentRebufferTime, latency, playbackRate);
-        let currentQoeInfo = qoeEvaluator.getPerSegmentQoe();
-        let currentTotalQoe = currentQoeInfo.totalQoe;
-        console.log("QoE: ", currentTotalQoe);
-
 
         /*
         * Dynamic Weights Selector (step 1/2: initialization)
         */
-        // let userTargetLatency = mediaPlayerModel.getLiveDelay();    // not ideal to use this value as it is used for playback controller and too conservative for this..
-        // Todo: To consider specifying param values via UI
-        let dwsTargetLatency = 1.5;
-        let dwsBufferMin = 0.3;                             // for safe buffer constraint
-        let dwsBufferMax = dwsBufferMin + segmentDuration;  // for safe buffer constraint
-        let dynamicWeightsSelector = new DynamicWeightsSelector(dwsTargetLatency, dwsBufferMin, dwsBufferMax, segmentDuration, qoeEvaluator);
+        let dwsBufferMax = DWS_BUFFER_MIN + segmentDuration;  // for safe buffer constraint
+        let dynamicWeightsSelector = LoLpWeightSelector.create(DWS_TARGET_LATENCY, DWS_BUFFER_MIN, dwsBufferMax, segmentDuration, qoeEvaluator);
 
         /*
          * Select next quality
@@ -109,16 +138,32 @@ function LoLpBitrateSelection(config) {
 
         scheduleController.setTimeToLoadDelay(0);
 
-        if (switchRequest.quality != currentQuality) {
+        if (switchRequest.quality !== currentQuality) {
             console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
         }
 
         return switchRequest;
     }
 
+    /**
+     * Reset objects to their initial state
+     * @private
+     */
+    function _resetInitialSettings() {
+        learningController.reset();
+        qoeEvaluator.reset();
+    }
+
+    /**
+     * Reset the rule
+     */
+    function reset() {
+        _resetInitialSettings();
+    }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getMaxIndex,
+        reset
     };
 
     _setup();
@@ -126,5 +171,5 @@ function LoLpBitrateSelection(config) {
     return instance;
 }
 
-LoLpBitrateSelection.__dashjs_factory_name = 'LoLpBitrateSelection';
-export default FactoryMaker.getClassFactory(LoLpBitrateSelection);
+LoLPRule.__dashjs_factory_name = 'LoLPRule';
+export default FactoryMaker.getClassFactory(LoLPRule);

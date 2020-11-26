@@ -144,6 +144,13 @@ class Constants {
         this.ABR_STRATEGY_L2A = 'abrL2A';
 
         /**
+         *  @constant {string} ABR_STRATEGY_LoLP Adaptive bitrate algorithm based on LoL+
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_LoLP = 'abrLoLP';
+
+        /**
          *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
          *  @memberof Constants#
          *  @static

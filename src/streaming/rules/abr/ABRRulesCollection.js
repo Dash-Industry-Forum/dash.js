@@ -35,6 +35,7 @@ import DroppedFramesRule from './DroppedFramesRule';
 import SwitchHistoryRule from './SwitchHistoryRule';
 import BolaRule from './BolaRule';
 import L2ARule from './L2ARule.js';
+import LoLPRule from './lolp/LoLPRule.js';
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest';
 import Constants from '../../constants/Constants';
@@ -69,6 +70,14 @@ function ABRRulesCollection(config) {
                         dashMetrics: dashMetrics,
                         mediaPlayerModel: mediaPlayerModel,
                         settings: settings
+                    })
+                );
+            }
+            // If LoLP is used we only need this one rule
+            else if (settings.get().streaming.abr.ABRStrategy === Constants.ABR_STRATEGY_LoLP) {
+                qualitySwitchRules.push(
+                    LoLPRule(context).create({
+                        dashMetrics: dashMetrics
                     })
                 );
             } else {
