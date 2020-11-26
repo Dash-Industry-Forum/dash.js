@@ -394,7 +394,7 @@ function Settings() {
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
-            calcSegmentAvailabilityRangeFromTimeline: true,
+            calcSegmentAvailabilityRangeFromTimeline: false,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
             jumpGaps: true,
