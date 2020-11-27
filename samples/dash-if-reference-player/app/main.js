@@ -508,6 +508,16 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         });
     };
 
+    $scope.toggleLiveCatchupEnabled = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    enabled: $scope.liveCatchupEnabled
+                }
+            }
+        });
+    };
+
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
     };
@@ -590,6 +600,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             if (selectedConfig.lowLatencyMode !== undefined) {
                 config.streaming.lowLatencyEnabled = selectedConfig.lowLatencyMode;
             }
+        }
+
+        const initialLiveDelay = parseInt($scope.initialLiveDelay);
+        if (!isNaN(initialLiveDelay)) {
+            config.streaming.liveDelay = initialLiveDelay;
         }
 
         const initBitrate = parseInt($scope.initialVideoBitrate);
@@ -952,6 +967,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.bufferTimeAtTopQuality;
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.bufferTimeAtTopQualityLongForm;
         $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
+        $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
     }
 
 
