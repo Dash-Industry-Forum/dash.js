@@ -6,7 +6,7 @@
         "metricsMaxListDepth": 50,
         "abandonLoadTimeout": 10000,
         "liveDelayFragmentCount": null,
-        "liveDelay": 20,
+        "liveDelay": null,
         "scheduleWhilePaused": true,
         "fastSwitchEnabled": true,
         "flushBufferAtTrackSwitch": false,
