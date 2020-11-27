@@ -130,9 +130,13 @@ declare namespace dashjs {
             useSuggestedPresentationDelay?: boolean;
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
-            liveCatchUpMinDrift?: number;
-            liveCatchUpMaxDrift?: number;
-            liveCatchUpPlaybackRate?: number;
+            liveCatchup: {
+                minDrift?: number;
+                maxDrift?: number;
+                playbackRate?: number;
+                latencyThreshold?: number,
+                enabled?: boolean
+            }
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
                 ttl?: number;
