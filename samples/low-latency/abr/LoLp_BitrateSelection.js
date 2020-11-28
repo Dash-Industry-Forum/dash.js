@@ -425,6 +425,7 @@ class LearningAbrController {
                 }
                 if (maxDistance==null || minDistance>maxDistance){
                     nextPoint=currentPoint;
+                    maxDistance=minDistance;
                 }
             }
             centers.push(nextPoint);
