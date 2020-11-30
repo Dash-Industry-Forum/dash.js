@@ -165,6 +165,20 @@ class Constants {
         this.ABR_STRATEGY_LOL_PLUS = 'abrLoLPlus';
 
         /**
+         *  @constant {string} ABR_FETCH_THROUGHPUT_CALUCUALTION_DOWNLOADED_DATA Throughput calculation based on downloaded data array
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA = 'abrFetchThroughputCalculationDownloadedData';
+
+        /**
+         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING Throughput calculation based on moof parsing
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
+
+        /**
          *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
          *  @memberof Constants#
          *  @static

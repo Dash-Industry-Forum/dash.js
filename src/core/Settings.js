@@ -454,7 +454,8 @@ function Settings() {
                 maxRepresentationRatio: {audio: 1, video: 1},
                 initialBitrate: {audio: -1, video: -1},
                 initialRepresentationRatio: {audio: -1, video: -1},
-                autoSwitchBitrate: {audio: true, video: true}
+                autoSwitchBitrate: {audio: true, video: true},
+                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
             },
             cmcd: {
                 enabled: false,
