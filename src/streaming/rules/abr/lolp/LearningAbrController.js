@@ -462,17 +462,20 @@ function LearningAbrController() {
 
         for (let k = 1; k < somElements.length; k++) {
             let nextPoint = null;
+            let maxDistance = null;
             for (let i = 0; i < randomDataSet.length; i++) {
                 let currentPoint = randomDataSet[i];
                 let minDistance = null;
                 for (let j = 0; j < centers.length; j++) {
                     let distance = _getDistance(currentPoint, centers[j], distanceWeights);
-                    if (minDistance === null || distance < minDistance) {
+                    if (minDistance == null || distance < minDistance) {
                         minDistance = distance;
                     }
                 }
-                nextPoint = currentPoint;
-
+                if (maxDistance == null || minDistance > maxDistance) {
+                    nextPoint = currentPoint;
+                    maxDistance = minDistance;
+                }
             }
             centers.push(nextPoint);
         }
