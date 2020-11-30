@@ -99,9 +99,9 @@ function LearningAbrController() {
 
         if (somBitrateNeurons) {
             for (let i = 0; i < somBitrateNeurons.length; i++) {
-                let n = somBitrateNeurons[i];
-                if (n.state.throughput > maxThroughput) {
-                    maxThroughput = n.state.throughput;
+                let neuron = somBitrateNeurons[i];
+                if (neuron.state.throughput > maxThroughput) {
+                    maxThroughput = neuron.state.throughput;
                 }
             }
         }
@@ -232,7 +232,9 @@ function LearningAbrController() {
         // normalize throughput
         let throughputNormalized = throughput / bitrateNormalizationFactor;
         // saturate values higher than 1
-        if (throughputNormalized > 1) throughputNormalized = _getMaxThroughput();
+        if (throughputNormalized > 1) {
+            throughputNormalized = _getMaxThroughput();
+        }
         // normalize latency
         latency = latency / latencyNormalizationFactor;
 
@@ -468,11 +470,11 @@ function LearningAbrController() {
                 let minDistance = null;
                 for (let j = 0; j < centers.length; j++) {
                     let distance = _getDistance(currentPoint, centers[j], distanceWeights);
-                    if (minDistance == null || distance < minDistance) {
+                    if (minDistance === null || distance < minDistance) {
                         minDistance = distance;
                     }
                 }
-                if (maxDistance == null || minDistance > maxDistance) {
+                if (maxDistance === null || minDistance > maxDistance) {
                     nextPoint = currentPoint;
                     maxDistance = minDistance;
                 }

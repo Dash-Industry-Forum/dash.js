@@ -62,87 +62,95 @@ function LoLPRule(config) {
     function _setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         learningController = LearningAbrController(context).create();
-        qoeEvaluator = LoLpQoeEvaluator().create();
+        qoeEvaluator = LoLpQoeEvaluator(context).create();
     }
 
     function getMaxIndex(rulesContext) {
-        let switchRequest = SwitchRequest(context).create();
-        let mediaType = rulesContext.getMediaInfo().type;
-        let abrController = rulesContext.getAbrController();
-        const streamInfo = rulesContext.getStreamInfo();
-        let currentQuality = abrController.getQualityFor(mediaType, streamInfo);
-        const mediaInfo = rulesContext.getMediaInfo();
-        const bufferStateVO = dashMetrics.getLatestBufferInfoVO(mediaType, true, MetricsConstants.BUFFER_STATE);
-        const scheduleController = rulesContext.getScheduleController();
-        const currentBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
-        const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
-        const playbackController = scheduleController.getPlaybackController();
-        let latency = playbackController.getCurrentLiveLatency();
+        try {
+            let switchRequest = SwitchRequest(context).create();
+            let mediaType = rulesContext.getMediaInfo().type;
+            let abrController = rulesContext.getAbrController();
+            const streamInfo = rulesContext.getStreamInfo();
+            let currentQuality = abrController.getQualityFor(mediaType, streamInfo);
+            const mediaInfo = rulesContext.getMediaInfo();
+            const bufferStateVO = dashMetrics.getCurrentBufferState(mediaType);
+            const scheduleController = rulesContext.getScheduleController();
+            const currentBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
+            const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
+            const playbackController = scheduleController.getPlaybackController();
+            let latency = playbackController.getCurrentLiveLatency();
 
-        if (!rulesContext.useLoLPABR()) {
-            return switchRequest;
-        }
-
-        if (!latency) {
-            latency = 0;
-        }
-
-        const playbackRate = playbackController.getPlaybackRate();
-        const throughputHistory = abrController.getThroughputHistory();
-        const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
-        logger.debug(`Throughput ${Math.round(throughput)} kbps`);
-
-        if (isNaN(throughput) || !bufferStateVO) {
-            return switchRequest;
-        }
-
-        if (abrController.getAbandonmentStateFor(mediaType) === MetricsConstants.ABANDON_LOAD) {
-            return switchRequest;
-        }
-
-        // QoE parameters
-        let bitrateList = mediaInfo.bitrateList;  // [{bandwidth: 200000, width: 640, height: 360}, ...]
-        let segmentDuration = rulesContext.getRepresentationInfo().fragmentDuration;
-        let minBitrateKbps = bitrateList[0].bandwidth / 1000.0;                         // min bitrate level
-        let maxBitrateKbps = bitrateList[bitrateList.length - 1].bandwidth / 1000.0;    // max bitrate level
-        for (let i = 0; i < bitrateList.length; i++) {  // in case bitrateList is not sorted as expected
-            let b = bitrateList[i].bandwidth / 1000.0;
-            if (b > maxBitrateKbps)
-                maxBitrateKbps = b;
-            else if (b < minBitrateKbps) {
-                minBitrateKbps = b;
+            if (!rulesContext.useLoLPABR()) {
+                return switchRequest;
             }
+
+            if (!latency) {
+                latency = 0;
+            }
+
+            const playbackRate = playbackController.getPlaybackRate();
+            const throughputHistory = abrController.getThroughputHistory();
+            const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
+            logger.debug(`Throughput ${Math.round(throughput)} kbps`);
+
+            if (isNaN(throughput) || !bufferStateVO) {
+                return switchRequest;
+            }
+
+            if (abrController.getAbandonmentStateFor(mediaType) === MetricsConstants.ABANDON_LOAD) {
+                return switchRequest;
+            }
+
+            // QoE parameters
+            let bitrateList = mediaInfo.bitrateList;  // [{bandwidth: 200000, width: 640, height: 360}, ...]
+            let segmentDuration = rulesContext.getRepresentationInfo().fragmentDuration;
+            let minBitrateKbps = bitrateList[0].bandwidth / 1000.0;                         // min bitrate level
+            let maxBitrateKbps = bitrateList[bitrateList.length - 1].bandwidth / 1000.0;    // max bitrate level
+            for (let i = 0; i < bitrateList.length; i++) {  // in case bitrateList is not sorted as expected
+                let b = bitrateList[i].bandwidth / 1000.0;
+                if (b > maxBitrateKbps)
+                    maxBitrateKbps = b;
+                else if (b < minBitrateKbps) {
+                    minBitrateKbps = b;
+                }
+            }
+
+            // Learning rule pre-calculations
+            let currentBitrate = bitrateList[currentQuality].bandwidth;
+            let currentBitrateKbps = currentBitrate / 1000.0;
+            let httpRequest = dashMetrics.getCurrentHttpRequest(mediaType, true);
+            let lastFragmentDownloadTime = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
+            let segmentRebufferTime = lastFragmentDownloadTime > segmentDuration ? lastFragmentDownloadTime - segmentDuration : 0;
+            qoeEvaluator.setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps);
+            qoeEvaluator.logSegmentMetrics(currentBitrateKbps, segmentRebufferTime, latency, playbackRate);
+
+            /*
+            * Dynamic Weights Selector (step 1/2: initialization)
+            */
+            let dynamicWeightsSelector = LoLpWeightSelector(context).create({
+                targetLatency: DWS_TARGET_LATENCY,
+                bufferMin: DWS_BUFFER_MIN,
+                segmentDuration,
+                qoeEvaluator
+            });
+
+            /*
+             * Select next quality
+             */
+            switchRequest.quality = learningController.getNextQuality(mediaInfo, throughput * 1000, latency, currentBufferLevel, playbackRate, currentQuality, dynamicWeightsSelector);
+            switchRequest.reason = { throughput: throughput, latency: latency };
+            switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
+
+            scheduleController.setTimeToLoadDelay(0);
+
+            if (switchRequest.quality !== currentQuality) {
+                console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
+            }
+
+            return switchRequest;
+        } catch (e) {
+            throw e;
         }
-
-        // Learning rule pre-calculations
-        let currentBitrate = bitrateList[currentQuality].bandwidth;
-        let currentBitrateKbps = currentBitrate / 1000.0;
-        let httpRequest = dashMetrics.getCurrentHttpRequest(mediaType, true);
-        let lastFragmentDownloadTime = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
-        let segmentRebufferTime = lastFragmentDownloadTime > segmentDuration ? lastFragmentDownloadTime - segmentDuration : 0;
-        qoeEvaluator.setupPerSegmentQoe(segmentDuration, maxBitrateKbps, minBitrateKbps);
-        qoeEvaluator.logSegmentMetrics(currentBitrateKbps, segmentRebufferTime, latency, playbackRate);
-
-        /*
-        * Dynamic Weights Selector (step 1/2: initialization)
-        */
-        let dwsBufferMax = DWS_BUFFER_MIN + segmentDuration;  // for safe buffer constraint
-        let dynamicWeightsSelector = LoLpWeightSelector.create(DWS_TARGET_LATENCY, DWS_BUFFER_MIN, dwsBufferMax, segmentDuration, qoeEvaluator);
-
-        /*
-         * Select next quality
-         */
-        switchRequest.quality = learningController.getNextQuality(mediaInfo, throughput * 1000, latency, currentBufferLevel, playbackRate, currentQuality, dynamicWeightsSelector);
-        switchRequest.reason = { throughput: throughput, latency: latency };
-        switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
-
-        scheduleController.setTimeToLoadDelay(0);
-
-        if (switchRequest.quality !== currentQuality) {
-            console.log('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
-        }
-
-        return switchRequest;
     }
 
     /**

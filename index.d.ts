@@ -135,7 +135,10 @@ declare namespace dashjs {
                 maxDrift?: number;
                 playbackRate?: number;
                 latencyThreshold?: number,
+                playbackBufferMin?: number,
+                playbackBufferMax?: number,
                 enabled?: boolean
+                mode?: string
             }
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
@@ -204,7 +207,8 @@ declare namespace dashjs {
                 autoSwitchBitrate?: {
                     audio?: boolean;
                     video?: boolean;
-                };
+                },
+                fetchThroughputCalculationMode?: string;
             },
             cmcd?: {
                 enabled?: boolean,

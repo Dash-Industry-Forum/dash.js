@@ -38,12 +38,11 @@
 
 import FactoryMaker from '../../../../core/FactoryMaker';
 
-function LoLpWeightSelector(tLatency, bMin, bMax, sDuration, qEvaluator) {
-
-    let targetLatency = tLatency;
-    let bufferMin = bMin;
-    let segmentDuration = sDuration;
-    let qoeEvaluator = qEvaluator;
+function LoLpWeightSelector(config) {
+    let targetLatency = config.targetLatency;
+    let bufferMin = config.bufferMin;
+    let segmentDuration = config.segmentDuration;
+    let qoeEvaluator = config.qoeEvaluator;
     let instance,
         valueList,
         weightTypeCount,
@@ -178,7 +177,8 @@ function LoLpWeightSelector(tLatency, bMin, bMax, sDuration, qEvaluator) {
                 return perm;
             }
             // For each existing permutation
-            for (let i = 0; i < perm.length; i++) {
+            let len = perm.length;
+            for (let i = 0; i < len; i++) {
                 let currPerm = perm.shift();
                 // Create new permutation
                 for (let k = 0; k < list.length; k++) {
@@ -196,8 +196,7 @@ function LoLpWeightSelector(tLatency, bMin, bMax, sDuration, qEvaluator) {
      *
      * @return {number}
      */
-    function getMinBuffer()
-    {
+    function getMinBuffer() {
         return bufferMin;
     }
 
@@ -205,8 +204,7 @@ function LoLpWeightSelector(tLatency, bMin, bMax, sDuration, qEvaluator) {
      *
      * @return {number}
      */
-    function getSegmentDuration()
-    {
+    function getSegmentDuration() {
         return segmentDuration;
     }
 
@@ -217,8 +215,7 @@ function LoLpWeightSelector(tLatency, bMin, bMax, sDuration, qEvaluator) {
      * @param {number} currentThroughput
      * @return {number}
      */
-    function getNextBufferWithBitrate(bitrateToDownload, currentBuffer, currentThroughput)
-    {
+    function getNextBufferWithBitrate(bitrateToDownload, currentBuffer, currentThroughput) {
         let downloadTime = (bitrateToDownload * segmentDuration) / currentThroughput;
         return getNextBuffer(currentBuffer, downloadTime);
     }
@@ -229,8 +226,7 @@ function LoLpWeightSelector(tLatency, bMin, bMax, sDuration, qEvaluator) {
      * @param {number} downloadTime
      * @return {number}
      */
-    function getNextBuffer(currentBuffer, downloadTime)
-    {
+    function getNextBuffer(currentBuffer, downloadTime) {
         const segmentDuration = getSegmentDuration();
         let nextBuffer;
         if (downloadTime > segmentDuration) {

@@ -59,7 +59,7 @@ function LoLpQoeEvaluator() {
 
     function setupPerSegmentQoe(sDuration, maxBrKbps, minBrKbps) {
         // Set up Per Segment QoeInfo
-        voPerSegmentQoeInfo = _createQoeInfo('segment', segmentDuration, maxBitrateKbps, minBitrateKbps);
+        voPerSegmentQoeInfo = _createQoeInfo('segment', sDuration, maxBrKbps, minBrKbps);
         segmentDuration = sDuration;
         maxBitrateKbps = maxBrKbps;
         minBitrateKbps = minBrKbps;

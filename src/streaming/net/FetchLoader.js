@@ -42,9 +42,10 @@ import Constants from '../constants/Constants';
 function FetchLoader(cfg) {
 
     cfg = cfg || {};
+    const context = this.context;
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
-    const settings = Settings().getInstance();
+    const settings = Settings(context).getInstance();
     let instance;
     let count = 1;
 
@@ -135,6 +136,7 @@ function FetchLoader(cfg) {
             let downloadedData = [];
             let startTimeData = [];
             let endTimeData = [];
+            const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
 
             const processResult = function ({ value, done }) { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
                 if (done) {
@@ -147,7 +149,7 @@ function FetchLoader(cfg) {
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(startTimeData, endTimeData, downloadedData, bytesReceived),
+                            time: calculateDownloadedTime(calculationMode, startTimeData, endTimeData, downloadedData, bytesReceived),
                             stream: true
                         });
 
@@ -167,27 +169,32 @@ function FetchLoader(cfg) {
                         bytes: value.length
                     });
 
-                    // Parse the payload and capture the the 'moof' box
-                    const flag1 = boxParser.parsePayload(['moof'], remaining, offset);
-                    if (flag1.found) {
-                        // Store the beginning time of each chunk download in array StartTimeData
-                        startTimeData.push({
-                            ts: performance.now(),
-                            bytes: value.length,
-                            id: count
-                        });
+                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                        // Parse the payload and capture the the 'moof' box
+                        const flag1 = boxParser.parsePayload(['moof'], remaining, offset);
+                        if (flag1.found) {
+                            // Store the beginning time of each chunk download in array StartTimeData
+                            startTimeData.push({
+                                ts: Date.now(),
+                                bytes: value.length,
+                                id: count
+                            });
+                        }
+                        count = count + 1;
                     }
-                    count = count + 1;
 
                     const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
                     if (boxesInfo.found) {
                         const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
+
                         // Store the end time of each chunk download  with its size in array EndTimeData
-                        endTimeData.push({
-                            ts: performance.now(),
-                            bytes: remaining.length,
-                            id: count
-                        });
+                        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                            endTimeData.push({
+                                ts: Date.now(),
+                                bytes: remaining.length,
+                                id: count
+                            });
+                        }
 
                         // If we are going to pass full buffer, avoid copying it and pass
                         // complete buffer. Otherwise clone the part of the buffer that is completed
@@ -272,9 +279,7 @@ function FetchLoader(cfg) {
     }
 
     // Compute the download time of a segment
-    function calculateDownloadedTime(startTimeData, endTimeData, downloadedData, bytesReceived) {
-        const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
-
+    function calculateDownloadedTime(calculationMode, startTimeData, endTimeData, downloadedData, bytesReceived) {
         switch (calculationMode) {
             case Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING:
                 return _calculateDownloadedTimeByMoofParsing(startTimeData, endTimeData);
