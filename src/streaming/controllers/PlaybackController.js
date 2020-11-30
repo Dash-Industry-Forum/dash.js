@@ -578,8 +578,8 @@ function PlaybackController() {
     function onPlaybackProgression() {
         if (
             isDynamic &&
-            settings.get().streaming.lowLatencyEnabled &&
-            settings.get().streaming.liveCatchUpPlaybackRate > 0 &&
+            _isCatchupEnabled() &&
+            settings.get().streaming.liveCatchup.playbackRate > 0 &&
             !isPaused() &&
             !isSeeking()
         ) {
@@ -589,6 +589,10 @@ function PlaybackController() {
                 stopPlaybackCatchUp();
             }
         }
+    }
+
+    function _isCatchupEnabled() {
+        return settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled;
     }
 
     function getBufferLevel() {
@@ -610,13 +614,13 @@ function PlaybackController() {
         const latencyDrift = Math.abs(currentLiveLatency - mediaPlayerModel.getLiveDelay());
         const liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
 
-        return settings.get().streaming.lowLatencyEnabled && settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
-            latencyDrift > settings.get().streaming.liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
+        return _isCatchupEnabled() && settings.get().streaming.liveCatchup.playbackRate > 0 && getTime() > 0 &&
+            latencyDrift > settings.get().streaming.liveCatchup.minDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
     }
 
     function startPlaybackCatchUp() {
         if (videoModel) {
-            const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
+            const cpr = settings.get().streaming.liveCatchup.playbackRate;
             const liveDelay = mediaPlayerModel.getLiveDelay();
             const deltaLatency = getCurrentLiveLatency() - liveDelay;
             const d = deltaLatency * 5;
@@ -641,8 +645,8 @@ function PlaybackController() {
                 videoModel.setPlaybackRate(newRate);
             }
 
-            if (settings.get().streaming.liveCatchUpMaxDrift > 0 && !isLowLatencySeekingInProgress &&
-                deltaLatency > settings.get().streaming.liveCatchUpMaxDrift) {
+            if (settings.get().streaming.liveCatchup.maxDrift > 0 && !isLowLatencySeekingInProgress &&
+                deltaLatency > settings.get().streaming.liveCatchup.maxDrift) {
                 logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isLowLatencySeekingInProgress = true;
                 seekToLive();
@@ -674,7 +678,7 @@ function PlaybackController() {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamId !== streamInfo.id) return;
 
-        if (settings.get().streaming.lowLatencyEnabled) {
+        if (_isCatchupEnabled()) {
             if (e.state === MetricsConstants.BUFFER_EMPTY && !isSeeking()) {
                 if (!playbackStalled) {
                     playbackStalled = true;
@@ -716,7 +720,9 @@ function PlaybackController() {
                             streaming: {
                                 lowLatencyEnabled: true,
                                 liveDelay: llsd.latency.target / 1000,
-                                liveCatchUpMinDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined
+                                liveCatchup: {
+                                    minDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined
+                                }
                             }
                         });
                     }
@@ -725,7 +731,9 @@ function PlaybackController() {
                         settings.update({
                             streaming: {
                                 lowLatencyEnabled: true,
-                                liveCatchUpPlaybackRate: llsd.playbackRate.max - 1.0
+                                liveCatchup: {
+                                    playbackRate: llsd.playbackRate.max - 1.0
+                                }
                             }
                         });
                     }

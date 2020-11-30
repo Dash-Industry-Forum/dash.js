@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Synchronized live playback with catchup mode</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        function init() {
+            var player1, player2, video;
+            var MPD_2S_SEGMENTS = "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd";
+            var settings = {
+                streaming: {
+                    liveDelay: 10, 
+                    liveCatchup: {
+                        enabled: true
+                    }
+                }
+            }
+
+            video = document.querySelector("#video1");
+            player1 = dashjs.MediaPlayer().create();
+            player1.initialize(video, MPD_2S_SEGMENTS, true);
+            player1.updateSettings(settings);
+
+            video = document.querySelector("#video2");
+            player2 = dashjs.MediaPlayer().create();
+            player2.initialize(video, MPD_2S_SEGMENTS, true);
+            player2.updateSettings(settings);
+
+
+            setInterval(function () {
+                var d = new Date();
+                var seconds = d.getSeconds();
+                document.querySelector("#sec").innerHTML = (seconds < 10 ? "0" : "") + seconds;
+                var minutes = d.getMinutes();
+                document.querySelector("#min").innerHTML = (minutes < 10 ? "0" : "") + minutes;
+                for (var i = 1; i < 3; i++) {
+                    var p = eval("player" + i);
+                    document.querySelector("#video" + i + "delay").innerHTML = Math.round((d.getTime() / 1000) - Number(p.timeAsUTC()));
+                    document.querySelector("#video" + i + "buffer").innerHTML = p.getBufferLength() + "s";
+                }
+
+
+            }, 1000);
+
+        }
+    </script>
+    <style>
+
+        table {
+            border-spacing: 10px;
+        }
+
+        video {
+            width: 320px;
+            height: 180px;
+        }
+
+        .clock {
+            border: 1px solid #333;
+            color: #000;
+            font-size: 60pt
+        }
+    </style>
+</head>
+
+<body>
+This sample illustrates how to use the catchup mechanism to synchronize media playback of two videos.
+<table>
+    <tr>
+        <td>
+            2s segment, 10s target latency<br/>
+            <video id="video1" controls="true">
+            </video>
+            <br/>
+            Seconds behind live: <span id="video1delay"></span><br/>
+            Buffer length: <span id="video1buffer"></span>
+        </td>
+        <td>
+            2s segment, 10s target latency<br/>
+            <video id="video2" controls="true">
+            </video>
+            <br/>
+            Seconds behind live: <span id="video2delay"></span><br/>
+            Buffer length: <span id="video2buffer"></span>
+        </td>
+        <td>Wall clock time
+            <div class="clock">
+                <span id="min"> </span>:<span id="sec"></span>
+            </div>
+        </td>
+    </tr>
+    </tr>
+</table>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>
+

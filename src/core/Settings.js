@@ -75,9 +75,13 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          useSuggestedPresentationDelay: true,
  *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
- *          liveCatchUpMinDrift: 0.02,
- *          liveCatchUpMaxDrift: 0,
- *          liveCatchUpPlaybackRate: 0.5,
+ *          liveCatchup: {
+ *               minDrift: 0.02,
+ *               maxDrift: 0,
+ *               playbackRate: 0.5,
+ *               latencyThreshold: NaN,
+ *               enabled: false
+ *           },
  *          lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *          lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
  *          cacheLoadThresholds: { video: 50, audio: 5 },
@@ -280,42 +284,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
  * downloading the next manifest once the minimumUpdatePeriod time has
- * @property {number} [liveCatchUpMinDrift=0.02]
- * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
- * when the difference between the measured latency and the target one,
- * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
- * playback rate until target latency is reached.
- *
- * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [liveCatchUpMaxDrift=0]
- * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
- * when the difference between the measured latency and the target one,
- * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
- * the target live delay.
- *
- * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
- * fixing latency deviations.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [liveCatchUpPlaybackRate=0.5]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
- * when measured latency is higher/lower than the target one,
- * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
- *
- * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [liveCatchupLatencyThreshold=NaN]
- * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
- * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
- * of the playback rate if the user seeks within the DVR window.
- *
- * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
- * maximumLiveDelay = targetDelay + liveCatchupMinDrift
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used
  * to set the initial bit rate for subsequent playback within the expiration window.
@@ -336,6 +304,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails. For low latency mode these values are multiplied by lowLatencyMultiplyFactor.
  * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
+ * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  */
 
 /**
@@ -370,6 +339,49 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {string} [did=dash.js-cmcd-default-id] A unique string identifying the current device.
  */
 
+/**
+ * @typedef {Object} module:Settings~LiveCatchupSettings
+ @property {number} [minDrift=0.02]
+ * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
+ * when the difference between the measured latency and the target one,
+ * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
+ * playback rate until target latency is reached.
+ *
+ * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [maxDrift=0]
+ * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
+ * when the difference between the measured latency and the target one,
+ * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
+ * the target live delay.
+ *
+ * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
+ * fixing latency deviations.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [playbackRate=0.5]
+ * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
+ * when measured latency is higher/lower than the target one,
+ * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+ *
+ * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [latencyThreshold=NaN]
+ * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
+ * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
+ * of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
+ * maximumLiveDelay = targetDelay + liveCatchupMinDrift
+ *
+ * @property {boolean} [enabled=false]
+ * Use this parameter to enable the catchup mode for non low-latency streams
+ *
+ * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
+ */
+
 
 /**
  * @class
@@ -394,7 +406,7 @@ function Settings() {
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
-            calcSegmentAvailabilityRangeFromTimeline: true,
+            calcSegmentAvailabilityRangeFromTimeline: false,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
             jumpGaps: true,
@@ -411,14 +423,20 @@ function Settings() {
             useSuggestedPresentationDelay: true,
             useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
-            liveCatchUpMinDrift: 0.02,
-            liveCatchUpMaxDrift: 0,
-            liveCatchUpPlaybackRate: 0.5,
-            liveCatchupLatencyThreshold: NaN,
-            lastBitrateCachingInfo: {enabled: true, ttl: 360000},
-            lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
-            cacheLoadThresholds: {video: 50, audio: 5},
-            trackSwitchMode: {audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE, video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE},
+            liveCatchup: {
+                minDrift: 0.02,
+                maxDrift: 0,
+                playbackRate: 0.5,
+                latencyThreshold: NaN,
+                enabled: false
+            },
+            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
+            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
+            cacheLoadThresholds: { video: 50, audio: 5 },
+            trackSwitchMode: {
+                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+            },
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
             fragmentRequestTimeout: 0,
             retryIntervals: {

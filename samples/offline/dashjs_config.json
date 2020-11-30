@@ -24,9 +24,13 @@
         "segmentOverlapToleranceTime": 0.2,
         "useSuggestedPresentationDelay": false,
         "manifestUpdateRetryInterval": 100,
-        "liveCatchUpMinDrift": 0.02,
-        "liveCatchUpMaxDrift": 0,
-        "liveCatchUpPlaybackRate": 0.5,
+        "liveCatchup": {
+            "minDrift": 0.02,
+            "maxDrift": 0,
+            "playbackRate": 0.5,
+            "latencyThreshold": null,
+            "enabled": false
+        },
         "lastBitrateCachingInfo": { "enabled": true, "ttl": 360000},
         "lastMediaSettingsCachingInfo": { "enabled": true, "ttl": 360000},
         "cacheLoadThresholds": {"video": 50, "audio": 5},
