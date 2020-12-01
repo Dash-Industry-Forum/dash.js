@@ -149,7 +149,7 @@ function CmcdModel() {
         try {
             let cmcdData = null;
 
-            _probeNextRequest(request).then(nextRequest => console.log('THIS', request.url, '\nNEXT', nextRequest.url, '\n\n'));
+            _probeNextRequest(request, request.mediaType).then(nextRequest => console.log('THIS', request.url, '\nNEXT', nextRequest.url, '\n\n'));
 
             if (request.type === HTTPRequest.MPD_TYPE) {
                 return _getCmcdDataForMpd(request);
@@ -443,12 +443,12 @@ function CmcdModel() {
         }
     }
 
-    function _probeNextRequest(initialRequest) {
+    function _probeNextRequest(initialRequest, mediaType) {
         return new Promise((resolve) => {
             eventBus.trigger(Events.PROBE_NEXT_REQUEST, {
                 initialRequest,
                 callback: resolve
-            });
+            }, { mediaType });
         });
     }
 
