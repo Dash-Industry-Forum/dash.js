@@ -93,7 +93,7 @@ function PlaybackController() {
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
         eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
+        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
         eventBus.on(Events.STREAM_INITIALIZING, onStreamInitializing, this);
 
         if (playOnceInitialized) {
@@ -140,9 +140,7 @@ function PlaybackController() {
 
         if (!isNaN(startTime) && startTime !== videoModel.getTime()) {
             // Trigger PLAYBACK_SEEKING event for controllers
-            eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: startTime
-            });
+            eventBus.trigger(Events.PLAYBACK_SEEKING, { seekTime: startTime });
             // Seek video model
             seek(startTime, false, true);
         }
@@ -467,30 +465,22 @@ function PlaybackController() {
         logger.info('Native video element event: play');
         updateCurrentTime();
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_STARTED, {
-            startTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_STARTED, { startTime: getTime() });
     }
 
     function onPlaybackWaiting() {
         logger.info('Native video element event: waiting');
-        eventBus.trigger(Events.PLAYBACK_WAITING, {
-            playingTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_WAITING, { playingTime: getTime() });
     }
 
     function onPlaybackPlaying() {
         logger.info('Native video element event: playing');
-        eventBus.trigger(Events.PLAYBACK_PLAYING, {
-            playingTime: getTime()
-        });
+        eventBus.trigger(Events.PLAYBACK_PLAYING, { playingTime: getTime() });
     }
 
     function onPlaybackPaused() {
         logger.info('Native video element event: pause');
-        eventBus.trigger(Events.PLAYBACK_PAUSED, {
-            ended: getEnded()
-        });
+        eventBus.trigger(Events.PLAYBACK_PAUSED, { ended: getEnded() });
     }
 
     function onPlaybackSeeking() {
@@ -504,9 +494,7 @@ function PlaybackController() {
 
         logger.info('Seeking to: ' + seekTime);
         startUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_SEEKING, {
-            seekTime: seekTime
-        });
+        eventBus.trigger(Events.PLAYBACK_SEEKING, { seekTime: seekTime });
     }
 
     function onPlaybackSeeked() {
@@ -540,9 +528,7 @@ function PlaybackController() {
     function onPlaybackRateChanged() {
         const rate = getPlaybackRate();
         logger.info('Native video element event: ratechange: ', rate);
-        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, {
-            playbackRate: rate
-        });
+        eventBus.trigger(Events.PLAYBACK_RATE_CHANGED, { playbackRate: rate });
     }
 
     function onPlaybackMetaDataLoaded() {
@@ -556,7 +542,7 @@ function PlaybackController() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': streamController.getActiveStreamInfo().isLast});
+        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamController.getActiveStreamInfo().isLast });
     }
 
     // Handle DASH PLAYBACK_ENDED event
@@ -573,9 +559,7 @@ function PlaybackController() {
 
     function onPlaybackError(event) {
         const target = event.target || event.srcElement;
-        eventBus.trigger(Events.PLAYBACK_ERROR, {
-            error: target.error
-        });
+        eventBus.trigger(Events.PLAYBACK_ERROR, { error: target.error });
     }
 
     function onWallclockTime() {
@@ -594,8 +578,8 @@ function PlaybackController() {
     function onPlaybackProgression() {
         if (
             isDynamic &&
-            settings.get().streaming.lowLatencyEnabled &&
-            settings.get().streaming.liveCatchUpPlaybackRate > 0 &&
+            _isCatchupEnabled() &&
+            settings.get().streaming.liveCatchup.playbackRate > 0 &&
             !isPaused() &&
             !isSeeking()
         ) {
@@ -605,6 +589,10 @@ function PlaybackController() {
                 stopPlaybackCatchUp();
             }
         }
+    }
+
+    function _isCatchupEnabled() {
+        return settings.get().streaming.liveCatchup.enabled || settings.get().streaming.lowLatencyEnabled;
     }
 
     function getBufferLevel() {
@@ -626,13 +614,13 @@ function PlaybackController() {
         const latencyDrift = Math.abs(currentLiveLatency - mediaPlayerModel.getLiveDelay());
         const liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
 
-        return settings.get().streaming.lowLatencyEnabled && settings.get().streaming.liveCatchUpPlaybackRate > 0 && getTime() > 0 &&
-            latencyDrift > settings.get().streaming.liveCatchUpMinDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
+        return _isCatchupEnabled() && settings.get().streaming.liveCatchup.playbackRate > 0 && getTime() > 0 &&
+            latencyDrift > settings.get().streaming.liveCatchup.minDrift && (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold);
     }
 
     function startPlaybackCatchUp() {
         if (videoModel) {
-            const cpr = settings.get().streaming.liveCatchUpPlaybackRate;
+            const cpr = settings.get().streaming.liveCatchup.playbackRate;
             const liveDelay = mediaPlayerModel.getLiveDelay();
             const deltaLatency = getCurrentLiveLatency() - liveDelay;
             const d = deltaLatency * 5;
@@ -657,8 +645,8 @@ function PlaybackController() {
                 videoModel.setPlaybackRate(newRate);
             }
 
-            if (settings.get().streaming.liveCatchUpMaxDrift > 0 && !isLowLatencySeekingInProgress &&
-                deltaLatency > settings.get().streaming.liveCatchUpMaxDrift) {
+            if (settings.get().streaming.liveCatchup.maxDrift > 0 && !isLowLatencySeekingInProgress &&
+                deltaLatency > settings.get().streaming.liveCatchup.maxDrift) {
                 logger.info('Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isLowLatencySeekingInProgress = true;
                 seekToLive();
@@ -690,7 +678,7 @@ function PlaybackController() {
         // do not stall playback when get an event from Stream that is not active
         if (e.streamId !== streamInfo.id) return;
 
-        if (settings.get().streaming.lowLatencyEnabled) {
+        if (_isCatchupEnabled()) {
             if (e.state === MetricsConstants.BUFFER_EMPTY && !isSeeking()) {
                 if (!playbackStalled) {
                     playbackStalled = true;
@@ -703,9 +691,7 @@ function PlaybackController() {
     }
 
     function onPlaybackStalled(e) {
-        eventBus.trigger(Events.PLAYBACK_STALLED, {
-            e: e
-        });
+        eventBus.trigger(Events.PLAYBACK_STALLED, { e: e });
     }
 
     function onStreamInitializing(e) {
@@ -734,7 +720,9 @@ function PlaybackController() {
                             streaming: {
                                 lowLatencyEnabled: true,
                                 liveDelay: llsd.latency.target / 1000,
-                                liveCatchUpMinDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined
+                                liveCatchup: {
+                                    minDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined
+                                }
                             }
                         });
                     }
@@ -743,7 +731,9 @@ function PlaybackController() {
                         settings.update({
                             streaming: {
                                 lowLatencyEnabled: true,
-                                liveCatchUpPlaybackRate: llsd.playbackRate.max - 1.0
+                                liveCatchup: {
+                                    playbackRate: llsd.playbackRate.max - 1.0
+                                }
                             }
                         });
                     }

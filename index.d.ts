@@ -130,9 +130,13 @@ declare namespace dashjs {
             useSuggestedPresentationDelay?: boolean;
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
-            liveCatchUpMinDrift?: number;
-            liveCatchUpMaxDrift?: number;
-            liveCatchUpPlaybackRate?: number;
+            liveCatchup: {
+                minDrift?: number;
+                maxDrift?: number;
+                playbackRate?: number;
+                latencyThreshold?: number,
+                enabled?: boolean
+            }
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
                 ttl?: number;
@@ -145,6 +149,12 @@ declare namespace dashjs {
                 video?: number;
                 audio?: number;
             };
+            trackSwitchMode?: {
+                video?: TrackSwitchMode;
+                audio?: TrackSwitchMode;
+            }
+            selectionModeForInitialTrack?: TrackSelectionMode
+            fragmentRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?:                       number;
                 'XLinkExpansion'?:            number;
@@ -168,7 +178,6 @@ declare namespace dashjs {
                 ABRStrategy?: 'abrDynamic' | 'abrBola';
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
-                useBufferOccupancyABR?: boolean;
                 useDeadTimeLatency?: boolean;
                 limitBitrateByPortal?: boolean;
                 usePixelRatioInLimitBitrateByPortal?: boolean;
@@ -211,6 +220,7 @@ declare namespace dashjs {
         on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
         on(type: CaptionRenderedEvent['type'], listener: (e: CaptionRenderedEvent) => void, scope?: object): void;
         on(type: CaptionContainerResizeEvent['type'], listener: (e: CaptionContainerResizeEvent) => void, scope?: object): void;
+        on(type: DynamicToStaticEvent['type'], listener: (e: DynamicToStaticEvent) => void, scope?: object): void;
         on(type: ErrorEvent['type'], listener: (e: ErrorEvent) => void, scope?: object): void;
         on(type: FragmentLoadingCompletedEvent['type'], listener: (e: FragmentLoadingCompletedEvent) => void, scope?: object): void;
         on(type: FragmentLoadingAbandonedEvent['type'], listener: (e: FragmentLoadingAbandonedEvent) => void, scope?: object): void;
@@ -412,6 +422,7 @@ declare namespace dashjs {
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
         FRAGMENT_LOADING_COMPLETED: 'fragmentLoadingCompleted';
@@ -600,6 +611,9 @@ declare namespace dashjs {
         type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
     }
 
+    export interface DynamicToStaticEvent extends Event {
+        type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];
+    }    
     export interface FragmentLoadingCompletedEvent extends Event {
         type: MediaPlayerEvents['FRAGMENT_LOADING_COMPLETED'];
         request: FragmentRequest;

@@ -87,11 +87,7 @@ function ManifestLoader(config) {
     }
 
     function onXlinkReady(event) {
-        eventBus.trigger(
-            Events.INTERNAL_MANIFEST_LOADED, {
-                manifest: event.manifest
-            }
-        );
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
     }
 
     function createParser(data) {
@@ -147,15 +143,13 @@ function ManifestLoader(config) {
                 }
 
                 if (parser === null) {
-                    eventBus.trigger(
-                        Events.INTERNAL_MANIFEST_LOADED, {
-                            manifest: null,
-                            error: new DashJSError(
-                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
-                            )
-                        }
-                    );
+                    eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new DashJSError(
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
+                        )
+                    });
                     return;
                 }
 
@@ -166,15 +160,13 @@ function ManifestLoader(config) {
                 try {
                     manifest = parser.parse(data);
                 } catch (e) {
-                    eventBus.trigger(
-                        Events.INTERNAL_MANIFEST_LOADED, {
-                            manifest: null,
-                            error: new DashJSError(
-                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
-                           )
-                        }
-                    );
+                    eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new DashJSError(
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
+                        )
+                    });
                     return;
                 }
 
@@ -197,33 +189,25 @@ function ManifestLoader(config) {
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);
 
-                    eventBus.trigger(
-                        Events.ORIGINAL_MANIFEST_LOADED, {
-                            originalManifest: data
-                        }
-                    );
+                    eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
                 } else {
-                    eventBus.trigger(
-                        Events.INTERNAL_MANIFEST_LOADED, {
-                            manifest: null,
-                            error: new DashJSError(
-                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                                Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
-                            )
-                        }
-                    );
+                    eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                        manifest: null,
+                        error: new DashJSError(
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
+                            Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
+                        )
+                    });
                 }
             },
             error: function (request, statusText, errorText) {
-                eventBus.trigger(
-                    Events.INTERNAL_MANIFEST_LOADED, {
-                        manifest: null,
-                        error: new DashJSError(
-                            Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,
-                            Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE + `${url}, ${errorText}`
-                        )
-                    }
-                );
+                eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
+                    manifest: null,
+                    error: new DashJSError(
+                        Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE,
+                        Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE + `${url}, ${errorText}`
+                    )
+                });
             }
         });
     }

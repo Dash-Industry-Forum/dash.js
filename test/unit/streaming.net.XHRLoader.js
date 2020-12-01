@@ -144,4 +144,18 @@ describe('XHRLoader', function () {
         sinon.assert.notCalled(callbackAbort);
         expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
     });
+
+    it('should set timeout on the sending XHR request', () => {
+        xhrLoader = XHRLoader(context).create({
+            requestModifier: requestModifier
+        });
+        const request = {
+            request: {
+                checkExistenceOnly: true
+            },
+            timeout: 100
+        };
+        xhrLoader.load(request);
+        expect(request.response.timeout).to.be.equal(100);
+    });
 });

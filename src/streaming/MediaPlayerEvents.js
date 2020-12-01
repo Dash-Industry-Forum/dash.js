@@ -70,6 +70,12 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
         /**
+         * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
+         * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
+         */
+        this.DYNAMIC_TO_STATIC = 'dynamicToStatic';
+
+        /**
          * Triggered when there is an error from the element or MSE source buffer.
          * @event MediaPlayerEvents#ERROR
          */
@@ -348,6 +354,18 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
          */
         this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
+
+        /**
+         * Dash events are triggered at their respective start points on the timeline.
+         * @event MediaPlayerEvents#EVENT_MODE_ON_START
+         */
+        this.EVENT_MODE_ON_START = 'eventModeOnStart';
+
+        /**
+         * Dash events are triggered as soon as they were parsed.
+         * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
+         */
+        this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
     }
 }
 

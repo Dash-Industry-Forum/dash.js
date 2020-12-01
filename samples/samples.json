@@ -75,9 +75,19 @@
                 "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html"
             },
             {
+                "title": "Synchronized live playback with the catchup mode",
+                "description": "Example showing a synchronized live playback of two videos using the live playback catchup mode.",
+                "href": "live-streaming/synchronized-live-playback.html"
+            },
+            {
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
                 "href": "low-latency/index.html"
+            },
+            {
+                "title": "Low latency with L2ALL",
+                "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
+                "href": "low-latency/l2all_index.html"
             }
         ]
     },

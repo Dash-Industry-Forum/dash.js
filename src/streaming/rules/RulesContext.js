@@ -40,8 +40,10 @@ function RulesContext(config) {
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
     const bufferOccupancyABR = config.useBufferOccupancyABR;
+    const l2AABR = config.useL2AABR;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
     const representationInfo = config.streamProcessor ? config.streamProcessor.getRepresentationInfo() : null;
+    const videoModel = config.videoModel ? config.videoModel : null;
 
     function getMediaType() {
         const mediaInfo = getMediaInfo();
@@ -73,6 +75,10 @@ function RulesContext(config) {
         return switchHistory;
     }
 
+    function getVideoModel() {
+        return videoModel;
+    }
+
     function getDroppedFramesHistory() {
         return droppedFramesHistory;
     }
@@ -83,6 +89,9 @@ function RulesContext(config) {
 
     function useBufferOccupancyABR() {
         return bufferOccupancyABR;
+    }
+    function useL2AABR() {
+        return l2AABR;
     }
 
     instance = {
@@ -95,7 +104,9 @@ function RulesContext(config) {
         getScheduleController: getScheduleController,
         getAbrController: getAbrController,
         getRepresentationInfo: getRepresentationInfo,
-        useBufferOccupancyABR: useBufferOccupancyABR
+        useBufferOccupancyABR: useBufferOccupancyABR,
+        useL2AABR: useL2AABR,
+        getVideoModel
     };
 
     return instance;

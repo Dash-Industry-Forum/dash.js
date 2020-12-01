@@ -37,7 +37,7 @@
  */
 class Constants {
 
-    init () {
+    init() {
         /**
          *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
          *  @memberof Constants#
@@ -137,6 +137,13 @@ class Constants {
         this.ABR_STRATEGY_BOLA = 'abrBola';
 
         /**
+         *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_L2A = 'abrL2A';
+
+        /**
          *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
          *  @memberof Constants#
          *  @static
@@ -165,11 +172,40 @@ class Constants {
         this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
 
         /**
-         *  @constant {string} MISSING_CONFIG_ERROR Missing ocnfiguration parameters type of error
+         *  @constant {string} MISSING_CONFIG_ERROR Missing configuration parameters type of error
          *  @memberof Constants#
          *  @static
          */
         this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+
+        /**
+         *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
+
+        /**
+         *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
+
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
+
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE this mode makes the player select the track with a widest range of bitrates
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
+
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';
@@ -183,9 +219,11 @@ class Constants {
         this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
         this.XML = 'XML';
         this.ARRAY_BUFFER = 'ArrayBuffer';
+        this.DVB_REPORTING_URL = 'dvb:reportingUrl';
+        this.DVB_PROBABILITY = 'dvb:probability';
     }
 
-    constructor () {
+    constructor() {
         this.init();
     }
 }

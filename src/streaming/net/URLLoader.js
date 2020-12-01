@@ -61,6 +61,7 @@ function URLLoader(cfg) {
             constants: cfg.constants ? cfg.constants : null,
             dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
             urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
+            requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
             errors: cfg.errors
         });
 

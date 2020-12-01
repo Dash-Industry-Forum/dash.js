@@ -69,6 +69,7 @@ function ThumbnailTracks(config) {
         boxParser = BoxParser(context).getInstance();
 
         indexHandler = DashHandler(context).create({
+            streamInfo: streamInfo,
             timelineConverter: timelineConverter,
             baseURLController: baseURLController,
             debug: debug,
@@ -172,10 +173,11 @@ function ThumbnailTracks(config) {
 
         if (useSegmentBase) {
             eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {
-                mimeType: mediaInfo.mimeType,
+                streamId: streamInfo.id,
                 mediaType: Constants.IMAGE,
+                mimeType: mediaInfo.mimeType,
                 representation: representation,
-                callback: function (segments, representation) {
+                callback: function (streamId, mediaType, segments, representation) {
                     let cache = [];
                     segments = normalizeSegments(segments, representation);
                     track.segmentDuration = segments[0].duration; //assume all segments have the same duration

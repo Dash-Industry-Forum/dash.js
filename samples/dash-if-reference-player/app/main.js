@@ -330,8 +330,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
     }
 
-    var initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
-    var initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
+    var currentConfig = $scope.player.getSettings();
+
+    var initVideoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
+    var initAudioTrackSwitchMode = currentConfig.streaming.trackSwitchMode.audio;
 
     //get default track switch mode
     if (initVideoTrackSwitchMode === 'alwaysReplace') {
@@ -506,6 +508,16 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         });
     };
 
+    $scope.toggleLiveCatchupEnabled = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    enabled: $scope.liveCatchupEnabled
+                }
+            }
+        });
+    };
+
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
     };
@@ -590,6 +602,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             }
         }
 
+        const initialLiveDelay = parseInt($scope.initialLiveDelay);
+        if (!isNaN(initialLiveDelay)) {
+            config.streaming.liveDelay = initialLiveDelay;
+        }
+
         const initBitrate = parseInt($scope.initialVideoBitrate);
         if (!isNaN(initBitrate)) {
             config.streaming.abr.initialBitrate = {'video': initBitrate};
@@ -647,7 +664,9 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     };
 
     $scope.changeTrackSwitchMode = function (mode, type) {
-        $scope.player.setTrackSwitchModeFor(type, mode);
+        var switchMode = {};
+        switchMode[type] = mode;
+        $scope.player.updateSettings({'streaming': {'trackSwitchMode' : switchMode}});
     };
 
     $scope.setLogLevel = function () {
@@ -948,6 +967,7 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.bufferTimeAtTopQuality;
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.bufferTimeAtTopQualityLongForm;
         $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
+        $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
     }
 
 
