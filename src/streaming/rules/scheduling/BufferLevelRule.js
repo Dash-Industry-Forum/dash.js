@@ -72,7 +72,7 @@ function BufferLevelRule(config) {
             } else { // text is disabled, rule will return false
                 bufferTarget = 0;
             }
-        } else if (type === Constants.AUDIO && hasVideoTrack) {
+        }  else if (type === Constants.AUDIO && hasVideoTrack) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
             if (isNaN(representationInfo.fragmentDuration)) {
                 bufferTarget = videoBufferLevel;

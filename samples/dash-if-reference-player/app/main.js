@@ -61,11 +61,11 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         // Add provider to beginning of each Vector
         var provider = data.provider;
         $scope.availableStreams.forEach(function (item) {
-            if(item && item.submenu && item.submenu.length > 0) {
+            if (item && item.submenu && item.submenu.length > 0) {
                 item.submenu.forEach(function (subitem) {
-                   if(subitem && subitem.name && subitem.provider && provider[subitem.provider] && provider[subitem.provider].acronym) {
-                       subitem.name = '[' + provider[subitem.provider].acronym + '] ' + subitem.name;
-                   }
+                    if (subitem && subitem.name && subitem.provider && provider[subitem.provider] && provider[subitem.provider].acronym) {
+                        subitem.name = '[' + provider[subitem.provider].acronym + '] ' + subitem.name;
+                    }
                 });
             }
         });
@@ -330,8 +330,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
     }
 
-    var initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
-    var initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
+    var currentConfig = $scope.player.getSettings();
+
+    var initVideoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
+    var initAudioTrackSwitchMode = currentConfig.streaming.trackSwitchMode.audio;
 
     //get default track switch mode
     if (initVideoTrackSwitchMode === 'alwaysReplace') {
@@ -607,7 +609,6 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
-        config.streaming.cmcd.did = $scope.cmcdDeviceId ? $scope.cmcdDeviceId : null;
 
         $scope.player.updateSettings(config);
 
@@ -648,7 +649,9 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     };
 
     $scope.changeTrackSwitchMode = function (mode, type) {
-        $scope.player.setTrackSwitchModeFor(type, mode);
+        var switchMode = {};
+        switchMode[type] = mode;
+        $scope.player.updateSettings({'streaming': {'trackSwitchMode' : switchMode}});
     };
 
     $scope.setLogLevel = function () {
@@ -853,7 +856,8 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         var dashAdapter = $scope.player.getDashAdapter();
 
         if (dashMetrics && $scope.streamInfo) {
-            var periodIdx = $scope.streamInfo.index;
+            var period = dashAdapter.getPeriodById($scope.streamInfo.id);
+            var periodIdx = period ? period.index : $scope.streamInfo.index;
 
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);

@@ -34,6 +34,7 @@ import DashConstants from '../dash/constants/DashConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import PlaybackController from './controllers/PlaybackController';
 import StreamController from './controllers/StreamController';
+import GapController from './controllers/GapController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
@@ -145,6 +146,7 @@ function MediaPlayer() {
         baseURLController,
         capabilities,
         streamController,
+        gapController,
         playbackController,
         dashMetrics,
         manifestModel,
@@ -195,6 +197,9 @@ function MediaPlayer() {
         }
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.gapController) {
+            gapController = config.gapController;
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
@@ -272,6 +277,10 @@ function MediaPlayer() {
             streamController = StreamController(context).getInstance();
         }
 
+        if (!gapController) {
+            gapController = GapController(context).getInstance();
+        }
+
         adapter = DashAdapter(context).getInstance();
 
         manifestModel = ManifestModel(context).getInstance();
@@ -338,7 +347,8 @@ function MediaPlayer() {
      * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
      * calling attachSource with a new source file.
      *
-     * Calling this method is all that is necessary to destroy a MediaPlayer instance.
+     * This call does not destroy the MediaPlayer. To destroy the MediaPlayer and free all of its
+     * memory, call destroy().
      *
      * @memberof module:MediaPlayer
      * @instance
@@ -364,6 +374,17 @@ function MediaPlayer() {
             offlineController.reset();
             offlineController = null;
         }
+    }
+
+    /**
+     * Completely destroys the media player and frees all memory.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function destroy() {
+        reset();
+        FactoryMaker.deleteSingletonInstances(context);
     }
 
     /**
@@ -1539,11 +1560,11 @@ function MediaPlayer() {
     /**
      * This method sets the current track switch mode. Available options are:
      *
-     * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
+     * Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
      * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
      * Defers to fastSwitchEnabled for placement of new data. Default for video)
      *
-     * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
+     * Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
      *
      * @param {MediaType} type
@@ -1563,10 +1584,10 @@ function MediaPlayer() {
      * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
-     * MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+     * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
-     * MediaController.TRACK_SELECTION_MODE_WIDEST_RANGE
+     * Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
      * this mode makes the player select the track with a widest range of bitrates
      *
      * @param {string} mode
@@ -1628,7 +1649,7 @@ function MediaPlayer() {
      * be set before initializing MediaPlayer or, once initialized, before PROTECTION_CREATED event is fired.
      * @see {@link module:MediaPlayer#initialize initialize()}
      * @see {@link ProtectionEvents#event:PROTECTION_CREATED dashjs.Protection.events.PROTECTION_CREATED}
-     * @param {ProtectionData} value - object containing
+     * @param {ProtectionDataSet} value - object containing
      * property names corresponding to key system name strings and associated
      * values being instances of.
      * @memberof module:MediaPlayer
@@ -1903,6 +1924,7 @@ function MediaPlayer() {
         streamingInitialized = false;
         adapter.reset();
         streamController.reset();
+        gapController.reset();
         playbackController.reset();
         abrController.reset();
         mediaController.reset();
@@ -1929,7 +1951,8 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            domStorage: domStorage
+            domStorage: domStorage,
+            settings: settings
         });
 
         streamController.setConfig({
@@ -1949,6 +1972,15 @@ function MediaPlayer() {
             textController: textController,
             settings: settings,
             baseURLController: baseURLController
+        });
+
+        gapController.setConfig({
+            settings,
+            playbackController,
+            streamController,
+            videoModel,
+            timelineConverter,
+            adapter
         });
 
         playbackController.setConfig({
@@ -1990,6 +2022,7 @@ function MediaPlayer() {
 
         // initialises controller
         streamController.initialize(autoPlay, protectionData);
+        gapController.initialize();
         cmcdModel.initialize();
     }
 
@@ -2282,7 +2315,8 @@ function MediaPlayer() {
         getSettings: getSettings,
         updateSettings: updateSettings,
         resetSettings: resetSettings,
-        reset: reset
+        reset: reset,
+        destroy: destroy
     };
 
     setup();

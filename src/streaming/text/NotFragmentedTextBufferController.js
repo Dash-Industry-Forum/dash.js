@@ -102,6 +102,10 @@ function NotFragmentedTextBufferController(config) {
         }
     }
 
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
     function getType() {
         return type;
     }
@@ -145,8 +149,6 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type || e.error) return;
-
         if (initCache.extract(streamInfo.id, e.currentRepresentation.id) !== null) {
             return;
         }
@@ -155,12 +157,10 @@ function NotFragmentedTextBufferController(config) {
         isBufferingCompleted = false;
 
         // // Text data file is contained in initialization segment
-        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED, {
-            sender: instance,
-            streamId: streamInfo.id,
-            mediaType: type,
-            representationId: e.currentRepresentation.id
-        });
+        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+            { representationId: e.currentRepresentation.id },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function appendInitSegment(representationId) {
@@ -169,16 +169,17 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamInfo.id || e.chunk.mediaInfo.type !== type || (!e.chunk.bytes)) return;
+        if (!e.chunk.bytes) return;
 
         initCache.save(e.chunk);
         buffer.append(e.chunk);
 
         isBufferingCompleted = true;
 
-        eventBus.trigger(Events.STREAM_COMPLETED, {
-            request: e.request
-        });
+        eventBus.trigger(Events.STREAM_COMPLETED,
+            { request: e.request },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function getRangeAt() {
@@ -195,6 +196,7 @@ function NotFragmentedTextBufferController(config) {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
         createBuffer: createBuffer,
+        getStreamId: getStreamId,
         getType: getType,
         getBuffer: getBuffer,
         getBufferLevel: getBufferLevel,

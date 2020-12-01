@@ -151,31 +151,6 @@ describe('NotFragmentedTextBufferController', function () {
 
         describe('Event INIT_FRAGMENT_LOADED Handler', function () {
 
-            it('should not append data to buffer - wrong stream id', function (done) {
-
-                notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);
-                const buffer = notFragmentedTextBufferController.getBuffer().getBuffer();
-
-                let event = {
-                    chunk: {
-                        streamId: 'wrong',
-                        mediaInfo: {
-                            type: testType
-                        },
-                        bytes: 'data'
-                    }
-                };
-
-                let onEvent = function () {
-                    eventBus.off(Events.INIT_FRAGMENT_LOADED, onEvent);
-                    expect(buffer.chunk).to.not.exist; // jshint ignore:line
-
-                    done();
-                };
-                eventBus.on(Events.INIT_FRAGMENT_LOADED, onEvent, this);
-                eventBus.trigger(Events.INIT_FRAGMENT_LOADED, event);
-            });
-
             it('should not append data to buffer - no bytes', function (done) {
 
                 notFragmentedTextBufferController.createBuffer(mockMediaInfoArr);

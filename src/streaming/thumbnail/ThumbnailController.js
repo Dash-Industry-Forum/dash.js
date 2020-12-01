@@ -39,6 +39,7 @@ import { replaceTokenForTemplate, unescapeDollarsInTemplate } from '../../dash/u
 function ThumbnailController(config) {
 
     const context = this.context;
+    const streamInfo = config.streamInfo;
 
     let instance,
         thumbnailTracks;
@@ -46,7 +47,7 @@ function ThumbnailController(config) {
     function setup() {
         reset();
         thumbnailTracks = ThumbnailTracks(context).create({
-            streamInfo: config.streamInfo,
+            streamInfo: streamInfo,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
             timelineConverter: config.timelineConverter,
@@ -55,6 +56,10 @@ function ThumbnailController(config) {
             events: config.events,
             dashConstants: config.dashConstants
         });
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     function provideThumbnail(time, callback) {
@@ -144,6 +149,7 @@ function ThumbnailController(config) {
     }
 
     instance = {
+        getStreamId: getStreamId,
         provide: provideThumbnail,
         setTrackByIndex: setTrackByIndex,
         getCurrentTrackIndex: getCurrentTrackIndex,

@@ -84,7 +84,8 @@ function StreamProcessor(config) {
         representationController,
         liveEdgeFinder,
         indexHandler,
-        streamInitialized;
+        bufferingTime,
+        bufferPruned;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -135,7 +136,7 @@ function StreamProcessor(config) {
         abrController.registerStreamType(type, instance);
 
         representationController = RepresentationController(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             type: type,
             abrController: abrController,
             dashMetrics: dashMetrics,
@@ -153,7 +154,7 @@ function StreamProcessor(config) {
         }
 
         scheduleController = ScheduleController(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             type: type,
             mimeType: mimeType,
             adapter: adapter,
@@ -170,12 +171,22 @@ function StreamProcessor(config) {
 
         scheduleController.initialize(hasVideoTrack);
 
-        streamInitialized = false;
+        bufferingTime = 0;
+        bufferPruned = false;
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
     }
 
     function resetInitialSettings() {
         mediaInfoArr = [];
         mediaInfo = null;
+        bufferingTime = 0;
     }
 
     function reset(errored, keepBuffers) {
@@ -228,20 +239,20 @@ function StreamProcessor(config) {
 
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getType() !== getType() || e.sender.getStreamId() !== streamInfo.id) return;
-
         if (!e.error) {
             // Update representation if no error
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
         }
         if (!e.error || e.error.code === Errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE) {
             // Update has been postponed, update nevertheless DVR info
-            addDVRMetric();
+            const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
+            if (activeStreamId === streamInfo.id) {
+                addDVRMetric();
+            }
         }
     }
 
     function onQualityChanged(e) {
-        if (type !== e.mediaType || streamInfo.id !== e.streamInfo.id) return;
         let representationInfo = getRepresentationInfo(e.newQuality);
         scheduleController.setCurrentRepresentation(representationInfo);
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
@@ -249,18 +260,14 @@ function StreamProcessor(config) {
     }
 
     function onBufferLevelUpdated(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
-
         dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
-
-        if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated) {
+        const activeStreamId = playbackController.getStreamController().getActiveStreamInfo().id;
+        if (!manifestModel.getValue().doNotUpdateDVRWindowOnBufferUpdated && streamInfo.id === activeStreamId) {
             addDVRMetric();
         }
     }
 
     function onBufferLevelStateChanged(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
-
         dashMetrics.addBufferState(type, e.state, scheduleController.getBufferTarget());
         if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
             // logger.info('Buffer is empty! Stalling!');
@@ -269,15 +276,15 @@ function StreamProcessor(config) {
     }
 
     function onBufferCleared(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) return;
+        // Remove executed requests not buffered anymore
+        fragmentModel.syncExecutedRequestsWithBufferedRange(
+            bufferController.getBuffer().getAllBufferRanges(),
+            streamInfo.duration);
 
-        if (e.unintended) {
-            // There was an unintended buffer remove, probably creating a gap in the buffer, remove every saved request
-            fragmentModel.removeExecutedRequestsAfterTime(e.from);
-        } else {
-            fragmentModel.syncExecutedRequestsWithBufferedRange(
-                bufferController.getBuffer().getAllBufferRanges(),
-                streamInfo.duration);
+        // If buffer removed ahead current time (QuotaExceededError or automatic buffer pruning) then adjust current index handler time
+        if (e.from > playbackController.getTime()) {
+            bufferingTime = e.from;
+            bufferPruned = true;
         }
     }
 
@@ -286,10 +293,6 @@ function StreamProcessor(config) {
         const isDynamic = manifestInfo.isDynamic;
         const range = timelineConverter.calcSegmentAvailabilityRange(representationController.getCurrentRepresentation(), isDynamic);
         dashMetrics.addDVRInfo(getType(), playbackController.getTime(), manifestInfo, range);
-    }
-
-    function getType() {
-        return type;
     }
 
     function getRepresentationController() {
@@ -314,6 +317,9 @@ function StreamProcessor(config) {
 
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
+        if (settings.get().streaming.useAppendWindow) {
+            bufferController.updateAppendWindow();
+        }
     }
 
     function getStreamInfo() {
@@ -417,8 +423,6 @@ function StreamProcessor(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) return;
-
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
@@ -431,8 +435,6 @@ function StreamProcessor(config) {
     }
 
     function onMediaFragmentNeeded(e) {
-        if (!e.sender || e.mediaType !== type || e.streamId !== streamInfo.id) return;
-
         let request;
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
@@ -442,7 +444,7 @@ function StreamProcessor(config) {
                 scheduleController.setSeekTarget(NaN);
                 if (!e.replacement) {
                     if (!isNaN(request.startTime + request.duration)) {
-                        setIndexHandlerTime(request.startTime + request.duration);
+                        bufferingTime = request.startTime + request.duration;
                     }
                     request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
                     scheduleController.setTimeToLoadDelay(0);
@@ -457,7 +459,7 @@ function StreamProcessor(config) {
         const representationInfo = getRepresentationInfo();
         const hasSeekTarget = !isNaN(seekTarget);
         const currentTime = playbackController.getNormalizedTime();
-        let time = hasSeekTarget ? seekTarget : getIndexHandlerTime();
+        let time = hasSeekTarget ? seekTarget : bufferingTime;
         let bufferIsDivided = false;
         let request;
 
@@ -489,10 +491,12 @@ function StreamProcessor(config) {
             });
         } else {
             // Use time just whenever is strictly needed
+            const useTime = hasSeekTarget || bufferPruned || bufferIsDivided;
             request = getFragmentRequest(representationInfo,
-                hasSeekTarget || bufferIsDivided ? time : undefined, {
-                    keepIdx: !hasSeekTarget && !bufferIsDivided
+                useTime ? time : undefined, {
+                    keepIdx: !useTime
                 });
+            bufferPruned = false;
 
             // Then, check if this request was downloaded or not
             while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
@@ -506,7 +510,6 @@ function StreamProcessor(config) {
 
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
-        if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type != type) return;
 
         const bytes = chunk.bytes;
         const quality = chunk.quality;
@@ -524,7 +527,10 @@ function StreamProcessor(config) {
             })[0];
 
             const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.INBAND_EVENTS, {sender: instance, events: events});
+            eventBus.trigger(Events.INBAND_EVENTS,
+                { events: events },
+                { streamId: streamInfo.id }
+            );
         }
     }
 
@@ -615,6 +621,11 @@ function StreamProcessor(config) {
         let liveStartTime = NaN;
         const currentRepresentationInfo = getRepresentationInfo();
         const liveEdge = liveEdgeFinder.getLiveEdge(currentRepresentationInfo);
+
+        if (isNaN(liveEdge)) {
+            return NaN;
+        }
+
         const request = findRequestForLiveEdge(liveEdge, currentRepresentationInfo);
 
         if (request) {
@@ -666,20 +677,12 @@ function StreamProcessor(config) {
     }
 
     function onSeekTarget(e) {
-        if (e.mediaType !== type || e.streamId !== streamInfo.id) return;
-
-        setIndexHandlerTime(e.time);
+        bufferingTime = e.time;
         scheduleController.setSeekTarget(e.time);
     }
 
-    function setIndexHandlerTime(value) {
-        if (indexHandler) {
-            indexHandler.setCurrentTime(value);
-        }
-    }
-
-    function getIndexHandlerTime() {
-        return indexHandler ? indexHandler.getCurrentTime() : NaN;
+    function setBufferingTime(value) {
+        bufferingTime = value;
     }
 
     function resetIndexHandler() {
@@ -718,8 +721,9 @@ function StreamProcessor(config) {
 
     instance = {
         initialize: initialize,
-        isUpdating: isUpdating,
+        getStreamId: getStreamId,
         getType: getType,
+        isUpdating: isUpdating,
         getBufferController: getBufferController,
         getFragmentModel: getFragmentModel,
         getScheduleController: getScheduleController,
@@ -741,8 +745,7 @@ function StreamProcessor(config) {
         dischargePreBuffer: dischargePreBuffer,
         getBuffer: getBuffer,
         setBuffer: setBuffer,
-        setIndexHandlerTime: setIndexHandlerTime,
-        getIndexHandlerTime: getIndexHandlerTime,
+        setBufferingTime: setBufferingTime,
         resetIndexHandler: resetIndexHandler,
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,

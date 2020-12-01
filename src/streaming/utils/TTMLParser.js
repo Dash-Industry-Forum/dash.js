@@ -81,9 +81,16 @@ function TTMLParser() {
         let metadataHandler = {
 
             onOpenTag: function (ns, name, attrs) {
-                if (name === 'image' && ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt') {
-                    if (!attrs[' imagetype'] || attrs[' imagetype'].value !== 'PNG') {
-                        logger.warn('smpte-tt imagetype != PNG. Discarded');
+                // cope with existing non-compliant content
+                if (attrs[' imagetype'] && !attrs[' imageType']) {
+                    attrs[' imageType'] = attrs[' imagetype'];
+                }
+
+                if (name === 'image' &&
+                (ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt' ||
+                 ns === 'http://www.smpte-ra.org/schemas/2052-1/2013/smpte-tt')) {
+                    if (!attrs[' imageType'] || attrs[' imageType'].value !== 'PNG') {
+                        logger.warn('smpte-tt imageType != PNG. Discarded');
                         return;
                     }
                     currentImageId = attrs['http://www.w3.org/XML/1998/namespace id'].value;
@@ -118,7 +125,7 @@ function TTMLParser() {
             errorMsg = msg;
         }, metadataHandler);
 
-        eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
+        eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 
         const mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 

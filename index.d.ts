@@ -36,7 +36,7 @@ declare namespace dashjs {
         setMediaElement(element: HTMLMediaElement): void;
         setSessionType(type: string): void;
         setRobustnessLevel(level: string): void;
-        setProtectionData(protData: ProtectionData): void;
+        setProtectionData(protDataSet: ProtectionDataSet): void;
         getSupportedKeySystemsFromContentProtection(cps: any[]): SupportedKeySystem[];
         getKeySystems(): KeySystem[];
         setKeySystems(keySystems: KeySystem[]): void;
@@ -111,10 +111,13 @@ declare namespace dashjs {
             liveDelay?: number;
             scheduleWhilePaused?: boolean;
             fastSwitchEnabled?: boolean;
+            flushBufferAtTrackSwitch?: boolean;
+            calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
             bufferAheadToKeep?: number;
             jumpGaps?: boolean;
+            jumpLargeGaps?: boolean;
             smallGapLimit?: number;
             stableBufferTime?: number;
             bufferTimeAtTopQuality?: number;
@@ -125,7 +128,7 @@ declare namespace dashjs {
             keepProtectionMediaKeys?: boolean;
             useManifestDateHeaderTimeSource?: boolean;
             useSuggestedPresentationDelay?: boolean;
-            useAppendWindowEnd?: boolean,
+            useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             liveCatchUpMinDrift?: number;
             liveCatchUpMaxDrift?: number;
@@ -142,6 +145,12 @@ declare namespace dashjs {
                 video?: number;
                 audio?: number;
             };
+            trackSwitchMode?: {
+                video?: TrackSwitchMode;
+                audio?: TrackSwitchMode;
+            }
+            selectionModeForInitialTrack?: TrackSelectionMode
+            fragmentRequestTimeout?: number;
             retryIntervals?: {
                 'MPD'?:                       number;
                 'XLinkExpansion'?:            number;
@@ -193,6 +202,11 @@ declare namespace dashjs {
                     audio?: boolean;
                     video?: boolean;
                 };
+            },
+            cmcd?: {
+                enabled?: boolean,
+                sid?: string,
+                cid?: string
             }
         }
     }
@@ -203,6 +217,7 @@ declare namespace dashjs {
         on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
         on(type: CaptionRenderedEvent['type'], listener: (e: CaptionRenderedEvent) => void, scope?: object): void;
         on(type: CaptionContainerResizeEvent['type'], listener: (e: CaptionContainerResizeEvent) => void, scope?: object): void;
+        on(type: DynamicToStaticEvent['type'], listener: (e: DynamicToStaticEvent) => void, scope?: object): void;
         on(type: ErrorEvent['type'], listener: (e: ErrorEvent) => void, scope?: object): void;
         on(type: FragmentLoadingCompletedEvent['type'], listener: (e: FragmentLoadingCompletedEvent) => void, scope?: object): void;
         on(type: FragmentLoadingAbandonedEvent['type'], listener: (e: FragmentLoadingAbandonedEvent) => void, scope?: object): void;
@@ -305,7 +320,7 @@ declare namespace dashjs {
         getXHRWithCredentialsForType(type: string): boolean;
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
-        setProtectionData(value: ProtectionData): void;
+        setProtectionData(value: ProtectionDataSet): void;
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -404,6 +419,7 @@ declare namespace dashjs {
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
         FRAGMENT_LOADING_COMPLETED: 'fragmentLoadingCompleted';
@@ -592,6 +608,9 @@ declare namespace dashjs {
         type: MediaPlayerEvents['CAPTION_CONTAINER_RESIZE'];
     }
 
+    export interface DynamicToStaticEvent extends Event {
+        type: MediaPlayerEvents['DYNAMIC_TO_STATIC'];
+    }    
     export interface FragmentLoadingCompletedEvent extends Event {
         type: MediaPlayerEvents['FRAGMENT_LOADING_COMPLETED'];
         request: FragmentRequest;
@@ -922,7 +941,11 @@ declare namespace dashjs {
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
     }
 
-    export class ProtectionData {
+    export interface ProtectionDataSet {
+        [keySystemName: string]: ProtectionData;
+    }
+
+    export interface ProtectionData {
         /**
          * A license server URL to use with this key system.
          * When specified as a string, a single URL will be used regardless of message type.
