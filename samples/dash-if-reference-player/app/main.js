@@ -135,26 +135,26 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
 
     $scope.chartState = {
         audio: {
-            buffer: {data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level'},
-            bitrate: {data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (kbps)'},
-            index: {data: [], selected: false, color: '#ffd446', label: 'Audio Current Index'},
-            pendingIndex: {data: [], selected: false, color: '#FF6700', label: 'AudioPending Index'},
-            ratio: {data: [], selected: false, color: '#329d61', label: 'Audio Ratio'},
-            download: {data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)'},
-            latency: {data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)'},
-            droppedFPS: {data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS'},
-            liveLatency: {data: [], selected: false, color: '#65080c', label: 'Live Latency'}
+            buffer: { data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level' },
+            bitrate: { data: [], selected: false, color: '#00CCBE', label: 'Audio Bitrate (kbps)' },
+            index: { data: [], selected: false, color: '#ffd446', label: 'Audio Current Index' },
+            pendingIndex: { data: [], selected: false, color: '#FF6700', label: 'AudioPending Index' },
+            ratio: { data: [], selected: false, color: '#329d61', label: 'Audio Ratio' },
+            download: { data: [], selected: false, color: '#44c248', label: 'Audio Download Rate (Mbps)' },
+            latency: { data: [], selected: false, color: '#326e88', label: 'Audio Latency (ms)' },
+            droppedFPS: { data: [], selected: false, color: '#004E64', label: 'Audio Dropped FPS' },
+            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
         },
         video: {
-            buffer: {data: [], selected: true, color: '#00589d', label: 'Video Buffer Level'},
-            bitrate: {data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (kbps)'},
-            index: {data: [], selected: false, color: '#326e88', label: 'Video Current Quality'},
-            pendingIndex: {data: [], selected: false, color: '#44c248', label: 'Video Pending Index'},
-            ratio: {data: [], selected: false, color: '#00CCBE', label: 'Video Ratio'},
-            download: {data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)'},
-            latency: {data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)'},
-            droppedFPS: {data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS'},
-            liveLatency: {data: [], selected: false, color: '#65080c', label: 'Live Latency'}
+            buffer: { data: [], selected: true, color: '#00589d', label: 'Video Buffer Level' },
+            bitrate: { data: [], selected: true, color: '#ff7900', label: 'Video Bitrate (kbps)' },
+            index: { data: [], selected: false, color: '#326e88', label: 'Video Current Quality' },
+            pendingIndex: { data: [], selected: false, color: '#44c248', label: 'Video Pending Index' },
+            ratio: { data: [], selected: false, color: '#00CCBE', label: 'Video Ratio' },
+            download: { data: [], selected: false, color: '#FF6700', label: 'Video Download Rate (Mbps)' },
+            latency: { data: [], selected: false, color: '#329d61', label: 'Video Latency (ms)' },
+            droppedFPS: { data: [], selected: false, color: '#65080c', label: 'Video Dropped FPS' },
+            liveLatency: { data: [], selected: false, color: '#65080c', label: 'Live Latency' }
         }
     };
 
@@ -423,14 +423,49 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.setAutoPlay($scope.autoPlaySelected);
     };
 
-    $scope.changeABRStrategy = function (strategy) {
+    $scope.changeFetchThroughputCalculation = function (mode) {
         $scope.player.updateSettings({
-            'streaming': {
-                'abr': {
-                    'ABRStrategy': strategy
+            streaming: {
+                abr: {
+                    fetchThroughputCalculationMode: mode
                 }
             }
         });
+    };
+
+    $scope.changeLiveCatchupMode = function (mode) {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    mode: mode
+                }
+            }
+        });
+
+    };
+
+    $scope.changeABRStrategy = function (strategy) {
+        $scope.player.updateSettings({
+            streaming: {
+                stallThreshold: 0.5,
+                abr: {
+                    ABRStrategy: strategy
+                }
+            }
+        });
+
+        if (strategy === 'abrLoLP') {
+            $scope.player.updateSettings({
+                streaming: {
+                    stallThreshold: 0.05
+                }
+            });
+            $scope.changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing');
+            document.getElementById('abrFetchThroughputCalculationMoofParsing').checked = true;
+
+            $scope.changeLiveCatchupMode('liveCatchupModeLoLP');
+            document.getElementById('liveCatchupModeLoLP').checked = true;
+        }
     };
 
     $scope.toggleUseCustomABRRules = function () {
@@ -602,24 +637,24 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             }
         }
 
-        const initialLiveDelay = parseInt($scope.initialLiveDelay);
+        const initialLiveDelay = parseFloat($scope.initialLiveDelay);
         if (!isNaN(initialLiveDelay)) {
             config.streaming.liveDelay = initialLiveDelay;
         }
 
         const initBitrate = parseInt($scope.initialVideoBitrate);
         if (!isNaN(initBitrate)) {
-            config.streaming.abr.initialBitrate = {'video': initBitrate};
+            config.streaming.abr.initialBitrate = { 'video': initBitrate };
         }
 
         const minBitrate = parseInt($scope.minVideoBitrate);
         if (!isNaN(minBitrate)) {
-            config.streaming.abr.minBitrate = {'video': minBitrate};
+            config.streaming.abr.minBitrate = { 'video': minBitrate };
         }
 
         const maxBitrate = parseInt($scope.maxVideoBitrate);
         if (!isNaN(maxBitrate)) {
-            config.streaming.abr.maxBitrate = {'video': maxBitrate};
+            config.streaming.abr.maxBitrate = { 'video': maxBitrate };
         }
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
@@ -666,34 +701,34 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     $scope.changeTrackSwitchMode = function (mode, type) {
         var switchMode = {};
         switchMode[type] = mode;
-        $scope.player.updateSettings({'streaming': {'trackSwitchMode' : switchMode}});
+        $scope.player.updateSettings({ 'streaming': { 'trackSwitchMode': switchMode } });
     };
 
     $scope.setLogLevel = function () {
         var level = $("input[name='log-level']:checked").val();
         switch (level) {
             case 'none':
-                $scope.player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_NONE}});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
                 break;
 
             case 'fatal':
-                $scope.player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_FATAL}});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_FATAL } });
                 break;
 
             case 'error':
-                $scope.player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_ERROR}});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_ERROR } });
                 break;
 
             case 'warning':
-                $scope.player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_WARNING}});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
                 break;
 
             case 'info':
-                $scope.player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_INFO}});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_INFO } });
                 break;
 
             default:
-                $scope.player.updateSettings({'debug': {'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG}});
+                $scope.player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG } });
         }
     };
 

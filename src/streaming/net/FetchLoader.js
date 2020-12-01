@@ -47,7 +47,6 @@ function FetchLoader(cfg) {
     const boxParser = cfg.boxParser;
     const settings = Settings(context).getInstance();
     let instance;
-    let count = 1;
 
     function load(httpRequest) {
 
@@ -144,7 +143,6 @@ function FetchLoader(cfg) {
                         // If there is pending data, call progress so network metrics
                         // are correctly generated
                         // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
-                        count = 1;
                         httpRequest.progress({
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
@@ -176,11 +174,9 @@ function FetchLoader(cfg) {
                             // Store the beginning time of each chunk download in array StartTimeData
                             startTimeData.push({
                                 ts: Date.now(),
-                                bytes: value.length,
-                                id: count
+                                bytes: value.length
                             });
                         }
-                        count = count + 1;
                     }
 
                     const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
@@ -191,8 +187,7 @@ function FetchLoader(cfg) {
                         if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
                             endTimeData.push({
                                 ts: Date.now(),
-                                bytes: remaining.length,
-                                id: count
+                                bytes: remaining.length
                             });
                         }
 
@@ -294,8 +289,8 @@ function FetchLoader(cfg) {
         try {
             let datum, datumE;
             // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-            datum = startTimeData.filter((data, i) => data.id !== 1 && i < startTimeData.length - 1);
-            datumE = endTimeData.filter((dataE, i) => dataE.id !== 1 && i < endTimeData.length - 1);
+            datum = startTimeData.filter((data, i) => i > 0 && i < startTimeData.length - 1);
+            datumE = endTimeData.filter((dataE, i) => i > 0 && i < endTimeData.length - 1);
             // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
             if (datum.length > 1) {
                 let segDownloadtime = datumE[datumE.length - 1].ts - datum[0].ts;

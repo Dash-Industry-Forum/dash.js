@@ -291,6 +291,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
  * downloading the next manifest once the minimumUpdatePeriod time has
+ * @property {number} [stallThreshold=0.5]
+ * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used
  * to set the initial bit rate for subsequent playback within the expiration window.
@@ -439,13 +441,14 @@ function Settings() {
             useSuggestedPresentationDelay: true,
             useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
+            stallThreshold: 0.5,
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 0,
                 playbackRate: 0.5,
                 latencyThreshold: NaN,
-                playbackBufferMin: NaN,
-                playbackBufferMax: NaN,
+                playbackBufferMin: 0.5,
+                playbackBufferMax: 0.5,
                 enabled: false,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },

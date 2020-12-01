@@ -43,6 +43,7 @@ import LoLpQoeEvaluator from './LoLpQoEEvaluator';
 import SwitchRequest from '../../SwitchRequest';
 import MetricsConstants from '../../../constants/MetricsConstants';
 import LoLpWeightSelector from './LoLpWeightSelector';
+import Constants from '../../../constants/Constants';
 
 const DWS_TARGET_LATENCY = 1.5;
 const DWS_BUFFER_MIN = 0.3;
@@ -80,7 +81,7 @@ function LoLPRule(config) {
             const playbackController = scheduleController.getPlaybackController();
             let latency = playbackController.getCurrentLiveLatency();
 
-            if (!rulesContext.useLoLPABR()) {
+            if (!rulesContext.useLoLPABR() || (mediaType === Constants.AUDIO)) {
                 return switchRequest;
             }
 

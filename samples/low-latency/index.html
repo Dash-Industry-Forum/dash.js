@@ -178,7 +178,7 @@
             var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
             document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
             
-            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchupLatencyThreshold + " secs";
+            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchup.latencyThreshold + " secs";
             
         }, 200);
     });

@@ -43,7 +43,6 @@ import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
-const STALL_THRESHOLD = 0.5;
 const BUFFERING_COMPLETED_THRESHOLD = 0.1;
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
@@ -226,7 +225,7 @@ function BufferController(config) {
         if (replacingBuffer) {
             mediaChunk = chunk;
             const ranges = buffer && buffer.getAllBufferRanges();
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > settings.get().streaming.stallThreshold) {
                 logger.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
@@ -420,7 +419,7 @@ function BufferController(config) {
             // we include fragment right behind the one in current time position
             const behindRange = {
                 start: 0,
-                end: currentTimeRequest.startTime - STALL_THRESHOLD
+                end: currentTimeRequest.startTime - settings.get().streaming.stallThreshold
             };
             const prevReq = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -437,16 +436,16 @@ function BufferController(config) {
             // Build buffer ahead range. To avoid pruning time around current time position,
             // we include fragment right after the one in current time position
             const aheadRange = {
-                start: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
+                start: currentTimeRequest.startTime + currentTimeRequest.duration + settings.get().streaming.stallThreshold,
                 end: endOfBuffer
             };
             const nextReq = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                time: currentTimeRequest.startTime + currentTimeRequest.duration + STALL_THRESHOLD,
+                time: currentTimeRequest.startTime + currentTimeRequest.duration + settings.get().streaming.stallThreshold,
                 threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
             })[0];
             if (nextReq && nextReq.startTime !== currentTimeRequest.startTime) {
-                aheadRange.start = nextReq.startTime + nextReq.duration + STALL_THRESHOLD;
+                aheadRange.start = nextReq.startTime + nextReq.duration + settings.get().streaming.stallThreshold;
             }
             if (aheadRange.start < aheadRange.end && aheadRange.start < endOfBuffer) {
                 clearRanges.push(aheadRange);
@@ -572,10 +571,10 @@ function BufferController(config) {
             triggerEvent(Events.BUFFERING_COMPLETED);
         }
 
-        // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
+        // When the player is working in low latency mode, the buffer is often below settings.get().streaming.stallThreshold.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
-        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
+        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= streamInfo.manifestInfo.minBufferTime) {
@@ -763,7 +762,7 @@ function BufferController(config) {
 
         logger.info('Track change asked');
         if (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > STALL_THRESHOLD) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > settings.get().streaming.stallThreshold) {
                 isBufferingCompleted = false;
                 lastIndex = Number.POSITIVE_INFINITY;
             }

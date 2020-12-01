@@ -197,7 +197,7 @@
             var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
             document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
 
-            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchupLatencyThreshold + " secs";
+            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchup.latencyThreshold + " secs";
         }, 200);
 
         player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, (e) => {
@@ -205,12 +205,14 @@
         });
 
         player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, (e) => {
-            console.warn('Quality changed', e);
-            const quality = player.getBitrateInfoListFor('video')[e.newQuality];
-            if (!quality) {
-                return;
+            if (e.mediaType === 'video') {
+                console.warn('Quality changed', e);
+                const quality = player.getBitrateInfoListFor('video')[e.newQuality];
+                if (!quality) {
+                    return;
+                }
+                document.querySelector('#quality-tag').innerText = `${quality.width}x${quality.height}, ${quality.bitrate / 1000}Kbps`;
             }
-            document.querySelector('#quality-tag').innerText = `${quality.width}x${quality.height}, ${quality.bitrate / 1000}Kbps`;
         });
 
         window.startRecording = () => {

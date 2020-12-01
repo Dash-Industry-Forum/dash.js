@@ -83,6 +83,13 @@ a:hover {
     float: left;
 }
 
+.sub-options-item {
+    background-color: #dfe2e2;
+    margin: 2px;
+    width: 195px;
+    float: left;
+}
+
 .options-label {
     margin-left: 4px;
 }
@@ -109,9 +116,24 @@ a:hover {
     line-height: 15px;
 }
 
+.sub-options-item-title {
+    background-color: #136bfb;
+    height: 20px;
+    padding-top: .2rem;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 2px;
+    line-height: 15px;
+}
+
 .options-item-body {
     width: 200px;
     height: 145px;
+    margin: 5px;
+}
+
+.sub-options-item-body {
+    width: 200px;
     margin: 5px;
 }
 

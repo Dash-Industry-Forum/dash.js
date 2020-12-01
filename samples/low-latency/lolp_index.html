@@ -17,10 +17,13 @@
             video = document.querySelector('video');
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
-            player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true } });
-            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
             player.updateSettings({
+                debug: {
+                    logLevel: dashjs.Debug.LOG_LEVEL_WARNING
+                },
                 streaming: {
+                    stallThreshold: 0.05,
+                    lowLatencyEnabled: true,
                     abr: {
                         useDefaultABRRules: true,
                         ABRStrategy: 'abrLoLP',
@@ -51,7 +54,7 @@
                 }
             });
 
-            // TGC addition for custom playback control
+            /* TGC addition for custom playback control */
             var useCustomPlaybackControl = document.getElementById('use-custom-playback-control').checked;
             if (useCustomPlaybackControl) {
                 var playbackBufferMin = parseFloat(document.getElementById('playback-buffer-min').value, 10);
@@ -257,8 +260,8 @@
         });
 
         player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, (e) => {
-            console.warn('Quality changed', e);
             if (e.mediaType === 'video') {
+                console.warn('Quality changed', e);
                 const quality = player.getBitrateInfoListFor('video')[e.newQuality];
                 if (!quality) {
                     return;
