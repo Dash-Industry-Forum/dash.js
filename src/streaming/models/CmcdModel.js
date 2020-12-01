@@ -37,6 +37,7 @@ import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
+import Events from '../../core/events/Events';
 
 const CMCD_REQUEST_FIELD_NAME = 'CMCD';
 const CMCD_VERSION = 1;
@@ -147,6 +148,8 @@ function CmcdModel() {
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
+
+            _probeNextRequest(request).then(nextRequest => console.log('THIS', request.url, '\nNEXT', nextRequest.url, '\n\n'));
 
             if (request.type === HTTPRequest.MPD_TYPE) {
                 _setDefaultContentId(request);
@@ -444,6 +447,15 @@ function CmcdModel() {
         } catch (e) {
             return null;
         }
+    }
+
+    function _probeNextRequest(initialRequest) {
+        return new Promise((resolve) => {
+            eventBus.trigger(Events.PROBE_NEXT_REQUEST, {
+                initialRequest,
+                callback: resolve
+            });
+        });
     }
 
     function reset() {

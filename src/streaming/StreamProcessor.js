@@ -100,6 +100,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, onSeekTarget, instance);
+        eventBus.on(Events.PROBE_NEXT_REQUEST, onProbeNextRequest, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack) {
@@ -219,6 +220,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, onSeekTarget, instance);
+        eventBus.off(Events.PROBE_NEXT_REQUEST, onProbeNextRequest, instance);
 
         resetInitialSettings();
         type = null;
@@ -465,6 +467,22 @@ function StreamProcessor(config) {
         }
 
         scheduleController.processMediaRequest(request);
+    }
+
+    function onProbeNextRequest(options) {
+        const callback = options.callback;
+        if (!indexHandler) return callback(null);
+        const representationInfo = getRepresentationInfo();
+
+        const representation = representationController && representationInfo ?
+            representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+        let request = indexHandler.getNextSegmentRequestIdempotent(
+            getMediaInfo(),
+            representation
+        );
+
+        callback(request);
     }
 
     function findNextRequest(seekTarget, requestToReplace) {

@@ -305,6 +305,19 @@ function DashHandler(config) {
         return request;
     }
 
+    function getNextSegmentRequestIdempotent(mediaInfo, representation) {
+        let request = null;
+        let indexToRequest = segmentIndex + 1;
+        const segment = segmentsController.getSegmentByIndex(
+            representation,
+            indexToRequest,
+            lastSegment ? lastSegment.mediaStartTime : -1
+        );
+        if (!segment) return null;
+        request = getRequestForSegment(mediaInfo, segment);
+        return request;
+    }
+
     function getNextSegmentRequest(mediaInfo, representation) {
         let request = null;
 
@@ -438,7 +451,8 @@ function DashHandler(config) {
         isMediaFinished: isMediaFinished,
         reset: reset,
         resetIndex: resetIndex,
-        setMimeType: setMimeType
+        setMimeType: setMimeType,
+        getNextSegmentRequestIdempotent
     };
 
     setup();
