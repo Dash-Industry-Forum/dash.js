@@ -22,7 +22,7 @@ const { default: Test, SKIP } = require('intern/lib/Test');
 const NAME = 'TEXTSWITCHING';
 
 // test constants
-const mediaTypes  = ["text","fragmentedText"]; //Caption types do be tested "text" for VTT and "fragmentedText" for TTML
+const mediaTypes  = ['text','fragmentedText']; //Caption types do be tested "text" for VTT and "fragmentedText" for TTML
 const SWITCH_DURATION = 3; // Number of seconds between text switches
 
 exports.register = function (stream) {
@@ -35,7 +35,7 @@ exports.register = function (stream) {
             command = remote.get(intern.config.testPage);
 
             //Load needed elements into doc for Captions to function
-            let ttml =  await command.findById("ttml-rendering-div");
+            let ttml =  await command.findById('ttml-rendering-div');
             await command.execute(player.attachTTMLRenderingDiv, [ttml]);
             await command.execute(player.setTextDefaultEnabled, [true]);
             
