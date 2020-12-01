@@ -149,7 +149,10 @@ function CmcdModel() {
         try {
             let cmcdData = null;
 
-            _probeNextRequest(request, request.mediaType).then(nextRequest => console.log('THIS', request.url, '\nNEXT', nextRequest.url, '\n\n'));
+            _probeNextRequest(request, request.mediaType).then(nextRequest => console.log(
+                'THIS', request.url,
+                '\nNEXT', nextRequest ? nextRequest.url : 'none',
+                nextRequest && nextRequest.range ? '\nnrr=' + nextRequest.range : '', '\n\n'));
 
             if (request.type === HTTPRequest.MPD_TYPE) {
                 return _getCmcdDataForMpd(request);
@@ -227,6 +230,11 @@ function CmcdModel() {
 
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
+        }
+
+        // Assuming nor field is never set: If the ‘nor’ field is not set, then the object is assumed to match the object currently being requested.
+        if (request.range) {
+            data.nrr = request.range;
         }
 
         if (_bufferLevelStarved[request.mediaType]) {
