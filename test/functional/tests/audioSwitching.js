@@ -8,123 +8,58 @@ PLAY:
     - check playing state
     - check if playback progressing
 **/
-define([
-    'intern',
-    'intern!object',
-    'intern/chai!assert',
-    'require',
-    'test/functional/tests/scripts/player',
-    'test/functional/tests/scripts/utils'
-], function(intern, registerSuite, assert, require, player, utils) {
+const intern = require('intern').default;
+const { suite, before, test, after } = intern.getPlugin('interface.tdd');
+const { assert } = intern.getPlugin('chai');
 
-    // Suite name
-    var NAME = 'AUDIOSWITCHING';
+const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.js');
+const player = require('./scripts/player.js');
+const { beforeEach } = require('intern/lib/interfaces/tdd');
+const { default: Test, SKIP } = require('intern/lib/Test');
 
-    var command = null;
+// Suite name
+const NAME = 'AUDIOSWITCHING';
 
-    var mediaType = "audio";
+// test constants
+const mediaTypes = ['audio']; //mediaType audio is being tested
+const SWITCH_DURATION = 3; // Number of seconds between text switches
 
-    // Test constants
-    var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 15; // Timeout (in sec.) for checking playback progress
-    var SWITCH_DURATION = 3; // Time between track switches
-    var SKIPPABLE = false; // if there is only one track skipp this test suite
-    
-    var load = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
+exports.register = function (stream) {
 
-            load: function() {
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'Load Stream');
-                command = this.remote.get(require.toUrl(intern.config.testPage));
-                return command.execute(player.loadStream, [stream])
-                .then(function() {
-                    // Check if playing
-                    utils.log(NAME, 'Check if playing');
-                    return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                })
-                .then(function(playing) {
-                    assert.isTrue(playing);
-                });
-            }
-        })
-    };
+    suite(utils.testName(NAME, stream), (suite) => {
 
-    var switchTrack = function (stream, mediaInf) {
-            
-        var curr = mediaInf.shift();
+        before(async ({ remote }) => {
+            if (!stream.available) suite.skip();
+            utils.log(NAME, 'Load stream');
+            command = remote.get(intern.config.testPage);
 
-        return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-        .then(function(){
-            //switch track
-            return command.execute(player.setCurrentTrack, [curr]).sleep(SWITCH_DURATION*1000)
-        })
-        .then(function(){
-            return command.execute(player.getCurrentTrackFor, [mediaType])
-        })
-        .then(function(currTrack){
-            // check if correct audio track
-            assert.equal(curr.lang, currTrack.lang)
-        })
-        .then(function(){
-            if(mediaInf.length != 0) return switchTrack(stream, mediaInf);
-            else return;
+            await command.execute(player.loadStream, [stream]);
+            await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);     
         });
-    };
+        
+        let Tracks = [] // all Tracks will be added during the test
+        for(let i = 0; i < mediaTypes.length; i++){
+            test('switchMediaTypes_' + mediaTypes[i], async(test) =>{
+                utils.log(NAME, 'switchType');
+                Tracks.push(await command.execute(player.getTracksFor,[mediaTypes[i]]));
+                if(Tracks[i].length == 0) test.skip();
 
-    var switchAudio = function(stream){
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            switchAudio: function(){
-                if (!stream.available) this.skip();
-                utils.log(NAME, 'SwitchAudio');
-                var thisRef = this;
-
-                return command.execute(player.getTracksFor,[mediaType])
-                .then(function(mediaInf) {     
-                    if(mediaInf.length <= 1) {
-                        SKIPPABLE = true;
-                        thisRef.skip(); 
-                    }
-                    return switchTrack(stream, mediaInf);
-                });
-            }
-        });
-    };
-    var play = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            play: function() {
-                if (!stream.available || SKIPPABLE) this.skip();
-                utils.log(NAME, 'Play');
-                return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT])
-                .then(function (playing) {
-                    stream.available = playing;
-                    return assert.isTrue(playing);
-                });
-            },
-
-            progress: function() {
-                if (!stream.available || SKIPPABLE) this.skip();
-                utils.log(NAME, 'Progress');
-                return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
-                .then(function (progressing) {
-                    stream.available = progressing;
-                    return assert.isTrue(progressing);
-                });
-            }
-        });
-    };
-
-    return {
-        register: function (stream) {
-            load(stream);
-            switchAudio(stream);
-            play(stream);
-        }
-    }
-});
+                //Set Track and check if correct
+                for(let j = 0; j < Tracks[i].length; j++){  
+                    utils.log(NAME, 'switchTrack');
+                    await command.execute(player.setCurrentTrack, [Tracks[i][j]]).sleep(SWITCH_DURATION*1000);
+                    var curr = await command.execute(player.getCurrentTrackFor, [mediaTypes[i]]);
+                    assert.deepEqual(curr, Tracks[i][j]);        
+                }
+            });
+            test('playing_' + i, async (test) => {
+                //Check if progressing
+                if(Tracks[i].length == 0) test.skip();
+                utils.log(NAME, 'Check if playing');
+                const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                assert.isTrue(progressing);
+            });
+        };
+    });
+}
