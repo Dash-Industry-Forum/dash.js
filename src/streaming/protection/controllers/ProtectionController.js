@@ -34,6 +34,8 @@ import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
+import CmcdModel from '../../models/CmcdModel';
+import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -67,6 +69,7 @@ function ProtectionController(config) {
     const BASE64 = config.BASE64;
     const constants = config.constants;
     let needkeyRetries = [];
+    const context = this.context;
 
     let instance,
         logger,
@@ -75,7 +78,8 @@ function ProtectionController(config) {
         protDataSet,
         sessionType,
         robustnessLevel,
-        keySystem;
+        keySystem,
+        cmcdModel;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -83,6 +87,7 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
+        cmcdModel = CmcdModel(context).getInstance();
     }
 
     function checkConfig() {
@@ -708,6 +713,20 @@ function ProtectionController(config) {
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
     function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
+
+        const cmcdParams = cmcdModel.getQueryParameter({
+            url,
+            type: HTTPRequest.LICENSE
+        });
+
+        if (cmcdParams) {
+            let queryPrefix = '?';
+            if (url.indexOf('?') !== -1) {
+                queryPrefix = '&';
+            }
+            const query = queryPrefix + cmcdParams.key + '=' + cmcdParams.value;
+            url = url + query;
+        }
 
         xhr.open(method, url, true);
         xhr.responseType = responseType;

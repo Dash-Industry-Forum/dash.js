@@ -160,12 +160,22 @@ function CmcdModel() {
                 return _getCmcdDataForInitSegment(request);
             } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
                 return _getCmcdDataForOther(request);
+            } else if (request.type === HTTPRequest.LICENSE) {
+                return _getCmcdDataForLicense(request);
             }
 
             return cmcdData;
         } catch (e) {
             return null;
         }
+    }
+
+    function _getCmcdDataForLicense(request) {
+        const data = _getGenericCmcdData(request);
+
+        data.ot = OBJECT_TYPES.ENCRYPTION_KEY;
+
+        return data;
     }
 
     function _getCmcdDataForMpd() {
