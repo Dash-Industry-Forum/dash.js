@@ -419,7 +419,6 @@ function DashAdapter() {
             let presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
             let calculatedPresentationTime;
 
-            // startTime = Period@start - PTO + EPT
             if (eventBox.version === 0) {
                 calculatedPresentationTime = periodStart + mediaStartTime - presentationTimeOffset + presentationTimeDelta;
             } else {
