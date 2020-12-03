@@ -1,11 +1,8 @@
 import EventController from '../../src/streaming/controllers/EventController';
 import EventBus from '../../src/core/EventBus';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
-
-import { EVENT_MODE_ON_START, EVENT_MODE_ON_RECEIVE } from '../../src/streaming/MediaPlayerEvents';
 
 const expect = require('chai').expect;
 const context = {};
@@ -21,7 +18,7 @@ describe('EventController', function () {
         'duration': 0,
         'calculatedPresentationTime': 30,
         'id': 1819112295,
-        'messageData': { },
+        'messageData': {},
         'eventStream': {
             'adaptionSet': null,
             'representation': null,
@@ -126,7 +123,7 @@ describe('EventController', function () {
                 eventBus.off(schemeIdUri, onReceiveEvent);
             };
 
-            eventBus.on(schemeIdUri, onReceiveEvent, { scope: this, mode: EVENT_MODE_ON_RECEIVE });
+            eventBus.on(schemeIdUri, onReceiveEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
             let onStartEvent = function (e) {
                 expect(e.event.id).to.equal('event0');
@@ -135,7 +132,7 @@ describe('EventController', function () {
                 playbackControllerMock.setTime(0);
                 done();
             };
-            eventBus.on(schemeIdUri, onStartEvent, { scope: this, mode: EVENT_MODE_ON_START });
+            eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
             eventController.addInbandEvents(events);
             eventController.start();
@@ -162,7 +159,7 @@ describe('EventController', function () {
                 playbackControllerMock.setTime(0);
                 done();
             };
-            eventBus.on(schemeIdUri, onStartEvent, { scope: this, mode: EVENT_MODE_ON_START });
+            eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
             eventController.addInlineEvents(events);
             eventController.start();
@@ -186,7 +183,7 @@ describe('EventController', function () {
                 triggerCount++;
             };
 
-            eventBus.on(schemeIdUri, onStartEvent, { scope: this, mode: EVENT_MODE_ON_START });
+            eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
             eventController.addInlineEvents(events);
             eventController.start();
@@ -195,6 +192,33 @@ describe('EventController', function () {
 
             expect(triggerCount).to.equal(0);
             eventBus.off(schemeIdUri, onStartEvent, this);
+            playbackControllerMock.setTime(0);
+        });
+
+        it('should not fire inline events in onReceive mode twice', function () {
+            let triggerCount = 0;
+            let schemeIdUri = 'inlineEvent';
+            let events = [{
+                eventStream: {
+                    timescale: 3,
+                    schemeIdUri: schemeIdUri
+                },
+                id: 'event0',
+                calculatedPresentationTime: 10,
+                duration: 5
+            }];
+            const onReceiveEvent = function () {
+                triggerCount++;
+            };
+
+            eventBus.on(schemeIdUri, onReceiveEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
+
+            eventController.addInlineEvents(events);
+            eventController.addInlineEvents(events);
+
+
+            expect(triggerCount).to.equal(1);
+            eventBus.off(schemeIdUri, onReceiveEvent, this);
         });
 
         it('should fire MANIFEST_VALIDITY_CHANGED events immediately', function (done) {
