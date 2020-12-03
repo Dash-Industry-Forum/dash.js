@@ -227,6 +227,7 @@ function DashHandler(config) {
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
+        request.mediaStartTime = segment.mediaStartTime;
         request.duration = segment.duration;
         request.timescale = representation.timescale;
         request.availabilityStartTime = segment.availabilityStartTime;
