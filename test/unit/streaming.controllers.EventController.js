@@ -1,6 +1,6 @@
 import EventController from '../../src/streaming/controllers/EventController';
 import EventBus from '../../src/core/EventBus';
-import Events from '../../src/core/events/Events';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
@@ -19,7 +19,7 @@ describe('EventController', function () {
 
     const manifestExpiredEventStub = {
         'duration': 0,
-        'calculatedPresentationTime': 30 * 48000,
+        'calculatedPresentationTime': 30,
         'id': 1819112295,
         'messageData': { },
         'eventStream': {
@@ -110,40 +110,7 @@ describe('EventController', function () {
             eventController.start();
         });
 
-        it('should trigger added inline events immediately with mode set to on_receive', function (done) {
-            let schemeIdUri = 'inlineEvent';
-            let events = [{
-                eventStream: {
-                    timescale: 1,
-                    schemeIdUri: schemeIdUri
-                },
-                id: 'event0',
-                calculatedPresentationTime: 20
-            }];
-
-            let onReceiveEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
-                eventBus.off(schemeIdUri, onReceiveEvent);
-            };
-
-            eventBus.on(schemeIdUri, onReceiveEvent, { scope: this, mode: EVENT_MODE_ON_RECEIVE });
-
-            let onStartEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
-                eventBus.off(schemeIdUri, onStartEvent);
-                expect(playbackControllerMock.getTime()).to.equal(20);
-                playbackControllerMock.setTime(0);
-                done();
-            };
-            eventBus.on(schemeIdUri, onStartEvent, { scope: this, mode: EVENT_MODE_ON_START });
-
-            eventController.addInlineEvents(events);
-            eventController.start();
-
-            playbackControllerMock.setTime(20);
-        });
-
-        it('should trigger added inline events immediately with mode set to on_receive', function (done) {
+        it('should trigger added inline events', function (done) {
             let schemeIdUri = 'inbandEvent';
             let events = [{
                 eventStream: {
@@ -176,15 +143,16 @@ describe('EventController', function () {
             playbackControllerMock.setTime(20);
         });
 
-        it('should respect provided timescale when triggering events', function (done) {
-            let schemeIdUri = 'inbandEvent';
+        it('should trigger an inline event that has already been started and is still running', function (done) {
+            let schemeIdUri = 'inlineEvent';
             let events = [{
                 eventStream: {
                     timescale: 3,
                     schemeIdUri: schemeIdUri
                 },
                 id: 'event0',
-                calculatedPresentationTime: 60
+                calculatedPresentationTime: 10,
+                duration: 20
             }];
 
             let onStartEvent = function (e) {
@@ -202,17 +170,44 @@ describe('EventController', function () {
             playbackControllerMock.setTime(20);
         });
 
+        it('should not trigger an inline event for which the start + duration has already expired', function () {
+            let triggerCount = 0;
+            let schemeIdUri = 'inlineEvent';
+            let events = [{
+                eventStream: {
+                    timescale: 3,
+                    schemeIdUri: schemeIdUri
+                },
+                id: 'event0',
+                calculatedPresentationTime: 10,
+                duration: 5
+            }];
+            const onStartEvent = function () {
+                triggerCount++;
+            };
+
+            eventBus.on(schemeIdUri, onStartEvent, { scope: this, mode: EVENT_MODE_ON_START });
+
+            eventController.addInlineEvents(events);
+            eventController.start();
+
+            playbackControllerMock.setTime(20);
+
+            expect(triggerCount).to.equal(0);
+            eventBus.off(schemeIdUri, onStartEvent, this);
+        });
+
         it('should fire MANIFEST_VALIDITY_CHANGED events immediately', function (done) {
             const manifestValidityExpiredHandler = function (event) {
                 expect(event.id).to.equal(manifestExpiredEventStub.id);
-                expect(event.validUntil).to.equal(manifestExpiredEventStub.calculatedPresentationTime / manifestExpiredEventStub.eventStream.timescale);
-                expect(event.newDuration).to.equal((manifestExpiredEventStub.calculatedPresentationTime + manifestExpiredEventStub.duration) / manifestExpiredEventStub.eventStream.timescale);
+                expect(event.validUntil).to.equal(manifestExpiredEventStub.calculatedPresentationTime);
+                expect(event.newDuration).to.equal((manifestExpiredEventStub.calculatedPresentationTime + manifestExpiredEventStub.duration));
 
-                eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
+                eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
                 done();
             };
 
-            eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
+            eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
 
             eventController.addInbandEvents([manifestExpiredEventStub]);
         });
@@ -223,14 +218,14 @@ describe('EventController', function () {
                 triggerCount++;
             };
 
-            eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
+            eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
 
             eventController.addInbandEvents([manifestExpiredEventStub]);
             eventController.addInbandEvents([manifestExpiredEventStub]);
 
             expect(triggerCount).to.equal(1);
 
-            eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
+            eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
         });
     });
 });
