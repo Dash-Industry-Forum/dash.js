@@ -750,6 +750,12 @@ function ProtectionController(config) {
             onAbort(this);
         };
 
+        eventBus.trigger(events.LICENSE_REQUEST_SENDING, {
+            url,
+            headers,
+            payload
+        });
+
         xhr.send(payload);
     }
 
