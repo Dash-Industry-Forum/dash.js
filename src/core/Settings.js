@@ -76,11 +76,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
  *          liveCatchup: {
- *               minDrift: 0.02,
- *               maxDrift: 0,
- *               playbackRate: 0.5,
- *               latencyThreshold: NaN,
- *               enabled: false
+ *              minDrift: 0.02,
+ *              maxDrift: 0,
+ *              playbackRate: 0.5,
+ *              latencyThreshold: NaN,
+ *              playbackBufferMin: NaN,
+ *              playbackBufferMax: NaN,
+ *              enabled: false,
+ *              mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *           },
  *          lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *          lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
@@ -120,7 +123,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              maxRepresentationRatio: { audio: 1, video: 1 },
  *              initialBitrate: { audio: -1, video: -1 },
  *              initialRepresentationRatio: { audio: -1, video: -1 },
- *              autoSwitchBitrate: { audio: true, video: true }
+ *              autoSwitchBitrate: { audio: true, video: true },
+ *              fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
  *          },
  *          cmcd: {
  *              enabled: false,
@@ -202,6 +206,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}] Explicitly set the starting bitrate for audio or video
  * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}] Explicitly set the initial representation ratio. If initalBitrate is specified, this is ignored.
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}] Indicates whether the player should enable ABR algorithms to switch the bitrate.
+ *
+ * @property {boolean} [fetchThroughputCalculationMode=Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA]
+ * Algorithm to determine the throughput in case the Fetch API is used for low latency streaming. For details please check the samples section and FetchLoader.js
  */
 
 /**
@@ -284,6 +291,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
  * downloading the next manifest once the minimumUpdatePeriod time has
+ * @property {number} [stallThreshold=0.5]
+ * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used
  * to set the initial bit rate for subsequent playback within the expiration window.
@@ -376,8 +385,17 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
  * maximumLiveDelay = targetDelay + liveCatchupMinDrift
  *
+ * @property {number} [playbackBufferMin=NaN]
+ * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction
+ *
+ * @property {number} [playbackBufferMax=NaN]
+ * Use this parameter to specify the maximum buffer which is used for LoL+ based playback rate increase
+ *
  * @property {boolean} [enabled=false]
  * Use this parameter to enable the catchup mode for non low-latency streams
+ *
+ * @property {String} [mode=Constants.LIVE_CATCHUP_MODE_DEFAULT]
+ * Use this parameter to switch between different catchup modes. Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP"
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -423,12 +441,16 @@ function Settings() {
             useSuggestedPresentationDelay: true,
             useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
+            stallThreshold: 0.5,
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 0,
                 playbackRate: 0.5,
                 latencyThreshold: NaN,
-                enabled: false
+                playbackBufferMin: 0.5,
+                playbackBufferMax: 0.5,
+                enabled: false,
+                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
             lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
             lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
@@ -472,7 +494,8 @@ function Settings() {
                 maxRepresentationRatio: { audio: 1, video: 1 },
                 initialBitrate: { audio: -1, video: -1 },
                 initialRepresentationRatio: { audio: -1, video: -1 },
-                autoSwitchBitrate: { audio: true, video: true }
+                autoSwitchBitrate: { audio: true, video: true },
+                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
             },
             cmcd: {
                 enabled: false,

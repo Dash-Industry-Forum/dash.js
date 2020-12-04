@@ -43,6 +43,7 @@ const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR = 2;
+const MINIMUM_LIVE_LATENCY_CATCHUP = 5;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -159,7 +160,7 @@ function MediaPlayerModel() {
             const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchup.minDrift + getLiveDelay() : getLiveDelay() : NaN;
 
             if (maximumLiveDelay && !isNaN(maximumLiveDelay)) {
-                return maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR;
+                return Math.max(maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR, MINIMUM_LIVE_LATENCY_CATCHUP);
             }
 
             return NaN;

@@ -130,12 +130,16 @@ declare namespace dashjs {
             useSuggestedPresentationDelay?: boolean;
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
+            stallThreshold?: number;
             liveCatchup: {
                 minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
                 latencyThreshold?: number,
+                playbackBufferMin?: number,
+                playbackBufferMax?: number,
                 enabled?: boolean
+                mode?: string
             }
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
@@ -204,7 +208,8 @@ declare namespace dashjs {
                 autoSwitchBitrate?: {
                     audio?: boolean;
                     video?: boolean;
-                };
+                },
+                fetchThroughputCalculationMode?: string;
             },
             cmcd?: {
                 enabled?: boolean,

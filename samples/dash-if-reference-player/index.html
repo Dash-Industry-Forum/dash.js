@@ -180,17 +180,35 @@
                     Jump Small Gaps
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="">
+                       title="Enable low latency mode">
                     <input type="checkbox" id="lowLatencyModeCB" ng-model="lowLatencyModeSelected"
                            ng-change="togglelowLatencyMode()" ng-checked="lowLatencyModeSelected">
                     Low Latency Mode
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="">
+                       title="Enable catchup mode for non low latency streams">
                     <input type="checkbox" id="liveCatchupCB" ng-model="liveCatchupEnabled"
                            ng-change="toggleLiveCatchupEnabled()" ng-checked="liveCatchupEnabled">
-                    Live catchup 
+                    Live catchup
                 </label>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Catchup mechanism</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Default catchup mechanism to keep the desired live latency.">
+                            <input type="radio" id="liveCatchupModeDefault" autocomplete="off" checked="checked"
+                                   name="catchupMode"
+                                   ng-click="changeLiveCatchupMode('liveCatchupModeDefault')">
+                            Default
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="LoL+ based catchup mechanism to keep the desired live latency.">
+                            <input type="radio" id="liveCatchupModeLoLP" autocomplete="off" name="catchupMode"
+                                   ng-click="changeLiveCatchupMode('liveCatchupModeLoLP')">
+                            LoL+ based
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -209,36 +227,72 @@
                            ng-change="toggleVideoAutoSwitch()" ng-checked="videoAutoSwitchSelected">
                     Video Auto Switch
                 </label>
-                <label data-toggle="tooltip" data-placement="right"
-                       title="Dynamically switch between BOLA and Throughput strategies.">
-                    <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked"
-                           ng-click="changeABRStrategy('abrDynamic')">
-                    ABR Strategy: Dynamic
-                </label>
-                <label data-toggle="tooltip" data-placement="right"
-                       title="Choose bitrate based on buffer level.">
-                    <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy"
-                           ng-click="changeABRStrategy('abrBola')">
-                    ABR Strategy: BOLA
-                </label>
-                <label data-toggle="tooltip" data-placement="right"
-                       title="Choose bitrate based on recent throughput.">
-                    <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy"
-                           ng-click="changeABRStrategy('abrThroughput')">
-                    ABR Strategy: Throughput
-                </label>
-                <label data-toggle="tooltip" data-placement="right"
-                       title="Choose bitrate based on recent throughput.">
-                    <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy"
-                           ng-click="changeABRStrategy('abrL2A')">
-                    ABR Strategy: L2A-LL
-                </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="ABR - Use custom ABR rules">
                     <input type="checkbox" id="customABRRules" ng-model="customABRRulesSelected"
                            ng-change="toggleUseCustomABRRules()" ng-checked="customABRRulesSelected">
                     Use Custom ABR Rules
                 </label>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Standard</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Dynamically switch between BOLA and Throughput strategies.">
+                            <input type="radio" id="abrDynamic" autocomplete="off" name="abrStrategy" checked="checked"
+                                   ng-click="changeABRStrategy('abrDynamic')">
+                            ABR Strategy: Dynamic
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Choose bitrate based on buffer level.">
+                            <input type="radio" id="abrBola" autocomplete="off" name="abrStrategy"
+                                   ng-click="changeABRStrategy('abrBola')">
+                            ABR Strategy: BOLA
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Choose bitrate based on recent throughput.">
+                            <input type="radio" id="abrThroughput" autocomplete="off" name="abrStrategy"
+                                   ng-click="changeABRStrategy('abrThroughput')">
+                            ABR Strategy: Throughput
+                        </label>
+                    </div>
+                </div>
+
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Low-Latency</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Choose bitrate using the L2A algorithm.">
+                            <input type="radio" id="abrL2all" autocomplete="off" name="abrStrategy"
+                                   ng-click="changeABRStrategy('abrL2A')">
+                            ABR Strategy: L2A-LL
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Choose bitrate using the LoL+ algorithm.">
+                            <input type="radio" id="abrLoLP" autocomplete="off" name="abrStrategy"
+                                   ng-click="changeABRStrategy('abrLoLP')">
+                            ABR Strategy: LoL+
+                        </label>
+                    </div>
+                </div>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">LL throughput calculation</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Default fetch throughput calculation for low latency streaming based on downloaded data chunks.">
+                            <input type="radio" id="abrFetchThroughputCalculationDownloadedData" autocomplete="off"
+                                   checked="checked" name="abrFetchThroughputCalculation"
+                                   ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationDownloadedData')">
+                            Data chunks
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="LoL+ fetch throughput calculation for low latency streaming based on moof parsing.">
+                            <input type="radio" id="abrFetchThroughputCalculationMoofParsing" autocomplete="off"
+                                   name="abrFetchThroughputCalculation"
+                                   ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing')">
+                            moof parsing
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
 

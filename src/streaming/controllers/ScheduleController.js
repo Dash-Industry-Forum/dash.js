@@ -525,6 +525,10 @@ function ScheduleController(config) {
         resetInitialSettings();
     }
 
+    function getPlaybackController() {
+        return playbackController;
+    }
+
     instance = {
         initialize: initialize,
         getType: getType,
@@ -540,7 +544,8 @@ function ScheduleController(config) {
         reset: reset,
         getBufferTarget: getBufferTarget,
         processInitRequest: processInitRequest,
-        processMediaRequest: processMediaRequest
+        processMediaRequest: processMediaRequest,
+        getPlaybackController
     };
 
     setup();

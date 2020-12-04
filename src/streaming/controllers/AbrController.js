@@ -78,6 +78,7 @@ function AbrController() {
         throughputHistory,
         isUsingBufferOccupancyABRDict,
         isUsingL2AABRDict,
+        isUsingLoLPBRDict,
         dashMetrics,
         settings;
 
@@ -93,6 +94,7 @@ function AbrController() {
         abandonmentStateDict[type].state = MetricsConstants.ALLOW_LOAD;
         isUsingBufferOccupancyABRDict[type] = false;
         isUsingL2AABRDict[type] = false;
+        isUsingLoLPBRDict[type] = false;
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
         if (type === Constants.VIDEO) {
             eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, instance);
@@ -129,6 +131,7 @@ function AbrController() {
         switchHistoryDict = {};
         isUsingBufferOccupancyABRDict = {};
         isUsingL2AABRDict = {};
+        isUsingLoLPBRDict = {};
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
@@ -313,6 +316,7 @@ function AbrController() {
                 droppedFramesHistory: droppedFramesHistory,
                 useBufferOccupancyABR: useBufferOccupancyABR(type),
                 useL2AABR: useL2AABR(type),
+                useLoLPABR: useLoLPABR(type),
                 videoModel
             });
 
@@ -457,14 +461,23 @@ function AbrController() {
 
         if (strategy === Constants.ABR_STRATEGY_L2A) {
             isUsingBufferOccupancyABRDict[mediaType] = false;
+            isUsingLoLPBRDict[mediaType] = false;
             isUsingL2AABRDict[mediaType] = true;
+            return;
+        }
+        if (strategy === Constants.ABR_STRATEGY_LoLP) {
+            isUsingBufferOccupancyABRDict[mediaType] = false;
+            isUsingLoLPBRDict[mediaType] = true;
+            isUsingL2AABRDict[mediaType] = false;
             return;
         } else if (strategy === Constants.ABR_STRATEGY_BOLA) {
             isUsingBufferOccupancyABRDict[mediaType] = true;
+            isUsingLoLPBRDict[mediaType] = false;
             isUsingL2AABRDict[mediaType] = false;
             return;
         } else if (strategy === Constants.ABR_STRATEGY_THROUGHPUT) {
             isUsingBufferOccupancyABRDict[mediaType] = false;
+            isUsingLoLPBRDict[mediaType] = false;
             isUsingL2AABRDict[mediaType] = false;
             return;
         }
@@ -496,6 +509,10 @@ function AbrController() {
 
     function useL2AABR(mediaType) {
         return isUsingL2AABRDict[mediaType];
+    }
+
+    function useLoLPABR(mediaType) {
+        return isUsingLoLPBRDict[mediaType];
     }
 
     function getThroughputHistory() {
@@ -637,6 +654,7 @@ function AbrController() {
                 currentRequest: e.request,
                 useBufferOccupancyABR: useBufferOccupancyABR(type),
                 useL2AABR: useL2AABR(type),
+                useLoLPABR: useLoLPABR(type),
                 videoModel
             });
             const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
