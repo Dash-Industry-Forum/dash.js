@@ -33,7 +33,7 @@ angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVe
     });
 });
 
-app.controller('DashController', function ($scope, sources, contributors, dashifTestVectors) {
+app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', 'dashifTestVectors', function ($scope, $window, sources, contributors, dashifTestVectors) {
     $scope.selectedItem = {
         url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
     };
@@ -230,6 +230,10 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
     // Error management
     $scope.error = '';
     $scope.errorType = '';
+
+    // Cast
+    $scope.isCasting = false;
+    $scope.castPlayerState = 'IDLE';
 
     ////////////////////////////////////////
     //
@@ -663,8 +667,12 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
-        $scope.player.setProtectionData(protData);
-        $scope.player.attachSource($scope.selectedItem.url);
+        if ($scope.isCasting) {
+            loadCastMedia($scope.selectedItem.url, protData);
+        } else {
+            $scope.player.setProtectionData(protData);
+            $scope.player.attachSource($scope.selectedItem.url);
+        }
         if ($scope.initialSettings.audio) {
             $scope.player.setInitialMediaSettingsFor('audio', {
                 lang: $scope.initialSettings.audio
@@ -1067,7 +1075,85 @@ app.controller('DashController', function ($scope, sources, contributors, dashif
             }
         }
     })();
-});
+
+    ////////////////////////////////////////
+    //
+    // Google Cast management 
+    //
+    ////////////////////////////////////////
+
+    const CAST_APP_ID = '9210B4FF';
+    let castContext;
+    let castSession;
+    let remotePlayer;
+    let remotePlayerController;
+
+    let castPlayer;
+
+    $window['__onGCastApiAvailable'] = function(isAvailable) {
+        if (isAvailable) {
+            castContext = cast.framework.CastContext.getInstance();
+            castContext.setOptions({
+              receiverApplicationId: CAST_APP_ID,
+              autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, e => {
+                console.log('[Cast]', e);
+                if (e.castState === cast.framework.CastState.CONNECTED) {
+                    onCastReady();
+                } else if (e.castState === cast.framework.CastState.NOT_CONNECTED)  {
+                    onCastEnd();
+                }
+            });
+            remotePlayer = new cast.framework.RemotePlayer();
+            remotePlayerController = new cast.framework.RemotePlayerController(remotePlayer);
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, () => {
+                if (remotePlayer) {
+                    $scope.castPlayerState = remotePlayer.playerState;
+                    $scope.safeApply();
+                }
+            });
+            castPlayer = new CastPlayer(remotePlayer, remotePlayerController);
+        }
+    };
+
+    function onCastReady() {
+        $scope.isCasting = true;
+        castSession = castContext.getCurrentSession();
+        castPlayer.setCastSession(castSession);
+        $scope.controlbar.setPlayer(castPlayer);
+        $scope.controlbar.enable();
+        $scope.safeApply();
+    }
+
+    function onCastEnd() {
+        $scope.isCasting = false;
+        $scope.controlbar.setPlayer($scope.player);
+        $scope.safeApply();
+    }
+
+    function loadCastMedia(url, protData) {
+        var mediaInfo = new chrome.cast.media.MediaInfo(url);
+        if (protData) {
+            mediaInfo.customData = {
+                protData: protData
+            }
+        }
+        var request = new chrome.cast.media.LoadRequest(mediaInfo);
+        if (castSession) {
+            castPlayer.reset();
+            castSession.loadMedia(request).then(
+                function() { 
+                    let media = castSession.getMediaSession();
+                    if (media) {
+                        console.info('cast media: ', media);
+                    }
+                },
+                function(errorCode) { console.log('Error code: ' + errorCode); }
+            );
+        }
+    }
+}]);
 
 function legendLabelClickHandler(obj) { /* jshint ignore:line */
     var scope = angular.element($('body')).scope(); /* jshint ignore:line */
