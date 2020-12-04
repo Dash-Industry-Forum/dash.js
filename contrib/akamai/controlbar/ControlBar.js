@@ -38,7 +38,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var player = this.player = dashjsMediaPlayer;
     var self = this;
-    
+
     var captionMenu = null;
     var bitrateListMenu = null;
     var trackSwitchMenu = null;
@@ -339,7 +339,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
 
             if (thumbnailTimeLabel) {
-                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? self.player.formatUTC(mouseTime) : self.player.ameCode(mouseTime);
+                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? self.player.formatUTC(mouseTime) : self.player.convertToTimeCode(mouseTime);
             }
         });
     };
@@ -467,7 +467,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.exitFullscreen) {
-           document.exitFullscreen(); 
+           document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {
