@@ -217,6 +217,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
     $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
+    $scope.reuseExistingSourceBuffersSelected = true;
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
@@ -523,6 +524,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             'streaming': {
                 'calcSegmentAvailabilityRangeFromTimeline': $scope.calcSegmentAvailabilityRangeFromTimelineSelected
+            }
+        });
+    };
+
+    $scope.toggleReuseExistingSourceBuffers = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'reuseExistingSourceBuffers': $scope.reuseExistingSourceBuffersSelected
             }
         });
     };
