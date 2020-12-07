@@ -7,6 +7,7 @@ const os = require('os');
 var args = yargs
     .usage('$0 [options]')
     .alias('h', 'help')
+    .strict()
     .help(true)
     .options({
         'selenium': {
@@ -53,7 +54,7 @@ var args = yargs
     })
     .parse();
 
-console.log(args);
+// console.log(args);
 
 var config = {
 
