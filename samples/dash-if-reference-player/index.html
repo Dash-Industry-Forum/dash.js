@@ -172,6 +172,12 @@
                     Schedule While Paused
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables calculation of the DVR window based on the timestamps in SegmentTimeline element.">
+                    <input type="checkbox" ng-model="calcSegmentAvailabilityRangeFromTimelineSelected"
+                           ng-change="toggleCalcSegmentAvailabilityRangeFromTimeline()" ng-checked="calcSegmentAvailabilityRangeFromTimelineSelected">
+                    Calculate segment availability from Timeline
+                </label>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables local storage of player state (last bitrate, a/v or text track etc). This is then used when the next time media is played.">
                     <input type="checkbox" id="localStorageCB" ng-model="localStorageSelected"
                            ng-change="toggleLocalStorage()" ng-checked="localStorageSelected">
