@@ -3,6 +3,7 @@ import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import EventBus from '../../src/core/EventBus';
 import Constants from '../../src/streaming/constants/Constants';
 import Events from '../../src/core/events/Events';
+import Settings from '../../src/core/Settings';
 
 import DomStorageMock from './mocks/DomStorageMock';
 
@@ -15,19 +16,23 @@ describe('MediaController', function () {
     let mediaController;
     let domStorageMock;
     const trackType = Constants.AUDIO;
+    const settings = Settings(context).getInstance();
 
     beforeEach(function () {
 
         domStorageMock = new DomStorageMock();
         mediaController = MediaController(context).getInstance();
         mediaController.setConfig({
-            domStorage: domStorageMock
+            domStorage: domStorageMock,
+            settings: settings
         });
 
     });
 
     afterEach(function () {
         mediaController.reset();
+        mediaController.setSwitchMode('video', Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+        mediaController.setSwitchMode('audio', Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
         mediaController = null;
     });
 
@@ -65,45 +70,69 @@ describe('MediaController', function () {
 
     describe('Switch Mode', function () {
         it('should not set switch mode if mode is not supported', function () {
+            let switchmode = mediaController.getSwitchMode('video');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+
+            mediaController.setSwitchMode('video', 'unsupported');
+
+            switchmode = mediaController.getSwitchMode('video');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+        });
+
+        it('should not set switch mode if type is not supported', function () {
             let switchmode = mediaController.getSwitchMode('test');
             expect(switchmode).to.not.exist; // jshint ignore:line
 
-            mediaController.setSwitchMode('test', 'unsupported');
+            mediaController.setSwitchMode('test', Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
 
             switchmode = mediaController.getSwitchMode('test');
             expect(switchmode).to.not.exist; // jshint ignore:line
         });
 
-        it('should set and get switch mode', function () {
-            let switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.not.exist; // jshint ignore:line
+        it('should set and get switch mode for video', function () {
+            let switchmode = mediaController.getSwitchMode('video');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
 
-            mediaController.setSwitchMode('test', MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+            mediaController.setSwitchMode('video', Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
-            switchmode = mediaController.getSwitchMode('test');
-            expect(switchmode).to.equal(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+            switchmode = mediaController.getSwitchMode('video');
+
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+
+        });
+
+        it('should set and get switch mode for audio', function () {
+            let switchmode = mediaController.getSwitchMode('audio');
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+
+            mediaController.setSwitchMode('audio', Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+
+            switchmode = mediaController.getSwitchMode('audio');
+
+            expect(switchmode).to.equal(Constants.TRACK_SWITCH_MODE_NEVER_REPLACE);
+
         });
     });
 
     describe('Selection Mode For Initial Track', function () {
         it('should not set selection mode if mode is not supported', function () {
             let mode = mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE);
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
 
             mediaController.setSelectionModeForInitialTrack('unsupported');
 
-            mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE);
+            mode = mediaController.getSelectionModeForInitialTrack();
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
         });
 
         it('should set and get selection mode', function () {
             let mode = mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.DEFAULT_INIT_TRACK_SELECTION_MODE);
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
 
-            mediaController.setSelectionModeForInitialTrack(MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
+            mediaController.setSelectionModeForInitialTrack(Constants.TRACK_SELECTION_MODE_WIDEST_RANGE);
 
-            mediaController.getSelectionModeForInitialTrack();
-            expect(mode).to.equal(MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
+            mode = mediaController.getSelectionModeForInitialTrack();
+            expect(mode).to.equal(Constants.TRACK_SELECTION_MODE_WIDEST_RANGE);
         });
     });
 
@@ -385,7 +414,7 @@ describe('MediaController', function () {
 
                 expect(objectUtils.areEqual(old, track1)).to.be.true; // jshint ignore:line
                 expect(objectUtils.areEqual(current, track2)).to.be.true; // jshint ignore:line
-                expect(switchMode).to.equal(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
+                expect(switchMode).to.equal(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE);
 
                 eventBus.off(Events.CURRENT_TRACK_CHANGED, onTrackChanged);
                 done();

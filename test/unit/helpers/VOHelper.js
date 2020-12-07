@@ -86,6 +86,11 @@ class VoHelper {
         req.url = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/Header.m4s';
         req.startTime = NaN;
         req.duration = NaN;
+        req.mediaInfo = {
+            streamInfo: {
+                id: 'streamId'
+            }
+        }
 
         if (type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             req.url = 'https://dash.akamaized.net/envivio/dashpr/clear/video4/0.m4s';

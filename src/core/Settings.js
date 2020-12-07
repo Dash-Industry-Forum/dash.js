@@ -75,12 +75,20 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          useSuggestedPresentationDelay: true,
  *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
- *          liveCatchUpMinDrift: 0.02,
- *          liveCatchUpMaxDrift: 0,
- *          liveCatchUpPlaybackRate: 0.5,
+ *          liveCatchup: {
+ *              minDrift: 0.02,
+ *              maxDrift: 0,
+ *              playbackRate: 0.5,
+ *              latencyThreshold: NaN,
+ *              playbackBufferMin: NaN,
+ *              playbackBufferMax: NaN,
+ *              enabled: false,
+ *              mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
+ *           },
  *          lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *          lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
  *          cacheLoadThresholds: { video: 50, audio: 5 },
+ *          fragmentRequestTimeout: 0,
  *          retryIntervals: {
  *              MPD: 500,
  *              XLinkExpansion: 500,
@@ -115,7 +123,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              maxRepresentationRatio: { audio: 1, video: 1 },
  *              initialBitrate: { audio: -1, video: -1 },
  *              initialRepresentationRatio: { audio: -1, video: -1 },
- *              autoSwitchBitrate: { audio: true, video: true }
+ *              autoSwitchBitrate: { audio: true, video: true },
+ *              fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
  *          },
  *          cmcd: {
  *              enabled: false,
@@ -174,7 +183,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,
  * with lower values giving less rebuffering (but also lower quality).
  * @property {boolean} [useDefaultABRRules=true] Should the default ABR rules be used, or the custom ones added.
- * @property {boolean} [useBufferOccupancyABR=false] Whether to use the BOLA abr rule.
  * @property {boolean} [useDeadTimeLatency=true]
  * If true, only the download portion will be considered part of the download bitrate
  * and latency will be regarded as static. If false, the reciprocal of the whole
@@ -198,6 +206,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}] Explicitly set the starting bitrate for audio or video
  * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}] Explicitly set the initial representation ratio. If initalBitrate is specified, this is ignored.
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}] Indicates whether the player should enable ABR algorithms to switch the bitrate.
+ *
+ * @property {boolean} [fetchThroughputCalculationMode=Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA]
+ * Algorithm to determine the throughput in case the Fetch API is used for low latency streaming. For details please check the samples section and FetchLoader.js
  */
 
 /**
@@ -235,7 +246,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
  * or stall in playback.
  * @property {boolean} [flushBufferAtTrackSwitch=false]
- * When enabled, after a track switch and in case buffer is being replaced (see MEdiaPlayer.setTrackSwitchModeFor(MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE)),
+ * When enabled, after a track switch and in case buffer is being replaced (see MEdiaPlayer.setTrackSwitchModeFor(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE)),
  * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
@@ -280,42 +291,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * For live streams, set the interval-frequency in milliseconds at which
  * dash.js will check if the current manifest is still processed before
  * downloading the next manifest once the minimumUpdatePeriod time has
- * @property {number} [liveCatchUpMinDrift=0.02]
- * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
- * when the difference between the measured latency and the target one,
- * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
- * playback rate until target latency is reached.
- *
- * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [liveCatchUpMaxDrift=0]
- * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
- * when the difference between the measured latency and the target one,
- * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
- * the target live delay.
- *
- * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
- * fixing latency deviations.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [liveCatchUpPlaybackRate=0.5]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
- * when measured latency is higher/lower than the target one,
- * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
- *
- * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [liveCatchupLatencyThreshold=NaN]
- * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
- * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
- * of the playback rate if the user seeks within the DVR window.
- *
- * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
- * maximumLiveDelay = targetDelay + liveCatchupMinDrift
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [stallThreshold=0.5]
+ * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used
  * to set the initial bit rate for subsequent playback within the expiration window.
@@ -331,10 +308,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment
  * request is coming from browser cache or not.
+ * @property {module:Settings~RequestTypeSettings} [fragmentRequestTimeout] Time in milliseconds before timing out on loading a media fragment. Fragments that timeout are retried as if they failed.
  * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt. For low latency mode these values are divided by lowLatencyReductionFactor.
  * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails. For low latency mode these values are multiplied by lowLatencyMultiplyFactor.
  * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
+ * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  */
 
 /**
@@ -369,6 +348,58 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {string} [did=dash.js-cmcd-default-id] A unique string identifying the current device.
  */
 
+/**
+ * @typedef {Object} module:Settings~LiveCatchupSettings
+ @property {number} [minDrift=0.02]
+ * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
+ * when the difference between the measured latency and the target one,
+ * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
+ * playback rate until target latency is reached.
+ *
+ * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [maxDrift=0]
+ * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
+ * when the difference between the measured latency and the target one,
+ * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
+ * the target live delay.
+ *
+ * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
+ * fixing latency deviations.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [playbackRate=0.5]
+ * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
+ * when measured latency is higher/lower than the target one,
+ * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+ *
+ * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [latencyThreshold=NaN]
+ * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
+ * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
+ * of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
+ * maximumLiveDelay = targetDelay + liveCatchupMinDrift
+ *
+ * @property {number} [playbackBufferMin=NaN]
+ * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction
+ *
+ * @property {number} [playbackBufferMax=NaN]
+ * Use this parameter to specify the maximum buffer which is used for LoL+ based playback rate increase
+ *
+ * @property {boolean} [enabled=false]
+ * Use this parameter to enable the catchup mode for non low-latency streams
+ *
+ * @property {String} [mode=Constants.LIVE_CATCHUP_MODE_DEFAULT]
+ * Use this parameter to switch between different catchup modes. Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP"
+ *
+ * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
+ */
+
 
 /**
  * @class
@@ -393,7 +424,7 @@ function Settings() {
             scheduleWhilePaused: true,
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
-            calcSegmentAvailabilityRangeFromTimeline: true,
+            calcSegmentAvailabilityRangeFromTimeline: false,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
             jumpGaps: true,
@@ -410,13 +441,26 @@ function Settings() {
             useSuggestedPresentationDelay: true,
             useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
-            liveCatchUpMinDrift: 0.02,
-            liveCatchUpMaxDrift: 0,
-            liveCatchUpPlaybackRate: 0.5,
-            liveCatchupLatencyThreshold: NaN,
-            lastBitrateCachingInfo: {enabled: true, ttl: 360000},
-            lastMediaSettingsCachingInfo: {enabled: true, ttl: 360000},
-            cacheLoadThresholds: {video: 50, audio: 5},
+            stallThreshold: 0.5,
+            liveCatchup: {
+                minDrift: 0.02,
+                maxDrift: 0,
+                playbackRate: 0.5,
+                latencyThreshold: NaN,
+                playbackBufferMin: 0.5,
+                playbackBufferMax: 0.5,
+                enabled: false,
+                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
+            },
+            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
+            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
+            cacheLoadThresholds: { video: 50, audio: 5 },
+            trackSwitchMode: {
+                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+            },
+            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+            fragmentRequestTimeout: 0,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,
                 [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
@@ -442,22 +486,21 @@ function Settings() {
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
-                useBufferOccupancyABR: false,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
-                maxBitrate: {audio: -1, video: -1},
-                minBitrate: {audio: -1, video: -1},
-                maxRepresentationRatio: {audio: 1, video: 1},
-                initialBitrate: {audio: -1, video: -1},
-                initialRepresentationRatio: {audio: -1, video: -1},
-                autoSwitchBitrate: {audio: true, video: true}
+                maxBitrate: { audio: -1, video: -1 },
+                minBitrate: { audio: -1, video: -1 },
+                maxRepresentationRatio: { audio: 1, video: 1 },
+                initialBitrate: { audio: -1, video: -1 },
+                initialRepresentationRatio: { audio: -1, video: -1 },
+                autoSwitchBitrate: { audio: true, video: true },
+                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
             },
             cmcd: {
                 enabled: false,
                 sid: null,
-                cid: null,
-                did: null
+                cid: null
             }
         }
     };

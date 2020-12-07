@@ -81,6 +81,11 @@ function TTMLParser() {
         let metadataHandler = {
 
             onOpenTag: function (ns, name, attrs) {
+                // cope with existing non-compliant content
+                if (attrs[' imagetype'] && !attrs[' imageType']) {
+                    attrs[' imageType'] = attrs[' imagetype'];
+                }
+
                 if (name === 'image' &&
                 (ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt' ||
                  ns === 'http://www.smpte-ra.org/schemas/2052-1/2013/smpte-tt')) {
@@ -120,7 +125,7 @@ function TTMLParser() {
             errorMsg = msg;
         }, metadataHandler);
 
-        eventBus.trigger(Events.TTML_PARSED, {ttmlString: content.data, ttmlDoc: imsc1doc});
+        eventBus.trigger(Events.TTML_PARSED, { ttmlString: content.data, ttmlDoc: imsc1doc });
 
         const mediaTimeEvents = imsc1doc.getMediaTimeEvents();
 

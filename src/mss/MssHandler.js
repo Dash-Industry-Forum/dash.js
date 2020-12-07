@@ -132,7 +132,7 @@ function MssHandler(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        let streamProcessor = getStreamProcessor(e.sender.getType());
+        let streamProcessor = getStreamProcessor(e.mediaType);
         if (!streamProcessor) return;
 
         // Create init segment request
@@ -155,9 +155,10 @@ function MssHandler(config) {
             chunk.bytes = mssFragmentProcessor.generateMoov(representation);
 
             // Notify init segment has been loaded
-            eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
-                chunk: chunk
-            });
+            eventBus.trigger(events.INIT_FRAGMENT_LOADED,
+                { chunk: chunk },
+                { streamId: mediaInfo.streamInfo.id, mediaType: representation.adaptation.type }
+            );
         } catch (e) {
             config.errHandler.error(new DashJSError(e.code, e.message, e.data));
         }
@@ -211,10 +212,10 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
-        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
-        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
-        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
+        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
+        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
         eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 

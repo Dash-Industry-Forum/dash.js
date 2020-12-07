@@ -347,7 +347,8 @@ function MediaPlayer() {
      * Sets the MPD source and the video element to null. You can also reset the MediaPlayer by
      * calling attachSource with a new source file.
      *
-     * Calling this method is all that is necessary to destroy a MediaPlayer instance.
+     * This call does not destroy the MediaPlayer. To destroy the MediaPlayer and free all of its
+     * memory, call destroy().
      *
      * @memberof module:MediaPlayer
      * @instance
@@ -376,6 +377,17 @@ function MediaPlayer() {
     }
 
     /**
+     * Completely destroys the media player and frees all memory.
+     *
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function destroy() {
+        reset();
+        FactoryMaker.deleteSingletonInstances(context);
+    }
+
+    /**
      * The ready state of the MediaPlayer based on both the video element and MPD source being defined.
      *
      * @returns {boolean} The current ready state of the MediaPlayer
@@ -394,11 +406,12 @@ function MediaPlayer() {
      * @param {string} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
+     * @param {Object} options - object to define various options such as priority and mode
      * @memberof module:MediaPlayer
      * @instance
      */
-    function on(type, listener, scope) {
-        eventBus.on(type, listener, scope);
+    function on(type, listener, scope, options) {
+        eventBus.on(type, listener, scope, options);
     }
 
     /**
@@ -1548,11 +1561,11 @@ function MediaPlayer() {
     /**
      * This method sets the current track switch mode. Available options are:
      *
-     * MediaController.TRACK_SWITCH_MODE_NEVER_REPLACE
+     * Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
      * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
      * Defers to fastSwitchEnabled for placement of new data. Default for video)
      *
-     * MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE
+     * Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
      * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
      *
      * @param {MediaType} type
@@ -1572,10 +1585,10 @@ function MediaPlayer() {
      * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
-     * MediaController.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+     * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
-     * MediaController.TRACK_SELECTION_MODE_WIDEST_RANGE
+     * Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
      * this mode makes the player select the track with a widest range of bitrates
      *
      * @param {string} mode
@@ -1939,7 +1952,8 @@ function MediaPlayer() {
 
         // configure controllers
         mediaController.setConfig({
-            domStorage: domStorage
+            domStorage: domStorage,
+            settings: settings
         });
 
         streamController.setConfig({
@@ -1990,7 +2004,6 @@ function MediaPlayer() {
             videoModel: videoModel,
             settings: settings
         });
-        abrController.createAbrRulesCollection();
 
         textController.setConfig({
             errHandler: errHandler,
@@ -2302,7 +2315,8 @@ function MediaPlayer() {
         getSettings: getSettings,
         updateSettings: updateSettings,
         resetSettings: resetSettings,
-        reset: reset
+        reset: reset,
+        destroy: destroy
     };
 
     setup();

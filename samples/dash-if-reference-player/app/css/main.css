@@ -83,6 +83,13 @@ a:hover {
     float: left;
 }
 
+.sub-options-item {
+    background-color: #dfe2e2;
+    margin: 2px;
+    width: 195px;
+    float: left;
+}
+
 .options-label {
     margin-left: 4px;
 }
@@ -109,9 +116,24 @@ a:hover {
     line-height: 15px;
 }
 
+.sub-options-item-title {
+    background-color: #136bfb;
+    height: 20px;
+    padding-top: .2rem;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 2px;
+    line-height: 15px;
+}
+
 .options-item-body {
     width: 200px;
     height: 145px;
+    margin: 5px;
+}
+
+.sub-options-item-body {
+    width: 200px;
     margin: 5px;
 }
 
@@ -157,6 +179,32 @@ a:hover {
 .btn-play-pause,
 .control-icon-layout {
     padding: 4px 10px !important;
+}
+
+input[type=range].volumebar::-webkit-slider-thumb {
+    background: #136bfb;
+}
+
+.btn-cast {
+    padding-top: 6px !important;
+    pointer-events: all;
+}
+
+.btn-cast google-cast-launcher {
+    display: inline-block;
+    width: 25px;
+    --disconnected-color: white;
+    --connected-color: #136bfb;
+}
+
+#cast-msg {
+    color: white;
+    position: absolute;
+    top: 45%;
+    right: 0;
+    left: 0;
+    text-align: center;
+    font-size: 2em;
 }
 
 .cue-image {

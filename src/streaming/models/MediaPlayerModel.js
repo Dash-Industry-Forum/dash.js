@@ -43,6 +43,7 @@ const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR = 2;
+const MINIMUM_LIVE_LATENCY_CATCHUP = 5;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -147,7 +148,7 @@ function MediaPlayerModel() {
 
     function getLiveCatchupLatencyThreshold() {
         try {
-            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchupLatencyThreshold;
+            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchup.latencyThreshold;
             const liveDelay = getLiveDelay();
 
             if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
@@ -155,11 +156,11 @@ function MediaPlayerModel() {
             }
 
 
-            const liveCatchupMinDrift = settings.get().streaming.liveCatchUpMinDrift;
-            const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchUpMinDrift + getLiveDelay() : getLiveDelay() : NaN;
+            const liveCatchupMinDrift = settings.get().streaming.liveCatchup.minDrift;
+            const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchup.minDrift + getLiveDelay() : getLiveDelay() : NaN;
 
             if (maximumLiveDelay && !isNaN(maximumLiveDelay)) {
-                return maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR;
+                return Math.max(maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR, MINIMUM_LIVE_LATENCY_CATCHUP);
             }
 
             return NaN;

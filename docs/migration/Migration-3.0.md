@@ -108,9 +108,9 @@ As a helper for the migration process, below table shows which property of the n
 |MediaPlayer.enableManifestDateHeaderTimeSource  | streaming.useManifestDateHeaderTimeSource   |
 |MediaPlayer.useSuggestedPresentationDelay       | streaming.useSuggestedPresentationDelay     |
 |MediaPlayer.setManifestUpdateRetryInterval      | streaming.manifestUpdateRetryInterval       |
-|MediaPlayer.setLowLatencyMinDrift      | streaming.liveCatchUpMinDrift             |
-|MediaPlayer.setLowLatencyMaxDrift      | streaming.liveCatchUpMaxDrift             |
-|MediaPlayer.setCatchUpPlaybackRate     | streaming.liveCatchUpPlaybackRate         |
+|MediaPlayer.setLowLatencyMinDrift      | streaming.liveCatchup.minDrift             |
+|MediaPlayer.setLowLatencyMaxDrift      | streaming.liveCatchup.maxDrift             |
+|MediaPlayer.setCatchUpPlaybackRate     | streaming.liveCatchup.playbackRate         |
 |MediaPlayer.enableLastBitrateCaching   | streaming.lastBitrateCachingInfo.enabled<br>streaming.lastBitrateCachingInfo.ttl       |
 |MediaPlayer.enableLastMediaSettingsCaching      | streaming.lastMediaSettingsCachingInfo.enabled<br>lastMediaSettingsCachingInfo.ttl        |
 |MediaPlayer.setMovingAverageMethod     | streaming.abr.movingAverageMethod         |

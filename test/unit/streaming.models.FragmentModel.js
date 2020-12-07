@@ -25,7 +25,13 @@ describe('FragmentModel', function () {
     const context = {};
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();
-    let fragmentModel = FragmentModel(context).create({dashMetrics: new DashMetricsMock(),eventBus: eventBus, events: Events, debug: debug});
+    let fragmentModel = FragmentModel(context).create({
+        streamInfo: { id: 'streamId' },
+        type: 'video',
+        dashMetrics: new DashMetricsMock(),
+        eventBus: eventBus,
+        events: Events,
+        debug: debug});
 
     it('should not have any loading, executed, canceled or failed requests', function () {
         const expectedValue = 0;
@@ -71,7 +77,15 @@ describe('FragmentModel', function () {
             let clock;
 
             beforeEach(function () {
-                fragmentModel = FragmentModel(context).create({dashMetrics: new DashMetricsMock(), fragmentLoader: loader, eventBus: eventBus, events: Events, debug: debug});
+                fragmentModel = FragmentModel(context).create({
+                    streamInfo: { id: 'streamId' },
+                    type: 'video',
+                    dashMetrics: new DashMetricsMock(),
+                    fragmentLoader: loader,
+                    eventBus: eventBus,
+                    events: Events,
+                    debug: debug
+                });
                 clock = sinon.useFakeTimers();
 
                 setTimeout(function () {

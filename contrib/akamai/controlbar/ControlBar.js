@@ -36,7 +36,9 @@
  */
 var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
-    var player = dashjsMediaPlayer;
+    var player = this.player = dashjsMediaPlayer;
+    var self = this;
+
     var captionMenu = null;
     var bitrateListMenu = null;
     var trackSwitchMenu = null;
@@ -96,8 +98,36 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         thumbnailTimeLabel = document.getElementById(getControlId('thumbnail-time-label'));
     };
 
+    var addPlayerEventsListeners = function () {
+        self.player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
+        self.player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        self.player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
+        self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+        self.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+        self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
+        self.player.on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
+    }
+
+    var removePlayerEventsListeners = function () {
+        self.player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
+        self.player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        self.player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
+        self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+        self.player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
+        self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
+        self.player.off(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
+    }
+
     var getControlId = function (id) {
         return id + (idSuffix ? idSuffix : '');
+    };
+
+    var setPlayer = function (player) {
+        if (self.player) {
+            removePlayerEventsListeners();
+        }
+        player = self.player = player;
+        addPlayerEventsListeners();
     };
 
     //************************************************************************************
@@ -105,7 +135,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     //************************************************************************************
 
     var togglePlayPauseBtnState = function () {
-        if (player.isPaused()) {
+        if (self.player.isPaused()) {
             setPlayBtn();
         } else {
             setPauseBtn();
@@ -130,7 +160,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var onPlayPauseClick = function (/*e*/) {
         togglePlayPauseBtnState.call(this);
-        player.isPaused() ? player.play() : player.pause();
+        self.player.isPaused() ? self.player.play() : self.player.pause();
     };
 
     var onPlaybackPaused = function (/*e*/) {
@@ -138,7 +168,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var onPlayStart = function (/*e*/) {
-        setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
+        setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.time());
         updateDuration();
         togglePlayPauseBtnState();
     };
@@ -146,27 +176,27 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var onPlayTimeUpdate = function (/*e*/) {
         updateDuration();
         if (!seeking) {
-            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
+            setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.time());
             if (seekbarPlay) {
-                if (player.isDynamic() && (player.duration() - player.time() < liveThresholdSecs)) {
+                if (self.player.isDynamic() && (self.player.duration() - self.player.time() < liveThresholdSecs)) {
                     seekbarPlay.style.width = '100%';
                 } else {
-                    seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
+                    seekbarPlay.style.width = (self.player.time() / self.player.duration() * 100) + '%';
                 }
             }
             if (seekbarBuffer) {
-                seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
+                seekbarBuffer.style.width = ((self.player.time() + getBufferLevel()) / self.player.duration() * 100) + '%';
             }
 
             if (seekbar.getAttribute('type') === 'range') {
-                seekbar.value = player.time();
+                seekbar.value = self.player.time();
             }
 
         }
     };
 
     var getBufferLevel = function () {
-        var dashMetrics = player.getDashMetrics();
+        var dashMetrics = self.player.getDashMetrics();
         var bufferLevel = 0;
         if (dashMetrics) {
             bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
@@ -183,7 +213,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var toggleMuteBtnState = function () {
         var span = document.getElementById(getControlId('iconMute'));
-        if (player.isMuted()) {
+        if (self.player.isMuted()) {
             span.classList.remove('icon-mute-off');
             span.classList.add('icon-mute-on');
         } else {
@@ -193,13 +223,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var onMuteClick = function (/*e*/) {
-        if (player.isMuted() && !isNaN(lastVolumeLevel)) {
+        if (self.player.isMuted() && !isNaN(lastVolumeLevel)) {
             setVolume(lastVolumeLevel);
         } else {
             lastVolumeLevel = parseFloat(volumebar.value);
             setVolume(0);
         }
-        player.setMute(player.getVolume() === 0);
+        self.player.setMute(self.player.getVolume() === 0);
         toggleMuteBtnState();
     };
 
@@ -207,10 +237,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (typeof value === 'number') {
             volumebar.value = value;
         }
-        player.setVolume(parseFloat(volumebar.value));
-        player.setMute(player.getVolume() === 0);
+        self.player.setVolume(parseFloat(volumebar.value));
+        self.player.setMute(self.player.getVolume() === 0);
         if (isNaN(lastVolumeLevel)) {
-            lastVolumeLevel = player.getVolume();
+            lastVolumeLevel = self.player.getVolume();
         }
         toggleMuteBtnState();
     };
@@ -221,7 +251,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var calculateTimeByEvent = function (event) {
         var seekbarRect = seekbar.getBoundingClientRect();
-        return Math.floor(player.duration() * (event.clientX - seekbarRect.left) / seekbarRect.width);
+        return Math.floor(self.player.duration() * (event.clientX - seekbarRect.left) / seekbarRect.width);
     };
 
     var onSeeking = function (event) {
@@ -229,7 +259,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         seeking = true;
         var mouseTime = calculateTimeByEvent(event);
         if (seekbarPlay) {
-            seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+            seekbarPlay.style.width = (mouseTime / self.player.duration() * 100) + '%';
         }
         setTime(mouseTime);
         document.addEventListener('mousemove', onSeekBarMouseMove, true);
@@ -245,13 +275,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         var mouseTime = calculateTimeByEvent(event);
         if (!isNaN(mouseTime)) {
             mouseTime = mouseTime < 0 ? 0 : mouseTime;
-            player.seek(mouseTime);
+            self.player.seek(mouseTime);
         }
 
         onSeekBarMouseMoveOut(event);
 
         if (seekbarPlay) {
-            seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+            seekbarPlay.style.width = (mouseTime / self.player.duration() * 100) + '%';
         }
     };
 
@@ -273,12 +303,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (seeking) {
             setTime(mouseTime);
             if (seekbarPlay) {
-                seekbarPlay.style.width = (mouseTime / player.duration() * 100) + '%';
+                seekbarPlay.style.width = (mouseTime / self.player.duration() * 100) + '%';
             }
         }
 
         // Get thumbnail information
-        player.provideThumbnail(mouseTime, function (thumbnail) {
+        self.player.provideThumbnail(mouseTime, function (thumbnail) {
+
             if (!thumbnail) return;
 
             // Adjust left variable for positioning thumbnail with regards to its viewport
@@ -308,7 +339,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
 
             if (thumbnailTimeLabel) {
-                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? player.formatUTC(mouseTime) : player.convertToTimeCode(mouseTime);
+                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? self.player.formatUTC(mouseTime) : self.player.convertToTimeCode(mouseTime);
             }
         });
     };
@@ -332,21 +363,21 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var seekLive = function () {
-        player.seek(player.duration());
+        self.player.seek(self.player.duration());
     };
 
     //************************************************************************************
     // TIME/DURATION
     //************************************************************************************
     var setDuration = function (value) {
-        if (player.isDynamic()) {
+        if (self.player.isDynamic()) {
             durationDisplay.textContent = '● LIVE';
             if (!durationDisplay.onclick) {
                 durationDisplay.onclick = seekLive;
                 durationDisplay.classList.add('live-icon');
             }
         } else if (!isNaN(value)) {
-            durationDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
+            durationDisplay.textContent = displayUTCTimeCodes ? self.player.formatUTC(value) : self.player.convertToTimeCode(value);
             durationDisplay.classList.remove('live-icon');
         }
     };
@@ -355,24 +386,24 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (value < 0) {
             return;
         }
-        if (player.isDynamic() && player.duration()) {
-            var liveDelay = player.duration() - value;
+        if (self.player.isDynamic() && self.player.duration()) {
+            var liveDelay = self.player.duration() - value;
             if (liveDelay < liveThresholdSecs) {
                 durationDisplay.classList.add('live');
                 timeDisplay.textContent = '';
             } else {
                 durationDisplay.classList.remove('live');
-                timeDisplay.textContent = '- ' + player.convertToTimeCode(liveDelay);
+                timeDisplay.textContent = '- ' + self.player.convertToTimeCode(liveDelay);
             }
         } else if (!isNaN(value)) {
-            timeDisplay.textContent = displayUTCTimeCodes ? player.formatUTC(value) : player.convertToTimeCode(value);
+            timeDisplay.textContent = displayUTCTimeCodes ? self.player.formatUTC(value) : self.player.convertToTimeCode(value);
         }
     };
 
     var updateDuration = function () {
-        var duration = player.duration();
+        var duration = self.player.duration();
         if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-            setDuration(displayUTCTimeCodes ? player.durationAsUTC() : duration);
+            setDuration(displayUTCTimeCodes ? self.player.durationAsUTC() : duration);
             seekbar.max = duration;
         }
     };
@@ -436,7 +467,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.exitFullscreen) {
-           document.exitFullscreen(); 
+           document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {
@@ -532,8 +563,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         //Track Switch Menu
         if (!trackSwitchMenu && trackSwitchBtn) {
             var availableTracks = { menuType: 'track' };
-            availableTracks.audio = player.getTracksFor('audio');
-            availableTracks.video = player.getTracksFor('video'); // these return empty arrays so no need to check for null
+            availableTracks.audio = self.player.getTracksFor('audio');
+            availableTracks.video = self.player.getTracksFor('video'); // these return empty arrays so no need to check for null
 
             if (availableTracks.audio.length > 1 || availableTracks.video.length > 1) {
                 contentFunc = function (element) {
@@ -597,7 +628,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var getMenuInitialIndex = function (info, menuType, mediaType) {
         if (menuType === 'track') {
-            var mediaInfo = player.getCurrentTrackFor(mediaType);
+            var mediaInfo = self.player.getCurrentTrackFor(mediaType);
             var idx = 0;
             info.some(function (element, index) {
                 if (isTracksEqual(element, mediaInfo)) {
@@ -608,13 +639,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return idx;
 
         } else if (menuType === 'bitrate') {
-            var cfg = player.getSettings();
+            var cfg = self.player.getSettings();
             if (cfg.streaming && cfg.streaming.abr && cfg.streaming.abr.initialBitrate) {
                 return cfg.streaming.abr.initialBitrate['mediaType'] | 0;
             }
             return 0;
         } else if (menuType === 'caption') {
-            return player.getCurrentTextTrackIndex() + 1;
+            return self.player.getCurrentTextTrackIndex() + 1;
         }
     };
 
@@ -623,8 +654,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         var sameViewpoint = t1.viewpoint === t2.viewpoint;
         var sameLang = t1.lang === t2.lang;
         var sameRoles = t1.roles.toString() === t2.roles.toString();
-        var sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
-        var sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
+        var sameAccessibility = (!t1.accessibility && !t2.accessibility) || (t1.accessibility && t2.accessibility && t1.accessibility.toString() === t2.accessibility.toString());
+        var sameAudioChannelConfiguration = (!t1.audioChannelConfiguration && !t2.audioChannelConfiguration) || (t1.audioChannelConfiguration && t2.audioChannelConfiguration && t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString());
 
         return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     };
@@ -726,21 +757,21 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var setMenuItemsState = function (value, type) {
-        var self = typeof value === 'number' ? document.getElementById(type + 'Item_' + value) : this;
-        var nodes = self.parentElement.children;
+        var item = typeof value === 'number' ? document.getElementById(type + 'Item_' + value) : this;
+        var nodes = item.parentElement.children;
 
         for (var i = 0; i < nodes.length; i++) {
             nodes[i].selected = false;
             nodes[i].classList.remove('menu-item-selected');
             nodes[i].classList.add('menu-item-unselected');
         }
-        self.selected = true;
-        self.classList.remove('menu-item-over');
-        self.classList.remove('menu-item-unselected');
-        self.classList.add('menu-item-selected');
+        item.selected = true;
+        item.classList.remove('menu-item-over');
+        item.classList.remove('menu-item-unselected');
+        item.classList.add('menu-item-selected');
 
         if (type === undefined) { // User clicked so type is part of item binding.
-            switch (self.name) {
+            switch (item.name) {
                 case 'video-bitrate-list':
                 case 'audio-bitrate-list':
                     var cfg = {
@@ -752,24 +783,24 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                         }
                     };
 
-                    if (self.index > 0) {
-                        cfg.streaming.abr.autoSwitchBitrate[self.mediaType] = false;
-                        player.updateSettings(cfg);
-                        player.setQualityFor(self.mediaType, self.index - 1);
+                    if (item.index > 0) {
+                        cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
+                        self.player.updateSettings(cfg);
+                        self.player.setQualityFor(item.mediaType, item.index - 1);
                     } else {
-                        cfg.streaming.abr.autoSwitchBitrate[self.mediaType] = true;
-                        player.updateSettings(cfg);
+                        cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
+                        self.player.updateSettings(cfg);
                     }
                     break;
                 case 'image-bitrate-list':
                     player.setQualityFor(self.mediaType, self.index);
                     break;
                 case 'caption-list':
-                    player.setTextTrack(self.index - 1);
+                    self.player.setTextTrack(item.index - 1);
                     break;
                 case 'video-track-list':
                 case 'audio-track-list':
-                    player.setCurrentTrack(player.getTracksFor(self.mediaType)[self.index]);
+                    self.player.setCurrentTrack(self.player.getTracksFor(item.mediaType)[item.index]);
                     break;
             }
         }
@@ -849,6 +880,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         setVolume: setVolume,
         setDuration: setDuration,
         setTime: setTime,
+        setPlayer: setPlayer,
 
         initialize: function (suffix) {
 
@@ -869,15 +901,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             if (trackSwitchBtn) {
                 trackSwitchBtn.classList.add('hide');
             }
-
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-            player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
-            player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
-            player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
-            player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
-            player.on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
-
+            addPlayerEventsListeners();
             playPauseBtn.addEventListener('click', onPlayPauseClick);
             muteBtn.addEventListener('click', onMuteClick);
             fullscreenBtn.addEventListener('click', onFullscreenClick);
@@ -960,13 +984,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             seekbar.removeEventListener('touchcancel', onSeekBarMouseMoveOut);
             seekbar.removeEventListener('touchend', onSeekBarMouseMoveOut);
 
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
-            player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
-            player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
-            player.off(dashjs.MediaPlayer.events.STREAM_INITIALIZED, onStreamInitialized, this);
-            player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
-            player.off(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
+            removePlayerEventsListeners();
 
             document.removeEventListener('fullscreenchange', onFullScreenChange);
             document.removeEventListener('MSFullscreenChange', onFullScreenChange);

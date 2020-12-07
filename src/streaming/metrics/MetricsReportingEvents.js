@@ -36,6 +36,12 @@ class MetricsReportingEvents extends EventsBase {
 
         this.METRICS_INITIALISATION_COMPLETE = 'internal_metricsReportingInitialized';
         this.BECAME_REPORTING_PLAYER = 'internal_becameReportingPlayer';
+
+        /**
+         * Triggered when CMCD data was generated for a HTTP request
+         * @event MetricsReportingEvents#CMCD_DATA_GENERATED
+         */
+        this.CMCD_DATA_GENERATED = 'cmcdDataGenerated';
     }
 }
 
