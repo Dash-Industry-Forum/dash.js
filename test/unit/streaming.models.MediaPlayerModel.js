@@ -139,6 +139,7 @@ describe('MediaPlayerModel', function () {
     });
 
     it('should configure liveCatchupLatencyThreshold', function () {
+        settings.update({ streaming: { liveCatchup: { latencyThreshold: NaN } } });
         let liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
         expect(liveCatchupLatencyThreshold).to.be.NaN; // jshint ignore:line
 

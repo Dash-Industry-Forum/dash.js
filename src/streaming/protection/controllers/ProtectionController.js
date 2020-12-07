@@ -700,13 +700,14 @@ function ProtectionController(config) {
         const reqMethod = licenseServerData.getHTTPMethod(messageType);
         const responseType = licenseServerData.getResponseType(keySystemString, messageType);
         const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
+        const sessionId = sessionToken.getSessionID() || null;
 
         doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload,
-            LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+            LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError, sessionId);
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
-    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
+    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId) {
         const xhr = new XMLHttpRequest();
 
         xhr.open(method, url, true);
@@ -724,7 +725,7 @@ function ProtectionController(config) {
             retriesCount--;
             setTimeout(function () {
                 doLicenseRequest(url, headers, method, responseType, withCredentials, payload,
-                    retriesCount, timeout, onLoad, onAbort, onError);
+                    retriesCount, timeout, onLoad, onAbort, onError, sessionId);
             }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
         };
 
@@ -753,7 +754,8 @@ function ProtectionController(config) {
         eventBus.trigger(events.LICENSE_REQUEST_SENDING, {
             url,
             headers,
-            payload
+            payload,
+            sessionId
         });
 
         xhr.send(payload);

@@ -59,6 +59,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          scheduleWhilePaused: true,
  *          fastSwitchEnabled: false,
  *          flushBufferAtTrackSwitch: false,
+ *          calcSegmentAvailabilityRangeFromTimeline: false,
+ *          reuseExistingSourceBuffers: true,
  *          bufferPruningInterval: 10,
  *          bufferToKeep: 20,
  *          jumpGaps: true,
@@ -250,7 +252,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
- * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=true] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
+ * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
+ * @property {boolean} [reuseExistingSourceBuffers=true] Enable reuse of existing MediaSource Sourcebuffers during period transition
  * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
@@ -425,6 +428,7 @@ function Settings() {
             fastSwitchEnabled: false,
             flushBufferAtTrackSwitch: false,
             calcSegmentAvailabilityRangeFromTimeline: false,
+            reuseExistingSourceBuffers: true,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
             jumpGaps: true,
@@ -446,7 +450,7 @@ function Settings() {
                 minDrift: 0.02,
                 maxDrift: 0,
                 playbackRate: 0.5,
-                latencyThreshold: NaN,
+                latencyThreshold: 60,
                 playbackBufferMin: 0.5,
                 playbackBufferMax: 0.5,
                 enabled: false,

@@ -216,6 +216,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.cmcdEnabled = false;
     $scope.loopSelected = true;
     $scope.scheduleWhilePausedSelected = true;
+    $scope.calcSegmentAvailabilityRangeFromTimelineSelected = false;
+    $scope.reuseExistingSourceBuffersSelected = true;
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
@@ -392,7 +394,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function (e) { /* jshint ignore:line */
         if ($('#loop-cb').is(':checked') &&
-            $scope.player.getActiveStream().getStreamInfo().isLast) {
+            e && e.isLast) {
             $scope.doLoad();
         }
     }, $scope);
@@ -514,6 +516,22 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings({
             'streaming': {
                 'scheduleWhilePaused': $scope.scheduleWhilePausedSelected
+            }
+        });
+    };
+
+    $scope.toggleCalcSegmentAvailabilityRangeFromTimeline = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'calcSegmentAvailabilityRangeFromTimeline': $scope.calcSegmentAvailabilityRangeFromTimelineSelected
+            }
+        });
+    };
+
+    $scope.toggleReuseExistingSourceBuffers = function () {
+        $scope.player.updateSettings({
+            'streaming': {
+                'reuseExistingSourceBuffers': $scope.reuseExistingSourceBuffersSelected
             }
         });
     };
@@ -1078,7 +1096,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     ////////////////////////////////////////
     //
-    // Google Cast management 
+    // Google Cast management
     //
     ////////////////////////////////////////
 
@@ -1143,7 +1161,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         if (castSession) {
             castPlayer.reset();
             castSession.loadMedia(request).then(
-                function() { 
+                function() {
                     let media = castSession.getMediaSession();
                     if (media) {
                         console.info('cast media: ', media);
