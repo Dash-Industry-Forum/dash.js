@@ -446,7 +446,7 @@ function Settings() {
                 minDrift: 0.02,
                 maxDrift: 0,
                 playbackRate: 0.5,
-                latencyThreshold: NaN,
+                latencyThreshold: 60,
                 playbackBufferMin: 0.5,
                 playbackBufferMax: 0.5,
                 enabled: false,
