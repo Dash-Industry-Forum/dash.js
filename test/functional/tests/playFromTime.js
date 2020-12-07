@@ -35,7 +35,7 @@ exports.register = function (stream) {
                 stream_.url += '#t=' + startTime;
             } else {
                 startTime = Math.floor(Date.now() / 1000) - TIME_OFFSET;
-                stream_.url += '#t=' + startTime;
+                stream_.url += '#t=posix:' + startTime;
             }
             utils.log(NAME, 'Playback start time: ' + startTime);
             await command.execute(player.loadStream, [stream_]);
