@@ -76,14 +76,14 @@ jobs:
           # Run functional tests for chrome browser for https
           name: Run functional tests (chrome / https)
           command:
-            node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https
+            node test/functional/runTests.js --selenium=remote --reporters="junit,runner" --app=remote --browsers=chrome --protocol=https
 
-      - run:
-          # Run functional tests for chrome browser for http
-          name: Run functional tests (chrome / http)
-          when: always # run tests even if some previous tests failed
-          command:
-            node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
+#      - run:
+#          # Run functional tests for chrome browser for http
+#          name: Run functional tests (chrome / http)
+#          when: always # run tests even if some previous tests failed
+#          command:
+#            node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
       
       - store_test_results:
           path: test/functional/reports
@@ -102,14 +102,14 @@ workflows:
             branches:
               only:
                 - functional-tests
-  scheduled-workflow:
-    triggers:
-      - schedule:
-          cron: "0 0 * * 0"
-          filters:
-            branches:
-              only:
-                - development
-    jobs:
-      - functional-tests
+#  scheduled-workflow:
+#    triggers:
+#      - schedule:
+#          cron: "0 0 * * 0"
+#          filters:
+#            branches:
+#              only:
+#                - development
+#    jobs:
+#      - functional-tests
 
