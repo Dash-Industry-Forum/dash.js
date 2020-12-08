@@ -616,9 +616,8 @@ function PlaybackController() {
      */
     function _getCatchupMode() {
         const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-        const playbackBufferMax = settings.get().streaming.liveCatchup.playbackBufferMax;
 
-        return settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin) && playbackBufferMax !== null && !isNaN(playbackBufferMax) ? Constants.LIVE_CATCHUP_MODE_LOLP : Constants.LIVE_CATCHUP_MODE_DEFAULT;
+        return settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin) ? Constants.LIVE_CATCHUP_MODE_LOLP : Constants.LIVE_CATCHUP_MODE_DEFAULT;
     }
 
     /**
@@ -638,9 +637,8 @@ function PlaybackController() {
                 if (catchupMode === Constants.LIVE_CATCHUP_MODE_LOLP) {
                     const currentBuffer = getBufferLevel();
                     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-                    const playbackBufferMax = settings.get().streaming.liveCatchup.playbackBufferMax;
 
-                    return _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin, playbackBufferMax);
+                    return _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin);
                 } else {
                     return _defaultNeedToCatchUp(currentLiveLatency, liveDelay, liveCatchupLatencyThreshold, liveCatchUpMinDrift);
                 }
@@ -676,13 +674,12 @@ function PlaybackController() {
      * @param {number} liveCatchUpMinDrift
      * @param {number} currentBuffer
      * @param {number} playbackBufferMin
-     * @param {number} playbackBufferMax
      * @return {boolean}
      * @private
      */
-    function _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin, playbackBufferMax) {
+    function _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin) {
         try {
-            return Math.abs(currentLiveLatency - liveDelay) > liveCatchUpMinDrift || (currentBuffer < playbackBufferMin || currentBuffer > playbackBufferMax);
+            return Math.abs(currentLiveLatency - liveDelay) > liveCatchUpMinDrift || (currentBuffer < playbackBufferMin);
         } catch (e) {
             return false;
         }
@@ -703,8 +700,7 @@ function PlaybackController() {
             if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_LOLP) {
                 const liveCatchUpMinDrift = settings.get().streaming.liveCatchup.minDrift;
                 const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-                const playbackBufferMax = settings.get().streaming.liveCatchup.playbackBufferMax;
-                results = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRate, currentLiveLatency, liveDelay, liveCatchUpMinDrift, playbackBufferMin, playbackBufferMax, bufferLevel, currentPlaybackRate);
+                results = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRate, currentLiveLatency, liveDelay, liveCatchUpMinDrift, playbackBufferMin, bufferLevel, currentPlaybackRate);
             } else {
                 // Default playback control: Based on target and current latency
                 results = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRate, currentLiveLatency, liveDelay, bufferLevel, currentPlaybackRate);
@@ -778,13 +774,12 @@ function PlaybackController() {
      * @param {number} liveDelay
      * @param {number} minDrift
      * @param {number} playbackBufferMin
-     * @param {number} playbackBufferMax
      * @param {number} bufferLevel
      * @param {number} currentPlaybackRate
      * @return {{newRate: number}}
      * @private
      */
-    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, minDrift, playbackBufferMin, playbackBufferMax, bufferLevel, currentPlaybackRate) {
+    function _calculateNewPlaybackRateLolP(liveCatchUpPlaybackRate, currentLiveLatency, liveDelay, minDrift, playbackBufferMin, bufferLevel, currentPlaybackRate) {
         const cpr = liveCatchUpPlaybackRate;
         let newRate;
 
