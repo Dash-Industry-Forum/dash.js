@@ -49,7 +49,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * // Full settings object
  * settings = {
  *      debug: {
- *          logLevel: Debug.LOG_LEVEL_WARNING
+ *          logLevel: Debug.LOG_LEVEL_WARNING,
+ *          dispatchEvent: false
  *      },
  *      streaming: {
  *          metricsMaxListDepth: 1000,
@@ -164,6 +165,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * <li>dashjs.Debug.LOG_LEVEL_DEBUG<br/>
  * Log debug messages.
  * </ul>
+ * @property {boolean} [dispatchEvent=false]
+ * Enable to trigger a Events.LOG event whenever log output is generated. Note this will be dispatched regardless of log level
  */
 
 /**
@@ -417,7 +420,8 @@ function Settings() {
      */
     const defaultSettings = {
         debug: {
-            logLevel: Debug.LOG_LEVEL_WARNING
+            logLevel: Debug.LOG_LEVEL_WARNING,
+            dispatchEvent: false
         },
         streaming: {
             metricsMaxListDepth: 1000,
