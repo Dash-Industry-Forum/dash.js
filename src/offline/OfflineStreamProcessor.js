@@ -111,7 +111,7 @@ function OfflineStreamProcessor(config) {
         });
 
         fragmentModel = FragmentModel(context).create({
-            streamId: streamInfo.id,
+            streamInfo: streamInfo,
             dashMetrics: dashMetrics,
             fragmentLoader: FragmentLoader(context).create({
                 dashMetrics: dashMetrics,
