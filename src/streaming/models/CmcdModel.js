@@ -37,7 +37,6 @@ import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
-import Events from '../../core/events/Events';
 
 const CMCD_REQUEST_FIELD_NAME = 'CMCD';
 const CMCD_VERSION = 1;
@@ -69,6 +68,7 @@ function CmcdModel() {
         abrController,
         dashMetrics,
         playbackController,
+        streamProcessors,
         _isStartup,
         _bufferLevelStarved,
         _initialMediaRequestsDone;
@@ -89,6 +89,7 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
     }
 
     function setConfig(config) {
@@ -119,6 +120,16 @@ function CmcdModel() {
         _bufferLevelStarved = {};
         _isStartup = {};
         _initialMediaRequestsDone = {};
+        updateStreamProcessors();
+    }
+
+    function _onPeriodSwitchComplete() {
+        updateStreamProcessors();
+    }
+
+    function updateStreamProcessors() {
+        if (!playbackController) return;
+        streamProcessors = playbackController.getStreamController().getActiveStream().getProcessors();
     }
 
     function getQueryParameter(request) {
@@ -148,11 +159,6 @@ function CmcdModel() {
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
-
-            _probeNextRequest(request, request.mediaType).then(nextRequest => console.log(
-                'THIS', request.url,
-                '\nNEXT', nextRequest ? nextRequest.url : 'none',
-                nextRequest && nextRequest.range ? '\nnrr=' + nextRequest.range : '', '\n\n'));
 
             if (request.type === HTTPRequest.MPD_TYPE) {
                 return _getCmcdDataForMpd(request);
@@ -199,6 +205,21 @@ function CmcdModel() {
         const bl = _getBufferLevelByType(request.mediaType);
         const tb = _getTopBitrateByType(request.mediaType);
         const pr = internalData.pr;
+
+        const nextRequest = _probeNextRequest(request.mediaType);
+
+        let nrr = request.range;
+
+        if (nextRequest) {
+            data.nor = nextRequest.url;
+            if (nextRequest.range) {
+                nrr = nextRequest.range;
+            }
+        }
+
+        if (nrr) {
+            data.nrr = nrr;
+        }
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -461,13 +482,12 @@ function CmcdModel() {
         }
     }
 
-    function _probeNextRequest(initialRequest, mediaType) {
-        return new Promise((resolve) => {
-            eventBus.trigger(Events.PROBE_NEXT_REQUEST, {
-                initialRequest,
-                callback: resolve
-            }, { mediaType });
-        });
+    function _probeNextRequest(mediaType) {
+        if (!streamProcessors || streamProcessors.length === 0) return;
+        for (let streamProcessor of streamProcessors) {
+            if (streamProcessor.getType() !== mediaType) continue;
+            return streamProcessor.probeNextRequest();
+        }
     }
 
     function reset() {
