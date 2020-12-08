@@ -177,16 +177,6 @@
         ]
     },
     {
-        "section": "Ad Insertion",
-        "samples": [
-            {
-                "title": "Ad insertion",
-                "description": "Demonstration of different implementation approaches for advert insertion, specifically inband, inline and X-Link onLoad. Provided by Fraunhofer Fokus.",
-                "href": "ad-insertion/index.html"
-            }
-        ]
-    },
-    {
         "section": "Preload",
         "samples": [
             {

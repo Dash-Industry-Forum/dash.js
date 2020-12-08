@@ -160,7 +160,7 @@ function BufferController(config) {
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-        updateBufferTimestampOffset(this.getRepresentationInfo(requiredQuality));
+        updateBufferTimestampOffset(getRepresentationInfo(requiredQuality));
         return buffer;
     }
 
