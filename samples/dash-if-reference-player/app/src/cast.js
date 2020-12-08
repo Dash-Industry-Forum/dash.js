@@ -237,11 +237,6 @@ let CastPlayer = function (player, playerController) {
         }, () => { 
             console.error('error track changed'); 
         });
-    },
-    getDashMetrics () {},
-    getThumbnail () {},
-    getBitrateInfoListFor () {
-        return [];
     }
   }
 };

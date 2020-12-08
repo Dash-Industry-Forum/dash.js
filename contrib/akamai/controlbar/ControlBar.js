@@ -196,12 +196,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var getBufferLevel = function () {
-        var dashMetrics = self.player.getDashMetrics();
         var bufferLevel = 0;
-        if (dashMetrics) {
-            bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
-            if (!bufferLevel) {
-                bufferLevel = dashMetrics.getCurrentBufferLevel('audio', true);
+        if (self.player.getDashMetrics) {
+            var dashMetrics = self.player.getDashMetrics();
+            if (dashMetrics) {
+                bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+                if (!bufferLevel) {
+                    bufferLevel = dashMetrics.getCurrentBufferLevel('audio', true);
+                }
             }
         }
         return bufferLevel;
@@ -308,40 +310,42 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
 
         // Get thumbnail information
-        self.player.provideThumbnail(mouseTime, function (thumbnail) {
+        if (self.player.provideThumbnail) {
+            self.player.provideThumbnail(mouseTime, function (thumbnail) {
 
-            if (!thumbnail) return;
+                if (!thumbnail) return;
 
-            // Adjust left variable for positioning thumbnail with regards to its viewport
-            left += (seekbarRect.left - videoContainerRect.left);
-            // Take into account thumbnail control
-            var ctrlWidth = parseInt(window.getComputedStyle(thumbnailElem).width);
-            if (!isNaN(ctrlWidth)) {
-                left -= ctrlWidth / 2;
-            }
+                // Adjust left variable for positioning thumbnail with regards to its viewport
+                left += (seekbarRect.left - videoContainerRect.left);
+                // Take into account thumbnail control
+                var ctrlWidth = parseInt(window.getComputedStyle(thumbnailElem).width);
+                if (!isNaN(ctrlWidth)) {
+                    left -= ctrlWidth / 2;
+                }
 
-            var scale = (videoContainerRect.height * maxPercentageThumbnailScreen) / thumbnail.height;
-            if (scale > maximumScale) {
-                scale = maximumScale;
-            }
+                var scale = (videoContainerRect.height * maxPercentageThumbnailScreen) / thumbnail.height;
+                if (scale > maximumScale) {
+                    scale = maximumScale;
+                }
 
-            // Set thumbnail control position
-            thumbnailContainer.style.left = left + 'px';
-            thumbnailContainer.style.display = '';
-            thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail) + 'px';
-            thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
+                // Set thumbnail control position
+                thumbnailContainer.style.left = left + 'px';
+                thumbnailContainer.style.display = '';
+                thumbnailContainer.style.bottom += Math.round(videoControllerRect.height + bottomMarginThumbnail) + 'px';
+                thumbnailContainer.style.height = Math.round(thumbnail.height) + 'px';
 
-            var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
-                'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
-            thumbnailElem.style.background = backgroundStyle;
-            thumbnailElem.style.width = thumbnail.width + 'px';
-            thumbnailElem.style.height = thumbnail.height + 'px';
-            thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
+                var backgroundStyle = 'url("' + thumbnail.url + '") ' + (thumbnail.x > 0 ? '-' + thumbnail.x : '0') +
+                    'px ' + (thumbnail.y > 0 ? '-' + thumbnail.y : '0') + 'px';
+                thumbnailElem.style.background = backgroundStyle;
+                thumbnailElem.style.width = thumbnail.width + 'px';
+                thumbnailElem.style.height = thumbnail.height + 'px';
+                thumbnailElem.style.transform = 'scale(' + scale + ',' + scale + ')';
 
-            if (thumbnailTimeLabel) {
-                thumbnailTimeLabel.textContent = displayUTCTimeCodes ? self.player.formatUTC(mouseTime) : self.player.convertToTimeCode(mouseTime);
-            }
-        });
+                if (thumbnailTimeLabel) {
+                    thumbnailTimeLabel.textContent = displayUTCTimeCodes ? self.player.formatUTC(mouseTime) : self.player.convertToTimeCode(mouseTime);
+                }
+            });
+        }
     };
 
     var onSeekBarMouseMoveOut = function (/*e*/) {
@@ -522,7 +526,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             menuHandlersList.push(func);
             captionBtn.addEventListener('click', func);
             captionBtn.classList.remove('hide');
-        } else {
+        } else if (e.index !== undefined) {
             setMenuItemsState(e.index + 1, 'caption-list');
         }
     };
@@ -538,9 +542,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (bitrateListBtn) {
             destroyBitrateMenu();
             var availableBitrates = { menuType: 'bitrate' };
-            availableBitrates.audio = player.getBitrateInfoListFor('audio') || [];
-            availableBitrates.video = player.getBitrateInfoListFor('video') || [];
-            availableBitrates.images = player.getBitrateInfoListFor('image') || [];
+            availableBitrates.audio = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('audio') || [];
+            availableBitrates.video = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('video') || [];
+            availableBitrates.images = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('image') || [];
             if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1 || availableBitrates.images.length > 1) {
                 contentFunc = function (element, index) {
                     var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate / 1000) + ' kbps';
