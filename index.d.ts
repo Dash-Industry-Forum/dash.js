@@ -139,7 +139,6 @@ declare namespace dashjs {
                 playbackRate?: number;
                 latencyThreshold?: number,
                 playbackBufferMin?: number,
-                playbackBufferMax?: number,
                 enabled?: boolean
                 mode?: string
             }
