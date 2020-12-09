@@ -49,7 +49,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * // Full settings object
  * settings = {
  *      debug: {
- *          logLevel: Debug.LOG_LEVEL_WARNING
+ *          logLevel: Debug.LOG_LEVEL_WARNING,
+ *          dispatchEvent: false
  *      },
  *      streaming: {
  *          metricsMaxListDepth: 1000,
@@ -83,7 +84,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              playbackRate: 0.5,
  *              latencyThreshold: NaN,
  *              playbackBufferMin: NaN,
- *              playbackBufferMax: NaN,
  *              enabled: false,
  *              mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *           },
@@ -164,6 +164,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * <li>dashjs.Debug.LOG_LEVEL_DEBUG<br/>
  * Log debug messages.
  * </ul>
+ * @property {boolean} [dispatchEvent=false]
+ * Enable to trigger a Events.LOG event whenever log output is generated. Note this will be dispatched regardless of log level
  */
 
 /**
@@ -391,8 +393,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [playbackBufferMin=NaN]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction
  *
- * @property {number} [playbackBufferMax=NaN]
- * Use this parameter to specify the maximum buffer which is used for LoL+ based playback rate increase
  *
  * @property {boolean} [enabled=false]
  * Use this parameter to enable the catchup mode for non low-latency streams
@@ -417,7 +417,8 @@ function Settings() {
      */
     const defaultSettings = {
         debug: {
-            logLevel: Debug.LOG_LEVEL_WARNING
+            logLevel: Debug.LOG_LEVEL_WARNING,
+            dispatchEvent: false
         },
         streaming: {
             metricsMaxListDepth: 1000,
@@ -452,7 +453,6 @@ function Settings() {
                 playbackRate: 0.5,
                 latencyThreshold: 60,
                 playbackBufferMin: 0.5,
-                playbackBufferMax: 0.5,
                 enabled: false,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
