@@ -49,7 +49,7 @@
                     liveDelay: targetLatency,
                     liveCatchup: {
                         minDrift: minDrift,
-                        catchUpPlaybackRate: catchupPlaybackRate
+                        playbackRate: catchupPlaybackRate
                     }
                 }
             });
@@ -58,13 +58,11 @@
             var useCustomPlaybackControl = document.getElementById('use-custom-playback-control').checked;
             if (useCustomPlaybackControl) {
                 var playbackBufferMin = parseFloat(document.getElementById('playback-buffer-min').value, 10);
-                var playbackBufferMax = parseFloat(document.getElementById('playback-buffer-max').value, 10);
 
                 player.updateSettings({
                     streaming: {
                         liveCatchup: {
                             playbackBufferMin: playbackBufferMin,
-                            playbackBufferMax: playbackBufferMax,
                             mode: 'liveCatchupModeLoLP'
                         }
                     }
@@ -136,28 +134,26 @@
                 <form action='javascript:applyParameters()'>
                     <fieldset>
                         <legend>Configurable parameters</legend>
-                        <p>Target Latency (secs): <input type='number' id='target-latency' value='1' min='0' step='0.1'>
+                        <p>Target Latency (secs): <input type='number' id='target-latency' value='1.5' min='0' step='0.1'>
                         </p>
                         <p>Min. drift (secs): <input type='number' id='min-drift' value='0.05' min='0.0' max='0.5'
                                                      step='0.01'></p>
                         <p>Catch-up playback rate (e.g. 0.3 means playback rate is 0.7-1.3x): <input type='number'
                                                                                                      id='catchup-playback-rate'
-                                                                                                     value='0.5'
+                                                                                                     value='0.3'
                                                                                                      min='0.0' max='0.5'
                                                                                                      step='0.01'></p>
                         <!-- TGC addition for custom playback control -->
                         <br/>
                         <!-- Option A: To use DEFAULT playback control -->
-                        <p><input type='checkbox' id='use-custom-playback-control' name='use-custom-playback-control'
+                        <p><input checked type='checkbox' id='use-custom-playback-control' name='use-custom-playback-control'
                                   style='width: 2em;'>
-                            <!-- Option B: To use CUSTOM playback control -->
+                            <!-- Option B: To use LoLp CUSTOM playback control -->
                             <!-- <p><input checked type='checkbox' id='use-custom-playback-control' name='use-custom-playback-control' style='width: 2em;'> -->
-                            <label for='use-custom-playback-control'>Use custom playback control</label></p>
+                            <label for='use-custom-playback-control'>Use LoL+ custom playback control</label></p>
                         <p style='font-size: 0.9em;'>(Note: these params will only be used if the above checkbox is
                             checked)</p>
                         <p>Playback buffer min. (secs): <input type='number' id='playback-buffer-min' value='0.5'
-                                                               min='0.0' max='2.0' step='0.1'></p>
-                        <p>Playback buffer max. (secs): <input type='number' id='playback-buffer-max' value='0.5'
                                                                min='0.0' max='2.0' step='0.1'></p>
 
                         <button type='submit'>Apply</button>
@@ -301,7 +297,6 @@
                 const currentBuffer = player.getDashMetrics().getCurrentBufferLevel('video');
                 history.averageLatency = latencyCMA.average(currentLatency);
                 history.averageBufferLength = bufferCMA.average(currentBuffer);
-                console.log(history);
             }, 200);
 
 
