@@ -173,7 +173,7 @@ function FetchLoader(cfg) {
                         if (flag1.found) {
                             // Store the beginning time of each chunk download in array StartTimeData
                             startTimeData.push({
-                                ts: performance.now(),
+                                ts: performance.now(), /* jshint ignore:line */
                                 bytes: value.length
                             });
                         }
@@ -186,7 +186,7 @@ function FetchLoader(cfg) {
                         // Store the end time of each chunk download  with its size in array EndTimeData
                         if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
                             endTimeData.push({
-                                ts: performance.now(),
+                                ts: performance.now(), /* jshint ignore:line */
                                 bytes: remaining.length
                             });
                         }

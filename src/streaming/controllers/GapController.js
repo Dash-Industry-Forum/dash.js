@@ -232,7 +232,10 @@ function GapController() {
 
             if (jumpToStreamEnd) {
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
-                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, { seekTime: seekToPosition });
+                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, {
+                    seekTime: seekToPosition,
+                    duration: timeUntilGapEnd
+                });
             } else {
                 const isDynamic = playbackController.getIsDynamic();
                 const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
@@ -241,6 +244,10 @@ function GapController() {
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
                     logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
+                    eventBus.trigger(Events.GAP_CAUSED_INTERNAL_SEEK, {
+                        seekTime: seekToPosition,
+                        duration: timeUntilGapEnd
+                    });
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }

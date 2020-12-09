@@ -120,7 +120,7 @@ function PlaybackController() {
                 const dvrWindow = dvrInfo ? dvrInfo.range : null;
                 if (dvrWindow) {
                     // #t shall be relative to period start
-                    const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, true);
+                    const startTimeFromUri = getStartTimeFromUriParameters(true);
                     if (!isNaN(startTimeFromUri)) {
                         logger.info('Start time from URI parameters: ' + startTimeFromUri);
                         startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
@@ -130,7 +130,7 @@ function PlaybackController() {
                 // For static stream, start by default at period start
                 startTime = streamInfo.start;
                 // If start time in URI, take max value between period start and time from URI (if in period range)
-                const startTimeFromUri = getStartTimeFromUriParameters(streamInfo.start, false);
+                const startTimeFromUri = getStartTimeFromUriParameters(false);
                 if (!isNaN(startTimeFromUri) && startTimeFromUri < (startTime + streamInfo.duration)) {
                     logger.info('Start time from URI parameters: ' + startTimeFromUri);
                     startTime = Math.max(startTime, startTimeFromUri);
@@ -371,22 +371,20 @@ function PlaybackController() {
         }
     }
 
-    function getStartTimeFromUriParameters(rangeStart, isDynamic) {
+    function getStartTimeFromUriParameters(isDynamic) {
         const fragData = uriFragmentModel.getURIFragmentData();
         if (!fragData || !fragData.t) {
             return NaN;
         }
-
-        let startTime = NaN;
-
+        const refStream = streamController.getStreams()[0];
+        const refStreamStartTime = refStream.getStreamInfo().start;
         // Consider only start time of MediaRange
         // TODO: consider end time of MediaRange to stop playback at provided end time
         fragData.t = fragData.t.split(',')[0];
-
-        // "t=<time>" : time is relative to period start (for static streams) or DVR window range start (for dynamic streams)
+        // "t=<time>" : time is relative to 1st period start
         // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
-        startTime = (isDynamic && fragData.t.indexOf('posix:') !== -1) ? parseInt(fragData.t.substring(6)) : (rangeStart + parseInt(fragData.t));
-
+        const posix = fragData.t.indexOf('posix:') !== -1 ? fragData.t.substring(6) === 'now' ? Date.now() / 1000 : parseInt(fragData.t.substring(6)) : NaN;
+        let startTime = (isDynamic && !isNaN(posix)) ? posix - availabilityStartTime / 1000 : parseInt(fragData.t) + refStreamStartTime;
         return startTime;
     }
 

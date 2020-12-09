@@ -297,7 +297,6 @@
                 const currentBuffer = player.getDashMetrics().getCurrentBufferLevel('video');
                 history.averageLatency = latencyCMA.average(currentLatency);
                 history.averageBufferLength = bufferCMA.average(currentBuffer);
-                // console.log(history);
             }, 200);
 
 

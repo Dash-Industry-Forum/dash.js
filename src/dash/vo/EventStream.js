@@ -40,6 +40,7 @@ class EventStream {
         this.timescale = 1;
         this.value = '';
         this.schemeIdUri = '';
+        this.presentationTimeOffset = 0;
     }
 }
 

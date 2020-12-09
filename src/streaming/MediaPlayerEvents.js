@@ -356,6 +356,12 @@ class MediaPlayerEvents extends EventsBase {
         this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
 
         /**
+         * A gap occured in the timeline which requires an internal seek
+         * @event MediaPlayerEvents#GAP_CAUSED_INTERNAL_SEEK
+         */
+        this.GAP_CAUSED_INTERNAL_SEEK = 'gapCausedInternalSeek';
+
+        /**
          * Dash events are triggered at their respective start points on the timeline.
          * @event MediaPlayerEvents#EVENT_MODE_ON_START
          */

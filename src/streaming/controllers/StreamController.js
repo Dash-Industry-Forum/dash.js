@@ -334,7 +334,7 @@ function StreamController() {
 
     function canSourceBuffersBeReused(nextStream, previousStream) {
         try {
-            return (previousStream.isProtectionCompatible(nextStream, previousStream) &&
+            return (settings.get().streaming.reuseExistingSourceBuffers && previousStream.isProtectionCompatible(nextStream, previousStream) &&
                 (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
         } catch (e) {
             return false;
@@ -730,7 +730,7 @@ function StreamController() {
 
                 // we need to figure out what the correct starting period is
                 let initialStream = null;
-                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
+                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(adapter.getIsDynamic());
 
                 initialStream = getStreamForTime(startTimeFromUri);
 

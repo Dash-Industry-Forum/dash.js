@@ -326,6 +326,12 @@ function MediaPlayer() {
 
         segmentBaseController.initialize();
 
+        // configure controllers
+        mediaController.setConfig({
+            domStorage: domStorage,
+            settings: settings
+        });
+
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -1949,12 +1955,6 @@ function MediaPlayer() {
         if (!streamController) {
             streamController = StreamController(context).getInstance();
         }
-
-        // configure controllers
-        mediaController.setConfig({
-            domStorage: domStorage,
-            settings: settings
-        });
 
         streamController.setConfig({
             capabilities: capabilities,

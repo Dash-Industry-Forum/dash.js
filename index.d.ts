@@ -103,6 +103,7 @@ declare namespace dashjs {
     export class MediaPlayerSettingClass {
         debug?: {
             logLevel?: LogLevel;
+            dispatchEvent?: boolean;
         };
         streaming?: {
             metricsMaxListDepth?: number;
@@ -112,6 +113,7 @@ declare namespace dashjs {
             scheduleWhilePaused?: boolean;
             fastSwitchEnabled?: boolean;
             flushBufferAtTrackSwitch?: boolean;
+            reuseExistingSourceBuffers?: boolean;
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;

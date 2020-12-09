@@ -32,9 +32,8 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import XHRLoader from '../net/XHRLoader';
-import {EVENT_MODE_ON_START, EVENT_MODE_ON_RECEIVE} from '../MediaPlayerEvents';
 
 function EventController() {
 
@@ -120,9 +119,14 @@ function EventController() {
             if (values) {
                 for (let i = 0; i < values.length; i++) {
                     let event = values[i];
-                    inlineEvents[event.id] = event;
                     logger.debug('Add inline event with id ' + event.id);
-                    _startEvent(event.id, event, values, EVENT_MODE_ON_RECEIVE);
+
+                    // If we see the event for the first time we trigger it in onReceive mode
+                    if (!inlineEvents[event.id]) {
+                        _startEvent(event.id, event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                    }
+
+                    inlineEvents[event.id] = event;
                 }
             }
             logger.debug(`Added ${values.length} inline events`);
@@ -147,7 +151,7 @@ function EventController() {
                     }
                     inbandEvents[event.id] = event;
                     logger.debug('Add inband event with id ' + event.id);
-                    _startEvent(event.id, event, values, EVENT_MODE_ON_RECEIVE);
+                    _startEvent(event.id, event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
                 } else {
                     logger.debug('Repeated event with id ' + event.id);
                 }
@@ -161,22 +165,21 @@ function EventController() {
     function _handleManifestReloadEvent(event) {
         try {
             if (event.eventStream.value == MPD_RELOAD_VALUE) {
-                const timescale = event.eventStream.timescale || 1;
-                const validUntil = event.calculatedPresentationTime / timescale;
+                const validUntil = event.calculatedPresentationTime;
                 let newDuration;
                 if (event.calculatedPresentationTime == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
                     newDuration = NaN;
                 } else {
-                    newDuration = (event.calculatedPresentationTime + event.duration) / timescale;
+                    newDuration = event.calculatedPresentationTime + event.duration;
                 }
-                logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
-                eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, {
+                //logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+                eventBus.trigger(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, {
                     id: event.id,
                     validUntil: validUntil,
                     newDuration: newDuration,
                     newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
                 }, {
-                    mode: EVENT_MODE_ON_START
+                    mode: MediaPlayerEvents.EVENT_MODE_ON_START
                 });
             }
         } catch (e) {
@@ -195,7 +198,7 @@ function EventController() {
                 for (let i = 0; i < eventIds.length; i++) {
                     let eventId = eventIds[i];
                     let event = activeEvents[eventId];
-                    if (event !== null && (event.duration + event.calculatedPresentationTime) / event.eventStream.timescale < currentVideoTime) {
+                    if (event !== null && event.duration + event.calculatedPresentationTime < currentVideoTime) {
                         logger.debug('Remove Event ' + eventId + ' at time ' + currentVideoTime);
                         event = null;
                         delete activeEvents[eventId];
@@ -251,11 +254,11 @@ function EventController() {
                     let event = events[eventId];
 
                     if (event !== undefined) {
-                        const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
-
-                        if (calculatedPresentationTimeInSeconds <= currentVideoTime && calculatedPresentationTimeInSeconds + presentationTimeThreshold >= currentVideoTime) {
-                            _startEvent(eventId, event, events, EVENT_MODE_ON_START);
-                        } else if (_eventHasExpired(currentVideoTime, presentationTimeThreshold, calculatedPresentationTimeInSeconds) || _eventIsInvalid(event)) {
+                        const duration = !isNaN(event.duration) ? event.duration : 0;
+                        // The event is either about to start or has already been started and we are within its duration
+                        if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
+                            _startEvent(eventId, event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
+                        } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
                             logger.debug(`Deleting event ${eventId} as it is expired or invalid`);
                             delete events[eventId];
                         }
@@ -266,9 +269,9 @@ function EventController() {
         }
     }
 
-    function _eventHasExpired(currentVideoTime, presentationTimeThreshold, calculatedPresentationTimeInSeconds) {
+    function _eventHasExpired(currentVideoTime, threshold, calculatedPresentationTimeInSeconds) {
         try {
-            return currentVideoTime - presentationTimeThreshold > calculatedPresentationTimeInSeconds;
+            return currentVideoTime - threshold > calculatedPresentationTimeInSeconds;
         } catch (e) {
             return false;
         }
@@ -278,7 +281,7 @@ function EventController() {
         try {
             const periodEndTime = event.eventStream.period.start + event.eventStream.period.duration;
 
-            return event.calculatedPresentationTime / 1000 > periodEndTime;
+            return event.calculatedPresentationTime  > periodEndTime;
         } catch (e) {
             return false;
         }
@@ -302,10 +305,10 @@ function EventController() {
 
             eventIds.forEach((eventId) => {
                 const event = events[eventId];
-                const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime / event.eventStream.timescale;
+                const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime;
 
                 if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
-                    _startEvent(eventId, event, events, EVENT_MODE_ON_START);
+                    _startEvent(eventId, event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
                 }
             });
         } catch (e) {
@@ -317,7 +320,7 @@ function EventController() {
         try {
             const currentVideoTime = playbackController.getTime();
 
-            if (mode === EVENT_MODE_ON_RECEIVE) {
+            if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE) {
                 logger.debug(`Received event ${eventId}`);
                 eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 return;
