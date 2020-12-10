@@ -76,7 +76,7 @@ jobs:
           # Run functional tests for chrome browser for https
           name: Run functional tests (chrome / https)
           command:
-            node test/functional/runTests.js --selenium=remote --reporters="junit,runner" --app=remote --browsers=firefox --protocol=https
+            node test/functional/runTests.js --selenium=remote --reporters="junit,runner" --app=remote --browsers=chrome --protocol=https
 
 #      - run:
 #          # Run functional tests for chrome browser for http
