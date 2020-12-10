@@ -636,7 +636,7 @@ function PlaybackController() {
                     const currentBuffer = getBufferLevel();
                     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
 
-                    return _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin);
+                    return _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin, liveCatchupLatencyThreshold);
                 } else {
                     return _defaultNeedToCatchUp(currentLiveLatency, liveDelay, liveCatchupLatencyThreshold, liveCatchUpMinDrift);
                 }
@@ -669,15 +669,18 @@ function PlaybackController() {
      * LoL+ logic to determine if catchup mode should be enabled
      * @param {number} currentLiveLatency
      * @param {number} liveDelay
-     * @param {number} liveCatchUpMinDrift
+     * @param {number} minDrift
      * @param {number} currentBuffer
      * @param {number} playbackBufferMin
+     * @param {number} liveCatchupLatencyThreshold
      * @return {boolean}
      * @private
      */
-    function _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, liveCatchUpMinDrift, currentBuffer, playbackBufferMin) {
+    function _lolpNeedToCatchUpCustom(currentLiveLatency, liveDelay, minDrift, currentBuffer, playbackBufferMin, liveCatchupLatencyThreshold) {
         try {
-            return Math.abs(currentLiveLatency - liveDelay) > liveCatchUpMinDrift || (currentBuffer < playbackBufferMin);
+            const latencyDrift = Math.abs(currentLiveLatency - liveDelay);
+
+            return (isNaN(liveCatchupLatencyThreshold) || currentLiveLatency <= liveCatchupLatencyThreshold) && (latencyDrift > minDrift || currentBuffer < playbackBufferMin);
         } catch (e) {
             return false;
         }
