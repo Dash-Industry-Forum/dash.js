@@ -166,7 +166,7 @@ function ProtectionModel_01b(config) {
             }
         }
         if (!found) {
-            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, {error: 'Key system access denied! -- No valid audio/video content configurations detected!'});
+            eventBus.trigger(events.KEY_SYSTEM_ACCESS_COMPLETE, { error: 'Key system access denied! -- No valid audio/video content configurations detected!' });
         }
     }
 
@@ -258,7 +258,7 @@ function ProtectionModel_01b(config) {
         try {
             videoElement[api.cancelKeyRequest](keySystem.systemString, sessionToken.sessionID);
         } catch (error) {
-            eventBus.trigger(events.KEY_SESSION_CLOSED, {data: null, error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message});
+            eventBus.trigger(events.KEY_SESSION_CLOSED, { data: null, error: 'Error closing session (' + sessionToken.sessionID + ') ' + error.message });
         }
     }
 
@@ -273,7 +273,7 @@ function ProtectionModel_01b(config) {
                 switch (event.type) {
                     case api.needkey:
                         let initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                        eventBus.trigger(events.NEED_KEY, {key: new NeedKey(initData, 'cenc')});
+                        eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, 'cenc') });
                         break;
 
                     case api.keyerror:
@@ -313,7 +313,7 @@ function ProtectionModel_01b(config) {
                             }
                             msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
-                            eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(code, msg, sessionToken)});
+                            eventBus.trigger(events.KEY_ERROR, { data: new DashJSError(code, msg, sessionToken) });
                         } else {
                             logger.error('No session token found for key error');
                         }
@@ -327,7 +327,7 @@ function ProtectionModel_01b(config) {
 
                         if (sessionToken) {
                             logger.debug('DRM: Key added.');
-                            eventBus.trigger(events.KEY_ADDED, {data: sessionToken});//TODO not sure anything is using sessionToken? why there?
+                            eventBus.trigger(events.KEY_ADDED, { data: sessionToken });//TODO not sure anything is using sessionToken? why there?
                         } else {
                             logger.debug('No session token found for key added');
                         }
@@ -350,7 +350,7 @@ function ProtectionModel_01b(config) {
                                 sessions.push(sessionToken);
                                 sessionToken.sessionID = event.sessionId;
 
-                                eventBus.trigger(events.KEY_SESSION_CREATED, {data: sessionToken});
+                                eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
                             }
                         } else if (pendingSessions.length > 0) { // SessionIDs not supported
                             sessionToken = pendingSessions.shift();
@@ -368,7 +368,7 @@ function ProtectionModel_01b(config) {
                             // addKey method, so we always save it to the token since there is no
                             // way to tell which key system is in use
                             sessionToken.keyMessage = message;
-                            eventBus.trigger(events.INTERNAL_KEY_MESSAGE, {data: new KeyMessage(sessionToken, message, event.defaultURL)});
+                            eventBus.trigger(events.INTERNAL_KEY_MESSAGE, { data: new KeyMessage(sessionToken, message, event.defaultURL) });
 
                         } else {
                             logger.warn('No session token found for key message');

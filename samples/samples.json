@@ -75,9 +75,24 @@
                 "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html"
             },
             {
+                "title": "Synchronized live playback with the catchup mode",
+                "description": "Example showing a synchronized live playback of two videos using the live playback catchup mode.",
+                "href": "live-streaming/synchronized-live-playback.html"
+            },
+            {
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
                 "href": "low-latency/index.html"
+            },
+            {
+                "title": "Low latency with L2ALL",
+                "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
+                "href": "low-latency/l2all_index.html"
+            },
+            {
+                "title": "Low latency with LoL+",
+                "description": "Example showing how to use dash.js to play low latency streams using the LoL+ ABR algorithm.",
+                "href": "low-latency/lolp_index.html"
             }
         ]
     },
@@ -158,16 +173,6 @@
                 "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html"
-            }
-        ]
-    },
-    {
-        "section": "Ad Insertion",
-        "samples": [
-            {
-                "title": "Ad insertion",
-                "description": "Demonstration of different implementation approaches for advert insertion, specifically inband, inline and X-Link onLoad. Provided by Fraunhofer Fokus.",
-                "href": "ad-insertion/index.html"
             }
         ]
     },

@@ -39,6 +39,7 @@ class FragmentRequest {
     constructor(url) {
         this.action = FragmentRequest.ACTION_DOWNLOAD;
         this.startTime = NaN;
+        this.mediaStartTime = NaN;
         this.mediaType = null;
         this.mediaInfo = null;
         this.type = null;

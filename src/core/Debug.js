@@ -108,6 +108,7 @@ function Debug(config) {
     function setLogTimestampVisible(value) {
         showLogTimestamp = value;
     }
+
     /**
      * Prepends the callee object name, and media type if available, to each log message.
      * @param {boolean} value Set to true if you want to see the callee object name and media type in each log message.
@@ -169,7 +170,9 @@ function Debug(config) {
         }
 
         // send log event regardless of log level
-        eventBus.trigger(Events.LOG, {message: message, level: level});
+        if (settings && settings.get().debug.dispatchEvent) {
+            eventBus.trigger(Events.LOG, { message: message, level: level });
+        }
     }
 
     instance = {

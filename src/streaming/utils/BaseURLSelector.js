@@ -95,14 +95,12 @@ function BaseURLSelector() {
         let selectedBaseUrl = selector.select(baseUrls);
 
         if (!selectedBaseUrl) {
-            eventBus.trigger(
-                Events.URL_RESOLUTION_FAILED, {
-                    error: new DashJSError(
-                        Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
-                        Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE
-                    )
-                }
-            );
+            eventBus.trigger(Events.URL_RESOLUTION_FAILED, {
+                error: new DashJSError(
+                    Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE,
+                    Errors.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE
+                )
+            });
             if (selector === basicSelector) {
                 reset();
             }

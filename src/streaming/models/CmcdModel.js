@@ -30,30 +30,25 @@
  */
 import EventBus from '../../core/EventBus';
 import MediaPlayerEvents from '../MediaPlayerEvents';
+import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
-import {getVersionString} from '../../core/Version';
 
-const CMCD_REQUEST_FIELD_NAME = 'Common-Media-Client-Data';
+const CMCD_REQUEST_FIELD_NAME = 'CMCD';
 const CMCD_VERSION = 1;
-const DEFAULT_DEVICE_ID = `dash.js-v${getVersionString()}`;
-const BUFFER_STATES = {
-    DEFAULT: null,
-    INITIALIZING: 1,
-    SEEKING: 2,
-    RISK: 3,
-    EMPTY: 4
-};
 const OBJECT_TYPES = {
     MANIFEST: 'm',
     AUDIO: 'a',
     VIDEO: 'v',
     INIT: 'i',
-    CAPTION: 'c'
+    CAPTION: 'c',
+    ISOBMFF_TEXT_TRACK: 'tt',
+    ENCRYPTION_KEY: 'k',
+    OTHER: 'o'
 };
 const STREAMING_FORMATS = {
     DASH: 'd',
@@ -72,7 +67,10 @@ function CmcdModel() {
         internalData,
         abrController,
         dashMetrics,
-        playbackController;
+        playbackController,
+        _isStartup,
+        _bufferLevelStarved,
+        _initialMediaRequestsDone;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -89,6 +87,7 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     }
 
     function setConfig(config) {
@@ -114,14 +113,11 @@ function CmcdModel() {
             st: null,
             sf: null,
             sid: `${Utils.generateUuid()}`,
-            bs: {
-                audio: BUFFER_STATES.INITIALIZING,
-                video: BUFFER_STATES.INITIALIZING
-            },
-            cid: null,
-            did: `${DEFAULT_DEVICE_ID}`
-
+            cid: null
         };
+        _bufferLevelStarved = {};
+        _isStartup = {};
+        _initialMediaRequestsDone = {};
     }
 
     function getQueryParameter(request) {
@@ -130,6 +126,12 @@ function CmcdModel() {
                 const cmcdData = _getCmcdData(request);
                 const finalPayloadString = _buildFinalString(cmcdData);
 
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
+                    url: request.url,
+                    mediaType: request.mediaType,
+                    cmcdData,
+                    cmcdString: finalPayloadString
+                });
                 return {
                     key: CMCD_REQUEST_FIELD_NAME,
                     value: finalPayloadString
@@ -147,25 +149,19 @@ function CmcdModel() {
             let cmcdData = null;
 
             if (request.type === HTTPRequest.MPD_TYPE) {
-                _setDefaultContentId(request);
                 return _getCmcdDataForMpd(request);
             } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                _initForMediaType(request.mediaType);
                 return _getCmcdDataForMediaSegment(request);
             } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
                 return _getCmcdDataForInitSegment(request);
+            } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
+                return _getCmcdDataForOther(request);
             }
 
             return cmcdData;
         } catch (e) {
             return null;
-        }
-    }
-
-    function _setDefaultContentId(request) {
-        try {
-            internalData.cid = `${Utils.generateHashCode(request.url)}`;
-        } catch (e) {
-
         }
     }
 
@@ -184,7 +180,9 @@ function CmcdModel() {
         const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
-        const bs = _getBufferStateByRequest(request);
+        const bl = _getBufferLevelByType(request.mediaType);
+        const tb = _getTopBitrateByType(request.mediaType);
+        const pr = internalData.pr;
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -206,32 +204,78 @@ function CmcdModel() {
             data.dl = dl;
         }
 
-        if (!isNaN(bs) && bs !== null) {
-            data.bs = bs;
+        if (!isNaN(bl)) {
+            data.bl = bl;
+        }
+
+        if (!isNaN(tb)) {
+            data.tb = tb;
+        }
+
+        if (!isNaN(pr) && pr !== 1) {
+            data.pr = pr;
+        }
+
+        if (_bufferLevelStarved[request.mediaType]) {
+            data.bs = true;
+            _bufferLevelStarved[request.mediaType] = false;
+        }
+
+        if (_isStartup[request.mediaType] || !_initialMediaRequestsDone[request.mediaType]) {
+            data.su = true;
+            _isStartup[request.mediaType] = false;
+            _initialMediaRequestsDone[request.mediaType] = true;
         }
 
         return data;
+    }
+
+    function _initForMediaType(mediaType) {
+
+        if (!_initialMediaRequestsDone.hasOwnProperty(mediaType)) {
+            _initialMediaRequestsDone[mediaType] = false;
+        }
+
+        if (!_isStartup.hasOwnProperty(mediaType)) {
+            _isStartup[mediaType] = false;
+        }
+
+        if (!_bufferLevelStarved.hasOwnProperty(mediaType)) {
+            _bufferLevelStarved[mediaType] = false;
+        }
     }
 
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
         data.ot = `${OBJECT_TYPES.INIT}`;
+        data.su = true;
 
         return data;
     }
 
+    function _getCmcdDataForOther() {
+        const data = _getGenericCmcdData();
+
+        data.ot = `${OBJECT_TYPES.OTHER}`;
+
+        return data;
+    }
+
+
     function _getGenericCmcdData() {
         const data = {};
 
+        let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
+
         data.v = CMCD_VERSION;
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-        data.cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
-        data.did = settings.get().streaming.cmcd.did ? settings.get().streaming.cmcd.did : internalData.did;
 
-        data.sid = `"${data.sid}"`;
-        data.cid = `"${data.cid}"`;
-        data.did = `"${data.did}"`;
+        data.sid = `${data.sid}`;
+
+        if (cid) {
+            data.cid = `${cid}`;
+        }
 
         if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
             data.pr = internalData.pr;
@@ -259,6 +303,15 @@ function CmcdModel() {
         }
     }
 
+    function _getTopBitrateByType(mediaType) {
+        try {
+            const info = abrController.getTopBitrateInfoFor(mediaType);
+            return Math.round(info.bitrate / 1000);
+        } catch (e) {
+            return null;
+        }
+    }
+
     function _getObjectDurationByRequest(request) {
         try {
             return !isNaN(request.duration) ? Math.round(request.duration * 1000) : null;
@@ -269,7 +322,7 @@ function CmcdModel() {
 
     function _getMeasuredThroughputByType(mediaType) {
         try {
-            return Math.round(abrController.getThroughputHistory().getSafeAverageThroughput(mediaType));
+            return parseInt(abrController.getThroughputHistory().getSafeAverageThroughput(mediaType) / 100) * 100;
         } catch (e) {
             return null;
         }
@@ -281,7 +334,7 @@ function CmcdModel() {
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
 
             if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
-                return parseInt((bufferLevel / playbackRate) * 1000);
+                return parseInt((bufferLevel / playbackRate) * 10) * 100;
             }
 
             return null;
@@ -290,22 +343,17 @@ function CmcdModel() {
         }
     }
 
-    function _getBufferStateByRequest(request) {
+    function _getBufferLevelByType(mediaType) {
         try {
-            const mediaType = request.mediaType;
-            if (internalData.bs[mediaType] !== null) {
-                return internalData.bs[mediaType];
-            }
-
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const duration = request.duration;
-            if (bufferLevel < duration) {
-                return BUFFER_STATES.RISK;
+
+            if (!isNaN(bufferLevel)) {
+                return parseInt(bufferLevel * 10) * 100;
             }
 
-            return BUFFER_STATES.DEFAULT;
+            return null;
         } catch (e) {
-
+            return null;
         }
     }
 
@@ -332,24 +380,32 @@ function CmcdModel() {
     function _onBufferLevelStateChanged(data) {
         try {
             if (data.state && data.mediaType) {
-                let state = null;
-                switch (data.state) {
-                    case MediaPlayerEvents.BUFFER_LOADED:
-                        state = BUFFER_STATES.DEFAULT;
-                        break;
-                    case MediaPlayerEvents.BUFFER_EMPTY:
-                        if (playbackController.isSeeking()) {
-                            state = BUFFER_STATES.SEEKING;
-                        }
-                        state = BUFFER_STATES.EMPTY;
-                        break;
-                    default:
-                }
-                internalData.bs[data.mediaType] = state;
+                if (data.state === MediaPlayerEvents.BUFFER_EMPTY) {
 
+                    if (!_bufferLevelStarved[data.mediaType]) {
+                        _bufferLevelStarved[data.mediaType] = true;
+                    }
+                    if (!_isStartup[data.mediaType]) {
+                        _isStartup[data.mediaType] = true;
+                    }
+                }
             }
         } catch (e) {
 
+        }
+    }
+
+    function _onPlaybackSeeked() {
+        for (let key in _bufferLevelStarved) {
+            if (_bufferLevelStarved.hasOwnProperty(key)) {
+                _bufferLevelStarved[key] = true;
+            }
+        }
+
+        for (let key in _isStartup) {
+            if (_isStartup.hasOwnProperty(key)) {
+                _isStartup[key] = true;
+            }
         }
     }
 
@@ -358,11 +414,17 @@ function CmcdModel() {
             if (!cmcdData) {
                 return null;
             }
-            const keys = Object.keys(cmcdData);
+            const keys = Object.keys(cmcdData).sort((a, b) =>a.localeCompare(b));
             const length = keys.length;
 
-            return keys.reduce((acc, key, index) => {
-                acc += `${key}=${cmcdData[key]}`;
+            let cmcdString = keys.reduce((acc, key, index) => {
+                if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
+                if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
+                    let string = cmcdData[key].replace(/"/g, '\"');
+                    acc += `${key}="${string}"`;
+                } else {
+                    acc += `${key}=${cmcdData[key]}`;
+                }
                 if (index < length - 1) {
                     acc += ',';
                 }
@@ -370,6 +432,9 @@ function CmcdModel() {
                 return acc;
             }, '');
 
+            cmcdString = cmcdString.replace(/=true/g, '');
+
+            return cmcdString;
         } catch (e) {
             return null;
         }
@@ -379,6 +444,7 @@ function CmcdModel() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
 
         _resetInitialSettings();
     }
