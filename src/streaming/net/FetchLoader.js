@@ -135,6 +135,7 @@ function FetchLoader(cfg) {
             let downloadedData = [];
             let startTimeData = [];
             let endTimeData = [];
+            let lastChunkWasFinished = true;
             const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
 
             const processResult = function ({ value, done }) { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
@@ -167,11 +168,12 @@ function FetchLoader(cfg) {
                         bytes: value.length
                     });
 
-                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && lastChunkWasFinished) {
                         // Parse the payload and capture the the 'moof' box
-                        const flag1 = boxParser.parsePayload(['moof'], remaining, offset);
-                        if (flag1.found) {
+                        const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], remaining, offset);
+                        if (boxesInfo.found) {
                             // Store the beginning time of each chunk download in array StartTimeData
+                            lastChunkWasFinished = false;
                             startTimeData.push({
                                 ts: performance.now(), /* jshint ignore:line */
                                 bytes: value.length
@@ -185,6 +187,7 @@ function FetchLoader(cfg) {
 
                         // Store the end time of each chunk download  with its size in array EndTimeData
                         if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                            lastChunkWasFinished = true;
                             endTimeData.push({
                                 ts: performance.now(), /* jshint ignore:line */
                                 bytes: remaining.length
@@ -292,10 +295,16 @@ function FetchLoader(cfg) {
             datum = startTimeData.filter((data, i) => i > 0 && i < startTimeData.length - 1);
             datumE = endTimeData.filter((dataE, i) => i > 0 && i < endTimeData.length - 1);
             // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
+            let segDownloadTime = 0;
             if (datum.length > 1) {
-                let segDownloadtime = datumE[datumE.length - 1].ts - datum[0].ts;
-                // Send SegDownlaodtime to ThroughputHistory.js for SWMA based throughout measurements
-                return segDownloadtime;
+                for (let i = 0; i < datum.length; i++) {
+                    if (datum[i] && datumE[i]) {
+                        let chunkDownladTime = datumE[i].ts - datum[i].ts;
+                        segDownloadTime += chunkDownladTime;
+                    }
+                }
+
+                return segDownloadTime;
             }
             return null;
         } catch (e) {
