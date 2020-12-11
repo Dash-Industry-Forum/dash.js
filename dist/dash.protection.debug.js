@@ -838,6 +838,12 @@ var ProtectionEvents = (function (_EventsBase) {
     this.LICENSE_REQUEST_COMPLETE = 'public_licenseRequestComplete';
 
     /**
+     * Sending a license rquest
+     * @event ProtectionEvents#LICENSE_REQUEST_SENDING
+     */
+    this.LICENSE_REQUEST_SENDING = 'public_licenseRequestSending';
+
+    /**
      * Event ID for needkey/encrypted events
      * @ignore
      */
@@ -1080,7 +1086,7 @@ function ProtectionController(config) {
             var currentInitData = protectionModel.getAllInitData();
             for (var i = 0; i < currentInitData.length; i++) {
                 if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                    logger.warn('DRM: Ignoring initData because we have already seen it!');
+                    logger.info('DRM: Ignoring initData because we have already seen it!');
                     return;
                 }
             }
@@ -1611,12 +1617,13 @@ function ProtectionController(config) {
         var reqMethod = licenseServerData.getHTTPMethod(messageType);
         var responseType = licenseServerData.getResponseType(keySystemString, messageType);
         var timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
+        var sessionId = sessionToken.getSessionID() || null;
 
-        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError, sessionId);
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
-    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError) {
+    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId) {
         var xhr = new XMLHttpRequest();
 
         xhr.open(method, url, true);
@@ -1633,7 +1640,7 @@ function ProtectionController(config) {
             // fail silently and retry
             retriesCount--;
             setTimeout(function () {
-                doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError);
+                doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId);
             }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
         };
 
@@ -1658,6 +1665,13 @@ function ProtectionController(config) {
         xhr.onabort = function () {
             onAbort(this);
         };
+
+        eventBus.trigger(events.LICENSE_REQUEST_SENDING, {
+            url: url,
+            headers: headers,
+            payload: payload,
+            sessionId: sessionId
+        });
 
         xhr.send(payload);
     }

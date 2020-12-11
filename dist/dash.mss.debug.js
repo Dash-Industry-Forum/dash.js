@@ -785,6 +785,19 @@ var FactoryMaker = (function () {
         });
     }
 
+    /**
+     * Use this method to remove all singleton instances associated with a particular context.
+     *
+     * @param {Object} context
+     * @memberof module:FactoryMaker
+     * @instance
+     */
+    function deleteSingletonInstances(context) {
+        singletonContexts = singletonContexts.filter(function (x) {
+            return x.context !== context;
+        });
+    }
+
     /*------------------------------------------------------------------------------------------*/
 
     // Factories storage Management
@@ -932,6 +945,7 @@ var FactoryMaker = (function () {
         extend: extend,
         getSingletonInstance: getSingletonInstance,
         setSingletonInstance: setSingletonInstance,
+        deleteSingletonInstances: deleteSingletonInstances,
         getSingletonFactory: getSingletonFactory,
         getSingletonFactoryByName: getSingletonFactoryByName,
         updateSingletonFactory: updateSingletonFactory,
@@ -1459,6 +1473,14 @@ function MssFragmentMoofProcessor(config) {
             segment.t -= parseFloat(segments[0].tManifest) - segments[0].t;
             segment.tManifest = entry.fragment_absolute_time;
         }
+
+        // Patch previous segment duration
+        var lastSegment = segments[segments.length - 1];
+        if (lastSegment.t + lastSegment.d !== segment.t) {
+            logger.debug('Patch segment duration - t = ', lastSegment.t + ', d = ' + lastSegment.d + ' => ' + (segment.t - lastSegment.t));
+            lastSegment.d = segment.t - lastSegment.t;
+        }
+
         segments.push(segment);
 
         // In case of static start-over streams, update content duration
@@ -2696,7 +2718,7 @@ function MssHandler(config) {
     }
 
     function onInitFragmentNeeded(e) {
-        var streamProcessor = getStreamProcessor(e.sender.getType());
+        var streamProcessor = getStreamProcessor(e.mediaType);
         if (!streamProcessor) return;
 
         // Create init segment request
@@ -2719,9 +2741,7 @@ function MssHandler(config) {
             chunk.bytes = mssFragmentProcessor.generateMoov(representation);
 
             // Notify init segment has been loaded
-            eventBus.trigger(events.INIT_FRAGMENT_LOADED, {
-                chunk: chunk
-            });
+            eventBus.trigger(events.INIT_FRAGMENT_LOADED, { chunk: chunk }, { streamId: mediaInfo.streamInfo.id, mediaType: representation.adaptation.type });
         } catch (e) {
             config.errHandler.error(new _streamingVoDashJSError2['default'](e.code, e.message, e.data));
         }
@@ -2775,10 +2795,10 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
-        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
-        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
-        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH); /* jshint ignore:line */
+        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
+        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
+        eventBus.on(events.PLAYBACK_SEEK_ASKED, onPlaybackSeekAsked, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH }); /* jshint ignore:line */
         eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 
@@ -3939,6 +3959,12 @@ var MediaPlayerEvents = (function (_EventsBase) {
     this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
     /**
+     * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
+     * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
+     */
+    this.DYNAMIC_TO_STATIC = 'dynamicToStatic';
+
+    /**
      * Triggered when there is an error from the element or MSE source buffer.
      * @event MediaPlayerEvents#ERROR
      */
@@ -4217,6 +4243,24 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
      */
     this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
+
+    /**
+     * A gap occured in the timeline which requires an internal seek
+     * @event MediaPlayerEvents#GAP_CAUSED_INTERNAL_SEEK
+     */
+    this.GAP_CAUSED_INTERNAL_SEEK = 'gapCausedInternalSeek';
+
+    /**
+     * Dash events are triggered at their respective start points on the timeline.
+     * @event MediaPlayerEvents#EVENT_MODE_ON_START
+     */
+    this.EVENT_MODE_ON_START = 'eventModeOnStart';
+
+    /**
+     * Dash events are triggered as soon as they were parsed.
+     * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
+     */
+    this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
   }
 
   return MediaPlayerEvents;
@@ -4485,6 +4529,7 @@ var FragmentRequest = (function () {
 
         this.action = FragmentRequest.ACTION_DOWNLOAD;
         this.startTime = NaN;
+        this.mediaStartTime = NaN;
         this.mediaType = null;
         this.mediaInfo = null;
         this.type = null;
