@@ -146,12 +146,12 @@ describe('MediaPlayerModel', function () {
         settings.update({ streaming: { lowLatencyEnabled: true, liveDelay: 3, liveCatchup: { minDrift: 3 } } });
 
         liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(12);
+        expect(liveCatchupLatencyThreshold).to.equal(24);
 
         settings.update({ streaming: { liveCatchup: { minDrift: NaN } } });
 
         liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
-        expect(liveCatchupLatencyThreshold).to.equal(6);
+        expect(liveCatchupLatencyThreshold).to.equal(12);
 
         settings.update({ streaming: { liveCatchup: { latencyThreshold: 50 } } });
 
