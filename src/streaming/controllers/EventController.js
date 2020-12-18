@@ -46,6 +46,12 @@ function EventController() {
     const REFRESH_DELAY = 100;
     const REMAINING_EVENTS_THRESHOLD = 300;
 
+    const EVENT_HANDLED_STATES = {
+        DISCARDED: 'discarded',
+        UPDATED: 'updated',
+        ADDED: 'added'
+    };
+
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -119,14 +125,15 @@ function EventController() {
             if (values) {
                 for (let i = 0; i < values.length; i++) {
                     let event = values[i];
-                    logger.debug('Add inline event with id ' + event.id);
+                    let result = _addOrUpdateEvent(event, inlineEvents, true);
 
-                    // If we see the event for the first time we trigger it in onReceive mode
-                    if (!inlineEvents[event.id]) {
-                        _startEvent(event.id, event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                    if (result === EVENT_HANDLED_STATES.ADDED) {
+                        logger.debug(`Added inline event with id ${event.id}`);
+                        // If we see the event for the first time we trigger it in onReceive mode
+                        _startEvent(event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                    } else if (result === EVENT_HANDLED_STATES.UPDATED) {
+                        logger.debug(`Updated inline event with id ${event.id}`);
                     }
-
-                    inlineEvents[event.id] = event;
                 }
             }
             logger.debug(`Added ${values.length} inline events`);
@@ -136,7 +143,7 @@ function EventController() {
     }
 
     /**
-     * i.e. processing of any one event message box with the same id is sufficient
+     * Messages with the same id within the scope of the same scheme_id_uri and value pair are equivalent , i.e. processing of any one event message box with the same id is sufficient.
      * @param {Array.<Object>} values
      */
     function addInbandEvents(values) {
@@ -145,13 +152,14 @@ function EventController() {
 
             for (let i = 0; i < values.length; i++) {
                 let event = values[i];
-                if (!(event.id in inbandEvents)) {
+                let result = _addOrUpdateEvent(event, inbandEvents, false);
+
+                if (result === EVENT_HANDLED_STATES.ADDED) {
                     if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && inbandEvents[event.id] === undefined) {
                         _handleManifestReloadEvent(event);
                     }
-                    inbandEvents[event.id] = event;
-                    logger.debug('Add inband event with id ' + event.id);
-                    _startEvent(event.id, event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
+                    logger.debug('Added inband event with id ' + event.id);
+                    _startEvent(event, values, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
                 } else {
                     logger.debug('Repeated event with id ' + event.id);
                 }
@@ -160,6 +168,31 @@ function EventController() {
         } catch (e) {
             throw e;
         }
+    }
+
+    function _addOrUpdateEvent(event, events, shouldOverwriteExistingEvents = false) {
+        const schemeIdUri = event.eventStream.schemeIdUri;
+        const value = event.value;
+        const id = event.id;
+        let eventState = EVENT_HANDLED_STATES.DISCARDED;
+
+        if (!events[schemeIdUri]) {
+            events[schemeIdUri] = {};
+        }
+
+        if (!events[schemeIdUri][value]) {
+            events[schemeIdUri][value] = {};
+        }
+
+        if (!events[schemeIdUri][value][id]) {
+            events[schemeIdUri][value][id] = event;
+            eventState = EVENT_HANDLED_STATES.ADDED;
+        } else if (shouldOverwriteExistingEvents) {
+            events[schemeIdUri][value][id] = event;
+            eventState = EVENT_HANDLED_STATES.UPDATED;
+        }
+
+        return eventState;
     }
 
     function _handleManifestReloadEvent(event) {
@@ -257,7 +290,7 @@ function EventController() {
                         const duration = !isNaN(event.duration) ? event.duration : 0;
                         // The event is either about to start or has already been started and we are within its duration
                         if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
-                            _startEvent(eventId, event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
+                            _startEvent(event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
                         } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
                             logger.debug(`Deleting event ${eventId} as it is expired or invalid`);
                             delete events[eventId];
@@ -281,7 +314,7 @@ function EventController() {
         try {
             const periodEndTime = event.eventStream.period.start + event.eventStream.period.duration;
 
-            return event.calculatedPresentationTime  > periodEndTime;
+            return event.calculatedPresentationTime > periodEndTime;
         } catch (e) {
             return false;
         }
@@ -308,7 +341,7 @@ function EventController() {
                 const calculatedPresentationTimeInSeconds = event.calculatedPresentationTime;
 
                 if (Math.abs(calculatedPresentationTimeInSeconds - currentTime) < REMAINING_EVENTS_THRESHOLD) {
-                    _startEvent(eventId, event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
+                    _startEvent(event, events, MediaPlayerEvents.EVENT_MODE_ON_START);
                 }
             });
         } catch (e) {
@@ -316,9 +349,10 @@ function EventController() {
         }
     }
 
-    function _startEvent(eventId, event, events, mode) {
+    function _startEvent(event, events, mode) {
         try {
             const currentVideoTime = playbackController.getTime();
+            const eventId = event.id;
 
             if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE) {
                 logger.debug(`Received event ${eventId}`);
