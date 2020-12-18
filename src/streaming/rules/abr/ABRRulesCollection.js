@@ -135,46 +135,57 @@ function ABRRulesCollection(config) {
         return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
     }
 
+    /**
+     *
+     * @param {array} srArray
+     * @return {object} SwitchRequest
+     */
     function getMinSwitchRequest(srArray) {
         const values = {};
+        let newSwitchReq = null;
         let i,
             len,
             req,
-            newQuality,
-            quality;
+            quality,
+            reason;
 
         if (srArray.length === 0) {
             return;
         }
 
-        values[SwitchRequest.PRIORITY.STRONG] = SwitchRequest.NO_CHANGE;
-        values[SwitchRequest.PRIORITY.WEAK] = SwitchRequest.NO_CHANGE;
-        values[SwitchRequest.PRIORITY.DEFAULT] = SwitchRequest.NO_CHANGE;
+        values[SwitchRequest.PRIORITY.STRONG] = { quality: SwitchRequest.NO_CHANGE, reason: null };
+        values[SwitchRequest.PRIORITY.WEAK] = { quality: SwitchRequest.NO_CHANGE, reason: null };
+        values[SwitchRequest.PRIORITY.DEFAULT] = { quality: SwitchRequest.NO_CHANGE, reason: null };
 
         for (i = 0, len = srArray.length; i < len; i += 1) {
             req = srArray[i];
             if (req.quality !== SwitchRequest.NO_CHANGE) {
-                values[req.priority] = values[req.priority] > SwitchRequest.NO_CHANGE ? Math.min(values[req.priority], req.quality) : req.quality;
+                // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
+                if (values[req.priority].quality === SwitchRequest.NO_CHANGE || values[req.priority].quality > req.quality) {
+                    values[req.priority].quality = req.quality;
+                    values[req.priority].reason = req.reason || null;
+                }
             }
         }
 
-        if (values[SwitchRequest.PRIORITY.WEAK] !== SwitchRequest.NO_CHANGE) {
-            newQuality = values[SwitchRequest.PRIORITY.WEAK];
+        if (values[SwitchRequest.PRIORITY.WEAK].quality !== SwitchRequest.NO_CHANGE) {
+            newSwitchReq = values[SwitchRequest.PRIORITY.WEAK];
         }
 
-        if (values[SwitchRequest.PRIORITY.DEFAULT] !== SwitchRequest.NO_CHANGE) {
-            newQuality = values[SwitchRequest.PRIORITY.DEFAULT];
+        if (values[SwitchRequest.PRIORITY.DEFAULT].quality !== SwitchRequest.NO_CHANGE) {
+            newSwitchReq = values[SwitchRequest.PRIORITY.DEFAULT];
         }
 
-        if (values[SwitchRequest.PRIORITY.STRONG] !== SwitchRequest.NO_CHANGE) {
-            newQuality = values[SwitchRequest.PRIORITY.STRONG];
+        if (values[SwitchRequest.PRIORITY.STRONG].quality !== SwitchRequest.NO_CHANGE) {
+            newSwitchReq = values[SwitchRequest.PRIORITY.STRONG];
         }
 
-        if (newQuality !== SwitchRequest.NO_CHANGE) {
-            quality = newQuality;
+        if (newSwitchReq) {
+            quality = newSwitchReq.quality;
+            reason = newSwitchReq.reason;
         }
 
-        return SwitchRequest(context).create(quality);
+        return SwitchRequest(context).create(quality, reason);
     }
 
     function getMaxQuality(rulesContext) {
@@ -211,6 +222,7 @@ function ABRRulesCollection(config) {
         initialize,
         reset,
         getMaxQuality,
+        getMinSwitchRequest,
         shouldAbandonFragment,
         getQualitySwitchRules
     };
