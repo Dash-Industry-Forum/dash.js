@@ -158,6 +158,44 @@ describe('ABRRulesCollection', function () {
             expect(sr.reason.throughput).to.be.equal(50);
         });
 
+        it('should return correct switch request in getMinSwitchRequest for multiple items with different and similar priorities', () => {
+            const srArray = [
+                {
+                    quality: 6,
+                    priority: SwitchRequest.PRIORITY.DEFAULT,
+                    reason: {
+                        throughput: 60
+                    }
+                },
+                {
+                    quality: 5,
+                    priority: SwitchRequest.PRIORITY.STRONG,
+                    reason: {
+                        throughput: 50
+                    }
+                },
+                {
+                    quality: 4,
+                    priority: SwitchRequest.PRIORITY.STRONG,
+                    reason: {
+                        throughput: 40
+                    }
+                },
+                {
+                    quality: 7,
+                    priority: SwitchRequest.PRIORITY.WEAK,
+                    reason: {
+                        throughput: 70
+                    }
+                }
+            ];
+
+            const sr = abrRulesCollection.getMinSwitchRequest(srArray);
+
+            expect(sr.quality).to.be.equal(4);
+            expect(sr.reason.throughput).to.be.equal(40);
+        });
+
         it('should return correct switch request in getMinSwitchRequest for a single item without reason', () => {
             const srArray = [{
                 quality: 5,
