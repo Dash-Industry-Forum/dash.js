@@ -573,7 +573,7 @@ function Stream(config) {
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.fatal(msg);
         } else {
-            checkIfInitializationCompleted();
+            checkIfInitializationCompleted(true);
         }
 
         return buffers;
@@ -592,7 +592,7 @@ function Stream(config) {
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
             logger.debug(msg);
         } else {
-            checkIfInitializationCompleted();
+            checkIfInitializationCompleted(true);
         }
     }
 
@@ -615,7 +615,7 @@ function Stream(config) {
         });
     }
 
-    function checkIfInitializationCompleted() {
+    function checkIfInitializationCompleted(initProtection) {
         const ln = streamProcessors.length;
         const hasError = !!updateError.audio || !!updateError.video;
         let error = hasError ? new DashJSError(Errors.DATA_UPDATE_FAILED_ERROR_CODE, Errors.DATA_UPDATE_FAILED_ERROR_MESSAGE) : null;
@@ -630,7 +630,7 @@ function Stream(config) {
             return;
         }
 
-        if (protectionController) {
+        if (protectionController && initProtection) {
             // Need to check if streamProcessors exists because streamProcessors
             // could be cleared in case an error is detected while initializing DRM keysystem
             for (let i = 0; i < ln && streamProcessors[i]; i++) {
