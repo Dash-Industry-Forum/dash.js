@@ -1592,10 +1592,13 @@ function MediaPlayer() {
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
      * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
-     * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
+     * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+     *
+     * Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
+     * This mode makes the player select the track with the lowest bitrate per pixel average.
      *
      * Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
-     * this mode makes the player select the track with a widest range of bitrates
+     * This mode makes the player select the track with a widest range of bitrates.
      *
      * @param {string} mode
      * @memberof module:MediaPlayer
