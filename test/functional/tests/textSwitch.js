@@ -30,7 +30,7 @@ exports.register = function (stream) {
     suite(utils.testName(NAME, stream), (suite) => {
 
         before(async ({ remote }) => {
-            if (!stream.available || stream.textTracks["text"].length < 1 && stream.textTracks["fragmentedText"].length < 1) suite.skip();
+            if (!stream.available || stream.textTracks['text'].length < 1 && stream.textTracks['fragmentedText'].length < 1) suite.skip();
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
 
