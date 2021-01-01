@@ -133,5 +133,24 @@ module.exports = {
 
         _timeout = setTimeout(_onTimeout, timeout * 1000);
         player.on(event, _onEvent);
+    },
+
+    getTracksFor: function(type){
+        return player.getTracksFor(type);
+    },
+
+    setCurrentTrack: function(track){
+        player.setCurrentTrack(track);
+    },
+
+    getCurrentTrackFor: function(type){
+        return player.getCurrentTrackFor(type);
+    },
+    setAutoPlay: function(value){
+        player.setAutoPlay(value);
+    },
+
+    setInitialMediaSettingsFor: function(type, value){
+        player.setInitialMediaSettingsFor(type, value);
     }
 };
