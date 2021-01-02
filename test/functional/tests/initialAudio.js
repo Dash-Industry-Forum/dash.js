@@ -28,7 +28,7 @@ exports.register = function (stream) {
     suite(utils.testName(NAME, stream), (suite) => {
 
         before(async () => {
-            if (!stream.available) suite.skip();
+            if (!stream.available || stream.audioTracks.length <= 1) suite.skip();
             utils.log(NAME, 'Load stream');
             
         });
