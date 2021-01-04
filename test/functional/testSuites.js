@@ -19,7 +19,7 @@ var registerSuites = function (stream) {
     if (suites.indexOf('playFromTime') !== -1) playFromTime.register(stream);
     if (suites.indexOf('pause') !== -1) pause.register(stream);
     if (suites.indexOf('seek') !== -1) seek.register(stream);
-    if (suites.indexOf('seek') !== -1) seekPeriods.register(stream);
+    if (suites.indexOf('seekPeriods') !== -1) seekPeriods.register(stream);
     if (suites.indexOf('ended') !== -1) ended.register(stream);
 };
 
