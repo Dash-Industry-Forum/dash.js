@@ -8,7 +8,7 @@ AUDIO_SWITCH:
     - check if playback progressing
 **/
 const intern = require('intern').default;
-const { suite, before, test, after } = intern.getPlugin('interface.tdd');
+const { suite, before, test } = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
 const constants = require('./scripts/constants.js');
@@ -18,7 +18,7 @@ const player = require('./scripts/player.js');
 // Suite name
 const NAME = 'AUDIO_SWITCH';
 
-// test constants
+// Test constants
 const SWITCH_WAIT = 3;
 
 exports.register = function (stream) {
@@ -34,8 +34,10 @@ exports.register = function (stream) {
         });
 
         test('switch audio track', async () => {
-            // Select each track and check if new selected track is correct
-            for (let i = 0; i < stream.audioTracks.length; i++) {
+            // Wait
+            await command.sleep(SWITCH_WAIT * 1000);
+            // Select each other track and check if new selected track is correct
+            for (let i = 1; i < stream.audioTracks.length; i++) {
                 // Select audio track
                 utils.log(NAME, 'switch audio track: ' + stream.audioTracks[i].lang);
                 await command.execute(player.setCurrentTrack, [stream.audioTracks[i]]);
