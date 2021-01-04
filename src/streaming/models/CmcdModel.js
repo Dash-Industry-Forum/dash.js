@@ -129,7 +129,12 @@ function CmcdModel() {
 
     function updateStreamProcessors() {
         if (!playbackController) return;
-        streamProcessors = playbackController.getStreamController().getActiveStream().getProcessors();
+        const streamController = playbackController.getStreamController();
+        if (!streamController) return;
+        if (typeof streamController.getActiveStream !== 'function') return;
+        const activeStream = streamController.getActiveStream();
+        if (!activeStream) return;
+        streamProcessors = activeStream.getProcessors();
     }
 
     function getQueryParameter(request) {

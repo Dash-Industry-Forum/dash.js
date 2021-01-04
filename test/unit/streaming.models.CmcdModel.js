@@ -102,6 +102,8 @@ describe('CmcdModel', function () {
             const MEASURED_THROUGHPUT = 8327641;
             const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
             const VIDEO_OBJECT_TYPE = 'v';
+            const NEXT_OBJECT_URL = 'http://test.url/next_object';
+            const NEXT_OBJECT_RANGE = '100-500';
 
             abrControllerMock.setTopBitrateInfo({bitrate: TOP_BITRATE});
             abrControllerMock.setThroughputHistory({
@@ -140,6 +142,10 @@ describe('CmcdModel', function () {
             expect(metrics.bl).to.equal(BUFFER_LEVEL);
             expect(metrics).to.have.property('tb');
             expect(metrics.tb).to.equal(parseInt(TOP_BITRATE / 1000));
+            expect(metrics).to.have.property('nor');
+            expect(metrics.nor).to.equal(NEXT_OBJECT_URL);
+            expect(metrics).to.have.property('nrr');
+            expect(metrics.nrr).to.equal(NEXT_OBJECT_RANGE);
         });
 
         it('getQueryParameter() returns correct metrics for other type', function () {
