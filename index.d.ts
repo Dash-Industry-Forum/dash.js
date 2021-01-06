@@ -133,7 +133,7 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
-            liveCatchup: {
+            liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
@@ -180,7 +180,7 @@ declare namespace dashjs {
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
-                ABRStrategy?: 'abrDynamic' | 'abrBola';
+                ABRStrategy?: 'abrDynamic' | 'abrBola' | 'abrL2A' | 'abrLoLP' | 'abrThroughput';
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
                 useDeadTimeLatency?: boolean;
