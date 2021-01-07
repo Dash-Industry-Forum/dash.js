@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from './FactoryMaker';
-import {EVENT_MODE_ON_RECEIVE} from '../streaming/MediaPlayerEvents';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 
 const EVENT_PRIORITY_LOW = 0;
 const EVENT_PRIORITY_HIGH = 5000;
@@ -116,7 +116,7 @@ function EventBus() {
                     return false;
                 }
                 // This is used for dispatching DASH events. By default we use the onStart mode. Consequently we filter everything that has a non matching mode and the onReceive events for handlers that did not specify a mode.
-                if ((filters.mode && handler.mode && handler.mode !== filters.mode) || (!handler.mode && filters.mode && filters.mode === EVENT_MODE_ON_RECEIVE)) {
+                if ((filters.mode && handler.mode && handler.mode !== filters.mode) || (!handler.mode && filters.mode && filters.mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE)) {
                     return false;
                 }
                 return true;

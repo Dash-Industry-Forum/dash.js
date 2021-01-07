@@ -133,7 +133,7 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
-            liveCatchup: {
+            liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
