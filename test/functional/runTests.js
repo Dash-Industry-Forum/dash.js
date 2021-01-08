@@ -46,6 +46,10 @@ var args = yargs
             describe: 'Name filter for streams to be tested',
             default: 'all'
         },
+        'mpd': {
+            describe: 'Manifest url of the stream to be tested',
+            default: ''
+        },
         'debug': {
             describe: 'Output log/debug messages',
             type: 'boolean',
@@ -181,9 +185,13 @@ if (args.testSuites !== 'all') {
     config.testSuites = args.testSuites;
 }
 
-// Test stream
+// Test streams
 if (args.streams !== 'all') {
     config.streams = args.streams;
+}
+
+if (args.mpd !== '') {
+    config.mpd = args.mpd;
 }
 
 // Debug logs
