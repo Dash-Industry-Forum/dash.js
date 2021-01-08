@@ -21,9 +21,10 @@ const { default: Test, SKIP } = require('intern/lib/Test');
 // Suite name
 const NAME = 'TEXTSWITCH';
 
-// test constants
+// Test constants
 
 const SWITCH_WAIT = 3; 
+const SWITCH_TIMEOUT = 60;
 
 exports.register = function (stream) {
 
@@ -43,12 +44,15 @@ exports.register = function (stream) {
             await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);     
         });
         
-        //Check for every media type (VTT, etc..)
-        
-        test('switch text track', async() =>{
+        test('switch text track', async(test) =>{
+            // Set test timeout
+            test.timeout = SWITCH_TIMEOUT * 1000;
 
+            // Select for MediaType "text" and "fragmented"
             for(let textType in stream.textTracks){
+                // Select each track and check if new selected track is correct
                 for(let i = 0; i < stream.textTracks[textType].length; i++){
+                    // Select text track
                     utils.log(NAME, 'switch '+ textType+' track: ' + stream.textTracks[textType][i].lang);
                     await command.execute(player.setCurrentTrack,[stream.textTracks[textType][i]]);
                     
@@ -63,8 +67,8 @@ exports.register = function (stream) {
                     utils.log(NAME, 'Check if playing');
                     const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
                     assert.isTrue(progressing);
-                }         
-            }
+                }       
+            }  
         });
     });
 }

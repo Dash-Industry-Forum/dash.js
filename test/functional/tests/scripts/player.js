@@ -137,7 +137,6 @@ module.exports = {
 
     getTracksFor: function(mediaType){
         return player.getTracksFor(mediaType);
-        
     },
 
     setCurrentTrack: function(track){
