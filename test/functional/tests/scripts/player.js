@@ -153,6 +153,6 @@ module.exports = {
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
     }
-    
+
     
 };

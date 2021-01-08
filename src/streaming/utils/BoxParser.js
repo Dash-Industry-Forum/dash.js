@@ -252,12 +252,58 @@ function BoxParser(/*config*/) {
         return initRange;
     }
 
+    /**
+     * Real-time parsing (whenever data is loaded in the buffer payload) of the payload to capture the moof of a chunk
+     * @param {array} types
+     * @param {ArrayBuffer} buffer
+     * @param {number} offset
+     * @return {IsoBoxSearchInfo}
+     */
+    function parsePayload(types, buffer, offset) {
+        if (offset === undefined) {
+            offset = 0;
+        }
+
+        if (!buffer || offset + 8 >= buffer.byteLength) {
+            return new IsoBoxSearchInfo(0, false);
+        }
+
+        const data = (buffer instanceof ArrayBuffer) ? new Uint8Array(buffer) : buffer;
+        let boxInfo;
+        let lastCompletedOffset = 0;
+        while (offset < data.byteLength) {
+            const boxSize = parseUint32(data, offset);
+            const boxType = parseIsoBoxType(data, offset + 4);
+
+            if (boxSize === 0) {
+                break;
+            }
+
+            if (offset + boxSize <= data.byteLength) {
+                if (types.indexOf(boxType) >= 0) {
+                    boxInfo = new IsoBoxSearchInfo(offset, true, boxSize, boxType);
+                } else {
+                    lastCompletedOffset = offset + boxSize;
+                }
+            }
+
+            offset += boxSize;
+        }
+
+        if (!boxInfo) {
+            return new IsoBoxSearchInfo(lastCompletedOffset, false);
+        }
+
+        return boxInfo;
+    }
+
     instance = {
         parse: parse,
         findLastTopIsoBoxCompleted: findLastTopIsoBoxCompleted,
         getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
         getSamplesInfo: getSamplesInfo,
-        findInitRange: findInitRange
+        findInitRange: findInitRange,
+        parsePayload: parsePayload
     };
 
     setup();

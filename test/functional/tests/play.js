@@ -43,6 +43,7 @@ exports.register = function (stream) {
         after(async () => {
             stream.dynamic = await command.execute(player.isDynamic);
             stream.duration = await command.execute(player.getDuration);
+            stream.audioTracks = await command.execute(player.getTracksFor, ['audio']);
             stream.textTracks = {};
             stream.textTracks['text'] = await command.execute(player.getTracksFor, ['text']);
             stream.textTracks['fragmentedText'] = await command.execute(player.getTracksFor, ['fragmentedText']);

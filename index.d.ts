@@ -103,6 +103,7 @@ declare namespace dashjs {
     export class MediaPlayerSettingClass {
         debug?: {
             logLevel?: LogLevel;
+            dispatchEvent?: boolean;
         };
         streaming?: {
             metricsMaxListDepth?: number;
@@ -112,6 +113,7 @@ declare namespace dashjs {
             scheduleWhilePaused?: boolean;
             fastSwitchEnabled?: boolean;
             flushBufferAtTrackSwitch?: boolean;
+            reuseExistingSourceBuffers?: boolean;
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
@@ -130,9 +132,16 @@ declare namespace dashjs {
             useSuggestedPresentationDelay?: boolean;
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
-            liveCatchUpMinDrift?: number;
-            liveCatchUpMaxDrift?: number;
-            liveCatchUpPlaybackRate?: number;
+            stallThreshold?: number;
+            liveCatchup?: {
+                minDrift?: number;
+                maxDrift?: number;
+                playbackRate?: number;
+                latencyThreshold?: number,
+                playbackBufferMin?: number,
+                enabled?: boolean
+                mode?: string
+            }
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
                 ttl?: number;
@@ -171,10 +180,9 @@ declare namespace dashjs {
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
-                ABRStrategy?: 'abrDynamic' | 'abrBola';
+                ABRStrategy?: 'abrDynamic' | 'abrBola' | 'abrL2A' | 'abrLoLP' | 'abrThroughput';
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
-                useBufferOccupancyABR?: boolean;
                 useDeadTimeLatency?: boolean;
                 limitBitrateByPortal?: boolean;
                 usePixelRatioInLimitBitrateByPortal?: boolean;
@@ -201,7 +209,8 @@ declare namespace dashjs {
                 autoSwitchBitrate?: {
                     audio?: boolean;
                     video?: boolean;
-                };
+                },
+                fetchThroughputCalculationMode?: string;
             },
             cmcd?: {
                 enabled?: boolean,

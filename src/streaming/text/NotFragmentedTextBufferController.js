@@ -158,7 +158,7 @@ function NotFragmentedTextBufferController(config) {
 
         // // Text data file is contained in initialization segment
         eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-            { representationId: e.currentRepresentation.id },
+            { representationId: e.currentRepresentation.id, sender: instance },
             { streamId: streamInfo.id, mediaType: type }
         );
     }

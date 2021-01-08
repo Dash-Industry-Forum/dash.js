@@ -143,7 +143,7 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
@@ -334,7 +334,7 @@ function StreamController() {
 
     function canSourceBuffersBeReused(nextStream, previousStream) {
         try {
-            return (previousStream.isProtectionCompatible(nextStream, previousStream) &&
+            return (settings.get().streaming.reuseExistingSourceBuffers && previousStream.isProtectionCompatible(nextStream, previousStream) &&
                 (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
         } catch (e) {
             return false;
@@ -730,7 +730,7 @@ function StreamController() {
 
                 // we need to figure out what the correct starting period is
                 let initialStream = null;
-                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
+                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(adapter.getIsDynamic());
 
                 initialStream = getStreamForTime(startTimeFromUri);
 

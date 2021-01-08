@@ -114,7 +114,7 @@ function ThumbnailController(config) {
     function buildUrlFromTemplate(track, seq) {
         const seqIdx = seq + track.startNumber;
         let url = replaceTokenForTemplate(track.templateUrl, 'Number', seqIdx);
-        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration);
+        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration * track.timescale);
         url = replaceTokenForTemplate(url, 'Bandwidth', track.bandwidth);
         return unescapeDollarsInTemplate(url);
     }

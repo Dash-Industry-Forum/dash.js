@@ -326,6 +326,12 @@ function MediaPlayer() {
 
         segmentBaseController.initialize();
 
+        // configure controllers
+        mediaController.setConfig({
+            domStorage: domStorage,
+            settings: settings
+        });
+
         restoreDefaultUTCTimingSources();
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
@@ -406,11 +412,12 @@ function MediaPlayer() {
      * @param {string} type - {@link MediaPlayerEvents}
      * @param {Function} listener - callback method when the event fires.
      * @param {Object} scope - context of the listener so it can be removed properly.
+     * @param {Object} options - object to define various options such as priority and mode
      * @memberof module:MediaPlayer
      * @instance
      */
-    function on(type, listener, scope) {
-        eventBus.on(type, listener, scope);
+    function on(type, listener, scope, options) {
+        eventBus.on(type, listener, scope, options);
     }
 
     /**
@@ -1949,12 +1956,6 @@ function MediaPlayer() {
             streamController = StreamController(context).getInstance();
         }
 
-        // configure controllers
-        mediaController.setConfig({
-            domStorage: domStorage,
-            settings: settings
-        });
-
         streamController.setConfig({
             capabilities: capabilities,
             manifestLoader: manifestLoader,
@@ -2003,7 +2004,6 @@ function MediaPlayer() {
             videoModel: videoModel,
             settings: settings
         });
-        abrController.createAbrRulesCollection();
 
         textController.setConfig({
             errHandler: errHandler,
