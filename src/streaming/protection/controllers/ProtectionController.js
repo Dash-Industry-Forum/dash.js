@@ -476,15 +476,15 @@ function ProtectionController(config) {
             return entry.ks === keySystem;
         });
 
-        if (ksIdx !== -1) {
+        if (ksIdx !== -1 && supportedKS[ksIdx].initData) {
+
             //  we only need to call this if the init data has changed
-            if (supportedKS[ksIdx].initData) {
-                const initDataForKs = CommonEncryption.getPSSHForKeySystem(keySystem, supportedKS[ksIdx].initData);
-                if (_isInitDataDuplicate(initDataForKs)) {
-                    logger.info('DRM: Ignoring initData because we have already seen it!');
-                    return;
-                }
+            const initDataForKs = CommonEncryption.getPSSHForKeySystem(keySystem, supportedKS[ksIdx].initData);
+            if (_isInitDataDuplicate(initDataForKs)) {
+                logger.info('DRM: Ignoring initData because we have already seen it!');
+                return;
             }
+
 
             requestedKeySystems.push({
                 ks: supportedKS[ksIdx].ks,
