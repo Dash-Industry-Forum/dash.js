@@ -204,7 +204,6 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bl = _getBufferLevelByType(request.mediaType);
@@ -212,6 +211,17 @@ function CmcdModel() {
         const pr = internalData.pr;
 
         const nextRequest = _probeNextRequest(request.mediaType);
+
+        let ot;
+        if (request.mediaType === 'video') ot = OBJECT_TYPES.VIDEO;
+        if (request.mediaType === 'audio') ot = OBJECT_TYPES.AUDIO;
+        if (request.mediaType === 'fragmentedText') {
+            if (request.mediaInfo.mimeType === 'application/mp4') {
+                ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
+            } else {
+                ot = OBJECT_TYPES.CAPTION;
+            }
+        }
 
         let nrr = request.range;
 
