@@ -410,18 +410,26 @@ function DashAdapter() {
             if (!eventBox || !eventStreams || isNaN(mediaStartTime) || !voRepresentation) {
                 return null;
             }
-            const event = new Event();
+
             const schemeIdUri = eventBox.scheme_id_uri;
             const value = eventBox.value;
+
+            if (!eventStreams[schemeIdUri + '/' + value]) {
+                return null;
+            }
+
+            const event = new Event();
             const timescale = eventBox.timescale || 1;
-            const presentationTimeOffset = voRepresentation.presentationTimeOffset || 0;
             const periodStart = voRepresentation.adaptation.period.start;
+            const eventStream = eventStreams[schemeIdUri + '/' + value];
             let presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
             let calculatedPresentationTime;
 
             if (eventBox.version === 0) {
+                const presentationTimeOffset = voRepresentation.presentationTimeOffset || 0;
                 calculatedPresentationTime = periodStart + mediaStartTime - presentationTimeOffset + presentationTimeDelta;
             } else {
+                const presentationTimeOffset = eventStream.presentationTimeOffset || 0;
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
 
@@ -429,11 +437,7 @@ function DashAdapter() {
             const id = eventBox.id;
             const messageData = eventBox.message_data;
 
-            if (!eventStreams[schemeIdUri + '/' + value]) {
-                return null;
-            }
-
-            event.eventStream = eventStreams[schemeIdUri + '/' + value];
+            event.eventStream = eventStream;
             event.eventStream.value = value;
             event.eventStream.timescale = timescale;
             event.duration = duration;

@@ -133,7 +133,7 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
-            liveCatchup: {
+            liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
@@ -1089,4 +1089,6 @@ declare namespace dashjs {
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
     export type TrackSelectionMode = 'highestBitrate' | 'highestEfficiency' | 'widestRange';
+    export function supportsMediaSource(): boolean;
+
 }

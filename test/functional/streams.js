@@ -27,5 +27,13 @@ module.exports.getStreams = function () {
         });
     };
 
+    // If input manifest url is provided then use it
+    if (intern.config.mpd) {
+        streams = [{
+            name: 'User MPD',
+            url: intern.config.mpd
+        }];
+    }
+
     return streams;
 }
