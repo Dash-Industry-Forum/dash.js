@@ -68,6 +68,7 @@ function CmcdModel() {
         abrController,
         dashMetrics,
         playbackController,
+        streamProcessors,
         _isStartup,
         _bufferLevelStarved,
         _initialMediaRequestsDone;
@@ -88,6 +89,7 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
     }
 
     function setConfig(config) {
@@ -118,6 +120,21 @@ function CmcdModel() {
         _bufferLevelStarved = {};
         _isStartup = {};
         _initialMediaRequestsDone = {};
+        updateStreamProcessors();
+    }
+
+    function _onPeriodSwitchComplete() {
+        updateStreamProcessors();
+    }
+
+    function updateStreamProcessors() {
+        if (!playbackController) return;
+        const streamController = playbackController.getStreamController();
+        if (!streamController) return;
+        if (typeof streamController.getActiveStream !== 'function') return;
+        const activeStream = streamController.getActiveStream();
+        if (!activeStream) return;
+        streamProcessors = activeStream.getProcessors();
     }
 
     function getQueryParameter(request) {
@@ -157,12 +174,22 @@ function CmcdModel() {
                 return _getCmcdDataForInitSegment(request);
             } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
                 return _getCmcdDataForOther(request);
+            } else if (request.type === HTTPRequest.LICENSE) {
+                return _getCmcdDataForLicense(request);
             }
 
             return cmcdData;
         } catch (e) {
             return null;
         }
+    }
+
+    function _getCmcdDataForLicense(request) {
+        const data = _getGenericCmcdData(request);
+
+        data.ot = OBJECT_TYPES.ENCRYPTION_KEY;
+
+        return data;
     }
 
     function _getCmcdDataForMpd() {
@@ -177,12 +204,37 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bl = _getBufferLevelByType(request.mediaType);
         const tb = _getTopBitrateByType(request.mediaType);
         const pr = internalData.pr;
+
+        const nextRequest = _probeNextRequest(request.mediaType);
+
+        let ot;
+        if (request.mediaType === 'video') ot = OBJECT_TYPES.VIDEO;
+        if (request.mediaType === 'audio') ot = OBJECT_TYPES.AUDIO;
+        if (request.mediaType === 'fragmentedText') {
+            if (request.mediaInfo.mimeType === 'application/mp4') {
+                ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
+            } else {
+                ot = OBJECT_TYPES.CAPTION;
+            }
+        }
+
+        let nrr = request.range;
+
+        if (nextRequest) {
+            data.nor = nextRequest.url;
+            if (nextRequest.range) {
+                nrr = nextRequest.range;
+            }
+        }
+
+        if (nrr) {
+            data.nrr = nrr;
+        }
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -214,6 +266,11 @@ function CmcdModel() {
 
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
+        }
+
+        // Assuming nor field is never set: If the ‘nor’ field is not set, then the object is assumed to match the object currently being requested.
+        if (request.range) {
+            data.nrr = request.range;
         }
 
         if (_bufferLevelStarved[request.mediaType]) {
@@ -437,6 +494,14 @@ function CmcdModel() {
             return cmcdString;
         } catch (e) {
             return null;
+        }
+    }
+
+    function _probeNextRequest(mediaType) {
+        if (!streamProcessors || streamProcessors.length === 0) return;
+        for (let streamProcessor of streamProcessors) {
+            if (streamProcessor.getType() !== mediaType) continue;
+            return streamProcessor.probeNextRequest();
         }
     }
 

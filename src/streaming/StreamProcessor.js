@@ -458,6 +458,20 @@ function StreamProcessor(config) {
         scheduleController.processMediaRequest(request);
     }
 
+    function probeNextRequest() {
+        const representationInfo = getRepresentationInfo();
+
+        const representation = representationController && representationInfo ?
+            representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+        let request = indexHandler.getNextSegmentRequestIdempotent(
+            getMediaInfo(),
+            representation
+        );
+
+        return request;
+    }
+
     function findNextRequest(seekTarget, requestToReplace) {
         const representationInfo = getRepresentationInfo();
         const hasSeekTarget = !isNaN(seekTarget);
@@ -765,6 +779,7 @@ function StreamProcessor(config) {
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,
         finalisePlayList: finalisePlayList,
+        probeNextRequest: probeNextRequest,
         reset: reset
     };
 
