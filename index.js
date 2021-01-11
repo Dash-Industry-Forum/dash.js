@@ -31,7 +31,7 @@
 
 import { MediaPlayer } from './index_mediaplayerOnly';
 
-import { supportsMediaSource as isSupported } from './src/streaming/utils/Capabilities'
+import { supportsMediaSource } from './src/streaming/utils/Capabilities';
 import MetricsReporting from './src/streaming/metrics/MetricsReporting';
 import Protection from './src/streaming/protection/Protection';
 import MediaPlayerFactory from './src/streaming/MediaPlayerFactory';
@@ -41,7 +41,7 @@ dashjs.Protection = Protection;
 dashjs.MetricsReporting = MetricsReporting;
 dashjs.MediaPlayerFactory = MediaPlayerFactory;
 dashjs.Debug = Debug;
-dashjs.isSupported = isSupported
+dashjs.supportsMediaSource = supportsMediaSource;
 
 export default dashjs;
-export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory, Debug, isSupported };
+export { MediaPlayer, Protection, MetricsReporting, MediaPlayerFactory, Debug, supportsMediaSource };
