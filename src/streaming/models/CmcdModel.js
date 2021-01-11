@@ -309,7 +309,6 @@ function CmcdModel() {
         return data;
     }
 
-
     function _getGenericCmcdData() {
         const data = {};
 
