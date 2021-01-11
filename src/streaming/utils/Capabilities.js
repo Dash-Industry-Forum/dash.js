@@ -30,6 +30,13 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 
+export function supportsMediaSource() {
+    let hasWebKit = ('WebKitMediaSource' in window);
+    let hasMediaSource = ('MediaSource' in window);
+
+    return (hasWebKit || hasMediaSource);
+}
+
 function Capabilities() {
 
     let instance,
@@ -37,13 +44,6 @@ function Capabilities() {
 
     function setup() {
         encryptedMediaSupported = false;
-    }
-
-    function supportsMediaSource() {
-        let hasWebKit = ('WebKitMediaSource' in window);
-        let hasMediaSource = ('MediaSource' in window);
-
-        return (hasWebKit || hasMediaSource);
     }
 
     /**
