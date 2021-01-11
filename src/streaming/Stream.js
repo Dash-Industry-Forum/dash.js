@@ -641,7 +641,7 @@ function Stream(config) {
                     type === Constants.FRAGMENTED_TEXT) {
                     let mediaInfo = streamProcessors[i].getMediaInfo();
                     if (mediaInfo) {
-                        protectionController.initializeForMedia(mediaInfo, type);
+                        protectionController.initializeForMedia(mediaInfo);
                     }
                 }
             }
