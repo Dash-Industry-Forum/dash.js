@@ -54,6 +54,7 @@ function Stream(config) {
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
     const capabilities = config.capabilities;
+    const capabilitiesFilter = config.capabilitiesFilter;
     const errHandler = config.errHandler;
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
@@ -549,8 +550,7 @@ function Stream(config) {
 
         isUpdating = true;
 
-        filterCodecs(Constants.VIDEO);
-        filterCodecs(Constants.AUDIO);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod( streamInfo);
 
         if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);
@@ -582,8 +582,7 @@ function Stream(config) {
     function initializeAfterPreload() {
         isUpdating = true;
         checkConfig();
-        filterCodecs(Constants.VIDEO);
-        filterCodecs(Constants.AUDIO);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
         isMediaInitialized = true;
         isUpdating = false;
@@ -594,25 +593,6 @@ function Stream(config) {
         } else {
             checkIfInitializationCompleted();
         }
-    }
-
-    function filterCodecs(type) {
-        const realAdaptation = adapter.getAdaptationForType(streamInfo ? streamInfo.index : null, type, streamInfo);
-
-        if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
-
-        // Filter codecs that are not supported
-        realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
-            // keep at least codec from lowest representation
-            if (i === 0) return true;
-
-            const codec = adapter.getCodec(realAdaptation, i, true);
-            if (!capabilities.supportsCodec(codec)) {
-                logger.error('[Stream] codec not supported: ' + codec);
-                return false;
-            }
-            return true;
-        });
     }
 
     function checkIfInitializationCompleted() {
@@ -764,8 +744,7 @@ function Stream(config) {
             addInlineEvents();
         }
 
-        filterCodecs(Constants.VIDEO);
-        filterCodecs(Constants.AUDIO);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
