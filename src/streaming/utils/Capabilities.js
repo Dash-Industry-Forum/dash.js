@@ -75,7 +75,7 @@ function Capabilities() {
 
     function supportsEssentialProperty(ep) {
         try {
-            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri);
+            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
         } catch (e) {
             return true;
         }
