@@ -88,12 +88,14 @@ function CapabilitiesFilter() {
                 const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
 
                 if (essentialProperties && essentialProperties.length > 0) {
-                    essentialProperties.forEach((ep) => {
-                        if (!capabilities.supportsEssentialProperty(ep)) {
-                            logger.debug('[Stream] EssentialProperty not supported: ' + ep.schemeIdUri);
+                    let i = 0;
+                    while (i < essentialProperties.length) {
+                        if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
+                            logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
                             return false;
                         }
-                    });
+                        i += 1;
+                    }
                 }
 
                 return true;
