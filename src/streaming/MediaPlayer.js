@@ -1972,7 +1972,8 @@ function MediaPlayer() {
 
         capabilitiesFilter.setConfig({
             capabilities,
-            adapter
+            adapter,
+            settings
         });
 
         streamController.setConfig({

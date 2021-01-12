@@ -1147,6 +1147,7 @@ function DashManifestModel() {
         getRegularPeriods: getRegularPeriods,
         getMpd: getMpd,
         getEventsForPeriod: getEventsForPeriod,
+        getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
         getEventStreamForRepresentation: getEventStreamForRepresentation,
         getUTCTimingSources: getUTCTimingSources,

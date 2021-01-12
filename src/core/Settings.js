@@ -298,6 +298,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * downloading the next manifest once the minimumUpdatePeriod time has
  * @property {number} [stallThreshold=0.5]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * @property {boolean} [filterUnsupportedEssentialProperties=true]
+ * Enable to filter all the AdaptationSets and Representations which contain an unsupported <EssentialProperty> element
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used
  * to set the initial bit rate for subsequent playback within the expiration window.
@@ -447,6 +449,7 @@ function Settings() {
             useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
             stallThreshold: 0.5,
+            filterUnsupportedEssentialProperties: true,
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 0,

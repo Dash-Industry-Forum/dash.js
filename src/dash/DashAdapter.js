@@ -378,6 +378,24 @@ function DashAdapter() {
         return realAdaptation;
     }
 
+    /**
+     * Return all EssentialProperties of a Representation
+     * @param {object} representation
+     * @return {array}
+     */
+    function getEssentialPropertiesForRepresentation(representation) {
+        try {
+            return dashManifestModel.getEssentialPropertiesForRepresentation(representation);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /**
+     * Returns the period by index
+     * @param {number} index
+     * @return {object}
+     */
     function getRealPeriodByIndex(index) {
         return dashManifestModel.getRealPeriodForIndex(index, voPeriods[0].mpd.manifest);
     }
@@ -949,6 +967,7 @@ function DashAdapter() {
         getAdaptationForType: getAdaptationForType,
         getRealAdaptation: getRealAdaptation,
         getRealPeriodByIndex,
+        getEssentialPropertiesForRepresentation,
         getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,

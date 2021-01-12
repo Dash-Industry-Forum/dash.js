@@ -7,6 +7,7 @@ function CapabilitiesFilter() {
     let instance,
         adapter,
         capabilities,
+        settings,
         logger;
 
 
@@ -27,17 +28,24 @@ function CapabilitiesFilter() {
             capabilities = config.capabilities;
         }
 
+        if (config.settings) {
+            settings = config.settings;
+        }
+
     }
 
     function filterUnsupportedFeaturesOfPeriod(streamInfo) {
         _filterUnsupportedCodecs(Constants.VIDEO, streamInfo);
         _filterUnsupportedCodecs(Constants.AUDIO, streamInfo);
-        _filterUnsupportedEssentialProperties(streamInfo);
+
+        if (settings.get().streaming.filterUnsupportedEssentialProperties) {
+            _filterUnsupportedEssentialProperties(streamInfo);
+        }
     }
 
 
     function _filterUnsupportedCodecs(type, streamInfo) {
-        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null, type);
+        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
 
         if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
             return;
@@ -63,7 +71,36 @@ function CapabilitiesFilter() {
 
     }
 
-    function _filterUnsupportedEssentialProperties() {
+    function _filterUnsupportedEssentialProperties(streamInfo) {
+        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
+
+        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
+            return;
+        }
+
+        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
+
+            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                return true;
+            }
+
+            as.Representation_asArray = as.Representation_asArray.filter((rep) => {
+                const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
+
+                if (essentialProperties && essentialProperties.length > 0) {
+                    essentialProperties.forEach((ep) => {
+                        if (!capabilities.supportsEssentialProperty(ep)) {
+                            logger.debug('[Stream] EssentialProperty not supported: ' + ep.schemeIdUri);
+                            return false;
+                        }
+                    });
+                }
+
+                return true;
+            });
+
+            return as.Representation_asArray && as.Representation_asArray.length > 0;
+        });
 
     }
 

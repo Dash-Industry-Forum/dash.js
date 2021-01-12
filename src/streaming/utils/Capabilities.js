@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
+import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
 
 export function supportsMediaSource() {
     let hasWebKit = ('WebKitMediaSource' in window);
@@ -72,16 +73,26 @@ function Capabilities() {
         return false;
     }
 
+    function supportsEssentialProperty(ep) {
+        try {
+            return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri);
+        } catch (e) {
+            return true;
+        }
+    }
+
     instance = {
-        supportsMediaSource: supportsMediaSource,
-        supportsEncryptedMedia: supportsEncryptedMedia,
-        supportsCodec: supportsCodec,
-        setEncryptedMediaSupported: setEncryptedMediaSupported
+        supportsMediaSource,
+        supportsEncryptedMedia,
+        supportsCodec,
+        setEncryptedMediaSupported,
+        supportsEssentialProperty
     };
 
     setup();
 
     return instance;
 }
+
 Capabilities.__dashjs_factory_name = 'Capabilities';
 export default FactoryMaker.getSingletonFactory(Capabilities);
