@@ -633,10 +633,12 @@ function Stream(config) {
         if (protectionController) {
             // Need to check if streamProcessors exists because streamProcessors
             // could be cleared in case an error is detected while initializing DRM keysystem
+            protectionController.clearMediaInfoArrayByStreamId(getId());
             for (let i = 0; i < ln && streamProcessors[i]; i++) {
-                if (streamProcessors[i].getType() === Constants.AUDIO ||
-                    streamProcessors[i].getType() === Constants.VIDEO ||
-                    streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
+                const type = streamProcessors[i].getType();
+                if (type === Constants.AUDIO ||
+                    type === Constants.VIDEO ||
+                    type === Constants.FRAGMENTED_TEXT) {
                     let mediaInfo = streamProcessors[i].getMediaInfo();
                     if (mediaInfo) {
                         protectionController.initializeForMedia(mediaInfo);
