@@ -22,6 +22,7 @@ const NAME = 'INITIAL_AUDIO';
 
 // test constants
 const SWITCH_WAIT = 3;
+const SWITCH_TIMEOUT = 60;
 
 exports.register = function (stream) {
 
@@ -33,10 +34,12 @@ exports.register = function (stream) {
             
         });
 
-        test('switch audio track', async ({ remote }) => {
+        test('switch audio track', async (test) => {
+            test.timeout = SWITCH_TIMEOUT * 1000;
+
             for (let i = 0; i < stream.audioTracks.length ; i++) {
                 // reload page
-                command = remote.get(intern.config.testPage);
+                command = test.remote.get(intern.config.testPage);
                 await command.execute(player.setAutoPlay, [false]);
 
                 // set initial track
