@@ -129,5 +129,5 @@ workflows:
                             only:
                                 - development
         jobs:
-            - functional-tests
+            - functional-tests-all
 
