@@ -545,4 +545,100 @@ describe('MediaController', function () {
         });
     });
 
+    describe('Initial Track Selection', function () {
+
+        function testSelectInitialTrack(type, expectedBitrateList, otherBitrateList) {
+            const tracks = [ expectedBitrateList, otherBitrateList ].map(function (bitrateList) {
+                return {
+                    bitrateList: bitrateList,
+                    representationCount: bitrateList.length
+                };
+            });
+            const selection = mediaController.selectInitialTrack(type, tracks);
+            expect(objectUtils.areEqual(selection.bitrateList, expectedBitrateList)).to.be.true; // jshint ignore:line
+        }
+
+        describe('"highestBitrate" mode', function () {
+            beforeEach(function () {
+                mediaController.setSelectionModeForInitialTrack(Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE);
+            });
+
+            it('should select track with highest bitrate', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 2000 } ],
+                    [ { bandwidth: 1000 } ]
+                );
+            });
+
+            it('should tie break using "widestRange"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ],
+                    [ { bandwidth: 2000 } ]
+                );
+            });
+        });
+
+        describe('"highestEfficiency" mode', function () {
+            beforeEach(function () {
+                mediaController.setSelectionModeForInitialTrack(Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY);
+            });
+
+            it('should select video track with lowest bitrate among equal resolutions', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 1000, width: 1920, height: 1280 } ],
+                    [ { bandwidth: 2000, width: 1920, height: 1280 } ]
+                );
+            });
+
+            it('should select video track with lowest bitrate among different resolutions', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 1000, width: 1920, height: 1280 } ],
+                    [ { bandwidth: 1000, width: 1080, height: 720 } ]
+                );
+            });
+
+            it('should select audio track with lowest avg bitrate', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    [ { bandwidth: 1000, width: 0, height: 0 } ],
+                    [ { bandwidth: 2000, width: 0, height: 0 } ]
+                );
+            });
+
+            it('should tie break using "highestBitrate"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 1500, width: 1920, height: 1280 }, { bandwidth: 1000, width: 1080, height: 720 } ],
+                    [ { bandwidth: 1000, width: 1080, height: 720 } ]
+                );
+            });
+        });
+
+        describe('"widestRange" mode', function () {
+            beforeEach(function () {
+                mediaController.setSelectionModeForInitialTrack(Constants.TRACK_SELECTION_MODE_WIDEST_RANGE);
+            });
+
+            it('should select track with most bitrates', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ],
+                    [ { bandwidth: 2000 } ]
+                );
+            });
+
+            it('should tie break using "highestBitrate"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 3000 }, { bandwidth: 2000 } ],
+                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ]
+                );
+            });
+        });
+    });
+
 });
