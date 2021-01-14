@@ -119,7 +119,7 @@ workflows:
                     filters:
                         branches:
                             only:
-                                - feature-3514
+                                - development
     scheduled-workflow:
         triggers:
             -   schedule:
