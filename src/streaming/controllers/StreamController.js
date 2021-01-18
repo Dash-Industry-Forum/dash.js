@@ -60,6 +60,7 @@ function StreamController() {
     let instance,
         logger,
         capabilities,
+        capabilitiesFilter,
         manifestUpdater,
         manifestLoader,
         manifestModel,
@@ -619,7 +620,7 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
                 if (seekTime === playbackController.getTime()) {
-                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime}, {streamId: activeStream.getId()});
+                    eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
                 } else {
                     playbackController.seek(seekTime);
                 }
@@ -699,6 +700,7 @@ function StreamController() {
                         adapter: adapter,
                         timelineConverter: timelineConverter,
                         capabilities: capabilities,
+                        capabilitiesFilter,
                         errHandler: errHandler,
                         baseURLController: baseURLController,
                         abrController: abrController,
@@ -990,6 +992,9 @@ function StreamController() {
 
         if (config.capabilities) {
             capabilities = config.capabilities;
+        }
+        if (config.capabilitiesFilter) {
+            capabilitiesFilter = config.capabilitiesFilter;
         }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;

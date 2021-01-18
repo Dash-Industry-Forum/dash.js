@@ -379,6 +379,28 @@ function DashAdapter() {
     }
 
     /**
+     * Return all EssentialProperties of a Representation
+     * @param {object} representation
+     * @return {array}
+     */
+    function getEssentialPropertiesForRepresentation(representation) {
+        try {
+            return dashManifestModel.getEssentialPropertiesForRepresentation(representation);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /**
+     * Returns the period by index
+     * @param {number} index
+     * @return {object}
+     */
+    function getRealPeriodByIndex(index) {
+        return dashManifestModel.getRealPeriodForIndex(index, voPeriods[0].mpd.manifest);
+    }
+
+    /**
      * Returns all voRepresentations for a given mediaInfo
      * @param {object} mediaInfo
      * @returns {Array} voReps
@@ -725,6 +747,10 @@ function DashAdapter() {
         return null;
     }
 
+    function getIsTypeOf(adaptation, type) {
+        return dashManifestModel.getIsTypeOf(adaptation, type);
+    }
+
     function reset() {
         voPeriods = [];
         voAdaptations = {};
@@ -940,6 +966,8 @@ function DashAdapter() {
         getAllMediaInfoForType: getAllMediaInfoForType,
         getAdaptationForType: getAdaptationForType,
         getRealAdaptation: getRealAdaptation,
+        getRealPeriodByIndex,
+        getEssentialPropertiesForRepresentation,
         getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
@@ -950,6 +978,7 @@ function DashAdapter() {
         getUTCTimingSources: getUTCTimingSources,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
         getAvailabilityStartTime: getAvailabilityStartTime,
+        getIsTypeOf,
         getIsDynamic: getIsDynamic,
         getDuration: getDuration,
         getRegularPeriods: getRegularPeriods,

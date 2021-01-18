@@ -208,6 +208,19 @@ function DashManifestModel() {
         return manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
     }
 
+    function getRealPeriods(manifest) {
+        return manifest && manifest.Period_asArray ? manifest.Period_asArray : [];
+    }
+
+    function getRealPeriodForIndex(index, manifest) {
+        const realPeriods = getRealPeriods(manifest);
+        if (realPeriods.length > 0 && isInteger(index)) {
+            return realPeriods[index];
+        } else {
+            return null;
+        }
+    }
+
     function getAdaptationForId(id, manifest, periodIndex) {
         const realAdaptations = getRealAdaptations(manifest, periodIndex);
         let i,
@@ -1114,6 +1127,8 @@ function DashManifestModel() {
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
         getAdaptationsForType: getAdaptationsForType,
+        getRealPeriods,
+        getRealPeriodForIndex,
         getCodec: getCodec,
         getMimeType: getMimeType,
         getKID: getKID,
@@ -1132,6 +1147,7 @@ function DashManifestModel() {
         getRegularPeriods: getRegularPeriods,
         getMpd: getMpd,
         getEventsForPeriod: getEventsForPeriod,
+        getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
         getEventStreamForRepresentation: getEventStreamForRepresentation,
         getUTCTimingSources: getUTCTimingSources,
