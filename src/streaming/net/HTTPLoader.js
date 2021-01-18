@@ -112,7 +112,7 @@ function HTTPLoader(cfg) {
                     success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
-                    dashMetrics.addManifestUpdate(request.type, request.requestStartDate, request.requestEndDate);
+                    dashMetrics.addManifestUpdate(request);
                 }
             }
         };
