@@ -29,7 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker';
-import {THUMBNAILS_SCHEME_ID_URIS} from '../../streaming/thumbnail/ThumbnailTracks';
+import {THUMBNAILS_SCHEME_ID_URIS} from '../thumbnail/ThumbnailTracks';
+
+const codecCompatibilityTable = [
+    {
+        'codec': 'avc1',
+        'compatibleCodecs': ['avc3']
+    },
+    {
+        'codec': 'avc3',
+        'compatibleCodecs': ['avc1']
+    }
+];
 
 export function supportsMediaSource() {
     let hasWebKit = ('WebKitMediaSource' in window);
@@ -57,10 +68,19 @@ function Capabilities() {
         return encryptedMediaSupported;
     }
 
+    /**
+     *
+     * @param {boolean} value
+     */
     function setEncryptedMediaSupported(value) {
         encryptedMediaSupported = value;
     }
 
+    /**
+     * Check if a codec is supported by the MediaSource
+     * @param {string} codec
+     * @return {boolean}
+     */
     function supportsCodec(codec) {
         if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
             return true;
@@ -73,6 +93,11 @@ function Capabilities() {
         return false;
     }
 
+    /**
+     * Check if a specific EssentialProperty is supported
+     * @param {object} ep
+     * @return {boolean}
+     */
     function supportsEssentialProperty(ep) {
         try {
             return THUMBNAILS_SCHEME_ID_URIS.indexOf(ep.schemeIdUri) !== -1;
@@ -81,12 +106,35 @@ function Capabilities() {
         }
     }
 
+    /**
+     * Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
+     * @param {string} codec1
+     * @param {string} codec2
+     * @return {boolean}
+     */
+    function codecRootCompatibleWithCodec(codec1, codec2) {
+        const codecRoot = codec1.split('.')[0];
+        const rootCompatible = codec2.indexOf(codecRoot) === 0;
+        let compatTableCodec;
+        for (let i = 0; i < codecCompatibilityTable.length; i++) {
+            if (codecCompatibilityTable[i].codec === codecRoot) {
+                compatTableCodec = codecCompatibilityTable[i];
+                break;
+            }
+        }
+        if (compatTableCodec) {
+            return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
+        }
+        return rootCompatible;
+    }
+
     instance = {
         supportsMediaSource,
         supportsEncryptedMedia,
         supportsCodec,
         setEncryptedMediaSupported,
-        supportsEssentialProperty
+        supportsEssentialProperty,
+        codecRootCompatibleWithCodec
     };
 
     setup();

@@ -87,17 +87,6 @@ function Stream(config) {
         isEndedEventSignaled,
         trackChangedEvent;
 
-    const codecCompatibilityTable = [
-        {
-            'codec': 'avc1',
-            'compatibleCodecs': ['avc3']
-        },
-        {
-            'codec': 'avc3',
-            'compatibleCodecs': ['avc1']
-        }
-    ];
-
     function setup() {
         debug = Debug(context).getInstance();
         logger = debug.getLogger(instance);
@@ -845,25 +834,8 @@ function Stream(config) {
             return oldCodecs.indexOf(newCodec) > -1;
         });
 
-        const partialCodecMatch = newCodecs.some((newCodec) => oldCodecs.some((oldCodec) => codecRootCompatibleWithCodec(oldCodec, newCodec)));
+        const partialCodecMatch = newCodecs.some((newCodec) => oldCodecs.some((oldCodec) => capabilities.codecRootCompatibleWithCodec(oldCodec, newCodec)));
         return codecMatch || (partialCodecMatch && sameMimeType);
-    }
-
-    // Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
-    function codecRootCompatibleWithCodec(codec1, codec2) {
-        const codecRoot = codec1.split('.')[0];
-        const rootCompatible = codec2.indexOf(codecRoot) === 0;
-        let compatTableCodec;
-        for (let i = 0; i < codecCompatibilityTable.length; i++) {
-            if (codecCompatibilityTable[i].codec === codecRoot) {
-                compatTableCodec = codecCompatibilityTable[i];
-                break;
-            }
-        }
-        if (compatTableCodec) {
-            return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
-        }
-        return rootCompatible;
     }
 
     function setPreloaded(value) {
