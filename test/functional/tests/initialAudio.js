@@ -45,7 +45,8 @@ exports.register = function (stream) {
                 // set initial track
                 utils.log(NAME, 'set initial audio track: ' + stream.audioTracks[i].lang);
                 await command.execute(player.setInitialMediaSettingsFor, ['audio', {
-                    lang: stream.audioTracks[i].lang 
+                    lang: stream.audioTracks[i].lang ,
+                    index: stream.audioTracks[i].index
                 }]);
                 await command.execute(player.loadStream, [stream]);
                 await command.execute(player.play, []);
