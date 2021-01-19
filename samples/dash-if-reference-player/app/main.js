@@ -182,6 +182,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.isDynamic = false;
 
+    $scope.conformanceViolations = [];
+
     // metrics
     $scope.videoBitrate = 0;
     $scope.videoIndex = 0;
@@ -410,6 +412,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
                 $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+            }
+        }
+    }, $scope);
+
+    $scope.player.on(dashjs.MediaPlayer.events.CONFORMANCE_VIOLATION, function (e) { /* jshint ignore:line */
+        if (e && e.event && e.event.key && !$scope.conformanceViolations[e.event.key]) {
+            var existingViolation = $scope.conformanceViolations.filter(function (violation) {
+                return violation.event.key === e.event.key;
+            })
+
+            if(!existingViolation || existingViolation.length === 0) {
+                $scope.conformanceViolations.push(e);
             }
         }
     }, $scope);

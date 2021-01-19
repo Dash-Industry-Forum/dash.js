@@ -48,6 +48,7 @@ import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const PREBUFFERING_CAN_START_INTERVAL = 500;
@@ -850,6 +851,14 @@ function StreamController() {
             adapter.updatePeriods(manifest);
 
             let manifestUTCTimingSources = adapter.getUTCTimingSources();
+
+            if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
+                eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                    level: ConformanceViolationConstants.LEVELS.WARNING,
+                    event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
+                });
+            }
+
             let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
