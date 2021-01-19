@@ -458,6 +458,10 @@ function StreamProcessor(config) {
         scheduleController.processMediaRequest(request);
     }
 
+    /**
+     * Probe the next request. This is used in the CMCD model to get information about the upcoming request. Note: No actual request is performed here.
+     * @return {FragmentRequest|null}
+     */
     function probeNextRequest() {
         const representationInfo = getRepresentationInfo();
 

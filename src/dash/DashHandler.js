@@ -308,6 +308,12 @@ function DashHandler(config) {
         return request;
     }
 
+    /**
+     * This function returns the next segment request without modifying any internal variables. Any class (e.g CMCD Model) that needs information about the upcoming request should use this method.
+     * @param {object} mediaInfo
+     * @param {object} representation
+     * @return {FragmentRequest|null}
+     */
     function getNextSegmentRequestIdempotent(mediaInfo, representation) {
         let request = null;
         let indexToRequest = segmentIndex + 1;
@@ -321,6 +327,12 @@ function DashHandler(config) {
         return request;
     }
 
+    /**
+     * Main function to get the next segment request.
+     * @param {object} mediaInfo
+     * @param {object} representation
+     * @return {FragmentRequest|null}
+     */
     function getNextSegmentRequest(mediaInfo, representation) {
         let request = null;
 
