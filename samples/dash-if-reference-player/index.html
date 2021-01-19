@@ -719,19 +719,6 @@
         </div>
     </div>
 
-    <!-- Conformance violations -->
-    <div class="row">
-        <div class="col-md-12 conformance-violations-panel">
-            <div id="conformance-violations">
-                <h4>Conformance Violations </h4>
-                <ul class="list-unstyled" ng-repeat="conformanceViolation in conformanceViolations">
-                    <li><span class="label label-{{conformanceViolation.level}}">{{conformanceViolation.level}}</span> : {{conformanceViolation.event.message}} </li>
-                </ul>
-            </div>
-        </div>    
-    </div>
-
-
     <!-- CHARTING -->
     <div class="chart-panel">
         <div class="chart-controls">
@@ -748,6 +735,18 @@
         <div id="chart-wrapper">
             <div id="chart-inventory">
                 <flot dataset="chartData" options="chartOptions"></flot>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conformance violations -->
+    <div class="row">
+        <div class="col-md-12 conformance-violations-panel">
+            <div id="conformance-violations">
+                <h4>Conformance Violations </h4>
+                <ul class="list-unstyled" ng-repeat="conformanceViolation in conformanceViolations">
+                    <li><span class="label label-{{conformanceViolation.level}}">{{conformanceViolation.level}}</span> : {{conformanceViolation.event.message}} </li>
+                </ul>
             </div>
         </div>
     </div>
