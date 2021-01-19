@@ -699,6 +699,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
+        $scope.conformanceViolations = [];
         if ($scope.isCasting) {
             loadCastMedia($scope.selectedItem.url, protData);
         } else {
@@ -735,6 +736,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.doStop = function () {
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
+        $scope.conformanceViolations = [];
         stopMetricsInterval();
     };
 
