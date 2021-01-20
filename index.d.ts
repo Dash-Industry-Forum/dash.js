@@ -168,6 +168,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyReductionFactor'?:  number;
             };
             retryAttempts?: {
                 'MPD'?:                       number;
@@ -177,6 +178,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyMultiplyFactor'?:  number;
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';

@@ -411,7 +411,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Bitrate stream switching type of request.
  * @property {number} [other]
  * Other type of request.
+ * @property {number} [lowLatencyReductionFactor]
+ * For low latency mode, values of type of request are divided by lowLatencyReductionFactor.
  *
+ * Note: It's not type of request.
+ * @property {number} [lowLatencyMultiplyFactor]
+ * For low latency mode, values of type of request are multiplied by lowLatencyMultiplyFactor.
+ *
+ * Note: It's not type of request.
  */
 
 /**
