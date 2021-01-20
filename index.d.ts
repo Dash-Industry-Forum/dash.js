@@ -117,7 +117,6 @@ declare namespace dashjs {
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
-            bufferAheadToKeep?: number;
             jumpGaps?: boolean;
             jumpLargeGaps?: boolean;
             smallGapLimit?: number;
