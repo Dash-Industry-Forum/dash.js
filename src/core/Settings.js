@@ -119,7 +119,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
  *              bandwidthSafetyFactor: 0.9,
  *              useDefaultABRRules: true,
- *              useBufferOccupancyABR: false,
  *              useDeadTimeLatency: true,
  *              limitBitrateByPortal: false,
  *              usePixelRatioInLimitBitrateByPortal: false,
