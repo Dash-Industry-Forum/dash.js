@@ -10,7 +10,7 @@ INITIAL_AUDIO:
     - check if playback progressing
 **/
 const intern = require('intern').default;
-const { suite, before, test, after} = intern.getPlugin('interface.tdd');
+const { suite, before, test} = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
 const constants = require('./scripts/constants.js');
@@ -28,7 +28,7 @@ exports.register = function (stream) {
 
     suite(utils.testName(NAME, stream), (suite) => {
 
-        before(async () => {
+        before(() => {
             if (!stream.available || stream.audioTracks.length <= 1) suite.skip();
             utils.log(NAME, 'Load stream');
             
