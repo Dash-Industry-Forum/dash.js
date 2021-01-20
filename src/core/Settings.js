@@ -486,7 +486,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {boolean} [enabled=false]
  * Use this parameter to enable the catchup mode for non low-latency streams.
  *
- * @property {String} [mode=Constants.LIVE_CATCHUP_MODE_DEFAULT]
+ * @property {string} [mode="liveCatchupModeDefault"]
  * Use this parameter to switch between different catchup modes.
  *
  * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
