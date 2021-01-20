@@ -359,7 +359,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * If expired, the default settings will be used for that session and a new settings will be stored during that session.
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
- * @property {module:Settings~RequestTypeSettings} [fragmentRequestTimeout]
+ * @property {number} [fragmentRequestTimeout=0]
  * Time in milliseconds before timing out on loading a media fragment.
  *
  * Fragments that timeout are retried as if they failed.
