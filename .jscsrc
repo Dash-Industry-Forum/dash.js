@@ -27,7 +27,6 @@
         "allExcept": ["comments"]
     },
     "jsDoc": {
-        "checkTypes": "strictNativeCase",
         "checkParamExistence": true,
         "checkParamNames": true,
         "requireParamTypes": true,
