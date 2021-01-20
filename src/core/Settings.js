@@ -133,8 +133,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          cmcd: {
  *              enabled: false,
  *              sid: null,
- *              cid: null,
- *              did: null
+ *              cid: null
  *          }
  *      }
  * }
@@ -435,8 +434,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * A unique string to identify the current content.
  *
  * If not specified it will be a hash of the MPD url.
- * @property {string} [did=dash.js-cmcd-default-id]
- * A unique string identifying the current device.
  */
 
 /**
