@@ -241,7 +241,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}]
  * Indicates whether the player should enable ABR algorithms to switch the bitrate.
  *
- * @property {boolean} [fetchThroughputCalculationMode=Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA]
+ * @property {string} [fetchThroughputCalculationMode="abrFetchThroughputCalculationDownloadedData"]
  * Algorithm to determine the throughput in case the Fetch API is used for low latency streaming.
  *
  * For details please check the samples section and FetchLoader.js.
