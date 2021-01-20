@@ -81,6 +81,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
  *          stallThreshold: 0.5,
+ *          filterUnsupportedEssentialProperties: true,
  *          liveCatchup: {
  *              minDrift: 0.02,
  *              maxDrift: 0,
