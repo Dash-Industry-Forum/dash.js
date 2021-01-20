@@ -254,7 +254,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
  * buffered track is fully consumed.
- * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
+ * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>
  * @property {boolean} [reuseExistingSourceBuffers=true] Enable reuse of existing MediaSource Sourcebuffers during period transition
  * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
  * @property {number} [bufferToKeep=20]
@@ -299,7 +299,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [stallThreshold=0.5]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
- * Enable to filter all the AdaptationSets and Representations which contain an unsupported <EssentialProperty> element
+ * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used
  * to set the initial bit rate for subsequent playback within the expiration window.
