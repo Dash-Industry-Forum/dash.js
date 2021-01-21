@@ -568,3 +568,25 @@ CONTROL BAR CSS NEEDS TO MOVE INTO THE CONTROL BAR
     font-size: .9em !important;
     padding: 0px;
 }
+
+/********************************************************
+Conformance warnings
+*********************************************************/
+.label-Warning {
+    background-color: #f0ad4e;
+}
+
+.label-Error {
+    background-color: #d9534f;
+}
+
+.label-Suggestion {
+    background-color: #5bc0de;
+}
+
+.conformance-violations-panel {
+    background-color: #ffffff;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    padding: 12px;
+}
