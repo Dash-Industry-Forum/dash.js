@@ -146,6 +146,13 @@ module.exports = {
     getCurrentTrackFor: function(type){
         return player.getCurrentTrackFor(type);
     },
+    setAutoPlay: function(value){
+        player.setAutoPlay(value);
+    },
+
+    setInitialMediaSettingsFor: function(type, value){
+        player.setInitialMediaSettingsFor(type, value);
+    },
 
     setTextDefaultEnabled: function(bool){
         player.setTextDefaultEnabled(bool);

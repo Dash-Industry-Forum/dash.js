@@ -382,6 +382,7 @@ function MediaController() {
 
     function matchSettings(settings, track) {
         const matchLang = !settings.lang || (track.lang.match(settings.lang));
+        const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return item === settings.role;
@@ -393,7 +394,7 @@ function MediaController() {
             return item === settings.audioChannelConfiguration;
         })[0];
 
-        return (matchLang && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
+        return (matchLang && matchIndex && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
     }
 
     function resetInitialSettings() {
