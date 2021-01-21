@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashJSError from './../vo/DashJSError';
-import { HTTPRequest } from './../vo/metrics/HTTPRequest';
+import {HTTPRequest} from './../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import Errors from './../../core/errors/Errors';
@@ -47,50 +47,14 @@ function TimeSyncController() {
 
     let instance,
         logger,
-        offsetToDeviceTimeMs,
         isSynchronizing,
-        useManifestDateHeaderTimeSource,
+        settings,
         handlers,
         dashMetrics,
         baseURLController;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-    }
-
-    function initialize(timingSources, useManifestDateHeader) {
-        useManifestDateHeaderTimeSource = useManifestDateHeader;
-        offsetToDeviceTimeMs = 0;
-        isSynchronizing = false;
-
-        // a list of known schemeIdUris and a method to call with @value
-        handlers = {
-            'urn:mpeg:dash:utc:http-head:2014':     httpHeadHandler,
-            'urn:mpeg:dash:utc:http-xsdate:2014':   httpHandler.bind(null, xsdatetimeDecoder),
-            'urn:mpeg:dash:utc:http-iso:2014':      httpHandler.bind(null, iso8601Decoder),
-            'urn:mpeg:dash:utc:direct:2014':        directHandler,
-
-            // some specs referencing early ISO23009-1 drafts incorrectly use
-            // 2012 in the URI, rather than 2014. support these for now.
-            'urn:mpeg:dash:utc:http-head:2012':     httpHeadHandler,
-            'urn:mpeg:dash:utc:http-xsdate:2012':   httpHandler.bind(null, xsdatetimeDecoder),
-            'urn:mpeg:dash:utc:http-iso:2012':      httpHandler.bind(null, iso8601Decoder),
-            'urn:mpeg:dash:utc:direct:2012':        directHandler,
-
-            // it isn't clear how the data returned would be formatted, and
-            // no public examples available so http-ntp not supported for now.
-            // presumably you would do an arraybuffer type xhr and decode the
-            // binary data returned but I would want to see a sample first.
-            'urn:mpeg:dash:utc:http-ntp:2014':      notSupportedHandler,
-
-            // not clear how this would be supported in javascript (in browser)
-            'urn:mpeg:dash:utc:ntp:2014':           notSupportedHandler,
-            'urn:mpeg:dash:utc:sntp:2014':          notSupportedHandler
-        };
-
-        if (!getIsSynchronizing()) {
-            attemptSync(timingSources);
-        }
     }
 
     function setConfig(config) {
@@ -103,10 +67,117 @@ function TimeSyncController() {
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
         }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
-    function getOffsetToDeviceTimeMs() {
-        return getOffsetMs();
+    /**
+     * Register the timing handler depending on the schemeIdUris. This method is called once when the StreamController is initialized
+     */
+    function initialize() {
+        setIsSynchronizing(false);
+
+        // a list of known schemeIdUris and a method to call with @value
+        handlers = {
+            'urn:mpeg:dash:utc:http-head:2014': httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2014': httpHandler.bind(null, xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2014': httpHandler.bind(null, iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2014': directHandler,
+
+            // some specs referencing early ISO23009-1 drafts incorrectly use
+            // 2012 in the URI, rather than 2014. support these for now.
+            'urn:mpeg:dash:utc:http-head:2012': httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2012': httpHandler.bind(null, xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2012': httpHandler.bind(null, iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2012': directHandler,
+
+            // it isn't clear how the data returned would be formatted, and
+            // no public examples available so http-ntp not supported for now.
+            // presumably you would do an arraybuffer type xhr and decode the
+            // binary data returned but I would want to see a sample first.
+            'urn:mpeg:dash:utc:http-ntp:2014': notSupportedHandler,
+
+            // not clear how this would be supported in javascript (in browser)
+            'urn:mpeg:dash:utc:ntp:2014': notSupportedHandler,
+            'urn:mpeg:dash:utc:sntp:2014': notSupportedHandler
+        };
+
+    }
+
+    /**
+     * Sync against a timing source. This method is called recursively if the time sync for the first entry in timingSources fails.
+     * @param {array} timingSources
+     * @param {number} sourceIndex
+     */
+    function attemptSync(timingSources, sourceIndex = null) {
+
+        if (getIsSynchronizing()) {
+            return;
+        }
+
+        // if called with no sourceIndex, use zero (highest priority)
+        let index = sourceIndex || 0;
+
+        // the sources should be ordered in priority from the manifest.
+        // try each in turn, from the top, until either something
+        // sensible happens, or we run out of sources to try.
+        let source = timingSources[index];
+
+        setIsSynchronizing(true);
+
+        if (source) {
+            // check if there is a handler for this @schemeIdUri
+            if (handlers.hasOwnProperty(source.schemeIdUri)) {
+                // if so, call it with its @value
+                handlers[source.schemeIdUri](
+                    source.value,
+                    function (serverTime) {
+                        // the timing source returned something useful
+                        const deviceTime = new Date().getTime();
+                        const offset = serverTime - deviceTime;
+
+                        logger.info('Local time: ' + new Date(deviceTime));
+                        logger.info('Server time: ' + new Date(serverTime));
+                        logger.info('Server Time - Local Time (ms): ' + offset);
+
+                        _onComplete(serverTime, offset);
+                    },
+                    function () {
+                        // the timing source was probably uncontactable
+                        // or returned something we can't use - try again
+                        // with the remaining sources
+                        setIsSynchronizing(false);
+                        attemptSync(timingSources, index + 1);
+                    }
+                );
+            } else {
+                // an unknown schemeIdUri must have been found
+                // try again with the remaining sources
+                setIsSynchronizing(false);
+                attemptSync(timingSources, index + 1);
+            }
+        } else {
+            // no valid time source could be found, just use device time
+            _onComplete();
+        }
+    }
+
+    /**
+     * Callback after sync has been completed
+     * @param time
+     * @param offset
+     * @private
+     */
+    function _onComplete(time, offset) {
+        let failed = !time || !offset;
+        if (failed && settings.get().streaming.useManifestDateHeaderTimeSource) {
+            //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
+            checkForDateHeader();
+        } else {
+            completeTimeSyncSequence(failed, time, offset);
+        }
     }
 
     function setIsSynchronizing(value) {
@@ -117,13 +188,6 @@ function TimeSyncController() {
         return isSynchronizing;
     }
 
-    function setOffsetMs(value) {
-        offsetToDeviceTimeMs = value;
-    }
-
-    function getOffsetMs() {
-        return offsetToDeviceTimeMs;
-    }
 
     // takes xsdatetime and returns milliseconds since UNIX epoch
     // may not be necessary as xsdatetime is very similar to ISO 8601
@@ -236,8 +300,8 @@ function TimeSyncController() {
 
             if (req.status === 200) {
                 time = isHeadRequest ?
-                        req.getResponseHeader('Date') :
-                        req.response;
+                    req.getResponseHeader('Date') :
+                    req.response;
 
                 result = decoder(time);
 
@@ -273,7 +337,7 @@ function TimeSyncController() {
         let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
-            setOffsetMs(dateHeaderTime - new Date().getTime());
+            const offsetToDeviceTimeMs = dateHeaderTime - new Date().getTime();
             completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
         } else {
             completeTimeSyncSequence(true);
@@ -289,80 +353,15 @@ function TimeSyncController() {
         });
     }
 
-    function calculateTimeOffset(serverTime, deviceTime) {
-        return serverTime - deviceTime;
-    }
-
-    function attemptSync(sources, sourceIndex) {
-
-        // if called with no sourceIndex, use zero (highest priority)
-        let  index = sourceIndex || 0;
-
-        // the sources should be ordered in priority from the manifest.
-        // try each in turn, from the top, until either something
-        // sensible happens, or we run out of sources to try.
-        let source = sources[index];
-
-        // callback to emit event to listeners
-        const onComplete = function (time, offset) {
-            let failed = !time || !offset;
-            if (failed && useManifestDateHeaderTimeSource) {
-                //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
-                checkForDateHeader();
-            } else {
-                completeTimeSyncSequence(failed, time, offset);
-            }
-        };
-
-        setIsSynchronizing(true);
-
-        if (source) {
-            // check if there is a handler for this @schemeIdUri
-            if (handlers.hasOwnProperty(source.schemeIdUri)) {
-                // if so, call it with its @value
-                handlers[source.schemeIdUri](
-                    source.value,
-                    function (serverTime) {
-                        // the timing source returned something useful
-                        const deviceTime = new Date().getTime();
-                        const offset = calculateTimeOffset(serverTime, deviceTime);
-
-                        setOffsetMs(offset);
-
-                        logger.info('Local time: ' + new Date(deviceTime));
-                        logger.info('Server time: ' + new Date(serverTime));
-                        logger.info('Server Time - Local Time (ms): ' + offset);
-
-                        onComplete(serverTime, offset);
-                    },
-                    function () {
-                        // the timing source was probably uncontactable
-                        // or returned something we can't use - try again
-                        // with the remaining sources
-                        attemptSync(sources, index + 1);
-                    }
-                );
-            } else {
-                // an unknown schemeIdUri must have been found
-                // try again with the remaining sources
-                attemptSync(sources, index + 1);
-            }
-        } else {
-            // no valid time source could be found, just use device time
-            setOffsetMs(0);
-            onComplete();
-        }
-    }
-
     function reset() {
         setIsSynchronizing(false);
     }
 
     instance = {
-        initialize: initialize,
-        getOffsetToDeviceTimeMs: getOffsetToDeviceTimeMs,
-        setConfig: setConfig,
-        reset: reset
+        initialize,
+        attemptSync,
+        setConfig,
+        reset
     };
 
     setup();

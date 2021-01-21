@@ -57,14 +57,6 @@ function TimelineConverter() {
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
     }
 
-    function isTimeSyncCompleted() {
-        return isClientServerTimeSyncCompleted;
-    }
-
-    function setTimeSyncCompleted(value) {
-        isClientServerTimeSyncCompleted = value;
-    }
-
     function getClientTimeOffset() {
         return clientServerTimeShift;
     }
@@ -237,9 +229,6 @@ function TimelineConverter() {
     * FYI StreamController's onManifestUpdated entry point to timeSync
     * */
     function onTimeSyncComplete(e) {
-
-        if (isClientServerTimeSyncCompleted) return;
-
         if (e.offset !== undefined) {
             setClientTimeOffset(e.offset / 1000);
             isClientServerTimeSyncCompleted = true;
@@ -259,8 +248,6 @@ function TimelineConverter() {
 
     instance = {
         initialize: initialize,
-        isTimeSyncCompleted: isTimeSyncCompleted,
-        setTimeSyncCompleted: setTimeSyncCompleted,
         getClientTimeOffset: getClientTimeOffset,
         setClientTimeOffset: setClientTimeOffset,
         getExpectedLiveEdge: getExpectedLiveEdge,
