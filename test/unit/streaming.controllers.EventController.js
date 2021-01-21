@@ -55,14 +55,46 @@ describe('EventController', function () {
 
     describe('if configured', function () {
         beforeEach(function () {
+            eventController.reset();
             eventController.setConfig({
                 manifestUpdater: manifestUpdaterMock,
                 playbackController: playbackControllerMock
             });
         });
 
-        it('should trigger added inband events', function (done) {
-            let schemeIdUri = 'inbandEvent';
+        it('should add a single inband event with a value and trigger it', function (done) {
+            const schemeIdUri = 'inbandEvent';
+            const value = 'value';
+            let events = [{
+                eventStream: {
+                    timescale: 1,
+                    schemeIdUri: schemeIdUri
+                },
+                id: 'event0',
+                value,
+                calculatedPresentationTime: 0
+            }];
+
+            let onInbandEvent = function (e) {
+                try {
+                    const inbandEvents = eventController.getInbandEvents();
+                    expect(e.event.id).to.equal('event0');
+                    expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
+                    eventBus.off(schemeIdUri, onInbandEvent);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
+            };
+
+            eventBus.on(schemeIdUri, onInbandEvent, this);
+
+            eventController.addInbandEvents(events);
+            eventController.start();
+        });
+
+        it('should add a single inband event without a value and trigger it', function (done) {
+            const schemeIdUri = 'inbandEvent';
             let events = [{
                 eventStream: {
                     timescale: 1,
@@ -73,9 +105,191 @@ describe('EventController', function () {
             }];
 
             let onInbandEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
-                eventBus.off(schemeIdUri, onInbandEvent);
-                done();
+                try {
+                    const inbandEvents = eventController.getInbandEvents();
+                    expect(e.event.id).to.equal('event0');
+                    expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
+                    eventBus.off(schemeIdUri, onInbandEvent);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
+            };
+
+            eventBus.on(schemeIdUri, onInbandEvent, this);
+
+            eventController.addInbandEvents(events);
+            eventController.start();
+        });
+
+        it('should add a two inband events with different values and same id and trigger them', function (done) {
+            const schemeIdUri = 'inbandEvent';
+            let events = [
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        value: 'value1'
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 0
+                },
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        value: 'value2'
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 0
+                }];
+            let eventCounter = 0;
+
+            let onInbandEvent = function (e) {
+                try {
+                    eventCounter += 1;
+                    expect(e.event.id).to.equal('event0');
+                    if (eventCounter === 2) {
+                        const inbandEvents = eventController.getInbandEvents();
+                        expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
+                        eventBus.off(schemeIdUri, onInbandEvent);
+                        done();
+                    }
+                } catch (error) {
+                    done(error);
+                }
+            };
+
+            eventBus.on(schemeIdUri, onInbandEvent, this);
+
+            eventController.addInbandEvents(events);
+            eventController.start();
+        });
+
+        it('should add a two inband events with different ids and same values and trigger them', function (done) {
+            const schemeIdUri = 'inbandEvent';
+            let events = [
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        value: 'value1'
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 0
+                },
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        value: 'value1'
+                    },
+                    id: 'event1',
+                    calculatedPresentationTime: 0
+                }];
+            let eventCounter = 0;
+
+            let onInbandEvent = function (e) {
+                try {
+                    eventCounter += 1;
+                    expect(e.event.eventStream.value).to.equal('value1');
+                    if (eventCounter === 2) {
+                        const inbandEvents = eventController.getInbandEvents();
+                        expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
+                        eventBus.off(schemeIdUri, onInbandEvent);
+                        done();
+                    }
+                } catch (error) {
+                    done(error);
+                }
+            };
+
+            eventBus.on(schemeIdUri, onInbandEvent, this);
+
+            eventController.addInbandEvents(events);
+            eventController.start();
+        });
+
+        it('should add a two inband events with different scheme ids and same id and value fields and trigger them', function (done) {
+            let events = [
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: 'inbandEvent1',
+                        value: 'value1'
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 0
+                },
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: 'inbandEvent2',
+                        value: 'value1'
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 0
+                }];
+            let eventCounter = 0;
+
+            let onInbandEvent = function (e) {
+                try {
+                    eventCounter += 1;
+                    expect(e.event.id).to.equal('event0');
+                    if (eventCounter === 2) {
+                        const inbandEvents = eventController.getInbandEvents();
+                        expect(inbandEvents[e.event.eventStream.schemeIdUri]).to.be.undefined;  // jshint ignore:line
+                        eventBus.off('inbandEvent1', onInbandEvent, this);
+                        eventBus.off('inbandEvent2', onInbandEvent, this);
+                        done();
+                    }
+                } catch (error) {
+                    done(error);
+                }
+            };
+
+            eventBus.on('inbandEvent1', onInbandEvent, this);
+            eventBus.on('inbandEvent2', onInbandEvent, this);
+
+            eventController.addInbandEvents(events);
+            eventController.start();
+        });
+
+        it('should add only one out of two similar events and trigger it', function (done) {
+            const schemeIdUri = 'inbandEvent';
+            let events = [
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        value: 'value1'
+                    },
+                    id: 'event0',
+                    messageData: '1',
+                    calculatedPresentationTime: 0
+                },
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        value: 'value1'
+                    },
+                    id: 'event0',
+                    messageData: '2',
+                    calculatedPresentationTime: 0
+                }];
+
+            let onInbandEvent = function (e) {
+                try {
+                    expect(e.event.id).to.equal('event0');
+                    expect(e.event.messageData).to.equal('1');
+                    const inbandEvents = eventController.getInbandEvents();
+                    expect(inbandEvents[schemeIdUri]).to.be.undefined;  // jshint ignore:line
+                    eventBus.off(schemeIdUri, onInbandEvent);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             };
 
             eventBus.on(schemeIdUri, onInbandEvent, this);
@@ -86,19 +300,67 @@ describe('EventController', function () {
 
         it('should trigger added inline events', function (done) {
             let schemeIdUri = 'inbandEvent';
+            const value = 'value';
             let events = [{
                 eventStream: {
                     timescale: 1,
                     schemeIdUri: schemeIdUri
                 },
                 id: 'event0',
+                value,
                 calculatedPresentationTime: 0
             }];
 
             let onInlineEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
-                eventBus.off(schemeIdUri, onInlineEvent);
-                done();
+                try {
+                    expect(e.event.id).to.equal('event0');
+                    eventBus.off(schemeIdUri, onInlineEvent);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
+            };
+
+            eventBus.on(schemeIdUri, onInlineEvent, this);
+
+            eventController.addInlineEvents(events);
+            eventController.start();
+        });
+
+        it('should add inline event twice, updating first event', function (done) {
+            let schemeIdUri = 'inbandEvent';
+            const value = 'value';
+            let events = [
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri
+                    },
+                    id: 'event0',
+                    value,
+                    messageData: '1',
+                    calculatedPresentationTime: 0
+                },
+                {
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri
+                    },
+                    id: 'event0',
+                    value,
+                    messageData: '2',
+                    calculatedPresentationTime: 0
+                }];
+
+            let onInlineEvent = function (e) {
+                try {
+                    expect(e.event.id).to.equal('event0');
+                    expect(e.event.messageData).to.equal('2');
+                    eventBus.off(schemeIdUri, onInlineEvent);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             };
 
             eventBus.on(schemeIdUri, onInlineEvent, this);
@@ -126,11 +388,15 @@ describe('EventController', function () {
             eventBus.on(schemeIdUri, onReceiveEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_RECEIVE });
 
             let onStartEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
-                eventBus.off(schemeIdUri, onStartEvent);
-                expect(playbackControllerMock.getTime()).to.equal(20);
-                playbackControllerMock.setTime(0);
-                done();
+                try {
+                    expect(e.event.id).to.equal('event0');
+                    eventBus.off(schemeIdUri, onStartEvent);
+                    expect(playbackControllerMock.getTime()).to.equal(20);
+                    playbackControllerMock.setTime(0);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             };
             eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 
@@ -153,11 +419,15 @@ describe('EventController', function () {
             }];
 
             let onStartEvent = function (e) {
-                expect(e.event.id).to.equal('event0');
-                eventBus.off(schemeIdUri, onStartEvent);
-                expect(playbackControllerMock.getTime()).to.equal(20);
-                playbackControllerMock.setTime(0);
-                done();
+                try {
+                    expect(e.event.id).to.equal('event0');
+                    eventBus.off(schemeIdUri, onStartEvent);
+                    expect(playbackControllerMock.getTime()).to.equal(20);
+                    playbackControllerMock.setTime(0);
+                    done();
+                } catch (error) {
+                    done(error);
+                }
             };
             eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
 

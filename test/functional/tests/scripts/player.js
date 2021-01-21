@@ -135,8 +135,8 @@ module.exports = {
         player.on(event, _onEvent);
     },
 
-    getTracksFor: function(type){
-        return player.getTracksFor(type);
+    getTracksFor: function(mediaType){
+        return player.getTracksFor(mediaType);
     },
 
     setCurrentTrack: function(track){
@@ -157,8 +157,9 @@ module.exports = {
     setTextDefaultEnabled: function(bool){
         player.setTextDefaultEnabled(bool);
     },
-    
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
     }
+
+
 };

@@ -40,6 +40,7 @@ import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
+import CapabilitiesFilter from './utils/CapabilitiesFilter';
 import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
@@ -61,7 +62,7 @@ import Settings from '../core/Settings';
 import {
     getVersionString
 }
-from './../core/Version';
+    from './../core/Version';
 
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
@@ -74,7 +75,7 @@ import {
 import BASE64 from '../../externals/base64';
 import ISOBoxer from 'codem-isoboxer';
 import DashJSError from './vo/DashJSError';
-import { checkParameterType } from './utils/SupervisorTools';
+import {checkParameterType} from './utils/SupervisorTools';
 import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
@@ -84,6 +85,7 @@ import BoxParser from './utils/BoxParser';
  * The media types
  * @typedef {("video" | "audio" | "text" | "fragmentedText" | "embeddedText" | "image")} MediaType
  */
+
 /* jscs:enable */
 
 /**
@@ -94,35 +96,35 @@ import BoxParser from './utils/BoxParser';
  */
 function MediaPlayer() {
     /**
-    * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-    * @inner
-    */
+     * @constant {string} STREAMING_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+     * @inner
+     */
     const STREAMING_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a source before calling this method';
     /**
-    * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
-    * @inner
-    */
+     * @constant {string} PLAYBACK_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized
+     * @inner
+     */
     const PLAYBACK_NOT_INITIALIZED_ERROR = 'You must first call initialize() and set a valid source and view before calling this method';
     /**
-    * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
-    * @inner
-    */
+     * @constant {string} ELEMENT_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a reference of an HTML5 video element
+     * @inner
+     */
     const ELEMENT_NOT_ATTACHED_ERROR = 'You must first call attachView() to set the video element before calling this method';
     /**
-    * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
-    * @inner
-    */
+     * @constant {string} SOURCE_NOT_ATTACHED_ERROR error string thrown when a function is called before the dash.js has received a valid source stream.
+     * @inner
+     */
     const SOURCE_NOT_ATTACHED_ERROR = 'You must first call attachSource() with a valid source before calling this method';
     /**
-    * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
-    * @inner
-    */
+     * @constant {string} MEDIA_PLAYER_NOT_INITIALIZED_ERROR error string thrown when a function is called before the dash.js has been fully initialized.
+     * @inner
+     */
     const MEDIA_PLAYER_NOT_INITIALIZED_ERROR = 'MediaPlayer not initialized!';
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     let settings = Settings(context).getInstance();
-    const debug = Debug(context).getInstance({settings: settings});
+    const debug = Debug(context).getInstance({ settings: settings });
 
     let instance,
         logger,
@@ -145,6 +147,7 @@ function MediaPlayer() {
         errHandler,
         baseURLController,
         capabilities,
+        capabilitiesFilter,
         streamController,
         gapController,
         playbackController,
@@ -195,6 +198,9 @@ function MediaPlayer() {
         if (config.capabilities) {
             capabilities = config.capabilities;
         }
+        if (config.capabilitiesFilter) {
+            capabilitiesFilter = config.capabilitiesFilter;
+        }
         if (config.streamController) {
             streamController = config.streamController;
         }
@@ -242,6 +248,7 @@ function MediaPlayer() {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
         }
+
         errHandler = ErrorHandler(context).getInstance();
 
         if (!capabilities.supportsMediaSource()) {
@@ -279,6 +286,10 @@ function MediaPlayer() {
 
         if (!gapController) {
             gapController = GapController(context).getInstance();
+        }
+
+        if (!capabilitiesFilter) {
+            capabilitiesFilter = CapabilitiesFilter(context).getInstance();
         }
 
         adapter = DashAdapter(context).getInstance();
@@ -1493,6 +1504,7 @@ function MediaPlayer() {
      * This method allows to set media settings that will be used to pick the initial track. Format of the settings
      * is following: <br />
      * {lang: langValue (can be either a string or a regex to match),
+     *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
      *  accessibility: accessibilityValue,
@@ -1518,6 +1530,7 @@ function MediaPlayer() {
      * This method returns media settings that is used to pick the initial track. Format of the settings
      * is following:
      * {lang: langValue,
+     *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
      *  accessibility: accessibilityValue,
@@ -1592,10 +1605,13 @@ function MediaPlayer() {
      * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
      *
      * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
-     * this mode makes the player select the track with a highest bitrate. This mode is a default mode.
+     * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+     *
+     * Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
+     * This mode makes the player select the track with the lowest bitrate per pixel average.
      *
      * Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
-     * this mode makes the player select the track with a widest range of bitrates
+     * This mode makes the player select the track with a widest range of bitrates.
      *
      * @param {string} mode
      * @memberof module:MediaPlayer
@@ -1956,8 +1972,15 @@ function MediaPlayer() {
             streamController = StreamController(context).getInstance();
         }
 
+        capabilitiesFilter.setConfig({
+            capabilities,
+            adapter,
+            settings
+        });
+
         streamController.setConfig({
             capabilities: capabilities,
+            capabilitiesFilter,
             manifestLoader: manifestLoader,
             manifestModel: manifestModel,
             mediaPlayerModel: mediaPlayerModel,

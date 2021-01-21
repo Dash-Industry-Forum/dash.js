@@ -133,7 +133,8 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
-            liveCatchup: {
+            filterUnsupportedEssentialProperties?: true
+            liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
                 playbackRate?: number;
@@ -428,6 +429,7 @@ declare namespace dashjs {
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        CONFORMANCE_VIOLATION: 'conformanceViolation'
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
@@ -1088,5 +1090,7 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestBitrate' | 'widestRange';
+    export type TrackSelectionMode = 'highestBitrate' | 'highestEfficiency' | 'widestRange';
+    export function supportsMediaSource(): boolean;
+
 }

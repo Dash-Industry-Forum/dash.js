@@ -161,7 +161,18 @@ describe('DashAdapter', function () {
             expect(event).to.be.an('object');
         });
 
-        it('should calculate correct start time for a version 0 event', function () {
+        it('should calculate correct start time for a version 0 event without PTO', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 0 };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(27);
+        });
+
+        it('should calculate correct start time for a version 0 event with PTO', function () {
             const representation = { presentationTimeOffset: 5, adaptation: { period: { start: 10 } } };
             const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 0 };
             const eventStreams = { 'id/value': {} };
@@ -172,10 +183,32 @@ describe('DashAdapter', function () {
             expect(event.calculatedPresentationTime).to.be.equal(22);
         });
 
-        it('should calculate correct start time for a version 1 event', function () {
-            const representation = { presentationTimeOffset: 5, adaptation: { period: { start: 10 } } };
+        it('should calculate correct start time for a version 1 event without PTO', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
             const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 1 };
             const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(22);
+        });
+
+        it('should calculate correct start time for a version 1 event with PTO in representation', function () {
+            const representation = { presentationTimeOffset: 10, adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 1 };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(22);
+        });
+
+        it('should calculate correct start time for a version 1 event with PTO in eventStream and representation', function () {
+            const representation = { presentationTimeOffset: 10, adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 1 };
+            const eventStreams = { 'id/value': { presentationTimeOffset: 5 } };
             const mediaTime = 5;
             const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
 
@@ -183,10 +216,16 @@ describe('DashAdapter', function () {
             expect(event.calculatedPresentationTime).to.be.equal(17);
         });
 
-        it('should calculate correct start time for a version 0 event with timescale > 1', function () {
-            const representation = { presentationTimeOffset: 5, adaptation: { period: { start: 10 } } };
-            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 90000, version: 1, timescale: 45000 };
-            const eventStreams = { 'id/value': {} };
+        it('should calculate correct start time for a version 1 event with timescale > 1 and PTO in eventStream', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = {
+                scheme_id_uri: 'id',
+                value: 'value',
+                presentation_time_delta: 90000,
+                version: 1,
+                timescale: 45000
+            };
+            const eventStreams = { 'id/value': { presentationTimeOffset: 5 } };
             const mediaTime = 5;
             const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
 
