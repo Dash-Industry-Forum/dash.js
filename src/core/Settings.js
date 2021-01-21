@@ -94,6 +94,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *          lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
  *          cacheLoadThresholds: { video: 50, audio: 5 },
+ *          trackSwitchMode: {
+ *              audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+ *              video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+ *          },
+ *          selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
  *          fragmentRequestTimeout: 0,
  *          retryIntervals: {
  *              MPD: 500,
