@@ -10,10 +10,9 @@ INITIAL_Text:
     - check if playback progressing
 **/
 const intern = require('intern').default;
-const { suite, before, test, after} = intern.getPlugin('interface.tdd');
+const { suite, before, test} = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
-const constants = require('./scripts/constants.js');
 const utils = require('./scripts/utils.js');
 const player = require('./scripts/player.js');
 
@@ -22,22 +21,26 @@ const NAME = 'INITIAL_TEXT';
 
 // test constants
 const SWITCH_WAIT = 3;
+const SWITCH_TIMEOUT = 60;
 
 exports.register = function (stream) {
 
     suite(utils.testName(NAME, stream), (suite) => {
 
-        before(async () => {
+        before(() => {
             if (!stream.available || stream.textTracks["text"].length < 1 && stream.textTracks["fragmentedText"].length < 1) suite.skip();
             utils.log(NAME, 'Load stream');
 
         });
 
-        test('switch text track', async ({ remote }) => {
+        test('switch text track', async (test) => {
+            // Set test timeout
+            test.timeout = SWITCH_TIMEOUT * 1000;
+
             for(let textType in stream.textTracks){
                 for (let i = 0; i < stream.textTracks[textType].length ; i++) {
                     // reload page
-                    command = remote.get(intern.config.testPage);
+                    command = test.remote.get(intern.config.testPage);
                     await command.execute(player.setAutoPlay, [false]);
 
                     //Load needed elements into doc for Captions to function
