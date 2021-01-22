@@ -364,6 +364,32 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * If expired, the default settings will be used for that session and a new settings will be stored during that session.
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
+ * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
+ * For a given media type defines if existing segments in the buffer should be overwritten once the track is switched. For instance if the user switches the audio language the existing segments in the audio buffer will be replaced when setting this value to "alwaysReplace".
+ *
+ * Possible values
+ *
+ * - Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
+ * Replace existing segments in the buffer
+ *
+ * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+ * Do not replace existing segments in the buffer
+ *
+ * @property {string} [selectionModeForInitialTrack="highestBitrate"]
+ * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
+ *
+ * Possible values
+ *
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+ * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+ *
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
+ * This mode makes the player select the track with the lowest bitrate per pixel average.
+ *
+ * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
+ * This mode makes the player select the track with a widest range of bitrates.
+ *
+ *
  * @property {number} [fragmentRequestTimeout=0]
  * Time in milliseconds before timing out on loading a media fragment.
  *
@@ -394,9 +420,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} module:Settings~AudioVideoSettings
- * @property {number|boolean} [audio]
+ * @property {number|boolean|string} [audio]
  * Configuration for audio media type of tracks.
- * @property {number|boolean} [video]
+ * @property {number|boolean|string} [video]
  * Configuration for video media type of tracks.
  */
 
