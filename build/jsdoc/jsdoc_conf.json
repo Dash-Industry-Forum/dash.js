@@ -6,6 +6,9 @@
         "include": ["./src/", "README.md"]
     },
     "plugins": [ "plugins/markdown" ],
+    "markdown": {
+        "hardwrap": true
+    },
     "templates": {
 		"cleverLinks"           : true,
 		"monospaceLinks"        : true,
