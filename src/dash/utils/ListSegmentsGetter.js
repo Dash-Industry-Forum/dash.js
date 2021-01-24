@@ -60,14 +60,15 @@ function ListSegmentsGetter(config, isDynamic) {
         const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
         const offsetToSubtract = Math.max(startNumber - 1, 0);
 
-        const start = representation.startNumber;
+        const relativeIndex = Math.max(index - offsetToSubtract, 0);
+
         let segment = null;
-        if ((index - offsetToSubtract) < len) {
-            const s = list.SegmentURL_asArray[index - offsetToSubtract];
+        if (relativeIndex < len) {
+            const s = list.SegmentURL_asArray[relativeIndex];
 
             segment = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
             if (segment) {
-                segment.replacementTime = (start + index - 1) * representation.segmentDuration;
+                segment.replacementTime = (startNumber + index - 1) * representation.segmentDuration;
                 segment.media = s.media ? s.media : '';
                 segment.mediaRange = s.mediaRange;
                 segment.index = index;
@@ -92,7 +93,6 @@ function ListSegmentsGetter(config, isDynamic) {
         if (isNaN(duration)) {
             return null;
         }
-
 
         const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = Math.floor(periodTime / duration);
