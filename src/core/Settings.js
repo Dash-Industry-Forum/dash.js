@@ -139,7 +139,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          cmcd: {
  *              enabled: false,
  *              sid: null,
- *              cid: null
+ *              cid: null,
+ *              rtp: null
  *          }
  *      }
  * }
@@ -627,7 +628,8 @@ function Settings() {
             cmcd: {
                 enabled: false,
                 sid: null,
-                cid: null
+                cid: null,
+                rtp: null
             }
         }
     };

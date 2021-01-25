@@ -223,6 +223,12 @@ function CmcdModel() {
             }
         }
 
+        let rtp = settings.get().streaming.cmcd.rtp;
+        if (!rtp) {
+            rtp = _calculateRtp(request);
+        }
+        data.rtp = rtp;
+
         let nrr = request.range;
 
         if (nextRequest) {
@@ -503,6 +509,24 @@ function CmcdModel() {
             if (streamProcessor.getType() !== mediaType) continue;
             return streamProcessor.probeNextRequest();
         }
+    }
+
+    function _calculateRtp(request) {
+        // Get the values we need
+        let playbackRate = playbackController.getPlaybackRate();
+        let { quality, mediaType, mediaInfo, duration } = request;
+        let currentBufferTime = _getBufferLevelByType(mediaType);
+        let bitrate = mediaInfo.bitrateList[quality].bandwidth;
+
+        // Calculate RTP
+        let segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
+        let timeToLoad = currentBufferTime * playbackRate / 1000; // Calculate time available to load file in seconds
+        let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
+        let maxBandwidth = minBandwidth * 4; // Include a safety buffer
+
+        let rtp = (parseInt(maxBandwidth / 100) + 1) * 100; // Round to the next multiple of 100
+
+        return rtp;
     }
 
     function reset() {
