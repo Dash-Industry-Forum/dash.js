@@ -85,11 +85,11 @@ function DashAdapter() {
         }
 
         if (config.errHandler) {
-            dashManifestModel.setConfig({errHandler: config.errHandler});
+            dashManifestModel.setConfig({ errHandler: config.errHandler });
         }
 
         if (config.BASE64) {
-            dashManifestModel.setConfig({BASE64: config.BASE64});
+            dashManifestModel.setConfig({ BASE64: config.BASE64 });
         }
     }
 
@@ -382,6 +382,28 @@ function DashAdapter() {
     }
 
     /**
+     * Return all EssentialProperties of a Representation
+     * @param {object} representation
+     * @return {array}
+     */
+    function getEssentialPropertiesForRepresentation(representation) {
+        try {
+            return dashManifestModel.getEssentialPropertiesForRepresentation(representation);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /**
+     * Returns the period by index
+     * @param {number} index
+     * @return {object}
+     */
+    function getRealPeriodByIndex(index) {
+        return dashManifestModel.getRealPeriodForIndex(index, voPeriods[0].mpd.manifest);
+    }
+
+    /**
      * Returns all voRepresentations for a given mediaInfo
      * @param {object} mediaInfo
      * @returns {Array} voReps
@@ -400,46 +422,59 @@ function DashAdapter() {
     /**
      *
      * @param {object} eventBox
-     * @param {Array} eventStreams
-     * @param {number} startTime
+     * @param {object} eventStreams
+     * @param {number} mediaStartTime
+     * @param {object} voRepresentation
      * @returns {null|Event}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
      */
-    function getEvent(eventBox, eventStreams, startTime) {
-        if (!eventBox || !eventStreams) {
+    function getEvent(eventBox, eventStreams, mediaStartTime, voRepresentation) {
+        try {
+            if (!eventBox || !eventStreams || isNaN(mediaStartTime) || !voRepresentation) {
+                return null;
+            }
+
+            const schemeIdUri = eventBox.scheme_id_uri;
+            const value = eventBox.value;
+
+            if (!eventStreams[schemeIdUri + '/' + value]) {
+                return null;
+            }
+
+            const event = new Event();
+            const timescale = eventBox.timescale || 1;
+            const periodStart = voRepresentation.adaptation.period.start;
+            const eventStream = eventStreams[schemeIdUri + '/' + value];
+            let presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
+            let calculatedPresentationTime;
+
+            if (eventBox.version === 0) {
+                const presentationTimeOffset = voRepresentation.presentationTimeOffset || 0;
+                calculatedPresentationTime = periodStart + mediaStartTime - presentationTimeOffset + presentationTimeDelta;
+            } else {
+                const presentationTimeOffset = eventStream.presentationTimeOffset || 0;
+                calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
+            }
+
+            const duration = eventBox.event_duration;
+            const id = eventBox.id;
+            const messageData = eventBox.message_data;
+
+            event.eventStream = eventStream;
+            event.eventStream.value = value;
+            event.eventStream.timescale = timescale;
+            event.duration = duration;
+            event.id = id;
+            event.calculatedPresentationTime = calculatedPresentationTime;
+            event.messageData = messageData;
+            event.presentationTimeDelta = presentationTimeDelta;
+
+            return event;
+        } catch (e) {
             return null;
         }
-        const event = new Event();
-        const schemeIdUri = eventBox.scheme_id_uri;
-        const value = eventBox.value;
-        const timescale = eventBox.timescale;
-        let presentationTimeDelta;
-        let calculatedPresentationTime;
-        if (eventBox.version === 0) {
-            presentationTimeDelta = eventBox.presentation_time_delta;
-            calculatedPresentationTime = startTime * timescale + presentationTimeDelta;
-        } else {
-            presentationTimeDelta = 0;
-            calculatedPresentationTime = eventBox.presentation_time_delta;
-        }
-        const duration = eventBox.event_duration;
-        const id = eventBox.id;
-        const messageData = eventBox.message_data;
-
-        if (!eventStreams[schemeIdUri + '/' + value]) return null;
-
-        event.eventStream = eventStreams[schemeIdUri + '/' + value];
-        event.eventStream.value = value;
-        event.eventStream.timescale = timescale;
-        event.duration = duration;
-        event.id = id;
-        event.calculatedPresentationTime = calculatedPresentationTime;
-        event.messageData = messageData;
-        event.presentationTimeDelta = presentationTimeDelta;
-
-        return event;
     }
 
     /**
@@ -747,6 +782,10 @@ function DashAdapter() {
         }
 
         return null;
+    }
+
+    function getIsTypeOf(adaptation, type) {
+        return dashManifestModel.getIsTypeOf(adaptation, type);
     }
 
     function reset() {
@@ -1087,6 +1126,8 @@ function DashAdapter() {
         getAllMediaInfoForType: getAllMediaInfoForType,
         getAdaptationForType: getAdaptationForType,
         getRealAdaptation: getRealAdaptation,
+        getRealPeriodByIndex,
+        getEssentialPropertiesForRepresentation,
         getVoRepresentations: getVoRepresentations,
         getEventsFor: getEventsFor,
         getEvent: getEvent,
@@ -1097,6 +1138,7 @@ function DashAdapter() {
         getUTCTimingSources: getUTCTimingSources,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
         getAvailabilityStartTime: getAvailabilityStartTime,
+        getIsTypeOf,
         getIsDynamic: getIsDynamic,
         getDuration: getDuration,
         getRegularPeriods: getRegularPeriods,

@@ -14,17 +14,60 @@ const context = {};
 const voHelper = new VoHelper();
 const dashAdapter = DashAdapter(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
-const manifest_with_audio = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: undefined, mimeType: Constants.AUDIO, lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }] }] };
-const manifest_with_video_with_embedded_subtitles = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, Accessibility: {schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}, Accessibility_asArray: [{schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe'}]}, { id: 1, mimeType: Constants.VIDEO}] }] };
-const manifest_with_ll_service_description = { loadedTime: new Date(), mediaPresentationDuration: 10, ServiceDescription: {}, ServiceDescription_asArray: [{ Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' }, Latency: { target: 3000, max: 5000, min: 2000}, PlaybackRate: { max: 1.5, min: 0.5 } }], Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO, SupplementalProperty: {}, SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }] }] }] };
-const manifest_without_supplemental_properties = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }] };
+const manifest_with_audio = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: undefined,
+            mimeType: Constants.AUDIO,
+            lang: 'eng',
+            Role_asArray: [{ value: 'main' }]
+        }, { id: undefined, mimeType: Constants.AUDIO, lang: 'deu', Role_asArray: [{ value: 'main' }] }]
+    }]
+};
+const manifest_with_video_with_embedded_subtitles = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0,
+            mimeType: Constants.VIDEO,
+            Accessibility: { schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' },
+            Accessibility_asArray: [{ schemeIdUri: 'urn:scte:dash:cc:cea-608:2015', value: 'CC1=eng;CC3=swe' }]
+        }, { id: 1, mimeType: Constants.VIDEO }]
+    }]
+};
+const manifest_with_ll_service_description = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    ServiceDescription: {},
+    ServiceDescription_asArray: [{
+        Scope: { schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019' },
+        Latency: { target: 3000, max: 5000, min: 2000 },
+        PlaybackRate: { max: 1.5, min: 0.5 }
+    }],
+    Period_asArray: [{
+        AdaptationSet_asArray: [{
+            id: 0,
+            mimeType: Constants.VIDEO,
+            SupplementalProperty: {},
+            SupplementalProperty_asArray: [{ schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'true' }]
+        }]
+    }]
+};
+const manifest_without_supplemental_properties = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }] }]
+};
 
 
 describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
 
         it('should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined', function () {
-            expect(dashAdapter.getStreamsInfo.bind(dashAdapter,{})).to.throw('setConfig function has to be called previously');
+            expect(dashAdapter.getStreamsInfo.bind(dashAdapter, {})).to.throw('setConfig function has to be called previously');
         });
 
         it('should throw an exception when attempting to call getAllMediaInfoForType While the setConfig function was not called, and externalManifest parameter is defined', function () {
@@ -53,7 +96,7 @@ describe('DashAdapter', function () {
         });
 
         it('should throw an error when updatePeriods is called and newManifest parameter is defined, while setConfig has not been called', function () {
-            expect(dashAdapter.updatePeriods.bind(dashAdapter,{})).to.be.throw('setConfig function has to be called previously');
+            expect(dashAdapter.updatePeriods.bind(dashAdapter, {})).to.be.throw('setConfig function has to be called previously');
         });
 
         it('should return null when getMediaInfoForType is called and voPeriods is an empty array', function () {
@@ -92,14 +135,108 @@ describe('DashAdapter', function () {
             expect(event).to.be.null;                // jshint ignore:line
         });
 
-        it('should return an empty event object when getEvent is called and eventBox and eventStreams parameters are set', function () {
-            const event = dashAdapter.getEvent({scheme_id_uri: 'id', value: 'value'}, {'id/value': {}});
+        it('should return null when getEvent is called and no media start time is set', function () {
+            const event = dashAdapter.getEvent({ scheme_id_uri: 'id', value: 'value' }, { 'id/value': {} });
+
+            expect(event).to.be.null;                // jshint ignore:line
+        });
+
+        it('should return null when getEvent is called and no representation is set', function () {
+            const event = dashAdapter.getEvent({ scheme_id_uri: 'id', value: 'value' }, { 'id/value': {} }, 0);
+
+            expect(event).to.be.null;                // jshint ignore:line
+        });
+
+        it('should return null when getEvent is called and no period is set in the representation', function () {
+            const event = dashAdapter.getEvent({ scheme_id_uri: 'id', value: 'value' }, { 'id/value': {} }, 0, {});
+
+            expect(event).to.be.null;                // jshint ignore:line
+        });
+
+        it('should return an empty event object when getEvent is called and parameters are set', function () {
+            const representation = { presentationTimeOffset: 0, adaptation: { period: { start: 0 } } };
+            const event = dashAdapter.getEvent({
+                scheme_id_uri: 'id',
+                value: 'value'
+            }, { 'id/value': {} }, 0, representation);
 
             expect(event).to.be.an('object');
         });
 
+        it('should calculate correct start time for a version 0 event without PTO', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 0 };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(27);
+        });
+
+        it('should calculate correct start time for a version 0 event with PTO', function () {
+            const representation = { presentationTimeOffset: 5, adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 0 };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(22);
+        });
+
+        it('should calculate correct start time for a version 1 event without PTO', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 1 };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(22);
+        });
+
+        it('should calculate correct start time for a version 1 event with PTO in representation', function () {
+            const representation = { presentationTimeOffset: 10, adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 1 };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(22);
+        });
+
+        it('should calculate correct start time for a version 1 event with PTO in eventStream and representation', function () {
+            const representation = { presentationTimeOffset: 10, adaptation: { period: { start: 10 } } };
+            const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 1 };
+            const eventStreams = { 'id/value': { presentationTimeOffset: 5 } };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(17);
+        });
+
+        it('should calculate correct start time for a version 1 event with timescale > 1 and PTO in eventStream', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = {
+                scheme_id_uri: 'id',
+                value: 'value',
+                presentation_time_delta: 90000,
+                version: 1,
+                timescale: 45000
+            };
+            const eventStreams = { 'id/value': { presentationTimeOffset: 5 } };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.calculatedPresentationTime).to.be.equal(7);
+        });
+
         it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
-            const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo(Constants.VIDEO));
+            const realAdaptation = dashAdapter.getRealAdaptation(null, voHelper.getDummyMediaInfo(Constants.VIDEO));
 
             expect(realAdaptation).to.be.undefined; // jshint ignore:line
         });
@@ -180,7 +317,16 @@ describe('DashAdapter', function () {
         });
 
         it('should return the first adaptation when getAdaptationForType is called and streamInfo is undefined', () => {
-            const manifest_with_video = { loadedTime: new Date(), mediaPresentationDuration: 10, Period_asArray: [{ AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO}, { id: 1, mimeType: Constants.VIDEO}] }] };
+            const manifest_with_video = {
+                loadedTime: new Date(),
+                mediaPresentationDuration: 10,
+                Period_asArray: [{
+                    AdaptationSet_asArray: [{ id: 0, mimeType: Constants.VIDEO }, {
+                        id: 1,
+                        mimeType: Constants.VIDEO
+                    }]
+                }]
+            };
             dashAdapter.updatePeriods(manifest_with_video);
             const adaptation = dashAdapter.getAdaptationForType(0, Constants.VIDEO);
 
@@ -254,7 +400,7 @@ describe('DashAdapter', function () {
             });
 
             it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
-                const realAdaptation = dashAdapter.getRealAdaptation(null,voHelper.getDummyMediaInfo(Constants.VIDEO));
+                const realAdaptation = dashAdapter.getRealAdaptation(null, voHelper.getDummyMediaInfo(Constants.VIDEO));
 
                 expect(realAdaptation).to.be.undefined; // jshint ignore:line
             });
@@ -296,7 +442,10 @@ describe('DashAdapter', function () {
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and voPeriods is not an empty array, and streamInfo parameter is set', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.AUDIO);
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.AUDIO);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray).to.not.be.empty;                // jshint ignore:line
@@ -310,7 +459,10 @@ describe('DashAdapter', function () {
             });
 
             it('should return an empty array when getAllMediaInfoForType is called and, embeddedText type and externalManifest are set', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.EMBEDDED_TEXT, manifest_with_video_with_embedded_subtitles);
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.EMBEDDED_TEXT, manifest_with_video_with_embedded_subtitles);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray.length).equals(2);           // jshint ignore:line
@@ -322,7 +474,7 @@ describe('DashAdapter', function () {
                 expect(streamInfos).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(streamInfos.length).equals(1);           // jshint ignore:line
 
-                expect(streamInfos[0].manifestInfo).not.to.be.null; ;    // jshint ignore:line
+                expect(streamInfos[0].manifestInfo).not.to.be.null; // jshint ignore:line
                 expect(streamInfos[0].manifestInfo.serviceDescriptions).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(streamInfos[0].manifestInfo.serviceDescriptions.length).equals(1);           // jshint ignore:line
 
@@ -335,7 +487,10 @@ describe('DashAdapter', function () {
             });
 
             it('supplemental properties should be empty if not defined', function () {
-                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({id: 'defaultId_0', index: 0}, Constants.VIDEO, manifest_without_supplemental_properties);
+                const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                    id: 'defaultId_0',
+                    index: 0
+                }, Constants.VIDEO, manifest_without_supplemental_properties);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray.length).equals(1);           // jshint ignore:line

@@ -7,7 +7,12 @@ class StreamControllerMock {
         this.streamId = 'streamId';
     }
 
-    initialize() {
+    initialize(streams) {
+        this.streams = streams;
+    }
+
+    getStreams() {
+        return this.streams;
     }
 
     getActiveStreamCommonEarliestTime() {

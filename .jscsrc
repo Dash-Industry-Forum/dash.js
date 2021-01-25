@@ -10,7 +10,7 @@
     "requireSpaceAfterKeywords": true,
     "requireSpaceBeforeBinaryOperators": true,
     "requireSpaceAfterBinaryOperators": true,
-    "requireSpacesInConditionalExpression": true, // Ternary if
+    "requireSpacesInConditionalExpression": true,
     "requireSpaceBeforeBlockStatements": true,
     "requireSpacesInForStatement": true,
     "requireSpacesInFunctionExpression": {
@@ -27,7 +27,6 @@
         "allExcept": ["comments"]
     },
     "jsDoc": {
-        "checkTypes": "strictNativeCase",
         "checkParamExistence": true,
         "checkParamNames": true,
         "requireParamTypes": true,

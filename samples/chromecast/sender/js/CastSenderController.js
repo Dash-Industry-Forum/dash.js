@@ -1,4 +1,6 @@
-function CasterController($scope) {
+var app = angular.module('DashCastSenderApp.controllers',[]);
+
+app.controller('CastSenderController', ['$scope', '$window', 'caster', function($scope, $window, caster) {
     $scope.availableStreams = [
         {
             name: "4K",
@@ -313,14 +315,6 @@ function CasterController($scope) {
         $scope.selectedItem = item;
     }
 
-    $scope.setReceiver = function (item) {
-        $scope.receiver = item;
-        Caster.doLaunch($scope.receiver);
-    }
-
-    $scope.isReceiverSelected = function (item) {
-        return ($scope.receiver === item);
-    }
 
     // -----------------------------------
     // Casting Methods
@@ -328,44 +322,30 @@ function CasterController($scope) {
 
     $scope.doCast = function () {
         $scope.state = STATE_CASTING;
-        Caster.loadMedia($scope.selectedItem.url, $scope.selectedItem.isLive);
+        caster.loadMedia($scope.selectedItem.url, $scope.selectedItem.isLive);
         $scope.playing = true;
     }
 
     $scope.stopCast = function () {
         $scope.state = STATE_READY;
-        Caster.stopPlayback();
+        caster.stopPlayback();
         $scope.playing = false;
     }
 
     $scope.togglePlayback = function () {
-        if ($scope.playing) {
-            Caster.pauseMedia();
-            $scope.playing = false;
-        }
-        else {
-            Caster.playMedia();
-            $scope.playing = true;
-        }
+        caster.playOrPause();
     }
 
     $scope.doSeek = function () {
         var x = event.layerX,
-            w = $("#scrubber").width(),
+            w = document.getElementById("scrubber").offsetWidth,
             p = x / w,
             v = $scope.duration * p;
-        Caster.seekMedia(v);
+        caster.seekMedia(v);
     }
 
     $scope.toggleMute = function () {
-        if ($scope.muted) {
-            Caster.unmuteMedia();
-            $scope.muted = false;
-        }
-        else {
-            Caster.muteMedia();
-            $scope.muted = true;
-        }
+        caster.muteOrUnmute();
     }
 
     $scope.turnVolumeDown = function () {
@@ -373,7 +353,7 @@ function CasterController($scope) {
         if ($scope.volume < 0) {
             $scope.volume = 0;
         }
-        Caster.setMediaVolume($scope.volume);
+        caster.setMediaVolume($scope.volume);
     }
 
     $scope.turnVolumeUp = function () {
@@ -381,72 +361,76 @@ function CasterController($scope) {
         if ($scope.volume > 1) {
             $scope.volume = 1;
         }
-        Caster.setMediaVolume($scope.volume);
+        caster.setMediaVolume($scope.volume);
     }
 
     $scope.toggleStats = function () {
-        Caster.toggleStats();
+        caster.toggleStats();
     }
 
     // -----------------------------------
     // Initialization
     // -----------------------------------
 
-    $(window).bind("message", function (e) {
-        if (event.source !== window) {
-            return;
+    $window['__onGCastApiAvailable'] = function(isAvailable) {
+        if (isAvailable && caster) {
+            caster.initialize(self);
         }
+    };
 
-        if (!Caster.isCastInitMessage(event)) {
-            return;
-        }
-
-        if (initialized) {
-            return;
-        }
-
-        initialized = true;
-
-        if (cast === undefined || cast === null) {
-            $scope.errorMessage = "Chromecast API not detected.";
-            $scope.hasError = true;
-            $scope.$apply();
-        }
-        else {
-            Caster.initialize(self);
-        }
-    });
 
     // -----------------------------------
-    // Caster Delegate Methods
+    // CastSender Delegate Methods
     // -----------------------------------
 
-    this.onReceiverList = function (list) {
-        if (list.length === 0) {
-            $scope.errorMessage = "No Chromecast receivers detected for the Dash.JS application.";
+    this.onReady = function (error) {
+        if (error) {
+            $scope.errorMessage = error;
             $scope.hasError = true;
+            $scope.castApiReady = false;
+            $scope.state = STATE_CASTING;
         }
         else {
             $scope.castApiReady = true;
-            $scope.receivers = list;
             $scope.state = STATE_READY;
         }
-
         $scope.$apply();
     }
 
     this.onTimeUpdate = function (time) {
         $scope.currentTime = time;
-        var w = $("#scrubber").width(),
-            p = ($scope.currentTime / $scope.duration) * 100;
-        $("#scrubber-content").width(p + "%");
+        var scrubber = document.getElementById("scrubber-content");
+        var p = ($scope.currentTime / $scope.duration) * 100;
+        angular.element(scrubber).width(p + "%");
     }
 
     this.onDurationChange = function (duration) {
         $scope.duration = duration;
     }
 
+    this.onPausedChange = function (isPaused) {
+        $scope.playing = !isPaused;
+    }
+
+    this.onMutedChange = function (isMuted) {
+        $scope.muted = isMuted;
+    }
+
+    this.onVolumeChange = function (level) {
+        $scope.volume = level;
+    }
+
     this.onEnded = function () {
 
     }
-}
+
+    this.resumeMediaSession = function (mediaSession) {
+        if (mediaSession.media) {
+            $scope.setStream($scope.availableStreams.find(item => item.url == mediaSession.media.contentId));
+            $scope.state = STATE_CASTING;
+            $scope.playing = mediaSession.playerState === 'PLAYING';
+            $scope.muted = mediaSession.volume.muted;
+            $scope.$apply();
+        }
+    }
+}]);

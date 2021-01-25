@@ -120,6 +120,43 @@ function AdapterMock () {
         return null;
     };
 
+    this.getIsTypeOf = function () {
+        return true;
+    };
+
+    this.getCodec = function (adaptation, representationId, addResolutionInfo) {
+        let codec = null;
+
+        if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
+            const representation = adaptation.Representation_asArray[representationId];
+            if (representation) {
+                codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
+                if (addResolutionInfo && representation.width !== undefined && representation.height !== undefined) {
+                    codec += ';width="' + representation.width + '";height="' + representation.height + '"';
+                }
+            }
+        }
+
+        // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+        if (codec) {
+            codec = codec.replace(/\sprofiles=[^;]*/g, '');
+        }
+
+        return codec;
+    };
+
+    this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
+        if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
+
+        return realRepresentation.EssentialProperty_asArray.map((prop) => {
+            return {
+                schemeIdUri: prop.schemeIdUri,
+                value: prop.value
+            };
+        });
+    };
+
+
     this.getLocation = function () {
         return null;
     };

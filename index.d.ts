@@ -103,6 +103,7 @@ declare namespace dashjs {
     export class MediaPlayerSettingClass {
         debug?: {
             logLevel?: LogLevel;
+            dispatchEvent?: boolean;
         };
         streaming?: {
             metricsMaxListDepth?: number;
@@ -112,10 +113,10 @@ declare namespace dashjs {
             scheduleWhilePaused?: boolean;
             fastSwitchEnabled?: boolean;
             flushBufferAtTrackSwitch?: boolean;
+            reuseExistingSourceBuffers?: boolean;
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
-            bufferAheadToKeep?: number;
             jumpGaps?: boolean;
             jumpLargeGaps?: boolean;
             smallGapLimit?: number;
@@ -130,9 +131,17 @@ declare namespace dashjs {
             useSuggestedPresentationDelay?: boolean;
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
-            liveCatchUpMinDrift?: number;
-            liveCatchUpMaxDrift?: number;
-            liveCatchUpPlaybackRate?: number;
+            stallThreshold?: number;
+            filterUnsupportedEssentialProperties?: true
+            liveCatchup?: {
+                minDrift?: number;
+                maxDrift?: number;
+                playbackRate?: number;
+                latencyThreshold?: number,
+                playbackBufferMin?: number,
+                enabled?: boolean
+                mode?: string
+            }
             lastBitrateCachingInfo?: {
                 enabled?: boolean;
                 ttl?: number;
@@ -159,6 +168,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyReductionFactor'?:  number;
             };
             retryAttempts?: {
                 'MPD'?:                       number;
@@ -168,13 +178,13 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyMultiplyFactor'?:  number;
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
-                ABRStrategy?: 'abrDynamic' | 'abrBola';
+                ABRStrategy?: 'abrDynamic' | 'abrBola' | 'abrL2A' | 'abrLoLP' | 'abrThroughput';
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
-                useBufferOccupancyABR?: boolean;
                 useDeadTimeLatency?: boolean;
                 limitBitrateByPortal?: boolean;
                 usePixelRatioInLimitBitrateByPortal?: boolean;
@@ -201,7 +211,8 @@ declare namespace dashjs {
                 autoSwitchBitrate?: {
                     audio?: boolean;
                     video?: boolean;
-                };
+                },
+                fetchThroughputCalculationMode?: string;
             },
             cmcd?: {
                 enabled?: boolean,
@@ -419,6 +430,7 @@ declare namespace dashjs {
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        CONFORMANCE_VIOLATION: 'conformanceViolation'
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
@@ -1079,5 +1091,7 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestBitrate' | 'widestRange';
+    export type TrackSelectionMode = 'highestBitrate' | 'highestEfficiency' | 'widestRange';
+    export function supportsMediaSource(): boolean;
+
 }

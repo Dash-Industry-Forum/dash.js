@@ -37,7 +37,7 @@
  */
 class Constants {
 
-    init () {
+    init() {
         /**
          *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
          *  @memberof Constants#
@@ -137,11 +137,53 @@ class Constants {
         this.ABR_STRATEGY_BOLA = 'abrBola';
 
         /**
+         *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_L2A = 'abrL2A';
+
+        /**
+         *  @constant {string} ABR_STRATEGY_LoLP Adaptive bitrate algorithm based on LoL+
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_STRATEGY_LoLP = 'abrLoLP';
+
+        /**
          *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
          *  @memberof Constants#
          *  @static
          */
         this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+
+        /**
+         *  @constant {string} ABR_FETCH_THROUGHPUT_CALUCUALTION_DOWNLOADED_DATA Throughput calculation based on downloaded data array
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA = 'abrFetchThroughputCalculationDownloadedData';
+
+        /**
+         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING Throughput calculation based on moof parsing
+         *  @memberof Constants#
+         *  @static
+         */
+        this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
+
+        /**
+         *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
+         *  @memberof Constants#
+         *  @static
+         */
+        this.LIVE_CATCHUP_MODE_DEFAULT = 'liveCatchupModeDefault';
+
+        /**
+         *  @constant {string} LIVE_CATCHUP_MODE_LOLP Throughput calculation based on moof parsing
+         *  @memberof Constants#
+         *  @static
+         */
+        this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
 
         /**
          *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
@@ -193,7 +235,14 @@ class Constants {
         this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
 
         /**
-         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE this mode makes the player select the track with a widest range of bitrates
+         *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY = 'highestEfficiency';
+
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
          *  @memberof Constants#
          *  @static
          */
@@ -216,7 +265,7 @@ class Constants {
         this.DVB_PROBABILITY = 'dvb:probability';
     }
 
-    constructor () {
+    constructor() {
         this.init();
     }
 }

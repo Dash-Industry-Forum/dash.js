@@ -48,6 +48,7 @@ import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const PREBUFFERING_CAN_START_INTERVAL = 500;
@@ -60,6 +61,7 @@ function StreamController() {
     let instance,
         logger,
         capabilities,
+        capabilitiesFilter,
         manifestUpdater,
         manifestLoader,
         manifestModel,
@@ -143,7 +145,7 @@ function StreamController() {
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, instance);
-        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance, EventBus.EVENT_PRIORITY_HIGH);
+        eventBus.on(Events.PLAYBACK_ENDED, onEnded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, onStreamBufferingCompleted, instance);
         eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
@@ -334,7 +336,7 @@ function StreamController() {
 
     function canSourceBuffersBeReused(nextStream, previousStream) {
         try {
-            return (previousStream.isProtectionCompatible(nextStream, previousStream) &&
+            return (settings.get().streaming.reuseExistingSourceBuffers && previousStream.isProtectionCompatible(nextStream, previousStream) &&
                 (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
         } catch (e) {
             return false;
@@ -619,7 +621,7 @@ function StreamController() {
             if (!isNaN(seekTime)) {
                 // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
                 if (seekTime === playbackController.getTime()) {
-                    eventBus.trigger(Events.SEEK_TARGET, {time: seekTime}, {streamId: activeStream.getId()});
+                    eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
                 } else {
                     playbackController.seek(seekTime);
                 }
@@ -699,6 +701,7 @@ function StreamController() {
                         adapter: adapter,
                         timelineConverter: timelineConverter,
                         capabilities: capabilities,
+                        capabilitiesFilter,
                         errHandler: errHandler,
                         baseURLController: baseURLController,
                         abrController: abrController,
@@ -730,7 +733,7 @@ function StreamController() {
 
                 // we need to figure out what the correct starting period is
                 let initialStream = null;
-                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamsInfo[0].start, adapter.getIsDynamic());
+                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(adapter.getIsDynamic());
 
                 initialStream = getStreamForTime(startTimeFromUri);
 
@@ -848,6 +851,14 @@ function StreamController() {
             adapter.updatePeriods(manifest);
 
             let manifestUTCTimingSources = adapter.getUTCTimingSources();
+
+            if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
+                eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                    level: ConformanceViolationConstants.LEVELS.WARNING,
+                    event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
+                });
+            }
+
             let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
@@ -990,6 +1001,9 @@ function StreamController() {
 
         if (config.capabilities) {
             capabilities = config.capabilities;
+        }
+        if (config.capabilitiesFilter) {
+            capabilitiesFilter = config.capabilitiesFilter;
         }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;

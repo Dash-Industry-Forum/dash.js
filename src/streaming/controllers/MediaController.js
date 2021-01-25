@@ -53,6 +53,7 @@ function MediaController() {
 
     const validTrackSelectionModes = [
         Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+        Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
         Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
     ];
 
@@ -87,10 +88,10 @@ function MediaController() {
         }
 
         if (tracks.length === 0) {
-            setTrack(selectInitialTrack(type, tracksForType), true);
+            setTrack(this.selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(selectInitialTrack(type, tracks));
+                setTrack(this.selectInitialTrack(type, tracks));
             } else {
                 setTrack(tracks[0]);
             }
@@ -381,6 +382,7 @@ function MediaController() {
 
     function matchSettings(settings, track) {
         const matchLang = !settings.lang || (track.lang.match(settings.lang));
+        const matchIndex = (settings.index === undefined) || (settings.index === null) || (track.index === settings.index);
         const matchViewPoint = !settings.viewpoint || (settings.viewpoint === track.viewpoint);
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return item === settings.role;
@@ -392,7 +394,7 @@ function MediaController() {
             return item === settings.audioChannelConfiguration;
         })[0];
 
-        return (matchLang && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
+        return (matchLang && matchIndex && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
     }
 
     function resetInitialSettings() {
@@ -403,48 +405,73 @@ function MediaController() {
         };
     }
 
+    function getTracksWithHighestBitrate (trackArr) {
+        let max = 0;
+        let result = [];
+        let tmp;
+
+        trackArr.forEach(function (track) {
+            tmp = Math.max.apply(Math, track.bitrateList.map(function (obj) { return obj.bandwidth; }));
+
+            if (tmp > max) {
+                max = tmp;
+                result = [track];
+            } else if (tmp === max) {
+                result.push(track);
+            }
+        });
+
+        return result;
+    }
+
+    function getTracksWithHighestEfficiency (trackArr) {
+        let min = Infinity;
+        let result = [];
+        let tmp;
+
+        trackArr.forEach(function (track) {
+            const sum = track.bitrateList.reduce(function (acc, obj) {
+                const resolution = Math.max(1, obj.width * obj.height);
+                const efficiency = obj.bandwidth / resolution;
+                return acc + efficiency;
+            }, 0);
+            tmp = sum / track.bitrateList.length;
+
+            if (tmp < min) {
+                min = tmp;
+                result = [track];
+            } else if (tmp === min) {
+                result.push(track);
+            }
+        });
+
+        return result;
+    }
+
+    function getTracksWithWidestRange (trackArr) {
+        let max = 0;
+        let result = [];
+        let tmp;
+
+        trackArr.forEach(function (track) {
+            tmp = track.representationCount;
+
+            if (tmp > max) {
+                max = tmp;
+                result = [track];
+            } else if (tmp === max) {
+                result.push(track);
+            }
+        });
+
+        return result;
+    }
+
     function selectInitialTrack(type, tracks) {
         if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
 
         let mode = getSelectionModeForInitialTrack();
         let tmpArr = [];
-
-        const getTracksWithHighestBitrate = function (trackArr) {
-            let max = 0;
-            let result = [];
-            let tmp;
-
-            trackArr.forEach(function (track) {
-                tmp = Math.max.apply(Math, track.bitrateList.map(function (obj) { return obj.bandwidth; }));
-
-                if (tmp > max) {
-                    max = tmp;
-                    result = [track];
-                } else if (tmp === max) {
-                    result.push(track);
-                }
-            });
-
-            return result;
-        };
-        const getTracksWithWidestRange = function (trackArr) {
-            let max = 0;
-            let result = [];
-            let tmp;
-
-            trackArr.forEach(function (track) {
-                tmp = track.representationCount;
-
-                if (tmp > max) {
-                    max = tmp;
-                    result = [track];
-                } else if (tmp === max) {
-                    result.push(track);
-                }
-            });
-
-            return result;
-        };
 
         switch (mode) {
             case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
@@ -452,6 +479,13 @@ function MediaController() {
 
                 if (tmpArr.length > 1) {
                     tmpArr = getTracksWithWidestRange(tmpArr);
+                }
+                break;
+            case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                tmpArr = getTracksWithHighestEfficiency(tracks);
+
+                if (tmpArr.length > 1) {
+                    tmpArr = getTracksWithHighestBitrate(tmpArr);
                 }
                 break;
             case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
@@ -510,6 +544,10 @@ function MediaController() {
         getInitialSettings: getInitialSettings,
         setSwitchMode: setSwitchMode,
         getSwitchMode: getSwitchMode,
+        selectInitialTrack: selectInitialTrack,
+        getTracksWithHighestBitrate: getTracksWithHighestBitrate,
+        getTracksWithHighestEfficiency: getTracksWithHighestEfficiency,
+        getTracksWithWidestRange: getTracksWithWidestRange,
         setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
         getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
         isMultiTrackSupportedByType: isMultiTrackSupportedByType,

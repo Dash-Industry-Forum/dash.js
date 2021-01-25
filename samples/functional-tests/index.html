@@ -20,6 +20,7 @@
             video = document.querySelector(".dash-video-player video");
             player = dashjs.MediaPlayer().create();
             player.initialize(video, null, true);
+            player.updateSettings({ 'streaming': { 'lastMediaSettingsCachingInfo': { 'enabled': false } } });
             player.setMute(true);
             player.setAutoPlay(true);
 
@@ -51,7 +52,8 @@
 
     <body onload="onLoad()">
         <div class="dash-video-player">
-            <video controls="true"></video>
+            <div id="ttml-rendering-div"></div>
+            <video controls="true" preload="auto" autoplay=""></video>
         </div>
     </body>
 

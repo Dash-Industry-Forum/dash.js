@@ -91,7 +91,7 @@ function StreamProcessor(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance, EventBus.EVENT_PRIORITY_HIGH); // High priority to be notified before Stream
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, onMediaFragmentNeeded, instance);
@@ -423,6 +423,9 @@ function StreamProcessor(config) {
     }
 
     function onInitFragmentNeeded(e) {
+        // Event propagation may have been stopped (see MssHandler)
+        if (!e.sender) return;
+
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
@@ -535,28 +538,40 @@ function StreamProcessor(config) {
     }
 
     function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
-        const fragmentStartTime = Math.max(!request || isNaN(request.startTime) ? 0 : request.startTime, 0);
-        const eventStreams = [];
-        const events = [];
+        try {
+            const eventStreams = {};
+            const events = [];
 
-        /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
-        const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
-        for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
-            eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
-        }
-
-        const isoFile = BoxParser(context).getInstance().parse(data);
-        const eventBoxes = isoFile.getBoxes('emsg');
-
-        for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
-            const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentStartTime);
-
-            if (event) {
-                events.push(event);
+            /* Extract the possible schemeIdUri : If a DASH client detects an event message box with a scheme that is not defined in MPD, the client is expected to ignore it */
+            const inbandEvents = mediaInbandEvents.concat(trackInbandEvents);
+            for (let i = 0, ln = inbandEvents.length; i < ln; i++) {
+                eventStreams[inbandEvents[i].schemeIdUri + '/' + inbandEvents[i].value] = inbandEvents[i];
             }
-        }
 
-        return events;
+            const isoFile = BoxParser(context).getInstance().parse(data);
+            const eventBoxes = isoFile.getBoxes('emsg');
+
+            if (!eventBoxes || eventBoxes.length === 0) {
+                return events;
+            }
+
+            const sidx = isoFile.getBox('sidx');
+            const mediaAnchorTime = sidx && !isNaN(sidx.earliest_presentation_time) && !isNaN(sidx.timescale) ? sidx.earliest_presentation_time / sidx.timescale : request && !isNaN(request.mediaStartTime) ? request.mediaStartTime : 0;
+            const fragmentMediaStartTime = Math.max(mediaAnchorTime, 0);
+            const voRepresentation = representationController.getCurrentRepresentation();
+
+            for (let i = 0, ln = eventBoxes.length; i < ln; i++) {
+                const event = adapter.getEvent(eventBoxes[i], eventStreams, fragmentMediaStartTime, voRepresentation);
+
+                if (event) {
+                    events.push(event);
+                }
+            }
+
+            return events;
+        } catch (e) {
+            return [];
+        }
     }
 
     function createBuffer(previousBuffers) {
