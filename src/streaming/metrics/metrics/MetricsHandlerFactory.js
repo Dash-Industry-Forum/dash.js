@@ -54,8 +54,8 @@ function MetricsHandlerFactory(config) {
     };
 
     function create(listType, reportingController) {
-        var matches = listType.match(keyRegex);
-        var handler;
+        const matches = listType.match(keyRegex);
+        let handler = null;
 
         if (!matches) {
             return;

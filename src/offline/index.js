@@ -32,9 +32,9 @@
 import OfflineController from './controllers/OfflineController';
 
 // Shove both of these into the global scope
-var context = (typeof window !== 'undefined' && window) || global;
+const context = (typeof window !== 'undefined' && window) || global;
 
-var dashjs = context.dashjs;
+let dashjs = context.dashjs;
 if (!dashjs) {
     dashjs = context.dashjs = {};
 }

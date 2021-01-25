@@ -754,7 +754,7 @@ function MssParser(config) {
         if (manifest.type === 'static') {
             // In case of start-over stream and manifest reloading (due to track switch)
             // we consider previous timestampOffset to keep timelines synchronized
-            var prevManifest = manifestModel.getValue();
+            const prevManifest = manifestModel.getValue();
             if (prevManifest && prevManifest.timestampOffset) {
                 timestampOffset = prevManifest.timestampOffset;
             } else {

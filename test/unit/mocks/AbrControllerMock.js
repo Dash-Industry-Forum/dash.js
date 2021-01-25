@@ -69,7 +69,7 @@ function AbrControllerMock () {
     this.isPlayingAtTopQuality = function () {};
 
     this.getQualityFor = function (type) {
-        var quality;
+        let quality;
 
         if (!this.currentStreamId || !this.qualityDict.hasOwnProperty(this.currentStreamId)) {
             return QUALITY_DEFAULT;

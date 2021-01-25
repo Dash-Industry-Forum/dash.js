@@ -19,14 +19,14 @@ In Dash.js v2.x, metris related methods were shared across the classes ```DashMe
 
 *Example of how to access metrics in v3*
 ```js
-var dashMetrics = player.getDashMetrics();
-var currentBuffer = dashMetrics.getCurrentBufferLevel('video');
+let dashMetrics = player.getDashMetrics();
+let currentBuffer = dashMetrics.getCurrentBufferLevel('video');
 ```
 
 *Example of how get bandwidth of a representation  in v3*
 ```js
-var dashAdapter = player.getDashAdapter();
-var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
+let dashAdapter = player.getDashAdapter();
+let maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
 ```
 
 Please, note these changes affect to most of analytics plugins integrated with dash.js.

@@ -4,7 +4,7 @@ const applications = require('./config/applications.json');
 const yargs = require('yargs');
 const os = require('os');
 
-var args = yargs
+let args = yargs
     .usage('$0 [options]')
     .alias('h', 'help')
     .help(true)
@@ -59,7 +59,7 @@ var args = yargs
 
 console.log(args);
 
-var config = {
+let config = {
 
     // The maximum number of sessions to drive concurrently
     maxConcurrency: 1,
@@ -76,7 +76,7 @@ var config = {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Selenium configuration
-var seleniumConfig = {
+let seleniumConfig = {
     local: {
         proxyUrl: 'http://127.0.0.1:3555',
         proxyPort: 3555,
@@ -113,7 +113,7 @@ config = Object.assign(config, seleniumConfig[args.selenium]);
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Browsers / OS configuration
 
-var osName = args.os;
+let osName = args.os;
 
 // For local testing, detect the OS
 if (args.selenium === 'local') {
@@ -132,7 +132,7 @@ if (args.selenium === 'local') {
     }
 }
 
-var browserNames = Object.keys(browsers[osName]);
+let browserNames = Object.keys(browsers[osName]);
 if (args.browsers) {
     browserNames = browserNames.filter(name => args.browsers.split(',').includes(name));
 }
@@ -145,7 +145,7 @@ browserNames.forEach(name => {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Reporters
 config.reporters = [];
-var reportersNames = args.reporters ? args.reporters.split(',') : ['runner'];
+let reportersNames = args.reporters ? args.reporters.split(',') : ['runner'];
 reportersNames.forEach(name => {
     let reporter = {
         name: name

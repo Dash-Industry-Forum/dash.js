@@ -22,7 +22,7 @@ const NAME = 'SEEK';
 const SEEK_COUNT = 3; // Number of seek tests
 
 // Test variables
-var seekPos;
+let seekPos;
 
 exports.register = function(stream) {
 

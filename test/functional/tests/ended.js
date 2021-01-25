@@ -14,7 +14,7 @@ const utils = require('./scripts/utils.js');
 const player = require('./scripts/player.js');
 
 // Suite name
-var NAME = 'ENDED';
+let NAME = 'ENDED';
 
 exports.register = function(stream) {
 

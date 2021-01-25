@@ -47,8 +47,8 @@ function ManifestParsing (config) {
 
         if (manifest && manifest.Metrics_asArray) {
             manifest.Metrics_asArray.forEach(metric => {
-                var metricEntry = new Metrics();
-                var isDynamic = adapter.getIsDynamic(manifest);
+                const metricEntry = new Metrics();
+                const isDynamic = adapter.getIsDynamic(manifest);
 
                 if (metric.hasOwnProperty('metrics')) {
                     metricEntry.metrics = metric.metrics;
@@ -58,7 +58,7 @@ function ManifestParsing (config) {
 
                 if (metric.Range_asArray) {
                     metric.Range_asArray.forEach(range => {
-                        var rangeEntry = new Range();
+                        const rangeEntry = new Range();
 
                         rangeEntry.starttime =
                             getMetricsRangeStartTime(manifest, isDynamic, range);
@@ -79,7 +79,7 @@ function ManifestParsing (config) {
 
                 if (metric.Reporting_asArray) {
                     metric.Reporting_asArray.forEach(reporting => {
-                        var reportingEntry = new Reporting();
+                        const reportingEntry = new Reporting();
 
                         if (reporting.hasOwnProperty(constants.SCHEME_ID_URI)) {
                             reportingEntry.schemeIdUri = reporting.schemeIdUri;

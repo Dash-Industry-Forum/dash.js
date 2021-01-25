@@ -38,20 +38,20 @@ describe('Debug', function () {
     });
 
     it('Default values', function () {
-        var logLevel = settings.get().debug.logLevel;
+        let logLevel = settings.get().debug.logLevel;
         expect(logLevel).to.equal(Debug.LOG_LEVEL_WARNING);
     });
 
     it('should set log level', function () {
         const s = { debug: { logLevel: Debug.LOG_LEVEL_NONE }};
         settings.update(s);
-        var logLevel = settings.get().debug.logLevel;
+        let logLevel = settings.get().debug.logLevel;
         expect(logLevel).to.equal(Debug.LOG_LEVEL_NONE);
     });
 
     describe('Log Levels', function () {
         it('should return a logger with the right interface', function () {
-            var logger = debug.getLogger();
+            let logger = debug.getLogger();
             expect(logger.debug).to.be.instanceOf(Function);
             expect(logger.info).to.be.instanceOf(Function);
             expect(logger.warn).to.be.instanceOf(Function);
@@ -60,7 +60,7 @@ describe('Debug', function () {
         });
 
         it('shouldnt write logs when LOG_LEVEL_NONE level is set', function () {
-            var logger = debug.getLogger();
+            let logger = debug.getLogger();
 
             const s = { debug: { logLevel: Debug.LOG_LEVEL_NONE }};
             settings.update(s);
@@ -77,7 +77,7 @@ describe('Debug', function () {
         });
 
         it('should manage log levels correctly', function () {
-            var logger = debug.getLogger();
+            let logger = debug.getLogger();
             // Debug
             let s = { debug: { logLevel: Debug.LOG_LEVEL_DEBUG }};
             settings.update(s);

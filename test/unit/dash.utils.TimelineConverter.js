@@ -74,7 +74,7 @@ describe('TimelineConverter', function () {
 
         it('should calculate availability window for dynamic mpd', function () {
 
-            var clock = sinon.useFakeTimers(new Date().getTime());
+            let clock = sinon.useFakeTimers(new Date().getTime());
             representation.adaptation.period.mpd.availabilityStartTime = new Date(new Date().getTime() - representation.adaptation.period.mpd.timeShiftBufferDepth * 1000);
             timelineConverter.setExpectedLiveEdge(100);
 

@@ -13,11 +13,11 @@
 
 /*! @source http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js */
 
-var saveAs = saveAs
+let saveAs = saveAs
   || (navigator.msSaveOrOpenBlob && navigator.msSaveOrOpenBlob.bind(navigator))
   || (function(view) {
 	"use strict";
-	var
+	let
 		  doc = view.document
 		  // only get URL when necessary in case BlobBuilder.js hasn't overridden it yet
 		, get_URL = function() {
@@ -27,7 +27,7 @@ var saveAs = saveAs
 		, save_link = doc.createElementNS("http://www.w3.org/1999/xhtml", "a")
 		, can_use_save_link =  !view.externalHost && "download" in save_link
 		, click = function(node) {
-			var event = doc.createEvent("MouseEvents");
+			let event = doc.createEvent("MouseEvents");
 			event.initMouseEvent(
 				"click", true, false, view, 0, 0, 0, 0, 0
 				, false, false, false, false, 0, null
@@ -45,9 +45,9 @@ var saveAs = saveAs
 		, fs_min_size = 0
 		, deletion_queue = []
 		, process_deletion_queue = function() {
-			var i = deletion_queue.length;
+			let i = deletion_queue.length;
 			while (i--) {
-				var file = deletion_queue[i];
+				let file = deletion_queue[i];
 				if (typeof file === "string") { // file is an object URL
 					URL.revokeObjectURL(file);
 				} else { // file is a File
@@ -58,9 +58,9 @@ var saveAs = saveAs
 		}
 		, dispatch = function(filesaver, event_types, event) {
 			event_types = [].concat(event_types);
-			var i = event_types.length;
+			let i = event_types.length;
 			while (i--) {
-				var listener = filesaver["on" + event_types[i]];
+				let listener = filesaver["on" + event_types[i]];
 				if (typeof listener === "function") {
 					try {
 						listener.call(filesaver, event || filesaver);
@@ -72,14 +72,14 @@ var saveAs = saveAs
 		}
 		, FileSaver = function(blob, name) {
 			// First try a.download, then web filesystem, then object URLs
-			var
+			let
 				  filesaver = this
 				, type = blob.type
 				, blob_changed = false
 				, object_url
 				, target_view
 				, get_object_url = function() {
-					var object_url = get_URL().createObjectURL(blob);
+					let object_url = get_URL().createObjectURL(blob);
 					deletion_queue.push(object_url);
 					return object_url;
 				}
@@ -147,7 +147,7 @@ var saveAs = saveAs
 			fs_min_size += blob.size;
 			req_fs(view.TEMPORARY, fs_min_size, abortable(function(fs) {
 				fs.root.getDirectory("saved", create_if_not_found, abortable(function(dir) {
-					var save = function() {
+					let save = function() {
 						dir.getFile(name, create_if_not_found, abortable(function(file) {
 							file.createWriter(abortable(function(writer) {
 								writer.onwriteend = function(event) {
@@ -157,7 +157,7 @@ var saveAs = saveAs
 									dispatch(filesaver, "writeend", event);
 								};
 								writer.onerror = function() {
-									var error = writer.error;
+									let error = writer.error;
 									if (error.code !== error.ABORT_ERR) {
 										fs_error();
 									}
@@ -194,7 +194,7 @@ var saveAs = saveAs
 		}
 	;
 	FS_proto.abort = function() {
-		var filesaver = this;
+		let filesaver = this;
 		filesaver.readyState = filesaver.DONE;
 		dispatch(filesaver, "abort");
 	};

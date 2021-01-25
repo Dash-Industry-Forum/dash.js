@@ -223,7 +223,7 @@ function OfflineStream(config) {
         let segments = 0;
         let allSegments = 0;
         let waitForAllProgress;
-        for (var property in progressionById) {
+        for (let property in progressionById) {
             if (progressionById.hasOwnProperty(property)) {
                 if (progressionById[property] === null) {
                     waitForAllProgress = true;

@@ -9,7 +9,7 @@ class MpdHelper {
     }
 
     getMpd(type) {
-        var mpd = {};
+        let mpd = {};
 
         mpd.type = type;
         mpd.minimumUpdatePeriod = 10;
@@ -20,7 +20,7 @@ class MpdHelper {
     }
 
     getMimeForType(type) {
-        var mime = null;
+        let mime = null;
 
         switch (type) {
             case 'video': {
@@ -45,7 +45,7 @@ class MpdHelper {
     }
 
     getCodecsForType(type) {
-        var codecs = [];
+        let codecs = [];
 
         switch (type) {
             case 'video': {
@@ -70,7 +70,7 @@ class MpdHelper {
     }
 
     composePeriod() {
-        var period = {};
+        let period = {};
 
         period.AdaptationSet_asArray = [this.getAdaptationForSegmentInfoType('video', this.SEGMENT_TEMPLATE)];
 
@@ -78,11 +78,11 @@ class MpdHelper {
     }
 
     composeAdaptation(type) {
-        var adaptation = {};
-        var objRepresentation = [];
-        var objSubRepresentation = [];
-        var codecs = this.getCodecsForType(type);
-        var mime = this.getMimeForType(type);
+        let adaptation = {};
+        let objRepresentation = [];
+        let objSubRepresentation = [];
+        let codecs = this.getCodecsForType(type);
+        let mime = this.getMimeForType(type);
 
         adaptation.BaseURL = this.baseUrl;
         adaptation.__cnt = 20;
@@ -192,7 +192,7 @@ class MpdHelper {
     }
 
     getAdaptationForSegmentInfoType(type, segmentInfo) {
-        var adaptation = this.composeAdaptation(type);
+        let adaptation = this.composeAdaptation(type);
 
         switch (segmentInfo) {
             case this.SEGMENT_TEMPLATE: {

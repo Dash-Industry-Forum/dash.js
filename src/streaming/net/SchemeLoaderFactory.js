@@ -59,7 +59,7 @@ function SchemeLoaderFactory() {
     function getLoader(url) {
 
         // iterates through schemeLoaderMap to find a loader for the scheme
-        for (var scheme in schemeLoaderMap) {
+        for (let scheme in schemeLoaderMap) {
             if (schemeLoaderMap.hasOwnProperty(scheme) && url.startsWith(scheme)) {
                 return schemeLoaderMap[scheme];
             }

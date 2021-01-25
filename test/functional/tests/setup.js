@@ -10,7 +10,7 @@ const { assert } = intern.getPlugin('chai');
 const utils = require('./scripts/utils.js');
 
 // Suite name
-var NAME = 'SETUP';
+let NAME = 'SETUP';
 
 exports.register = function (stream) {
 
@@ -20,8 +20,8 @@ exports.register = function (stream) {
             utils.info(NAME, 'Setup stream: ' + stream.name);
 
             // Check key systems support
-            var browserName = remote.session.capabilities.browserName;
-            var browsersConf = intern.config.environments.filter(conf => conf.browserName === browserName)[0];
+            let browserName = remote.session.capabilities.browserName;
+            let browsersConf = intern.config.environments.filter(conf => conf.browserName === browserName)[0];
 
             if (stream.protData) {
                 stream.available = false;

@@ -202,7 +202,7 @@ function OfflineDownload(config) {
         let segments = 0;
         let allSegments = 0;
         let waitForAllProgress;
-        for (var property in _progressionById) {
+        for (let property in _progressionById) {
             if (_progressionById.hasOwnProperty(property)) {
                 if (_progressionById[property] === null) {
                     waitForAllProgress = true;

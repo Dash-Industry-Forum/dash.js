@@ -13,9 +13,9 @@ const textSwitch = require('./tests/textSwitch');
 const initialAudio = require('./tests/initialAudio');
 const ended = require('./tests/ended');
 
-var registerSuites = function (stream) {
-    var suites = intern.config.testSuites || ['playFromTime', 'pause', 'seek', 'seekPeriods', 'audioSwitch', 'textSwitch','initialAudio' , 'ended'];
-  
+let registerSuites = function (stream) {
+    let suites = intern.config.testSuites || ['playFromTime', 'pause', 'seek', 'seekPeriods', 'audioSwitch', 'textSwitch','initialAudio' , 'ended'];
+
     setup.register(stream);
     play.register(stream);
 
@@ -29,10 +29,10 @@ var registerSuites = function (stream) {
     if (suites.indexOf('ended') !== -1) ended.register(stream);
 };
 
-var streamsArray = streams.getStreams();
+let streamsArray = streams.getStreams();
 
-for (var i = 0; i < streamsArray.length; i++) {
-    var stream = streamsArray[i];
+for (let i = 0; i < streamsArray.length; i++) {
+    let stream = streamsArray[i];
     registerSuites(stream);
 }
 

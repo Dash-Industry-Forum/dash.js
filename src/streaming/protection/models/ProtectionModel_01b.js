@@ -185,7 +185,7 @@ function ProtectionModel_01b(config) {
             removeEventListeners();
 
             // Close any open sessions - avoids memory leak on LG webOS 2016/2017 TVs
-            for (var i = 0; i < sessions.length; i++) {
+            for (let i = 0; i < sessions.length; i++) {
                 closeKeySession(sessions[i]);
             }
             sessions = [];

@@ -6,7 +6,7 @@ Build status (CircleCI): [![CircleCI](https://circleci.com/gh/Dash-Industry-Foru
 [Join #dashjs on Slack!](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg)
 
 ## dash.js awards 2021
-The DASH Industry Forum (DASH-IF) is proud to announce its second dash.js award. Again, we are looking for developers who made contributions of significant benefit to the advancement of the dash.js project. 
+The DASH Industry Forum (DASH-IF) is proud to announce its second dash.js award. Again, we are looking for developers who made contributions of significant benefit to the advancement of the dash.js project.
 All information can be found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/dash.js-awards-2021).
 
 ## Overview
@@ -73,8 +73,8 @@ Add dash.all.min.js to the end of the body.
 Now comes the good stuff. We need to create a MediaPlayer and initialize it.
 ``` js
 
-var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
-var player = dashjs.MediaPlayer().create();
+let url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+let player = dashjs.MediaPlayer().create();
 player.initialize(document.querySelector("#videoPlayer"), url, true);
 
 ```
@@ -99,8 +99,8 @@ When it is all done, it should look similar to this:
         <script src="yourPathToDash/dash.all.min.js"></script>
         <script>
             (function(){
-                var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
-                var player = dashjs.MediaPlayer().create();
+                let url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
+                let player = dashjs.MediaPlayer().create();
                 player.initialize(document.querySelector("#videoPlayer"), url, true);
             })();
         </script>

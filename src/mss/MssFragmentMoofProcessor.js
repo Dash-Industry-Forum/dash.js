@@ -143,8 +143,9 @@ function MssFragmentMoofProcessor(config) {
         // In case of static start-over streams, update content duration
         if (manifest.type === 'static') {
             if (type === 'video') {
-                segment = segments[segments.length - 1];
-                var end = (segment.t + segment.d) / timescale;
+                const segment = segments[segments.length - 1];
+                const end = (segment.t + segment.d) / timescale;
+
                 if (end > representation.adaptation.period.duration) {
                     eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: this, newDuration: end });
                 }

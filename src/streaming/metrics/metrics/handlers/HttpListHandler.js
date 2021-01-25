@@ -48,7 +48,7 @@ function HttpListHandler(config) {
     const metricsConstants = config.metricsConstants;
 
     function intervalCallback() {
-        var vos = storedVos;
+        const vos = storedVos;
 
         if (vos.length) {
             if (reportingController) {

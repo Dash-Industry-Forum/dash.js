@@ -35,9 +35,9 @@ import Debug from './src/core/Debug';
 import { getVersionString } from './src/core/Version';
 
 // Shove both of these into the global scope
-var context = (typeof window !== 'undefined' && window) || global;
+const context = (typeof window !== 'undefined' && window) || global;
 
-var dashjs = context.dashjs;
+let dashjs = context.dashjs;
 if (!dashjs) {
     dashjs = context.dashjs = {};
 }

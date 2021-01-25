@@ -31,7 +31,7 @@ module.exports = {
     },
 
     checkIfFileExits: function (url, done) {
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.open('GET', url, false);
         xhr.onload = function() {
             if (xhr.status >= 200 && xhr.status <= 299) {

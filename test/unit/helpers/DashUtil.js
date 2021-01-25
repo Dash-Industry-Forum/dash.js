@@ -10,7 +10,7 @@
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-var element, player, video, stream, system, context, mpd, counter, seekCounter, count, tdID, stalled, isPaused, isSeeking, chkTimeout, currentDate, intervalID, refreshId, testMode, testModeList, csvContent, playbackCounter, runTestFlag, lastTime, endCheckCount, testPhaseDuration, lastTimeDuplicate,isIE;
+let element, player, video, stream, system, context, mpd, counter, seekCounter, count, tdID, stalled, isPaused, isSeeking, chkTimeout, currentDate, intervalID, refreshId, testMode, testModeList, csvContent, playbackCounter, runTestFlag, lastTime, endCheckCount, testPhaseDuration, lastTimeDuplicate,isIE;
 $(document).ready(function testLoad() {
 
 	csvContent = 'data:text/csv;charset=utf-8,';
@@ -44,13 +44,13 @@ function modeChanged() {
 /**Create dynamic rows for table*/
 function createRowsForMPD() {
 
-	for (var i = 0; i < mpd.length; i++) {
+	for (let i = 0; i < mpd.length; i++) {
 		createRow(i + 1);
 	}
 }
 
 function createRow(i) {
-	var RowItem = templateRow.clone();
+	let RowItem = templateRow.clone();
 	RowItem.attr('id', i);
 	RowItem.find('td').eq(1).attr('id', 'VideoPlayer' + i);
 	RowItem.find('td').eq(0).text('MPD' + i);
@@ -139,7 +139,7 @@ function initialisation(rowID) {
 		(element).setAttribute("controls", "true");
 	}
 
-	var videoDiv = document.querySelector('.ClassVideo' + (rowID));
+	let videoDiv = document.querySelector('.ClassVideo' + (rowID));
 	videoDiv.appendChild(element);
 	if (counter != rowID) {
 		$('#ClassVideo' + rowID).show();
@@ -186,9 +186,9 @@ function initialisation(rowID) {
 
 		player = new MediaPlayer(context);
 		player.startup();
-		var mpdID = '#MPDUrl' + rowID,
+		let mpdID = '#MPDUrl' + rowID,
 			onError = function (e) {
-				var message = "null";
+				let message = "null";
 				if (e) {
 					message = "source=" + e.error;
 					if (e.event.hasOwnProperty("id")) {
@@ -237,7 +237,7 @@ function runTest(id) {
 
 /** Onclick of delete button*/
 function deleteRow(id) {
-	var rowID;
+	let rowID;
 	$('#' + id).live('click', function () {
 		$(this).closest('tr').remove();
 		mpd[rowID] = null;
@@ -250,10 +250,10 @@ function loadNextMPD() {
 	clearInterval(intervalID);
 	teardown();
 	if (runTestFlag === false) {
-		var prevRow = $('#' + counter);
-		var intCounter = counter + 1;
+		let prevRow = $('#' + counter);
+		let intCounter = counter + 1;
 		if (intCounter < (mpd.length + 1)) {
-			var nextRowID = prevRow.next().attr('id');
+			let nextRowID = prevRow.next().attr('id');
 			initialisation(parseInt(nextRowID));
 		} else {
 			teardown();
@@ -388,7 +388,7 @@ function clearTest(){
 
 }
 function appendLogMsg(tableDivId) {
-	var msg = $(tableDivId).html();
+	let msg = $(tableDivId).html();
 	if (msg.trim().length != 0)
 		csvContent += msg + ' \n';
 }
@@ -421,7 +421,7 @@ function loadPopupBox() {
 }
 
 function addMPDData() {
-	var textArea = document.getElementById("AddMPDTextArea").value;
+	let textArea = document.getElementById("AddMPDTextArea").value;
 	mpd.push(textArea);
 	try {
 		createRow(mpd.length - 1);
@@ -433,7 +433,7 @@ function addMPDData() {
 
 /** Export data to file*/
 function exportToJSON() {
-	var blob = new Blob([JSON.stringify(mpd)], {
+	let blob = new Blob([JSON.stringify(mpd)], {
 			type : "text/plain;charset=utf-8"
 		});
 	saveAs(blob, "DashLog.json");
@@ -455,11 +455,11 @@ function importToTable(contents) {
 }
 
 function handleFileSelect(evt) {
-	var contents,
+	let contents,
 	jsonString;
-	var files = evt.target.files;
+	let files = evt.target.files;
 
-	var reader = new FileReader();
+	let reader = new FileReader();
 	reader.onload = (function (theFile) {
 		return function (e) {
 			importToTable(e.target.result);
@@ -470,15 +470,15 @@ function handleFileSelect(evt) {
 
 /** Populate table wit imported contents */
 function populateTable(contentXML) {
-	var mpdTable = document.getElementById('tbMPD');
-	var mpdRows = mpdTable.getElementsByTagName('tr');
-	for (var i = 1; i = mpdRows.length - 1; i++) {
+	let mpdTable = document.getElementById('tbMPD');
+	let mpdRows = mpdTable.getElementsByTagName('tr');
+	for (let i = 1; i = mpdRows.length - 1; i++) {
 		mpdTable.deleteRow(i);
 	}
 	mpd = new Array()
 
-	var contentTag = contentXML.getElementsByTagName("content");
-	for (var rowId = 0; rowId < contentTag.length; rowId++) {
+	let contentTag = contentXML.getElementsByTagName("content");
+	for (let rowId = 0; rowId < contentTag.length; rowId++) {
 		if (!!window.MSStream)
 			mpd[rowId] = contentTag[rowId].childNodes[1].text;
 		else
@@ -510,7 +510,7 @@ function textClick() {
 /** Error logging*/
 function logging() {
 debugger;
-	for (var i = 0; i < mpd.length; i++) {
+	for (let i = 0; i < mpd.length; i++) {
 		csvContent += '=================================================================================';
 		csvContent += 'Info';
 		csvContent += '=================================================================================';
@@ -525,14 +525,14 @@ debugger;
 	}
 	csvContent += '====================================================================================';
 	csvContent += '====================================================================================';
-	var blob = new Blob([csvContent], {
+	let blob = new Blob([csvContent], {
 			type : "text/plain;charset=utf-8"
 		});
 	saveAs(blob, "DashLog.txt");
 }
 
 function appendLogMsg(tableDivId) {
-	var msg = $(tableDivId).html();
+	let msg = $(tableDivId).html();
 	if (msg.trim().length != 0)
 		csvContent += msg + ' \n';
 }

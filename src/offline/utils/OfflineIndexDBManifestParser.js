@@ -479,7 +479,7 @@ function OfflineIndexDBManifestParser(config) {
      * @instance
     */
     function findAndKeepOnlySelectedRepresentations(currentAdaptationSet, representations, adaptationType) {
-        for ( var i = representations.length - 1; i >= 0; i--) {
+        for (let i = representations.length - 1; i >= 0; i--) {
             let representation = representations[i];
             let repId = representation.getAttribute(dashConstants.ID);
             if (allMediaInfos[adaptationType] && allMediaInfos[adaptationType].indexOf(repId) === -1) {

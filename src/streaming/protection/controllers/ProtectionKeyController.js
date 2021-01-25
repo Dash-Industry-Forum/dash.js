@@ -323,16 +323,16 @@ function ProtectionKeyController() {
     }
 
     function setProtectionData(protectionDataSet) {
-        var getProtectionData = function (keySystemString) {
-            var protData = null;
+        const getProtectionData = function (keySystemString) {
+            let protData = null;
             if (protectionDataSet) {
                 protData = (keySystemString in protectionDataSet) ? protectionDataSet[keySystemString] : null;
             }
             return protData;
         };
 
-        for (var i = 0; i < keySystems.length; i++) {
-            var keySystem = keySystems[i];
+        for (let i = 0; i < keySystems.length; i++) {
+            const keySystem = keySystems[i];
             if (keySystem.hasOwnProperty('init')) {
                 keySystem.init(getProtectionData(keySystem.systemString));
             }

@@ -19,7 +19,7 @@ const player = require('./scripts/player.js');
 const NAME = 'SEEK_PERIODS';
 
 // Test variables
-var seekPos;
+let seekPos;
 
 exports.register = function(stream) {
 

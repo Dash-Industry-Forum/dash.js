@@ -221,14 +221,14 @@ describe('DashManifestModel', function () {
 
         it('should return -1 when getIndexForAdaptation is called and manifest and periodIndex are undefined', () => {
             const manifest = {Period_asArray: []};
-            var adaptation = mpdHelper.composeAdaptation('video');
+            let adaptation = mpdHelper.composeAdaptation('video');
             const index = dashManifestModel.getIndexForAdaptation(adaptation, manifest, undefined);
 
             expect(index).to.equal(-1); // jshint ignore:line
         });
 
         it('should return -1 when getIndexForAdaptation is called and periodIndex are undefined', () => {
-            var adaptation = mpdHelper.composeAdaptation('video');
+            let adaptation = mpdHelper.composeAdaptation('video');
             const index = dashManifestModel.getIndexForAdaptation(adaptation, undefined, undefined);
 
             expect(index).to.equal(-1); // jshint ignore:line
@@ -487,14 +487,14 @@ describe('DashManifestModel', function () {
         });
 
         it('should return null when getRepresentationFor is called and index is undefined', () => {
-            var adaptation = mpdHelper.composeAdaptation('video');
+            let adaptation = mpdHelper.composeAdaptation('video');
             const representation = dashManifestModel.getRepresentationFor(undefined, adaptation);
 
             expect(representation).to.be.null; // jshint ignore:line
         });
 
         it('should return representation.id = video20 when getRepresentationFor is called', () => {
-            var adaptation = mpdHelper.composeAdaptation('video');
+            let adaptation = mpdHelper.composeAdaptation('video');
             const representation = dashManifestModel.getRepresentationFor(0, adaptation);
 
             expect(representation.id).equal('video20'); // jshint ignore:line

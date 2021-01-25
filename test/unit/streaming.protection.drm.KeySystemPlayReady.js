@@ -107,7 +107,7 @@ describe('KeySystemPlayready', function () {
             expect(keySystem).to.be.defined;   // jshint ignore:line
             expect(cdmData).to.be.not.null;   // jshint ignore:line
             expect(cdmData).to.be.instanceOf(ArrayBuffer);
-            var cdmDataString = String.fromCharCode.apply(null, new Uint16Array(cdmData));
+            let cdmDataString = String.fromCharCode.apply(null, new Uint16Array(cdmData));
             expect(cdmDataString).to.equal(expectedCDMData);
         });
     });

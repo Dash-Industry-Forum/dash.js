@@ -18,7 +18,7 @@ class VoHelper {
     }
 
     createMpd(type) {
-        var mpd = {};
+        let mpd = {};
 
         mpd.manifest = this.mpdHelper.getMpd(type || this.defaultMpdType);
         mpd.suggestedPresentationDelay = 0;
@@ -31,7 +31,7 @@ class VoHelper {
     }
 
     createPeriod() {
-        var period = {};
+        let period = {};
 
         period.mpd = this.createMpd();
         period.start = 0;
@@ -47,7 +47,7 @@ class VoHelper {
     }
 
     createAdaptation(type) {
-        var adaptation = {};
+        let adaptation = {};
         adaptation.period = this.createPeriod();
         adaptation.index = 0;
         adaptation.type = type;
@@ -56,7 +56,7 @@ class VoHelper {
     }
 
     createRepresentation(type, index) {
-        var rep = new Representation();
+        let rep = new Representation();
 
         rep.id = null;
         rep.index = index || 0;
@@ -78,7 +78,7 @@ class VoHelper {
     }
 
     createRequest(type, state) {
-        var req = {};
+        let req = {};
         req.action = FragmentRequest.ACTION_DOWNLOAD;
         req.quality = 0;
         req.mediaType = 'video';

@@ -25,7 +25,7 @@ module.exports = {
     },
 
     isPlaying: function(timeout, done) {
-        var _video = document.querySelector('video');
+        let _video = document.querySelector('video');
             _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
@@ -48,7 +48,7 @@ module.exports = {
     },
 
     isProgressing: function(progress, timeout, done) {
-        var _video = document.querySelector('video'),
+        let _video = document.querySelector('video'),
             _startTime = -1,
             _timeout = null,
             _onComplete = function (res) {
@@ -74,7 +74,7 @@ module.exports = {
     },
 
     seek: function(time, timeout, done) {
-        var _video = document.querySelector('video'),
+        let _video = document.querySelector('video'),
             _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
@@ -94,7 +94,7 @@ module.exports = {
     },
 
     waitForEvent: function(event, timeout, done) {
-        var _timeout = null,
+        let _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
                 video.removeEventListener(event, _onEvent);
@@ -116,7 +116,7 @@ module.exports = {
     },
 
     hasCues: function() {
-        var textTracks = document.querySelector('video').textTracks;
+        let textTracks = document.querySelector('video').textTracks;
         if (textTracks.length === 0) {
             return false;
         }
@@ -124,7 +124,7 @@ module.exports = {
     },
 
     waitForCues: function(done) {
-        var video = document.querySelector('video'),
+        let video = document.querySelector('video'),
             textTrack = video.textTracks.length > 0 ? video.textTracks[0] : null,
             interval = null,
             hasCues = function() {

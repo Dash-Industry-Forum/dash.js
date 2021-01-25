@@ -3,15 +3,15 @@ const fs = require('fs');
 
 module.exports.getStreams = function () {
     // Get streams from reference sample application
-    var sources = JSON.parse(fs.readFileSync('./samples/dash-if-reference-player/app/sources.json', 'utf8'));
+    let sources = JSON.parse(fs.readFileSync('./samples/dash-if-reference-player/app/sources.json', 'utf8'));
 
-    var streams = [];
+    let streams = [];
 
-    for (var i = 0; i < sources.items.length; i++) {
-        var group = sources.items[i];
-        var groupName = group.name;
-        for (var j = 0; j < group.submenu.length; j++) {
-            var stream = group.submenu[j];
+    for (let i = 0; i < sources.items.length; i++) {
+        let group = sources.items[i];
+        let groupName = group.name;
+        for (let j = 0; j < group.submenu.length; j++) {
+            let stream = group.submenu[j];
             stream.name = groupName + ' / ' + stream.name;
             streams.push(stream);
         }

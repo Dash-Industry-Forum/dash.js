@@ -390,7 +390,7 @@ function X2JS(config) {
     function jsonXmlElemCount ( jsonObj ) {
         var elementsCnt = 0;
         if(jsonObj instanceof Object ) {
-            for( var it in jsonObj  ) {
+            for(var it in jsonObj) {
                 if(jsonXmlSpecialElem ( jsonObj, it) )
                     continue;
                 elementsCnt++;
@@ -408,7 +408,7 @@ function X2JS(config) {
     function parseJSONAttributes ( jsonObj ) {
         var attrList = [];
         if(jsonObj instanceof Object ) {
-            for( var ait in jsonObj  ) {
+            for(var ait in jsonObj) {
                 if(ait.toString().indexOf("__")== -1 && ait.toString().indexOf(config.attributePrefix)==0) {
                     attrList.push(ait);
                 }
@@ -479,7 +479,7 @@ function X2JS(config) {
         var elementsCnt = jsonXmlElemCount ( jsonObj );
 
         if(elementsCnt > 0) {
-            for( var it in jsonObj ) {
+            for(var it in jsonObj) {
 
                 if(jsonXmlSpecialElem ( jsonObj, it) || (jsonObjPath!="" && !checkJsonObjPropertiesFilter(jsonObj, it, getJsonPropertyPath(jsonObjPath,it))) )
                     continue;

@@ -209,8 +209,8 @@ describe('TextController', function () {
     });
 
     describe('Handle event TEXT_TRACKS_QUEUE_INITIALIZED', function () {
-        var textTracksQueue;
-        var initialIndex;
+        let textTracksQueue;
+        let initialIndex;
 
         beforeEach(function () {
             textTracksQueue = [];

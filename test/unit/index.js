@@ -33,9 +33,9 @@ import FactoryMaker from '../../src/core/FactoryMaker';
 
 
 // Shove both of these into the global scope
-var context = (typeof window !== 'undefined' && window) || global;
+let context = (typeof window !== 'undefined' && window) || global;
 
-var dashjs = context.dashjs;
+let dashjs = context.dashjs;
 if (!dashjs) {
     dashjs = context.dashjs = {};
 }

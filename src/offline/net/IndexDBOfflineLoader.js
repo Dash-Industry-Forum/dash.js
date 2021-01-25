@@ -45,8 +45,8 @@ function IndexDBOfflineLoader(config) {
     }
 
     function getManifestId (url) {
-        let myURL = urlUtils.removeHostname(url);
-        var parts = myURL.split('/');
+        const myURL = urlUtils.removeHostname(url);
+        const parts = myURL.split('/');
         return parts[0];
     }
     /**

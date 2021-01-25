@@ -45,7 +45,7 @@ module.exports = {
     },
 
     isPlaying: function(timeout, done) {
-        var _timeout = null,
+        let _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
                 player.off('playbackPlaying', _onPlaying);
@@ -71,7 +71,7 @@ module.exports = {
     },
 
     isProgressing: function(progress, timeout, done) {
-        var _startTime = -1,
+        let _startTime = -1,
             _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
@@ -98,7 +98,7 @@ module.exports = {
     },
 
     seek: function(time, timeout, done) {
-        var _timeout = null,
+        let _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
                 player.off('playbackSeeked', _onSeeked);
@@ -118,7 +118,7 @@ module.exports = {
     },
 
     waitForEvent: function(event, timeout, done) {
-        var _timeout = null,
+        let _timeout = null,
             _onComplete = function (res) {
                 clearTimeout(_timeout);
                 player.off(event, _onEvent);

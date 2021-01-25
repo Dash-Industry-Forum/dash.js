@@ -12,7 +12,7 @@
 
 //This file contains valid MPD strings
 
-var strMpd = {
+let strMpd = {
 
 	//http://dash.edgesuite.net/dash264/TestCases/1b/thomson-networks/manifest.mpd
 	MPD1 : '<?xml version="1.0"?>\
@@ -588,7 +588,7 @@ var strMpd = {
 				</MPD>'
 };
 
-var emptyMpdData = {
+let emptyMpdData = {
     MPD1 : '<?xml version="1.0"?>\
 				<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\
 				  xmlns="urn:mpeg:dash:schema:mpd:2011"\

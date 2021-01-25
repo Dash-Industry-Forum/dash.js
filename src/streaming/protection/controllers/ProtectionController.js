@@ -543,7 +543,7 @@ function ProtectionController(config) {
         }
 
         let keySystemAccess;
-        const onKeySystemAccessComplete = function (event) {
+        function onKeySystemAccessComplete(event) {
             eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
             if (event.error) {
                 keySystem = undefined;
@@ -559,8 +559,8 @@ function ProtectionController(config) {
                 logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
                 protectionModel.selectKeySystem(keySystemAccess);
             }
-        };
-        var onKeySystemSelected = function (event) {
+        }
+        function onKeySystemSelected(event) {
             eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
             eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
             if (!event.error) {
@@ -607,7 +607,7 @@ function ProtectionController(config) {
                     });
                 }
             }
-        };
+        }
 
         eventBus.on(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
         eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
