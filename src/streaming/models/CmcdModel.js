@@ -229,12 +229,13 @@ function CmcdModel() {
         }
         data.rtp = rtp;
 
-        let nrr = request.range;
+        let nrr;
 
         if (nextRequest) {
-            data.nor = nextRequest.url;
-            if (nextRequest.range) {
-                nrr = nextRequest.range;
+            let url = new URL(nextRequest.url);
+            data.nor = url.pathname;
+            if (request.url === nextRequest.url && nextRequest.range) {
+                nrr = nextRequest.nrr;
             }
         }
 
@@ -272,11 +273,6 @@ function CmcdModel() {
 
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
-        }
-
-        // Assuming nor field is never set: If the ‘nor’ field is not set, then the object is assumed to match the object currently being requested.
-        if (request.range) {
-            data.nrr = request.range;
         }
 
         if (_bufferLevelStarved[request.mediaType]) {
@@ -506,8 +502,9 @@ function CmcdModel() {
     function _probeNextRequest(mediaType) {
         if (!streamProcessors || streamProcessors.length === 0) return;
         for (let streamProcessor of streamProcessors) {
-            if (streamProcessor.getType() !== mediaType) continue;
-            return streamProcessor.probeNextRequest();
+            if (streamProcessor.getType() === mediaType) {
+                return streamProcessor.probeNextRequest();
+            }
         }
     }
 

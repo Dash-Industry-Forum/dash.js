@@ -34,8 +34,8 @@ import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
-import CmcdModel from '../../models/CmcdModel';
 import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import Utils from '../../../core/Utils';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -69,7 +69,7 @@ function ProtectionController(config) {
     const BASE64 = config.BASE64;
     const constants = config.constants;
     let needkeyRetries = [];
-    const context = this.context;
+    const cmcdModel = config.cmcdModel;
 
     let instance,
         logger,
@@ -78,8 +78,7 @@ function ProtectionController(config) {
         protDataSet,
         sessionType,
         robustnessLevel,
-        keySystem,
-        cmcdModel;
+        keySystem;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -87,7 +86,6 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
-        cmcdModel = CmcdModel(context).getInstance();
     }
 
     function checkConfig() {
@@ -784,12 +782,7 @@ function ProtectionController(config) {
         });
 
         if (cmcdParams) {
-            let queryPrefix = '?';
-            if (url.indexOf('?') !== -1) {
-                queryPrefix = '&';
-            }
-            const query = queryPrefix + cmcdParams.key + '=' + cmcdParams.value;
-            url = url + query;
+            Utils.addAditionalQueryParameterToUrl(url, cmcdParams);
         }
 
         xhr.open(method, url, true);
