@@ -229,18 +229,13 @@ function CmcdModel() {
         }
         data.rtp = rtp;
 
-        let nrr;
-
         if (nextRequest) {
-            let url = new URL(nextRequest.url);
-            data.nor = url.pathname;
-            if (request.url === nextRequest.url && nextRequest.range) {
-                nrr = nextRequest.nrr;
+            if (request.url !== nextRequest.url) {
+                let url = new URL(nextRequest.url);
+                data.nor = url.pathname;
+            } else if (nextRequest.range) {
+                data.nrr = nextRequest.range;
             }
-        }
-
-        if (nrr) {
-            data.nrr = nrr;
         }
 
         if (encodedBitrate) {
@@ -511,8 +506,10 @@ function CmcdModel() {
     function _calculateRtp(request) {
         // Get the values we need
         let playbackRate = playbackController.getPlaybackRate();
+        if (!playbackRate) playbackRate = 1;
         let { quality, mediaType, mediaInfo, duration } = request;
         let currentBufferTime = _getBufferLevelByType(mediaType);
+        if (currentBufferTime === 0) currentBufferTime = 500;
         let bitrate = mediaInfo.bitrateList[quality].bandwidth;
 
         // Calculate RTP
