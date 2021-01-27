@@ -782,7 +782,7 @@ function ProtectionController(config) {
         });
 
         if (cmcdParams) {
-            Utils.addAditionalQueryParameterToUrl(url, cmcdParams);
+            url = Utils.addAditionalQueryParameterToUrl(url, [cmcdParams]);
         }
 
         xhr.open(method, url, true);
