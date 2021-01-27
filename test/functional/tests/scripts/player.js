@@ -157,7 +157,6 @@ module.exports = {
     setTextDefaultEnabled: function(bool){
         player.setTextDefaultEnabled(bool);
     },
-
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
     }
