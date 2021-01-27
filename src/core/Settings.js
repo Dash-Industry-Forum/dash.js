@@ -467,6 +467,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * A unique string to identify the current content.
  *
  * If not specified it will be a hash of the MPD url.
+ * @property {number} [rtp]
+ * The requested maximum throughput that the client considers sufficient for delivery of the asset.
+ *
+ * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
  */
 
 /**
