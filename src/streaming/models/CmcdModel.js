@@ -518,7 +518,7 @@ function CmcdModel() {
         let segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
         let timeToLoad = currentBufferLevel * playbackRate / 1000; // Calculate time available to load file in seconds
         let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-        let rtpSafetyFactor = !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+        let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
         let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
         let rtp = (parseInt(maxBandwidth / 100) + 1) * 100; // Round to the next multiple of 100
