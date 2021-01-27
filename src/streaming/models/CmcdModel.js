@@ -120,14 +120,14 @@ function CmcdModel() {
         _bufferLevelStarved = {};
         _isStartup = {};
         _initialMediaRequestsDone = {};
-        updateStreamProcessors();
+        _updateStreamProcessors();
     }
 
     function _onPeriodSwitchComplete() {
-        updateStreamProcessors();
+        _updateStreamProcessors();
     }
 
-    function updateStreamProcessors() {
+    function _updateStreamProcessors() {
         if (!playbackController) return;
         const streamController = playbackController.getStreamController();
         if (!streamController) return;
