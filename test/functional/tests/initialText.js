@@ -28,7 +28,7 @@ exports.register = function (stream) {
     suite(utils.testName(NAME, stream), (suite) => {
 
         before(() => {
-            if (!stream.available || stream.textTracks["text"].length < 1 && stream.textTracks["fragmentedText"].length < 1) suite.skip();
+            if (!stream.available || stream.textTracks.text.length < 1 && stream.textTracks.fragmentedText.length < 1) suite.skip();
             utils.log(NAME, 'Load stream');
 
         });
@@ -47,11 +47,11 @@ exports.register = function (stream) {
                     let ttml =  await command.findById('ttml-rendering-div');
                     await command.execute(player.attachTTMLRenderingDiv, [ttml]);
                     await command.execute(player.setTextDefaultEnabled, [true]);
-                    
+
                     // set initial track
                     utils.log(NAME, 'set initial text track: ' + stream.textTracks[textType][i].lang);
                     await command.execute(player.setInitialMediaSettingsFor, [textType, {
-                        lang: stream.textTracks[textType][i].lang 
+                        lang: stream.textTracks[textType][i].lang
                     }]);
                     await command.execute(player.loadStream, [stream]);
                     await command.execute(player.play, []);
@@ -63,8 +63,8 @@ exports.register = function (stream) {
                     const newTrack = await command.execute(player.getCurrentTrackFor, [textType]);
                     utils.log(NAME, 'current audio track: ' + newTrack.lang);
                     assert.deepEqual(newTrack.lang, stream.textTracks[textType][i].lang);
-                }    
+                }
             }
         });
     });
-} 
+};
