@@ -140,7 +140,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              enabled: false,
  *              sid: null,
  *              cid: null,
- *              rtp: null
+ *              rtp: null,
+ *              rtpSafetyFactor: 5
  *          }
  *      }
  * }
@@ -471,6 +472,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The requested maximum throughput that the client considers sufficient for delivery of the asset.
  *
  * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
+ * @property {number} [rtpSafetyFactor]
+ * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
+ *
+ * If not specified this value defaults to 5. Note that this value is only used no static rtp value is defined.
  */
 
 /**
@@ -633,7 +638,8 @@ function Settings() {
                 enabled: false,
                 sid: null,
                 cid: null,
-                rtp: null
+                rtp: null,
+                rtpSafetyFactor: 5
             }
         }
     };

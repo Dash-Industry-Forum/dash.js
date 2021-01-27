@@ -34,6 +34,7 @@ import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
+import Constants from '../../streaming/constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
@@ -58,6 +59,7 @@ const STREAM_TYPES = {
     VOD: 'v',
     LIVE: 'l'
 };
+const RTP_SAFETY_FACTOR = 5;
 
 function CmcdModel() {
 
@@ -213,9 +215,9 @@ function CmcdModel() {
         const nextRequest = _probeNextRequest(request.mediaType);
 
         let ot;
-        if (request.mediaType === 'video') ot = OBJECT_TYPES.VIDEO;
-        if (request.mediaType === 'audio') ot = OBJECT_TYPES.AUDIO;
-        if (request.mediaType === 'fragmentedText') {
+        if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
+        if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
+        if (request.mediaType === Constants.FRAGMENTED_TEXT) {
             if (request.mediaInfo.mimeType === 'application/mp4') {
                 ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
             } else {
@@ -468,7 +470,7 @@ function CmcdModel() {
             if (!cmcdData) {
                 return null;
             }
-            const keys = Object.keys(cmcdData).sort((a, b) =>a.localeCompare(b));
+            const keys = Object.keys(cmcdData).sort((a, b) => a.localeCompare(b));
             const length = keys.length;
 
             let cmcdString = keys.reduce((acc, key, index) => {
@@ -508,15 +510,16 @@ function CmcdModel() {
         let playbackRate = playbackController.getPlaybackRate();
         if (!playbackRate) playbackRate = 1;
         let { quality, mediaType, mediaInfo, duration } = request;
-        let currentBufferTime = _getBufferLevelByType(mediaType);
-        if (currentBufferTime === 0) currentBufferTime = 500;
+        let currentBufferLevel = _getBufferLevelByType(mediaType);
+        if (currentBufferLevel === 0) currentBufferLevel = 500;
         let bitrate = mediaInfo.bitrateList[quality].bandwidth;
 
         // Calculate RTP
         let segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
-        let timeToLoad = currentBufferTime * playbackRate / 1000; // Calculate time available to load file in seconds
+        let timeToLoad = currentBufferLevel * playbackRate / 1000; // Calculate time available to load file in seconds
         let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-        let maxBandwidth = minBandwidth * 4; // Include a safety buffer
+        let rtpSafetyFactor = !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+        let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
         let rtp = (parseInt(maxBandwidth / 100) + 1) * 100; // Round to the next multiple of 100
 

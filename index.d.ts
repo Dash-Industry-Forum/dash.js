@@ -218,7 +218,8 @@ declare namespace dashjs {
                 enabled?: boolean,
                 sid?: string,
                 cid?: string,
-                rtp?: number
+                rtp?: number,
+                rtpSafetyFactor?: number
             }
         }
     }
