@@ -102,6 +102,8 @@ describe('CmcdModel', function () {
             const MEASURED_THROUGHPUT = 8327641;
             const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
             const VIDEO_OBJECT_TYPE = 'v';
+            const NEXT_OBJECT_URL = '/next_object';
+            const NEXT_OBJECT_RANGE = '100-500';
 
             abrControllerMock.setTopBitrateInfo({bitrate: TOP_BITRATE});
             abrControllerMock.setThroughputHistory({
@@ -140,6 +142,17 @@ describe('CmcdModel', function () {
             expect(metrics.bl).to.equal(BUFFER_LEVEL);
             expect(metrics).to.have.property('tb');
             expect(metrics.tb).to.equal(parseInt(TOP_BITRATE / 1000));
+            expect(metrics).to.have.property('nor');
+            expect(metrics.nor).to.equal(NEXT_OBJECT_URL);
+            expect(metrics).to.have.property('rtp');
+            expect(typeof metrics.rtp).to.equal('number');
+            expect(metrics.rtp % 100).to.equal(0);
+
+            request.url = 'http://test.url/next_object';
+            parameters = cmcdModel.getQueryParameter(request);
+            metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('nrr');
+            expect(metrics.nrr).to.equal(NEXT_OBJECT_RANGE);
         });
 
         it('getQueryParameter() returns correct metrics for other type', function () {
@@ -301,6 +314,28 @@ describe('CmcdModel', function () {
             let metrics = parseQuery(parameters.value);
             expect(metrics).to.have.property('cid');
             expect(metrics.cid).to.equal(CID);
+        });
+
+        it('getQueryParameter() returns correct RTP value if set to static ', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            settings.update({streaming: {cmcd: {enabled: true, rtp: 10000}}});
+
+            let parameters = cmcdModel.getQueryParameter(request);
+            expect(parameters).to.have.property('key');
+            expect(parameters.key).to.equal('CMCD');
+            expect(parameters).to.have.property('value');
+            expect(typeof parameters.value).to.equal('string');
+
+            let metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('rtp');
+            expect(metrics.rtp).to.equal(10000);
         });
     });
 });

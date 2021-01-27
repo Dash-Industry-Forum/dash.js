@@ -129,7 +129,8 @@ function Protection() {
                 debug: config.debug,
                 events: config.events,
                 BASE64: config.BASE64,
-                constants: config.constants
+                constants: config.constants,
+                cmcdModel: config.cmcdModel
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }

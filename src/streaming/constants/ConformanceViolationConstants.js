@@ -29,37 +29,20 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @class
- * @ignore
- */
-class QoeInfo {
-
-    constructor() {
-        // Type e.g. 'segment'
-        this.type = null;
-
-        // Store lastBitrate for calculation of bitrateSwitchWSum
-        this.lastBitrate = null;
-
-        // Weights for each Qoe factor
-        this.weights = {};
-        this.weights.bitrateReward = null;
-        this.weights.bitrateSwitchPenalty = null;
-        this.weights.rebufferPenalty = null;
-        this.weights.latencyPenalty = null;
-        this.weights.playbackSpeedPenalty = null;
-
-        // Weighted Sum for each Qoe factor
-        this.bitrateWSum = 0;           // kbps
-        this.bitrateSwitchWSum = 0;     // kbps
-        this.rebufferWSum = 0;          // seconds
-        this.latencyWSum = 0;           // seconds
-        this.playbackSpeedWSum = 0;     // e.g. 0.95, 1.0, 1.05
-
-        // Store total Qoe value based on current Weighted Sum values
-        this.totalQoe = 0;
+export default {
+    LEVELS: {
+        SUGGESTION: 'Suggestion',
+        WARNING: 'Warning',
+        ERROR: 'Error'
+    },
+    EVENTS: {
+        NO_UTC_TIMING_ELEMENT: {
+            key: 'NO_UTC_TIMING_ELEMENT',
+            message: 'No UTCTiming element is present in the manifest. You may experience playback failures. For a detailed validation use https://conformance.dashif.org/'
+        },
+        NON_COMPLIANT_SMPTE_IMAGE_ATTRIBUTE: {
+            key: 'NON_COMPLIANT_SMPTE_IMAGE_ATTRIBUTE',
+            message: 'SMPTE 2052-1:2013 defines the attribute name as "imageType" and does not define "imagetype"'
+        }
     }
-}
-
-export default QoeInfo;
+};

@@ -372,6 +372,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
          */
         this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
+
+        /**
+         * Event that is dispatched whenever the player encounters a potential conformance validation that might lead to unexpected/not optimal behavior
+         * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
+         */
+        this.CONFORMANCE_VIOLATION = 'conformanceViolation';
     }
 }
 

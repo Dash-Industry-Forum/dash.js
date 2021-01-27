@@ -126,7 +126,7 @@
             },
             {
                 "title": "PlayReady",
-                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows only).",
+                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows 10 Microsoft Chromium Edge only).",
                 "href": "drm/playready.html"
             },
             {

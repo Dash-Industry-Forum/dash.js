@@ -117,7 +117,6 @@ declare namespace dashjs {
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
-            bufferAheadToKeep?: number;
             jumpGaps?: boolean;
             jumpLargeGaps?: boolean;
             smallGapLimit?: number;
@@ -133,6 +132,7 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
+            filterUnsupportedEssentialProperties?: true
             liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
@@ -168,6 +168,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyReductionFactor'?:  number;
             };
             retryAttempts?: {
                 'MPD'?:                       number;
@@ -177,6 +178,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyMultiplyFactor'?:  number;
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
@@ -215,7 +217,9 @@ declare namespace dashjs {
             cmcd?: {
                 enabled?: boolean,
                 sid?: string,
-                cid?: string
+                cid?: string,
+                rtp?: number,
+                rtpSafetyFactor?: number
             }
         }
     }
@@ -428,6 +432,7 @@ declare namespace dashjs {
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        CONFORMANCE_VIOLATION: 'conformanceViolation'
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
