@@ -315,6 +315,28 @@ describe('CmcdModel', function () {
             expect(metrics).to.have.property('cid');
             expect(metrics.cid).to.equal(CID);
         });
+
+        it('getQueryParameter() returns correct RTP value if set to static ', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            settings.update({streaming: {cmcd: {enabled: true, rtp: 10000}}});
+
+            let parameters = cmcdModel.getQueryParameter(request);
+            expect(parameters).to.have.property('key');
+            expect(parameters.key).to.equal('CMCD');
+            expect(parameters).to.have.property('value');
+            expect(typeof parameters.value).to.equal('string');
+
+            let metrics = parseQuery(parameters.value);
+            expect(metrics).to.have.property('rtp');
+            expect(metrics.rtp).to.equal(10000);
+        });
     });
 });
 
