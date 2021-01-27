@@ -34,6 +34,8 @@ import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
+import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import Utils from '../../../core/Utils';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -67,6 +69,7 @@ function ProtectionController(config) {
     const BASE64 = config.BASE64;
     const constants = config.constants;
     let needkeyRetries = [];
+    const cmcdModel = config.cmcdModel;
 
     let instance,
         logger,
@@ -772,6 +775,15 @@ function ProtectionController(config) {
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
     function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId) {
         const xhr = new XMLHttpRequest();
+
+        const cmcdParams = cmcdModel.getQueryParameter({
+            url,
+            type: HTTPRequest.LICENSE
+        });
+
+        if (cmcdParams) {
+            url = Utils.addAditionalQueryParameterToUrl(url, [cmcdParams]);
+        }
 
         xhr.open(method, url, true);
         xhr.responseType = responseType;

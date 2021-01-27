@@ -217,7 +217,9 @@ declare namespace dashjs {
             cmcd?: {
                 enabled?: boolean,
                 sid?: string,
-                cid?: string
+                cid?: string,
+                rtp?: number,
+                rtpSafetyFactor?: number
             }
         }
     }

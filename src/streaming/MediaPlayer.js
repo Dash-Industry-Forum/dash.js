@@ -2085,7 +2085,8 @@ function MediaPlayer() {
                 eventBus: eventBus,
                 events: Events,
                 BASE64: BASE64,
-                constants: Constants
+                constants: Constants,
+                cmcdModel: cmcdModel
             });
             return protectionController;
         }

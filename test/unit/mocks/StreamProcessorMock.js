@@ -116,6 +116,10 @@ function StreamProcessorMock (testType, streamInfo) {
     this.appendInitSegment = function () {};
 
     this.reset = function () {};
+
+    this.probeNextRequest = function () {
+        return { url: 'http://test.url/next_object', range: '100-500' };
+    };
 }
 
 export default StreamProcessorMock;
