@@ -475,7 +475,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [rtpSafetyFactor]
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
- * If not specified this value defaults to 5. Note that this value is only used no static rtp value is defined.
+ * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
  */
 
 /**
