@@ -54,7 +54,7 @@ function TimelineConverter() {
 
     function initialize() {
         resetInitialSettings();
-        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, _onUpdateTimeSyncOffset, this);
     }
 
     function getClientTimeOffset() {
@@ -228,7 +228,7 @@ function TimelineConverter() {
     * seems we figure out client offset based on logic in liveEdgeFinder getLiveEdge timelineConverter.setClientTimeOffset(liveEdge - representationInfo.DVRWindow.end);
     * FYI StreamController's onManifestUpdated entry point to timeSync
     * */
-    function onTimeSyncComplete(e) {
+    function _onUpdateTimeSyncOffset(e) {
         if (e.offset !== undefined) {
             setClientTimeOffset(e.offset / 1000);
             isClientServerTimeSyncCompleted = true;
@@ -242,7 +242,7 @@ function TimelineConverter() {
     }
 
     function reset() {
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncComplete, this);
+        eventBus.off(Events.UPDATE_TIME_SYNC_OFFSET, _onUpdateTimeSyncOffset, this);
         resetInitialSettings();
     }
 

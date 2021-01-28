@@ -450,6 +450,11 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
+            utcSynchronization: {
+                backgroundAttempts: 2,
+                timeBetweenSyncAttempts: 300,
+                driftFactor: 0.2
+            },
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 0,

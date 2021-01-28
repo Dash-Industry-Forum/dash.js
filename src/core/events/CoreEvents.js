@@ -75,6 +75,7 @@ class CoreEvents extends EventsBase {
         this.STREAM_COMPLETED = 'streamCompleted';
         this.TEXT_TRACKS_QUEUE_INITIALIZED = 'textTracksQueueInitialized';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
+        this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
         this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
         this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';

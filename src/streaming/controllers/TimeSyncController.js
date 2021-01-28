@@ -38,6 +38,8 @@ import Debug from '../../core/Debug';
 import URLUtils from '../utils/URLUtils';
 
 const HTTP_TIMEOUT_MS = 5000;
+const DEFAULT_DRIFT_FACTOR = 0.2;
+const TIME_BETWEEN_SYNC_ADJUSTMENT_FACTOR = 2;
 
 function TimeSyncController() {
 
@@ -51,6 +53,10 @@ function TimeSyncController() {
         settings,
         handlers,
         dashMetrics,
+        timeOffsets,
+        timingSources,
+        timeOfLastSync,
+        lastOffset,
         baseURLController;
 
     function setup() {
@@ -73,35 +79,43 @@ function TimeSyncController() {
         }
     }
 
+    function _resetInitialSettings() {
+        timeOffsets = [];
+        timingSources = [];
+        timeOfLastSync = null;
+        lastOffset = NaN;
+        _setIsSynchronizing(false);
+    }
+
     /**
      * Register the timing handler depending on the schemeIdUris. This method is called once when the StreamController is initialized
      */
     function initialize() {
-        setIsSynchronizing(false);
+        _resetInitialSettings();
 
         // a list of known schemeIdUris and a method to call with @value
         handlers = {
-            'urn:mpeg:dash:utc:http-head:2014': httpHeadHandler,
-            'urn:mpeg:dash:utc:http-xsdate:2014': httpHandler.bind(null, xsdatetimeDecoder),
-            'urn:mpeg:dash:utc:http-iso:2014': httpHandler.bind(null, iso8601Decoder),
-            'urn:mpeg:dash:utc:direct:2014': directHandler,
+            'urn:mpeg:dash:utc:http-head:2014': _httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2014': _httpHandler.bind(null, _xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2014': _httpHandler.bind(null, _iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2014': _directHandler,
 
             // some specs referencing early ISO23009-1 drafts incorrectly use
             // 2012 in the URI, rather than 2014. support these for now.
-            'urn:mpeg:dash:utc:http-head:2012': httpHeadHandler,
-            'urn:mpeg:dash:utc:http-xsdate:2012': httpHandler.bind(null, xsdatetimeDecoder),
-            'urn:mpeg:dash:utc:http-iso:2012': httpHandler.bind(null, iso8601Decoder),
-            'urn:mpeg:dash:utc:direct:2012': directHandler,
+            'urn:mpeg:dash:utc:http-head:2012': _httpHeadHandler,
+            'urn:mpeg:dash:utc:http-xsdate:2012': _httpHandler.bind(null, _xsdatetimeDecoder),
+            'urn:mpeg:dash:utc:http-iso:2012': _httpHandler.bind(null, _iso8601Decoder),
+            'urn:mpeg:dash:utc:direct:2012': _directHandler,
 
             // it isn't clear how the data returned would be formatted, and
             // no public examples available so http-ntp not supported for now.
             // presumably you would do an arraybuffer type xhr and decode the
             // binary data returned but I would want to see a sample first.
-            'urn:mpeg:dash:utc:http-ntp:2014': notSupportedHandler,
+            'urn:mpeg:dash:utc:http-ntp:2014': _notSupportedHandler,
 
             // not clear how this would be supported in javascript (in browser)
-            'urn:mpeg:dash:utc:ntp:2014': notSupportedHandler,
-            'urn:mpeg:dash:utc:sntp:2014': notSupportedHandler
+            'urn:mpeg:dash:utc:ntp:2014': _notSupportedHandler,
+            'urn:mpeg:dash:utc:sntp:2014': _notSupportedHandler
         };
 
     }
@@ -111,35 +125,57 @@ function TimeSyncController() {
      * @param {array} timingSources
      * @param {number} sourceIndex
      */
-    function attemptSync(timingSources, sourceIndex = null) {
+    function attemptSync(tSources) {
 
-        if (getIsSynchronizing()) {
+        timingSources = tSources;
+
+        // Stop if we are already synchronizing
+        if (_getIsSynchronizing()) {
             return;
         }
 
+        // No synchronization required we can signal the completion immediately
+        if (!_shouldPerformSynchronization()) {
+            eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+        }
+
+        _attemptRecursiveSync();
+    }
+
+    /**
+     * Does a synchronization in the background in case the last offset should be verified or a 404 occurs
+     */
+    function attemptBackgroundSync() {
+        if (!timingSources || timingSources.length === 0) {
+            return;
+        }
+    }
+
+    function _attemptRecursiveSync(sourceIndex = null) {
         // if called with no sourceIndex, use zero (highest priority)
         let index = sourceIndex || 0;
 
         // the sources should be ordered in priority from the manifest.
         // try each in turn, from the top, until either something
         // sensible happens, or we run out of sources to try.
+        if (timingSources.length >= index) {
+            _onComplete();
+        }
         let source = timingSources[index];
 
-        setIsSynchronizing(true);
+        _setIsSynchronizing(true);
 
         if (source) {
             // check if there is a handler for this @schemeIdUri
             if (handlers.hasOwnProperty(source.schemeIdUri)) {
                 // if so, call it with its @value
+                const deviceTimeBeforeSync = new Date().getTime();
                 handlers[source.schemeIdUri](
                     source.value,
                     function (serverTime) {
                         // the timing source returned something useful
-                        const deviceTime = new Date().getTime();
-                        const offset = serverTime - deviceTime;
-
-                        logger.info('Local time: ' + new Date(deviceTime));
-                        logger.info('Server time: ' + new Date(serverTime));
+                        const deviceTimeAfterSync = new Date().getTime();
+                        const offset = _calculateOffset(deviceTimeBeforeSync, deviceTimeAfterSync, serverTime);
                         logger.info('Server Time - Local Time (ms): ' + offset);
 
                         _onComplete(serverTime, offset);
@@ -148,19 +184,53 @@ function TimeSyncController() {
                         // the timing source was probably uncontactable
                         // or returned something we can't use - try again
                         // with the remaining sources
-                        setIsSynchronizing(false);
-                        attemptSync(timingSources, index + 1);
+                        _setIsSynchronizing(false);
+                        _attemptRecursiveSync(timingSources, index + 1);
                     }
                 );
             } else {
                 // an unknown schemeIdUri must have been found
                 // try again with the remaining sources
-                setIsSynchronizing(false);
-                attemptSync(timingSources, index + 1);
+                _setIsSynchronizing(false);
+                _attemptRecursiveSync(timingSources, index + 1);
             }
         } else {
             // no valid time source could be found, just use device time
             _onComplete();
+        }
+
+    }
+
+    /**
+     * Calculate the offset between client and server. Account for the roundtrip time
+     * @param {number} deviceTimeBeforeSync
+     * @param {number} deviceTimeAfterSync
+     * @param {number} serverTime
+     * @return {number}
+     * @private
+     */
+    function _calculateOffset(deviceTimeBeforeSync, deviceTimeAfterSync, serverTime) {
+        const deviceReferenceTime = deviceTimeAfterSync - ((deviceTimeAfterSync - deviceTimeBeforeSync) / 2);
+
+        return serverTime - deviceReferenceTime;
+    }
+
+    /**
+     * Checks if a synchronization is required
+     * @return {boolean}
+     * @private
+     */
+    function _shouldPerformSynchronization() {
+        try {
+            const timeBetweenSyncAttempts = settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts;
+
+            if (!timeOfLastSync || !timeBetweenSyncAttempts || isNaN(timeBetweenSyncAttempts)) {
+                return true;
+            }
+
+            return ((new Date().getTime() - timeOfLastSync) / 1000) >= timeBetweenSyncAttempts;
+        } catch (e) {
+            return true;
         }
     }
 
@@ -174,25 +244,36 @@ function TimeSyncController() {
         let failed = !time || !offset;
         if (failed && settings.get().streaming.useManifestDateHeaderTimeSource) {
             //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
-            checkForDateHeader();
+            _checkForDateHeader();
         } else {
-            completeTimeSyncSequence(failed, time, offset);
+            _completeTimeSyncSequence(failed, time, offset);
         }
     }
 
-    function setIsSynchronizing(value) {
+    /**
+     * Set isSynchronizing
+     * @param {boolean} value
+     */
+    function _setIsSynchronizing(value) {
         isSynchronizing = value;
     }
 
-    function getIsSynchronizing() {
+    /**
+     * Get isSynchronizing
+     * @return {boolean}
+     */
+    function _getIsSynchronizing() {
         return isSynchronizing;
     }
 
 
-    // takes xsdatetime and returns milliseconds since UNIX epoch
-    // may not be necessary as xsdatetime is very similar to ISO 8601
-    // which is natively understood by javascript Date parser
-    function alternateXsdatetimeDecoder(xsdatetimeStr) {
+    /**
+     * Takes xsdatetime and returns milliseconds since UNIX epoch. May not be necessary as xsdatetime is very similar to ISO 8601 which is natively understood by javascript Date parser
+     * @param {string} xsdatetimeStr
+     * @return {number}
+     * @private
+     */
+    function _alternateXsdatetimeDecoder(xsdatetimeStr) {
         // taken from DashParser - should probably refactor both uses
         const SECONDS_IN_MIN = 60;
         const MINUTES_IN_HOUR = 60;
@@ -225,36 +306,59 @@ function TimeSyncController() {
         return new Date(utcDate).getTime();
     }
 
-    // try to use the built in parser, since xsdate is a constrained ISO8601
-    // which is supported natively by Date.parse. if that fails, try a
-    // regex-based version used elsewhere in this application.
-    function xsdatetimeDecoder(xsdatetimeStr) {
+
+    /**
+     * Try to use the built in parser, since xsdate is a constrained ISO8601 which is supported natively by Date.parse. if that fails, try a regex-based version used elsewhere in this application.
+     * @param {string} xsdatetimeStr
+     * @return {number}
+     */
+    function _xsdatetimeDecoder(xsdatetimeStr) {
         let parsedDate = Date.parse(xsdatetimeStr);
 
         if (isNaN(parsedDate)) {
-            parsedDate = alternateXsdatetimeDecoder(xsdatetimeStr);
+            parsedDate = _alternateXsdatetimeDecoder(xsdatetimeStr);
         }
 
         return parsedDate;
     }
 
-    // takes ISO 8601 timestamp and returns milliseconds since UNIX epoch
-    function iso8601Decoder(isoStr) {
+    /**
+     * Takes ISO 8601 timestamp and returns milliseconds since UNIX epoch
+     * @param {string} isoStr
+     * @return {number}
+     */
+    function _iso8601Decoder(isoStr) {
         return Date.parse(isoStr);
     }
 
-    // takes RFC 1123 timestamp (which is same as ISO8601) and returns
-    // milliseconds since UNIX epoch
-    function rfc1123Decoder(dateStr) {
+    /**
+     * Takes RFC 1123 timestamp (which is same as ISO8601) and returns milliseconds since UNIX epoch
+     * @param dateStr
+     * @return {number}
+     */
+    function _rfc1123Decoder(dateStr) {
         return Date.parse(dateStr);
     }
 
-    function notSupportedHandler(url, onSuccessCB, onFailureCB) {
+    /**
+     * Handler for unsupported scheme ids.
+     * @param {string} url
+     * @param {function} onSuccessCB
+     * @param {function} onFailureCB
+     * @private
+     */
+    function _notSupportedHandler(url, onSuccessCB, onFailureCB) {
         onFailureCB();
     }
 
-    function directHandler(xsdatetimeStr, onSuccessCB, onFailureCB) {
-        let time = xsdatetimeDecoder(xsdatetimeStr);
+    /**
+     * Direct handler
+     * @param {string} xsdatetimeStr
+     * @param {function} onSuccessCB
+     * @param {function} onFailureCB
+     */
+    function _directHandler(xsdatetimeStr, onSuccessCB, onFailureCB) {
+        let time = _xsdatetimeDecoder(xsdatetimeStr);
 
         if (!isNaN(time)) {
             onSuccessCB(time);
@@ -264,7 +368,16 @@ function TimeSyncController() {
         onFailureCB();
     }
 
-    function httpHandler(decoder, url, onSuccessCB, onFailureCB, isHeadRequest) {
+    /**
+     * Generic http handler
+     * @param {function} decoder
+     * @param {string} url
+     * @param {function} onSuccessCB
+     * @param {function} onFailureCB
+     * @param {boolean} isHeadRequest
+     * @private
+     */
+    function _httpHandler(decoder, url, onSuccessCB, onFailureCB, isHeadRequest) {
         let oncomplete,
             onload;
         let complete = false;
@@ -288,7 +401,7 @@ function TimeSyncController() {
 
             // if there are more urls to try, call self.
             if (urls.length) {
-                httpHandler(decoder, urls.join(' '), onSuccessCB, onFailureCB, isHeadRequest);
+                _httpHandler(decoder, urls.join(' '), onSuccessCB, onFailureCB, isHeadRequest);
             } else {
                 onFailureCB();
             }
@@ -328,33 +441,76 @@ function TimeSyncController() {
         req.send();
     }
 
-    function httpHeadHandler(url, onSuccessCB, onFailureCB) {
-        httpHandler(rfc1123Decoder, url, onSuccessCB, onFailureCB, true);
+    /**
+     * Handler for http-head schemeIdUri
+     * @param {string} url
+     * @param {function} onSuccessCB
+     * @param {function} onFailureCB
+     * @private
+     */
+    function _httpHeadHandler(url, onSuccessCB, onFailureCB) {
+        _httpHandler(_rfc1123Decoder, url, onSuccessCB, onFailureCB, true);
     }
 
-    function checkForDateHeader() {
+    /**
+     * Checks if a date header is present in the MPD response and calculates the offset based on the header
+     * @private
+     */
+    function _checkForDateHeader() {
         let dateHeaderValue = dashMetrics.getLatestMPDRequestHeaderValueByID('Date');
         let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
             const offsetToDeviceTimeMs = dateHeaderTime - new Date().getTime();
-            completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
+            _completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
         } else {
-            completeTimeSyncSequence(true);
+            _completeTimeSyncSequence(true);
         }
     }
 
-    function completeTimeSyncSequence(failed, time, offset) {
-        setIsSynchronizing(false);
-        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED, {
+    /**
+     * Triggers the event to signal that the time synchronization was completed
+     * @param {boolean} failed
+     * @param {number} time
+     * @param {number} offset
+     * @private
+     */
+    function _completeTimeSyncSequence(failed, time, offset) {
+
+        // Adjust the time of the next sync based on the drift between current offset and last offset
+        if (!isNaN(lastOffset) && !isNaN(offset) && !failed) {
+            const driftFactor = settings.get().streaming.utcSynchronization.driftFactor && !isNaN(settings.get().streaming.utcSynchronization.driftFactor) && settings.get().streaming.utcSynchronization.driftFactor >= 0 && settings.get().streaming.utcSynchronization.driftFactor <= 1 ? settings.get().streaming.utcSynchronization.driftFactor : DEFAULT_DRIFT_FACTOR;
+            const maxAllowedOffsetDrift = lastOffset - (lastOffset * driftFactor);
+
+            const timeBetweenSyncAttempts = settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts;
+            let adjustedTimeBetweenSyncAttempts;
+
+            if (offset > lastOffset + maxAllowedOffsetDrift || offset < lastOffset - maxAllowedOffsetDrift) {
+                // The drift between the current offset and the last offset is not within the allowed threshold. Decrease sync time
+                adjustedTimeBetweenSyncAttempts = timeBetweenSyncAttempts * 1 / TIME_BETWEEN_SYNC_ADJUSTMENT_FACTOR;
+            } else {
+                // Drift between the current offset and the last offset is within the allowed threshold. Increase sync time
+                adjustedTimeBetweenSyncAttempts = timeBetweenSyncAttempts * TIME_BETWEEN_SYNC_ADJUSTMENT_FACTOR;
+            }
+            settings.update({ streaming: { utcSynchronization: { timeBetweenSyncAttempts: adjustedTimeBetweenSyncAttempts } } });
+        }
+
+        // Update the internal data
+        _setIsSynchronizing(false);
+        timeOfLastSync = Date.now();
+        lastOffset = offset;
+
+        // Notify other classes
+        eventBus.trigger(Events.UPDATE_TIME_SYNC_OFFSET, {
             time: time,
             offset: offset,
             error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null
         });
+        eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
     }
 
     function reset() {
-        setIsSynchronizing(false);
+        _resetInitialSettings();
     }
 
     instance = {
