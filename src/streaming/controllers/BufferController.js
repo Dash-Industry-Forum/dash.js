@@ -185,16 +185,18 @@ function BufferController(config) {
             let lastInit = null;
             for (let j = 0; j < chunks.length; j++) {
                 const chunk = chunks[j];
-                const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
-                if (initChunk) {
-                    if (lastInit !== initChunk) {
-                        dischargeFragments.push(initChunk);
-                        buffer.append(initChunk);
-                        lastInit = initChunk;
+                if (chunk.segmentType !== 'InitializationSegment') {
+                    const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
+                    if (initChunk) {
+                        if (lastInit !== initChunk) {
+                            dischargeFragments.push(initChunk);
+                            buffer.append(initChunk);
+                            lastInit = initChunk;
+                        }
                     }
-                    dischargeFragments.push(chunk);
-                    buffer.append(chunk);
                 }
+                dischargeFragments.push(chunk);
+                buffer.append(chunk);
             }
 
             dischargeBuffer.reset();
