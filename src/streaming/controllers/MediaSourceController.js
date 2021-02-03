@@ -71,6 +71,7 @@ function MediaSourceController() {
 
     function setDuration(source, value) {
         if (!source || source.readyState !== 'open') return;
+        if (value === null && isNaN(value)) return;
         if (source.duration === value) return;
 
         if (!isBufferUpdating(source)) {

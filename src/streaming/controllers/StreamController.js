@@ -636,10 +636,7 @@ function StreamController() {
 
     function setMediaDuration(duration) {
         const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
-
-        if (manifestDuration && !isNaN(manifestDuration)) {
-            mediaSourceController.setDuration(mediaSource, manifestDuration);
-        }
+        mediaSourceController.setDuration(mediaSource, manifestDuration);
     }
 
     function getComposedStream(streamInfo) {
