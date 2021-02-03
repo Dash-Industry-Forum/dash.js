@@ -638,8 +638,7 @@ function StreamController() {
         const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
 
         if (manifestDuration && !isNaN(manifestDuration)) {
-            const mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
-            logger.debug('Duration successfully set to: ' + mediaDuration);
+            mediaSourceController.setDuration(mediaSource, manifestDuration);
         }
     }
 

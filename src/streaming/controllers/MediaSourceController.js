@@ -70,11 +70,15 @@ function MediaSourceController() {
     }
 
     function setDuration(source, value) {
+        if (!source || source.readyState !== 'open') return;
+        if (source.duration === value) return;
 
-        if (source.duration != value)
+        if (!isBufferUpdating(source)) {
+            logger.info('Set MediaSource duration:' + value);
             source.duration = value;
-
-        return source.duration;
+        } else {
+            setTimeout(setDuration.bind(null, source, value), 50);
+        }
     }
 
     function setSeekable(source, start, end) {
@@ -102,6 +106,16 @@ function MediaSourceController() {
         }
         logger.info('call to mediaSource endOfStream');
         source.endOfStream();
+    }
+
+    function isBufferUpdating(source) {
+        let buffers = source.sourceBuffers;
+        for (let i = 0; i < buffers.length; i++) {
+            if (buffers[i].updating) {
+                return true;
+            }
+        }
+        return false;
     }
 
     instance = {
