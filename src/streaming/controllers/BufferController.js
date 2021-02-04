@@ -313,7 +313,14 @@ function BufferController(config) {
             triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
-        if (appendedBytesInfo && (!dischargeFragments || dischargeFragments.indexOf(appendedBytesInfo) < 0)) {
+        let suppressAppendedEvent = false;
+        if (dischargeFragments) {
+            if (dischargeFragments.indexOf(appendedBytesInfo) > 0) {
+                suppressAppendedEvent = true;
+            }
+            dischargeFragments = null;
+        }
+        if (appendedBytesInfo && !suppressAppendedEvent) {
             triggerEvent(appendedBytesInfo.endFragment ? Events.BYTES_APPENDED_END_FRAGMENT : Events.BYTES_APPENDED, {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
@@ -321,8 +328,6 @@ function BufferController(config) {
                 bufferedRanges: ranges,
                 mediaType: type
             });
-        } else {
-            dischargeFragments = null;
         }
     }
 
