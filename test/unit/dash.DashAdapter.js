@@ -908,7 +908,7 @@ describe('DashAdapter', function () {
             });
 
             it('applies add attribute operation', function () {
-                let originalPeriod = {id: 'foo'};
+                let originalPeriod = {};
                 let manifest = {
                     Period: originalPeriod,
                     Period_asArray: [originalPeriod]
@@ -923,6 +923,24 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(originalPeriod.id).to.equal('foo');
+            });
+
+            it('applies add attribute operation on existing attribute, should act as replace', function () {
+                let originalPeriod = {id: 'foo'};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD/Period[1]',
+                    type: '@id',
+                    text: 'bar'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(originalPeriod.id).to.equal('bar');
             });
 
             it('applies replace operation with siblings', function () {
