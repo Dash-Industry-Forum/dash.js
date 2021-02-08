@@ -87,6 +87,12 @@ function MssParser(config) {
         logger = debug.getLogger(instance);
     }
 
+    function getAttributeAsBoolean(node, attrName) {
+        const value = node.getAttribute(attrName);
+        if (!value) return false;
+        return value.toLowerCase() === 'true';
+    }
+
     function mapPeriod(smoothStreamingMedia, timescale) {
         const period = {};
         let streams,
@@ -598,7 +604,7 @@ function MssParser(config) {
         // Set manifest node properties
         manifest.protocol = 'MSS';
         manifest.profiles = 'urn:mpeg:dash:profile:isoff-live:2011';
-        manifest.type = smoothStreamingMedia.getAttribute('IsLive') === 'TRUE' ? 'dynamic' : 'static';
+        manifest.type = getAttributeAsBoolean(smoothStreamingMedia, 'IsLive') ? 'dynamic' : 'static';
         timescale =  smoothStreamingMedia.getAttribute('TimeScale');
         manifest.timescale = timescale ? parseFloat(timescale) : DEFAULT_TIME_SCALE;
         let dvrWindowLength = parseFloat(smoothStreamingMedia.getAttribute('DVRWindowLength'));
@@ -607,7 +613,7 @@ function MssParser(config) {
             dvrWindowLength = Infinity;
         }
         // Star-over
-        if (dvrWindowLength === 0 && smoothStreamingMedia.getAttribute('CanSeek') === 'TRUE') {
+        if (dvrWindowLength === 0 && getAttributeAsBoolean(smoothStreamingMedia, 'CanSeek')) {
             dvrWindowLength = Infinity;
         }
 

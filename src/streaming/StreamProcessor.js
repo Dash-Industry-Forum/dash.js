@@ -214,7 +214,7 @@ function StreamProcessor(config) {
             liveEdgeFinder = null;
         }
 
-        if (abrController) {
+        if (abrController && !keepBuffers) {
             abrController.unRegisterStreamType(type);
         }
 
