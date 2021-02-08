@@ -134,7 +134,7 @@ function ManifestUpdater() {
         }
     }
 
-    function refreshManifest() {
+    function refreshManifest(ignorePatch = false) {
         isUpdating = true;
         const manifest = manifestModel.getValue();
 
@@ -144,7 +144,7 @@ function ManifestUpdater() {
         // Check for PatchLocation and Location alternatives
         const patchLocation = adapter.getPatchLocation(manifest);
         const location = adapter.getLocation(manifest);
-        if (patchLocation) {
+        if (patchLocation && !ignorePatch) {
             url = patchLocation;
         } else if (location) {
             url = location;
@@ -170,11 +170,29 @@ function ManifestUpdater() {
             let patch = manifest;
             manifest = manifestModel.getValue();
 
-            // if the patch received is valid we apply it to the manifest
-            if (adapter.isPatchValid(manifest, patch)) {
-                adapter.applyPatchToManifest(manifest, patch);
-            } else {
-                logger.debug('Invalid patch provided, cannot apply');
+            // check for patch validity
+            let isPatchValid = adapter.isPatchValid(manifest, patch);
+            let patchSuccessful = isPatchValid;
+
+            if (isPatchValid) {
+                // grab publish time before update
+                let publishTime = adapter.getPublishTime(manifest);
+
+                // apply validated patch to manifest
+                patchSuccessful = adapter.applyPatchToManifest(manifest, patch);
+
+                // get the updated publish time
+                let updatedPublishTime = adapter.getPublishTime(manifest);
+
+                // ensure the patch properly updated the in-memory publish time
+                patchSuccessful = publishTime.getTime() != updatedPublishTime.getTime();
+            }
+
+            // if the patch failed to apply, force a full manifest refresh
+            if (!patchSuccessful) {
+                logger.debug('Patch provided is invalid, performing full manifest refresh');
+                refreshManifest(true);
+                return;
             }
         }
 

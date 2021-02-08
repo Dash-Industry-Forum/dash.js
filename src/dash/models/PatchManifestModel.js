@@ -66,20 +66,20 @@ function PatchManifestModel() {
         }
 
         // Go through the patch operations in order and parse their actions out for usage
-        return (patch.__children || []).map((node) => {
-            let action = Object.keys(node)[0];
+        return (patch.__children || []).map((nodeContainer) => {
+            let action = Object.keys(nodeContainer)[0];
 
             // we only look add add/remove/replace actions
-            if (action != 'add' && action != 'remove' && action != 'replace') {
+            if (action !== 'add' && action !== 'remove' && action !== 'replace') {
                 logger.warn(`Ignoring node of invalid action: ${action}`);
                 return null;
             }
 
-            node = node[action];
+            let node = nodeContainer[action];
             let selector = node.sel;
 
             // add action can have special targeting via the 'type' attribute
-            if (action == 'add' && node.type) {
+            if (action === 'add' && node.type) {
                 if (!node.type.startsWith('@')) {
                     logger.warn(`Ignoring add action for prefixed namespace declaration: ${node.type}=${node.__text}`);
                     return null;
@@ -99,7 +99,7 @@ function PatchManifestModel() {
             let value = null;
             if (xpath.findsAttribute()) {
                 value = node.__text || '';
-            } else if (action != 'remove') {
+            } else if (action !== 'remove') {
                 value = node.__children.reduce((groups, child) => {
                     // note that this is informed by xml2js parse structure for the __children array
                     // which will be something like this for each child:
@@ -108,7 +108,7 @@ function PatchManifestModel() {
                     // }
                     let key = Object.keys(child)[0];
                     // we also ignore
-                    if (key != '#text') {
+                    if (key !== '#text') {
                         groups[key] = groups[key] || [];
                         groups[key].push(child[key]);
                     }
@@ -118,7 +118,7 @@ function PatchManifestModel() {
 
             let operation = new PatchOperation(action, xpath, value);
 
-            if (action == 'add') {
+            if (action === 'add') {
                 operation.position = node.pos;
             }
 

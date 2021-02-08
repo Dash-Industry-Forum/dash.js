@@ -502,11 +502,17 @@ describe('DashAdapter', function () {
 
         describe('getPatchLocation', function () {
 
-            // example patch location element
-            const patchLocationElement = {
+            // example patch location element with ttl
+            const patchLocationElementTTL = {
                 __children: [{'#text': 'foobar'}],
                 '__text': 'foobar',
                 ttl: 60 * 5 // 5 minute validity period
+            };
+
+            // example patch location element that never expires
+            const patchLocationElementEvergreen = {
+                __children: [{'#text': 'foobar'}],
+                '__text': 'foobar'
             };
 
             it('should provide patch location if present and not expired', function () {
@@ -515,8 +521,8 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 1);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElement,
-                    PatchLocation_asArray: [patchLocationElement]
+                    PatchLocation: patchLocationElementTTL,
+                    PatchLocation_asArray: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -529,12 +535,26 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 10);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElement,
-                    PatchLocation_asArray: [patchLocationElement]
+                    PatchLocation: patchLocationElementTTL,
+                    PatchLocation_asArray: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
                 expect(patchLocation).to.be.null; // jshint ignore:line
+            });
+
+            it('should provide patch location if present and never expires', function () {
+                // simulated 120 minute old manifest
+                let publishTime = new Date();
+                publishTime.setMinutes(publishTime.getMinutes() - 120);
+                const manifest = {
+                    [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
+                    PatchLocation: patchLocationElementEvergreen,
+                    PatchLocation_asArray: [patchLocationElementEvergreen]
+                };
+
+                let patchLocation = dashAdapter.getPatchLocation(manifest);
+                expect(patchLocation).equals('foobar');
             });
 
             it('should not provide patch location if not present', function () {
@@ -548,8 +568,8 @@ describe('DashAdapter', function () {
 
             it('should not provide patch location if present in manifest without publish time', function () {
                 const manifest = {
-                    PatchLocation: patchLocationElement,
-                    PatchLocation_asArray: [patchLocationElement]
+                    PatchLocation: patchLocationElementTTL,
+                    PatchLocation_asArray: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -559,10 +579,10 @@ describe('DashAdapter', function () {
 
         describe('isPatchValid', function () {
             it('considers patch invalid if no patch given', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
                 let manifest = {
                     [DashConstants.ID]: 'foobar',
-                    [DashConstants.PUBLISH_TIME]: publishTime
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest);
 
@@ -570,10 +590,12 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if no manifest given', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let patch = {
                     [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(undefined, patch);
 
@@ -581,13 +603,15 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if manifest has no id', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let manifest = {
                     [DashConstants.PUBLISH_TIME]: publishTime
                 };
                 let patch = {
                     [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
@@ -595,13 +619,15 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if patch has no manifest id', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let manifest = {
                     [DashConstants.ID]: 'foobar',
-                    [DashConstants.PUBLISH_TIME]: publishTime
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let patch = {
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
@@ -609,13 +635,15 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if manifest has no publish time', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let manifest = {
                     [DashConstants.ID]: 'foobar'
                 };
                 let patch = {
                     [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
@@ -623,13 +651,15 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if patch has no original publish time', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let manifest = {
                     [DashConstants.ID]: 'foobar',
-                    [DashConstants.PUBLISH_TIME]: publishTime
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let patch = {
-                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar'
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
@@ -637,24 +667,43 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if both objects missing ids', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let manifest = {
-                    [DashConstants.PUBLISH_TIME]: publishTime
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let patch = {
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
                 expect(isValid).to.be.false; // jshint ignore:line
             });
 
-            it('considers patch invalid if both objects missing publish times', function () {
+            it('considers patch invalid if both objects missing mpd publish times', function () {
+                let publishTime = new Date();
                 let manifest = {
                     [DashConstants.ID]: 'foobar'
                 };
                 let patch = {
-                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar'
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if patch missing new publish time', function () {
+                let publishTime = new Date();
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
@@ -662,14 +711,16 @@ describe('DashAdapter', function () {
             });
 
             it('considers patch invalid if ids do not match', function () {
-                let publishTime = new Date().toISOString();
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
                 let manifest = {
                     [DashConstants.ID]: 'foobar',
-                    [DashConstants.PUBLISH_TIME]: publishTime
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let patch = {
                     [DashConstants.ORIGINAL_MPD_ID]: 'bazqux',
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
@@ -679,28 +730,48 @@ describe('DashAdapter', function () {
             it('considers patch invalid if publish times do not match', function () {
                 let publishTime = new Date();
                 let publishTime2 = new Date(publishTime.getTime() + 100);
+                let publishTime3 = new Date(publishTime.getTime() + 200);
                 let manifest = {
                     [DashConstants.ID]: 'foobar',
                     [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let patch = {
                     [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime2.toISOString()
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime2.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime3.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 
                 expect(isValid).to.be.false; // jshint ignore:line
             });
 
-            it('considers patch valid if ids and publish times match', function () {
-                let publishTime = new Date().toISOString();
+            it('considers patch invalid if new publish time is not later than previous', function () {
+                let publishTime = new Date();
                 let manifest = {
                     [DashConstants.ID]: 'foobar',
-                    [DashConstants.PUBLISH_TIME]: publishTime
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
                 };
                 let patch = {
                     [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
-                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch valid if ids, publish times match, and new publish time is later than previous', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
                 };
                 let isValid = dashAdapter.isPatchValid(manifest, patch);
 

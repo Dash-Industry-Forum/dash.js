@@ -87,6 +87,10 @@ function AdapterMock () {
         return 0;
     };
 
+    this.getPublishTime = function () {
+        return null;
+    };
+
     this.updatePeriods = function () {
     };
 

@@ -96,6 +96,9 @@ describe('ManifestUpdater', function () {
         const patchCheckStub = sinon.stub(adapterMock, 'getIsPatch').returns(true);
         const isPatchValidStub = sinon.stub(adapterMock, 'isPatchValid').returns(true);
         const applyPatchStub = sinon.stub(adapterMock, 'applyPatchToManifest');
+        const publishTimeStub = sinon.stub(adapterMock, 'getPublishTime');
+        publishTimeStub.onCall(0).returns(originalTime);
+        publishTimeStub.onCall(1).returns(new Date());
 
         const spy = sinon.spy();
         eventBus.on(Events.MANIFEST_UPDATED, spy);
@@ -114,10 +117,11 @@ describe('ManifestUpdater', function () {
         patchCheckStub.restore();
         isPatchValidStub.restore();
         applyPatchStub.restore();
+        publishTimeStub.restore();
         eventBus.off(Events.MANIFEST_UPDATED, spy);
     });
 
-    it('should call MANIFEST_UPDATED with original manifest if invalid patch update provided', function () {
+    it('should force full manifest refresh if invalid patch update provided', function () {
         let originalTime = new Date(Date.now() - 1000 * 60 * 10);
         let inMemoryManifest = {
             loadedTime: originalTime
@@ -127,9 +131,10 @@ describe('ManifestUpdater', function () {
         const patchCheckStub = sinon.stub(adapterMock, 'getIsPatch').returns(true);
         const isPatchValidStub = sinon.stub(adapterMock, 'isPatchValid').returns(false);
         const applyPatchStub = sinon.stub(adapterMock, 'applyPatchToManifest');
-
-        const spy = sinon.spy();
-        eventBus.on(Events.MANIFEST_UPDATED, spy);
+        const loaderStub = sinon.stub(manifestLoaderMock, 'load');
+        const publishTimeStub = sinon.stub(adapterMock, 'getPublishTime');
+        publishTimeStub.onCall(0).returns(originalTime);
+        publishTimeStub.onCall(1).returns(new Date());
 
         const patch = {};
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: patch});
@@ -138,14 +143,44 @@ describe('ManifestUpdater', function () {
         expect(patchCheckStub.called).to.be.true; // jshint ignore:line
         expect(isPatchValidStub.called).to.be.true; // jshint ignore:line
         expect(applyPatchStub.called).to.be.false; // jshint ignore:line
-        expect(spy.calledOnce).to.be.true; // jshint ignore:line
-        expect(spy.firstCall.args[0].manifest).to.equal(inMemoryManifest);
+        expect(loaderStub.called).to.be.true; // jshint ignore:line
 
         manifestModelMock.setValue(null);
         patchCheckStub.restore();
         isPatchValidStub.restore();
         applyPatchStub.restore();
-        eventBus.off(Events.MANIFEST_UPDATED, spy);
+        publishTimeStub.restore();
+        loaderStub.restore();
+    });
+
+    it('should force full manifest refresh if patch update does not update publish time', function () {
+        let originalTime = new Date(Date.now() - 1000 * 60 * 10);
+        let inMemoryManifest = {
+            loadedTime: originalTime
+        };
+        manifestModelMock.setValue(inMemoryManifest);
+
+        const patchCheckStub = sinon.stub(adapterMock, 'getIsPatch').returns(true);
+        const isPatchValidStub = sinon.stub(adapterMock, 'isPatchValid').returns(true);
+        const applyPatchStub = sinon.stub(adapterMock, 'applyPatchToManifest');
+        const loaderStub = sinon.stub(manifestLoaderMock, 'load');
+        const publishTimeStub = sinon.stub(adapterMock, 'getPublishTime').returns(originalTime);
+
+        const patch = {};
+        eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: patch});
+
+        expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
+        expect(patchCheckStub.called).to.be.true; // jshint ignore:line
+        expect(isPatchValidStub.called).to.be.true; // jshint ignore:line
+        expect(applyPatchStub.called).to.be.true; // jshint ignore:line
+        expect(loaderStub.called).to.be.true; // jshint ignore:line
+
+        manifestModelMock.setValue(null);
+        patchCheckStub.restore();
+        isPatchValidStub.restore();
+        applyPatchStub.restore();
+        publishTimeStub.restore();
+        loaderStub.restore();
     });
 
     describe('refresh manifest location', function () {

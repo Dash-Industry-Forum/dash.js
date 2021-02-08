@@ -637,6 +637,17 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the publish time from the manifest
+     * @param {object} manifest
+     * @returns {Date|null} publishTime
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getPublishTime(manifest) {
+        return dashManifestModel.getPublishTime(manifest);
+    }
+
+    /**
      * Returns the patch location of the MPD if one exists and it is still valid
      * @param {object} manifest
      * @returns {(String|null)} patch location
@@ -646,19 +657,25 @@ function DashAdapter() {
     function getPatchLocation(manifest) {
         const patchLocation = dashManifestModel.getPatchLocation(manifest);
         const publishTime = dashManifestModel.getPublishTime(manifest);
-        if (patchLocation && publishTime) {
-            // grab the ttl from the patch location
-            const ttl = parseInt(patchLocation.ttl, 10) * 1000;
 
-            // if the patch location has not expired provide the location back
-            if (publishTime.getTime() + ttl > new Date().getTime()) {
-                // actual url is the text of the node
-                return patchLocation.__text;
+        // short-circuit when no patch location or publish time exists
+        if (!patchLocation || !publishTime) {
+            return null;
+        }
+
+        // if a ttl is provided, ensure patch location has not expired
+        if (patchLocation.hasOwnProperty('ttl') && publishTime) {
+            // attribute describes number of seconds as a double
+            const ttl = parseFloat(patchLocation.ttl) * 1000;
+
+            // check if the patch location has expired, if so do not consider it
+            if (publishTime.getTime() + ttl <= new Date().getTime()) {
+                return null;
             }
         }
 
-        // either there is no patch location or it has expired
-        return null;
+        // the patch location exists and, if a ttl applies, has not expired
+        return patchLocation.__text;
     }
 
     /**
@@ -803,15 +820,18 @@ function DashAdapter() {
     function isPatchValid(manifest, patch) {
         let manifestId = dashManifestModel.getId(manifest);
         let patchManifestId = patchManifestModel.getMpdId(patch);
-        let publishTime = dashManifestModel.getPublishTime(manifest);
-        let originalPublishTime = patchManifestModel.getOriginalPublishTime(patch);
+        let manifestPublishTime = dashManifestModel.getPublishTime(manifest);
+        let patchPublishTime = patchManifestModel.getPublishTime(patch);
+        let originalManifestPublishTime = patchManifestModel.getOriginalPublishTime(patch);
 
         // Patches are considered compatible if the following are true
         // - MPD@id == Patch@mpdId
         // - MPD@publishTime == Patch@originalPublishTime
+        // - MPD@publishTime < Patch@publishTime
         // - All values in comparison exist
         return !!(manifestId && patchManifestId && (manifestId == patchManifestId) &&
-            publishTime && originalPublishTime && (publishTime.getTime() == originalPublishTime.getTime()));
+            manifestPublishTime && originalManifestPublishTime && (manifestPublishTime.getTime() == originalManifestPublishTime.getTime()) &&
+            patchPublishTime && (manifestPublishTime.getTime() < patchPublishTime.getTime()));
     }
 
     /**
@@ -850,10 +870,10 @@ function DashAdapter() {
 
                 // determine the relative insert position prior to possible removal
                 let relativePosition = (target[name + '_asArray'] || []).indexOf(leaf);
-                let insertBefore = (operation.position == 'prepend' || operation.position == 'before');
+                let insertBefore = (operation.position === 'prepend' || operation.position === 'before');
 
                 // perform removal operation first, we have already capture the appropriate relative position
-                if (operation.action == 'remove' || operation.action == 'replace') {
+                if (operation.action === 'remove' || operation.action === 'replace') {
                     // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd operations
 
                     // purge the directly named entity
@@ -879,7 +899,7 @@ function DashAdapter() {
                 // place of a replaced element while the add case allows an arbitrary number of children.
                 // Due to the both operations requiring the same insertion logic they have been combined here and we will
                 // not enforce single child operations for replace, assertions should be made at patch parse time if necessary
-                if (operation.action == 'add' || operation.action == 'replace') {
+                if (operation.action === 'add' || operation.action === 'replace') {
                     // value will be an object with element name keys pointing to arrays of objects
                     Object.keys(operation.value).forEach((insert) => {
                         let insertNodes = operation.value[insert];
@@ -1145,6 +1165,7 @@ function DashAdapter() {
         getLocation: getLocation,
         getPatchLocation: getPatchLocation,
         getManifestUpdatePeriod: getManifestUpdatePeriod,
+        getPublishTime,
         getIsDVB: getIsDVB,
         getIsPatch: getIsPatch,
         getBaseURLsFromElement: getBaseURLsFromElement,
