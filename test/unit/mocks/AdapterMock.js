@@ -87,6 +87,10 @@ function AdapterMock () {
         return 0;
     };
 
+    this.getPublishTime = function () {
+        return null;
+    };
+
     this.updatePeriods = function () {
     };
 
@@ -105,6 +109,16 @@ function AdapterMock () {
     this.getIsDVB = function () {
         return false;
     };
+
+    this.getIsPatch = function () {
+        return false;
+    };
+
+    this.isPatchValid = function () {
+        return false;
+    };
+
+    this.applyPatchToManifest = function () {};
 
     this.convertDataToRepresentationInfo = function () {
         return null;
@@ -146,6 +160,14 @@ function AdapterMock () {
         });
     };
 
+
+    this.getLocation = function () {
+        return null;
+    };
+
+    this.getPatchLocation = function () {
+        return null;
+    };
 }
 
 export default AdapterMock;

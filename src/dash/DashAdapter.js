@@ -37,6 +37,7 @@ import ManifestInfo from './vo/ManifestInfo';
 import Event from './vo/Event';
 import FactoryMaker from '../core/FactoryMaker';
 import DashManifestModel from './models/DashManifestModel';
+import PatchManifestModel from './models/PatchManifestModel';
 
 /**
  * @module DashAdapter
@@ -45,6 +46,7 @@ import DashManifestModel from './models/DashManifestModel';
 function DashAdapter() {
     let instance,
         dashManifestModel,
+        patchManifestModel,
         voPeriods,
         voAdaptations,
         currentMediaInfo,
@@ -57,6 +59,7 @@ function DashAdapter() {
 
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
+        patchManifestModel = PatchManifestModel(context).getInstance();
         reset();
     }
 
@@ -634,6 +637,48 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the publish time from the manifest
+     * @param {object} manifest
+     * @returns {Date|null} publishTime
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getPublishTime(manifest) {
+        return dashManifestModel.getPublishTime(manifest);
+    }
+
+    /**
+     * Returns the patch location of the MPD if one exists and it is still valid
+     * @param {object} manifest
+     * @returns {(String|null)} patch location
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getPatchLocation(manifest) {
+        const patchLocation = dashManifestModel.getPatchLocation(manifest);
+        const publishTime = dashManifestModel.getPublishTime(manifest);
+
+        // short-circuit when no patch location or publish time exists
+        if (!patchLocation || !publishTime) {
+            return null;
+        }
+
+        // if a ttl is provided, ensure patch location has not expired
+        if (patchLocation.hasOwnProperty('ttl') && publishTime) {
+            // attribute describes number of seconds as a double
+            const ttl = parseFloat(patchLocation.ttl) * 1000;
+
+            // check if the patch location has expired, if so do not consider it
+            if (publishTime.getTime() + ttl <= new Date().getTime()) {
+                return null;
+            }
+        }
+
+        // the patch location exists and, if a ttl applies, has not expired
+        return patchLocation.__text;
+    }
+
+    /**
      * Checks if the manifest has a DVB profile
      * @param {object} manifest
      * @returns {boolean}
@@ -643,6 +688,15 @@ function DashAdapter() {
      */
     function getIsDVB(manifest) {
         return dashManifestModel.hasProfile(manifest, PROFILE_DVB);
+    }
+
+    /**
+     * Checks if the manifest is actually just a patch manifest
+     * @param  {object} manifest
+     * @return {boolean}
+     */
+    function getIsPatch(manifest) {
+        return patchManifestModel.getIsPatch(manifest);
     }
 
     /**
@@ -755,6 +809,132 @@ function DashAdapter() {
         voPeriods = [];
         voAdaptations = {};
         currentMediaInfo = {};
+    }
+
+    /**
+     * Checks if the supplied manifest is compatible for application of the supplied patch
+     * @param  {object}  manifest
+     * @param  {object}  patch
+     * @return {boolean}
+     */
+    function isPatchValid(manifest, patch) {
+        let manifestId = dashManifestModel.getId(manifest);
+        let patchManifestId = patchManifestModel.getMpdId(patch);
+        let manifestPublishTime = dashManifestModel.getPublishTime(manifest);
+        let patchPublishTime = patchManifestModel.getPublishTime(patch);
+        let originalManifestPublishTime = patchManifestModel.getOriginalPublishTime(patch);
+
+        // Patches are considered compatible if the following are true
+        // - MPD@id == Patch@mpdId
+        // - MPD@publishTime == Patch@originalPublishTime
+        // - MPD@publishTime < Patch@publishTime
+        // - All values in comparison exist
+        return !!(manifestId && patchManifestId && (manifestId == patchManifestId) &&
+            manifestPublishTime && originalManifestPublishTime && (manifestPublishTime.getTime() == originalManifestPublishTime.getTime()) &&
+            patchPublishTime && (manifestPublishTime.getTime() < patchPublishTime.getTime()));
+    }
+
+    /**
+     * Takes a given patch and applies it to the provided manifest, assumes patch is valid for manifest
+     * @param  {object} manifest
+     * @param  {object} patch
+     */
+    function applyPatchToManifest(manifest, patch) {
+        // get all operations from the patch and apply them in document order
+        patchManifestModel.getPatchOperations(patch)
+            .forEach((operation) => {
+                let result = operation.getMpdTarget(manifest);
+
+                // operation supplies a path that doesn't match mpd, skip
+                if (result === null) {
+                    return;
+                }
+
+                let {name, target, leaf} = result;
+
+                // short circuit for attribute selectors
+                if (operation.xpath.findsAttribute()) {
+                    switch (operation.action) {
+                        case 'add':
+                        case 'replace':
+                            // add and replace are just setting the value
+                            target[name] = operation.value;
+                            break;
+                        case 'remove':
+                            // remove is deleting the value
+                            delete target[name];
+                            break;
+                    }
+                    return;
+                }
+
+                // determine the relative insert position prior to possible removal
+                let relativePosition = (target[name + '_asArray'] || []).indexOf(leaf);
+                let insertBefore = (operation.position === 'prepend' || operation.position === 'before');
+
+                // perform removal operation first, we have already capture the appropriate relative position
+                if (operation.action === 'remove' || operation.action === 'replace') {
+                    // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd operations
+
+                    // purge the directly named entity
+                    delete target[name];
+
+                    // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
+                    if (relativePosition != -1) {
+                        let targetArray = target[name + '_asArray'];
+                        targetArray.splice(relativePosition, 1);
+                        if (targetArray.length > 1) {
+                            target[name] = targetArray;
+                        } else if (targetArray.length == 1) {
+                            // xml parsing semantics, singular asArray must be non-array in the unsuffixed key
+                            target[name] = targetArray[0];
+                        } else {
+                            // all nodes of this type deleted, remove entry
+                            delete target[name + '_asArray'];
+                        }
+                    }
+                }
+
+                // Perform any add/replace operations now, technically RFC5261 only allows a single element to take the
+                // place of a replaced element while the add case allows an arbitrary number of children.
+                // Due to the both operations requiring the same insertion logic they have been combined here and we will
+                // not enforce single child operations for replace, assertions should be made at patch parse time if necessary
+                if (operation.action === 'add' || operation.action === 'replace') {
+                    // value will be an object with element name keys pointing to arrays of objects
+                    Object.keys(operation.value).forEach((insert) => {
+                        let insertNodes = operation.value[insert];
+
+                        let updatedNodes = target[insert + '_asArray'] || [];
+                        if (updatedNodes.length === 0 && target[insert]) {
+                            updatedNodes.push(target[insert]);
+                        }
+
+                        if (updatedNodes.length === 0) {
+                            // no original nodes for this element type
+                            updatedNodes = insertNodes;
+                        } else {
+                            // compute the position we need to insert at, default to end of set
+                            let position = updatedNodes.length;
+                            if (insert == name && relativePosition != -1) {
+                                // if the inserted element matches the operation target (not leaf) and there is a relative position we
+                                // want the inserted position to be set such that our insertion is relative to original position
+                                // since replace has modified the array length we reduce the insert point by 1
+                                position = relativePosition + (insertBefore ? 0 : 1) + (operation.action == 'replace' ? -1 : 0);
+                            } else {
+                                // otherwise we are in an add append/prepend case or replace case that removed the target name completely
+                                position = insertBefore ? 0 : updatedNodes.length;
+                            }
+
+                            // we dont have to perform element removal for the replace case as that was done above
+                            updatedNodes.splice.apply(updatedNodes, [position, 0].concat(insertNodes));
+                        }
+
+                        // now we properly reset the element keys on the target to match parsing semantics
+                        target[insert + '_asArray'] = updatedNodes;
+                        target[insert] = updatedNodes.length == 1 ? updatedNodes[0] : updatedNodes;
+                    });
+                }
+            });
     }
 
     // #endregion PUBLIC FUNCTIONS
@@ -983,8 +1163,11 @@ function DashAdapter() {
         getDuration: getDuration,
         getRegularPeriods: getRegularPeriods,
         getLocation: getLocation,
+        getPatchLocation: getPatchLocation,
         getManifestUpdatePeriod: getManifestUpdatePeriod,
+        getPublishTime,
         getIsDVB: getIsDVB,
+        getIsPatch: getIsPatch,
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
         getCodec: getCodec,
@@ -992,6 +1175,8 @@ function DashAdapter() {
         getVoPeriods: getVoPeriods,
         getPeriodById,
         setCurrentMediaInfo: setCurrentMediaInfo,
+        isPatchValid: isPatchValid,
+        applyPatchToManifest: applyPatchToManifest,
         reset: reset
     };
 
