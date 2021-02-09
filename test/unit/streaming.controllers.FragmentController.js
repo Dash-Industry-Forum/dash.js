@@ -16,6 +16,7 @@ describe('FragmentController', function () {
     const mediaPlayerModelMock = new MediaPlayerModelMock();
     const settings = Settings(context).getInstance();
     const fragmentController = FragmentController(context).create({
+        streamInfo: { id: 'streamId' },
         mediaPlayerModel: mediaPlayerModelMock,
         settings: settings
     });
@@ -23,7 +24,7 @@ describe('FragmentController', function () {
     Events.extend(MediaPlayerEvents);
 
     it('should create or return model for a given media type', function () {
-        videoFragmentModel = fragmentController.getModel('streamId', 'video');
+        videoFragmentModel = fragmentController.getModel('video');
         expect(videoFragmentModel).to.exist; // jshint ignore:line
     });
 
@@ -31,11 +32,11 @@ describe('FragmentController', function () {
         const context1 = 1;
         const context2 = 2;
 
-        const model1 = fragmentController.getModel('streamId', context1);
-        const model2 = fragmentController.getModel('streamId', context2);
+        const model1 = fragmentController.getModel(context1);
+        const model2 = fragmentController.getModel(context2);
 
-        expect(fragmentController.getModel('streamId', context1)).to.be.equal(model1);
-        expect(fragmentController.getModel('streamId', context2)).to.be.equal(model2);
+        expect(fragmentController.getModel(context1)).to.be.equal(model1);
+        expect(fragmentController.getModel(context2)).to.be.equal(model2);
     });
 
     it('should trigger INIT_FRAGMENT_LOADED event when an init segment download is completed.', function (done) {

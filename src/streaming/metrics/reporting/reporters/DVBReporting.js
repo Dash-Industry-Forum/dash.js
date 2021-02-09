@@ -137,7 +137,7 @@ function DVBReporting(config) {
 
         rangeController = rc;
 
-        reportingUrl = entry['dvb:reportingUrl'];
+        reportingUrl = entry.dvb_reportingUrl;
 
         // If a required attribute is missing, the Reporting descriptor may
         // be ignored by the Player
@@ -151,11 +151,10 @@ function DVBReporting(config) {
         // static for the duration of the MPD, regardless of MPD updates.
         // (i.e. only calling reset (or failure) changes this state)
         if (!reportingPlayerStatusDecided) {
-            // NOTE: DVB spec has a typo where it incorrectly references the
-            // priority attribute, which should be probability
-            probability = entry['dvb:probability'] || entry['dvb:priority'] || 0;
-            // If the @priority attribute is set to 1000, it shall be a reporting Player.
-            // If the @priority attribute is missing, the Player shall not be a reporting Player.
+            probability = entry.dvb_probability;
+            // TS 103 285 Clause 10.12.3.4
+            // If the @probability attribute is set to 1000, it shall be a reporting Player.
+            // If the @probability attribute is absent it will take the default value of 1000.
             // For any other value of the @probability attribute, it shall decide at random whether to be a
             // reporting Player, such that the probability of being one is @probability/1000.
             if (probability && (probability === 1000 || ((probability / 1000) >= randomNumberGenerator.random()))) {

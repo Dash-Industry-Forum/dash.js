@@ -87,6 +87,10 @@ function AdapterMock () {
         return 0;
     };
 
+    this.getPublishTime = function () {
+        return null;
+    };
+
     this.updatePeriods = function () {
     };
 
@@ -106,12 +110,63 @@ function AdapterMock () {
         return false;
     };
 
+    this.getIsPatch = function () {
+        return false;
+    };
+
+    this.isPatchValid = function () {
+        return false;
+    };
+
+    this.applyPatchToManifest = function () {};
+
     this.convertDataToRepresentationInfo = function () {
         return null;
     };
 
-    this.getCodec = function () {
-        return 'audio/mp4;codecs="mp4a.40.2"';
+    this.getIsTypeOf = function () {
+        return true;
+    };
+
+    this.getCodec = function (adaptation, representationId, addResolutionInfo) {
+        let codec = null;
+
+        if (adaptation && adaptation.Representation && adaptation.Representation.length > 0) {
+            const representation = adaptation.Representation[representationId];
+            if (representation) {
+                codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
+                if (addResolutionInfo && representation.width !== undefined && representation.height !== undefined) {
+                    codec += ';width="' + representation.width + '";height="' + representation.height + '"';
+                }
+            }
+        }
+
+        // If the codec contains a profiles parameter we remove it. Otherwise it will cause problems when checking for codec capabilities of the platform
+        if (codec) {
+            codec = codec.replace(/\sprofiles=[^;]*/g, '');
+        }
+
+        return codec;
+    };
+
+    this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) return null;
+
+        return realRepresentation.EssentialProperty.map((prop) => {
+            return {
+                schemeIdUri: prop.schemeIdUri,
+                value: prop.value
+            };
+        });
+    };
+
+
+    this.getLocation = function () {
+        return null;
+    };
+
+    this.getPatchLocation = function () {
+        return null;
     };
 }
 

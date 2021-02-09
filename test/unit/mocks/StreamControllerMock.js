@@ -1,3 +1,5 @@
+import StreamMock from './StreamMock';
+
 class StreamControllerMock {
 
     constructor() {
@@ -5,9 +7,15 @@ class StreamControllerMock {
 
     setup() {
         this.streamId = 'streamId';
+        this.activeStream = new StreamMock();
     }
 
-    initialize() {
+    initialize(streams) {
+        this.streams = streams;
+    }
+
+    getStreams() {
+        return this.streams;
     }
 
     getActiveStreamCommonEarliestTime() {
@@ -75,6 +83,10 @@ class StreamControllerMock {
 
     getActiveStreamProcessors() {
         return [];
+    }
+
+    getActiveStream() {
+        return this.activeStream;
     }
 }
 

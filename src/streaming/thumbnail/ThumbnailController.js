@@ -39,6 +39,7 @@ import { replaceTokenForTemplate, unescapeDollarsInTemplate } from '../../dash/u
 function ThumbnailController(config) {
 
     const context = this.context;
+    const streamInfo = config.streamInfo;
 
     let instance,
         thumbnailTracks;
@@ -46,7 +47,7 @@ function ThumbnailController(config) {
     function setup() {
         reset();
         thumbnailTracks = ThumbnailTracks(context).create({
-            streamInfo: config.streamInfo,
+            streamInfo: streamInfo,
             adapter: config.adapter,
             baseURLController: config.baseURLController,
             timelineConverter: config.timelineConverter,
@@ -55,6 +56,10 @@ function ThumbnailController(config) {
             events: config.events,
             dashConstants: config.dashConstants
         });
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     function provideThumbnail(time, callback) {
@@ -109,7 +114,7 @@ function ThumbnailController(config) {
     function buildUrlFromTemplate(track, seq) {
         const seqIdx = seq + track.startNumber;
         let url = replaceTokenForTemplate(track.templateUrl, 'Number', seqIdx);
-        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration);
+        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration * track.timescale);
         url = replaceTokenForTemplate(url, 'Bandwidth', track.bandwidth);
         return unescapeDollarsInTemplate(url);
     }
@@ -144,6 +149,7 @@ function ThumbnailController(config) {
     }
 
     instance = {
+        getStreamId: getStreamId,
         provide: provideThumbnail,
         setTrackByIndex: setTrackByIndex,
         getCurrentTrackIndex: getCurrentTrackIndex,

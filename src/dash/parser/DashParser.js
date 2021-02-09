@@ -100,7 +100,21 @@ function DashParser(config) {
             throw new Error('failed to parse the manifest');
         }
 
-        objectIron.run(manifest);
+        // handle full MPD and Patch ironing separately
+        if (manifest.Patch) {
+            manifest = manifest.Patch; // drop root reference
+            // apply iron to patch operations individually
+            if (manifest.add) {
+                manifest.add.forEach((operand) => objectIron.run(operand));
+            }
+            if (manifest.replace) {
+                manifest.replace.forEach((operand) => objectIron.run(operand));
+            }
+            // note that we don't need to iron remove as they contain no children
+        } else {
+            manifest = manifest.MPD; // drop root reference
+            objectIron.run(manifest);
+        }
 
         const parsedTime = window.performance.now();
         logger.info('Parsing complete: ' + (parsedTime - startTime).toPrecision(3) + 'ms');

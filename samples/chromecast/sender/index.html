@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app data-cast-api-enabled="true">
+<html ng-app="DashCastSenderApp" data-cast-api-enabled="true">
 <head>
     <meta charset="utf-8"/>
     <title>Dash.js Chromecast Sender</title>
@@ -10,11 +10,15 @@
     <link rel="stylesheet" href="css/bootstrap-glyphicons.css">
 
     <script src="http://code.jquery.com/jquery.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
     <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/js/bootstrap.min.js"></script>
 
-    <script src="js/caster.js"></script>
-    <script src="js/CasterController.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/CastSenderService.js"></script>
+    <script src="js/CastSenderController.js"></script>
+
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
 
     <style>
         .dropdown-menu {
@@ -40,15 +44,29 @@
             display: inline-block;
             vertical-align: middle;
         }
+
+        .cast-button {
+            margin: 0 auto;
+            width: 10em;
+            display: block;
+        }
     </style>
 
-    <body ng-controller="CasterController">
+    <body ng-controller="CastSenderController">
         <a href="https://github.com/Dash-Industry-Forum/dash.js">
             <img
                 style="position: absolute; top: 0; right: 0; border: 0; width: 149px; height: 149px;"
                 src="http://aral.github.com/fork-me-on-github-retina-ribbons/right-cerulean@2x.png"
                 alt="Fork me on GitHub">
         </a>
+
+        <div>
+            <google-cast-launcher class="cast-button"> </google-cast-launcher>
+            <div class="container" style="padding: 15px">
+                <p ng-if="!castApiReady">Click on the cast icon to select your ChromeCast device (only on Chrome browser)</p>
+            </div>
+            
+        </div>
 
         <div ng-switch on="castApiReady">
             <div class="alert alert-danger" ng-switch-default>
@@ -81,19 +99,6 @@
                             <span class="input-group-btn">
                                 <button class="btn btn-primary" type="button" ng-click="doCast()">Cast</button>
                             </span>
-                        </div>
-                    </div>
-
-                    <div class="panel" ng-show="state == 'ready' || state == 'casting'">
-                        <h3 class="text-primary">Receivers</h3>
-                        <div class="list-group">
-                            <a
-                                class="list-group-item"
-                                ng-repeat="rec in receivers"
-                                ng-click="setReceiver(rec)"
-                                ng-class="{active:isReceiverSelected(rec)}">
-                                {{rec.name}}
-                            </a>
                         </div>
                     </div>
 
