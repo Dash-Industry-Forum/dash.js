@@ -68,7 +68,7 @@ const manifest_without_supplemental_properties = {
 };
 
 
-describe.only('DashAdapter', function () {
+describe('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
 
         it('should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined', function () {
