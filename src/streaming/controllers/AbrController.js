@@ -190,8 +190,10 @@ function AbrController() {
 
     function onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
-            playbackIndex = e.oldQuality;
-            droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
+            if (playbackIndex !== undefined) {
+                droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
+            }
+            playbackIndex = e.newQuality;
         }
     }
 
@@ -338,7 +340,7 @@ function AbrController() {
                     newQuality = topQualityIdx;
                 }
 
-                switchHistoryDict[type].push({oldValue: oldQuality, newValue: newQuality});
+                switchHistoryDict[type].push({ oldValue: oldQuality, newValue: newQuality });
 
                 if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
                     if (abandonmentStateDict[type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality) {

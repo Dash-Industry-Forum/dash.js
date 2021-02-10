@@ -455,6 +455,13 @@
                 <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId">
                 <label class="options-label">Content ID:</label>
                 <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId">
+                <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="A static value to be used as RTP parameter">Requested maximum throughput (rtp):</label>
+                <input type="text" class="form-control" placeholder="rtp in kbps" ng-model="cmcdRtp">
+                <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor. If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.">RTP
+                    safety factor:</label>
+                <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor">
             </div>
         </div>
 
@@ -698,9 +705,9 @@
                 </div>
             </div>
         </div>
-        
+
     </div>
-    
+
     <!-- ERROR MODAL -->
     <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel"
          aria-hidden="true">
@@ -745,7 +752,9 @@
             <div id="conformance-violations">
                 <h4>Conformance Violations </h4>
                 <ul class="list-unstyled" ng-repeat="conformanceViolation in conformanceViolations">
-                    <li><span class="label label-{{conformanceViolation.level}}">{{conformanceViolation.level}}</span> : {{conformanceViolation.event.message}} </li>
+                    <li><span class="label label-{{conformanceViolation.level}}">{{conformanceViolation.level}}</span> :
+                        {{conformanceViolation.event.message}}
+                    </li>
                 </ul>
             </div>
         </div>

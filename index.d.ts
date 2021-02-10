@@ -117,7 +117,6 @@ declare namespace dashjs {
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
-            bufferAheadToKeep?: number;
             jumpGaps?: boolean;
             jumpLargeGaps?: boolean;
             smallGapLimit?: number;
@@ -169,6 +168,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyReductionFactor'?:  number;
             };
             retryAttempts?: {
                 'MPD'?:                       number;
@@ -178,6 +178,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyMultiplyFactor'?:  number;
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
@@ -216,7 +217,9 @@ declare namespace dashjs {
             cmcd?: {
                 enabled?: boolean,
                 sid?: string,
-                cid?: string
+                cid?: string,
+                rtp?: number,
+                rtpSafetyFactor?: number
             }
         }
     }

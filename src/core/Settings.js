@@ -36,14 +36,16 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
- * @see {@link module:Settings~PlayerSettings PlayerSettings} for further information about the supported configuration properties
+ * @see {@link module:Settings~PlayerSettings PlayerSettings} for further information about the supported configuration properties.
  */
 
 
 /**
  * @typedef {Object} PlayerSettings
- * @property {module:Settings~DebugSettings} [debug] Debug related settings
- * @property {module:Settings~StreamingSettings} [streaming] Streaming related settings
+ * @property {module:Settings~DebugSettings} [debug]
+ * Debug related settings.
+ * @property {module:Settings~StreamingSettings} [streaming]
+ * Streaming related settings.
  * @example
  *
  * // Full settings object
@@ -78,6 +80,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          useSuggestedPresentationDelay: true,
  *          useAppendWindow: true,
  *          manifestUpdateRetryInterval: 100,
+ *          stallThreshold: 0.5,
+ *          filterUnsupportedEssentialProperties: true,
  *          liveCatchup: {
  *              minDrift: 0.02,
  *              maxDrift: 0,
@@ -90,6 +94,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *          lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
  *          cacheLoadThresholds: { video: 50, audio: 5 },
+ *          trackSwitchMode: {
+ *              audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+ *              video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+ *          },
+ *          selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
  *          fragmentRequestTimeout: 0,
  *          retryIntervals: {
  *              MPD: 500,
@@ -116,7 +125,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
  *              bandwidthSafetyFactor: 0.9,
  *              useDefaultABRRules: true,
- *              useBufferOccupancyABR: false,
  *              useDeadTimeLatency: true,
  *              limitBitrateByPortal: false,
  *              usePixelRatioInLimitBitrateByPortal: false,
@@ -132,7 +140,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              enabled: false,
  *              sid: null,
  *              cid: null,
- *              did: null
+ *              rtp: null,
+ *              rtpSafetyFactor: 5
  *          }
  *      }
  * }
@@ -142,265 +151,386 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 /**
  * @typedef {Object} DebugSettings
  * @property {number} [logLevel=dashjs.Debug.LOG_LEVEL_WARNING]
- * Sets up the log level. The levels are cumulative. For example, if you set the log level
- * to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be logged. Possible values.
+ * Sets up the log level. The levels are cumulative.
  *
- * <ul>
- * <li>dashjs.Debug.LOG_LEVEL_NONE<br/>
+ * For example, if you set the log level to dashjs.Debug.LOG_LEVEL_WARNING all warnings, errors and fatals will be logged.
+ *
+ * Possible values.
+ *
+ * - dashjs.Debug.LOG_LEVEL_NONE
  * No message is written in the browser console.
  *
- * <li>dashjs.Debug.LOG_LEVEL_FATAL<br/>
- * Log fatal errors. An error is considered fatal when it causes playback to fail completely.
+ * - dashjs.Debug.LOG_LEVEL_FATAL
+ * Log fatal errors.
+ * An error is considered fatal when it causes playback to fail completely.
  *
- * <li>dashjs.Debug.LOG_LEVEL_ERROR<br/>
+ * - dashjs.Debug.LOG_LEVEL_ERROR
  * Log error messages.
  *
- * <li>dashjs.Debug.LOG_LEVEL_WARNING<br/>
+ * - dashjs.Debug.LOG_LEVEL_WARNING
  * Log warning messages.
  *
- * <li>dashjs.Debug.LOG_LEVEL_INFO<br/>
+ * - dashjs.Debug.LOG_LEVEL_INFO
  * Log info messages.
  *
- * <li>dashjs.Debug.LOG_LEVEL_DEBUG<br/>
+ * - dashjs.Debug.LOG_LEVEL_DEBUG
  * Log debug messages.
- * </ul>
  * @property {boolean} [dispatchEvent=false]
- * Enable to trigger a Events.LOG event whenever log output is generated. Note this will be dispatched regardless of log level
+ * Enable to trigger a Events.LOG event whenever log output is generated.
+ *
+ * Note this will be dispatched regardless of log level.
  */
 
 /**
  * @typedef {Object} AbrSettings
  * @property {string} [movingAverageMethod="slidingWindow"]
- * Sets the moving average method used for smoothing throughput estimates. Valid methods are
- * "slidingWindow" and "ewma". The call has no effect if an invalid method is passed.
+ * Sets the moving average method used for smoothing throughput estimates.
+ *
+ * Valid methods are "slidingWindow" and "ewma".
+ *
+ * The call has no effect if an invalid method is passed.
  *
  * The sliding window moving average method computes the average throughput using the last four segments downloaded.
+ *
  * If the stream is live (as opposed to VOD), then only the last three segments are used.
+ *
  * If wide variations in throughput are detected, the number of segments can be dynamically increased to avoid oscillations.
  *
  * The exponentially weighted moving average (EWMA) method computes the average using exponential smoothing.
+ *
  * Two separate estimates are maintained, a fast one with a three-second half life and a slow one with an eight-second half life.
+ *
  * The throughput estimate at any time is the minimum of the fast and slow estimates.
+ *
  * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
- * @property {string} [ABRStrategy="abrDynamic"] Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
+ * @property {string} [ABRStrategy="abrDynamic"]
+ * Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
  * @property {number} [bandwidthSafetyFactor=0.9]
- * Standard ABR throughput rules multiply the throughput by this value. It should be between 0 and 1,
- * with lower values giving less rebuffering (but also lower quality).
- * @property {boolean} [useDefaultABRRules=true] Should the default ABR rules be used, or the custom ones added.
+ * Standard ABR throughput rules multiply the throughput by this value.
+ *
+ * It should be between 0 and 1, with lower values giving less rebuffering (but also lower quality).
+ * @property {boolean} [useDefaultABRRules=true]
+ * Should the default ABR rules be used, or the custom ones added.
  * @property {boolean} [useDeadTimeLatency=true]
- * If true, only the download portion will be considered part of the download bitrate
- * and latency will be regarded as static. If false, the reciprocal of the whole
- * transfer time will be used.
- * @property {boolean} [limitBitrateByPortal=false] If true, the size of the video portal will limit the max chosen video resolution.
+ * If true, only the download portion will be considered part of the download bitrate and latency will be regarded as static.
+ *
+ * If false, the reciprocal of the whole transfer time will be used.
+ * @property {boolean} [limitBitrateByPortal=false]
+ * If true, the size of the video portal will limit the max chosen video resolution.
  * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+ *
  * Useful on, for example, retina displays.
- * @property {module:Settings~AudioVideoSettings} [maxBitrate={audio: -1, video: -1}] The maximum bitrate that the ABR algorithms will choose. Use NaN for no limit.
- * @property {module:Settings~AudioVideoSettings} [minBitrate={audio: -1, video: -1}] The minimum bitrate that the ABR algorithms will choose. Use NaN for no limit.
+ * @property {module:Settings~AudioVideoSettings} [maxBitrate={audio: -1, video: -1}]
+ * The maximum bitrate that the ABR algorithms will choose.
+ *
+ * Use NaN for no limit.
+ * @property {module:Settings~AudioVideoSettings} [minBitrate={audio: -1, video: -1}]
+ * The minimum bitrate that the ABR algorithms will choose.
+ *
+ * Use NaN for no limit.
  * @property {module:Settings~AudioVideoSettings} [maxRepresentationRatio={audio: 1, video: 1}]
- * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed,
- * as a proportion of the size of the representation set.
+ * When switching multi-bitrate content (auto or manual mode) this property specifies the maximum representation allowed, as a proportion of the size of the representation set.
  *
- * You can set or remove this cap at anytime before or during playback. To clear this setting you set the value to 1.
+ * You can set or remove this cap at anytime before or during playback.
  *
- * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation,
- * i.e. the lowest value from executing these rules is used.
+ * To clear this setting you set the value to 1.
+ *
+ * If both this and maxAllowedBitrate are defined, maxAllowedBitrate is evaluated first, then maxAllowedRepresentation, i.e. the lowest value from executing these rules is used.
  *
  * This feature is typically used to reserve higher representations for playback only when connected over a fast connection.
- * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}] Explicitly set the starting bitrate for audio or video
- * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}] Explicitly set the initial representation ratio. If initalBitrate is specified, this is ignored.
- * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}] Indicates whether the player should enable ABR algorithms to switch the bitrate.
+ * @property {module:Settings~AudioVideoSettings} [initialBitrate={audio: -1, video: -1}]
+ * Explicitly set the starting bitrate for audio or video.
+ * @property {module:Settings~AudioVideoSettings} [initialRepresentationRatio={audio: -1, video: -1}]
+ * Explicitly set the initial representation ratio.
  *
- * @property {boolean} [fetchThroughputCalculationMode=Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA]
- * Algorithm to determine the throughput in case the Fetch API is used for low latency streaming. For details please check the samples section and FetchLoader.js
+ * If initalBitrate is specified, this is ignored.
+ * @property {module:Settings~AudioVideoSettings} [autoSwitchBitrate={audio: true, video: true}]
+ * Indicates whether the player should enable ABR algorithms to switch the bitrate.
+ *
+ * @property {string} [fetchThroughputCalculationMode="abrFetchThroughputCalculationDownloadedData"]
+ * Algorithm to determine the throughput in case the Fetch API is used for low latency streaming.
+ *
+ * For details please check the samples section and FetchLoader.js.
  */
 
 /**
  * @typedef {Object} StreamingSettings
- * @property {number} [metricsMaxListDepth=1000] Maximum list depth of metrics.
+ * @property {number} [metricsMaxListDepth=1000]
+ * Maximum list depth of metrics.
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
+ *
  * This will only take effect after an abandoned fragment event occurs.
  * @property {number} [liveDelayFragmentCount=NaN]
- * Changing this value will lower or increase live stream latency.  The detected segment duration will be multiplied by this value
- * to define a time in seconds to delay a live stream from the live edge. Lowering this value will lower latency but may decrease
- * the player's ability to build a stable buffer.
+ * Changing this value will lower or increase live stream latency.
+ *
+ * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
  * @property {number} [liveDelay]
- * <p>Equivalent in seconds of setLiveDelayFragmentCount</p>
- * <p>Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.</p>
- * <p>This value should be less than the manifest duration by a couple of segment durations to avoid playback issues</p>
- * <p>If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info</p>
+ * Equivalent in seconds of setLiveDelayFragmentCount.
+ *
+ * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
+ *
+ * This value should be less than the manifest duration by a couple of segment durations to avoid playback issues.
+ *
+ * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
  * @property {boolean} [scheduleWhilePaused=true]
- * Set to true if you would like dash.js to keep downloading fragments in the background
- * when the video element is paused.
+ * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
  * @property {boolean} [fastSwitchEnabled=false]
- * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment
- * at the end of the current buffer range it is requested and appended closer to the current time
+ * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
+ *
  * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
  *
  * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
  * higher quality media for as long as possible.
  *
- * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather
- * just append at the end.  1. When the buffer level is less than one fragment duration 2.  The client
- * is in an Abandonment State due to recent fragment abandonment event.
+ * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather just append at the end.
+ * 1. When the buffer level is less than one fragment duration.
+ * 2. The client is in an Abandonment State due to recent fragment abandonment event.
  *
  * Known issues:
- * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the
- * fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter
- * or stall in playback.
+ * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter or stall in playback.
  * @property {boolean} [flushBufferAtTrackSwitch=false]
- * When enabled, after a track switch and in case buffer is being replaced (see MEdiaPlayer.setTrackSwitchModeFor(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE)),
- * the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
- * This can be required on some devices like GoogleCast devices to make track switching functional. Otherwise track switching will be effective only once after previous
- * buffered track is fully consumed.
- * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false] Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in <SegmentTimeline>
- * @property {boolean} [reuseExistingSourceBuffers=true] Enable reuse of existing MediaSource Sourcebuffers during period transition
- * @property {number} [bufferPruningInterval=10] The interval of pruning buffer in sconds.
+ * When enabled, after a track switch and in case buffer is being replaced (see MediaPlayer.setTrackSwitchModeFor(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE)), the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
+ *
+ * This can be required on some devices like GoogleCast devices to make track switching functional.
+ *
+ * Otherwise track switching will be effective only once after previous buffered track is fully consumed.
+ * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false]
+ * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
+ * @property {boolean} [reuseExistingSourceBuffers=true]
+ * Enable reuse of existing MediaSource Sourcebuffers during period transition.
+ * @property {number} [bufferPruningInterval=10]
+ * The interval of pruning buffer in seconds.
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
+ *
  * Allows you to modify the buffer that is kept in source buffer in seconds.
- *  0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
- * @property {boolean} [jumpGaps=true] Sets whether player should jump small gaps (discontinuities) in the buffer.
- * @property {boolean} [jumpLargeGaps=true] Sets whether player should jump large gaps (discontinuities) in the buffer.
- * @property {number} [smallGapLimit=1.8] Time in seconds for a gap to be considered small.
+ * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+ * @property {boolean} [jumpGaps=true]
+ * Sets whether player should jump small gaps (discontinuities) in the buffer.
+ * @property {boolean} [jumpLargeGaps=true]
+ * Sets whether player should jump large gaps (discontinuities) in the buffer.
+ * @property {number} [smallGapLimit=1.8]
+ * Time in seconds for a gap to be considered small.
  * @property {number} [stableBufferTime=12]
  * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
  *
- * When the time is set higher than the default you will have to wait longer
- * to see automatic bitrate switches but will have a larger buffer which
- * will increase stability.
+ * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
  * @property {number} [bufferTimeAtTopQuality=30]
  * The time that the internal buffer target will be set to once playing the top quality.
- * If there are multiple bitrates in your adaptation, and the media is playing at the highest
- * bitrate, then we try to build a larger buffer at the top quality to increase stability
- * and to maintain media quality.
- * @property {number} [bufferTimeAtTopQualityLongForm=60] The time that the internal buffer target will be set to once playing the top quality for long form content.
+ *
+ * If there are multiple bitrates in your adaptation, and the media is playing at the highest bitrate, then we try to build a larger buffer at the top quality to increase stability and to maintain media quality.
+ * @property {number} [bufferTimeAtTopQualityLongForm=60]
+ * The time that the internal buffer target will be set to once playing the top quality for long form content.
  * @property {number} [longFormContentDurationThreshold=600]
  * The threshold which defines if the media is considered long form content.
+ *
  * This will directly affect the buffer targets when playing back at the top quality.
- * @property {number} [wallclockTimeUpdateInterval=50] How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
- * @property {boolean} [lowLatencyEnabled=false] Enable or disable low latency mode
+ * @property {number} [wallclockTimeUpdateInterval=50]
+ * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
+ * @property {boolean} [lowLatencyEnabled=false]
+ * Enable or disable low latency mode.
  * @property {boolean} [keepProtectionMediaKeys=false]
- * Set the value for the ProtectionController and MediaKeys life cycle. If true, the
- * ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during
- * the MediaPlayer lifetime.
+ * Set the value for the ProtectionController and MediaKeys life cycle.
+ *
+ * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
- * <p>Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection. The
- * use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+ * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
+ *
+ * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {boolean} [useSuggestedPresentationDelay=true]
- * <p>Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.</p>
+ * Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {number} [manifestUpdateRetryInterval=100]
- * For live streams, set the interval-frequency in milliseconds at which
- * dash.js will check if the current manifest is still processed before
- * downloading the next manifest once the minimumUpdatePeriod time has
+ * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {number} [stallThreshold=0.5]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
- * Enable to filter all the AdaptationSets and Representations which contain an unsupported <EssentialProperty> element
- * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
- * Set to false if you would like to disable the last known bit rate from being stored during playback and used
- * to set the initial bit rate for subsequent playback within the expiration window.
- *
- * The default expiration is one hour, defined in milliseconds. If expired, the default initial bit rate (closest to 1000 kbps) will be used
- * for that session and a new bit rate will be stored during that session.
- * @property {module:Settings~CachingInfoSettings} [lastMediaSettingsCachingInfo={enabled: true, ttl: 360000}]
- * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used
- * to set the initial settings for subsequent playback within the expiration window.
- *
- * The default expiration is one hour, defined in milliseconds. If expired, the default settings will be used
- * for that session and a new settings will be stored during that session.
- * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
- * For a given media type, the threshold which defines if the response to a fragment
- * request is coming from browser cache or not.
- * @property {module:Settings~RequestTypeSettings} [fragmentRequestTimeout] Time in milliseconds before timing out on loading a media fragment. Fragments that timeout are retried as if they failed.
- * @property {module:Settings~RequestTypeSettings} [retryIntervals] Time in milliseconds of which to reload a failed file load attempt. For low latency mode these values are divided by lowLatencyReductionFactor.
- * @property {module:Settings~RequestTypeSettings} [retryAttempts] Total number of retry attempts that will occur on a file load before it fails. For low latency mode these values are multiplied by lowLatencyMultiplyFactor.
- * @property {module:Settings~AbrSettings} abr Adaptive Bitrate algorithm related settings.
- * @property {module:Settings~CmcdSettings} cmcd  Settings related to Common Media Client Data reporting.
+ * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
+ * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
+ * Set to false if you would like to disable the last known bit rate from being stored during playback and used to set the initial bit rate for subsequent playback within the expiration window.
+ *
+ * The default expiration is one hour, defined in milliseconds.
+ *
+ * If expired, the default initial bit rate (closest to 1000 kbps) will be used for that session and a new bit rate will be stored during that session.
+ * @property {module:Settings~CachingInfoSettings} [lastMediaSettingsCachingInfo={enabled: true, ttl: 360000}]
+ * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used to set the initial settings for subsequent playback within the expiration window.
+ *
+ * The default expiration is one hour, defined in milliseconds.
+ *
+ * If expired, the default settings will be used for that session and a new settings will be stored during that session.
+ * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
+ * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
+ * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
+ * For a given media type defines if existing segments in the buffer should be overwritten once the track is switched. For instance if the user switches the audio language the existing segments in the audio buffer will be replaced when setting this value to "alwaysReplace".
+ *
+ * Possible values
+ *
+ * - Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
+ * Replace existing segments in the buffer
+ *
+ * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+ * Do not replace existing segments in the buffer
+ *
+ * @property {string} [selectionModeForInitialTrack="highestBitrate"]
+ * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
+ *
+ * Possible values
+ *
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+ * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+ *
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
+ * This mode makes the player select the track with the lowest bitrate per pixel average.
+ *
+ * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
+ * This mode makes the player select the track with a widest range of bitrates.
+ *
+ *
+ * @property {number} [fragmentRequestTimeout=0]
+ * Time in milliseconds before timing out on loading a media fragment.
+ *
+ * Fragments that timeout are retried as if they failed.
+ * @property {module:Settings~RequestTypeSettings} [retryIntervals]
+ * Time in milliseconds of which to reload a failed file load attempt.
+ *
+ * For low latency mode these values are divided by lowLatencyReductionFactor.
+ * @property {module:Settings~RequestTypeSettings} [retryAttempts]
+ * Total number of retry attempts that will occur on a file load before it fails.
+ *
+ * For low latency mode these values are multiplied by lowLatencyMultiplyFactor.
+ * @property {module:Settings~AbrSettings} abr
+ * Adaptive Bitrate algorithm related settings.
+ * @property {module:Settings~CmcdSettings} cmcd
+ * Settings related to Common Media Client Data reporting.
  */
 
 /**
  * @typedef {Object} CachingInfoSettings
- * @property {boolean} [enable] Enable or disable the caching feature.
- * @property {number} [ttl] Time to live. A value defined in milliseconds representing how log to cache the settings for.
+ * @property {boolean} [enable]
+ * Enable or disable the caching feature.
+ * @property {number} [ttl]
+ * Time to live.
+ *
+ * A value defined in milliseconds representing how log to cache the settings for.
  */
 
 /**
  * @typedef {Object} module:Settings~AudioVideoSettings
- * @property {number|boolean} [audio] Configuration for audio media type of tracks.
- * @property {number|boolean} [video] Configuration for video media type of tracks.
+ * @property {number|boolean|string} [audio]
+ * Configuration for audio media type of tracks.
+ * @property {number|boolean|string} [video]
+ * Configuration for video media type of tracks.
  */
 
 /**
  * @typedef {Object} RequestTypeSettings
- * @property {number} [MPD] Manifest type of requests
- * @property {number} [XLinkExpansion] XLink expansion type of requests
- * @property {number} [InitializationSegment] Request to retrieve an initialization segment
- * @property {number} [IndexSegment] Request to retrieve an index segment (SegmentBase)
- * @property {number} [MediaSegment] Request to retrieve a media segment (video/audio/image/text chunk)
- * @property {number} [BitstreamSwitchingSegment] Bitrate stream switching type of request
- * @property {number} [other] Other type of request
+ * @property {number} [MPD]
+ * Manifest type of requests.
+ * @property {number} [XLinkExpansion]
+ * XLink expansion type of requests.
+ * @property {number} [InitializationSegment]
+ * Request to retrieve an initialization segment.
+ * @property {number} [IndexSegment]
+ * Request to retrieve an index segment (SegmentBase).
+ * @property {number} [MediaSegment]
+ * Request to retrieve a media segment (video/audio/image/text chunk).
+ * @property {number} [BitstreamSwitchingSegment]
+ * Bitrate stream switching type of request.
+ * @property {number} [other]
+ * Other type of request.
+ * @property {number} [lowLatencyReductionFactor]
+ * For low latency mode, values of type of request are divided by lowLatencyReductionFactor.
  *
+ * Note: It's not type of request.
+ * @property {number} [lowLatencyMultiplyFactor]
+ * For low latency mode, values of type of request are multiplied by lowLatencyMultiplyFactor.
+ *
+ * Note: It's not type of request.
  */
 
 /**
  * @typedef {Object} module:Settings~CmcdSettings
- * @property {boolean} [enable=false] Enable or disable the CMCD reporting.
- * @property {string} [sid] GUID identifying the current playback session. Should be in UUID format. If not specified a UUID will be automatically generated.
- * @property {string} [cid] A unique string to identify the current content. If not specified it will be a hash of the MPD url.
- * @property {string} [did=dash.js-cmcd-default-id] A unique string identifying the current device.
+ * @property {boolean} [enable=false]
+ * Enable or disable the CMCD reporting.
+ * @property {string} [sid]
+ * GUID identifying the current playback session.
+ *
+ * Should be in UUID format.
+ *
+ * If not specified a UUID will be automatically generated.
+ * @property {string} [cid]
+ * A unique string to identify the current content.
+ *
+ * If not specified it will be a hash of the MPD url.
+ * @property {number} [rtp]
+ * The requested maximum throughput that the client considers sufficient for delivery of the asset.
+ *
+ * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
+ * @property {number} [rtpSafetyFactor]
+ * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
+ *
+ * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
  */
 
 /**
  * @typedef {Object} module:Settings~LiveCatchupSettings
- @property {number} [minDrift=0.02]
- * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism. In low latency mode,
- * when the difference between the measured latency and the target one,
- * as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases
- * playback rate until target latency is reached.
+ * @property {number} [minDrift=0.02]
+ * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism.
+ *
+ * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases playback rate until target latency is reached.
  *
  * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [maxDrift=0]
- * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position. In low latency mode,
- * when the difference between the measured latency and the target one,
- * as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus
- * the target live delay.
+ * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
- * LowLatencyMaxDriftBeforeSeeking should be provided in seconds. If 0, then seeking operations won't be used for
- * fixing latency deviations.
+ * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
+ *
+ * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
+ *
+ * If 0, then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate=0.5]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams. In low latency mode,
- * when measured latency is higher/lower than the target one,
- * dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+ * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
  *
- * Valid values for catch up rate are in range 0-0.5 (0-50%). Set it to 0 to turn off live catch up feature.
+ * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+ *
+ * Valid values for catch up rate are in range 0-0.5 (0-50%).
+ *
+ * Set it to 0 to turn off live catch up feature.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [latencyThreshold=NaN]
- * Use this parameter to set the maximum threshold for which live catch up is applied. For instance, if this value is set to 8 seconds,
- * then live catchup is only applied if the current live latency is equal or below 8 seconds. The reason behind this parameter is to avoid an increase
- * of the playback rate if the user seeks within the DVR window.
+ * Use this parameter to set the maximum threshold for which live catch up is applied.
  *
- * If no value is specified this will be twice the maximum live delay. The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
- * maximumLiveDelay = targetDelay + liveCatchupMinDrift
+ * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
+ *
+ * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified this will be twice the maximum live delay.
+ *
+ * The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
+ * maximumLiveDelay = targetDelay + liveCatchupMinDrift.
  *
  * @property {number} [playbackBufferMin=NaN]
- * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction
+ * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  *
  * @property {boolean} [enabled=false]
- * Use this parameter to enable the catchup mode for non low-latency streams
+ * Use this parameter to enable the catchup mode for non low-latency streams.
  *
- * @property {String} [mode=Constants.LIVE_CATCHUP_MODE_DEFAULT]
- * Use this parameter to switch between different catchup modes. Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP"
+ * @property {string} [mode="liveCatchupModeDefault"]
+ * Use this parameter to switch between different catchup modes.
+ *
+ * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -515,7 +645,9 @@ function Settings() {
             cmcd: {
                 enabled: false,
                 sid: null,
-                cid: null
+                cid: null,
+                rtp: null,
+                rtpSafetyFactor: 5
             }
         }
     };

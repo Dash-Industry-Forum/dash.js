@@ -695,6 +695,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
+        config.streaming.cmcd.rtp = $scope.cmcdRtp ? $scope.cmcdRtp : null;
+        config.streaming.cmcd.rtpSafetyFactor = $scope.cmcdRtpSafetyFactor ? $scope.cmcdRtpSafetyFactor : null;
 
         $scope.player.updateSettings(config);
 

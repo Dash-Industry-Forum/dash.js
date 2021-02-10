@@ -34,6 +34,7 @@ import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
+import Constants from '../../streaming/constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import DashManifestModel from '../../dash/models/DashManifestModel';
 import Utils from '../../core/Utils';
@@ -58,6 +59,7 @@ const STREAM_TYPES = {
     VOD: 'v',
     LIVE: 'l'
 };
+const RTP_SAFETY_FACTOR = 5;
 
 function CmcdModel() {
 
@@ -68,6 +70,7 @@ function CmcdModel() {
         abrController,
         dashMetrics,
         playbackController,
+        streamProcessors,
         _isStartup,
         _bufferLevelStarved,
         _initialMediaRequestsDone;
@@ -88,6 +91,7 @@ function CmcdModel() {
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
     }
 
     function setConfig(config) {
@@ -118,6 +122,21 @@ function CmcdModel() {
         _bufferLevelStarved = {};
         _isStartup = {};
         _initialMediaRequestsDone = {};
+        _updateStreamProcessors();
+    }
+
+    function _onPeriodSwitchComplete() {
+        _updateStreamProcessors();
+    }
+
+    function _updateStreamProcessors() {
+        if (!playbackController) return;
+        const streamController = playbackController.getStreamController();
+        if (!streamController) return;
+        if (typeof streamController.getActiveStream !== 'function') return;
+        const activeStream = streamController.getActiveStream();
+        if (!activeStream) return;
+        streamProcessors = activeStream.getProcessors();
     }
 
     function getQueryParameter(request) {
@@ -157,12 +176,22 @@ function CmcdModel() {
                 return _getCmcdDataForInitSegment(request);
             } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
                 return _getCmcdDataForOther(request);
+            } else if (request.type === HTTPRequest.LICENSE) {
+                return _getCmcdDataForLicense(request);
             }
 
             return cmcdData;
         } catch (e) {
             return null;
         }
+    }
+
+    function _getCmcdDataForLicense(request) {
+        const data = _getGenericCmcdData(request);
+
+        data.ot = OBJECT_TYPES.ENCRYPTION_KEY;
+
+        return data;
     }
 
     function _getCmcdDataForMpd() {
@@ -177,12 +206,39 @@ function CmcdModel() {
         const data = _getGenericCmcdData();
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
-        const ot = request.mediaType === 'video' ? `${OBJECT_TYPES.VIDEO}` : request.mediaType === 'audio' ? `${OBJECT_TYPES.AUDIO}` : request.mediaType === 'fragmentedText' ? `${OBJECT_TYPES.CAPTION}` : null;
         const mtp = _getMeasuredThroughputByType(request.mediaType);
         const dl = _getDeadlineByType(request.mediaType);
         const bl = _getBufferLevelByType(request.mediaType);
         const tb = _getTopBitrateByType(request.mediaType);
         const pr = internalData.pr;
+
+        const nextRequest = _probeNextRequest(request.mediaType);
+
+        let ot;
+        if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
+        if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
+        if (request.mediaType === Constants.FRAGMENTED_TEXT) {
+            if (request.mediaInfo.mimeType === 'application/mp4') {
+                ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
+            } else {
+                ot = OBJECT_TYPES.CAPTION;
+            }
+        }
+
+        let rtp = settings.get().streaming.cmcd.rtp;
+        if (!rtp) {
+            rtp = _calculateRtp(request);
+        }
+        data.rtp = rtp;
+
+        if (nextRequest) {
+            if (request.url !== nextRequest.url) {
+                let url = new URL(nextRequest.url);
+                data.nor = url.pathname;
+            } else if (nextRequest.range) {
+                data.nrr = nextRequest.range;
+            }
+        }
 
         if (encodedBitrate) {
             data.br = encodedBitrate;
@@ -414,7 +470,7 @@ function CmcdModel() {
             if (!cmcdData) {
                 return null;
             }
-            const keys = Object.keys(cmcdData).sort((a, b) =>a.localeCompare(b));
+            const keys = Object.keys(cmcdData).sort((a, b) => a.localeCompare(b));
             const length = keys.length;
 
             let cmcdString = keys.reduce((acc, key, index) => {
@@ -438,6 +494,36 @@ function CmcdModel() {
         } catch (e) {
             return null;
         }
+    }
+
+    function _probeNextRequest(mediaType) {
+        if (!streamProcessors || streamProcessors.length === 0) return;
+        for (let streamProcessor of streamProcessors) {
+            if (streamProcessor.getType() === mediaType) {
+                return streamProcessor.probeNextRequest();
+            }
+        }
+    }
+
+    function _calculateRtp(request) {
+        // Get the values we need
+        let playbackRate = playbackController.getPlaybackRate();
+        if (!playbackRate) playbackRate = 1;
+        let { quality, mediaType, mediaInfo, duration } = request;
+        let currentBufferLevel = _getBufferLevelByType(mediaType);
+        if (currentBufferLevel === 0) currentBufferLevel = 500;
+        let bitrate = mediaInfo.bitrateList[quality].bandwidth;
+
+        // Calculate RTP
+        let segmentSize = bitrate * duration / 1000; // Calculate file size in kilobits
+        let timeToLoad = currentBufferLevel * playbackRate / 1000; // Calculate time available to load file in seconds
+        let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
+        let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+        let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
+
+        let rtp = (parseInt(maxBandwidth / 100) + 1) * 100; // Round to the next multiple of 100
+
+        return rtp;
     }
 
     function reset() {
