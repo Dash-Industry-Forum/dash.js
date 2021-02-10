@@ -35,9 +35,9 @@ describe('CapabilitiesFilter', function () {
 
             it('should not filter AdaptationSets and Representations', function () {
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
@@ -56,16 +56,16 @@ describe('CapabilitiesFilter', function () {
                 prepareAdapterMock(periodAsArray);
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(1);
-                expect(periodAsArray.AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(2);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet[0].Representation).to.have.lengthOf(2);
 
             });
 
             it('should filter AdaptationSets', function () {
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
@@ -89,14 +89,14 @@ describe('CapabilitiesFilter', function () {
                 });
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(0);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(0);
             });
 
             it('should filter Representations', function () {
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.1',
@@ -120,8 +120,8 @@ describe('CapabilitiesFilter', function () {
                 });
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(1);
-                expect(periodAsArray.AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet[0].Representation).to.have.lengthOf(1);
 
             });
         });
@@ -135,14 +135,14 @@ describe('CapabilitiesFilter', function () {
             it('should not filter AdaptationSets and Representations if filterUnsupportedEssentialProperties is disabled', function () {
                 settings.update({ streaming: { filterUnsupportedEssentialProperties: false } });
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -151,7 +151,7 @@ describe('CapabilitiesFilter', function () {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -169,20 +169,20 @@ describe('CapabilitiesFilter', function () {
                 });
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(1);
-                expect(periodAsArray.AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(2);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet[0].Representation).to.have.lengthOf(2);
             });
 
             it('should not filter AdaptationSets and Representations if EssentialProperties value is supported', function () {
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -191,7 +191,7 @@ describe('CapabilitiesFilter', function () {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -209,20 +209,20 @@ describe('CapabilitiesFilter', function () {
                 });
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(1);
-                expect(periodAsArray.AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(2);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet[0].Representation).to.have.lengthOf(2);
             });
 
             it('should filter AdaptationSets if EssentialProperty value is not supported', function () {
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -231,7 +231,7 @@ describe('CapabilitiesFilter', function () {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -249,19 +249,19 @@ describe('CapabilitiesFilter', function () {
                 });
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(0);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(0);
             });
 
             it('should filter a single Representation if EssentialProperty value is not supported', function () {
                 const periodAsArray = {
-                    AdaptationSet_asArray: [{
+                    AdaptationSet: [{
                         mimeType: 'audio/mp4',
-                        Representation_asArray: [
+                        Representation: [
                             {
                                 mimeType: 'audio/mp4',
                                 codecs: 'mp4a.40.2',
                                 audioSamplingRate: '48000',
-                                EssentialProperty_asArray: [{
+                                EssentialProperty: [{
                                     schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                     value: 'somevalue'
                                 }]
@@ -284,8 +284,8 @@ describe('CapabilitiesFilter', function () {
                 });
                 capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(1);
-                expect(periodAsArray.AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet[0].Representation).to.have.lengthOf(1);
             });
         });
 

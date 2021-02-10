@@ -869,7 +869,7 @@ function DashAdapter() {
                 }
 
                 // determine the relative insert position prior to possible removal
-                let relativePosition = (target[name + '_asArray'] || []).indexOf(leaf);
+                let relativePosition = (target[name] || []).indexOf(leaf);
                 let insertBefore = (operation.position === 'prepend' || operation.position === 'before');
 
                 // perform removal operation first, we have already capture the appropriate relative position
@@ -881,16 +881,13 @@ function DashAdapter() {
 
                     // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
                     if (relativePosition != -1) {
-                        let targetArray = target[name + '_asArray'];
+                        let targetArray = target[name];
                         targetArray.splice(relativePosition, 1);
-                        if (targetArray.length > 1) {
+                        if (targetArray.length > 0) {
                             target[name] = targetArray;
-                        } else if (targetArray.length == 1) {
-                            // xml parsing semantics, singular asArray must be non-array in the unsuffixed key
-                            target[name] = targetArray[0];
                         } else {
                             // all nodes of this type deleted, remove entry
-                            delete target[name + '_asArray'];
+                            delete target[name];
                         }
                     }
                 }
@@ -904,7 +901,7 @@ function DashAdapter() {
                     Object.keys(operation.value).forEach((insert) => {
                         let insertNodes = operation.value[insert];
 
-                        let updatedNodes = target[insert + '_asArray'] || [];
+                        let updatedNodes = target[insert] || [];
                         if (updatedNodes.length === 0 && target[insert]) {
                             updatedNodes.push(target[insert]);
                         }
@@ -930,8 +927,7 @@ function DashAdapter() {
                         }
 
                         // now we properly reset the element keys on the target to match parsing semantics
-                        target[insert + '_asArray'] = updatedNodes;
-                        target[insert] = updatedNodes.length == 1 ? updatedNodes[0] : updatedNodes;
+                        target[insert] = updatedNodes;
                     });
                 }
             });

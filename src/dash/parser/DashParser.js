@@ -125,13 +125,23 @@ function DashParser(config) {
     }
 
 
-    function parseXml(data, tagName) {
+    function parseXml(data) {
         try {
             let root = tXml(data, { parseNode: true }, matchers, arrayNodes);
-            if (tagName && root.tagName !== tagName) {
-                root = root[tagName];
+            let ret = {};
+            // If root element is xml node, then get first child node as root
+            if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
+                for (let key in root) {
+                    if (Array.isArray(root[key])) {
+                        ret[key] = root[key][0];
+                        break;
+                    }
+                }
+            } else {
+                ret[root.tagName] = root;
+                delete root.tagName;
             }
-            return root;
+            return ret;
         } catch (e) {
             return null;
         }

@@ -529,7 +529,7 @@ describe('DashManifestModel', function () {
             };
             const manifest = {
                 [DashConstants.PATCH_LOCATION]: patchLocation,
-                PatchLocation_asArray: [patchLocation]
+                PatchLocation: [patchLocation]
             };
 
             const location = dashManifestModel.getPatchLocation(manifest);

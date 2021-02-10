@@ -106,7 +106,7 @@ class SimpleXPath {
 
             // stop one early if this is the last element and an attribute
             if (level !== this.path.length - 1 || !name.startsWith('@')) {
-                let children = parent[name + '_asArray'] || [];
+                let children = parent[name] || [];
                 if (children.length === 0 && parent[name]) {
                     children.push(parent[name]);
                 }

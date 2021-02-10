@@ -209,7 +209,7 @@ function DashManifestModel() {
     }
 
     function getRealPeriods(manifest) {
-        return manifest && manifest.Period_asArray ? manifest.Period_asArray : [];
+        return manifest && manifest.Period ? manifest.Period : [];
     }
 
     function getRealPeriodForIndex(index, manifest) {
@@ -1055,7 +1055,7 @@ function DashManifestModel() {
     function getPatchLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
             // only include support for single patch location currently
-            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
+            manifest.PatchLocation = manifest.PatchLocation[0];
 
             return manifest.PatchLocation;
         }

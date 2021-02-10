@@ -68,7 +68,7 @@ const manifest_without_supplemental_properties = {
 };
 
 
-describe('DashAdapter', function () {
+describe.only('DashAdapter', function () {
     describe('SetConfig not previously called', function () {
 
         it('should throw an exception when attempting to call getStreamsInfo While the setConfig function was not called, and externalManifest parameter is defined', function () {
@@ -526,8 +526,7 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 1);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElementTTL,
-                    PatchLocation_asArray: [patchLocationElementTTL]
+                    PatchLocation: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -540,8 +539,7 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 10);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElementTTL,
-                    PatchLocation_asArray: [patchLocationElementTTL]
+                    PatchLocation: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -554,8 +552,7 @@ describe('DashAdapter', function () {
                 publishTime.setMinutes(publishTime.getMinutes() - 120);
                 const manifest = {
                     [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
-                    PatchLocation: patchLocationElementEvergreen,
-                    PatchLocation_asArray: [patchLocationElementEvergreen]
+                    PatchLocation: [patchLocationElementEvergreen]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -573,8 +570,7 @@ describe('DashAdapter', function () {
 
             it('should not provide patch location if present in manifest without publish time', function () {
                 const manifest = {
-                    PatchLocation: patchLocationElementTTL,
-                    PatchLocation_asArray: [patchLocationElementTTL]
+                    PatchLocation: [patchLocationElementTTL]
                 };
 
                 let patchLocation = dashAdapter.getPatchLocation(manifest);
@@ -800,8 +796,7 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.equal(addedPeriod);
-                expect(manifest.Period_asArray).to.deep.equal([addedPeriod]);
+                expect(manifest.Period).to.deep.equal([addedPeriod]);
             });
 
             it('applies add operation to structure with single sibling', function () {
@@ -809,7 +804,7 @@ describe('DashAdapter', function () {
                 let addedPeriod = {id: 'bar'};
                 // special case x2js object which omits the _asArray variant
                 let manifest = {
-                    Period: originalPeriod
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -822,15 +817,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriod, addedPeriod]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add implicit append operation with siblings', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
                 let addedPeriod = {id: 'baz'};
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -843,15 +836,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add prepend operation with siblings', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
                 let addedPeriod = {id: 'baz'};
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -865,15 +856,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([addedPeriod, originalPeriods[0], originalPeriods[1]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add before operation with siblings', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
                 let addedPeriod = {id: 'qux'};
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -887,15 +876,13 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], addedPeriod, originalPeriods[1], originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add after operation with siblings', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
                 let addedPeriod = {id: 'qux'};
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -909,14 +896,12 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod, originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies add attribute operation', function () {
                 let originalPeriod = {};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -933,8 +918,7 @@ describe('DashAdapter', function () {
             it('applies add attribute operation on existing attribute, should act as replace', function () {
                 let originalPeriod = {id: 'foo'};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'add',
@@ -952,49 +936,44 @@ describe('DashAdapter', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
                 let replacementPeriod = {id: 'qux'};
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
                     selector: '/MPD/Period[2]',
                     children: [{
-                        Period: replacementPeriod
+                        Period: [replacementPeriod]
                     }]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], replacementPeriod, originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies replace operation without siblings', function () {
                 let originalPeriod = {id: 'foo'};
                 let replacementPeriod = {id: 'bar'};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
                     selector: '/MPD/Period[1]',
                     children: [{
-                        Period: replacementPeriod
+                        Period: [replacementPeriod]
                     }]
                 }]);
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.deep.equal(replacementPeriod);
-                expect(manifest.Period_asArray).to.deep.equal([replacementPeriod]);
+                expect(manifest.Period).to.deep.equal([replacementPeriod]);
             });
 
             it('applies replace operation to attribute', function () {
                 let originalPeriod = {id: 'foo'};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'replace',
@@ -1010,8 +989,7 @@ describe('DashAdapter', function () {
             it('applies remove operation leaving multiple siblings', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1021,14 +999,12 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[2]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('applies remove operation leaving one sibling', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1037,15 +1013,13 @@ describe('DashAdapter', function () {
 
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
-                expect(manifest.Period).to.equal(originalPeriods[0]);
-                expect(manifest.Period_asArray).to.deep.equal([originalPeriods[0]]);
+                expect(manifest.Period).to.deep.equal([originalPeriods[0]]);
             });
 
             it('applies remove operation leaving no siblings', function () {
                 let originalPeriod = {id: 'foo'};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1055,14 +1029,12 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest).to.not.have.property('Period');
-                expect(manifest).to.not.have.property('Period_asArray');
             });
 
             it('applies remove attribute operation', function () {
                 let originalPeriod = {id: 'foo', start: 'bar'};
                 let manifest = {
-                    Period: originalPeriod,
-                    Period_asArray: [originalPeriod]
+                    Period: [originalPeriod]
                 };
                 let patch = patchHelper.generatePatch('foobar', [{
                     action: 'remove',
@@ -1072,16 +1044,14 @@ describe('DashAdapter', function () {
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(originalPeriod).to.not.have.property('start');
-                expect(manifest.Period).to.deep.equal(originalPeriod);
-                expect(manifest.Period_asArray).to.deep.equal([originalPeriod]);
+                expect(manifest.Period).to.deep.equal([originalPeriod]);
             });
 
             it('applies multiple operations respecting order', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
                 let newPeriod = {id: 'baz'};
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [
                     {
@@ -1117,14 +1087,12 @@ describe('DashAdapter', function () {
 
                 // check insertion and ordering based on application
                 expect(manifest.Period).to.deep.equal([newPeriod, originalPeriods[1]]);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
 
             it('invalid operations are ignored', function () {
                 let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
                 let manifest = {
-                    Period: originalPeriods.slice(),
-                    Period_asArray: originalPeriods.slice()
+                    Period: originalPeriods.slice()
                 };
                 let patch = patchHelper.generatePatch('foobar', [
                     {
@@ -1154,7 +1122,6 @@ describe('DashAdapter', function () {
 
                 // check ordering proper
                 expect(manifest.Period).to.deep.equal(originalPeriods);
-                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
         });
     });

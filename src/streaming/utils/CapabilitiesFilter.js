@@ -47,17 +47,17 @@ function CapabilitiesFilter() {
     function _filterUnsupportedCodecs(type, streamInfo) {
         const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
 
-        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
+        if (!realPeriod || !realPeriod.AdaptationSet || realPeriod.AdaptationSet.length === 0) {
             return;
         }
 
-        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
+        realPeriod.AdaptationSet = realPeriod.AdaptationSet.filter((as) => {
 
-            if (!as.Representation_asArray || as.Representation_asArray.length === 0 || !adapter.getIsTypeOf(as, type)) {
+            if (!as.Representation || as.Representation.length === 0 || !adapter.getIsTypeOf(as, type)) {
                 return true;
             }
 
-            as.Representation_asArray = as.Representation_asArray.filter((_, i) => {
+            as.Representation = as.Representation.filter((_, i) => {
                 const codec = adapter.getCodec(as, i, true);
                 if (!capabilities.supportsCodec(codec)) {
                     logger.error('[Stream] codec not supported: ' + codec);
@@ -66,7 +66,7 @@ function CapabilitiesFilter() {
                 return true;
             });
 
-            return as.Representation_asArray && as.Representation_asArray.length > 0;
+            return as.Representation && as.Representation.length > 0;
         });
 
     }
@@ -74,17 +74,17 @@ function CapabilitiesFilter() {
     function _filterUnsupportedEssentialProperties(streamInfo) {
         const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
 
-        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
+        if (!realPeriod || !realPeriod.AdaptationSet || realPeriod.AdaptationSet.length === 0) {
             return;
         }
 
-        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
+        realPeriod.AdaptationSet = realPeriod.AdaptationSet.filter((as) => {
 
-            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+            if (!as.Representation || as.Representation.length === 0) {
                 return true;
             }
 
-            as.Representation_asArray = as.Representation_asArray.filter((rep) => {
+            as.Representation = as.Representation.filter((rep) => {
                 const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
 
                 if (essentialProperties && essentialProperties.length > 0) {
@@ -101,7 +101,7 @@ function CapabilitiesFilter() {
                 return true;
             });
 
-            return as.Representation_asArray && as.Representation_asArray.length > 0;
+            return as.Representation && as.Representation.length > 0;
         });
 
     }

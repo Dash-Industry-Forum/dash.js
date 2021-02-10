@@ -136,8 +136,7 @@ function XlinkController(config) {
                 index = element.resolvedContent.indexOf('?>') + 2; //find the closing position of the xml declaration, if it exists.
             }
             mergedContent = element.resolvedContent.substr(0,index) + openingTag + element.resolvedContent.substr(index) + closingTag;
-            // element.resolvedContent = converter.xml_str2json(mergedContent);
-            element.resolvedContent = parser.parseXml(mergedContent);
+            element.resolvedContent = parser.parseXml(mergedContent).response;
         }
         if (isResolvingFinished(resolveObject)) {
             onXlinkAllElementsLoaded(resolveObject);
