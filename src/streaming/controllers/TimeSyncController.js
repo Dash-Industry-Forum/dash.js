@@ -167,6 +167,11 @@ function TimeSyncController() {
         _attemptBackgroundSync(backgroundAttempts);
     }
 
+    /**
+     * Perform a defined number of background attempts
+     * @param {number} attempts
+     * @private
+     */
     function _attemptBackgroundSync(attempts) {
         try {
             if (attempts <= 0) {

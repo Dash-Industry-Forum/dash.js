@@ -618,7 +618,7 @@ function Settings() {
             filterUnsupportedEssentialProperties: true,
             utcSynchronization: {
                 backgroundAttempts: 2,
-                timeBetweenSyncAttempts: 60,
+                timeBetweenSyncAttempts: 2,
                 maximumTimeBetweenSyncAttempts: 600,
                 minimumTimeBetweenSyncAttempts: 2,
                 timeBetweenSyncAttemptsAdjustmentFactor: 2,
