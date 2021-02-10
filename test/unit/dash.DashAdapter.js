@@ -942,10 +942,11 @@ describe.only('DashAdapter', function () {
                     action: 'replace',
                     selector: '/MPD/Period[2]',
                     children: [{
-                        Period: [replacementPeriod]
+                        Period: replacementPeriod
                     }]
                 }]);
 
+                console.log('applies replace operation with siblings');
                 dashAdapter.applyPatchToManifest(manifest, patch);
 
                 expect(manifest.Period).to.deep.equal([originalPeriods[0], replacementPeriod, originalPeriods[2]]);
@@ -961,7 +962,7 @@ describe.only('DashAdapter', function () {
                     action: 'replace',
                     selector: '/MPD/Period[1]',
                     children: [{
-                        Period: [replacementPeriod]
+                        Period: replacementPeriod
                     }]
                 }]);
 
