@@ -451,9 +451,12 @@ function Settings() {
             stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
             utcSynchronization: {
-                backgroundAttempts: 2,
-                timeBetweenSyncAttempts: 300,
-                driftFactor: 0.2
+                backgroundAttempts: 4,
+                timeBetweenSyncAttempts: 2,
+                maximumTimeBetweenSyncAttempts: 600,
+                minimumTimeBetweenSyncAttempts: 2,
+                timeBetweenSyncAttemptsAdjustmentFactor: 2,
+                maximumAllowedDrift: 50
             },
             liveCatchup: {
                 minDrift: 0.02,

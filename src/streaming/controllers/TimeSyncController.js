@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import DashJSError from './../vo/DashJSError';
-import {HTTPRequest} from './../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import EventBus from './../../core/EventBus';
 import Events from './../../core/events/Events';
 import Errors from './../../core/errors/Errors';
@@ -38,8 +38,12 @@ import Debug from '../../core/Debug';
 import URLUtils from '../utils/URLUtils';
 
 const HTTP_TIMEOUT_MS = 5000;
-const DEFAULT_DRIFT_FACTOR = 0.2;
-const TIME_BETWEEN_SYNC_ADJUSTMENT_FACTOR = 2;
+const DEFAULT_MAXIMUM_ALLOWED_DRIFT = 100;
+const DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS_ADJUSTMENT_FACTOR = 2;
+const DEFAULT_BACKGROUND_ATTEMPTS = 3;
+const DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS = 30;
+const DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC = 60;
+const DEFAULT_MINIMUM_TIME_BETWEEN_SYNC = 4;
 
 function TimeSyncController() {
 
@@ -50,17 +54,21 @@ function TimeSyncController() {
     let instance,
         logger,
         isSynchronizing,
+        isBackgroundSynchronizing,
         settings,
         handlers,
         dashMetrics,
-        timeOffsets,
+        backgroundSyncTimeOffsets,
         timingSources,
         timeOfLastSync,
         lastOffset,
+        lastTimingSource,
         baseURLController;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+
+        eventBus.on(Events.ATTEMPT_BACKGROUND_SYNC, _onAttemptBackgroundSync, instance);
     }
 
     function setConfig(config) {
@@ -80,11 +88,13 @@ function TimeSyncController() {
     }
 
     function _resetInitialSettings() {
-        timeOffsets = [];
+        backgroundSyncTimeOffsets = [];
         timingSources = [];
         timeOfLastSync = null;
+        lastTimingSource = null;
         lastOffset = NaN;
-        _setIsSynchronizing(false);
+        isSynchronizing = false;
+        isBackgroundSynchronizing = false;
     }
 
     /**
@@ -121,36 +131,73 @@ function TimeSyncController() {
     }
 
     /**
-     * Sync against a timing source. This method is called recursively if the time sync for the first entry in timingSources fails.
-     * @param {array} timingSources
-     * @param {number} sourceIndex
+     * Sync against a timing source. T
+     * @param {array} tSources
      */
     function attemptSync(tSources) {
 
         timingSources = tSources;
 
         // Stop if we are already synchronizing
-        if (_getIsSynchronizing()) {
+        if (isSynchronizing) {
             return;
         }
 
         // No synchronization required we can signal the completion immediately
         if (!_shouldPerformSynchronization()) {
             eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+            return;
         }
 
+        isSynchronizing = true;
         _attemptRecursiveSync();
     }
 
     /**
      * Does a synchronization in the background in case the last offset should be verified or a 404 occurs
      */
-    function attemptBackgroundSync() {
-        if (!timingSources || timingSources.length === 0) {
+    function _onAttemptBackgroundSync() {
+        if (isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
             return;
+        }
+
+        backgroundSyncTimeOffsets = [];
+        isBackgroundSynchronizing = true;
+        const backgroundAttempts = !isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts) ? settings.get().streaming.utcSynchronization.backgroundAttempts : DEFAULT_BACKGROUND_ATTEMPTS;
+        _attemptBackgroundSync(backgroundAttempts);
+    }
+
+    function _attemptBackgroundSync(attempts) {
+        try {
+            if (attempts <= 0) {
+                _completeBackgroundTimeSyncSequence();
+                return;
+            }
+
+            const deviceTimeBeforeSync = Date.now();
+            handlers[lastTimingSource.schemeIdUri](
+                lastTimingSource.value,
+                function (serverTime) {
+                    // the timing source returned something useful
+                    const deviceTimeAfterSync = Date.now();
+                    const offset = _calculateOffset(deviceTimeBeforeSync, deviceTimeAfterSync, serverTime);
+
+                    backgroundSyncTimeOffsets.push(offset);
+                    _attemptBackgroundSync(attempts - 1);
+                },
+                function () {
+                    _completeBackgroundTimeSyncSequence();
+                }
+            );
+        } catch (e) {
+            _completeBackgroundTimeSyncSequence();
         }
     }
 
+    /**
+     * Sync against a timing source. This method is called recursively if the time sync for the first entry in timingSources fails.
+     * @param {number} sourceIndex
+     */
     function _attemptRecursiveSync(sourceIndex = null) {
         // if called with no sourceIndex, use zero (highest priority)
         let index = sourceIndex || 0;
@@ -158,12 +205,11 @@ function TimeSyncController() {
         // the sources should be ordered in priority from the manifest.
         // try each in turn, from the top, until either something
         // sensible happens, or we run out of sources to try.
-        if (timingSources.length >= index) {
+        if (!timingSources || timingSources.length === 0 || index >= timingSources.length) {
             _onComplete();
+            return;
         }
         let source = timingSources[index];
-
-        _setIsSynchronizing(true);
 
         if (source) {
             // check if there is a handler for this @schemeIdUri
@@ -176,23 +222,21 @@ function TimeSyncController() {
                         // the timing source returned something useful
                         const deviceTimeAfterSync = new Date().getTime();
                         const offset = _calculateOffset(deviceTimeBeforeSync, deviceTimeAfterSync, serverTime);
-                        logger.info('Server Time - Local Time (ms): ' + offset);
+                        lastTimingSource = source;
 
-                        _onComplete(serverTime, offset);
+                        _onComplete(offset);
                     },
                     function () {
                         // the timing source was probably uncontactable
                         // or returned something we can't use - try again
                         // with the remaining sources
-                        _setIsSynchronizing(false);
-                        _attemptRecursiveSync(timingSources, index + 1);
+                        _attemptRecursiveSync(index + 1);
                     }
                 );
             } else {
                 // an unknown schemeIdUri must have been found
                 // try again with the remaining sources
-                _setIsSynchronizing(false);
-                _attemptRecursiveSync(timingSources, index + 1);
+                _attemptRecursiveSync(index + 1);
             }
         } else {
             // no valid time source could be found, just use device time
@@ -228,7 +272,7 @@ function TimeSyncController() {
                 return true;
             }
 
-            return ((new Date().getTime() - timeOfLastSync) / 1000) >= timeBetweenSyncAttempts;
+            return ((Date.now() - timeOfLastSync) / 1000) >= timeBetweenSyncAttempts;
         } catch (e) {
             return true;
         }
@@ -236,36 +280,18 @@ function TimeSyncController() {
 
     /**
      * Callback after sync has been completed
-     * @param time
-     * @param offset
+     * @param {number} offset
      * @private
      */
-    function _onComplete(time, offset) {
-        let failed = !time || !offset;
+    function _onComplete(offset = NaN) {
+        let failed = isNaN(offset);
         if (failed && settings.get().streaming.useManifestDateHeaderTimeSource) {
             //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
             _checkForDateHeader();
         } else {
-            _completeTimeSyncSequence(failed, time, offset);
+            _completeTimeSyncSequence(failed, offset);
         }
     }
-
-    /**
-     * Set isSynchronizing
-     * @param {boolean} value
-     */
-    function _setIsSynchronizing(value) {
-        isSynchronizing = value;
-    }
-
-    /**
-     * Get isSynchronizing
-     * @return {boolean}
-     */
-    function _getIsSynchronizing() {
-        return isSynchronizing;
-    }
-
 
     /**
      * Takes xsdatetime and returns milliseconds since UNIX epoch. May not be necessary as xsdatetime is very similar to ISO 8601 which is natively understood by javascript Date parser
@@ -333,7 +359,7 @@ function TimeSyncController() {
 
     /**
      * Takes RFC 1123 timestamp (which is same as ISO8601) and returns milliseconds since UNIX epoch
-     * @param dateStr
+     * @param {string} dateStr
      * @return {number}
      */
     function _rfc1123Decoder(dateStr) {
@@ -461,8 +487,8 @@ function TimeSyncController() {
         let dateHeaderTime = dateHeaderValue !== null ? new Date(dateHeaderValue).getTime() : Number.NaN;
 
         if (!isNaN(dateHeaderTime)) {
-            const offsetToDeviceTimeMs = dateHeaderTime - new Date().getTime();
-            _completeTimeSyncSequence(false, dateHeaderTime / 1000, offsetToDeviceTimeMs);
+            const offsetToDeviceTimeMs = dateHeaderTime - Date.now();
+            _completeTimeSyncSequence(false, offsetToDeviceTimeMs);
         } else {
             _completeTimeSyncSequence(true);
         }
@@ -471,46 +497,113 @@ function TimeSyncController() {
     /**
      * Triggers the event to signal that the time synchronization was completed
      * @param {boolean} failed
-     * @param {number} time
      * @param {number} offset
      * @private
      */
-    function _completeTimeSyncSequence(failed, time, offset) {
+    function _completeTimeSyncSequence(failed, offset) {
 
         // Adjust the time of the next sync based on the drift between current offset and last offset
         if (!isNaN(lastOffset) && !isNaN(offset) && !failed) {
-            const driftFactor = settings.get().streaming.utcSynchronization.driftFactor && !isNaN(settings.get().streaming.utcSynchronization.driftFactor) && settings.get().streaming.utcSynchronization.driftFactor >= 0 && settings.get().streaming.utcSynchronization.driftFactor <= 1 ? settings.get().streaming.utcSynchronization.driftFactor : DEFAULT_DRIFT_FACTOR;
-            const maxAllowedOffsetDrift = lastOffset - (lastOffset * driftFactor);
-
-            const timeBetweenSyncAttempts = settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts;
-            let adjustedTimeBetweenSyncAttempts;
-
-            if (offset > lastOffset + maxAllowedOffsetDrift || offset < lastOffset - maxAllowedOffsetDrift) {
-                // The drift between the current offset and the last offset is not within the allowed threshold. Decrease sync time
-                adjustedTimeBetweenSyncAttempts = timeBetweenSyncAttempts * 1 / TIME_BETWEEN_SYNC_ADJUSTMENT_FACTOR;
-            } else {
-                // Drift between the current offset and the last offset is within the allowed threshold. Increase sync time
-                adjustedTimeBetweenSyncAttempts = timeBetweenSyncAttempts * TIME_BETWEEN_SYNC_ADJUSTMENT_FACTOR;
-            }
-            settings.update({ streaming: { utcSynchronization: { timeBetweenSyncAttempts: adjustedTimeBetweenSyncAttempts } } });
+            _adjustTimeBetweenSyncAttempts(offset);
         }
 
         // Update the internal data
-        _setIsSynchronizing(false);
-        timeOfLastSync = Date.now();
-        lastOffset = offset;
+        if (!failed && !isNaN(offset)) {
+            timeOfLastSync = Date.now();
+            isSynchronizing = false;
+
+            // if this is the first sync we are doing perform background syncs as well to confirm current offset
+            const shouldAttemptBackgroundSync = isNaN(lastOffset);
+            lastOffset = offset;
+            if (shouldAttemptBackgroundSync) {
+                _onAttemptBackgroundSync();
+            }
+            logger.debug(`Completed UTC sync. Setting client - server offset to ${offset}`);
+        }
+
+        if (failed) {
+            lastTimingSource = null;
+        }
 
         // Notify other classes
         eventBus.trigger(Events.UPDATE_TIME_SYNC_OFFSET, {
-            time: time,
             offset: offset,
             error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null
         });
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
     }
 
+    function _adjustTimeBetweenSyncAttempts(offset) {
+        try {
+            const isOffsetDriftWithinThreshold = _isOffsetDriftWithinThreshold(offset);
+            const timeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
+            const timeBetweenSyncAttemptsAdjustmentFactor = !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS_ADJUSTMENT_FACTOR;
+            const maximumTimeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts : DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC;
+            const minimumTimeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts : DEFAULT_MINIMUM_TIME_BETWEEN_SYNC;
+            let adjustedTimeBetweenSyncAttempts;
+
+            if (isOffsetDriftWithinThreshold) {
+                // The drift between the current offset and the last offset is within the allowed threshold. Increase sync time
+                adjustedTimeBetweenSyncAttempts = Math.min(timeBetweenSyncAttempts * timeBetweenSyncAttemptsAdjustmentFactor, maximumTimeBetweenSyncAttempts);
+                logger.debug(`Increasing timeBetweenSyncAttempts to ${adjustedTimeBetweenSyncAttempts}`);
+            } else {
+                // Drift between the current offset and the last offset is not within the allowed threshold. Decrease sync time
+                adjustedTimeBetweenSyncAttempts = Math.max(timeBetweenSyncAttempts / timeBetweenSyncAttemptsAdjustmentFactor, minimumTimeBetweenSyncAttempts);
+                logger.debug(`Decreasing timeBetweenSyncAttempts to ${adjustedTimeBetweenSyncAttempts}`);
+            }
+
+            settings.update({ streaming: { utcSynchronization: { timeBetweenSyncAttempts: adjustedTimeBetweenSyncAttempts } } });
+        } catch (e) {
+
+        }
+    }
+
+    /**
+     * Callback after all background syncs have been completed.
+     * @private
+     */
+    function _completeBackgroundTimeSyncSequence() {
+        if (!backgroundSyncTimeOffsets || backgroundSyncTimeOffsets.length === 0) {
+            return;
+        }
+
+        const averageOffset = backgroundSyncTimeOffsets.reduce((acc, curr) => {
+            return acc + curr;
+        }, 0) / backgroundSyncTimeOffsets.length;
+
+        if (!_isOffsetDriftWithinThreshold(averageOffset)) {
+            logger.debug(`Completed background UTC sync. Setting client - server offset to ${averageOffset}`);
+            lastOffset = averageOffset;
+            eventBus.trigger(Events.UPDATE_TIME_SYNC_OFFSET, {
+                offset: lastOffset
+            });
+        } else {
+            logger.debug(`Completed background UTC sync. Offset is within allowed threshold and is not adjusted.`);
+        }
+
+        isBackgroundSynchronizing = false;
+    }
+
+    function _isOffsetDriftWithinThreshold(offset) {
+        try {
+            if (isNaN(lastOffset)) {
+                return true;
+            }
+
+            const maxAllowedDrift = settings.get().streaming.utcSynchronization.maximumAllowedDrift && !isNaN(settings.get().streaming.utcSynchronization.maximumAllowedDrift) ? settings.get().streaming.utcSynchronization.maximumAllowedDrift : DEFAULT_MAXIMUM_ALLOWED_DRIFT;
+            const lowerBound = lastOffset - maxAllowedDrift;
+            const upperBound = lastOffset + maxAllowedDrift;
+
+            return offset >= lowerBound && offset <= upperBound;
+        } catch (e) {
+            return true;
+        }
+    }
+
     function reset() {
         _resetInitialSettings();
+
+        eventBus.off(Events.ATTEMPT_BACKGROUND_SYNC, _onAttemptBackgroundSync, instance);
     }
 
     instance = {
