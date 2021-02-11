@@ -84,11 +84,16 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          filterUnsupportedEssentialProperties: true,
  *          utcSynchronization: {
  *              backgroundAttempts: 2,
- *              timeBetweenSyncAttempts: 60,
+ *              timeBetweenSyncAttempts: 30,
  *              maximumTimeBetweenSyncAttempts: 600,
  *              minimumTimeBetweenSyncAttempts: 2,
  *              timeBetweenSyncAttemptsAdjustmentFactor: 2,
- *              maximumAllowedDrift: 100
+ *              maximumAllowedDrift: 100,
+ *              enableBackgroundSyncAfterSegmentDownloadError: true,
+ *              defaultTimingSource: {
+ *                   scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+ *                   value: 'http://time.akamai.com/?iso&ms'
+ *               }
  *          },
  *          liveCatchup: {
  *              minDrift: 0.02,
@@ -495,7 +500,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The background requests are async and done in parallel to the start of the playback.
  *
  * This value is also used to perform a resync after 404 errors on segments.
- * @property {number} [timeBetweenSyncAttempts=60]
+ * @property {number} [timeBetweenSyncAttempts=30]
  * The time in seconds between two consecutive sync attempts.
  *
  * Note: This value is adjusted during playback based on the drift between two consecutive synchronization attempts
@@ -511,7 +516,13 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The factor used to multiply or divide the timeBetweenSyncAttempts parameter after a sync. The maximumAllowedDrift defines whether this value is used as a factor or a dividend.
  *
  * @property {number} [maximumAllowedDrift=100]
- * The maximum allowed drift specified in milliseconds between two consecutive synchronization attempts. T
+ * The maximum allowed drift specified in milliseconds between two consecutive synchronization attempts.
+ *
+ * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
+ * Enables or disables the background sync after the player ran into a segment download error.
+ *
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * The default timing source to be used. The timing sources in the MPD take precedence over this one.
  */
 
 /**
@@ -618,11 +629,16 @@ function Settings() {
             filterUnsupportedEssentialProperties: true,
             utcSynchronization: {
                 backgroundAttempts: 2,
-                timeBetweenSyncAttempts: 2,
+                timeBetweenSyncAttempts: 30,
                 maximumTimeBetweenSyncAttempts: 600,
                 minimumTimeBetweenSyncAttempts: 2,
                 timeBetweenSyncAttemptsAdjustmentFactor: 2,
-                maximumAllowedDrift: 100
+                maximumAllowedDrift: 100,
+                enableBackgroundSyncAfterSegmentDownloadError: true,
+                defaultTimingSource: {
+                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+                    value: 'http://time.akamai.com/?iso&ms'
+                }
             },
             liveCatchup: {
                 minDrift: 0.02,

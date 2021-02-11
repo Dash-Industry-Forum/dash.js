@@ -139,7 +139,12 @@ declare namespace dashjs {
                 maximumTimeBetweenSyncAttempts?: number,
                 minimumTimeBetweenSyncAttempts?: number,
                 timeBetweenSyncAttemptsAdjustmentFactor?: number,
-                maximumAllowedDrift?: number
+                maximumAllowedDrift?: number,
+                enableBackgroundSyncAfterSegmentDownloadError?: boolean,
+                defaultTimingSource?: {
+                    scheme?: string,
+                    value?: string
+                }
             },
             liveCatchup?: {
                 minDrift?: number;
