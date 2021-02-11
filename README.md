@@ -50,7 +50,9 @@ For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our 
 
 If you are migrating from dash.js v2.x to dash.js v3.x please read the migration document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-3.0).
 
-Details of low latency streaming are covered on the wiki [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming)
+Detailed information on specific topics can be found in separate articles:
+
+* [Low latency streaming](https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming)
 
 
 ## Getting Started
