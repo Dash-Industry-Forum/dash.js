@@ -40,10 +40,11 @@ import URLUtils from '../utils/URLUtils';
 const HTTP_TIMEOUT_MS = 5000;
 const DEFAULT_MAXIMUM_ALLOWED_DRIFT = 100;
 const DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS_ADJUSTMENT_FACTOR = 2;
-const DEFAULT_BACKGROUND_ATTEMPTS = 3;
+const DEFAULT_BACKGROUND_ATTEMPTS = 2;
 const DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS = 30;
-const DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC = 60;
-const DEFAULT_MINIMUM_TIME_BETWEEN_SYNC = 4;
+const DEFAULT_MINIMUM_TIME_BETWEEN_BACKGROUND_SYNC_ATTEMPTS = 30;
+const DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC = 600;
+const DEFAULT_MINIMUM_TIME_BETWEEN_SYNC = 2;
 
 function TimeSyncController() {
 
@@ -61,6 +62,7 @@ function TimeSyncController() {
         backgroundSyncTimeOffsets,
         timingSources,
         timeOfLastSync,
+        timeOfLastBackgroundSync,
         lastOffset,
         lastTimingSource,
         baseURLController;
@@ -91,6 +93,7 @@ function TimeSyncController() {
         backgroundSyncTimeOffsets = [];
         timingSources = [];
         timeOfLastSync = null;
+        timeOfLastBackgroundSync = null;
         lastTimingSource = null;
         lastOffset = NaN;
         isSynchronizing = false;
@@ -158,6 +161,10 @@ function TimeSyncController() {
      */
     function _onAttemptBackgroundSync() {
         if (isSynchronizing || isBackgroundSynchronizing || !lastTimingSource || !lastTimingSource.value || !lastTimingSource.schemeIdUri || isNaN(lastOffset) || isNaN(settings.get().streaming.utcSynchronization.backgroundAttempts)) {
+            return;
+        }
+
+        if (timeOfLastBackgroundSync && ((Date.now() - timeOfLastBackgroundSync) / 1000) < DEFAULT_MINIMUM_TIME_BETWEEN_BACKGROUND_SYNC_ATTEMPTS) {
             return;
         }
 
@@ -587,6 +594,7 @@ function TimeSyncController() {
         }
 
         isBackgroundSynchronizing = false;
+        timeOfLastBackgroundSync = Date.now();
     }
 
     function _isOffsetDriftWithinThreshold(offset) {
