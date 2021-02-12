@@ -133,6 +133,19 @@ declare namespace dashjs {
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
             filterUnsupportedEssentialProperties?: true
+            utcSynchronization?: {
+                backgroundAttempts?: number,
+                timeBetweenSyncAttempts?: number,
+                maximumTimeBetweenSyncAttempts?: number,
+                minimumTimeBetweenSyncAttempts?: number,
+                timeBetweenSyncAttemptsAdjustmentFactor?: number,
+                maximumAllowedDrift?: number,
+                enableBackgroundSyncAfterSegmentDownloadError?: boolean,
+                defaultTimingSource?: {
+                    scheme?: string,
+                    value?: string
+                }
+            },
             liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;

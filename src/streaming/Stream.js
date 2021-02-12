@@ -620,7 +620,6 @@ function Stream(config) {
             errHandler.error(error);
         } else if (!isStreamInitialized) {
             isStreamInitialized = true;
-            timelineConverter.setTimeSyncCompleted(true);
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
                 streamInfo: streamInfo,

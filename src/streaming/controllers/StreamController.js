@@ -135,6 +135,13 @@ function StreamController() {
         });
         eventController.start();
 
+
+        timeSyncController.setConfig({
+            dashMetrics,
+            baseURLController,
+            settings
+        });
+        timeSyncController.initialize();
         registerEvents();
     }
 
@@ -867,12 +874,7 @@ function StreamController() {
             });
 
             baseURLController.initialize(manifest);
-
-            timeSyncController.setConfig({
-                dashMetrics: dashMetrics,
-                baseURLController: baseURLController
-            });
-            timeSyncController.initialize(allUTCTimingSources, settings.get().streaming.useManifestDateHeaderTimeSource);
+            timeSyncController.attemptSync(allUTCTimingSources);
         } else {
             hasInitialisationError = true;
             reset();
