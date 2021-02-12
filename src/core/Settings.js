@@ -503,7 +503,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [timeBetweenSyncAttempts=30]
  * The time in seconds between two consecutive sync attempts.
  *
- * Note: This value is adjusted during playback based on the drift between two consecutive synchronization attempts
+ * Note: This value is used as an initial starting value. The internal value of the TimeSyncController is adjusted during playback based on the drift between two consecutive synchronization attempts.
  *
  * Note: A sync is only performed after an MPD update. In case the @minimumUpdatePeriod is larger than this value the sync will be delayed until the next MPD update.
  * @property {number} [maximumTimeBetweenSyncAttempts=600]

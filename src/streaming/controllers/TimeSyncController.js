@@ -65,6 +65,7 @@ function TimeSyncController() {
         timeOfLastBackgroundSync,
         lastOffset,
         lastTimingSource,
+        internalTimeBetweenSyncAttempts,
         baseURLController;
 
     function setup() {
@@ -98,6 +99,7 @@ function TimeSyncController() {
         lastOffset = NaN;
         isSynchronizing = false;
         isBackgroundSynchronizing = false;
+        internalTimeBetweenSyncAttempts = NaN;
     }
 
     /**
@@ -278,7 +280,7 @@ function TimeSyncController() {
      */
     function _shouldPerformSynchronization() {
         try {
-            const timeBetweenSyncAttempts = settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts;
+            const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
 
             if (!timeOfLastSync || !timeBetweenSyncAttempts || isNaN(timeBetweenSyncAttempts)) {
                 return true;
@@ -548,7 +550,7 @@ function TimeSyncController() {
     function _adjustTimeBetweenSyncAttempts(offset) {
         try {
             const isOffsetDriftWithinThreshold = _isOffsetDriftWithinThreshold(offset);
-            const timeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
+            const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
             const timeBetweenSyncAttemptsAdjustmentFactor = !isNaN(settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor) ? settings.get().streaming.utcSynchronization.timeBetweenSyncAttemptsAdjustmentFactor : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS_ADJUSTMENT_FACTOR;
             const maximumTimeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.maximumTimeBetweenSyncAttempts : DEFAULT_MAXIMUM_TIME_BETWEEN_SYNC;
             const minimumTimeBetweenSyncAttempts = !isNaN(settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts) ? settings.get().streaming.utcSynchronization.minimumTimeBetweenSyncAttempts : DEFAULT_MINIMUM_TIME_BETWEEN_SYNC;
@@ -564,7 +566,7 @@ function TimeSyncController() {
                 logger.debug(`Decreasing timeBetweenSyncAttempts to ${adjustedTimeBetweenSyncAttempts}`);
             }
 
-            settings.update({ streaming: { utcSynchronization: { timeBetweenSyncAttempts: adjustedTimeBetweenSyncAttempts } } });
+            internalTimeBetweenSyncAttempts = adjustedTimeBetweenSyncAttempts;
         } catch (e) {
 
         }
