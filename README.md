@@ -50,13 +50,14 @@ For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our 
 
 If you are migrating from dash.js v2.x to dash.js v3.x please read the migration document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-3.0).
 
-Detailed information on specific topics can be found in separate articles:
+## Tutorials
+
+Detailed information on specific topics can be found in our tutorials:
 
 * [Low latency streaming](https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming)
-* [Buffer and scheduling logic](https://github.com/Dash-Industry-Forum/dash.js/wiki/Buffer-and-Scheduling-Logic)
 * [UTCTiming Clock synchronization](https://github.com/Dash-Industry-Forum/dash.js/wiki/UTCTiming---Clock-synchronization)
 * [Digital Rights Management (DRM) and license acquisition](https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition)
-
+* [Buffer and scheduling logic](https://github.com/Dash-Industry-Forum/dash.js/wiki/Buffer-and-Scheduling-Logic)
 
 ## Getting Started
 
