@@ -1694,7 +1694,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Registers a license request filter. This enables application to manipulate/override any request parameter and/or request data.
+     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license request filter callback
@@ -1709,7 +1709,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Registers a license response filter. This enables application to manipulate/override the response data
+     * Registers a license response filter. This enables application to manipulate/overwrite the response data
      * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the license response filter callback
