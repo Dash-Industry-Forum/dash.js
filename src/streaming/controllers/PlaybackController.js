@@ -188,6 +188,11 @@ function PlaybackController() {
             videoModel.removeEventListener('seeking', onPlaybackSeeking);
             logger.info('Requesting internal seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);
+            // Re-enable 'seeking' listener
+            setTimeout(() => {
+                if (!videoModel) return;
+                videoModel.addEventListener('seeking', onPlaybackSeeking);
+            }, 0);
         } else {
             seekTarget = time;
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
@@ -498,8 +503,6 @@ function PlaybackController() {
     function onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
         eventBus.trigger(Events.PLAYBACK_SEEKED);
-        // Reactivate 'seeking' event listener (see seek())
-        videoModel.addEventListener('seeking', onPlaybackSeeking);
     }
 
     function onPlaybackTimeUpdated() {
