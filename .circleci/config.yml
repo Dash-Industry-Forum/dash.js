@@ -1,133 +1,111 @@
-version: 2
+version: 2.1
 
-_defaults: &defaults
+executors:
+  dashjs-executor:
     working_directory: ~/repo
     docker:
-        -   image: circleci/node:10.20.1
-
-_steps:
-    restore_cache: &restore_cache
-        keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            # fallback to using the latest cache if no exact match is found
-            - v1-dependencies-
-
-    install_dependencies: &install_dependencies
-        name: Install dependencies
-        command: npm install
-
-    save_cache: &save_cache
-        paths:
-            - node_modules
-        key: v1-dependencies-{{ checksum "package.json" }}
+      - image: cimg/node:10.20.1
 
 commands:
-    functional_test_setup:
-        <<: *defaults
-
+    dependencies_setup:
         steps:
-            - checkout
-            -   restore_cache: *restore_cache
-            -   run: *install_dependencies
-            -   save_cache: *save_cache
-            -   run:
-                    # Download the browserstack binary file to create a tunnel
-                    download_browser_stack:
-                        name: Download Browserstack
-                        command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
+            - restore_cache:
+                keys:
+                    - v1-dependencies-{{ checksum "package.json" }}
+                    # fallback to using the latest cache if no exact match is found
+                    - v1-dependencies-
+            - run:
+                name: Install dependencies
+                command: npm install
+            - save_cache:
+                paths:
+                    - node_modules
+                key: v1-dependencies-{{ checksum "package.json" }}
+    functional_test_setup:
+        steps:
+            - run:
+                name: Download the browserstack binary file to create a tunnel
+                command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
 
-            -   run:
-                    # Unzip the browserstack binary file
-                    install_browser_stack:
-                        name: Install Browserstack
-                        command: unzip BrowserStackLocal-linux-x64.zip
+            - run:
+                name: Unzip the browserstack binary file
+                command: unzip BrowserStackLocal-linux-x64.zip
 
-            -   run:
-                    # Run browserstack with your access key
-                    run_browser_stack:
-                        name: Run Browserstack
-                        command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
-                        background: true
+            - run:
+                name: Run browserstack with provided access key
+                command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
+                background: true
 
 jobs:
     build:
-        <<: *defaults
-
+        executor: dashjs-executor
         steps:
             - checkout
-            -   restore_cache: *restore_cache
-            -   run: *install_dependencies
-            -   save_cache: *save_cache
-
-            # run build and tests
-            -   run:
-                    name: Build and Test
-                    command: npm run build
-
-            # deploy
-            -   deploy:
-                    name: Deploy
-                    command: |
-                        if [ "${CIRCLE_BRANCH}" = "development" ]; then
-                          sudo npm install -g grunt-cli
-                          grunt deploy --git-commit=$CIRCLE_SHA1 --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
-                        else
-                          echo "Not development branch, dry run only"
-                        fi
+            - dependencies_setup
+            - run:
+                name: Build and Test
+                command: npm run build
+            - deploy:
+                name: Deploy
+                command: |
+                    if [ "${CIRCLE_BRANCH}" = "development" ]; then
+                        sudo npm install -g grunt-cli
+                        grunt deploy --git-commit=$CIRCLE_SHA1 --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
+                    else
+                        echo "Not development branch, dry run only"
+                    fi
 
     functional-tests-all:
-        <<: *defaults
-
+        executor: dashjs-executor
         steps:
+            - checkout
+            - dependencies_setup
             - functional_test_setup
-            -   run:
-                    # Run functional tests for chrome browser for https
-                    name: Run functional tests (chrome / https)
-                    command:
-                        node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https
+            - run:
+                name: Run functional tests (chrome / https)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https
 
-            -   run:
-                    # Run functional tests for chrome browser for http
-                    name: Run functional tests (chrome / http)
-                    when: always # run tests even if some previous tests failed
-                    command:
-                        node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
+            - run:
+                name: Run functional tests (chrome / http)
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
 
-            -   store_test_results:
-                    path: test/functional/reports
+            - store_test_results:
+                path: test/functional/reports
 
     functional-tests-smoke:
-        <<: *defaults
-
+        executor: dashjs-executor
         steps:
+            - checkout
+            - dependencies_setup
             - functional_test_setup
-            -   run:
-                    # Run functional tests for smoke vectors in chrome browser for https
-                    name: Run functional tests (chrome / https)
-                    command:
-                        node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+            - run:
+                name: Run functional tests for smoke vectors (chrome / https)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
 
-            -   store_test_results:
-                    path: test/functional/reports
+            - store_test_results:
+                path: test/functional/reports
 
 workflows:
-    version: 2
     commit-workflow:
         jobs:
             - build
-            -   functional-tests-smoke:
-                    filters:
-                        branches:
-                            only:
-                                - development
+            - functional-tests-smoke:
+                filters:
+                    branches:
+                        only:
+                            - development
     scheduled-workflow:
         triggers:
-            -   schedule:
-                    cron: "0 0 * * 0"
-                    filters:
-                        branches:
-                            only:
-                                - development
+            - schedule:
+                cron: "0 0 * * 0"
+                filters:
+                    branches:
+                        only:
+                            - development
         jobs:
             - functional-tests-all
 
