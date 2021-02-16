@@ -1701,7 +1701,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function registerLicenseRequestFilter (filter) {
+    function registerLicenseRequestFilter(filter) {
         licenseRequestFilters.push(filter);
         if (protectionController) {
             protectionController.setLicenseRequestFilters(licenseRequestFilters);
@@ -1716,7 +1716,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function registerLicenseResponseFilter (filter) {
+    function registerLicenseResponseFilter(filter) {
         licenseResponseFilters.push(filter);
         if (protectionController) {
             protectionController.setLicenseResponseFilters(licenseResponseFilters);
@@ -1729,7 +1729,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function unregisterLicenseRequestFilter (filter) {
+    function unregisterLicenseRequestFilter(filter) {
         unregisterFilter(licenseRequestFilters, filter);
         if (protectionController) {
             protectionController.setLicenseRequestFilters(licenseRequestFilters);
@@ -1742,7 +1742,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function unregisterLicenseResponseFilter (filter) {
+    function unregisterLicenseResponseFilter(filter) {
         unregisterFilter(licenseResponseFilters, filter);
         if (protectionController) {
             protectionController.setLicenseResponseFilters(licenseResponseFilters);
@@ -2162,8 +2162,10 @@ function MediaPlayer() {
                 constants: Constants,
                 cmcdModel: cmcdModel
             });
-            protectionController.setLicenseRequestFilters(licenseRequestFilters);
-            protectionController.setLicenseResponseFilters(licenseResponseFilters);
+            if (protectionController) {
+                protectionController.setLicenseRequestFilters(licenseRequestFilters);
+                protectionController.setLicenseResponseFilters(licenseResponseFilters);
+            }
             return protectionController;
         }
 
