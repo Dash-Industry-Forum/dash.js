@@ -133,7 +133,13 @@
                 "title": "ClearKey",
                 "description": "This example shows how to use dash.js to play streams with ClearKey DRM protection.",
                 "href": "drm/clearkey.html"
+            },
+            {
+                "title": "License wrapping",
+                "description": "This example shows how to use dash.js to filter and wrap license requests and responses",
+                "href": "drm/license-wrapping.html"
             }
+
         ]
     },
     {

@@ -158,7 +158,9 @@ function MediaPlayer() {
         textController,
         uriFragmentModel,
         domStorage,
-        segmentBaseController;
+        segmentBaseController,
+        licenseRequestFilters,
+        licenseResponseFilters;
 
     /*
     ---------------------------------------------------------------------------
@@ -182,6 +184,8 @@ function MediaPlayer() {
         mediaPlayerModel = MediaPlayerModel(context).getInstance();
         videoModel = VideoModel(context).getInstance();
         uriFragmentModel = URIFragmentModel(context).getInstance();
+        licenseRequestFilters = [];
+        licenseResponseFilters = [];
     }
 
     /**
@@ -401,6 +405,8 @@ function MediaPlayer() {
      */
     function destroy() {
         reset();
+        licenseRequestFilters = [];
+        licenseResponseFilters = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -1687,6 +1693,74 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerLicenseRequestFilter (filter) {
+        licenseRequestFilters.push(filter);
+        if (protectionController) {
+            protectionController.setLicenseRequestFilters(licenseRequestFilters);
+        }
+    }
+
+    /**
+     * Registers a license response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerLicenseResponseFilter (filter) {
+        licenseResponseFilters.push(filter);
+        if (protectionController) {
+            protectionController.setLicenseResponseFilters(licenseResponseFilters);
+        }
+    }
+
+    /**
+     * Unregisters a license request filter.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterLicenseRequestFilter (filter) {
+        unregisterFilter(licenseRequestFilters, filter);
+        if (protectionController) {
+            protectionController.setLicenseRequestFilters(licenseRequestFilters);
+        }
+    }
+
+    /**
+     * Unregisters a license response filter.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterLicenseResponseFilter (filter) {
+        unregisterFilter(licenseResponseFilters, filter);
+        if (protectionController) {
+            protectionController.setLicenseResponseFilters(licenseResponseFilters);
+        }
+    }
+
+    function unregisterFilter(filters, filter) {
+        let index = -1;
+        filters.some((item, i) => {
+            if (item === filter) {
+                index = i;
+                return true;
+            }
+        });
+        if (index < 0) return;
+        filters.splice(index, 1);
+    }
+
     /*
     ---------------------------------------------------------------------------
 
@@ -2088,6 +2162,8 @@ function MediaPlayer() {
                 constants: Constants,
                 cmcdModel: cmcdModel
             });
+            protectionController.setLicenseRequestFilters(licenseRequestFilters);
+            protectionController.setLicenseResponseFilters(licenseResponseFilters);
             return protectionController;
         }
 
@@ -2330,6 +2406,10 @@ function MediaPlayer() {
         getProtectionController: getProtectionController,
         attachProtectionController: attachProtectionController,
         setProtectionData: setProtectionData,
+        registerLicenseRequestFilter: registerLicenseRequestFilter,
+        registerLicenseResponseFilter: registerLicenseResponseFilter,
+        unregisterLicenseRequestFilter: unregisterLicenseRequestFilter,
+        unregisterLicenseResponseFilter: unregisterLicenseResponseFilter,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,

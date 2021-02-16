@@ -347,6 +347,10 @@ declare namespace dashjs {
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionDataSet): void;
+        registerLicenseRequestFilter(filter: RequestFilter),
+        registerLicenseResponseFilter(filter: ResponseFilter),
+        unregisterLicenseRequestFilter(filter: RequestFilter),
+        unregisterLicenseResponseFilter(filter: ResponseFilter),
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -1014,6 +1018,26 @@ declare namespace dashjs {
         cdmData: ArrayBuffer | null;
         sessionId: string | null;
     }
+
+    export interface LicenseRequest {
+        url: string;
+        method: string;
+        responseType: string;
+        headers: object;
+        withCredentials: boolean;
+        messageType: string;
+        sessionId: string;
+        data: ArrayBuffer;
+    }
+
+    export interface LicenseResponse {
+        url: string;
+        headers: object;
+        data: ArrayBuffer;
+    }
+
+    export type RequestFilter = (request: LicenseRequest) => Promise<any>;
+    export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 
     export interface IBufferLevel {
         level: number;
