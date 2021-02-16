@@ -68,9 +68,6 @@ describe('TimelineConverter', function () {
             }, specHelper.getExecutionDelay());
         });
 
-        it('should set isTimeSyncCompleted', function () {
-            expect(timelineConverter.isTimeSyncCompleted()).to.be.ok; // jshint ignore:line
-        });
 
         it('should calculate availability window for dynamic mpd', function () {
 

@@ -82,6 +82,19 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          manifestUpdateRetryInterval: 100,
  *          stallThreshold: 0.5,
  *          filterUnsupportedEssentialProperties: true,
+ *          utcSynchronization: {
+ *              backgroundAttempts: 2,
+ *              timeBetweenSyncAttempts: 30,
+ *              maximumTimeBetweenSyncAttempts: 600,
+ *              minimumTimeBetweenSyncAttempts: 2,
+ *              timeBetweenSyncAttemptsAdjustmentFactor: 2,
+ *              maximumAllowedDrift: 100,
+ *              enableBackgroundSyncAfterSegmentDownloadError: true,
+ *              defaultTimingSource: {
+ *                   scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+ *                   value: 'http://time.akamai.com/?iso&ms'
+ *               }
+ *          },
  *          liveCatchup: {
  *              minDrift: 0.02,
  *              maxDrift: 0,
@@ -351,6 +364,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
  * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used to set the initial bit rate for subsequent playback within the expiration window.
@@ -479,6 +493,39 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
+ * @typedef {Object} module:Settings~UtcSynchronizationSettings
+ * @property {number} [backgroundAttempts=2]
+ * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
+ *
+ * The background requests are async and done in parallel to the start of the playback.
+ *
+ * This value is also used to perform a resync after 404 errors on segments.
+ * @property {number} [timeBetweenSyncAttempts=30]
+ * The time in seconds between two consecutive sync attempts.
+ *
+ * Note: This value is used as an initial starting value. The internal value of the TimeSyncController is adjusted during playback based on the drift between two consecutive synchronization attempts.
+ *
+ * Note: A sync is only performed after an MPD update. In case the @minimumUpdatePeriod is larger than this value the sync will be delayed until the next MPD update.
+ * @property {number} [maximumTimeBetweenSyncAttempts=600]
+ * The maximum time in seconds between two consecutive sync attempts.
+ *
+ * @property {number} [minimumTimeBetweenSyncAttempts=2]
+ * The minimum time in seconds between two consecutive sync attempts.
+ *
+ * @property {number} [timeBetweenSyncAttemptsAdjustmentFactor=2]
+ * The factor used to multiply or divide the timeBetweenSyncAttempts parameter after a sync. The maximumAllowedDrift defines whether this value is used as a factor or a dividend.
+ *
+ * @property {number} [maximumAllowedDrift=100]
+ * The maximum allowed drift specified in milliseconds between two consecutive synchronization attempts.
+ *
+ * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
+ * Enables or disables the background sync after the player ran into a segment download error.
+ *
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * The default timing source to be used. The timing sources in the MPD take precedence over this one.
+ */
+
+/**
  * @typedef {Object} module:Settings~LiveCatchupSettings
  * @property {number} [minDrift=0.02]
  * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism.
@@ -580,6 +627,19 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
+            utcSynchronization: {
+                backgroundAttempts: 2,
+                timeBetweenSyncAttempts: 30,
+                maximumTimeBetweenSyncAttempts: 600,
+                minimumTimeBetweenSyncAttempts: 2,
+                timeBetweenSyncAttemptsAdjustmentFactor: 2,
+                maximumAllowedDrift: 100,
+                enableBackgroundSyncAfterSegmentDownloadError: true,
+                defaultTimingSource: {
+                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+                    value: 'http://time.akamai.com/?iso&ms'
+                }
+            },
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 0,
