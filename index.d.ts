@@ -695,6 +695,7 @@ declare namespace dashjs {
     export interface KeyStatusesChangedEvent extends Event {
         type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
         data: SessionToken;
+        error?: string;
     }
 
     export interface KeySystemSelectedEvent extends Event {
