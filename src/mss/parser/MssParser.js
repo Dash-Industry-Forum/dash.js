@@ -200,12 +200,18 @@ function MssParser(config) {
         const representation = {};
         const type = streamIndex.getAttribute('Type');
         let fourCCValue = null;
+        let width = null;
+        let height = null;
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
         representation.mimeType = qualityLevel.mimeType;
-        representation.width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
-        representation.height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+
+        width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
+        height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+        if (!isNaN(width)) representation.width = width;
+        if (!isNaN(height)) representation.height = height;
+
 
         fourCCValue = qualityLevel.getAttribute('FourCC');
 
