@@ -1133,7 +1133,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
               receiverApplicationId: CAST_APP_ID,
               autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
-            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, e => {
+            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function (e) {
                 console.log('[Cast]', e);
                 if (e.castState === cast.framework.CastState.CONNECTED) {
                     onCastReady();
@@ -1143,7 +1143,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             });
             remotePlayer = new cast.framework.RemotePlayer();
             remotePlayerController = new cast.framework.RemotePlayerController(remotePlayer);
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, function () {
                 if (remotePlayer) {
                     $scope.castPlayerState = remotePlayer.playerState;
                     $scope.safeApply();
