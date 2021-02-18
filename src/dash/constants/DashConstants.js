@@ -131,6 +131,10 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_SCOPE = 'Scope';
         this.SERVICE_DESCRIPTION_LATENCY = 'Latency';
         this.SERVICE_DESCRIPTION_PLAYBACK_RATE = 'PlaybackRate';
+        this.PATCH_LOCATION = 'PatchLocation';
+        this.PUBLISH_TIME = 'publishTime';
+        this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
+        this.ORIGINAL_MPD_ID = 'mpdId';
     }
 
     constructor () {

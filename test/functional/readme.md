@@ -127,9 +127,14 @@ As an example, to execute tests:
   - play and pause tes suites only
   - for streams in the group "DRM (mordern)"
 
-enter command:
+Windows example command:
 ```sh
 > node .\test\functional\runTests.js --selenium=remote --os=windows --browsers=firefox --app=remote --protocol=https --reporters=junit --testSuites="play,pause" --streams="DRM (modern)"
+```
+
+Mac example command:
+```
+node test/functional/runTests.js --selenium=local --os=mac --browsers=chrome --app=local --protocol=http --reporters=junit --testSuites="textSwitch" --mpd="https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd"
 ```
 
 #### Troubleshooting

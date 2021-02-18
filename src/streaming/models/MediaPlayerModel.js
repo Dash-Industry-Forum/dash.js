@@ -54,10 +54,6 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         customABRRule;
 
-    const DEFAULT_UTC_TIMING_SOURCE = {
-        scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-        value: 'http://time.akamai.com/?iso&ms'
-    };
     const context = this.context;
     const settings = Settings(context).getInstance();
 
@@ -197,7 +193,8 @@ function MediaPlayerModel() {
     }
 
     function restoreDefaultUTCTimingSources() {
-        addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
+        let defaultUtcTimingSource = settings.get().streaming.utcSynchronization.defaultTimingSource;
+        addUTCTimingSource(defaultUtcTimingSource.scheme, defaultUtcTimingSource.value);
     }
 
     function setXHRWithCredentialsForType(type, value) {
@@ -217,7 +214,7 @@ function MediaPlayerModel() {
     }
 
     function getDefaultUtcTimingSource() {
-        return DEFAULT_UTC_TIMING_SOURCE;
+        return settings.get().streaming.utcSynchronization.defaultTimingSource;
     }
 
     function reset() {

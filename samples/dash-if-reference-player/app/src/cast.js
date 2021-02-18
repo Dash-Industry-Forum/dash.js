@@ -28,7 +28,7 @@ let CastPlayer = function (player, playerController) {
         callback: listener,
         scope: scope
     };
-    
+
     handlers[type].push(handler);
   }
 
@@ -48,8 +48,8 @@ let CastPlayer = function (player, playerController) {
 
       payload.type = type;
 
-      handlers[type] = handlers[type].filter((item) => item);
-      handlers[type].forEach( handler => handler && handler.callback.call(handler.scope, payload) );
+      handlers[type] = handlers[type].filter(function (item) { return item });
+      handlers[type].forEach(function (handler) { handler && handler.callback.call(handler.scope, payload) });
   }
 
   function getHandlerIdx(type, listener, scope) {
@@ -58,7 +58,7 @@ let CastPlayer = function (player, playerController) {
 
     if (!handlers[type]) return idx;
 
-    handlers[type].some( (item, index) => {
+    handlers[type].some(function (item, index) {
         if (item && item.callback === listener && (!scope || scope === item.scope)) {
             idx = index;
             return true;
@@ -72,34 +72,34 @@ let CastPlayer = function (player, playerController) {
   }
 
   (function () {
-    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.CURRENT_TIME_CHANGED, e => {
+    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.CURRENT_TIME_CHANGED, function (e) {
         if (remotePlayer && remotePlayer.isMediaLoaded) {
             trigger(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED);
         }
     });
-    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.DURATION_CHANGED, () => {
+    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.DURATION_CHANGED, function () {
         if (remotePlayer && remotePlayer.duration) {
             duration = remotePlayer.duration;
         }
     });
-    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.MEDIA_INFO_CHANGED, () => {
+    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.MEDIA_INFO_CHANGED, function () {
         if (remotePlayer && remotePlayer.mediaInfo) {
             if (!tracksAdded && remotePlayer.mediaInfo.tracks) {
-                let tracks = remotePlayer.mediaInfo.tracks.map(track => {
+                let tracks = remotePlayer.mediaInfo.tracks.map(function (track) {
                     track.labels = [];
                     track.lang = track.language;
                     track.kind = track.roles && track.roles[0];
                     return track;
                 });
                 trigger(dashjs.MediaPlayer.events.STREAM_INITIALIZED);
-                let textTracks = tracks.filter(track => track.type === 'TEXT');
+                let textTracks = tracks.filter(function (track) { return track.type === 'TEXT' });
                 if (textTracks.length > 0) {
                     trigger(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, { tracks: textTracks });
                 }
             }
         }
     });
-    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, () => {
+    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, function () {
         if (remotePlayer) {
             // trigger same events than dashjs MediaPlayer in order to update ControlBar
             switch (remotePlayer.playerState) {
@@ -115,12 +115,12 @@ let CastPlayer = function (player, playerController) {
             }
         }
     });
-    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_MUTED_CHANGED, () => {
+    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_MUTED_CHANGED, function () {
         if (remotePlayer) {
             console.info(remotePlayer.isMuted);
         }
     });
-    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.VOLUME_LEVEL_CHANGED, () => {
+    remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.VOLUME_LEVEL_CHANGED, function () {
         if (remotePlayer) {
             console.info(remotePlayer.volumeLevel);
         }
@@ -134,74 +134,74 @@ let CastPlayer = function (player, playerController) {
     reset: reset,
     setCastSession: setCastSession,
 /// PLAYBACK FUNCTIONS
-    play () {
+    play: function () {
         if (remotePlayer.isPaused) {
             remotePlayerController.playOrPause();
         }
     },
-    pause () {
+    pause: function () {
         if (!remotePlayer.isPaused) {
             remotePlayerController.playOrPause();
         }
     },
-    seek (time) {
+    seek: function (time) {
         remotePlayer.currentTime = time;
         remotePlayerController.seek();
     },
-    isDynamic () {
+    isDynamic: function () {
         return remotePlayer && remotePlayer.mediaInfo && remotePlayer.mediaInfo.streamType === chrome.cast.media.StreamType.LIVE;
     },
-    isPaused () {
+    isPaused: function () {
         return remotePlayer.isPaused;
     },
-    duration () {
+    duration: function () {
         return remotePlayer.duration;
     },
-    time () {
+    time: function () {
         return remotePlayer.currentTime;
     },
 /// VOLUME FUNCTIONS
-    getVolume () {
+    getVolume: function () {
         return remotePlayer.volumeLevel;
     },
-    setVolume (value) {
+    setVolume: function (value) {
         remotePlayer.volumeLevel = value;
         remotePlayerController.setVolumeLevel();
     },
-    isMuted () {
+    isMuted: function () {
         return remotePlayer.isMuted;
     },
-    setMute (value) {
+    setMute: function (value) {
         if (remotePlayer.isMuted && value === false || !remotePlayer.isMuted && value === true) {
             remotePlayerController.muteOrUnmute();
         }
     },
-    convertToTimeCode (value) {
+    convertToTimeCode: function (value) {
         return fakePlayer.convertToTimeCode(value);
     },
 //TRACK MANAGEMENT
-    getActiveTrackIds() {
+    getActiveTrackIds: function () {
         let mediaSession = castSession.getMediaSession();
         if (mediaSession && mediaSession.activeTrackIds && mediaSession.activeTrackIds.length > 1) {
             return mediaSession.activeTrackIds;
         }
         return [];
     },
-    getTracksFor (type) {
+    getTracksFor: function (type) {
         let mediaSession = castSession.getMediaSession();
         if (mediaSession && mediaSession.media && mediaSession.media.tracks) {
-            let tracks = mediaSession.media.tracks.filter(track => track.type.toLowerCase() === type);
+            let tracks = mediaSession.media.tracks.filter(function (track) { return track.type.toLowerCase() === type });
             return tracks;
         }
     },
-    getCurrentTextTrackIndex () {
+    getCurrentTextTrackIndex: function () {
         let mediaSession = castSession.getMediaSession();
         if (mediaSession && mediaSession.activeTrackIds && mediaSession.activeTrackIds.length > 1) {
-            return this.getTracksFor('text').findIndex(track => track.trackId === mediaSession.activeTrackIds[1]);
+            return this.getTracksFor('text').findIndex(function (track) { return track.trackId === mediaSession.activeTrackIds[1] });
         }
         return -1;
     },
-    setTextTrack (index) {
+    setTextTrack: function (index) {
         let activeTrackIds = this.getActiveTrackIds();
         if (index === -1 && activeTrackIds.length === 2) {
             activeTrackIds.pop();
@@ -215,27 +215,27 @@ let CastPlayer = function (player, playerController) {
         }
         let tracksInfoRequest = new chrome.cast.media.EditTracksInfoRequest(activeTrackIds);
         let mediaSession = castSession.getMediaSession();
-        mediaSession.editTracksInfo(tracksInfoRequest, () => { 
+        mediaSession.editTracksInfo(tracksInfoRequest, function () {
             console.log('track changed');
-        }, () => { 
-            console.error('error track changed'); 
+        }, function () {
+            console.error('error track changed');
         });
     },
-    getCurrentTrackFor (type) {
+    getCurrentTrackFor: function (type) {
         let mediaSession = castSession.getMediaSession();
         if (mediaSession && mediaSession.activeTrackIds && mediaSession.media && mediaSession.media.tracks) {
-            return mediaSession.media.tracks.find(track => track.trackId === mediaSession.activeTrackIds[0]);
+            return mediaSession.media.tracks.find(function (track) { return track.trackId === mediaSession.activeTrackIds[0] });
         }
     },
-    setCurrentTrack (track) {
+    setCurrentTrack: function (track) {
         let activeTrackIds = this.getActiveTrackIds();
         activeTrackIds[0] = track.trackId;
         let tracksInfoRequest = new chrome.cast.media.EditTracksInfoRequest(activeTrackIds);
         let mediaSession = castSession.getMediaSession();
-        mediaSession.editTracksInfo(tracksInfoRequest, () => { 
+        mediaSession.editTracksInfo(tracksInfoRequest, function () {
             console.log('track changed');
-        }, () => { 
-            console.error('error track changed'); 
+        }, function () {
+            console.error('error track changed');
         });
     }
   }

@@ -78,6 +78,7 @@ function BufferController(config) {
         lastIndex,
         buffer,
         dischargeBuffer,
+        dischargeFragments,
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
@@ -178,18 +179,24 @@ function BufferController(config) {
                 logger.debug('PreBuffer discharge requested, but there were no media segments in the PreBuffer.');
             }
 
+            //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a sourcebuffer silent.
+            dischargeFragments = [];
             let chunks = dischargeBuffer.discharge();
             let lastInit = null;
             for (let j = 0; j < chunks.length; j++) {
                 const chunk = chunks[j];
-                const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
-                if (initChunk) {
-                    if (lastInit !== initChunk) {
-                        buffer.append(initChunk);
-                        lastInit = initChunk;
+                if (chunk.segmentType !== 'InitializationSegment') {
+                    const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
+                    if (initChunk) {
+                        if (lastInit !== initChunk) {
+                            dischargeFragments.push(initChunk);
+                            buffer.append(initChunk);
+                            lastInit = initChunk;
+                        }
                     }
-                    buffer.append(chunk); //TODO Think about supressing buffer events the second time round after a discharge?
                 }
+                dischargeFragments.push(chunk);
+                buffer.append(chunk);
             }
 
             dischargeBuffer.reset();
@@ -306,7 +313,14 @@ function BufferController(config) {
             triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
-        if (appendedBytesInfo) {
+        let suppressAppendedEvent = false;
+        if (dischargeFragments) {
+            if (dischargeFragments.indexOf(appendedBytesInfo) > 0) {
+                suppressAppendedEvent = true;
+            }
+            dischargeFragments = null;
+        }
+        if (appendedBytesInfo && !suppressAppendedEvent) {
             triggerEvent(appendedBytesInfo.endFragment ? Events.BYTES_APPENDED_END_FRAGMENT : Events.BYTES_APPENDED, {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,

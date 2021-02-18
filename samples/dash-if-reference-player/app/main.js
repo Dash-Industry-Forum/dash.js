@@ -182,6 +182,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.isDynamic = false;
 
+    $scope.conformanceViolations = [];
+
     // metrics
     $scope.videoBitrate = 0;
     $scope.videoIndex = 0;
@@ -410,6 +412,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             var session = e.data;
             if (session.getSessionType() === 'persistent-license') {
                 $scope.persistentSessionId[$scope.selectedItem.url] = session.getSessionID();
+            }
+        }
+    }, $scope);
+
+    $scope.player.on(dashjs.MediaPlayer.events.CONFORMANCE_VIOLATION, function (e) { /* jshint ignore:line */
+        if (e && e.event && e.event.key && !$scope.conformanceViolations[e.event.key]) {
+            var existingViolation = $scope.conformanceViolations.filter(function (violation) {
+                return violation.event.key === e.event.key;
+            })
+
+            if(!existingViolation || existingViolation.length === 0) {
+                $scope.conformanceViolations.push(e);
             }
         }
     }, $scope);
@@ -681,10 +695,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
         config.streaming.cmcd.cid = $scope.cmcdContentId ? $scope.cmcdContentId : null;
+        config.streaming.cmcd.rtp = $scope.cmcdRtp ? $scope.cmcdRtp : null;
+        config.streaming.cmcd.rtpSafetyFactor = $scope.cmcdRtpSafetyFactor ? $scope.cmcdRtpSafetyFactor : null;
 
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
+        $scope.conformanceViolations = [];
         if ($scope.isCasting) {
             loadCastMedia($scope.selectedItem.url, protData);
         } else {
@@ -721,6 +738,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.doStop = function () {
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
+        $scope.conformanceViolations = [];
         stopMetricsInterval();
     };
 
@@ -1115,7 +1133,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
               receiverApplicationId: CAST_APP_ID,
               autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
-            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, e => {
+            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function (e) {
                 console.log('[Cast]', e);
                 if (e.castState === cast.framework.CastState.CONNECTED) {
                     onCastReady();
@@ -1125,7 +1143,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             });
             remotePlayer = new cast.framework.RemotePlayer();
             remotePlayerController = new cast.framework.RemotePlayerController(remotePlayer);
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.PLAYER_STATE_CHANGED, function () {
                 if (remotePlayer) {
                     $scope.castPlayerState = remotePlayer.playerState;
                     $scope.safeApply();

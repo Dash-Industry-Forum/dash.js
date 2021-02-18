@@ -126,14 +126,20 @@
             },
             {
                 "title": "PlayReady",
-                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows only).",
+                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows 10 Microsoft Chromium Edge only).",
                 "href": "drm/playready.html"
             },
             {
                 "title": "ClearKey",
                 "description": "This example shows how to use dash.js to play streams with ClearKey DRM protection.",
                 "href": "drm/clearkey.html"
+            },
+            {
+                "title": "License wrapping",
+                "description": "This example shows how to use dash.js to filter and wrap license requests and responses",
+                "href": "drm/license-wrapping.html"
             }
+
         ]
     },
     {

@@ -5,6 +5,10 @@ Build status (CircleCI): [![CircleCI](https://circleci.com/gh/Dash-Industry-Foru
 
 [Join #dashjs on Slack!](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg)
 
+## dash.js awards 2021
+The DASH Industry Forum (DASH-IF) is proud to announce its second dash.js award. Again, we are looking for developers who made contributions of significant benefit to the advancement of the dash.js project. 
+All information can be found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/dash.js-awards-2021).
+
 ## Overview
 A reference client implementation for the playback of MPEG DASH via JavaScript and [compliant browsers](http://caniuse.com/#feat=mediasource). Learn more about DASH IF Reference Client on our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
 
@@ -46,6 +50,14 @@ For help, join our [Slack channel](https://dashif-slack.azurewebsites.net), our 
 
 If you are migrating from dash.js v2.x to dash.js v3.x please read the migration document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-3.0).
 
+## Tutorials
+
+Detailed information on specific topics can be found in our tutorials:
+
+* [Low latency streaming](https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming)
+* [UTCTiming Clock synchronization](https://github.com/Dash-Industry-Forum/dash.js/wiki/UTCTiming---Clock-synchronization)
+* [Digital Rights Management (DRM) and license acquisition](https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition)
+* [Buffer and scheduling logic](https://github.com/Dash-Industry-Forum/dash.js/wiki/Buffer-and-Scheduling-Logic)
 
 ## Getting Started
 
