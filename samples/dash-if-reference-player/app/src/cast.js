@@ -28,7 +28,7 @@ let CastPlayer = function (player, playerController) {
         callback: listener,
         scope: scope
     };
-    
+
     handlers[type].push(handler);
   }
 
@@ -218,13 +218,13 @@ let CastPlayer = function (player, playerController) {
         mediaSession.editTracksInfo(tracksInfoRequest, function () {
             console.log('track changed');
         }, function () {
-            console.error('error track changed'); 
+            console.error('error track changed');
         });
     },
     getCurrentTrackFor: function (type) {
         let mediaSession = castSession.getMediaSession();
         if (mediaSession && mediaSession.activeTrackIds && mediaSession.media && mediaSession.media.tracks) {
-            return mediaSession.media.tracks.find(function (track) { track.trackId === mediaSession.activeTrackIds[0] });
+            return mediaSession.media.tracks.find(function (track) { return track.trackId === mediaSession.activeTrackIds[0] });
         }
     },
     setCurrentTrack: function (track) {
@@ -235,7 +235,7 @@ let CastPlayer = function (player, playerController) {
         mediaSession.editTracksInfo(tracksInfoRequest, function () {
             console.log('track changed');
         }, function () {
-            console.error('error track changed'); 
+            console.error('error track changed');
         });
     }
   }
