@@ -43,6 +43,7 @@ angular.module('DashCastReceiverApp.services', [])
         _state = cast.receiver.media.PlayerState.BUFFERING;
         player = dashjs.MediaPlayer().create();
         player.initialize(videoElt, url, true);
+        player.updateSettings({ 'streaming': { 'flushBufferAtTrackSwitch': true }});
         player.setProtectionData(protData);
         initialized = true;
         player.attachTTMLRenderingDiv(captionElt);
