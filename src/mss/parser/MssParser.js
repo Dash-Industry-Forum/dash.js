@@ -122,7 +122,8 @@ function MssParser(config) {
         let qualityLevels,
             representation,
             segments,
-            i;
+            i,
+            index;
 
         const name = streamIndex.getAttribute('Name');
         const type = streamIndex.getAttribute('Type');
@@ -168,7 +169,8 @@ function MssParser(config) {
             qualityLevels[i].mimeType = adaptationSet.mimeType;
 
             // Set quality level id
-            qualityLevels[i].Id = adaptationSet.id + '_' + qualityLevels[i].getAttribute('Index');
+            index = qualityLevels[i].getAttribute('Index');
+            qualityLevels[i].Id = adaptationSet.id + ((index !== null) ? ('_' + index) : '');
 
             // Map Representation to QualityLevel
             representation = mapRepresentation(qualityLevels[i], streamIndex);
@@ -200,12 +202,18 @@ function MssParser(config) {
         const representation = {};
         const type = streamIndex.getAttribute('Type');
         let fourCCValue = null;
+        let width = null;
+        let height = null;
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
         representation.mimeType = qualityLevel.mimeType;
-        representation.width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
-        representation.height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+
+        width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
+        height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+        if (!isNaN(width)) representation.width = width;
+        if (!isNaN(height)) representation.height = height;
+
 
         fourCCValue = qualityLevel.getAttribute('FourCC');
 
