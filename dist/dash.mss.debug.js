@@ -3083,6 +3083,12 @@ function MssParser(config) {
         logger = debug.getLogger(instance);
     }
 
+    function getAttributeAsBoolean(node, attrName) {
+        var value = node.getAttribute(attrName);
+        if (!value) return false;
+        return value.toLowerCase() === 'true';
+    }
+
     function mapPeriod(smoothStreamingMedia, timescale) {
         var period = {};
         var streams = undefined,
@@ -3112,7 +3118,8 @@ function MssParser(config) {
         var qualityLevels = undefined,
             representation = undefined,
             segments = undefined,
-            i = undefined;
+            i = undefined,
+            index = undefined;
 
         var name = streamIndex.getAttribute('Name');
         var type = streamIndex.getAttribute('Type');
@@ -3158,7 +3165,8 @@ function MssParser(config) {
             qualityLevels[i].mimeType = adaptationSet.mimeType;
 
             // Set quality level id
-            qualityLevels[i].Id = adaptationSet.id + '_' + qualityLevels[i].getAttribute('Index');
+            index = qualityLevels[i].getAttribute('Index');
+            qualityLevels[i].Id = adaptationSet.id + (index !== null ? '_' + index : '');
 
             // Map Representation to QualityLevel
             representation = mapRepresentation(qualityLevels[i], streamIndex);
@@ -3190,12 +3198,17 @@ function MssParser(config) {
         var representation = {};
         var type = streamIndex.getAttribute('Type');
         var fourCCValue = null;
+        var width = null;
+        var height = null;
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
         representation.mimeType = qualityLevel.mimeType;
-        representation.width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
-        representation.height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+
+        width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
+        height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+        if (!isNaN(width)) representation.width = width;
+        if (!isNaN(height)) representation.height = height;
 
         fourCCValue = qualityLevel.getAttribute('FourCC');
 
@@ -3593,7 +3606,7 @@ function MssParser(config) {
         // Set manifest node properties
         manifest.protocol = 'MSS';
         manifest.profiles = 'urn:mpeg:dash:profile:isoff-live:2011';
-        manifest.type = smoothStreamingMedia.getAttribute('IsLive') === 'TRUE' ? 'dynamic' : 'static';
+        manifest.type = getAttributeAsBoolean(smoothStreamingMedia, 'IsLive') ? 'dynamic' : 'static';
         timescale = smoothStreamingMedia.getAttribute('TimeScale');
         manifest.timescale = timescale ? parseFloat(timescale) : DEFAULT_TIME_SCALE;
         var dvrWindowLength = parseFloat(smoothStreamingMedia.getAttribute('DVRWindowLength'));
@@ -3602,7 +3615,7 @@ function MssParser(config) {
             dvrWindowLength = Infinity;
         }
         // Star-over
-        if (dvrWindowLength === 0 && smoothStreamingMedia.getAttribute('CanSeek') === 'TRUE') {
+        if (dvrWindowLength === 0 && getAttributeAsBoolean(smoothStreamingMedia, 'CanSeek')) {
             dvrWindowLength = Infinity;
         }
 
@@ -4261,6 +4274,12 @@ var MediaPlayerEvents = (function (_EventsBase) {
      * @event MediaPlayerEvents#EVENT_MODE_ON_RECEIVE
      */
     this.EVENT_MODE_ON_RECEIVE = 'eventModeOnReceive';
+
+    /**
+     * Event that is dispatched whenever the player encounters a potential conformance validation that might lead to unexpected/not optimal behavior
+     * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
+     */
+    this.CONFORMANCE_VIOLATION = 'conformanceViolation';
   }
 
   return MediaPlayerEvents;
@@ -4699,7 +4718,7 @@ function HTTPRequest() {
    */
   this._tfinish = null;
   /**
-   * The duration of the media requests, if available, in milliseconds.
+   * The duration of the media requests, if available, in seconds.
    * @public
    */
   this._mediaduration = null;
@@ -4758,6 +4777,7 @@ HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
 HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
 HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
+HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 
 exports.HTTPRequest = HTTPRequest;

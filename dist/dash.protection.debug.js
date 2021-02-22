@@ -29,6 +29,183 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ * @class
+ * @ignore
+ */
+
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Utils = (function () {
+    function Utils() {
+        _classCallCheck(this, Utils);
+    }
+
+    _createClass(Utils, null, [{
+        key: 'mixin',
+        value: function mixin(dest, source, copy) {
+            var s = undefined;
+            var empty = {};
+            if (dest) {
+                for (var _name in source) {
+                    if (source.hasOwnProperty(_name)) {
+                        s = source[_name];
+                        if (!(_name in dest) || dest[_name] !== s && (!(_name in empty) || empty[_name] !== s)) {
+                            if (typeof dest[_name] === 'object' && dest[_name] !== null) {
+                                dest[_name] = Utils.mixin(dest[_name], s, copy);
+                            } else {
+                                dest[_name] = copy(s);
+                            }
+                        }
+                    }
+                }
+            }
+            return dest;
+        }
+    }, {
+        key: 'clone',
+        value: function clone(src) {
+            if (!src || typeof src !== 'object') {
+                return src; // anything
+            }
+            var r = undefined;
+            if (src instanceof Array) {
+                // array
+                r = [];
+                for (var i = 0, l = src.length; i < l; ++i) {
+                    if (i in src) {
+                        r.push(Utils.clone(src[i]));
+                    }
+                }
+            } else {
+                r = {};
+            }
+            return Utils.mixin(r, src, Utils.clone);
+        }
+    }, {
+        key: 'addAditionalQueryParameterToUrl',
+        value: function addAditionalQueryParameterToUrl(url, params) {
+            try {
+                var _ret = (function () {
+                    if (!params || params.length === 0) {
+                        return {
+                            v: url
+                        };
+                    }
+
+                    var modifiedUrl = new URL(url);
+
+                    params.forEach(function (param) {
+                        if (param.key && param.value) {
+                            modifiedUrl.searchParams.set(param.key, param.value);
+                        }
+                    });
+
+                    return {
+                        v: modifiedUrl.href
+                    };
+                })();
+
+                if (typeof _ret === 'object') return _ret.v;
+            } catch (e) {
+                return url;
+            }
+        }
+    }, {
+        key: 'parseHttpHeaders',
+        value: function parseHttpHeaders(headerStr) {
+            var headers = {};
+            if (!headerStr) {
+                return headers;
+            }
+
+            // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method
+            // which send a string starting with a "\n" character
+            var headerPairs = headerStr.trim().split('\r\n');
+            for (var i = 0, ilen = headerPairs.length; i < ilen; i++) {
+                var headerPair = headerPairs[i];
+                var index = headerPair.indexOf(': ');
+                if (index > 0) {
+                    headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
+                }
+            }
+            return headers;
+        }
+    }, {
+        key: 'generateUuid',
+        value: function generateUuid() {
+            var dt = new Date().getTime();
+            var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = (dt + Math.random() * 16) % 16 | 0;
+                dt = Math.floor(dt / 16);
+                return (c == 'x' ? r : r & 0x3 | 0x8).toString(16);
+            });
+            return uuid;
+        }
+    }, {
+        key: 'generateHashCode',
+        value: function generateHashCode(string) {
+            var hash = 0;
+
+            if (string.length === 0) {
+                return hash;
+            }
+
+            for (var i = 0; i < string.length; i++) {
+                var chr = string.charCodeAt(i);
+                hash = (hash << 5) - hash + chr;
+                hash |= 0;
+            }
+            return hash;
+        }
+    }]);
+
+    return Utils;
+})();
+
+exports['default'] = Utils;
+module.exports = exports['default'];
+
+},{}],2:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
 /**
  * @class
  * @ignore
@@ -70,7 +247,7 @@ var ErrorsBase = (function () {
 exports['default'] = ErrorsBase;
 module.exports = exports['default'];
 
-},{}],2:[function(_dereq_,module,exports){
+},{}],3:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -142,7 +319,7 @@ var EventsBase = (function () {
 exports['default'] = EventsBase;
 module.exports = exports['default'];
 
-},{}],3:[function(_dereq_,module,exports){
+},{}],4:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -212,7 +389,7 @@ var constants = new ProtectionConstants();
 exports['default'] = constants;
 module.exports = exports['default'];
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],5:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -458,7 +635,7 @@ var CommonEncryption = (function () {
 exports['default'] = CommonEncryption;
 module.exports = exports['default'];
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -497,31 +674,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionController = _dereq_(7);
+var _controllersProtectionController = _dereq_(8);
 
 var _controllersProtectionController2 = _interopRequireDefault(_controllersProtectionController);
 
-var _controllersProtectionKeyController = _dereq_(8);
+var _controllersProtectionKeyController = _dereq_(9);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _ProtectionEvents = _dereq_(6);
+var _ProtectionEvents = _dereq_(7);
 
 var _ProtectionEvents2 = _interopRequireDefault(_ProtectionEvents);
 
-var _errorsProtectionErrors = _dereq_(13);
+var _errorsProtectionErrors = _dereq_(14);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _modelsProtectionModel_21Jan2015 = _dereq_(15);
+var _modelsProtectionModel_21Jan2015 = _dereq_(16);
 
 var _modelsProtectionModel_21Jan20152 = _interopRequireDefault(_modelsProtectionModel_21Jan2015);
 
-var _modelsProtectionModel_3Feb2014 = _dereq_(16);
+var _modelsProtectionModel_3Feb2014 = _dereq_(17);
 
 var _modelsProtectionModel_3Feb20142 = _interopRequireDefault(_modelsProtectionModel_3Feb2014);
 
-var _modelsProtectionModel_01b = _dereq_(14);
+var _modelsProtectionModel_01b = _dereq_(15);
 
 var _modelsProtectionModel_01b2 = _interopRequireDefault(_modelsProtectionModel_01b);
 
@@ -617,7 +794,8 @@ function Protection() {
                 debug: config.debug,
                 events: config.events,
                 BASE64: config.BASE64,
-                constants: config.constants
+                constants: config.constants,
+                cmcdModel: config.cmcdModel
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
@@ -676,7 +854,7 @@ dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory
 exports['default'] = factory;
 module.exports = exports['default'];
 
-},{"13":13,"14":14,"15":15,"16":16,"6":6,"7":7,"8":8}],6:[function(_dereq_,module,exports){
+},{"14":14,"15":15,"16":16,"17":17,"7":7,"8":8,"9":9}],7:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -721,7 +899,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _coreEventsEventsBase = _dereq_(2);
+var _coreEventsEventsBase = _dereq_(3);
 
 var _coreEventsEventsBase2 = _interopRequireDefault(_coreEventsEventsBase);
 
@@ -890,7 +1068,7 @@ var protectionEvents = new ProtectionEvents();
 exports['default'] = protectionEvents;
 module.exports = exports['default'];
 
-},{"2":2}],7:[function(_dereq_,module,exports){
+},{"3":3}],8:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -930,25 +1108,39 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(4);
+var _CommonEncryption = _dereq_(5);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _voMediaCapability = _dereq_(26);
+var _voMediaCapability = _dereq_(29);
 
 var _voMediaCapability2 = _interopRequireDefault(_voMediaCapability);
 
-var _voKeySystemConfiguration = _dereq_(25);
+var _voKeySystemConfiguration = _dereq_(26);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _errorsProtectionErrors = _dereq_(13);
+var _errorsProtectionErrors = _dereq_(14);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _voDashJSError = _dereq_(28);
+var _voDashJSError = _dereq_(31);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
+
+var _voLicenseRequest = _dereq_(27);
+
+var _voLicenseRequest2 = _interopRequireDefault(_voLicenseRequest);
+
+var _voLicenseResponse = _dereq_(28);
+
+var _voLicenseResponse2 = _interopRequireDefault(_voLicenseResponse);
+
+var _voMetricsHTTPRequest = _dereq_(32);
+
+var _coreUtils = _dereq_(1);
+
+var _coreUtils2 = _interopRequireDefault(_coreUtils);
 
 var NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 var NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -982,6 +1174,7 @@ function ProtectionController(config) {
     var BASE64 = config.BASE64;
     var constants = config.constants;
     var needkeyRetries = [];
+    var cmcdModel = config.cmcdModel;
 
     var instance = undefined,
         logger = undefined,
@@ -990,7 +1183,9 @@ function ProtectionController(config) {
         protDataSet = undefined,
         sessionType = undefined,
         robustnessLevel = undefined,
-        keySystem = undefined;
+        keySystem = undefined,
+        licenseRequestFilters = undefined,
+        licenseResponseFilters = undefined;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -998,6 +1193,8 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
+        licenseRequestFilters = [];
+        licenseResponseFilters = [];
     }
 
     function checkConfig() {
@@ -1031,7 +1228,6 @@ function ProtectionController(config) {
 
         eventBus.on(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.on(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
-
         mediaInfoArr.push(mediaInfo);
 
         // ContentProtection elements are specified at the AdaptationSet level, so the CP for audio
@@ -1040,6 +1236,16 @@ function ProtectionController(config) {
         if (supportedKS && supportedKS.length > 0) {
             selectKeySystem(supportedKS, true);
         }
+    }
+
+    /**
+     * Removes all entries from the mediaInfoArr array for a specific stream id
+     * @param {String} streamId
+     */
+    function clearMediaInfoArrayByStreamId(streamId) {
+        mediaInfoArr = mediaInfoArr.filter(function (mediaInfo) {
+            return mediaInfo.streamInfo.id !== streamId;
+        });
     }
 
     /**
@@ -1083,13 +1289,10 @@ function ProtectionController(config) {
         if (initDataForKS) {
 
             // Check for duplicate initData
-            var currentInitData = protectionModel.getAllInitData();
-            for (var i = 0; i < currentInitData.length; i++) {
-                if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                    logger.info('DRM: Ignoring initData because we have already seen it!');
-                    return;
-                }
+            if (_isInitDataDuplicate(initDataForKS)) {
+                return;
             }
+
             try {
                 protectionModel.createKeySession(initDataForKS, protData, getSessionType(keySystem), cdmData);
             } catch (error) {
@@ -1105,6 +1308,33 @@ function ProtectionController(config) {
                 data: null,
                 error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (keySystem ? keySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
             });
+        }
+    }
+
+    /**
+     * Checks if the provided init data is equal to one of the existing init data values
+     * @param {any} initDataForKS
+     * @return {boolean}
+     * @private
+     */
+    function _isInitDataDuplicate(initDataForKS) {
+
+        if (!initDataForKS) {
+            return false;
+        }
+
+        try {
+            var currentInitData = protectionModel.getAllInitData();
+            for (var i = 0; i < currentInitData.length; i++) {
+                if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
+                    logger.debug('DRM: Ignoring initData because we have already seen it!');
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (e) {
+            return false;
         }
     }
 
@@ -1259,12 +1489,15 @@ function ProtectionController(config) {
     function reset() {
         checkConfig();
 
+        licenseRequestFilters = [];
+        licenseResponseFilters = [];
+
         eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
 
         setMediaElement(null);
 
-        keySystem = undefined; //TODO-Refactor look at why undefined is needed for this. refactor
+        keySystem = undefined;
 
         if (protectionModel) {
             protectionModel.reset();
@@ -1323,8 +1556,6 @@ function ProtectionController(config) {
     }
 
     function selectKeySystem(supportedKS, fromManifest) {
-        var self = this;
-        var requestedKeySystems = [];
 
         // Reorder key systems according to priority order provided in protectionData
         supportedKS = supportedKS.sort(function (ksA, ksB) {
@@ -1333,145 +1564,166 @@ function ProtectionController(config) {
             return indexA - indexB;
         });
 
-        var ksIdx = undefined;
-        if (keySystem) {
-            // We have a key system
-            for (ksIdx = 0; ksIdx < supportedKS.length; ksIdx++) {
-                if (keySystem === supportedKS[ksIdx].ks) {
-                    var _ret = (function () {
+        // First time, so we need to select a key system
+        if (keySystem === undefined) {
+            _selectInitialKeySystem(supportedKS, fromManifest);
+        }
 
-                        requestedKeySystems.push({
-                            ks: supportedKS[ksIdx].ks,
-                            configs: [getKeySystemConfiguration(keySystem)]
-                        });
+        // We already selected a key system. we only need to trigger a new license exchange if the init data has changed
+        else if (keySystem) {
+                _selectWithExistingKeySystem(supportedKS, fromManifest);
+            }
 
-                        // Ensure that we would be granted key system access using the key
-                        // system and codec information
-                        var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
-                            eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                            if (event.error) {
-                                if (!fromManifest) {
-                                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error) });
-                                }
-                            } else {
-                                logger.info('DRM: KeySystem Access Granted');
-                                eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: event.data });
-                                var protData = getProtData(keySystem);
-                                if (protectionKeyController.isClearKey(keySystem)) {
-                                    // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
-                                    // initData and overwrite possible initData indicated in encrypted event (EME)
-                                    if (protData && protData.hasOwnProperty('clearkeys')) {
-                                        var initData = { kids: Object.keys(protData.clearkeys) };
-                                        supportedKS[ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
-                                    }
-                                }
-                                if (supportedKS[ksIdx].sessionId) {
-                                    // Load MediaKeySession with sessionId
-                                    loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
-                                } else if (supportedKS[ksIdx].initData) {
-                                    // Create new MediaKeySession with initData
-                                    createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
-                                }
-                            }
-                        };
-                        eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                        protectionModel.requestKeySystemAccess(requestedKeySystems);
-                        return 'break';
-                    })();
+            // We are in the process of selecting a key system, so just save the data which might be coming from additional AdaptationSets.
+            else {
+                    pendingNeedKeyData.push(supportedKS);
+                }
+    }
 
-                    if (_ret === 'break') break;
+    function _selectWithExistingKeySystem(supportedKS, fromManifest) {
+        var self = this;
+        var requestedKeySystems = [];
+
+        var ksIdx = supportedKS.findIndex(function (entry) {
+            return entry.ks === keySystem;
+        });
+
+        if (ksIdx === -1 || !supportedKS[ksIdx].initData) {
+            return;
+        }
+
+        //  we only need to call this if the init data has changed
+        var initDataForKs = _CommonEncryption2['default'].getPSSHForKeySystem(keySystem, supportedKS[ksIdx].initData);
+        if (_isInitDataDuplicate(initDataForKs)) {
+            return;
+        }
+
+        requestedKeySystems.push({
+            ks: supportedKS[ksIdx].ks,
+            configs: [getKeySystemConfiguration(keySystem)]
+        });
+
+        // Ensure that we would be granted key system access using the key
+        // system and codec information
+        var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
+            eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+            if (event.error) {
+                if (!fromManifest) {
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, { error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error) });
+                }
+            } else {
+                logger.info('DRM: KeySystem Access Granted');
+                eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: event.data });
+                var protData = getProtData(keySystem);
+                if (protectionKeyController.isClearKey(keySystem)) {
+                    // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                    // initData and overwrite possible initData indicated in encrypted event (EME)
+                    if (protData && protData.hasOwnProperty('clearkeys')) {
+                        var initData = { kids: Object.keys(protData.clearkeys) };
+                        supportedKS[ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
+                    }
+                }
+                if (supportedKS[ksIdx].sessionId) {
+                    // Load MediaKeySession with sessionId
+                    loadKeySession(supportedKS[ksIdx].sessionId, supportedKS[ksIdx].initData);
+                } else if (supportedKS[ksIdx].initData) {
+                    // Create new MediaKeySession with initData
+                    createKeySession(supportedKS[ksIdx].initData, supportedKS[ksIdx].cdmData);
                 }
             }
-        } else if (keySystem === undefined) {
-            var onKeySystemSelected;
+        };
 
-            (function () {
-                // First time through, so we need to select a key system
-                keySystem = null;
-                pendingNeedKeyData.push(supportedKS);
+        eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+        protectionModel.requestKeySystemAccess(requestedKeySystems);
+    }
 
-                // Add all key systems to our request list since we have yet to select a key system
-                for (var i = 0; i < supportedKS.length; i++) {
-                    requestedKeySystems.push({
-                        ks: supportedKS[i].ks,
-                        configs: [getKeySystemConfiguration(supportedKS[i].ks)]
+    function _selectInitialKeySystem(supportedKS, fromManifest) {
+        var self = this;
+        var requestedKeySystems = [];
+        var ksIdx = undefined;
+
+        // First time through, so we need to select a key system
+        keySystem = null;
+        pendingNeedKeyData.push(supportedKS);
+
+        // Add all key systems to our request list since we have yet to select a key system
+        for (var i = 0; i < supportedKS.length; i++) {
+            requestedKeySystems.push({
+                ks: supportedKS[i].ks,
+                configs: [getKeySystemConfiguration(supportedKS[i].ks)]
+            });
+        }
+
+        var keySystemAccess = undefined;
+        var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
+            eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+            if (event.error) {
+                keySystem = undefined;
+                eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+                if (!fromManifest) {
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+                        data: null,
+                        error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)
                     });
                 }
+            } else {
+                keySystemAccess = event.data;
+                logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
+                protectionModel.selectKeySystem(keySystemAccess);
+            }
+        };
+        var onKeySystemSelected = function onKeySystemSelected(event) {
+            eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+            eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+            if (!event.error) {
+                if (!protectionModel) {
+                    return;
+                }
+                keySystem = protectionModel.getKeySystem();
+                eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
+                // Set server certificate from protData
+                var protData = getProtData(keySystem);
+                if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                    protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+                }
 
-                var keySystemAccess = undefined;
-                var onKeySystemAccessComplete = function onKeySystemAccessComplete(event) {
-                    eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                    if (event.error) {
-                        keySystem = undefined;
-                        eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-                        if (!fromManifest) {
-                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-                                data: null,
-                                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + event.error)
-                            });
-                        }
-                    } else {
-                        keySystemAccess = event.data;
-                        logger.info('DRM: KeySystem Access Granted (' + keySystemAccess.keySystem.systemString + ')!  Selecting key system...');
-                        protectionModel.selectKeySystem(keySystemAccess);
-                    }
-                };
-
-                onKeySystemSelected = function onKeySystemSelected(event) {
-                    eventBus.off(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-                    eventBus.off(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                    if (!event.error) {
-                        if (!protectionModel) {
-                            return;
-                        }
-                        keySystem = protectionModel.getKeySystem();
-                        eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
-                        // Set server certificate from protData
-                        var protData = getProtData(keySystem);
-                        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-                            protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
-                        }
-                        for (var i = 0; i < pendingNeedKeyData.length; i++) {
-                            for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
-                                if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
-                                    if (protectionKeyController.isClearKey(keySystem)) {
-                                        // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
-                                        // initData and overwrite possible initData indicated in encrypted event (EME)
-                                        if (protData && protData.hasOwnProperty('clearkeys')) {
-                                            var initData = { kids: Object.keys(protData.clearkeys) };
-                                            pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
-                                        }
-                                    }
-                                    if (pendingNeedKeyData[i][ksIdx].sessionId) {
-                                        // Load MediaKeySession with sessionId
-                                        loadKeySession(pendingNeedKeyData[i][ksIdx].sessionId, pendingNeedKeyData[i][ksIdx].initData);
-                                    } else if (pendingNeedKeyData[i][ksIdx].initData !== null) {
-                                        // Create new MediaKeySession with initData
-                                        createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
-                                    }
-                                    break;
+                // Create key session for the remaining AdaptationSets which have been added to pendingNeedKeyData
+                for (var i = 0; i < pendingNeedKeyData.length; i++) {
+                    for (ksIdx = 0; ksIdx < pendingNeedKeyData[i].length; ksIdx++) {
+                        if (keySystem === pendingNeedKeyData[i][ksIdx].ks) {
+                            if (protectionKeyController.isClearKey(keySystem)) {
+                                // For Clearkey: if parameters for generating init data was provided by the user, use them for generating
+                                // initData and overwrite possible initData indicated in encrypted event (EME)
+                                if (protData && protData.hasOwnProperty('clearkeys')) {
+                                    var initData = { kids: Object.keys(protData.clearkeys) };
+                                    pendingNeedKeyData[i][ksIdx].initData = new TextEncoder().encode(JSON.stringify(initData));
                                 }
                             }
-                        }
-                    } else {
-                        keySystem = undefined;
-                        if (!fromManifest) {
-                            eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
-                                data: null,
-                                error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
-                            });
+                            if (pendingNeedKeyData[i][ksIdx].sessionId) {
+                                // Load MediaKeySession with sessionId
+                                loadKeySession(pendingNeedKeyData[i][ksIdx].sessionId, pendingNeedKeyData[i][ksIdx].initData);
+                            } else if (pendingNeedKeyData[i][ksIdx].initData !== null) {
+                                // Create new MediaKeySession with initData
+                                createKeySession(pendingNeedKeyData[i][ksIdx].initData, pendingNeedKeyData[i][ksIdx].cdmData);
+                            }
+                            break;
                         }
                     }
-                };
+                }
+            } else {
+                keySystem = undefined;
+                if (!fromManifest) {
+                    eventBus.trigger(events.KEY_SYSTEM_SELECTED, {
+                        data: null,
+                        error: new _voDashJSError2['default'](_errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE, _errorsProtectionErrors2['default'].KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE + 'Error selecting key system! -- ' + event.error)
+                    });
+                }
+            }
+        };
 
-                eventBus.on(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
-                eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
-                protectionModel.requestKeySystemAccess(requestedKeySystems);
-            })();
-        } else {
-            // We are in the process of selecting a key system, so just save the data
-            pendingNeedKeyData.push(supportedKS);
-        }
+        eventBus.on(events.INTERNAL_KEY_SYSTEM_SELECTED, onKeySystemSelected, self);
+        eventBus.on(events.KEY_SYSTEM_ACCESS_COMPLETE, onKeySystemAccessComplete, self);
+        protectionModel.requestKeySystemAccess(requestedKeySystems);
     }
 
     function sendLicenseRequestCompleteEvent(data, error) {
@@ -1592,13 +1844,18 @@ function ProtectionController(config) {
             }
 
             if (xhr.status === 200) {
-                var licenseMessage = licenseServerData.getLicenseMessage(xhr.response, keySystemString, messageType);
-                if (licenseMessage !== null) {
-                    sendLicenseRequestCompleteEvent(eventData);
-                    protectionModel.updateKeySession(sessionToken, licenseMessage);
-                } else {
-                    reportError(xhr, eventData, keySystemString, messageType);
-                }
+                (function () {
+                    var licenseResponse = new _voLicenseResponse2['default'](xhr.responseURL, _coreUtils2['default'].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null), xhr.response);
+                    applyFilters(licenseResponseFilters, licenseResponse).then(function () {
+                        var licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
+                        if (licenseMessage !== null) {
+                            sendLicenseRequestCompleteEvent(eventData);
+                            protectionModel.updateKeySession(sessionToken, licenseMessage);
+                        } else {
+                            reportError(xhr, eventData, keySystemString, messageType);
+                        }
+                    });
+                })();
             } else {
                 reportError(xhr, eventData, keySystemString, messageType);
             }
@@ -1612,35 +1869,46 @@ function ProtectionController(config) {
             sendLicenseRequestCompleteEvent(eventData, new _voDashJSError2['default'](_errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE, _errorsProtectionErrors2['default'].MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE + keySystemString + ' update, XHR error. status is "' + xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
         };
 
-        //const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         var reqPayload = keySystem.getLicenseRequestFromMessage(message);
         var reqMethod = licenseServerData.getHTTPMethod(messageType);
         var responseType = licenseServerData.getResponseType(keySystemString, messageType);
         var timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
         var sessionId = sessionToken.getSessionID() || null;
 
-        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError, sessionId);
+        var licenseRequest = new _voLicenseRequest2['default'](url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
+        applyFilters(licenseRequestFilters, licenseRequest).then(function () {
+            doLicenseRequest(licenseRequest, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+        });
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
-    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId) {
+    function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         var xhr = new XMLHttpRequest();
 
-        xhr.open(method, url, true);
-        xhr.responseType = responseType;
-        xhr.withCredentials = withCredentials;
+        var cmcdParams = cmcdModel.getQueryParameter({
+            url: request.url,
+            type: _voMetricsHTTPRequest.HTTPRequest.LICENSE
+        });
+
+        if (cmcdParams) {
+            request.url = _coreUtils2['default'].addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+        }
+
+        xhr.open(request.method, request.url, true);
+        xhr.responseType = request.responseType;
+        xhr.withCredentials = request.withCredentials;
         if (timeout > 0) {
             xhr.timeout = timeout;
         }
-        for (var key in headers) {
-            xhr.setRequestHeader(key, headers[key]);
+        for (var key in request.headers) {
+            xhr.setRequestHeader(key, request.headers[key]);
         }
 
         var retryRequest = function retryRequest() {
             // fail silently and retry
             retriesCount--;
             setTimeout(function () {
-                doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId);
+                doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
             }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
         };
 
@@ -1666,14 +1934,15 @@ function ProtectionController(config) {
             onAbort(this);
         };
 
+        // deprecated, to be removed
         eventBus.trigger(events.LICENSE_REQUEST_SENDING, {
-            url: url,
-            headers: headers,
-            payload: payload,
-            sessionId: sessionId
+            url: request.url,
+            headers: request.headers,
+            payload: request.data,
+            sessionId: request.sessionId
         });
 
-        xhr.send(payload);
+        xhr.send(request.data);
     }
 
     function onNeedKey(event, retry) {
@@ -1708,12 +1977,8 @@ function ProtectionController(config) {
             if (initDataForKS) {
 
                 // Check for duplicate initData
-                var currentInitData = protectionModel.getAllInitData();
-                for (var i = 0; i < currentInitData.length; i++) {
-                    if (protectionKeyController.initDataEquals(initDataForKS, currentInitData[i])) {
-                        logger.warn('DRM: Ignoring initData because we have already seen it!');
-                        return;
-                    }
+                if (_isInitDataDuplicate(initDataForKS)) {
+                    return;
                 }
             }
         }
@@ -1739,8 +2004,26 @@ function ProtectionController(config) {
         }
     }
 
+    function setLicenseRequestFilters(filters) {
+        licenseRequestFilters = filters;
+    }
+
+    function setLicenseResponseFilters(filters) {
+        licenseResponseFilters = filters;
+    }
+
+    function applyFilters(filters, param) {
+        if (!filters) return Promise.resolve();
+        return filters.reduce(function (prev, next) {
+            return prev.then(function () {
+                return next(param);
+            });
+        }, Promise.resolve());
+    }
+
     instance = {
         initializeForMedia: initializeForMedia,
+        clearMediaInfoArrayByStreamId: clearMediaInfoArrayByStreamId,
         createKeySession: createKeySession,
         loadKeySession: loadKeySession,
         removeKeySession: removeKeySession,
@@ -1753,6 +2036,8 @@ function ProtectionController(config) {
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getKeySystems: getKeySystems,
         setKeySystems: setKeySystems,
+        setLicenseRequestFilters: setLicenseRequestFilters,
+        setLicenseResponseFilters: setLicenseResponseFilters,
         stop: stop,
         reset: reset
     };
@@ -1766,7 +2051,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionController);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"13":13,"25":25,"26":26,"28":28,"4":4}],8:[function(_dereq_,module,exports){
+},{"1":1,"14":14,"26":26,"27":27,"28":28,"29":29,"31":31,"32":32,"5":5}],9:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1805,43 +2090,43 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(4);
+var _CommonEncryption = _dereq_(5);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _drmKeySystemClearKey = _dereq_(9);
+var _drmKeySystemClearKey = _dereq_(10);
 
 var _drmKeySystemClearKey2 = _interopRequireDefault(_drmKeySystemClearKey);
 
-var _drmKeySystemW3CClearKey = _dereq_(11);
+var _drmKeySystemW3CClearKey = _dereq_(12);
 
 var _drmKeySystemW3CClearKey2 = _interopRequireDefault(_drmKeySystemW3CClearKey);
 
-var _drmKeySystemWidevine = _dereq_(12);
+var _drmKeySystemWidevine = _dereq_(13);
 
 var _drmKeySystemWidevine2 = _interopRequireDefault(_drmKeySystemWidevine);
 
-var _drmKeySystemPlayReady = _dereq_(10);
+var _drmKeySystemPlayReady = _dereq_(11);
 
 var _drmKeySystemPlayReady2 = _interopRequireDefault(_drmKeySystemPlayReady);
 
-var _serversDRMToday = _dereq_(18);
+var _serversDRMToday = _dereq_(19);
 
 var _serversDRMToday2 = _interopRequireDefault(_serversDRMToday);
 
-var _serversPlayReady = _dereq_(19);
+var _serversPlayReady = _dereq_(20);
 
 var _serversPlayReady2 = _interopRequireDefault(_serversPlayReady);
 
-var _serversWidevine = _dereq_(20);
+var _serversWidevine = _dereq_(21);
 
 var _serversWidevine2 = _interopRequireDefault(_serversWidevine);
 
-var _serversClearKey = _dereq_(17);
+var _serversClearKey = _dereq_(18);
 
 var _serversClearKey2 = _interopRequireDefault(_serversClearKey);
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2173,7 +2458,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyContro
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"10":10,"11":11,"12":12,"17":17,"18":18,"19":19,"20":20,"3":3,"4":4,"9":9}],9:[function(_dereq_,module,exports){
+},{"10":10,"11":11,"12":12,"13":13,"18":18,"19":19,"20":20,"21":21,"4":4,"5":5}],10:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2213,19 +2498,19 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voKeyPair = _dereq_(23);
+var _voKeyPair = _dereq_(24);
 
 var _voKeyPair2 = _interopRequireDefault(_voKeyPair);
 
-var _voClearKeyKeySet = _dereq_(21);
+var _voClearKeyKeySet = _dereq_(22);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
-var _CommonEncryption = _dereq_(4);
+var _CommonEncryption = _dereq_(5);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2389,7 +2674,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"21":21,"23":23,"3":3,"4":4}],10:[function(_dereq_,module,exports){
+},{"22":22,"24":24,"4":4,"5":5}],11:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2435,11 +2720,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(4);
+var _CommonEncryption = _dereq_(5);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2719,7 +3004,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady)
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"3":3,"4":4}],11:[function(_dereq_,module,exports){
+},{"4":4,"5":5}],12:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2759,19 +3044,19 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voKeyPair = _dereq_(23);
+var _voKeyPair = _dereq_(24);
 
 var _voKeyPair2 = _interopRequireDefault(_voKeyPair);
 
-var _voClearKeyKeySet = _dereq_(21);
+var _voClearKeyKeySet = _dereq_(22);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
-var _CommonEncryption = _dereq_(4);
+var _CommonEncryption = _dereq_(5);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2861,7 +3146,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKe
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"21":21,"23":23,"3":3,"4":4}],12:[function(_dereq_,module,exports){
+},{"22":22,"24":24,"4":4,"5":5}],13:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2908,11 +3193,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(4);
+var _CommonEncryption = _dereq_(5);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2984,7 +3269,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"3":3,"4":4}],13:[function(_dereq_,module,exports){
+},{"4":4,"5":5}],14:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3029,7 +3314,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var _coreErrorsErrorsBase = _dereq_(1);
+var _coreErrorsErrorsBase = _dereq_(2);
 
 var _coreErrorsErrorsBase2 = _interopRequireDefault(_coreErrorsErrorsBase);
 
@@ -3130,7 +3415,7 @@ var protectionErrors = new ProtectionErrors();
 exports['default'] = protectionErrors;
 module.exports = exports['default'];
 
-},{"1":1}],14:[function(_dereq_,module,exports){
+},{"2":2}],15:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3178,31 +3463,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionKeyController = _dereq_(8);
+var _controllersProtectionKeyController = _dereq_(9);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _voNeedKey = _dereq_(27);
+var _voNeedKey = _dereq_(30);
 
 var _voNeedKey2 = _interopRequireDefault(_voNeedKey);
 
-var _voDashJSError = _dereq_(28);
+var _voDashJSError = _dereq_(31);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _voKeyMessage = _dereq_(22);
+var _voKeyMessage = _dereq_(23);
 
 var _voKeyMessage2 = _interopRequireDefault(_voKeyMessage);
 
-var _voKeySystemConfiguration = _dereq_(25);
+var _voKeySystemConfiguration = _dereq_(26);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _voKeySystemAccess = _dereq_(24);
+var _voKeySystemAccess = _dereq_(25);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _errorsProtectionErrors = _dereq_(13);
+var _errorsProtectionErrors = _dereq_(14);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
@@ -3590,7 +3875,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionModel_01b);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"13":13,"22":22,"24":24,"25":25,"27":27,"28":28,"8":8}],15:[function(_dereq_,module,exports){
+},{"14":14,"23":23,"25":25,"26":26,"30":30,"31":31,"9":9}],16:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3638,31 +3923,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionKeyController = _dereq_(8);
+var _controllersProtectionKeyController = _dereq_(9);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _voNeedKey = _dereq_(27);
+var _voNeedKey = _dereq_(30);
 
 var _voNeedKey2 = _interopRequireDefault(_voNeedKey);
 
-var _errorsProtectionErrors = _dereq_(13);
+var _errorsProtectionErrors = _dereq_(14);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _voDashJSError = _dereq_(28);
+var _voDashJSError = _dereq_(31);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _voKeyMessage = _dereq_(22);
+var _voKeyMessage = _dereq_(23);
 
 var _voKeyMessage2 = _interopRequireDefault(_voKeyMessage);
 
-var _voKeySystemAccess = _dereq_(24);
+var _voKeySystemAccess = _dereq_(25);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -4118,7 +4403,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan20
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"13":13,"22":22,"24":24,"27":27,"28":28,"3":3,"8":8}],16:[function(_dereq_,module,exports){
+},{"14":14,"23":23,"25":25,"30":30,"31":31,"4":4,"9":9}],17:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4167,31 +4452,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionKeyController = _dereq_(8);
+var _controllersProtectionKeyController = _dereq_(9);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _voNeedKey = _dereq_(27);
+var _voNeedKey = _dereq_(30);
 
 var _voNeedKey2 = _interopRequireDefault(_voNeedKey);
 
-var _voDashJSError = _dereq_(28);
+var _voDashJSError = _dereq_(31);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _errorsProtectionErrors = _dereq_(13);
+var _errorsProtectionErrors = _dereq_(14);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _voKeyMessage = _dereq_(22);
+var _voKeyMessage = _dereq_(23);
 
 var _voKeyMessage2 = _interopRequireDefault(_voKeyMessage);
 
-var _voKeySystemConfiguration = _dereq_(25);
+var _voKeySystemConfiguration = _dereq_(26);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _voKeySystemAccess = _dereq_(24);
+var _voKeySystemAccess = _dereq_(25);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
@@ -4528,7 +4813,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionModel_3Feb201
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"13":13,"22":22,"24":24,"25":25,"27":27,"28":28,"8":8}],17:[function(_dereq_,module,exports){
+},{"14":14,"23":23,"25":25,"26":26,"30":30,"31":31,"9":9}],18:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4577,11 +4862,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voKeyPair = _dereq_(23);
+var _voKeyPair = _dereq_(24);
 
 var _voKeyPair2 = _interopRequireDefault(_voKeyPair);
 
-var _voClearKeyKeySet = _dereq_(21);
+var _voClearKeyKeySet = _dereq_(22);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
@@ -4636,7 +4921,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(ClearKey);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"21":21,"23":23}],18:[function(_dereq_,module,exports){
+},{"22":22,"24":24}],19:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4683,7 +4968,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _constantsProtectionConstants = _dereq_(3);
+var _constantsProtectionConstants = _dereq_(4);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -4757,7 +5042,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(DRMToday);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"3":3}],19:[function(_dereq_,module,exports){
+},{"4":4}],20:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4914,7 +5199,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(PlayReady);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4994,7 +5279,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(Widevine);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5100,7 +5385,7 @@ var ClearKeyKeySet = (function () {
 exports['default'] = ClearKeyKeySet;
 module.exports = exports['default'];
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5165,7 +5450,7 @@ function KeyMessage(sessionToken, message, defaultURL, messageType) {
 exports['default'] = KeyMessage;
 module.exports = exports['default'];
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5225,7 +5510,7 @@ function KeyPair(keyID, key) {
 exports["default"] = KeyPair;
 module.exports = exports["default"];
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5289,7 +5574,7 @@ function KeySystemAccess(keySystem, ksConfiguration) {
 exports["default"] = KeySystemAccess;
 module.exports = exports["default"];
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5368,7 +5653,174 @@ function KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiv
 exports['default'] = KeySystemConfiguration;
 module.exports = exports['default'];
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @classdesc Defines a license request
+ * @ignore
+ */
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var LicenseRequest =
+/**
+ * Defines a license request
+ *
+ * @class
+ */
+function LicenseRequest(url, method, responseType, headers, withCredentials, messageType, sessionId, data) {
+  _classCallCheck(this, LicenseRequest);
+
+  /**
+   * The license request url
+   */
+  this.url = url;
+
+  /**
+   * The HTTP method
+   */
+  this.method = method;
+
+  /**
+   * The HTTP response type
+   */
+  this.responseType = responseType;
+
+  /**
+   * The HTP request headers
+   */
+  this.headers = headers;
+
+  /**
+   * Wether request is done using credentials (cross-site cookies)
+   */
+  this.withCredentials = withCredentials;
+
+  /**
+   * The license request message type (see https://www.w3.org/TR/encrypted-media/#dom-mediakeymessagetype)
+   */
+  this.messageType = messageType;
+
+  /**
+   * The corresponding EME session ID
+   */
+  this.sessionId = sessionId;
+
+  /**
+   * The license request data
+   */
+  this.data = data;
+};
+
+exports["default"] = LicenseRequest;
+module.exports = exports["default"];
+
+},{}],28:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @classdesc Defines a license response
+ */
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var LicenseResponse =
+/**
+ * Defines a license request
+ *
+ * @class
+ * @ignore
+ */
+function LicenseResponse(url, headers, data) {
+  _classCallCheck(this, LicenseResponse);
+
+  /**
+   * The url that was loaded, that can be redirected from original request url
+   */
+  this.url = url;
+
+  /**
+   * The HTP response headers
+   */
+  this.headers = headers;
+
+  /**
+   * The license response data
+   */
+  this.data = data;
+};
+
+exports["default"] = LicenseResponse;
+module.exports = exports["default"];
+
+},{}],29:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5428,7 +5880,7 @@ function MediaCapability(contentType, robustness) {
 exports["default"] = MediaCapability;
 module.exports = exports["default"];
 
-},{}],27:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5487,7 +5939,7 @@ function NeedKey(initData, initDataType) {
 exports["default"] = NeedKey;
 module.exports = exports["default"];
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5541,6 +5993,193 @@ var DashJSError = function DashJSError(code, message, data) {
 exports["default"] = DashJSError;
 module.exports = exports["default"];
 
-},{}]},{},[5])(5)
+},{}],32:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @classdesc This Object holds reference to the HTTPRequest for manifest, fragment and xlink loading.
+ * Members which are not defined in ISO23009-1 Annex D should be prefixed by a _ so that they are ignored
+ * by Metrics Reporting code.
+ * @ignore
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var HTTPRequest =
+/**
+ * @class
+ */
+function HTTPRequest() {
+  _classCallCheck(this, HTTPRequest);
+
+  /**
+   * Identifier of the TCP connection on which the HTTP request was sent.
+   * @public
+   */
+  this.tcpid = null;
+  /**
+   * This is an optional parameter and should not be included in HTTP request/response transactions for progressive download.
+   * The type of the request:
+   * - MPD
+   * - XLink expansion
+   * - Initialization Fragment
+   * - Index Fragment
+   * - Media Fragment
+   * - Bitstream Switching Fragment
+   * - other
+   * @public
+   */
+  this.type = null;
+  /**
+   * The original URL (before any redirects or failures)
+   * @public
+   */
+  this.url = null;
+  /**
+   * The actual URL requested, if different from above
+   * @public
+   */
+  this.actualurl = null;
+  /**
+   * The contents of the byte-range-spec part of the HTTP Range header.
+   * @public
+   */
+  this.range = null;
+  /**
+   * Real-Time | The real time at which the request was sent.
+   * @public
+   */
+  this.trequest = null;
+  /**
+   * Real-Time | The real time at which the first byte of the response was received.
+   * @public
+   */
+  this.tresponse = null;
+  /**
+   * The HTTP response code.
+   * @public
+   */
+  this.responsecode = null;
+  /**
+   * The duration of the throughput trace intervals (ms), for successful requests only.
+   * @public
+   */
+  this.interval = null;
+  /**
+   * Throughput traces, for successful requests only.
+   * @public
+   */
+  this.trace = [];
+
+  /**
+   * Type of stream ("audio" | "video" etc..)
+   * @public
+   */
+  this._stream = null;
+  /**
+   * Real-Time | The real time at which the request finished.
+   * @public
+   */
+  this._tfinish = null;
+  /**
+   * The duration of the media requests, if available, in seconds.
+   * @public
+   */
+  this._mediaduration = null;
+  /**
+   * The media segment quality
+   * @public
+   */
+  this._quality = null;
+  /**
+   * all the response headers from request.
+   * @public
+   */
+  this._responseHeaders = null;
+  /**
+   * The selected service location for the request. string.
+   * @public
+   */
+  this._serviceLocation = null;
+}
+
+/**
+ * @classdesc This Object holds reference to the progress of the HTTPRequest.
+ * @ignore
+ */
+;
+
+var HTTPRequestTrace =
+/**
+* @class
+*/
+function HTTPRequestTrace() {
+  _classCallCheck(this, HTTPRequestTrace);
+
+  /**
+   * Real-Time | Measurement stream start.
+   * @public
+   */
+  this.s = null;
+  /**
+   * Measurement stream duration (ms).
+   * @public
+   */
+  this.d = null;
+  /**
+   * List of integers counting the bytes received in each trace interval within the measurement stream.
+   * @public
+   */
+  this.b = [];
+};
+
+HTTPRequest.GET = 'GET';
+HTTPRequest.HEAD = 'HEAD';
+HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
+HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
+HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
+HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
+HTTPRequest.LICENSE = 'license';
+HTTPRequest.OTHER_TYPE = 'other';
+
+exports.HTTPRequest = HTTPRequest;
+exports.HTTPRequestTrace = HTTPRequestTrace;
+
+},{}]},{},[6])(6)
 });
 //# sourceMappingURL=dash.protection.debug.js.map
