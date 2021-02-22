@@ -34,6 +34,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import MetricsConstants from '../streaming/constants/MetricsConstants';
 import Round10 from './utils/Round10';
 import MetricsModel from '../streaming/models/MetricsModel';
+import Utils from '../core/Utils';
 import {
     PlayList,
     PlayListTrace
@@ -410,7 +411,7 @@ function DashMetrics(config) {
             httpRequest = httpRequestList[i];
 
             if (httpRequest.type === HTTPRequest.MPD_TYPE) {
-                headers = parseResponseHeaders(httpRequest._responseHeaders);
+                headers = Utils.parseHttpHeaders(httpRequest._responseHeaders);
                 break;
             }
         }
@@ -429,28 +430,9 @@ function DashMetrics(config) {
         let headers = {};
         let httpRequest = getCurrentHttpRequest(type, true);
         if (httpRequest) {
-            headers = parseResponseHeaders(httpRequest._responseHeaders);
+            headers = Utils.parseHttpHeaders(httpRequest._responseHeaders);
         }
         return headers[id] === undefined ? null :  headers[id];
-    }
-
-    function parseResponseHeaders(headerStr) {
-        let headers = {};
-        if (!headerStr) {
-            return headers;
-        }
-
-        // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method
-        // which send a string starting with a "\n" character
-        let headerPairs = headerStr.trim().split('\u000d\u000a');
-        for (let i = 0, ilen = headerPairs.length; i < ilen; i++) {
-            let headerPair = headerPairs[i];
-            let index = headerPair.indexOf('\u003a\u0020');
-            if (index > 0) {
-                headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
-            }
-        }
-        return headers;
     }
 
     /**

@@ -264,7 +264,6 @@ function L2ARule(config) {
      * Algorithm is explained at http://arxiv.org/abs/1101.6081
      * @param {array} arr
      * @return {array}
-     * @constructor
      */
     function euclideanProjection(arr) {
         const m = arr.length;

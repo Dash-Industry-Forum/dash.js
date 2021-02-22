@@ -26,8 +26,6 @@
     <script src="app/lib/flot/jquery.flot.resize.min.js"></script>
     <script src="app/lib/flot/jquery.flot.axislabels.js"></script>
 
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
     <!-- App -->
     <script src="../../dist/dash.all.debug.js"></script>
     <script src="../../dist/dash.mss.debug.js"></script>
@@ -36,6 +34,9 @@
     <script src="app/main.js"></script>
     <script src="app/rules/DownloadRatioRule.js"></script>
     <script src="app/rules/ThroughputRule.js"></script>
+
+    <!-- Google Cast -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
 </head>
 <body ng-controller="DashController">
@@ -174,13 +175,15 @@
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enables calculation of the DVR window based on the timestamps in SegmentTimeline element.">
                     <input type="checkbox" ng-model="calcSegmentAvailabilityRangeFromTimelineSelected"
-                           ng-change="toggleCalcSegmentAvailabilityRangeFromTimeline()" ng-checked="calcSegmentAvailabilityRangeFromTimelineSelected">
+                           ng-change="toggleCalcSegmentAvailabilityRangeFromTimeline()"
+                           ng-checked="calcSegmentAvailabilityRangeFromTimelineSelected">
                     Calculate segment availability from timeline
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Enable reuse of existing MediaSource Sourcebuffers during period transition.">
                     <input type="checkbox" ng-model="reuseExistingSourceBuffersSelected"
-                           ng-change="toggleReuseExistingSourceBuffers()" ng-checked="reuseExistingSourceBuffersSelected">
+                           ng-change="toggleReuseExistingSourceBuffers()"
+                           ng-checked="reuseExistingSourceBuffersSelected">
                     Reuse SourceBuffers
                 </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
@@ -453,58 +456,72 @@
                 <input type="text" class="form-control" placeholder="mandatory session id" ng-model="cmcdSessionId">
                 <label class="options-label">Content ID:</label>
                 <input type="text" class="form-control" placeholder="content id" ng-model="cmcdContentId">
+                <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="A static value to be used as RTP parameter">Requested maximum throughput (rtp):</label>
+                <input type="text" class="form-control" placeholder="rtp in kbps" ng-model="cmcdRtp">
+                <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor. If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.">RTP
+                    safety factor:</label>
+                <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor">
             </div>
         </div>
 
     </div>
 
-        <!--VIDEO PLAYER / CONTROLS -->
-        <div class="row">
-            <div class="dash-video-player col-md-9">
-                <div id="videoContainer" class="videoContainer">
-                    <video></video>
-                    <div id="video-caption"></div>
-                    <div id="cast-msg" ng-if="isCasting">
-                        {{ castPlayerState === 'IDLE' ? 'Ready to cast stream' : castPlayerState }}
+    <!--VIDEO PLAYER / CONTROLS -->
+    <div class="row">
+        <div class="dash-video-player col-md-9">
+            <div id="videoContainer" class="videoContainer">
+                <video></video>
+                <div id="video-caption"></div>
+                <div id="cast-msg" ng-if="isCasting">
+                    {{ castPlayerState === 'IDLE' ? 'Ready to cast stream' : castPlayerState }}
+                </div>
+                <div id="videoController" class="video-controller unselectable" ng-cloak>
+                    <div id="playPauseBtn" class="btn-play-pause" data-toggle="tooltip" data-placement="bottom"
+                         title="Play/Pause">
+                        <span id="iconPlayPause" class="icon-play"></span>
                     </div>
-                    <div id="videoController" class="video-controller unselectable" ng-cloak>
-                        <div id="playPauseBtn" class="btn-play-pause" data-toggle="tooltip" data-placement="bottom" title="Play/Pause">
-                            <span id="iconPlayPause" class="icon-play"></span>
+                    <span id="videoTime" class="time-display">00:00:00</span>
+                    <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" data-toggle="tooltip"
+                         data-placement="bottom" title="Fullscreen">
+                        <span class="icon-fullscreen-enter"></span>
+                    </div>
+                    <div id="castBtn" class="btn-cast control-icon-layout" data-toggle="tooltip" data-placement="bottom"
+                         title="Cast">
+                        <google-cast-launcher></google-cast-launcher>
+                    </div>
+                    <div id="bitrateListBtn" class="btn-bitrate control-icon-layout" data-toggle="tooltip"
+                         data-placement="bottom" title="Bitrate List">
+                        <span class="icon-bitrate"></span>
+                    </div>
+                    <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                    <div id="muteBtn" class="btn-mute control-icon-layout" data-toggle="tooltip" data-placement="bottom"
+                         title="Mute">
+                        <span id="iconMute" class="icon-mute-off"></span>
+                    </div>
+                    <div id="trackSwitchBtn" class="btn-track-switch control-icon-layout" data-toggle="tooltip"
+                         data-placement="bottom" title="Track List">
+                        <span class="icon-tracks"></span>
+                    </div>
+                    <div id="captionBtn" class="btn-caption control-icon-layout" data-toggle="tooltip"
+                         data-placement="bottom" title="Closed Caption / Subtitles">
+                        <span class="icon-caption"></span>
+                    </div>
+                    <span id="videoDuration" class="duration-display">00:00:00</span>
+                    <div class="seekContainer">
+                        <div id="seekbar" class="seekbar seekbar-complete">
+                            <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                            <div id="seekbar-play" class="seekbar seekbar-play"></div>
                         </div>
-                        <span id="videoTime" class="time-display">00:00:00</span>
-                        <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Fullscreen">
-                            <span class="icon-fullscreen-enter"></span>
-                        </div>
-                        <div id="castBtn" class="btn-cast control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Cast">
-                            <google-cast-launcher> </google-cast-launcher>
-                        </div>
-                        <div id="bitrateListBtn" class="btn-bitrate control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Bitrate List">
-                            <span class="icon-bitrate"></span>
-                        </div>
-                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
-                        <div id="muteBtn" class="btn-mute control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Mute">
-                            <span id="iconMute" class="icon-mute-off"></span>
-                        </div>
-                        <div id="trackSwitchBtn" class="btn-track-switch control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Track List">
-                            <span class="icon-tracks"></span>
-                        </div>
-                        <div id="captionBtn" class="btn-caption control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Closed Caption / Subtitles">
-                            <span class="icon-caption"></span>
-                        </div>
-                        <span id="videoDuration" class="duration-display">00:00:00</span>
-                        <div class="seekContainer">
-                            <div id="seekbar" class="seekbar seekbar-complete">
-                                <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
-                                <div id="seekbar-play" class="seekbar seekbar-play"></div>
-                            </div>
-                        </div>
-                        <div id="thumbnail-container" class="thumbnail-container">
-                            <div id="thumbnail-elem" class="thumbnail-elem"></div>
-                            <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
-                        </div>
+                    </div>
+                    <div id="thumbnail-container" class="thumbnail-container">
+                        <div id="thumbnail-elem" class="thumbnail-elem"></div>
+                        <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
                     </div>
                 </div>
             </div>
+        </div>
 
         <!-- STATS TAB CONTENT -->
         <div class="col-md-3 tabs-section">
@@ -689,6 +706,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- ERROR MODAL -->
@@ -728,6 +746,21 @@
             </div>
         </div>
     </div>
+
+    <!-- Conformance violations -->
+    <div class="row">
+        <div class="col-md-12 conformance-violations-panel">
+            <div id="conformance-violations">
+                <h4>Conformance Violations </h4>
+                <ul class="list-unstyled" ng-repeat="conformanceViolation in conformanceViolations">
+                    <li><span class="label label-{{conformanceViolation.level}}">{{conformanceViolation.level}}</span> :
+                        {{conformanceViolation.event.message}}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 

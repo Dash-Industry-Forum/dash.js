@@ -235,7 +235,14 @@ class Constants {
         this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
 
         /**
-         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE this mode makes the player select the track with a widest range of bitrates
+         *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY = 'highestEfficiency';
+
+        /**
+         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
          *  @memberof Constants#
          *  @static
          */

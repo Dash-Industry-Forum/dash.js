@@ -32,7 +32,9 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
-import { fromXML, generateISD } from 'imsc';
+import {fromXML, generateISD} from 'imsc';
+import MediaPlayerEvents from '../MediaPlayerEvents';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
 
 function TTMLParser() {
 
@@ -83,12 +85,16 @@ function TTMLParser() {
             onOpenTag: function (ns, name, attrs) {
                 // cope with existing non-compliant content
                 if (attrs[' imagetype'] && !attrs[' imageType']) {
+                    eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                        level: ConformanceViolationConstants.LEVELS.ERROR,
+                        event: ConformanceViolationConstants.EVENTS.NON_COMPLIANT_SMPTE_IMAGE_ATTRIBUTE
+                    });
                     attrs[' imageType'] = attrs[' imagetype'];
                 }
 
                 if (name === 'image' &&
-                (ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt' ||
-                 ns === 'http://www.smpte-ra.org/schemas/2052-1/2013/smpte-tt')) {
+                    (ns === 'http://www.smpte-ra.org/schemas/2052-1/2010/smpte-tt' ||
+                        ns === 'http://www.smpte-ra.org/schemas/2052-1/2013/smpte-tt')) {
                     if (!attrs[' imageType'] || attrs[' imageType'].value !== 'PNG') {
                         logger.warn('smpte-tt imageType != PNG. Discarded');
                         return;
@@ -168,5 +174,6 @@ function TTMLParser() {
     setup();
     return instance;
 }
+
 TTMLParser.__dashjs_factory_name = 'TTMLParser';
 export default FactoryMaker.getSingletonFactory(TTMLParser);

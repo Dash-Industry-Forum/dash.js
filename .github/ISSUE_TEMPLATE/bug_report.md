@@ -23,7 +23,7 @@ assignees: ''
 1. Please provide clear steps to reproduce your problem
 2. If the bug is intermittent, give a rough frequency if possible
 
-##### Observed behaviour
+##### Observed behavior
 Describe what the player is doing that is unexpected or undesired behaviour.
 
 ##### Console output
@@ -31,3 +31,6 @@ Describe what the player is doing that is unexpected or undesired behaviour.
 Paste the contents of the browser console here.
 You may need to enable debug logging in dash.js by calling player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG }}) if you are using your own page.
 ```
+
+##### Expected behavior
+Describe what the player is expected to do
