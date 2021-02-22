@@ -46,6 +46,9 @@
                 "com.widevine.alpha": true,
                 "com.microsoft.playready": false,
                 "org.w3.clearkey": true
+            },
+            "goog:chromeOptions": {
+                "w3c": false
             }
         },
         "firefox": {
