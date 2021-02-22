@@ -78,7 +78,12 @@
                 "title": "Synchronized live playback with the catchup mode",
                 "description": "Example showing a synchronized live playback of two videos using the live playback catchup mode.",
                 "href": "live-streaming/synchronized-live-playback.html"
-            },
+            }
+        ]
+    },
+    {
+        "section": "Live Low Latency",
+        "samples": [
             {
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
