@@ -62,7 +62,7 @@
                 return;
             }
 
-            // Create protection data in case a license server was provided
+            /* Create protection data in case a license server was provided */
             if (licenseServerUrl) {
                 protData = {
                     'com.widevine.alpha': {
@@ -76,10 +76,10 @@
 
             player = dashjs.MediaPlayer().create();
             video = document.querySelector("video");
-            player.initialize(); // initialize the MediaPlayer instance
-            player.attachView(video); // tell the player which videoElement it should use
-            player.setProtectionData(protData); // set protection data (sets license server when required)
-            player.attachSource(streamUrl); // provide the manifest source
+            player.initialize(); /* initialize the MediaPlayer instance */
+            player.attachView(video); /* tell the player which videoElement it should use */
+            player.setProtectionData(protData); /* set protection data (sets license server when required) */
+            player.attachSource(streamUrl); /* provide the manifest source */
         }
     </script>
     <script src="../highlighter.js"></script>
