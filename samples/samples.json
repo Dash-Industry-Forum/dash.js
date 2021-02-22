@@ -97,26 +97,6 @@
         ]
     },
     {
-        "section": "MSS",
-        "samples": [
-            {
-                "title": "Microsoft Smooth Streaming",
-                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
-                "href": "smooth-streaming/mss.html"
-            }
-        ]
-    },
-    {
-        "section": "Thumbnails",
-        "samples": [
-            {
-                "title": "Thumbnails",
-                "description": "Example showing how to use streams with thumbnails representations.",
-                "href": "thumbnails/thumbnails.html"
-            }
-        ]
-    },
-    {
         "section": "DRM",
         "samples": [
             {
@@ -153,17 +133,7 @@
         ]
     },
     {
-        "section": "Audio only",
-        "samples": [
-            {
-                "title": "Only audio stream",
-                "description": "This example shows how to play audio-only streams in dash.js.",
-                "href": "audio-only/index.html"
-            }
-        ]
-    },
-    {
-        "section": "Captioning",
+        "section": "Subtitles & Captions",
         "samples": [
             {
                 "title": "Caption VTT",
@@ -183,12 +153,42 @@
         ]
     },
     {
+        "section": "Multi-Audio",
+        "samples": [
+            {
+                "title": "Multiple audio tracks",
+                "description": "This example shows how content with multiple audio tracks can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
+                "href": "multi-audio/multi-audio.html"
+            }
+        ]
+    },
+    {
+        "section": "Thumbnails",
+        "samples": [
+            {
+                "title": "Thumbnails",
+                "description": "Example showing how to use streams with thumbnails representations.",
+                "href": "thumbnails/thumbnails.html"
+            }
+        ]
+    },
+    {
         "section": "Preload",
         "samples": [
             {
                 "title": "Preload video",
                 "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
                 "href": "getting-started/pre-load-video.html"
+            }
+        ]
+    },
+    {
+        "section": "Audio only",
+        "samples": [
+            {
+                "title": "Only audio stream",
+                "description": "This example shows how to play audio-only streams in dash.js.",
+                "href": "audio-only/index.html"
             }
         ]
     },
@@ -239,6 +239,16 @@
                 "title": "Offline mode",
                 "description": "Example showing how store and read back streams without network connection to Dash",
                 "href": "offline/index.html"
+            }
+        ]
+    },
+    {
+        "section": "MSS",
+        "samples": [
+            {
+                "title": "Microsoft Smooth Streaming",
+                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
+                "href": "smooth-streaming/mss.html"
             }
         ]
     }
