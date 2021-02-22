@@ -21,30 +21,40 @@ commands:
                 paths:
                     - node_modules
                 key: v1-dependencies-{{ checksum "package.json" }}
+
     functional_test_setup:
         steps:
             - run:
                 name: Download the browserstack binary file to create a tunnel
                 command: wget "https://www.browserstack.com/browserstack-local/BrowserStackLocal-linux-x64.zip"
-
             - run:
                 name: Unzip the browserstack binary file
                 command: unzip BrowserStackLocal-linux-x64.zip
-
             - run:
                 name: Run browserstack with provided access key
                 command: ./BrowserStackLocal $BROWSERSTACK_ACCESS_KEY
                 background: true
 
+    build_and_run_unit_tests:
+        steps:
+            - run:
+                name: Build and run unit tests
+                command: npm run build
+
 jobs:
-    build:
+    build-quick-test:
         executor: dashjs-executor
         steps:
             - checkout
             - dependencies_setup
+            - build_and_run_unit_tests
+            - functional_test_setup
             - run:
-                name: Build and Test
-                command: npm run build
+                name: Run functional test for one vector (chrome / http)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/singleVector.json
+            - store_test_results:
+                path: test/functional/reports
             - deploy:
                 name: Deploy
                 command: |
@@ -55,49 +65,67 @@ jobs:
                         echo "Not development branch, dry run only"
                     fi
 
-    functional-tests-all:
+    merge-build-smoke-test:
         executor: dashjs-executor
         steps:
             - checkout
-            - dependencies_setup
-            - functional_test_setup
             - run:
-                name: Run functional tests (chrome / https)
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https
-
-            - run:
-                name: Run functional tests (chrome / http)
-                when: always # run tests even if some previous tests failed
-                command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
-
-            - store_test_results:
-                path: test/functional/reports
-
-    functional-tests-smoke:
-        executor: dashjs-executor
-        steps:
-            - checkout
+                name: Merge into development virtually
+                command: |
+                    git config --global user.email "foo@example.com"
+                    git config --global user.name "foo bar"
+                    git checkout development
+                    git merge --no-edit --no-ff $CIRCLE_BRANCH
             - dependencies_setup
+            - build_and_run_unit_tests
             - functional_test_setup
             - run:
                 name: Run functional tests for smoke vectors (chrome / https)
                 command:
                     node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https --source=./test/functional/config/smokeVectors.json
+            - store_test_results:
+                path: test/functional/reports
 
+    functional-tests-all:
+        executor: dashjs-executor
+        steps:
+            - checkout
+            - dependencies_setup
+            - build_and_run_unit_tests
+            - functional_test_setup
+            - run:
+                name: Run functional tests (chrome / https)
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https
+            - run:
+                name: Run functional tests (chrome / http)
+                when: always # run tests even if some previous tests failed
+                command:
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
             - store_test_results:
                 path: test/functional/reports
 
 workflows:
+    version: 2
     commit-workflow:
         jobs:
-            - build
-            - functional-tests-smoke:
+            - build-quick-test: # quick test on development branch
                 filters:
                     branches:
                         only:
                             - development
+
+    pr-workflow:
+        jobs:
+            - build-quick-test: # quick test on feature branch
+                filters:
+                    branches:
+                        only: /pull\/[0-9]+/
+            - merge-build-smoke-test: # smoke test after virtual merge
+                filters:
+                    branches:
+                        only: /pull\/[0-9]+/
+
     scheduled-workflow:
         triggers:
             - schedule:
