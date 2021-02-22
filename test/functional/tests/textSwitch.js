@@ -19,7 +19,7 @@ const { beforeEach } = require('intern/lib/interfaces/tdd');
 const { default: Test, SKIP } = require('intern/lib/Test');
 
 // Suite name
-const NAME = 'TEXTSWITCH';
+const NAME = 'TEXT_SWITCH';
 
 // Test constants
 
@@ -62,7 +62,8 @@ exports.register = function (stream) {
                     // Check if new current track is correct
                     var newTrack = await command.execute(player.getCurrentTrackFor, [textType]);
                     utils.log(NAME, 'current text track: ' + newTrack.lang);
-                    assert.deepEqual(newTrack, stream.textTracks[textType][i]);  
+                    assert.deepEqual(newTrack.lang, stream.textTracks[textType][i].lang);
+                    assert.deepEqual(newTrack.index, stream.textTracks[textType][i].index);
                     
                     utils.log(NAME, 'Check if playing');
                     const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
