@@ -2073,7 +2073,8 @@ function MediaPlayer() {
             mediaController: mediaController,
             textController: textController,
             settings: settings,
-            baseURLController: baseURLController
+            baseURLController: baseURLController,
+            uriFragmentModel
         });
 
         gapController.setConfig({
@@ -2092,7 +2093,6 @@ function MediaPlayer() {
             adapter: adapter,
             videoModel: videoModel,
             timelineConverter: timelineConverter,
-            uriFragmentModel: uriFragmentModel,
             settings: settings
         });
 

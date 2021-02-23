@@ -88,22 +88,26 @@ function Stream(config) {
         trackChangedEvent;
 
     function setup() {
-        debug = Debug(context).getInstance();
-        logger = debug.getLogger(instance);
-        resetInitialSettings();
+        try {
+            debug = Debug(context).getInstance();
+            logger = debug.getLogger(instance);
+            resetInitialSettings();
 
-        boxParser = BoxParser(context).getInstance();
+            boxParser = BoxParser(context).getInstance();
 
-        fragmentController = FragmentController(context).create({
-            streamInfo: streamInfo,
-            mediaPlayerModel: mediaPlayerModel,
-            dashMetrics: dashMetrics,
-            errHandler: errHandler,
-            settings: settings,
-            boxParser: boxParser,
-            dashConstants: DashConstants,
-            urlUtils: urlUtils
-        });
+            fragmentController = FragmentController(context).create({
+                streamInfo: streamInfo,
+                mediaPlayerModel: mediaPlayerModel,
+                dashMetrics: dashMetrics,
+                errHandler: errHandler,
+                settings: settings,
+                boxParser: boxParser,
+                dashConstants: DashConstants,
+                urlUtils: urlUtils
+            });
+        } catch (e) {
+            throw e;
+        }
     }
 
     function initialize() {
@@ -529,7 +533,7 @@ function Stream(config) {
 
         isUpdating = true;
 
-        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod( streamInfo);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
         if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);

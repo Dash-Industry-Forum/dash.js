@@ -62,7 +62,6 @@ function PlaybackController() {
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
-        uriFragmentModel,
         lastSeekWasInternal,
         settings;
 
@@ -275,6 +274,10 @@ function PlaybackController() {
         return ret;
     }
 
+    function getAvailabilityStartTime() {
+        return availabilityStartTime;
+    }
+
     function getLiveDelay() {
         return liveDelay;
     }
@@ -344,29 +347,9 @@ function PlaybackController() {
         if (config.timelineConverter) {
             timelineConverter = config.timelineConverter;
         }
-        if (config.uriFragmentModel) {
-            uriFragmentModel = config.uriFragmentModel;
-        }
         if (config.settings) {
             settings = config.settings;
         }
-    }
-
-    function getStartTimeFromUriParameters(isDynamic) {
-        const fragData = uriFragmentModel.getURIFragmentData();
-        if (!fragData || !fragData.t) {
-            return NaN;
-        }
-        const refStream = streamController.getStreams()[0];
-        const refStreamStartTime = refStream.getStreamInfo().start;
-        // Consider only start time of MediaRange
-        // TODO: consider end time of MediaRange to stop playback at provided end time
-        fragData.t = fragData.t.split(',')[0];
-        // "t=<time>" : time is relative to 1st period start
-        // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
-        const posix = fragData.t.indexOf('posix:') !== -1 ? fragData.t.substring(6) === 'now' ? Date.now() / 1000 : parseInt(fragData.t.substring(6)) : NaN;
-        let startTime = (isDynamic && !isNaN(posix)) ? posix - availabilityStartTime / 1000 : parseInt(fragData.t) + refStreamStartTime;
-        return startTime;
     }
 
     function getActualPresentationTime(currentTime) {
@@ -953,7 +936,6 @@ function PlaybackController() {
     instance = {
         initialize: initialize,
         setConfig: setConfig,
-        getStartTimeFromUriParameters: getStartTimeFromUriParameters,
         getTimeToStreamEnd: getTimeToStreamEnd,
         getTime: getTime,
         getNormalizedTime: getNormalizedTime,
@@ -972,7 +954,8 @@ function PlaybackController() {
         isSeeking: isSeeking,
         getStreamEndTime,
         seek: seek,
-        reset: reset
+        reset: reset,
+        getAvailabilityStartTime
     };
 
     setup();

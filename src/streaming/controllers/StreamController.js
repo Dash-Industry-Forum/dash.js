@@ -70,6 +70,7 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
+        uriFragmentModel,
         abrController,
         mediaController,
         eventController,
@@ -149,17 +150,18 @@ function StreamController() {
     }
 
     function registerEvents() {
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-        eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
-        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
-        eventBus.on(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        eventBus.on(Events.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
-        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+
         eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
-        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, instance);
@@ -167,17 +169,18 @@ function StreamController() {
     }
 
     function unRegisterEvents() {
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-        eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
-        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
-        eventBus.off(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        eventBus.off(Events.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
-        eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+
         eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, instance);
@@ -291,7 +294,7 @@ function StreamController() {
 
         if (unfinishedStreamProcessorsCount === 0) {
             flushPlaylistMetrics(PlayListTrace.END_OF_PERIOD_STOP_REASON);
-            switchStream(dataForStreamSwitchAfterSeek.seekingStream, activeStream, dataForStreamSwitchAfterSeek.seekTime);
+            _switchStream(dataForStreamSwitchAfterSeek.seekingStream, activeStream, dataForStreamSwitchAfterSeek.seekTime);
             dataForStreamSwitchAfterSeek = null;
         }
     }
@@ -325,6 +328,10 @@ function StreamController() {
             const time = playbackController.getTime();
             const range = timelineConverter.calcTimeShiftBufferWindow(streams, isDynamic);
             const activeStreamProcessors = getActiveStreamProcessors();
+
+            if (typeof range.start === 'undefined' || typeof range.end === 'undefined') {
+                return;
+            }
 
             if (!activeStreamProcessors || activeStreamProcessors.length === 0) {
                 dashMetrics.addDVRInfo(Constants.VIDEO, time, manifestInfo, range);
@@ -589,7 +596,7 @@ function StreamController() {
             const nextStream = getNextStream();
             if (nextStream) {
                 logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}`);
-                switchStream(nextStream, activeStream, NaN);
+                _switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
                 activeStream.setIsEndedEventSignaled(false);
@@ -650,7 +657,7 @@ function StreamController() {
         }
     }
 
-    function switchStream(stream, previousStream, seekTime) {
+    function _switchStream(stream, previousStream, seekTime) {
 
         if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) {
             return;
@@ -796,7 +803,7 @@ function StreamController() {
             const dvrWindow = dvrInfo ? dvrInfo.range : null;
             if (dvrWindow) {
                 // #t shall be relative to period start
-                const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streams[0].getStreamInfo().start, true);
+                const startTimeFromUri = _getStartTimeFromUriParameters(true);
                 if (!isNaN(startTimeFromUri)) {
                     logger.info('Start time from URI parameters: ' + startTimeFromUri);
                     startTime = Math.max(Math.min(startTime, startTimeFromUri), dvrWindow.start);
@@ -808,13 +815,30 @@ function StreamController() {
             const streamInfo = streams[0].getStreamInfo();
             startTime = streamInfo.start;
             // If start time in URI, take max value between period start and time from URI (if in period range)
-            const startTimeFromUri = playbackController.getStartTimeFromUriParameters(streamInfo.start, false);
+            const startTimeFromUri = _getStartTimeFromUriParameters(false);
             if (!isNaN(startTimeFromUri) && startTimeFromUri < (streamInfo.start + streamInfo.duration)) {
                 logger.info('Start time from URI parameters: ' + startTimeFromUri);
                 startTime = Math.max(startTime, startTimeFromUri);
             }
         }
 
+        return startTime;
+    }
+
+    function _getStartTimeFromUriParameters(isDynamic) {
+        const fragData = uriFragmentModel.getURIFragmentData();
+        if (!fragData || !fragData.t) {
+            return NaN;
+        }
+        const refStream = getStreams()[0];
+        const refStreamStartTime = refStream.getStreamInfo().start;
+        // Consider only start time of MediaRange
+        // TODO: consider end time of MediaRange to stop playback at provided end time
+        fragData.t = fragData.t.split(',')[0];
+        // "t=<time>" : time is relative to 1st period start
+        // "t=posix:<time>" : time is absolute start time as number of seconds since 01-01-1970
+        const posix = fragData.t.indexOf('posix:') !== -1 ? fragData.t.substring(6) === 'now' ? Date.now() / 1000 : parseInt(fragData.t.substring(6)) : NaN;
+        let startTime = (isDynamic && !isNaN(posix)) ? posix - playbackController.getAvailabilityStartTime() / 1000 : parseInt(fragData.t) + refStreamStartTime;
         return startTime;
     }
 
@@ -840,7 +864,7 @@ function StreamController() {
         return null;
     }
 
-    function composeStreams() {
+    function _composeStreams() {
         try {
             const streamsInfo = adapter.getStreamsInfo();
 
@@ -848,12 +872,14 @@ function StreamController() {
                 throw new Error('There are no streams');
             }
 
-            dashMetrics.updateManifestUpdateInfo({
-                currentTime: playbackController.getTime(),
-                buffered: videoModel.getBufferRange(),
-                presentationStartTime: streamsInfo[0].start,
-                clientTimeOffset: timelineConverter.getClientTimeOffset()
-            });
+            if (activeStream) {
+                dashMetrics.updateManifestUpdateInfo({
+                    currentTime: playbackController.getTime(),
+                    buffered: videoModel.getBufferRange(),
+                    presentationStartTime: streamsInfo[0].start,
+                    clientTimeOffset: timelineConverter.getClientTimeOffset()
+                });
+            }
 
             // Filter streams that are outdated and not included in the MPD anymore
             if (streams.length > 0) {
@@ -964,8 +990,8 @@ function StreamController() {
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
 
-        eventBus.trigger(Events.INITIAL_STREAM_SWITCH);
-        switchStream(startStream, null, startTime);
+        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
+        _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
         _startCheckIfPrebufferingCanStartInterval();
     }
@@ -1041,7 +1067,7 @@ function StreamController() {
             }
         }
 
-        composeStreams();
+        _composeStreams();
     }
 
     function onManifestUpdated(e) {
@@ -1245,6 +1271,9 @@ function StreamController() {
         }
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
+        }
+        if (config.uriFragmentModel) {
+            uriFragmentModel = config.uriFragmentModel;
         }
     }
 
