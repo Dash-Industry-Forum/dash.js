@@ -89,7 +89,7 @@ function ObjectIron(mappers) {
             return source;
         }
 
-        if ('period' in mappers) {
+        if (source.Period_asArray && 'period' in mappers) {
             const periodMapper = mappers.period;
             const periods = source.Period_asArray;
             for (let i = 0, len = periods.length; i < len; ++i) {

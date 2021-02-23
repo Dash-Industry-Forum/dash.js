@@ -1,9 +1,11 @@
 import DashAdapter from '../../src/dash/DashAdapter';
 import MediaInfo from '../../src/dash/vo/MediaInfo';
 import Constants from '../../src/streaming/constants/Constants';
+import DashConstants from '../../src/dash/constants/DashConstants';
 import cea608parser from '../../externals/cea608-parser';
 
 import VoHelper from './helpers/VOHelper';
+import PatchHelper from './helpers/PatchHelper.js';
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
@@ -202,7 +204,7 @@ describe('DashAdapter', function () {
             const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
 
             expect(event).to.be.an('object');
-            expect(event.calculatedPresentationTime).to.be.equal(22);
+            expect(event.calculatedPresentationTime).to.be.equal(12);
         });
 
         it('should calculate correct start time for a version 1 event with PTO in eventStream and representation', function () {
@@ -213,7 +215,7 @@ describe('DashAdapter', function () {
             const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
 
             expect(event).to.be.an('object');
-            expect(event.calculatedPresentationTime).to.be.equal(17);
+            expect(event.calculatedPresentationTime).to.be.equal(12);
         });
 
         it('should calculate correct start time for a version 1 event with timescale > 1 and PTO in eventStream', function () {
@@ -495,6 +497,659 @@ describe('DashAdapter', function () {
 
                 expect(mediaInfoArray[0].supplementalProperties).not.to.be.null;                   // jshint ignore:line
                 expect(Object.keys(mediaInfoArray[0].supplementalProperties).length).equals(0);    // jshint ignore:line
+            });
+        });
+
+        describe('getPatchLocation', function () {
+
+            // example patch location element with ttl
+            const patchLocationElementTTL = {
+                __children: [{'#text': 'foobar'}],
+                '__text': 'foobar',
+                ttl: 60 * 5 // 5 minute validity period
+            };
+
+            // example patch location element that never expires
+            const patchLocationElementEvergreen = {
+                __children: [{'#text': 'foobar'}],
+                '__text': 'foobar'
+            };
+
+            it('should provide patch location if present and not expired', function () {
+                // simulated 1 minute old manifest
+                let publishTime = new Date();
+                publishTime.setMinutes(publishTime.getMinutes() - 1);
+                const manifest = {
+                    [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
+                    PatchLocation: patchLocationElementTTL,
+                    PatchLocation_asArray: [patchLocationElementTTL]
+                };
+
+                let patchLocation = dashAdapter.getPatchLocation(manifest);
+                expect(patchLocation).equals('foobar');
+            });
+
+            it('should not provide patch location if present and expired', function () {
+                // simulated 10 minute old manifest
+                let publishTime = new Date();
+                publishTime.setMinutes(publishTime.getMinutes() - 10);
+                const manifest = {
+                    [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
+                    PatchLocation: patchLocationElementTTL,
+                    PatchLocation_asArray: [patchLocationElementTTL]
+                };
+
+                let patchLocation = dashAdapter.getPatchLocation(manifest);
+                expect(patchLocation).to.be.null; // jshint ignore:line
+            });
+
+            it('should provide patch location if present and never expires', function () {
+                // simulated 120 minute old manifest
+                let publishTime = new Date();
+                publishTime.setMinutes(publishTime.getMinutes() - 120);
+                const manifest = {
+                    [DashConstants.PUBLISH_TIME]: (publishTime.toISOString()),
+                    PatchLocation: patchLocationElementEvergreen,
+                    PatchLocation_asArray: [patchLocationElementEvergreen]
+                };
+
+                let patchLocation = dashAdapter.getPatchLocation(manifest);
+                expect(patchLocation).equals('foobar');
+            });
+
+            it('should not provide patch location if not present', function () {
+                const manifest = {
+                    [DashConstants.PUBLISH_TIME]: (new Date().toISOString())
+                };
+
+                let patchLocation = dashAdapter.getPatchLocation(manifest);
+                expect(patchLocation).to.be.null; // jshint ignore:line
+            });
+
+            it('should not provide patch location if present in manifest without publish time', function () {
+                const manifest = {
+                    PatchLocation: patchLocationElementTTL,
+                    PatchLocation_asArray: [patchLocationElementTTL]
+                };
+
+                let patchLocation = dashAdapter.getPatchLocation(manifest);
+                expect(patchLocation).to.be.null; // jshint ignore:line
+            });
+        });
+
+        describe('isPatchValid', function () {
+            it('considers patch invalid if no patch given', function () {
+                let publishTime = new Date();
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if no manifest given', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(undefined, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if manifest has no id', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.PUBLISH_TIME]: publishTime
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if patch has no manifest id', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if manifest has no publish time', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar'
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if patch has no original publish time', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if both objects missing ids', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if both objects missing mpd publish times', function () {
+                let publishTime = new Date();
+                let manifest = {
+                    [DashConstants.ID]: 'foobar'
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if patch missing new publish time', function () {
+                let publishTime = new Date();
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if ids do not match', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'bazqux',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if publish times do not match', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let publishTime3 = new Date(publishTime.getTime() + 200);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime2.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime3.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch invalid if new publish time is not later than previous', function () {
+                let publishTime = new Date();
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.false; // jshint ignore:line
+            });
+
+            it('considers patch valid if ids, publish times match, and new publish time is later than previous', function () {
+                let publishTime = new Date();
+                let publishTime2 = new Date(publishTime.getTime() + 100);
+                let manifest = {
+                    [DashConstants.ID]: 'foobar',
+                    [DashConstants.PUBLISH_TIME]: publishTime.toISOString()
+                };
+                let patch = {
+                    [DashConstants.ORIGINAL_MPD_ID]: 'foobar',
+                    [DashConstants.ORIGINAL_PUBLISH_TIME]: publishTime.toISOString(),
+                    [DashConstants.PUBLISH_TIME]: publishTime2.toISOString()
+                };
+                let isValid = dashAdapter.isPatchValid(manifest, patch);
+
+                expect(isValid).to.be.true; // jshint ignore:line
+            });
+        });
+
+        describe('applyPatchToManifest', function () {
+            const patchHelper = new PatchHelper();
+
+            it('applies add operation to structure with no siblings', function () {
+                let manifest = {};
+                let addedPeriod = {id: 'foo'};
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD',
+                    children: [{
+                        Period: addedPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.equal(addedPeriod);
+                expect(manifest.Period_asArray).to.deep.equal([addedPeriod]);
+            });
+
+            it('applies add operation to structure with single sibling', function () {
+                let originalPeriod = {id: 'foo'};
+                let addedPeriod = {id: 'bar'};
+                // special case x2js object which omits the _asArray variant
+                let manifest = {
+                    Period: originalPeriod
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD',
+                    children: [{
+                        Period: addedPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([originalPeriod, addedPeriod]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies add implicit append operation with siblings', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
+                let addedPeriod = {id: 'baz'};
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD',
+                    children: [{
+                        Period: addedPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies add prepend operation with siblings', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
+                let addedPeriod = {id: 'baz'};
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD',
+                    position: 'prepend',
+                    children: [{
+                        Period: addedPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([addedPeriod, originalPeriods[0], originalPeriods[1]]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies add before operation with siblings', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
+                let addedPeriod = {id: 'qux'};
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD/Period[2]',
+                    position: 'before',
+                    children: [{
+                        Period: addedPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([originalPeriods[0], addedPeriod, originalPeriods[1], originalPeriods[2]]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies add after operation with siblings', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
+                let addedPeriod = {id: 'qux'};
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD/Period[2]',
+                    position: 'after',
+                    children: [{
+                        Period: addedPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[1], addedPeriod, originalPeriods[2]]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies add attribute operation', function () {
+                let originalPeriod = {};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD/Period[1]',
+                    type: '@id',
+                    text: 'foo'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(originalPeriod.id).to.equal('foo');
+            });
+
+            it('applies add attribute operation on existing attribute, should act as replace', function () {
+                let originalPeriod = {id: 'foo'};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'add',
+                    selector: '/MPD/Period[1]',
+                    type: '@id',
+                    text: 'bar'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(originalPeriod.id).to.equal('bar');
+            });
+
+            it('applies replace operation with siblings', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
+                let replacementPeriod = {id: 'qux'};
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'replace',
+                    selector: '/MPD/Period[2]',
+                    children: [{
+                        Period: replacementPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([originalPeriods[0], replacementPeriod, originalPeriods[2]]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies replace operation without siblings', function () {
+                let originalPeriod = {id: 'foo'};
+                let replacementPeriod = {id: 'bar'};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'replace',
+                    selector: '/MPD/Period[1]',
+                    children: [{
+                        Period: replacementPeriod
+                    }]
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal(replacementPeriod);
+                expect(manifest.Period_asArray).to.deep.equal([replacementPeriod]);
+            });
+
+            it('applies replace operation to attribute', function () {
+                let originalPeriod = {id: 'foo'};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'replace',
+                    selector: '/MPD/Period[1]/@id',
+                    text: 'bar'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(originalPeriod.id).to.equal('bar');
+            });
+
+            it('applies remove operation leaving multiple siblings', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}, {id: 'baz'}];
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'remove',
+                    selector: '/MPD/Period[2]'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.deep.equal([originalPeriods[0], originalPeriods[2]]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('applies remove operation leaving one sibling', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'remove',
+                    selector: '/MPD/Period[2]'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest.Period).to.equal(originalPeriods[0]);
+                expect(manifest.Period_asArray).to.deep.equal([originalPeriods[0]]);
+            });
+
+            it('applies remove operation leaving no siblings', function () {
+                let originalPeriod = {id: 'foo'};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'remove',
+                    selector: '/MPD/Period[1]'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(manifest).to.not.have.property('Period');
+                expect(manifest).to.not.have.property('Period_asArray');
+            });
+
+            it('applies remove attribute operation', function () {
+                let originalPeriod = {id: 'foo', start: 'bar'};
+                let manifest = {
+                    Period: originalPeriod,
+                    Period_asArray: [originalPeriod]
+                };
+                let patch = patchHelper.generatePatch('foobar', [{
+                    action: 'remove',
+                    selector: '/MPD/Period[1]/@start'
+                }]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                expect(originalPeriod).to.not.have.property('start');
+                expect(manifest.Period).to.deep.equal(originalPeriod);
+                expect(manifest.Period_asArray).to.deep.equal([originalPeriod]);
+            });
+
+            it('applies multiple operations respecting order', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
+                let newPeriod = {id: 'baz'};
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [
+                    {
+                        action: 'add',
+                        selector: '/MPD/Period[1]',
+                        type: '@start',
+                        text: 'findme'
+                    },
+                    {
+                        action: 'add',
+                        selector: '/MPD/Period[2]',
+                        position: 'before',
+                        children: [{
+                            Period: newPeriod
+                        }]
+                    },
+                    {
+                        action: 'replace',
+                        selector: '/MPD/Period[3]/@id',
+                        text: 'qux'
+                    },
+                    {
+                        action: 'remove',
+                        selector: '/MPD/Period[@start="findme"]'
+                    }
+                ]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                // check attribute changes
+                expect(originalPeriods[0].start).to.equal('findme');
+                expect(originalPeriods[1].id).to.equal('qux');
+
+                // check insertion and ordering based on application
+                expect(manifest.Period).to.deep.equal([newPeriod, originalPeriods[1]]);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
+            });
+
+            it('invalid operations are ignored', function () {
+                let originalPeriods = [{id: 'foo'}, {id: 'bar'}];
+                let manifest = {
+                    Period: originalPeriods.slice(),
+                    Period_asArray: originalPeriods.slice()
+                };
+                let patch = patchHelper.generatePatch('foobar', [
+                    {
+                        action: 'add',
+                        selector: '/MPD/Period[1]',
+                        type: '@start',
+                        text: 'findme'
+                    },
+                    {
+                        action: 'replace',
+                        selector: '/MPD/Period[@id="nothere"]/@id',
+                        text: 'nochange'
+                    },
+                    {
+                        action: 'replace',
+                        selector: '/MPD/Period[2]/@id',
+                        text: 'baz'
+                    }
+                ]);
+
+                dashAdapter.applyPatchToManifest(manifest, patch);
+
+                // check updates executed
+                expect(originalPeriods[0]).to.have.property('start');
+                expect(originalPeriods[0].start).to.equal('findme');
+                expect(originalPeriods[1].id).to.equal('baz');
+
+                // check ordering proper
+                expect(manifest.Period).to.deep.equal(originalPeriods);
+                expect(manifest.Period).to.deep.equal(manifest.Period_asArray);
             });
         });
     });

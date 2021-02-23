@@ -34,6 +34,10 @@ import MediaCapability from '../vo/MediaCapability';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration';
 import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
+import LicenseRequest from '../vo/LicenseRequest';
+import LicenseResponse from '../vo/LicenseResponse';
+import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import Utils from '../../../core/Utils';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -67,6 +71,7 @@ function ProtectionController(config) {
     const BASE64 = config.BASE64;
     const constants = config.constants;
     let needkeyRetries = [];
+    const cmcdModel = config.cmcdModel;
 
     let instance,
         logger,
@@ -75,7 +80,9 @@ function ProtectionController(config) {
         protDataSet,
         sessionType,
         robustnessLevel,
-        keySystem;
+        keySystem,
+        licenseRequestFilters,
+        licenseResponseFilters;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -83,6 +90,8 @@ function ProtectionController(config) {
         mediaInfoArr = [];
         sessionType = 'temporary';
         robustnessLevel = '';
+        licenseRequestFilters = [];
+        licenseResponseFilters = [];
     }
 
     function checkConfig() {
@@ -377,6 +386,9 @@ function ProtectionController(config) {
      */
     function reset() {
         checkConfig();
+
+        licenseRequestFilters = [];
+        licenseResponseFilters = [];
 
         eventBus.off(events.INTERNAL_KEY_MESSAGE, onKeyMessage, this);
         eventBus.off(events.INTERNAL_KEY_STATUS_CHANGED, onKeyStatusChanged, this);
@@ -734,13 +746,16 @@ function ProtectionController(config) {
             }
 
             if (xhr.status === 200) {
-                const licenseMessage = licenseServerData.getLicenseMessage(xhr.response, keySystemString, messageType);
-                if (licenseMessage !== null) {
-                    sendLicenseRequestCompleteEvent(eventData);
-                    protectionModel.updateKeySession(sessionToken, licenseMessage);
-                } else {
-                    reportError(xhr, eventData, keySystemString, messageType);
-                }
+                let licenseResponse = new LicenseResponse(xhr.responseURL, Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null), xhr.response);
+                applyFilters(licenseResponseFilters, licenseResponse).then(() => {
+                    const licenseMessage = licenseServerData.getLicenseMessage(licenseResponse.data, keySystemString, messageType);
+                    if (licenseMessage !== null) {
+                        sendLicenseRequestCompleteEvent(eventData);
+                        protectionModel.updateKeySession(sessionToken, licenseMessage);
+                    } else {
+                        reportError(xhr, eventData, keySystemString, messageType);
+                    }
+                });
             } else {
                 reportError(xhr, eventData, keySystemString, messageType);
             }
@@ -758,37 +773,46 @@ function ProtectionController(config) {
                 xhr.statusText + '" (' + xhr.status + '), readyState is ' + xhr.readyState));
         };
 
-        //const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         const reqPayload = keySystem.getLicenseRequestFromMessage(message);
         const reqMethod = licenseServerData.getHTTPMethod(messageType);
         const responseType = licenseServerData.getResponseType(keySystemString, messageType);
         const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT;
         const sessionId = sessionToken.getSessionID() || null;
 
-        doLicenseRequest(url, reqHeaders, reqMethod, responseType, withCredentials, reqPayload,
-            LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError, sessionId);
+        let licenseRequest = new LicenseRequest(url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
+        applyFilters(licenseRequestFilters, licenseRequest).then(() => {
+            doLicenseRequest(licenseRequest, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
+        });
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
-    function doLicenseRequest(url, headers, method, responseType, withCredentials, payload, retriesCount, timeout, onLoad, onAbort, onError, sessionId) {
+    function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
 
-        xhr.open(method, url, true);
-        xhr.responseType = responseType;
-        xhr.withCredentials = withCredentials;
+        const cmcdParams = cmcdModel.getQueryParameter({
+            url: request.url,
+            type: HTTPRequest.LICENSE
+        });
+
+        if (cmcdParams) {
+            request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+        }
+
+        xhr.open(request.method, request.url, true);
+        xhr.responseType = request.responseType;
+        xhr.withCredentials = request.withCredentials;
         if (timeout > 0) {
             xhr.timeout = timeout;
         }
-        for (const key in headers) {
-            xhr.setRequestHeader(key, headers[key]);
+        for (const key in request.headers) {
+            xhr.setRequestHeader(key, request.headers[key]);
         }
 
         const retryRequest = function () {
             // fail silently and retry
             retriesCount--;
             setTimeout(function () {
-                doLicenseRequest(url, headers, method, responseType, withCredentials, payload,
-                    retriesCount, timeout, onLoad, onAbort, onError, sessionId);
+                doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
             }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
         };
 
@@ -814,14 +838,15 @@ function ProtectionController(config) {
             onAbort(this);
         };
 
+        // deprecated, to be removed
         eventBus.trigger(events.LICENSE_REQUEST_SENDING, {
-            url,
-            headers,
-            payload,
-            sessionId
+            url: request.url,
+            headers: request.headers,
+            payload: request.data,
+            sessionId: request.sessionId
         });
 
-        xhr.send(payload);
+        xhr.send(request.data);
     }
 
     function onNeedKey(event, retry) {
@@ -884,6 +909,23 @@ function ProtectionController(config) {
         }
     }
 
+    function setLicenseRequestFilters (filters) {
+        licenseRequestFilters = filters;
+    }
+
+    function setLicenseResponseFilters (filters) {
+        licenseResponseFilters = filters;
+    }
+
+    function applyFilters (filters, param) {
+        if (!filters) return Promise.resolve();
+        return filters.reduce((prev, next) => {
+            return prev.then(() => {
+                return next(param);
+            });
+        }, Promise.resolve());
+    }
+
     instance = {
         initializeForMedia: initializeForMedia,
         clearMediaInfoArrayByStreamId: clearMediaInfoArrayByStreamId,
@@ -899,6 +941,8 @@ function ProtectionController(config) {
         getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
         getKeySystems: getKeySystems,
         setKeySystems: setKeySystems,
+        setLicenseRequestFilters: setLicenseRequestFilters,
+        setLicenseResponseFilters: setLicenseResponseFilters,
         stop: stop,
         reset: reset
     };

@@ -117,7 +117,6 @@ declare namespace dashjs {
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             bufferPruningInterval?: number;
             bufferToKeep?: number;
-            bufferAheadToKeep?: number;
             jumpGaps?: boolean;
             jumpLargeGaps?: boolean;
             smallGapLimit?: number;
@@ -133,6 +132,20 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
+            filterUnsupportedEssentialProperties?: true
+            utcSynchronization?: {
+                backgroundAttempts?: number,
+                timeBetweenSyncAttempts?: number,
+                maximumTimeBetweenSyncAttempts?: number,
+                minimumTimeBetweenSyncAttempts?: number,
+                timeBetweenSyncAttemptsAdjustmentFactor?: number,
+                maximumAllowedDrift?: number,
+                enableBackgroundSyncAfterSegmentDownloadError?: boolean,
+                defaultTimingSource?: {
+                    scheme?: string,
+                    value?: string
+                }
+            },
             liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
@@ -168,6 +181,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyReductionFactor'?:  number;
             };
             retryAttempts?: {
                 'MPD'?:                       number;
@@ -177,6 +191,7 @@ declare namespace dashjs {
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
                 'other'?:                     number;
+                'lowLatencyMultiplyFactor'?:  number;
             };
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
@@ -215,7 +230,9 @@ declare namespace dashjs {
             cmcd?: {
                 enabled?: boolean,
                 sid?: string,
-                cid?: string
+                cid?: string,
+                rtp?: number,
+                rtpSafetyFactor?: number
             }
         }
     }
@@ -330,6 +347,10 @@ declare namespace dashjs {
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionDataSet): void;
+        registerLicenseRequestFilter(filter: RequestFilter),
+        registerLicenseResponseFilter(filter: ResponseFilter),
+        unregisterLicenseRequestFilter(filter: RequestFilter),
+        unregisterLicenseResponseFilter(filter: ResponseFilter),
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -428,6 +449,7 @@ declare namespace dashjs {
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
+        CONFORMANCE_VIOLATION: 'conformanceViolation'
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
         FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
@@ -996,6 +1018,26 @@ declare namespace dashjs {
         cdmData: ArrayBuffer | null;
         sessionId: string | null;
     }
+
+    export interface LicenseRequest {
+        url: string;
+        method: string;
+        responseType: string;
+        headers: object;
+        withCredentials: boolean;
+        messageType: string;
+        sessionId: string;
+        data: ArrayBuffer;
+    }
+
+    export interface LicenseResponse {
+        url: string;
+        headers: object;
+        data: ArrayBuffer;
+    }
+
+    export type RequestFilter = (request: LicenseRequest) => Promise<any>;
+    export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 
     export interface IBufferLevel {
         level: number;

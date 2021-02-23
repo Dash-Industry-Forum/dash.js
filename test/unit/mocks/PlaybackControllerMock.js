@@ -13,6 +13,7 @@ class PlaybackControllerMock {
         this.isDynamic = false;
         this.time = 0;
         this.streamController = new StreamControllerMock();
+        this.streamController.setup();
     }
 
     initialize() {

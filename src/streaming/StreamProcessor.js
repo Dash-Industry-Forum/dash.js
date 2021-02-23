@@ -214,7 +214,7 @@ function StreamProcessor(config) {
             liveEdgeFinder = null;
         }
 
-        if (abrController) {
+        if (abrController && !keepBuffers) {
             abrController.unRegisterStreamType(type);
         }
 
@@ -456,6 +456,24 @@ function StreamProcessor(config) {
         }
 
         scheduleController.processMediaRequest(request);
+    }
+
+    /**
+     * Probe the next request. This is used in the CMCD model to get information about the upcoming request. Note: No actual request is performed here.
+     * @return {FragmentRequest|null}
+     */
+    function probeNextRequest() {
+        const representationInfo = getRepresentationInfo();
+
+        const representation = representationController && representationInfo ?
+            representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+        let request = indexHandler.getNextSegmentRequestIdempotent(
+            getMediaInfo(),
+            representation
+        );
+
+        return request;
     }
 
     function findNextRequest(seekTarget, requestToReplace) {
@@ -765,6 +783,7 @@ function StreamProcessor(config) {
         getInitRequest: getInitRequest,
         getFragmentRequest: getFragmentRequest,
         finalisePlayList: finalisePlayList,
+        probeNextRequest: probeNextRequest,
         reset: reset
     };
 

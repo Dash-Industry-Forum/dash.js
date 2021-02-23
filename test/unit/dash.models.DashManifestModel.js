@@ -518,6 +518,33 @@ describe('DashManifestModel', function () {
             expect(location).to.be.equal('location_1'); // jshint ignore:line
         });
 
+        it('should return undefined when getPatchLocation is called and manifest is undefined', () => {
+            const location = dashManifestModel.getPatchLocation();
+
+            expect(location).to.be.undefined; // jshint ignore:line
+        });
+
+        it('should return undefined when getPatchLocation is called and one is not present', () => {
+            const location = dashManifestModel.getPatchLocation({});
+
+            expect(location).to.be.undefined; // jshint ignore:line
+        });
+
+        it('should return valid patch location when getLocation is called and manifest contains complex location', () => {
+            const patchLocation = {
+                __text: 'http://example.com',
+                ttl: 60
+            };
+            const manifest = {
+                [DashConstants.PATCH_LOCATION]: patchLocation,
+                PatchLocation_asArray: [patchLocation]
+            };
+
+            const location = dashManifestModel.getPatchLocation(manifest);
+
+            expect(location).to.equal(patchLocation);
+        });
+
         it('should return an empty Array when getUTCTimingSources is called and manifest is undefined', () => {
             const utcSourceArray = dashManifestModel.getUTCTimingSources();
 
@@ -791,6 +818,28 @@ describe('DashManifestModel', function () {
             expect(representationArray[0].index).to.equals(0);                // jshint ignore:line
         });
 
+        it('should return null when getId is called and manifest undefined', () => {
+            const id = dashManifestModel.getId();
+
+            expect(id).to.be.null; // jshint ignore:line
+        });
+
+        it('should return null when getId is called and manifest is missing id', () => {
+            const id = dashManifestModel.getId({});
+
+            expect(id).to.be.null; // jshint ignore:line
+        });
+
+        it('should return id when getId is called and manifest contains id', () => {
+            const manifest = {
+                [DashConstants.ID]: 'foobar'
+            };
+
+            const id = dashManifestModel.getId(manifest);
+
+            expect(id).to.equal('foobar');
+        });
+
         it('should return false when hasProfile is called and manifest is undefined', () => {
             const IsDVB = dashManifestModel.hasProfile();
 
@@ -815,6 +864,34 @@ describe('DashManifestModel', function () {
             const isDVB = dashManifestModel.hasProfile(manifest, 'urn:dvb:dash:profile:dvb-dash:2014');
 
             expect(isDVB).to.be.false; // jshint ignore:line
+        });
+
+        it('should return null when getPublishTime is called and manifest is undefined', () => {
+            const publishTime = dashManifestModel.getPublishTime();
+
+            expect(publishTime).to.be.null; // jshint ignore:line
+        });
+
+        it('should return valid date object when getPublishTime is called with manifest with valid date', () => {
+            const manifest = {
+                [DashConstants.PUBLISH_TIME]: '2020-11-11T05:13:19.514676331Z'
+            };
+
+            const publishTime = dashManifestModel.getPublishTime(manifest);
+
+            expect(publishTime).to.be.instanceOf(Date);
+            expect(publishTime.getTime()).to.not.be.NaN; // jshint ignore:line
+        });
+
+        it('should return invalid date object when getPublishTime is called with manifest with invalid date', () => {
+            const manifest = {
+                [DashConstants.PUBLISH_TIME]: '<invalid-date-time>'
+            };
+
+            const publishTime = dashManifestModel.getPublishTime(manifest);
+
+            expect(publishTime).to.be.instanceOf(Date);
+            expect(publishTime.getTime()).to.be.NaN; // jshint ignore:line
         });
 
         it('should return NaN when getManifestUpdatePeriod is called and manifest is undefined', () => {
