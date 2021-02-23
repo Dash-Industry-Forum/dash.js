@@ -531,7 +531,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         startedPlaying = false;
     };
 
-    var onStreamSwitched = function (/*e*/) {
+    var onStreamInitialized = function (/*e*/) {
         updateDuration();
         var contentFunc;
         //Bitrate Menu

@@ -319,9 +319,9 @@ function StreamController() {
      */
     function addDVRMetric() {
         try {
+            const isDynamic = adapter.getIsDynamic();
             const streamsInfo = adapter.getStreamsInfo();
             const manifestInfo = streamsInfo[0].manifestInfo;
-            const isDynamic = adapter.getIsDynamic();
             const time = playbackController.getTime();
             const range = timelineConverter.calcTimeShiftBufferWindow(streams, isDynamic);
             const activeStreamProcessors = getActiveStreamProcessors();
