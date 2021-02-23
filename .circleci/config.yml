@@ -22,6 +22,16 @@ commands:
                     - node_modules
                 key: v1-dependencies-{{ checksum "package.json" }}
 
+    functional_precondition:
+        steps:
+            - run:
+                name: Check if preconditions are met for functional tests
+                command: |
+                    if [ -z "$BROWSERSTACK_ACCESS_KEY" ]; then
+                        echo "BrowserStack not configured, functional tests will not be executed."
+                        circleci-agent step halt
+                    fi
+
     functional_test_setup:
         steps:
             - run:
@@ -51,11 +61,11 @@ jobs:
             - deploy:
                 name: Deploy
                 command: |
-                    if [ "${CIRCLE_BRANCH}" = "development" ]; then
+                    if [ "${CIRCLE_BRANCH}" = "development" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PASSWORD" ]; then
                         sudo npm install -g grunt-cli
                         grunt deploy --git-commit=$CIRCLE_SHA1 --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
                     else
-                        echo "Not development branch, dry run only"
+                        echo "Not on development branch or deploy not configured. Dry run only, nothing will be deployed."
                     fi
 
     merge-build-and-unit-test:
@@ -75,6 +85,7 @@ jobs:
     functional-tests-smoke:
         executor: dashjs-executor
         steps:
+            - functional_precondition
             - checkout
             - run:
                 name: Virtual merge into development branch
@@ -104,6 +115,7 @@ jobs:
     functional-tests-all:
         executor: dashjs-executor
         steps:
+            - functional_precondition
             - checkout
             - dependencies_setup
             - build_unit_test_steps
