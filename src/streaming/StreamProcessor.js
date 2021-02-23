@@ -246,11 +246,11 @@ function StreamProcessor(config) {
     }
 
     function _onBufferClearedForSeek(e) {
-        if(e.streamId !== streamInfo.id || e.mediaType !== type || isNaN(seekTime)) {
+        if (e.streamId !== streamInfo.id || e.mediaType !== type || isNaN(seekTime)) {
             return;
         }
 
-        bufferController.updateBufferLevel()
+        bufferController.updateBufferLevel();
 
         // Figure out the correct segment request time
         const targetTime = bufferController.getContiniousBufferTimeForTargetTime(seekTime);
@@ -296,10 +296,6 @@ function StreamProcessor(config) {
             bufferingTime = e.from;
             bufferPruned = true;
         }
-    }
-
-    function getType() {
-        return type;
     }
 
     function getRepresentationController() {

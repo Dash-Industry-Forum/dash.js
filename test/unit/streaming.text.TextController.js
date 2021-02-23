@@ -2,9 +2,9 @@ import TextController from '../../src/streaming/text/TextController';
 import TextTracks from '../../src/streaming/text/TextTracks';
 import TextSourceBuffer from '../../src/streaming/text/TextSourceBuffer';
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
-import EventBus from '../../src/core/EventBus';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
-import Events from '../../src/core/events/Events';
+//import EventBus from '../../src/core/EventBus';
+//import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
+//import Events from '../../src/core/events/Events';
 import Constants from '../../src/streaming/constants/Constants';
 
 import VideoModelMock from './mocks/VideoModelMock';
@@ -16,7 +16,7 @@ const expect = require('chai').expect;
 const context = {};
 
 const objectUtils = ObjectUtils(context).getInstance();
-const eventBus = EventBus(context).getInstance();
+//const eventBus = EventBus(context).getInstance();
 
 describe('TextController', function () {
 

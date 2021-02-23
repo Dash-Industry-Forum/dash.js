@@ -256,8 +256,8 @@ function StreamController() {
 
     /**
      * Handle an outer period seek. Dispatch the corresponding event to be handled in the BufferControllers and the ScheduleControllers
-     * @param e
-     * @param seekingStream
+     * @param {object} e
+     * @param {object} seekingStream
      * @private
      */
     function _handleOuterPeriodSeek(e, seekingStream) {
@@ -275,7 +275,7 @@ function StreamController() {
 
     /**
      * We need to wait for the buffer to be cleared before we can do a stream switch.
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onBufferClearedForStreamSwitch(e) {
@@ -297,8 +297,8 @@ function StreamController() {
     }
 
     /**
-     * A track change occured. We dactivate the preloading streams
-     * @param e
+     * A track change occured. We deactivate the preloading streams
+     * @param {object} e
      * @private
      */
     function _onCurrentTrackChanged(e) {
@@ -370,7 +370,7 @@ function StreamController() {
         if (!playbackEndedTimerInterval) {
             playbackEndedTimerInterval = setInterval(function () {
                 if (!isStreamSwitchingInProgress && playbackController.getTimeToStreamEnd() <= 0 && !playbackController.isSeeking()) {
-                    eventBus.trigger(Events.PLAYBACK_ENDED, {'isLast': getActiveStreamInfo().isLast});
+                    eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': getActiveStreamInfo().isLast });
                 }
             }, PLAYBACK_ENDED_TIMER_INTERVAL);
         }
@@ -765,10 +765,7 @@ function StreamController() {
                     logger.debug(`Stream activation requires seek to ${seekTime}`);
                     playbackController.seek(seekTime);
                 } else if (!activeStream.getPreloaded()) {
-                    eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, {
-                        streamId: activeStream.getStreamInfo().id,
-                        seekTarget: seekTime
-                    });
+                    eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, { seekTarget: seekTime }, { streamId: activeStream.getStreamInfo().id });
                 }
             }
         }
@@ -782,8 +779,9 @@ function StreamController() {
     }
 
     /**
-     * Called once the first stream has been intialized. We only use this function to seek to the right start time.
-     * @param {object} e
+     * Called once the first stream has been initialized. We only use this function to seek to the right start time.
+     * @return {number}
+     * @private
      */
     function _getInitialStartTime() {
         // Seek new stream in priority order:
@@ -885,33 +883,33 @@ function StreamController() {
     function _initializeOrUpdateStream(streamInfo) {
         let stream = getComposedStream(streamInfo);
 
-                if (!stream) {
-                    stream = Stream(context).create({
-                        manifestModel: manifestModel,
-                        mediaPlayerModel: mediaPlayerModel,
-                        dashMetrics: dashMetrics,
-                        manifestUpdater: manifestUpdater,
-                        adapter: adapter,
-                        timelineConverter: timelineConverter,
-                        capabilities: capabilities,
-                        capabilitiesFilter,
-                        errHandler: errHandler,
-                        baseURLController: baseURLController,
-                        abrController: abrController,
-                        playbackController: playbackController,
-                        eventController: eventController,
-                        mediaController: mediaController,
-                        textController: textController,
-                        protectionController: protectionController,
-                        videoModel: videoModel,
-                        streamInfo: streamInfo,
-                        settings: settings
-                    });
-                    streams.push(stream);
-                    stream.initialize();
-                } else {
-                    stream.updateData(streamInfo);
-                }
+        if (!stream) {
+            stream = Stream(context).create({
+                manifestModel: manifestModel,
+                mediaPlayerModel: mediaPlayerModel,
+                dashMetrics: dashMetrics,
+                manifestUpdater: manifestUpdater,
+                adapter: adapter,
+                timelineConverter: timelineConverter,
+                capabilities: capabilities,
+                capabilitiesFilter,
+                errHandler: errHandler,
+                baseURLController: baseURLController,
+                abrController: abrController,
+                playbackController: playbackController,
+                eventController: eventController,
+                mediaController: mediaController,
+                textController: textController,
+                protectionController: protectionController,
+                videoModel: videoModel,
+                streamInfo: streamInfo,
+                settings: settings
+            });
+            streams.push(stream);
+            stream.initialize();
+        } else {
+            stream.updateData(streamInfo);
+        }
 
         dashMetrics.addManifestUpdateStreamInfo(streamInfo);
     }
@@ -947,7 +945,7 @@ function StreamController() {
             }
             const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + settings.get().streaming.waitingOffsetIfAstIsGreaterThanNow) * 1000, 2147483647);
             logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-            eventBus.trigger(Events.AST_IN_FUTURE, {delay: waitingTime});
+            eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
             waitForPlaybackStartTimeout = setTimeout(() => {
                 _initializeForFirstStream(streamsInfo);
             }, waitingTime);

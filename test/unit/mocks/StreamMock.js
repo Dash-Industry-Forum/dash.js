@@ -48,7 +48,7 @@ StreamMock.prototype.setRepresentation = function (representation) {
     this.dashAdapter.setRepresentation(representation);
 };
 
-StreamMock.prototype.getProcessors = function() {
+StreamMock.prototype.getProcessors = function () {
     return this.streamProcessors;
 };
 

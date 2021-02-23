@@ -161,7 +161,6 @@ function TimelineConverter() {
         }
 
         // Specific use case of SegmentTimeline
-        const s = settings.get();
         if (settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
             return _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
         }

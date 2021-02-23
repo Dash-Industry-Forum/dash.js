@@ -169,8 +169,7 @@ describe('SourceBufferSink', function () {
                     eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
                     expect(mediaSource.buffers[0].chunk).to.equal('toto');
                     done();
-                }
-                catch(e) {
+                } catch (e) {
                     done(e);
                 }
             }
@@ -180,7 +179,7 @@ describe('SourceBufferSink', function () {
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
-            sink.append({bytes: 'toto'});
+            sink.append({ bytes: 'toto' });
         });
 
         /*
@@ -230,8 +229,7 @@ describe('SourceBufferSink', function () {
                     expect(e.error.code).to.equal(Errors.APPEND_ERROR_CODE);
                     expect(e.error.message).to.equal('chunk is not defined');
                     done();
-                }
-                catch(e) {
+                } catch (e) {
                     done(e);
                 }
             }
@@ -275,7 +273,7 @@ describe('SourceBufferSink', function () {
 
             eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
             eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
-            sink.append({bytes: 'toto'});
+            sink.append({ bytes: 'toto' });
         });
     });
 

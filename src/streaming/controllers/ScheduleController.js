@@ -219,7 +219,7 @@ function ScheduleController(config) {
 
             setFragmentProcessState(true);
             if (!isReplacement && checkPlaybackQuality) {
-                abrController.checkPlaybackQuality(type, streamId);
+                abrController.checkPlaybackQuality(type, getStreamId());
             }
 
             getNextFragment();
@@ -458,7 +458,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackRateChanged(e) {
-        dashMetrics.updatePlayListTraceMetrics({playbackspeed: e.playbackRate.toString()});
+        dashMetrics.updatePlayListTraceMetrics({ playbackspeed: e.playbackRate.toString() });
     }
 
     function setSeekTarget(value) {
@@ -478,9 +478,7 @@ function ScheduleController(config) {
     }
 
     function onStreamSwitchCausedTimeAdjustment(e) {
-        if (streamId === e.streamId) {
-            seekTarget = e.seekTarget;
-        }
+        seekTarget = e.seekTarget;
     }
 
     function resetInitialSettings() {

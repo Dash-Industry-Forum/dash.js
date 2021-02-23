@@ -157,26 +157,26 @@ function PlaybackController() {
     }
 
     function seek(time, stickToBuffered, internalSeek) {
-            if (!streamInfo || !videoModel) {
-                return;
-            }
+        if (!streamInfo || !videoModel) {
+            return;
+        }
 
-            let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
-            if (time === currentTime) {
-                return;
-            }
+        let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
+        if (time === currentTime) {
+            return;
+        }
 
-            if (internalSeek === true) {
-                lastSeekWasInternal = true;
-                logger.info('Requesting internal seek to time: ' + time);
-                videoModel.setCurrentTime(time, stickToBuffered);
-            } else {
-                lastSeekWasInternal = false;
-                seekTarget = time;
-                eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-                logger.info('Requesting seek to time: ' + time);
-                videoModel.setCurrentTime(time, stickToBuffered);
-            }
+        if (internalSeek === true) {
+            lastSeekWasInternal = true;
+            logger.info('Requesting internal seek to time: ' + time);
+            videoModel.setCurrentTime(time, stickToBuffered);
+        } else {
+            lastSeekWasInternal = false;
+            seekTarget = time;
+            eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
+            logger.info('Requesting seek to time: ' + time);
+            videoModel.setCurrentTime(time, stickToBuffered);
+        }
     }
 
     function seekToLive() {
@@ -503,7 +503,7 @@ function PlaybackController() {
     }
 
     function onPlaybackProgress() {
-        eventBus.trigger(Events.PLAYBACK_PROGRESS, {streamId: streamInfo.id});
+        eventBus.trigger(Events.PLAYBACK_PROGRESS, { streamId: streamInfo.id });
     }
 
     function onPlaybackRateChanged() {

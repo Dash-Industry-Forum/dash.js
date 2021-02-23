@@ -180,7 +180,7 @@ function DashHandler(config) {
         selectedMimeType = newMimeType;
     }
 
-    function onRepresentationUpdateStarted(eventObj) {
+    function onRepresentationUpdateStarted(e) {
         processRepresentation(e.representation);
     }
 

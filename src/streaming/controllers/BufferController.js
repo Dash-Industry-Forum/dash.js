@@ -260,7 +260,7 @@ function BufferController(config) {
         buffer.append(chunk);
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
-            triggerEvent(Events.VIDEO_CHUNK_RECEIVED, {chunk: chunk});
+            triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
 
@@ -303,7 +303,7 @@ function BufferController(config) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 // Notify Schedulecontroller to stop scheduling until buffer has been pruned
-                triggerEvent(Events.QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                triggerEvent(Events.QUOTA_EXCEEDED, { criticalBufferLevel: criticalBufferLevel });
                 clearBuffers(getClearRanges());
             }
             return;
@@ -325,7 +325,7 @@ function BufferController(config) {
             // (and previous buffered data removed) then seek stream to current time
             const currentTime = playbackController.getTime();
             logger.debug('AppendToBuffer seek target should be ' + currentTime);
-            triggerEvent(Events.SEEK_TARGET, {time: currentTime});
+            triggerEvent(Events.SEEK_TARGET, { time: currentTime });
         }
 
         let suppressAppendedEvent = false;
@@ -373,7 +373,7 @@ function BufferController(config) {
             // remove buffer after seeking operations
             pruneAllSafely(true);
         } else {
-            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, {mediaType: type});
+            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, { mediaType: type });
         }
     }
 
@@ -560,7 +560,7 @@ function BufferController(config) {
             const tolerance = settings.get().streaming.jumpGaps && !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : NaN;
             bufferLevel = getBufferLength(playbackController.getTime() || 0, tolerance);
             if (!streamId || streamId === streamInfo.id) {
-                triggerEvent(Events.BUFFER_LEVEL_UPDATED, {bufferLevel: bufferLevel});
+                triggerEvent(Events.BUFFER_LEVEL_UPDATED, { bufferLevel: bufferLevel });
             }
             checkIfSufficientBuffer();
         }
@@ -600,7 +600,7 @@ function BufferController(config) {
 
         bufferState = state;
 
-        triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, {state: state});
+        triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, { state: state });
         triggerEvent(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY);
         logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
@@ -723,7 +723,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting index handler time to', e.from);
-            triggerEvent(Events.SEEK_TARGET, {time: e.from});
+            triggerEvent(Events.SEEK_TARGET, { time: e.from });
         }
 
         if (isPruningInProgress) {
@@ -744,7 +744,7 @@ function BufferController(config) {
                 hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(),
                 quotaExceeded: isQuotaExceeded
             });
-            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, {mediaType: type});
+            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, { mediaType: type });
         }
     }
 
@@ -852,25 +852,26 @@ function BufferController(config) {
     }
 
     /**
-     * This function returns the maximum time for which the buffer is continious starting from a target time.
+     * This function returns the maximum time for which the buffer is continuous starting from a target time.
      * As soon as there is a gap we return the time before the gap starts
+     * @param {number} targetTime
      */
     function getContiniousBufferTimeForTargetTime(targetTime) {
         try {
             let adjustedTime = targetTime;
             const ranges = buffer.getAllBufferRanges();
 
-            if(!ranges || ranges.length === 0) {
+            if (!ranges || ranges.length === 0) {
                 return adjustedTime;
             }
 
             let i = 0;
 
-            while(adjustedTime === targetTime && i < ranges.length) {
+            while (adjustedTime === targetTime && i < ranges.length) {
                 const start = ranges.start(i);
                 const end = ranges.end(i);
 
-                if(adjustedTime >= start && adjustedTime <= end) {
+                if (adjustedTime >= start && adjustedTime <= end) {
                     adjustedTime = end;
                 }
 
@@ -879,8 +880,7 @@ function BufferController(config) {
 
             return adjustedTime;
 
-        }
-        catch(e) {
+        } catch (e) {
 
         }
     }

@@ -44,8 +44,6 @@ function MediaController() {
         tracks,
         settings,
         initialSettings,
-        selectionMode,
-        switchMode,
         lastSelectedTracks,
         domStorage;
 
@@ -399,7 +397,8 @@ function MediaController() {
             return item === settings.audioChannelConfiguration;
         })[0];
 
-        return (matchLang && matchIndex && matchViewPoint && matchRole && matchAccessibility && matchAudioChannelConfiguration);
+
+        return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
     }
 
     function resetInitialSettings() {

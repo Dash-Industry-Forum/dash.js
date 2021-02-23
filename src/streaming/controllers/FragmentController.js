@@ -39,7 +39,7 @@ import Errors from '../../core/errors/Errors';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 
-function FragmentController( config ) {
+function FragmentController(config) {
 
     config = config || {};
     const context = this.context;
@@ -84,7 +84,7 @@ function FragmentController( config ) {
                     events: Events,
                     errors: Errors,
                     dashConstants: config.dashConstants,
-                    urlUtils: config.urlUtils,
+                    urlUtils: config.urlUtils
                 }),
                 debug: debug,
                 eventBus: eventBus,

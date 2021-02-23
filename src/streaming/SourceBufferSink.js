@@ -35,7 +35,7 @@ import Events from '../core/events/Events';
 import FactoryMaker from '../core/FactoryMaker';
 import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
-import Settings from "../core/Settings";
+import Settings from '../core/Settings';
 
 
 /**
@@ -55,13 +55,13 @@ function SourceBufferSink(mSource) {
         type,
         logger,
         buffer,
-        isAppendingInProgress = false,
-        mediaSource = mSource,
         mediaInfo,
         intervalId;
 
     let callbacks = [];
     let appendQueue = [];
+    let isAppendingInProgress = false;
+    let mediaSource = mSource;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);

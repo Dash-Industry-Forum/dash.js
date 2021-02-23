@@ -89,9 +89,6 @@ class StreamControllerMock {
         return this.activeStream;
     }
 
-    getStreams() {
-        return [];
-    }
 }
 
 export default StreamControllerMock;
