@@ -204,7 +204,7 @@ function VideoModel() {
     function addStalledStream(type) {
         let event;
 
-        if (type === null || element.seeking || stalledStreams.indexOf(type) !== -1) {
+        if (type === null || !element || element.seeking || stalledStreams.indexOf(type) !== -1) {
             return;
         }
 
@@ -362,7 +362,7 @@ function VideoModel() {
 
     function getVideoRelativeOffsetTop() {
         const parentElement = element.parentNode.host || element.parentNode;
-        return parentElement ? element.getBoundingClientRect().top - parentElement.parentNode.getBoundingClientRect().top : NaN;
+        return parentElement ? element.getBoundingClientRect().top - parentElement.getBoundingClientRect().top : NaN;
     }
 
     function getVideoRelativeOffsetLeft() {

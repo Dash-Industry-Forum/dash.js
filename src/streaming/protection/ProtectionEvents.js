@@ -136,6 +136,12 @@ class ProtectionEvents extends EventsBase {
         this.LICENSE_REQUEST_COMPLETE = 'public_licenseRequestComplete';
 
         /**
+         * Sending a license rquest
+         * @event ProtectionEvents#LICENSE_REQUEST_SENDING
+         */
+        this.LICENSE_REQUEST_SENDING = 'public_licenseRequestSending';
+
+        /**
          * Event ID for needkey/encrypted events
          * @ignore
          */

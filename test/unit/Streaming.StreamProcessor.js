@@ -3,12 +3,19 @@ import Constants from '../../src/streaming/constants/Constants';
 const expect = require('chai').expect;
 const context = {};
 
+const streamInfo = {
+    id: 'streamId',
+    manifestInfo: {
+        isDynamic: true
+    }
+};
+
 describe('StreamProcessor', function () {
     describe('StreamProcessor not initialized', function () {
         let streamProcessor = null;
 
         beforeEach(function () {
-            streamProcessor = StreamProcessor(context).create({});
+            streamProcessor = StreamProcessor(context).create({streamInfo: streamInfo});
         });
 
         afterEach(function () {

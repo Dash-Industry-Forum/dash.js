@@ -11,7 +11,9 @@ class PlaybackControllerMock {
         this.playing = false;
         this.seeking = false;
         this.isDynamic = false;
+        this.time = 0;
         this.streamController = new StreamControllerMock();
+        this.streamController.setup();
     }
 
     initialize() {
@@ -60,7 +62,11 @@ class PlaybackControllerMock {
     }
 
     getTime() {
-        return null;
+        return this.time;
+    }
+
+    setTime(time) {
+        this.time = time;
     }
 
     getNormalizedTime() {

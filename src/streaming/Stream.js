@@ -54,6 +54,7 @@ function Stream(config) {
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
     const capabilities = config.capabilities;
+    const capabilitiesFilter = config.capabilitiesFilter;
     const errHandler = config.errHandler;
     const timelineConverter = config.timelineConverter;
     const dashMetrics = config.dashMetrics;
@@ -62,12 +63,13 @@ function Stream(config) {
     const eventController = config.eventController;
     const mediaController = config.mediaController;
     const textController = config.textController;
+    const protectionController = config.protectionController;
     const videoModel = config.videoModel;
     const settings = config.settings;
+    let streamInfo = config.streamInfo;
 
     let instance,
         logger,
-        streamInfo,
         streamProcessors,
         isStreamInitialized,
         isStreamActivated,
@@ -76,7 +78,6 @@ function Stream(config) {
         hasAudioTrack,
         updateError,
         isUpdating,
-        protectionController,
         fragmentController,
         thumbnailController,
         preloaded,
@@ -86,17 +87,6 @@ function Stream(config) {
         isEndedEventSignaled,
         trackChangedEvent;
 
-    const codecCompatibilityTable = [
-        {
-            'codec': 'avc1',
-            'compatibleCodecs': ['avc3']
-        },
-        {
-            'codec': 'avc3',
-            'compatibleCodecs': ['avc1']
-        }
-    ];
-
     function setup() {
         debug = Debug(context).getInstance();
         logger = debug.getLogger(instance);
@@ -105,6 +95,7 @@ function Stream(config) {
         boxParser = BoxParser(context).getInstance();
 
         fragmentController = FragmentController(context).create({
+            streamInfo: streamInfo,
             mediaPlayerModel: mediaPlayerModel,
             dashMetrics: dashMetrics,
             errHandler: errHandler,
@@ -113,8 +104,12 @@ function Stream(config) {
             dashConstants: DashConstants,
             urlUtils: urlUtils
         });
+    }
 
+    function initialize() {
         registerEvents();
+        registerProtectionEvents();
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
     function registerEvents() {
@@ -151,18 +146,8 @@ function Stream(config) {
         }
     }
 
-    function initialize(strInfo, prtctnController) {
-        streamInfo = strInfo;
-        if (strInfo) {
-            fragmentController.setStreamId(strInfo.id);
-        }
-        protectionController = prtctnController;
-        registerProtectionEvents();
-
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
-
+    function getStreamId() {
+        return streamInfo ? streamInfo.id : null;
     }
 
     /**
@@ -239,7 +224,6 @@ function Stream(config) {
 
     function resetInitialSettings() {
         deactivate();
-        streamInfo = null;
         isStreamInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
@@ -258,6 +242,8 @@ function Stream(config) {
             fragmentController.reset();
             fragmentController = null;
         }
+
+        streamInfo = null;
 
         resetInitialSettings();
 
@@ -408,7 +394,7 @@ function Stream(config) {
 
     function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
 
-        let fragmentModel = fragmentController.getModel(getId(), mediaInfo ? mediaInfo.type : null);
+        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -543,8 +529,7 @@ function Stream(config) {
 
         isUpdating = true;
 
-        filterCodecs(Constants.VIDEO);
-        filterCodecs(Constants.AUDIO);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod( streamInfo);
 
         if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
             initializeMediaForType(Constants.VIDEO, mediaSource);
@@ -576,8 +561,7 @@ function Stream(config) {
     function initializeAfterPreload() {
         isUpdating = true;
         checkConfig();
-        filterCodecs(Constants.VIDEO);
-        filterCodecs(Constants.AUDIO);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
         isMediaInitialized = true;
         isUpdating = false;
@@ -588,25 +572,6 @@ function Stream(config) {
         } else {
             checkIfInitializationCompleted();
         }
-    }
-
-    function filterCodecs(type) {
-        const realAdaptation = adapter.getAdaptationForType(streamInfo ? streamInfo.index : null, type, streamInfo);
-
-        if (!realAdaptation || !Array.isArray(realAdaptation.Representation_asArray)) return;
-
-        // Filter codecs that are not supported
-        realAdaptation.Representation_asArray = realAdaptation.Representation_asArray.filter((_, i) => {
-            // keep at least codec from lowest representation
-            if (i === 0) return true;
-
-            const codec = adapter.getCodec(realAdaptation, i, true);
-            if (!capabilities.supportsCodec(codec)) {
-                logger.error('[Stream] codec not supported: ' + codec);
-                return false;
-            }
-            return true;
-        });
     }
 
     function checkIfInitializationCompleted() {
@@ -627,11 +592,16 @@ function Stream(config) {
         if (protectionController) {
             // Need to check if streamProcessors exists because streamProcessors
             // could be cleared in case an error is detected while initializing DRM keysystem
+            protectionController.clearMediaInfoArrayByStreamId(getId());
             for (let i = 0; i < ln && streamProcessors[i]; i++) {
-                if (streamProcessors[i].getType() === Constants.AUDIO ||
-                    streamProcessors[i].getType() === Constants.VIDEO ||
-                    streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
-                    protectionController.initializeForMedia(streamProcessors[i].getMediaInfo());
+                const type = streamProcessors[i].getType();
+                if (type === Constants.AUDIO ||
+                    type === Constants.VIDEO ||
+                    type === Constants.FRAGMENTED_TEXT) {
+                    let mediaInfo = streamProcessors[i].getMediaInfo();
+                    if (mediaInfo) {
+                        protectionController.initializeForMedia(mediaInfo);
+                    }
                 }
             }
         }
@@ -640,7 +610,6 @@ function Stream(config) {
             errHandler.error(error);
         } else if (!isStreamInitialized) {
             isStreamInitialized = true;
-            timelineConverter.setTimeSyncCompleted(true);
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
                 streamInfo
@@ -684,9 +653,7 @@ function Stream(config) {
         return buffers;
     }
 
-    function onBufferingCompleted(e) {
-        if (e.streamId !== streamInfo.id) return;
-
+    function onBufferingCompleted() {
         let processors = getProcessors();
         const ln = processors.length;
 
@@ -705,20 +672,15 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo });
     }
 
     function onDataUpdateCompleted(e) {
-        if (!streamInfo || e.sender.getStreamId() !== streamInfo.id) return;
-
-        updateError[e.sender.getType()] = e.error;
+        updateError[e.mediaType] = e.error;
         checkIfInitializationCompleted();
     }
 
     function onInbandEvents(e) {
-        if (!streamInfo || e.sender.getStreamInfo().id !== streamInfo.id) return;
         addInbandEvents(e.events);
     }
 
@@ -759,23 +721,23 @@ function Stream(config) {
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
-        eventBus.trigger(Events.STREAM_UPDATED, {
-            streamInfo: streamInfo
-        });
+        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
 
         if (eventController) {
             addInlineEvents();
         }
 
-        filterCodecs(Constants.VIDEO);
-        filterCodecs(Constants.AUDIO);
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
             streamProcessor.updateStreamInfo(streamInfo);
             let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
-            abrController.updateTopQualityIndex(mediaInfo);
-            streamProcessor.addMediaInfo(mediaInfo, true);
+            // Check if AdaptationSet has not been removed in MPD update
+            if (mediaInfo) {
+                abrController.updateTopQualityIndex(mediaInfo);
+                streamProcessor.addMediaInfo(mediaInfo, true);
+            }
         }
 
         if (trackChangedEvent) {
@@ -866,25 +828,8 @@ function Stream(config) {
             return oldCodecs.indexOf(newCodec) > -1;
         });
 
-        const partialCodecMatch = newCodecs.some((newCodec) => oldCodecs.some((oldCodec) => codecRootCompatibleWithCodec(oldCodec, newCodec)));
+        const partialCodecMatch = newCodecs.some((newCodec) => oldCodecs.some((oldCodec) => capabilities.codecRootCompatibleWithCodec(oldCodec, newCodec)));
         return codecMatch || (partialCodecMatch && sameMimeType);
-    }
-
-    // Check if the root of the old codec is the same as the new one, or if it's declared as compatible in the compat table
-    function codecRootCompatibleWithCodec(codec1, codec2) {
-        const codecRoot = codec1.split('.')[0];
-        const rootCompatible = codec2.indexOf(codecRoot) === 0;
-        let compatTableCodec;
-        for (let i = 0; i < codecCompatibilityTable.length; i++) {
-            if (codecCompatibilityTable[i].codec === codecRoot) {
-                compatTableCodec = codecCompatibilityTable[i];
-                break;
-            }
-        }
-        if (compatTableCodec) {
-            return rootCompatible || compatTableCodec.compatibleCodecs.some((compatibleCodec) => codec2.indexOf(compatibleCodec) === 0);
-        }
-        return rootCompatible;
     }
 
     function setPreloaded(value) {
@@ -925,6 +870,7 @@ function Stream(config) {
 
     instance = {
         initialize: initialize,
+        getStreamId: getStreamId,
         activate: activate,
         deactivate: deactivate,
         isActive: isActive,

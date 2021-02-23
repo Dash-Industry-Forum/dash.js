@@ -41,7 +41,7 @@ function RepresentationController(config) {
     const playbackController = config.playbackController;
     const timelineConverter = config.timelineConverter;
     const type = config.type;
-    const streamId = config.streamId;
+    const streamInfo = config.streamInfo;
     const dashConstants = config.dashConstants;
 
     let instance,
@@ -56,6 +56,14 @@ function RepresentationController(config) {
         eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
     }
 
     function checkConfig() {
@@ -83,20 +91,11 @@ function RepresentationController(config) {
     }
 
     function reset() {
-
         eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.off(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
-    }
-
-    function getType() {
-        return type;
-    }
-
-    function getStreamId() {
-        return streamId;
     }
 
     function updateData(newRealAdaptation, availableRepresentations, type, quality) {
@@ -155,27 +154,32 @@ function RepresentationController(config) {
 
     function startDataUpdate() {
         updating = true;
-        eventBus.trigger(events.DATA_UPDATE_STARTED, {sender: instance});
+        eventBus.trigger(events.DATA_UPDATE_STARTED,
+            {},
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function endDataUpdate(error) {
         updating = false;
-        let eventArg = {sender: instance, data: realAdaptation, currentRepresentation: currentVoRepresentation};
-        if (error) {
-            eventArg.error = error;
-        }
-        eventBus.trigger(events.DATA_UPDATE_COMPLETED, eventArg);
+        eventBus.trigger(events.DATA_UPDATE_COMPLETED,
+            {
+                data: realAdaptation,
+                currentRepresentation: currentVoRepresentation,
+                error: error
+            },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function onRepresentationUpdated(e) {
-        if (e.sender.getType() !== getType() || e.sender.getStreamInfo().id !== streamId || !isUpdating()) return;
+        if (!isUpdating()) return;
 
         if (e.error) {
             endDataUpdate(e.error);
             return;
         }
 
-        let streamInfo = e.sender.getStreamInfo();
         let r = e.representation;
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
@@ -214,8 +218,6 @@ function RepresentationController(config) {
     }
 
     function onQualityChanged(e) {
-        if (e.mediaType !== getType() || streamId !== e.streamInfo.id) return;
-
         currentVoRepresentation = getRepresentationForQuality(e.newQuality);
         addRepresentationSwitch();
     }
@@ -231,13 +233,13 @@ function RepresentationController(config) {
     }
 
     instance = {
+        getStreamId: getStreamId,
+        getType: getType,
         getData: getData,
         isUpdating: isUpdating,
         updateData: updateData,
         getCurrentRepresentation: getCurrentRepresentation,
         getRepresentationForQuality: getRepresentationForQuality,
-        getType: getType,
-        getStreamId: getStreamId,
         reset: reset
     };
 

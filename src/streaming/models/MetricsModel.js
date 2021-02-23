@@ -65,17 +65,17 @@ function MetricsModel(config) {
     }
 
     function metricChanged(mediaType) {
-        eventBus.trigger(Events.METRIC_CHANGED, {mediaType: mediaType});
+        eventBus.trigger(Events.METRIC_CHANGED, { mediaType: mediaType });
         metricsChanged();
     }
 
     function metricUpdated(mediaType, metricType, vo) {
-        eventBus.trigger(Events.METRIC_UPDATED, {mediaType: mediaType, metric: metricType, value: vo});
+        eventBus.trigger(Events.METRIC_UPDATED, { mediaType: mediaType, metric: metricType, value: vo });
         metricChanged(mediaType);
     }
 
     function metricAdded(mediaType, metricType, vo) {
-        eventBus.trigger(Events.METRIC_ADDED, {mediaType: mediaType, metric: metricType, value: vo});
+        eventBus.trigger(Events.METRIC_ADDED, { mediaType: mediaType, metric: metricType, value: vo });
         metricChanged(mediaType);
     }
 

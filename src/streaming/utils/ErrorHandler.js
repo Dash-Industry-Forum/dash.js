@@ -47,7 +47,7 @@ function ErrorHandler() {
      * @memberof module:ErrorHandler
      */
     function error(err) {
-        eventBus.trigger(Events.ERROR, {error: err});
+        eventBus.trigger(Events.ERROR, { error: err });
     }
     instance = {
         error: error

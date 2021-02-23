@@ -16,6 +16,7 @@ describe('FragmentController', function () {
     const mediaPlayerModelMock = new MediaPlayerModelMock();
     const settings = Settings(context).getInstance();
     const fragmentController = FragmentController(context).create({
+        streamInfo: { id: 'streamId' },
         mediaPlayerModel: mediaPlayerModelMock,
         settings: settings
     });

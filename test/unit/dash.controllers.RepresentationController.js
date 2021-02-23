@@ -49,7 +49,9 @@ describe('RepresentationController', function () {
 
     describe('Config not correctly passed', function () {
         beforeEach(function () {
-            representationController = RepresentationController(context).create({ events: Events,
+            representationController = RepresentationController(context).create({
+                streamInfo: streamProcessor.getStreamInfo(),
+                events: Events,
                 eventBus: eventBus
             });
         });
@@ -74,12 +76,12 @@ describe('RepresentationController', function () {
     describe('Config correctly passed', function () {
         beforeEach(function () {
             representationController = RepresentationController(context).create({
+                streamInfo: streamProcessor.getStreamInfo(),
                 abrController: abrControllerMock,
                 timelineConverter: timelineConverter,
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock,
                 type: testType,
-                streamId: streamProcessor.getStreamInfo().id,
                 events: Events,
                 eventBus: eventBus,
                 dashConstants: DashConstants

@@ -36,8 +36,8 @@ import MetricsReportingEvents from '../MetricsReportingEvents';
 function MetricsCollectionController(config) {
 
     config = config || {};
+    let instance;
     let metricsControllers = {};
-
     let context = this.context;
     let eventBus = config.eventBus;
     const events = config.events;
@@ -78,9 +78,7 @@ function MetricsCollectionController(config) {
             delete metricsControllers[c];
         });
 
-        eventBus.trigger(
-            MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE
-        );
+        eventBus.trigger(MetricsReportingEvents.METRICS_INITIALISATION_COMPLETE);
     }
 
     function resetMetricsControllers() {
@@ -92,20 +90,21 @@ function MetricsCollectionController(config) {
     }
 
     function setup() {
-        eventBus.on(events.MANIFEST_UPDATED, update);
-        eventBus.on(events.STREAM_TEARDOWN_COMPLETE, resetMetricsControllers);
+        eventBus.on(events.MANIFEST_UPDATED, update, instance);
+        eventBus.on(events.STREAM_TEARDOWN_COMPLETE, resetMetricsControllers, instance);
     }
 
     function reset() {
-        eventBus.off(events.MANIFEST_UPDATED, update);
-        eventBus.off(events.STREAM_TEARDOWN_COMPLETE, resetMetricsControllers);
+        eventBus.off(events.MANIFEST_UPDATED, update, instance);
+        eventBus.off(events.STREAM_TEARDOWN_COMPLETE, resetMetricsControllers, instance);
     }
 
-    setup();
-
-    return {
+    instance = {
         reset: reset
     };
+
+    setup();
+    return instance;
 }
 
 MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController';

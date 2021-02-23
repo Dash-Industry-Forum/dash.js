@@ -33,11 +33,13 @@
             liveCatchupLatencyThreshold = parseFloat(document.getElementById("catchup-threshold").value, 10);
 
             player.updateSettings({
-                'streaming': {
-                    'liveDelay': targetLatency,
-                    'liveCatchUpMinDrift': minDrift,
-                    'liveCatchUpPlaybackRate': catchupPlaybackRate,
-                    "liveCatchupLatencyThreshold": liveCatchupLatencyThreshold,
+                streaming: {
+                    liveDelay: targetLatency,
+                    liveCatchup: {
+                        minDrift: minDrift,
+                        playbackRate: catchupPlaybackRate,
+                        latencyThreshold: liveCatchupLatencyThreshold,    
+                    }
                 }
             });
         }
@@ -168,7 +170,7 @@
             var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
             document.getElementById("latency-tag").innerHTML = currentLatency + " secs";
 
-            document.getElementById("mindrift-tag").innerHTML = settings.streaming.liveCatchUpMinDrift + " secs";
+            document.getElementById("mindrift-tag").innerHTML = settings.streaming.liveCatchup.minDrift + " secs";
 
             var currentPlaybackRate = player.getPlaybackRate();
             document.getElementById("playbackrate-tag").innerHTML = Math.round(currentPlaybackRate * 100) / 100;
@@ -176,7 +178,7 @@
             var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
             document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
             
-            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchupLatencyThreshold + " secs";
+            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchup.latencyThreshold + " secs";
             
         }, 200);
     });

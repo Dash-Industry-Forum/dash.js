@@ -208,6 +208,19 @@ function DashManifestModel() {
         return manifest && manifest.Period_asArray && isInteger(periodIndex) ? manifest.Period_asArray[periodIndex] ? manifest.Period_asArray[periodIndex].AdaptationSet_asArray : [] : [];
     }
 
+    function getRealPeriods(manifest) {
+        return manifest && manifest.Period_asArray ? manifest.Period_asArray : [];
+    }
+
+    function getRealPeriodForIndex(index, manifest) {
+        const realPeriods = getRealPeriods(manifest);
+        if (realPeriods.length > 0 && isInteger(index)) {
+            return realPeriods[index];
+        } else {
+            return null;
+        }
+    }
+
     function getAdaptationForId(id, manifest, periodIndex) {
         const realAdaptations = getRealAdaptations(manifest, periodIndex);
         let i,
@@ -328,6 +341,10 @@ function DashManifestModel() {
         return isDynamic;
     }
 
+    function getId(manifest) {
+        return (manifest && manifest[DashConstants.ID]) || null;
+    }
+
     function hasProfile(manifest, profile) {
         let has = false;
 
@@ -363,6 +380,10 @@ function DashManifestModel() {
             delay = manifest.minimumUpdatePeriod;
         }
         return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 1);
+    }
+
+    function getPublishTime(manifest) {
+        return manifest && manifest.hasOwnProperty(DashConstants.PUBLISH_TIME) ? new Date(manifest[DashConstants.PUBLISH_TIME]) : null;
     }
 
     function getRepresentationCount(adaptation) {
@@ -735,6 +756,10 @@ function DashManifestModel() {
             if (manifest.hasOwnProperty(DashConstants.MAX_SEGMENT_DURATION)) {
                 mpd.maxSegmentDuration = manifest.maxSegmentDuration;
             }
+
+            if (manifest.hasOwnProperty(DashConstants.PUBLISH_TIME)) {
+                mpd.publishTime = new Date(manifest.publishTime);
+            }
         }
 
         return mpd;
@@ -779,44 +804,48 @@ function DashManifestModel() {
                 eventStream.timescale = 1;
 
                 if (eventStreams[i].hasOwnProperty(Constants.SCHEME_ID_URI)) {
-                    eventStream.schemeIdUri = eventStreams[i].schemeIdUri;
+                    eventStream.schemeIdUri = eventStreams[i][Constants.SCHEME_ID_URI];
                 } else {
                     throw new Error('Invalid EventStream. SchemeIdUri has to be set');
                 }
                 if (eventStreams[i].hasOwnProperty(DashConstants.TIMESCALE)) {
-                    eventStream.timescale = eventStreams[i].timescale;
+                    eventStream.timescale = eventStreams[i][DashConstants.TIMESCALE];
                 }
                 if (eventStreams[i].hasOwnProperty(DashConstants.VALUE)) {
-                    eventStream.value = eventStreams[i].value;
+                    eventStream.value = eventStreams[i][DashConstants.VALUE];
+                }
+                if (eventStreams[i].hasOwnProperty(DashConstants.PRESENTATION_TIME_OFFSET)) {
+                    eventStream.presentationTimeOffset = eventStreams[i][DashConstants.PRESENTATION_TIME_OFFSET];
                 }
                 for (j = 0; eventStreams[i].Event_asArray && j < eventStreams[i].Event_asArray.length; j++) {
+                    const currentMpdEvent = eventStreams[i].Event_asArray[j];
                     const event = new Event();
                     event.presentationTime = 0;
                     event.eventStream = eventStream;
 
-                    if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
-                        event.presentationTime = eventStreams[i].Event_asArray[j].presentationTime;
-                        const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset * eventStream.timescale : 0;
-                        event.calculatedPresentationTime = event.presentationTime + (period.start * eventStream.timescale) - presentationTimeOffset;
+                    if (currentMpdEvent.hasOwnProperty(DashConstants.PRESENTATION_TIME)) {
+                        event.presentationTime = currentMpdEvent.presentationTime;
+                        const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+                        event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
                     }
-                    if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.DURATION)) {
-                        event.duration = eventStreams[i].Event_asArray[j].duration;
+                    if (currentMpdEvent.hasOwnProperty(DashConstants.DURATION)) {
+                        event.duration = currentMpdEvent.duration / eventStream.timescale;
                     }
-                    if (eventStreams[i].Event_asArray[j].hasOwnProperty(DashConstants.ID)) {
-                        event.id = eventStreams[i].Event_asArray[j].id;
+                    if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
+                        event.id = currentMpdEvent.id;
                     }
 
-                    if (eventStreams[i].Event_asArray[j].Signal && eventStreams[i].Event_asArray[j].Signal.Binary) {
+                    if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
                         // toString is used to manage both regular and namespaced tags
-                        event.messageData = BASE64.decodeArray(eventStreams[i].Event_asArray[j].Signal.Binary.toString());
+                        event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
                     } else {
                         // From Cor.1: 'NOTE: this attribute is an alternative
                         // to specifying a complete XML element(s) in the Event.
                         // It is useful when an event leans itself to a compact
                         // string representation'.
                         event.messageData =
-                            eventStreams[i].Event_asArray[j].messageData ||
-                            eventStreams[i].Event_asArray[j].__text;
+                            currentMpdEvent.messageData ||
+                            currentMpdEvent.__text;
                     }
 
                     events.push(event);
@@ -1023,6 +1052,18 @@ function DashManifestModel() {
         return undefined;
     }
 
+    function getPatchLocation(manifest) {
+        if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
+            // only include support for single patch location currently
+            manifest.PatchLocation = manifest.PatchLocation_asArray[0];
+
+            return manifest.PatchLocation;
+        }
+
+        // no patch location provided
+        return undefined;
+    }
+
     function getSuggestedPresentationDelay(mpd) {
         return mpd && mpd.hasOwnProperty(DashConstants.SUGGESTED_PRESENTATION_DELAY) ? mpd.suggestedPresentationDelay : null;
     }
@@ -1110,16 +1151,20 @@ function DashManifestModel() {
         getIndexForAdaptation: getIndexForAdaptation,
         getAdaptationForId: getAdaptationForId,
         getAdaptationsForType: getAdaptationsForType,
+        getRealPeriods,
+        getRealPeriodForIndex,
         getCodec: getCodec,
         getMimeType: getMimeType,
         getKID: getKID,
         getLabelsForAdaptation: getLabelsForAdaptation,
         getContentProtectionData: getContentProtectionData,
         getIsDynamic: getIsDynamic,
+        getId: getId,
         hasProfile: hasProfile,
         getDuration: getDuration,
         getBandwidth: getBandwidth,
         getManifestUpdatePeriod: getManifestUpdatePeriod,
+        getPublishTime: getPublishTime,
         getRepresentationCount: getRepresentationCount,
         getBitrateListForAdaptation: getBitrateListForAdaptation,
         getRepresentationFor: getRepresentationFor,
@@ -1128,12 +1173,14 @@ function DashManifestModel() {
         getRegularPeriods: getRegularPeriods,
         getMpd: getMpd,
         getEventsForPeriod: getEventsForPeriod,
+        getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
         getEventStreamForRepresentation: getEventStreamForRepresentation,
         getUTCTimingSources: getUTCTimingSources,
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
         getLocation: getLocation,
+        getPatchLocation: getPatchLocation,
         getSuggestedPresentationDelay: getSuggestedPresentationDelay,
         getAvailabilityStartTime: getAvailabilityStartTime,
         getServiceDescriptions: getServiceDescriptions,

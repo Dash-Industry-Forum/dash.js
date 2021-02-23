@@ -2,8 +2,6 @@
 PAUSE:
 - load test page
 - load stream
-- check playing status
-- wait for N seconds
 - repeat N times:
     - pause the player (player.pause())
     - check if playback is paused
@@ -11,112 +9,78 @@ PAUSE:
     - resume the playback (player.play())
     - check if playback is progressing
 **/
-define([
-    'intern',
-    'intern!object',
-    'intern/chai!assert',
-    'require',
-    'test/functional/tests/scripts/player',
-    'test/functional/tests/scripts/utils'
-], function(intern, registerSuite, assert, require, player, utils) {
+const intern = require('intern').default;
+const { suite, before, test } = intern.getPlugin('interface.tdd');
+const { assert } = intern.getPlugin('chai');
 
-    // Suite name
-    var NAME = 'PAUSE';
+const constants = require('./scripts/constants.js');
+const utils = require('./scripts/utils.js');
+const player = require('./scripts/player.js');
 
-    var command = null;
+// Suite name
+const NAME = 'PAUSE';
 
-    // Test constants
-    var PLAYING_TIMEOUT = 10; // Timeout (in sec.) for checking playing status
-    var PROGRESS_VALUE = 5; // Playback progress value (in sec.) to be checked
-    var PROGRESS_TIMEOUT = 10; // Timeout (in sec.) for checking playback progress
-    var PAUSE_DELAY = 5; // Delay (in s) for checking is player is still paused (= not progressing)
-    var PAUSE_COUNT = 3; // Number of pause tests
+// Test constants
+const PAUSE_DELAY = 5; // Delay (in s) for checking is player is still paused (= not progressing)
+const PAUSE_COUNT = 3; // Number of pause tests
 
-    var load = function(stream) {
-        registerSuite({
-            name: utils.testName(NAME, stream),
+exports.register = function(stream) {
 
-            load: function() {
-                if (!stream.available) this.skip();
-                // Ignore streams that are insufficiently long
-                if (stream.duration < 60) this.skip();
-                utils.log(NAME, 'Load stream');
-                command = this.remote.get(require.toUrl(intern.config.testPage));
-                return command.execute(player.loadStream, [stream])
-                .then(function() {
-                    // Check if playing
-                    utils.log(NAME, 'Check if playing');
-                    return command.executeAsync(player.isPlaying, [PLAYING_TIMEOUT]);
-                });
-            }
-        })
-    };
+    suite(utils.testName(NAME, stream), (suite) => {
 
-    var pause = function(stream) {
-
-        registerSuite({
-            name: utils.testName(NAME, stream),
-
-            pause: function() {
-                if (!stream.available || stream.duration < 60) this.skip();
-                var pauseTime = 0;
-                // Execute a play in case previous pause test has failed
-                utils.log(NAME, 'Play');
-                return command.execute(player.play)
-                .then(function () {
-                    var sleepTime = Math.round(Math.random() * 10);
-                    utils.log(NAME, 'Wait ' + sleepTime + ' sec. and pause playback');
-                    // Wait and pause the player
-                    return command.sleep(sleepTime * 1000).execute(player.pause)
-                })
-                .then(function() {
-                    // Pause the player
-                    utils.log(NAME, 'Check if paused');
-                    return command.execute(player.isPaused);
-                })
-                .then(function(paused) {
-                    assert.isTrue(paused);
-                    // Get current time
-                    return command.execute(player.getTime);
-                })
-                .then(function(time) {
-                    pauseTime = time;
-                    utils.log(NAME, 'Check if not progressing');
-                    utils.log(NAME, 'Playback time = ' + time);
-                    utils.log(NAME, 'Wait ' + PAUSE_DELAY + 's...');
-                    return command.sleep(PAUSE_DELAY * 1000).execute(player.getTime);
-                })
-                .then(function(time) {
-                    // Check if the playback is really paused (not playing/progressing)
-                    utils.log(NAME, 'Playback time = ' + time);
-                    if (stream.dynamic) {
-                        // For dynamic streams, when paused, current time is progressing backward
-                        assert.isAtMost(time, (pauseTime - PAUSE_DELAY + 1)); // +1 for 1 sec tolerance
-                    } else {
-                        assert.strictEqual(time, pauseTime);
-                    }
-                    // Resume the player
-                    utils.log(NAME, 'Resume playback');
-                    return command.execute(player.play);
-                })
-                .then(function() {
-                    // Check if playing
-                    utils.log(NAME, 'Check if playing');
-                    return command.executeAsync(player.isProgressing, [PROGRESS_VALUE, PROGRESS_TIMEOUT])
-                })
-                .then(function (progressing) {
-                    return assert.isTrue(progressing);
-                });
-            }
+        before(async ({ remote }) => {
+            if (!stream.available || stream.duration < 60) suite.skip();
+            utils.log(NAME, 'Load stream');
+            command = remote.get(intern.config.testPage);
+            await command.execute(player.loadStream, [stream]);
+            await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
         });
-    };
 
-    return {
-        register: function (stream) {
-            load(stream);
-            for (var i = 0; i < PAUSE_COUNT; i++) {
-                pause(stream);
-            }
+        for (let i = 0; i < PAUSE_COUNT; i++) {
+            test('pause_' + i, async () => {
+                // Do play in case previous pause test has failed
+                command.execute(player.play);
+
+                const sleepTime = Math.round(Math.random() * 10);
+                utils.log(NAME, 'Wait ' + sleepTime + ' sec. and pause playback');
+                await command.sleep(sleepTime * 1000);
+
+                utils.log(NAME, 'Pause playback');
+                await command.execute(player.pause);
+                const paused = await command.execute(player.isPaused);
+                assert.isTrue(paused);
+            });
+
+            test('not progressing_' + i, async () => {
+                // Check if the playback is really paused (not playing/progressing)
+                utils.log(NAME, 'Check if not progressing');
+
+                let pauseTime = await command.execute(player.getTime);
+                utils.log(NAME, 'Playback time = ' + pauseTime);
+
+                utils.log(NAME, 'Wait ' + PAUSE_DELAY + 's...');
+                await command.sleep(PAUSE_DELAY * 1000);
+
+                const time = await command.execute(player.getTime);
+                utils.log(NAME, 'Playback time = ' + time);
+                if (stream.dynamic) {
+                    // For dynamic streams, when paused, current time is progressing backward
+                    assert.isAtMost(time, (pauseTime - PAUSE_DELAY + 1)); // +1 for 1 sec tolerance
+                } else {
+                    assert.strictEqual(time, pauseTime);
+                }
+            });
+
+            test('resume_' + i, async () => {
+                // Resume the player
+                utils.log(NAME, 'Resume playback');
+                await command.execute(player.play);
+
+                // Check if playing
+                utils.log(NAME, 'Check if playing');
+                const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                assert.isTrue(progressing);
+            });
         }
-    }
-});
+    });
+};

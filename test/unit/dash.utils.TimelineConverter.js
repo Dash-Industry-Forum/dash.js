@@ -51,7 +51,7 @@ describe('TimelineConverter', function () {
             before(() => {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityWindowFromTimeline: false
+                        calcSegmentAvailabilityRangeFromTimeline: false
                     }
                 });
             });
@@ -105,7 +105,7 @@ describe('TimelineConverter', function () {
             before(() => {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityWindowFromTimeline: false
+                        calcSegmentAvailabilityRangeFromTimeline: false
                     }
                 });
             });
@@ -170,7 +170,7 @@ describe('TimelineConverter', function () {
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityWindowFromTimeline: true
+                            calcSegmentAvailabilityRangeFromTimeline: true
                         }
                     });
                 });
@@ -185,7 +185,7 @@ describe('TimelineConverter', function () {
             before(() => {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityWindowFromTimeline: false
+                        calcSegmentAvailabilityRangeFromTimeline: false
                     }
                 });
             });
@@ -238,14 +238,11 @@ describe('TimelineConverter', function () {
             before(() => {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityWindowFromTimeline: false
+                        calcSegmentAvailabilityRangeFromTimeline: false
                     }
                 });
             });
 
-            beforeEach(function () {
-                representation.adaptation.period.mpd.manifest.type = 'dynamic';
-            });
 
 
             describe('SegmentTemplate and ', function () {
@@ -305,7 +302,7 @@ describe('TimelineConverter', function () {
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityWindowFromTimeline: true
+                            calcSegmentAvailabilityRangeFromTimeline: true
                         }
                     });
                 });
@@ -353,7 +350,7 @@ describe('TimelineConverter', function () {
             it('with SegmentTimeline and one period and shouldCalculateFromTimeline set to true', function () {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityWindowFromTimeline: true
+                        calcSegmentAvailabilityRangeFromTimeline: true
                     }
                 });
                 streams.push(streamOneMock);
@@ -365,7 +362,7 @@ describe('TimelineConverter', function () {
             it('with SegmentTimeline and two periods and shouldCalculateFromTimeline set to true', function () {
                 settings.update({
                     streaming: {
-                        calcSegmentAvailabilityWindowFromTimeline: true
+                        calcSegmentAvailabilityRangeFromTimeline: true
                     }
                 });
                 streams.push(streamOneMock, streamTwoMock);
@@ -382,7 +379,7 @@ describe('TimelineConverter', function () {
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityWindowFromTimeline: false
+                            calcSegmentAvailabilityRangeFromTimeline: false
                         }
                     });
                 });
@@ -702,12 +699,12 @@ describe('TimelineConverter', function () {
                     clock.restore();
                 });
             });
-            describe('with SegmentTimeline and calcSegmentAvailabilityWindowFromTimeline set to true', function () {
+            describe('with SegmentTimeline and calcSegmentAvailabilityRangeFromTimeline set to true', function () {
 
                 before(() => {
                     settings.update({
                         streaming: {
-                            calcSegmentAvailabilityWindowFromTimeline: true
+                            calcSegmentAvailabilityRangeFromTimeline: true
                         }
                     });
                 });

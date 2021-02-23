@@ -42,7 +42,8 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const DEFAULT_LOW_LATENCY_LIVE_DELAY = 3.0;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
-const DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR = 2;
+const DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR = 4;
+const MINIMUM_LIVE_LATENCY_CATCHUP = 5;
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -53,10 +54,6 @@ function MediaPlayerModel() {
         xhrWithCredentials,
         customABRRule;
 
-    const DEFAULT_UTC_TIMING_SOURCE = {
-        scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-        value: 'http://time.akamai.com/?iso&ms'
-    };
     const context = this.context;
     const settings = Settings(context).getInstance();
 
@@ -147,7 +144,7 @@ function MediaPlayerModel() {
 
     function getLiveCatchupLatencyThreshold() {
         try {
-            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchupLatencyThreshold;
+            const liveCatchupLatencyThreshold = settings.get().streaming.liveCatchup.latencyThreshold;
             const liveDelay = getLiveDelay();
 
             if (liveCatchupLatencyThreshold !== null && !isNaN(liveCatchupLatencyThreshold)) {
@@ -155,11 +152,11 @@ function MediaPlayerModel() {
             }
 
 
-            const liveCatchupMinDrift = settings.get().streaming.liveCatchUpMinDrift;
-            const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchUpMinDrift + getLiveDelay() : getLiveDelay() : NaN;
+            const liveCatchupMinDrift = settings.get().streaming.liveCatchup.minDrift;
+            const maximumLiveDelay = !isNaN(liveDelay) && liveDelay ? !isNaN(liveCatchupMinDrift) ? settings.get().streaming.liveCatchup.minDrift + getLiveDelay() : getLiveDelay() : NaN;
 
             if (maximumLiveDelay && !isNaN(maximumLiveDelay)) {
-                return maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR;
+                return Math.max(maximumLiveDelay * DEFAULT_LIVE_LATENCY_CATCHUP_THRESHOLD_FACTOR, MINIMUM_LIVE_LATENCY_CATCHUP);
             }
 
             return NaN;
@@ -196,7 +193,8 @@ function MediaPlayerModel() {
     }
 
     function restoreDefaultUTCTimingSources() {
-        addUTCTimingSource(DEFAULT_UTC_TIMING_SOURCE.scheme, DEFAULT_UTC_TIMING_SOURCE.value);
+        let defaultUtcTimingSource = settings.get().streaming.utcSynchronization.defaultTimingSource;
+        addUTCTimingSource(defaultUtcTimingSource.scheme, defaultUtcTimingSource.value);
     }
 
     function setXHRWithCredentialsForType(type, value) {
@@ -216,7 +214,7 @@ function MediaPlayerModel() {
     }
 
     function getDefaultUtcTimingSource() {
-        return DEFAULT_UTC_TIMING_SOURCE;
+        return settings.get().streaming.utcSynchronization.defaultTimingSource;
     }
 
     function reset() {

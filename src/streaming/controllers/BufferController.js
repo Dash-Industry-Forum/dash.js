@@ -34,7 +34,6 @@ import FragmentModel from '../models/FragmentModel';
 import SourceBufferSink from '../SourceBufferSink';
 import PreBufferSink from '../PreBufferSink';
 import AbrController from './AbrController';
-import MediaController from './MediaController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -43,8 +42,8 @@ import InitCache from '../utils/InitCache';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 
-const STALL_THRESHOLD = 0.5;
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
@@ -79,6 +78,7 @@ function BufferController(config) {
         maximumIndex,
         buffer,
         dischargeBuffer,
+        dischargeFragments,
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
@@ -101,6 +101,16 @@ function BufferController(config) {
         return BUFFER_CONTROLLER_TYPE;
     }
 
+    function setMediaSource(value, mediaInfo) {
+        mediaSource = value;
+        if (buffer && mediaInfo) { //if we have a prebuffer, we should prepare to discharge it, and make a new sourceBuffer ready
+            if (typeof buffer.discharge === 'function') {
+                dischargeBuffer = buffer;
+                createBuffer(mediaInfo);
+            }
+        }
+    }
+
     function initialize(Source) {
         setMediaSource(Source);
 
@@ -109,19 +119,29 @@ function BufferController(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        eventBus.on(Events.PLAYBACK_PLAYING, onPlaybackPlaying, this);
-        eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
-        eventBus.on(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
         eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
+
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, onPlaybackPlaying, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, onPlaybackProgression, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.on(MediaPlayerEvents.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
     }
+
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
+    function getType() {
+        return type;
+    }
+
 
     function getRepresentationInfo(quality) {
         return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
@@ -138,7 +158,7 @@ function BufferController(config) {
                     buffer.initializeForStreamSwitch(mediaInfo, selectedRepresentation);
                 } else {
                     buffer = SourceBufferSink(context).create(mediaSource);
-                    buffer.initializedForFirstUse(mediaInfo, selectedRepresentation);
+                    buffer.initializeForFirstUse(mediaInfo, selectedRepresentation);
                 }
 
                 if (typeof buffer.getBuffer().initialize === 'function') {
@@ -152,7 +172,7 @@ function BufferController(config) {
         } else {
             buffer = PreBufferSink(context).create(onAppended.bind(this));
         }
-
+        updateBufferTimestampOffset(getRepresentationInfo(requiredQuality));
         return buffer;
     }
 
@@ -170,18 +190,24 @@ function BufferController(config) {
                 logger.debug('PreBuffer discharge requested, but there were no media segments in the PreBuffer.');
             }
 
+            //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a sourcebuffer silent.
+            dischargeFragments = [];
             let chunks = dischargeBuffer.discharge();
             let lastInit = null;
             for (let j = 0; j < chunks.length; j++) {
                 const chunk = chunks[j];
-                const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
-                if (initChunk) {
-                    if (lastInit !== initChunk) {
-                        buffer.append(initChunk);
-                        lastInit = initChunk;
+                if (chunk.segmentType !== 'InitializationSegment') {
+                    const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
+                    if (initChunk) {
+                        if (lastInit !== initChunk) {
+                            dischargeFragments.push(initChunk);
+                            buffer.append(initChunk);
+                            lastInit = initChunk;
+                        }
                     }
-                    buffer.append(chunk); //TODO Think about supressing buffer events the second time round after a discharge?
                 }
+                dischargeFragments.push(chunk);
+                buffer.append(chunk);
             }
 
             dischargeBuffer.reset();
@@ -190,8 +216,6 @@ function BufferController(config) {
     }
 
     function onInitFragmentLoaded(e) {
-        if (e.chunk.streamId !== streamInfo.id || e.chunk.mediaInfo.type !== type) return;
-
         logger.info('Init fragment finished loading saving to', type + '\'s init cache');
         initCache.save(e.chunk);
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
@@ -215,12 +239,11 @@ function BufferController(config) {
 
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
-        if (chunk.streamId !== streamInfo.id || chunk.mediaInfo.type !== type) return;
 
         if (replacingBuffer) {
             mediaChunk = chunk;
             const ranges = buffer && buffer.getAllBufferRanges();
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > STALL_THRESHOLD) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > settings.get().streaming.stallThreshold) {
                 logger.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
                 clearBuffers([{
                     start: 0,
@@ -305,7 +328,14 @@ function BufferController(config) {
             triggerEvent(Events.SEEK_TARGET, {time: currentTime});
         }
 
-        if (appendedBytesInfo) {
+        let suppressAppendedEvent = false;
+        if (dischargeFragments) {
+            if (dischargeFragments.indexOf(appendedBytesInfo) > 0) {
+                suppressAppendedEvent = true;
+            }
+            dischargeFragments = null;
+        }
+        if (appendedBytesInfo && !suppressAppendedEvent) {
             triggerEvent(appendedBytesInfo.endFragment ? Events.BYTES_APPENDED_END_FRAGMENT : Events.BYTES_APPENDED, {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
@@ -316,7 +346,7 @@ function BufferController(config) {
     }
 
     function onQualityChanged(e) {
-        if (e.streamInfo.id !== streamInfo.id || e.mediaType !== type || requiredQuality === e.newQuality || isBufferingCompleted) return;
+        if (requiredQuality === e.newQuality || isBufferingCompleted) return;
 
         updateBufferTimestampOffset(this.getRepresentationInfo(e.newQuality));
         requiredQuality = e.newQuality;
@@ -509,6 +539,11 @@ function BufferController(config) {
         let range,
             length;
 
+        // Consider gap/discontinuity limit as tolerance
+        if (settings.get().streaming.jumpGaps) {
+            tolerance = settings.get().streaming.smallGapLimit;
+        }
+
         range = getRangeAt(time, tolerance);
 
         if (range === null) {
@@ -547,7 +582,7 @@ function BufferController(config) {
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
-        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < STALL_THRESHOLD) || bufferLevel === 0) && !isBufferingCompleted) {
+        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= streamInfo.manifestInfo.minBufferTime) {
@@ -729,16 +764,11 @@ function BufferController(config) {
     }
 
     function onDataUpdateCompleted(e) {
-        if (e.sender.getStreamId() !== streamInfo.id || e.sender.getType() !== type) return;
-        if (e.error) return;
-        if (isBufferingCompleted) {
-            return;
-        }
+        if (e.error || isBufferingCompleted) return;
         updateBufferTimestampOffset(e.currentRepresentation);
     }
 
     function onStreamCompleted(e) {
-        if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
         maximumIndex = e.request.index;
         checkIfBufferingCompleted();
     }
@@ -752,9 +782,8 @@ function BufferController(config) {
         if (!ranges) return;
 
         logger.info('Track change asked');
-
-        if (mediaController.getSwitchMode(type) === MediaController.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > STALL_THRESHOLD) {
+        if (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
+            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold) {
 
                 if (settings.get().streaming.useAppendWindow) {
                     updateAppendWindow();
@@ -779,10 +808,6 @@ function BufferController(config) {
         checkIfSufficientBuffer();
     }
 
-    function getType() {
-        return type;
-    }
-
     function getBuffer() {
         return buffer;
     }
@@ -793,16 +818,6 @@ function BufferController(config) {
 
     function getBufferLevel() {
         return bufferLevel;
-    }
-
-    function setMediaSource(value, mediaInfo) {
-        mediaSource = value;
-        if (buffer && mediaInfo) { //if we have a prebuffer, we should prepare to discharge it, and make a new sourceBuffer ready
-            if (typeof buffer.discharge === 'function') {
-                dischargeBuffer = buffer;
-                createBuffer(mediaInfo);
-            }
-        }
     }
 
     function getMediaSource() {
@@ -877,10 +892,7 @@ function BufferController(config) {
 
     function triggerEvent(eventType, data) {
         let payload = data || {};
-        payload.sender = instance;
-        payload.mediaType = type;
-        payload.streamId = streamInfo.id;
-        eventBus.trigger(eventType, payload);
+        eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
     }
 
     function resetInitialSettings(errored, keepBuffers) {
@@ -912,29 +924,32 @@ function BufferController(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
-        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
-        eventBus.off(Events.PLAYBACK_PLAYING, onPlaybackPlaying, this);
-        eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
-        eventBus.off(Events.PLAYBACK_STALLED, onPlaybackStalled, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
         eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
+        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+
+        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, onPlaybackPlaying, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, onPlaybackProgression, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
+        eventBus.off(MediaPlayerEvents.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
+
 
         resetInitialSettings(errored, keepBuffers);
     }
 
     instance = {
+        initialize,
+        getStreamId,
+        getType,
         getBufferControllerType,
         getRepresentationInfo,
-        initialize,
         createBuffer,
         dischargePreBuffer,
-        getType,
         getBuffer,
         setBuffer,
         getBufferLevel,

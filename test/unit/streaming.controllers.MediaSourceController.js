@@ -86,9 +86,13 @@ describe('MediaSourceController', function () {
 
         it('should update source duration', function () {
 
-            let source = {};
-            let duration = mediaSourceController.setDuration(source, 'duration');
-            expect(duration).to.equal('duration');
+            let source = {
+                readyState: 'open',
+                sourceBuffers: [],
+                duration: NaN
+            };
+            mediaSourceController.setDuration(source, 'duration');
+            expect(source.duration).to.equal('duration');
 
         });
 

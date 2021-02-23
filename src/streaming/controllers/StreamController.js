@@ -48,6 +48,7 @@ import MediaSourceController from './MediaSourceController';
 import DashJSError from '../vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 import EventController from './EventController';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const PREBUFFERING_CAN_START_INTERVAL = 500;
@@ -60,6 +61,7 @@ function StreamController() {
     let instance,
         logger,
         capabilities,
+        capabilitiesFilter,
         manifestUpdater,
         manifestLoader,
         manifestModel,
@@ -136,43 +138,50 @@ function StreamController() {
         });
         eventController.start();
 
+
+        timeSyncController.setConfig({
+            dashMetrics,
+            baseURLController,
+            settings
+        });
+        timeSyncController.initialize();
         registerEvents();
     }
 
     function registerEvents() {
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, this);
-        eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
-        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.on(Events.PLAYBACK_STARTED, _onPlaybackStarted, this);
-        eventBus.on(Events.PLAYBACK_PAUSED, _onPlaybackPaused, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
-        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, this);
-        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
-        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, this);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, this);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.on(Events.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
+        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.on(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
+        eventBus.on(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
+        eventBus.on(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, instance);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     function unRegisterEvents() {
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, this);
-        eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
-        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, this);
-        eventBus.off(Events.PLAYBACK_STARTED, _onPlaybackStarted, this);
-        eventBus.off(Events.PLAYBACK_PAUSED, _onPlaybackPaused, this);
-        eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
-        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, this);
-        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, this);
-        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this);
-        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, this);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, this);
-        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, this);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, this);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, this);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(Events.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
+        eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.off(Events.MANIFEST_UPDATED, onManifestUpdated, instance);
+        eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
+        eventBus.off(Events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, onTimeSyncCompleted, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
+        eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, instance);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     /**
@@ -460,7 +469,7 @@ function StreamController() {
 
     function canSourceBuffersBeReused(nextStream, previousStream) {
         try {
-            return (settings.get().streaming.reuseSourceBuffers && (previousStream.isProtectionCompatible(nextStream, previousStream) || firstLicenseIsFetched) &&
+            return (settings.get().streaming.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream, previousStream) || firstLicenseIsFetched) &&
                 (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
         } catch (e) {
             return false;
@@ -749,16 +758,18 @@ function StreamController() {
             }
         }
 
-        if (!isNaN(seekTime)) {
-            // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
-            if (seekTime !== playbackController.getTime()) {
-                logger.debug(`Stream activation requires seek to ${seekTime}`);
-                playbackController.seek(seekTime);
-            } else if (!activeStream.getPreloaded()) {
-                eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, {
-                    streamId: activeStream.getStreamInfo().id,
-                    seekTarget: seekTime
-                });
+        if (!initialPlayback) {
+            if (!isNaN(seekTime)) {
+                // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
+                if (seekTime !== playbackController.getTime()) {
+                    logger.debug(`Stream activation requires seek to ${seekTime}`);
+                    playbackController.seek(seekTime);
+                } else if (!activeStream.getPreloaded()) {
+                    eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, {
+                        streamId: activeStream.getStreamInfo().id,
+                        seekTarget: seekTime
+                    });
+                }
             }
         }
 
@@ -767,9 +778,7 @@ function StreamController() {
         }
 
         isStreamSwitchingInProgress = false;
-        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, {
-            toStreamInfo: getActiveStreamInfo()
-        });
+        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
     }
 
     /**
@@ -821,11 +830,7 @@ function StreamController() {
 
     function setMediaDuration(duration) {
         const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
-
-        if (manifestDuration && !isNaN(manifestDuration)) {
-            const mediaDuration = mediaSourceController.setDuration(mediaSource, manifestDuration);
-            logger.debug('Duration successfully set to: ' + mediaDuration);
-        }
+        mediaSourceController.setDuration(mediaSource, manifestDuration);
     }
 
     function getComposedStream(streamInfo) {
@@ -880,30 +885,33 @@ function StreamController() {
     function _initializeOrUpdateStream(streamInfo) {
         let stream = getComposedStream(streamInfo);
 
-        if (!stream) {
-            stream = Stream(context).create({
-                manifestModel: manifestModel,
-                mediaPlayerModel: mediaPlayerModel,
-                dashMetrics: dashMetrics,
-                manifestUpdater: manifestUpdater,
-                adapter: adapter,
-                timelineConverter: timelineConverter,
-                capabilities: capabilities,
-                errHandler: errHandler,
-                baseURLController: baseURLController,
-                abrController: abrController,
-                playbackController: playbackController,
-                eventController: eventController,
-                mediaController: mediaController,
-                textController: textController,
-                videoModel: videoModel,
-                settings: settings
-            });
-            streams.push(stream);
-            stream.initialize(streamInfo, protectionController);
-        } else {
-            stream.updateData(streamInfo);
-        }
+                if (!stream) {
+                    stream = Stream(context).create({
+                        manifestModel: manifestModel,
+                        mediaPlayerModel: mediaPlayerModel,
+                        dashMetrics: dashMetrics,
+                        manifestUpdater: manifestUpdater,
+                        adapter: adapter,
+                        timelineConverter: timelineConverter,
+                        capabilities: capabilities,
+                        capabilitiesFilter,
+                        errHandler: errHandler,
+                        baseURLController: baseURLController,
+                        abrController: abrController,
+                        playbackController: playbackController,
+                        eventController: eventController,
+                        mediaController: mediaController,
+                        textController: textController,
+                        protectionController: protectionController,
+                        videoModel: videoModel,
+                        streamInfo: streamInfo,
+                        settings: settings
+                    });
+                    streams.push(stream);
+                    stream.initialize();
+                } else {
+                    stream.updateData(streamInfo);
+                }
 
         dashMetrics.addManifestUpdateStreamInfo(streamInfo);
     }
@@ -1046,6 +1054,14 @@ function StreamController() {
             adapter.updatePeriods(manifest);
 
             let manifestUTCTimingSources = adapter.getUTCTimingSources();
+
+            if (adapter.getIsDynamic() && (!manifestUTCTimingSources || manifestUTCTimingSources.length === 0)) {
+                eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                    level: ConformanceViolationConstants.LEVELS.WARNING,
+                    event: ConformanceViolationConstants.EVENTS.NO_UTC_TIMING_ELEMENT
+                });
+            }
+
             let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(mediaPlayerModel.getUTCTimingSources());
             const isHTTPS = urlUtils.isHTTPS(e.manifest.url);
 
@@ -1058,12 +1074,7 @@ function StreamController() {
             });
 
             baseURLController.initialize(manifest);
-
-            timeSyncController.setConfig({
-                dashMetrics: dashMetrics,
-                baseURLController: baseURLController
-            });
-            timeSyncController.initialize(allUTCTimingSources, settings.get().streaming.useManifestDateHeaderTimeSource);
+            timeSyncController.attemptSync(allUTCTimingSources);
         } else {
             hasInitialisationError = true;
             reset();
@@ -1189,6 +1200,9 @@ function StreamController() {
         if (config.capabilities) {
             capabilities = config.capabilities;
         }
+        if (config.capabilitiesFilter) {
+            capabilitiesFilter = config.capabilitiesFilter;
+        }
         if (config.manifestLoader) {
             manifestLoader = config.manifestLoader;
         }
@@ -1297,9 +1311,7 @@ function StreamController() {
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
-                eventBus.trigger(Events.PROTECTION_DESTROYED, {
-                    data: manifestModel.getValue().url
-                });
+                eventBus.trigger(Events.PROTECTION_DESTROYED, { data: manifestModel.getValue().url });
             }
         }
 

@@ -39,7 +39,8 @@ describe('SourceBufferSink', function () {
 
             let mediaSource = new MediaSourceMock();
 
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(sink.getBuffer()).to.be.instanceOf(MediaSourceBufferMock); // jshint ignore:line
         });
 
@@ -50,7 +51,8 @@ describe('SourceBufferSink', function () {
 
             let mediaSource = new MediaSourceMock();
 
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
         });
 
@@ -62,6 +64,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink.initializeForFirstUse(mediaInfo);
             expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
         });
 
@@ -74,18 +77,20 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink.initializeForFirstUse(mediaInfo);
             expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
         });
 
-        it('should throw an error if codec is unknonw', function () {
+        it('should throw an error if codec is unknown', function () {
             let mediaInfo = {
                 codec: 'unknown'
             };
 
             let mediaSource = new MediaSourceMock();
             // http://chaijs.com/api/bdd/#method_throw
+            sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
             expect(function () {
-                SourceBufferSink(context).create(mediaSource, mediaInfo);
+                sink.initializeForFirstUse(mediaInfo);
             }).to.throw(Error, 'unknown');
         });
     });
@@ -99,6 +104,7 @@ describe('SourceBufferSink', function () {
             let mediaSource = new MediaSourceMock();
 
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             sink.reset();
@@ -117,6 +123,7 @@ describe('SourceBufferSink', function () {
 
             let mediaSource = new MediaSourceMock();
             sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
             buffer = mediaSource.buffers[0];
         });
@@ -150,55 +157,90 @@ describe('SourceBufferSink', function () {
         it('should append data to buffer', function (done) {
 
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo: {
+                    id: 'streamId'
+                }
             };
             let mediaSource = new MediaSourceMock();
 
             function onAppend() {
-                expect(mediaSource.buffers[0].chunk).to.equal('toto');
-                done();
+                try {
+                    eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
+                    expect(mediaSource.buffers[0].chunk).to.equal('toto');
+                    done();
+                }
+                catch(e) {
+                    done(e);
+                }
             }
 
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
+            eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
             sink.append({bytes: 'toto'});
         });
 
+        /*
         it('should append data to text buffer', function (done) {
 
             let mediaInfo = {
                 codec: 'text',
-                isText: true
+                isText: true,
+                streamInfo: {
+                    id: 'streamId'
+                }
             };
 
             let mediaSource = new MediaSourceMock();
             function onAppend() {
-                expect(sink.getBuffer().chunk).to.equal('toto');
-                done();
+                try {
+                    eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
+                    expect(mediaSource.buffers[0].chunk).to.equal('toto');
+                    done();
+                }
+                catch(e) {
+                    done(e);
+                }
             }
 
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock);
 
+            eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
             sink.append({bytes: 'toto'});
         });
+        */
 
         it('should return an error if data to append is null or undefined', function (done) {
-
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo: {
+                    id: 'streamId'
+                }
             };
             let mediaSource = new MediaSourceMock();
+
             function onAppend(e) {
-                expect(e.error.code).to.equal(Errors.APPEND_ERROR_CODE);
-                expect(e.error.message).to.equal('chunk is not defined');
-                done();
+                try {
+                    eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
+                    expect(e.error.code).to.equal(Errors.APPEND_ERROR_CODE);
+                    expect(e.error.message).to.equal('chunk is not defined');
+                    done();
+                }
+                catch(e) {
+                    done(e);
+                }
             }
 
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
+            eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
             sink.append();
         });
 
@@ -221,7 +263,8 @@ describe('SourceBufferSink', function () {
             }
 
             let mediaSource = new MediaSourceMock();
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo, onAppend);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
 
             function onRemoved() {
@@ -229,8 +272,9 @@ describe('SourceBufferSink', function () {
                 expect(mediaSource.buffers[0].chunk).to.be.null; // jshint ignore:line
                 done();
             }
-            eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
 
+            eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+            eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppend, this);
             sink.append({bytes: 'toto'});
         });
     });

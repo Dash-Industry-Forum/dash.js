@@ -75,13 +75,17 @@ function DashHandler(config) {
         eventBus.on(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.on(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
         eventBus.on(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
-        eventBus.on(events.DYNAMIC_STREAM_COMPLETED, onDynamicStreamCompleted, instance);
+        eventBus.on(events.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
     }
 
     function initialize(isDynamic) {
         isDynamicManifest = isDynamic;
         dynamicStreamCompleted = false;
         segmentsController.initialize(isDynamic);
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     function getType() {
@@ -118,7 +122,7 @@ function DashHandler(config) {
         eventBus.off(events.INITIALIZATION_LOADED, onInitializationLoaded, instance);
         eventBus.off(events.SEGMENTS_LOADED, onSegmentsLoaded, instance);
         eventBus.off(events.REPRESENTATION_UPDATE_STARTED, onRepresentationUpdateStarted, instance);
-        eventBus.off(events.DYNAMIC_STREAM_COMPLETED, onDynamicStreamCompleted, instance);
+        eventBus.off(events.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
     }
 
     function setRequestUrl(request, destination, representation) {
@@ -177,24 +181,22 @@ function DashHandler(config) {
     }
 
     function onRepresentationUpdateStarted(eventObj) {
-        if (eventObj.sender.getType() !== getType()) return;
-
-        processRepresentation(eventObj.representation);
+        processRepresentation(e.representation);
     }
 
     function processRepresentation(voRepresentation) {
         const hasInitialization = voRepresentation.hasInitialization();
         const hasSegments = voRepresentation.hasSegments();
 
-        //if representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
-        //otherwise, it means that a request has to be made to get initialization and/or segments informations
+        // If representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
+        // otherwise, it means that a request has to be made to get initialization and/or segments informations
         if (hasInitialization && hasSegments) {
-            eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {
-                sender: instance,
-                representation: voRepresentation
-            });
+            eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED,
+                { representation: voRepresentation },
+                { streamId: streamInfo.id, mediaType: type }
+            );
         } else {
-            segmentsController.update(voRepresentation, getType(), selectedMimeType, hasInitialization, hasSegments);
+            segmentsController.update(voRepresentation, selectedMimeType, hasInitialization, hasSegments);
         }
     }
 
@@ -218,6 +220,7 @@ function DashHandler(config) {
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
+        request.mediaStartTime = segment.mediaStartTime;
         request.duration = segment.duration;
         request.timescale = representation.timescale;
         request.availabilityStartTime = segment.availabilityStartTime;
@@ -299,6 +302,31 @@ function DashHandler(config) {
         return request;
     }
 
+    /**
+     * This function returns the next segment request without modifying any internal variables. Any class (e.g CMCD Model) that needs information about the upcoming request should use this method.
+     * @param {object} mediaInfo
+     * @param {object} representation
+     * @return {FragmentRequest|null}
+     */
+    function getNextSegmentRequestIdempotent(mediaInfo, representation) {
+        let request = null;
+        let indexToRequest = segmentIndex + 1;
+        const segment = segmentsController.getSegmentByIndex(
+            representation,
+            indexToRequest,
+            lastSegment ? lastSegment.mediaStartTime : -1
+        );
+        if (!segment) return null;
+        request = getRequestForSegment(mediaInfo, segment);
+        return request;
+    }
+
+    /**
+     * Main function to get the next segment request.
+     * @param {object} mediaInfo
+     * @param {object} representation
+     * @return {FragmentRequest|null}
+     */
     function getNextSegmentRequest(mediaInfo, representation) {
         let request = null;
 
@@ -354,11 +382,14 @@ function DashHandler(config) {
         const representation = e.representation;
         if (!representation.segments) return;
 
-        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED,
+            { representation: representation },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
     function onSegmentsLoaded(e) {
-        if (e.error || (getType() !== e.mediaType)) return;
+        if (e.error) return;
 
         const fragments = e.segments;
         const representation = e.representation;
@@ -400,17 +431,21 @@ function DashHandler(config) {
             return;
         }
 
-        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED, {sender: this, representation: representation});
+        eventBus.trigger(events.REPRESENTATION_UPDATE_COMPLETED,
+            { representation: representation },
+            { streamId: streamInfo.id, mediaType: type }
+        );
     }
 
-    function onDynamicStreamCompleted() {
+    function onDynamicToStatic() {
         logger.debug('Dynamic stream complete');
         dynamicStreamCompleted = true;
     }
 
     instance = {
         initialize: initialize,
-        getType: getType, //need to be public in order to be used by logger
+        getStreamId: getStreamId,
+        getType: getType,
         getStreamInfo: getStreamInfo,
         getInitRequest: getInitRequest,
         getRequestForSegment: getRequestForSegment,
@@ -421,7 +456,8 @@ function DashHandler(config) {
         isMediaFinished: isMediaFinished,
         reset: reset,
         resetIndex: resetIndex,
-        setMimeType: setMimeType
+        setMimeType: setMimeType,
+        getNextSegmentRequestIdempotent
     };
 
     setup();

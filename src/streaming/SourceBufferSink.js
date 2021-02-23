@@ -52,6 +52,7 @@ function SourceBufferSink(mSource) {
     const settings = Settings(context).getInstance();
 
     let instance,
+        type,
         logger,
         buffer,
         isAppendingInProgress = false,
@@ -68,6 +69,7 @@ function SourceBufferSink(mSource) {
 
     function initializeForStreamSwitch(mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
+        type = mediaInfo.type;
         const codec = mediaInfo.codec;
 
         if (settings.get().streaming.useAppendWindow) {
@@ -86,8 +88,9 @@ function SourceBufferSink(mSource) {
 
     }
 
-    function initializedForFirstUse(mInfo, selectedRepresentation) {
+    function initializeForFirstUse(mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
+        type = mediaInfo.type;
         const codec = mediaInfo.codec;
         try {
             // Safari claims to support anything starting 'application/mp4'.
@@ -137,6 +140,10 @@ function SourceBufferSink(mSource) {
             // use setInterval to periodically check if updating has been completed
             intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
         }
+    }
+
+    function getType() {
+        return type;
     }
 
     function _removeEventListeners() {
@@ -374,7 +381,7 @@ function SourceBufferSink(mSource) {
     }
 
     function errHandler() {
-        logger.error('SourceBufferSink error', mediaInfo.type);
+        logger.error('SourceBufferSink error');
     }
 
     function waitForUpdateEnd(callback) {
@@ -392,6 +399,7 @@ function SourceBufferSink(mSource) {
     }
 
     instance = {
+        getType: getType,
         getAllBufferRanges: getAllBufferRanges,
         getBuffer: getBuffer,
         append: append,
@@ -401,7 +409,7 @@ function SourceBufferSink(mSource) {
         updateTimestampOffset: updateTimestampOffset,
         waitForUpdateEnd: waitForUpdateEnd,
         initializeForStreamSwitch,
-        initializedForFirstUse,
+        initializeForFirstUse,
         updateAppendWindow
     };
 

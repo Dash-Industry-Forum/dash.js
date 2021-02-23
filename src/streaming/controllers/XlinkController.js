@@ -97,8 +97,13 @@ function XlinkController(config) {
         });
 
         manifest = mpd;
-        elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
-        resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+
+        if (manifest.Period_asArray) {
+            elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+            resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+        } else {
+            eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
+        }
     }
 
     function reset() {
@@ -166,7 +171,7 @@ function XlinkController(config) {
 
         mergeElementsBack(resolveObject);
         if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE) {
-            eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
+            eventBus.trigger(Events.XLINK_READY, { manifest: manifest });
         }
         if (resolveObject.resolveType === RESOLVE_TYPE_ONLOAD) {
             switch (resolveObject.type) {
@@ -185,7 +190,7 @@ function XlinkController(config) {
                     break;
                 case DashConstants.ADAPTATION_SET:
                     // TODO: Resolve SegmentList here
-                    eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
+                    eventBus.trigger(Events.XLINK_READY, { manifest: manifest });
                     break;
             }
         }

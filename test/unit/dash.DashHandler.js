@@ -6,6 +6,7 @@ import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 import Debug from '../../src/core/Debug';
 import URLUtils from '../../src/streaming/utils/URLUtils';
+import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
@@ -25,6 +26,8 @@ describe('DashHandler', function () {
     const eventBus = EventBus(context).getInstance();
     const debug = Debug(context).getInstance();
 
+    Events.extend(MediaPlayerEvents);
+
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const baseURLController = objectsHelper.getDummyBaseURLController();
@@ -32,6 +35,8 @@ describe('DashHandler', function () {
     const dashMetricsMock = new DashMetricsMock();
 
     const config = {
+        streamInfo: { id: 'id' },
+        type: 'video',
         mimeType: streamProcessor.getMediaInfo().mimeType,
         timelineConverter: timelineConverter,
         baseURLController: baseURLController,

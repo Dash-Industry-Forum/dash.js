@@ -130,6 +130,14 @@ function MssFragmentMoofProcessor(config) {
             segment.t -= parseFloat(segments[0].tManifest) - segments[0].t;
             segment.tManifest = entry.fragment_absolute_time;
         }
+
+        // Patch previous segment duration
+        let lastSegment = segments[segments.length - 1];
+        if (lastSegment.t + lastSegment.d !== segment.t) {
+            logger.debug('Patch segment duration - t = ', lastSegment.t + ', d = ' + lastSegment.d + ' => ' + (segment.t - lastSegment.t));
+            lastSegment.d = segment.t - lastSegment.t;
+        }
+
         segments.push(segment);
 
         // In case of static start-over streams, update content duration

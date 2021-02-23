@@ -10,6 +10,7 @@
     <!--<script src="../../dist/dash.all.min.js"></script>-->
 
     <script class="code">
+        var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
         function init() {
             var video,
                 player,
@@ -19,7 +20,10 @@
             player = dashjs.MediaPlayer().create();
             video = document.querySelector("video");
             player.initialize(); 
+            player.setTextDefaultEnabled(true);
             version = player.getVersion();
+
+            player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
 
             player.updateSettings({
                 streaming: {
@@ -27,7 +31,6 @@
                         enabled: true, /* enable reporting of cmcd parameters */
                         sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
                         cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
-                        did: 'dash.js-v' + version/* device id send with each request */
                     }
                 }
             });
@@ -35,6 +38,46 @@
             player.attachView(video);
             player.attachSource(url);
 
+            var TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
+        }
+
+        function handleCmcdDataGeneratedEvent(event) {
+            log("type: " +  event.mediaType);
+            log("file: " + event.url.split("/").pop())
+            var keys = Object.keys(event.cmcdData);
+            keys = keys.sort();
+            for (var key of keys) {
+                log(key.padEnd(4) + ": " + event.cmcdData[key]);
+            }
+            log("");
+        }
+
+        function log(msg) {
+            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; /* to avoid repeated wrapping with large objects */
+            var tracePanel = document.getElementById("trace");
+            tracePanel.innerHTML += msg + "\n";
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+
+        function handleCmcdDataGeneratedEvent(event) {
+            log("type: " +  event.mediaType);
+            log("file: " + event.url.split("/").pop())
+            var keys = Object.keys(event.cmcdData);
+            keys = keys.sort();
+            for (var key of keys) {
+                log(key.padEnd(4) + ": " + event.cmcdData[key]);
+            }
+            log("");
+        }
+
+        function log(msg) {
+            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; /* to avoid repeated wrapping with large objects */
+            var tracePanel = document.getElementById("trace");
+            tracePanel.innerHTML += msg + "\n";
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
         }
     </script>
 
@@ -44,18 +87,25 @@
             height: 360px;
             background-color: #666666;
         }
+        textarea {
+            width: 500px;
+            height:360px;
+            font-size: 10px;
+        }
     </style>
 </head>
-<body>
-<div>
-    <video controls="true">
-    </video>
-</div>
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        init();
-    });
-</script>
-<script src="../highlighter.js"></script>
-</body>
+    <body>
+        <div>
+            <video controls="true">
+            </video>
+            <div id="ttml-rendering-div"></div>
+            <textarea id="trace" placeholder="Sent CMCD data will be displayed here"></textarea>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                init();
+            });
+        </script>
+        <script src="../highlighter.js"></script>
+    </body>
 </html>

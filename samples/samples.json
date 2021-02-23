@@ -75,29 +75,29 @@
                 "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html"
             },
             {
+                "title": "Synchronized live playback with the catchup mode",
+                "description": "Example showing a synchronized live playback of two videos using the live playback catchup mode.",
+                "href": "live-streaming/synchronized-live-playback.html"
+            }
+        ]
+    },
+    {
+        "section": "Live Low Latency",
+        "samples": [
+            {
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
                 "href": "low-latency/index.html"
-            }
-        ]
-    },
-    {
-        "section": "MSS",
-        "samples": [
+            },
             {
-                "title": "Microsoft Smooth Streaming",
-                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
-                "href": "smooth-streaming/mss.html"
-            }
-        ]
-    },
-    {
-        "section": "Thumbnails",
-        "samples": [
+                "title": "Low latency with L2ALL",
+                "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
+                "href": "low-latency/l2all_index.html"
+            },
             {
-                "title": "Thumbnails",
-                "description": "Example showing how to use streams with thumbnails representations.",
-                "href": "thumbnails/thumbnails.html"
+                "title": "Low latency with LoL+",
+                "description": "Example showing how to use dash.js to play low latency streams using the LoL+ ABR algorithm.",
+                "href": "low-latency/lolp_index.html"
             }
         ]
     },
@@ -111,14 +111,20 @@
             },
             {
                 "title": "PlayReady",
-                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows only).",
+                "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows 10 Microsoft Chromium Edge only).",
                 "href": "drm/playready.html"
             },
             {
                 "title": "ClearKey",
                 "description": "This example shows how to use dash.js to play streams with ClearKey DRM protection.",
                 "href": "drm/clearkey.html"
+            },
+            {
+                "title": "License wrapping",
+                "description": "This example shows how to use dash.js to filter and wrap license requests and responses",
+                "href": "drm/license-wrapping.html"
             }
+
         ]
     },
     {
@@ -132,17 +138,7 @@
         ]
     },
     {
-        "section": "Audio only",
-        "samples": [
-            {
-                "title": "Only audio stream",
-                "description": "This example shows how to play audio-only streams in dash.js.",
-                "href": "audio-only/index.html"
-            }
-        ]
-    },
-    {
-        "section": "Captioning",
+        "section": "Subtitles & Captions",
         "samples": [
             {
                 "title": "Caption VTT",
@@ -162,12 +158,22 @@
         ]
     },
     {
-        "section": "Ad Insertion",
+        "section": "Multi-Audio",
         "samples": [
             {
-                "title": "Ad insertion",
-                "description": "Demonstration of different implementation approaches for advert insertion, specifically inband, inline and X-Link onLoad. Provided by Fraunhofer Fokus.",
-                "href": "ad-insertion/index.html"
+                "title": "Multiple audio tracks",
+                "description": "This example shows how content with multiple audio tracks can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
+                "href": "multi-audio/multi-audio.html"
+            }
+        ]
+    },
+    {
+        "section": "Thumbnails",
+        "samples": [
+            {
+                "title": "Thumbnails",
+                "description": "Example showing how to use streams with thumbnails representations.",
+                "href": "thumbnails/thumbnails.html"
             }
         ]
     },
@@ -178,6 +184,16 @@
                 "title": "Preload video",
                 "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
                 "href": "getting-started/pre-load-video.html"
+            }
+        ]
+    },
+    {
+        "section": "Audio only",
+        "samples": [
+            {
+                "title": "Only audio stream",
+                "description": "This example shows how to play audio-only streams in dash.js.",
+                "href": "audio-only/index.html"
             }
         ]
     },
@@ -228,6 +244,16 @@
                 "title": "Offline mode",
                 "description": "Example showing how store and read back streams without network connection to Dash",
                 "href": "offline/index.html"
+            }
+        ]
+    },
+    {
+        "section": "MSS",
+        "samples": [
+            {
+                "title": "Microsoft Smooth Streaming",
+                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
+                "href": "smooth-streaming/mss.html"
             }
         ]
     }

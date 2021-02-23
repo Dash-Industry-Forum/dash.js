@@ -35,6 +35,10 @@ import FactoryMaker from '../../core/FactoryMaker';
 import DashJSError from '../vo/DashJSError';
 import CmcdModel from '../models/CmcdModel';
 import Utils from '../../core/Utils';
+import Debug from '../../core/Debug';
+import EventBus from '../../core/EventBus';
+import Events from '../../core/events/Events';
+import Settings from '../../core/Settings';
 
 /**
  * @module HTTPLoader
@@ -54,15 +58,20 @@ function HTTPLoader(cfg) {
     const boxParser = cfg.boxParser;
     const useFetch = cfg.useFetch || false;
     const errors = cfg.errors;
+    const requestTimeout = cfg.requestTimeout || 0;
+    const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         requests,
         delayedRequests,
         retryRequests,
         downloadErrorToRequestTypeMap,
-        cmcdModel;
+        cmcdModel,
+        logger;
 
     function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
         requests = [];
         delayedRequests = [];
         retryRequests = [];
@@ -108,7 +117,7 @@ function HTTPLoader(cfg) {
                     success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
-                    dashMetrics.addManifestUpdate(request.type, request.requestStartDate, request.requestEndDate);
+                    dashMetrics.addManifestUpdate(request);
                 }
             }
         };
@@ -124,8 +133,22 @@ function HTTPLoader(cfg) {
                 handleLoaded(false);
 
                 if (remainingAttempts > 0) {
+
+                    // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+                    try {
+                        if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                            // Only trigger a sync if the loading failed for the first time
+                            const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
+                            if (initialNumberOfAttempts === remainingAttempts) {
+                                eventBus.trigger(Events.ATTEMPT_BACKGROUND_SYNC);
+                            }
+                        }
+                    } catch (e) {
+
+                    }
+
                     remainingAttempts--;
-                    let retryRequest = {config: config};
+                    let retryRequest = { config: config };
                     retryRequests.push(retryRequest);
                     retryRequest.timeout = setTimeout(function () {
                         if (retryRequests.indexOf(retryRequest) === -1) {
@@ -204,6 +227,17 @@ function HTTPLoader(cfg) {
             }
         };
 
+        const ontimeout = function (event) {
+            let timeoutMessage;
+            if (event.lengthComputable) {
+                let percentageComplete = (event.loaded / event.total) * 100;
+                timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
+            } else {
+                timeoutMessage = 'Request timeout: non-computable download size';
+            }
+            logger.warn(timeoutMessage);
+        };
+
         let loader;
         if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
@@ -233,7 +267,9 @@ function HTTPLoader(cfg) {
             onerror: onloadend,
             progress: progress,
             onabort: onabort,
-            loader: loader
+            ontimeout: ontimeout,
+            loader: loader,
+            timeout: requestTimeout
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
@@ -244,7 +280,7 @@ function HTTPLoader(cfg) {
             loader.load(httpRequest);
         } else {
             // delay
-            let delayedRequest = {httpRequest: httpRequest};
+            let delayedRequest = { httpRequest: httpRequest };
             delayedRequests.push(delayedRequest);
             delayedRequest.delayTimeout = setTimeout(function () {
                 if (delayedRequests.indexOf(delayedRequest) === -1) {

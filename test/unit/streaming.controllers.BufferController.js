@@ -160,30 +160,6 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong streamId', function (done) {
-            const event = {
-                chunk: {
-                    streamId: 'wrong',
-                    mediaInfo: {
-                        type: 'video'
-                    },
-                    bytes: 'initData',
-                    quality: 2,
-                    representationId: 'representationId'
-                }
-            };
-            const onInitDataLoaded = function () {
-                eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded);
-                expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-                done();
-            };
-            eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitDataLoaded, this);
-
-            expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-            // send event
-            eventBus.trigger(Events.INIT_FRAGMENT_LOADED, event);
-        });
-
         it('should append data to source buffer ', function (done) {
             const event = {
                 chunk: {
@@ -245,30 +221,6 @@ describe('BufferController', function () {
             bufferController.createBuffer(mediaInfo);
         });
 
-        it('should not append data to source buffer if wrong stream id', function (done) {
-            const event = {
-                chunk: {
-                    streamId: 'wrong',
-                    mediaInfo: {
-                        type: 'video'
-                    },
-                    bytes: 'data',
-                    quality: 2,
-                    representationId: 'representationId'
-                }
-            };
-            const onMediaFragmentLoaded = function () {
-                eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded);
-                expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-                done();
-            };
-            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
-
-            expect(mediaSourceMock.buffers[0].chunk).to.be.null; // jshint ignore:line
-            // send event
-            eventBus.trigger(Events.MEDIA_FRAGMENT_LOADED, event);
-        });
-
         it('should append data to source buffer ', function (done) {
             const event = {
                 chunk: {
@@ -323,38 +275,6 @@ describe('BufferController', function () {
                     MSETimeOffset: quality
                 };
             };
-        });
-
-        it('should not update buffer timestamp offset - wrong stream processor id', function () {
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
-
-            const event = {
-                newQuality: 2,
-                mediaType: testType,
-                streamInfo: {
-                    id: 'wrongid'
-                }
-            };
-
-            // send event
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, event);
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
-        });
-
-        it('should not update buffer timestamp offset - wrong media type', function () {
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
-
-            const event = {
-                streamInfo: {
-                    id: streamInfo.id
-                },
-                newQuality: 2,
-                mediaType: 'wrongMediaType'
-            };
-
-            // send event
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, event);
-            expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
         });
 
         it('should not update buffer timestamp offset - wrong quality', function () {
