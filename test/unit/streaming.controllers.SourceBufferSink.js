@@ -288,7 +288,8 @@ describe('SourceBufferSink', function () {
             };
 
             let mediaSource = new MediaSourceMock();
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
             let buffer = mediaSource.buffers[0];
 
@@ -305,7 +306,8 @@ describe('SourceBufferSink', function () {
 
             let mediaSource = new MediaSourceMock();
             mediaSource.readyState = 'closed';
-            sink = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            sink = SourceBufferSink(context).create(mediaSource);
+            sink.initializeForFirstUse(mediaInfo);
             expect(mediaSource.buffers).to.have.lengthOf(1);
             let buffer = mediaSource.buffers[0];
 

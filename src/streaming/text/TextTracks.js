@@ -31,6 +31,7 @@
 import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import { renderHTML } from 'imsc';
@@ -151,7 +152,7 @@ function TextTracks() {
                     }
                 }
                 this.addCaptions(i, 0, textTrackQueue[i].captionData);
-                eventBus.trigger(Events.TEXT_TRACK_ADDED);
+                eventBus.trigger(MediaPlayerEvents.TEXT_TRACK_ADDED);
             }
 
             //set current track index in textTrackQueue array
@@ -164,10 +165,10 @@ function TextTracks() {
                     if (track) {
                         checkVideoSize.call(this, track, true);
                     }
-                    eventBus.off(Events.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
+                    eventBus.off(MediaPlayerEvents.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
                 };
 
-                eventBus.on(Events.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
+                eventBus.on(MediaPlayerEvents.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
 
                 for (let idx = 0; idx < textTrackQueue.length; idx++) {
                     const videoTextTrack = getTrackByIdx(idx);
@@ -271,7 +272,7 @@ function TextTracks() {
                         containerStyle.width = actualVideoWidth + 'px';
                         containerStyle.height = actualVideoHeight + 'px';
                         containerStyle.zIndex = (fullscreenAttribute && document[fullscreenAttribute]) || displayCCOnTop ? topZIndex : null;
-                        eventBus.trigger(Events.CAPTION_CONTAINER_RESIZE);
+                        eventBus.trigger(MediaPlayerEvents.CAPTION_CONTAINER_RESIZE);
                     }
                 }
 
@@ -392,7 +393,7 @@ function TextTracks() {
                 //TODO add ErrorHandler management
             }, previousISDState, true /*enableRollUp*/);
             finalCue.id = cue.cueID;
-            eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
+            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
         }
     }
 
@@ -445,7 +446,7 @@ function TextTracks() {
                         } else {
                             captionContainer.appendChild(this.cueHTMLElement);
                             scaleCue.call(self, this);
-                            eventBus.trigger(Events.CAPTION_RENDERED, { captionDiv: this.cueHTMLElement, currentTrackIdx });
+                            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { captionDiv: this.cueHTMLElement, currentTrackIdx });
                         }
                     }
                 };
@@ -481,7 +482,7 @@ function TextTracks() {
                     }
                     cue.onenter = function () {
                         if (track.mode === Constants.TEXT_SHOWING) {
-                            eventBus.trigger(Events.CAPTION_RENDERED, { currentTrackIdx });
+                            eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { currentTrackIdx });
                         }
                     };
                 }

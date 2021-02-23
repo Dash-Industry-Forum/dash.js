@@ -80,7 +80,8 @@ function NotFragmentedTextBufferController(config) {
     function createBuffer(mediaInfoArr) {
         const mediaInfo = mediaInfoArr[0];
         try {
-            buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
+            buffer = SourceBufferSink(context).create(mediaSource);
+            buffer.initializeForFirstUse(mediaInfo);
             if (!initialized) {
                 const textBuffer = buffer.getBuffer();
                 if (textBuffer.hasOwnProperty(Constants.INITIALIZE)) {
@@ -90,6 +91,7 @@ function NotFragmentedTextBufferController(config) {
             }
             return buffer;
         } catch (e) {
+            buffer = null;
             if (mediaInfo && ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1))) {
                 try {
                     buffer = textController.getTextSourceBuffer();

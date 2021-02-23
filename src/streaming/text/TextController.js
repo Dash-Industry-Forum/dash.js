@@ -36,6 +36,7 @@ import VTTParser from '../utils/VTTParser';
 import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import { checkParameterType } from '../utils/SupervisorTools';
 
 function TextController() {
@@ -90,9 +91,9 @@ function TextController() {
         *   - switch occurs but codecs in streams are different
         *   - switch occurs and codecs in streams are not different
         */
-        eventBus.on(Events.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
+        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, instance);
-        eventBus.on(Events.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
+        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
 
         resetInitialSettings();
     }
@@ -213,7 +214,7 @@ function TextController() {
         }
 
         lastEnabledIndex = index;
-        eventBus.trigger(Events.TEXT_TRACKS_ADDED, {
+        eventBus.trigger(MediaPlayerEvents.TEXT_TRACKS_ADDED, {
             enabled: isTextEnabled(),
             index: index,
             tracks: tracks
@@ -374,6 +375,11 @@ function TextController() {
 
     function reset() {
         resetInitialSettings();
+        eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
+        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, instance);
+        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
         textSourceBuffer.resetEmbedded();
         textSourceBuffer.reset();
     }
