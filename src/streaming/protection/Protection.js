@@ -35,6 +35,7 @@ import ProtectionErrors from './errors/ProtectionErrors';
 import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015';
 import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014';
 import ProtectionModel_01b from './models/ProtectionModel_01b';
+import Settings from '../../core/Settings';
 
 const APIS_ProtectionModel_01b = [
     // Un-prefixed as per spec
@@ -130,7 +131,8 @@ function Protection() {
                 events: config.events,
                 BASE64: config.BASE64,
                 constants: config.constants,
-                cmcdModel: config.cmcdModel
+                cmcdModel: config.cmcdModel,
+                settings: Settings(context).getInstance()
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }

@@ -38,6 +38,7 @@ import LicenseRequest from '../vo/LicenseRequest';
 import LicenseResponse from '../vo/LicenseResponse';
 import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
 import Utils from '../../../core/Utils';
+import Constants from '../../constants/Constants';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -72,6 +73,7 @@ function ProtectionController(config) {
     const constants = config.constants;
     let needkeyRetries = [];
     const cmcdModel = config.cmcdModel;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -789,13 +791,16 @@ function ProtectionController(config) {
     function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
 
-        const cmcdParams = cmcdModel.getQueryParameter({
-            url: request.url,
-            type: HTTPRequest.LICENSE
-        });
+        const cmcdMode = settings.get().streaming.cmcd.mode;
+        if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
+            const cmcdParams = cmcdModel.getQueryParameter({
+                url: request.url,
+                type: HTTPRequest.LICENSE
+            });
 
-        if (cmcdParams) {
-            request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+            if (cmcdParams) {
+                request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+            }
         }
 
         xhr.open(request.method, request.url, true);
@@ -808,16 +813,18 @@ function ProtectionController(config) {
             xhr.setRequestHeader(key, request.headers[key]);
         }
 
-        const cmcdHeaders = cmcdModel.getHeaderParameters({
-            url: request.url,
-            type: HTTPRequest.LICENSE
-        });
+        if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
+            const cmcdHeaders = cmcdModel.getHeaderParameters({
+                url: request.url,
+                type: HTTPRequest.LICENSE
+            });
 
-        if (cmcdHeaders) {
-            for (const header in cmcdHeaders) {
-                let value = cmcdHeaders[header];
-                if (value) {
-                    xhr.setRequestHeader(header, value);
+            if (cmcdHeaders) {
+                for (const header in cmcdHeaders) {
+                    let value = cmcdHeaders[header];
+                    if (value) {
+                        xhr.setRequestHeader(header, value);
+                    }
                 }
             }
         }

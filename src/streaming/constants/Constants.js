@@ -248,6 +248,27 @@ class Constants {
          */
         this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
 
+        /**
+         *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_QUERY = 'query';
+
+        /**
+         *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_HEADER = 'header';
+
+        /**
+         *  @constant {string} CMCD_MODE_MIXED specifies to attach CMCD metrics as query parameter as well as HTTP headers.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_MIXED = 'mixed';
+
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';

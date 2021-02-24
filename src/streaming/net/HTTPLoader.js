@@ -39,6 +39,7 @@ import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
+import Constants from '../constants/Constants';
 
 /**
  * @module HTTPLoader
@@ -251,11 +252,17 @@ function HTTPLoader(cfg) {
         }
 
         let modifiedUrl = requestModifier.modifyRequestURL(request.url);
-        const additionalQueryParameter = _getAdditionalQueryParameter(request);
-        modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+        const cmcdMode = settings.get().streaming.cmcd.mode;
+        if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
+            const additionalQueryParameter = _getAdditionalQueryParameter(request);
+            modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+        }
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
-        const headers = cmcdModel.getHeaderParameters(request);
+        let headers = null;
+        if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
+            headers = cmcdModel.getHeaderParameters(request);
+        }
 
 
         httpRequest = {

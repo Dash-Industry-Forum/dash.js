@@ -154,7 +154,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              sid: null,
  *              cid: null,
  *              rtp: null,
- *              rtpSafetyFactor: 5
+ *              rtpSafetyFactor: 5,
+ *              mode: Constants.CMCD_MODE_QUERY
  *          }
  *      }
  * }
@@ -699,7 +700,8 @@ function Settings() {
                 sid: null,
                 cid: null,
                 rtp: null,
-                rtpSafetyFactor: 5
+                rtpSafetyFactor: 5,
+                mode: Constants.CMCD_MODE_QUERY
             }
         }
     };
