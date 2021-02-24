@@ -808,6 +808,20 @@ function ProtectionController(config) {
             xhr.setRequestHeader(key, request.headers[key]);
         }
 
+        const cmcdHeaders = cmcdModel.getHeaderParameters({
+            url: request.url,
+            type: HTTPRequest.LICENSE
+        });
+
+        if (cmcdHeaders) {
+            for (const header in cmcdHeaders) {
+                let value = cmcdHeaders[header];
+                if (value) {
+                    xhr.setRequestHeader(header, value);
+                }
+            }
+        }
+
         const retryRequest = function () {
             // fail silently and retry
             retriesCount--;
