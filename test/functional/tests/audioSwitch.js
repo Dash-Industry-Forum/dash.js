@@ -48,7 +48,10 @@ exports.register = function (stream) {
                 // Check if new current track is correct
                 const newTrack = await command.execute(player.getCurrentTrackFor, ['audio']);
                 utils.log(NAME, 'current audio track: ' + newTrack.lang);
-                assert.deepEqual(newTrack, stream.audioTracks[i]);
+                assert.deepEqual(newTrack.lang, stream.audioTracks[i].lang);
+                assert.deepEqual(newTrack.index, stream.audioTracks[i].index);
+                assert.deepEqual(newTrack.bitrateList.bandwidth, stream.audioTracks[i].bitrateList.bandwidth);
+                assert.deepEqual(newTrack.bitrateList.id, stream.audioTracks[i].bitrateList.id);
 
                 utils.log(NAME, 'Check if playing');
                 const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
