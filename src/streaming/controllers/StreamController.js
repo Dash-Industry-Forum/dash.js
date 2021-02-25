@@ -187,6 +187,50 @@ function StreamController() {
     }
 
     /**
+     * Setup the stream objects after the stream start and each MPD reload. This function is called after the UTC sync has been done (TIME_SYNCHRONIZATION_COMPLETED)
+     * @private
+     */
+    function _composeStreams() {
+        try {
+            const streamsInfo = adapter.getStreamsInfo();
+
+            if (!activeStream && streamsInfo.length === 0) {
+                throw new Error('There are no streams');
+            }
+
+            if (activeStream) {
+                dashMetrics.updateManifestUpdateInfo({
+                    currentTime: playbackController.getTime(),
+                    buffered: videoModel.getBufferRange(),
+                    presentationStartTime: streamsInfo[0].start,
+                    clientTimeOffset: timelineConverter.getClientTimeOffset()
+                });
+            }
+
+            // Filter streams that are outdated and not included in the MPD anymore
+            if (streams.length > 0) {
+                _filterOutdatedStreams(streamsInfo);
+            }
+
+            for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
+                const streamInfo = streamsInfo[i];
+                _initializeOrUpdateStream(streamInfo);
+            }
+
+            if (!activeStream) {
+                _initializeForFirstStream(streamsInfo);
+            }
+
+            eventBus.trigger(Events.STREAMS_COMPOSED);
+
+        } catch (e) {
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
+            hasInitialisationError = true;
+            reset();
+        }
+    }
+
+    /**
      *
      * @private
      */
@@ -417,32 +461,7 @@ function StreamController() {
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
             if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
                 if (mediaSource) {
-
-                    // We can not start prebuffering if the segments of the upcoming period are outside of the availability window
-                    const isDynamic = adapter.getIsDynamic();
-                    let segmentAvailabilityRangeIsOk = true;
-
-                    if (isDynamic) {
-                        const mediaTypes = [Constants.VIDEO, Constants.AUDIO];
-
-                        mediaTypes.forEach((mediaType) => {
-                            const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), mediaType);
-                            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-                            voRepresentations.forEach((voRep) => {
-
-                                const periodStartAvailTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(voRep.adaptation.period.start, voRep, isDynamic);
-                                const availWindowAnchorTime = timelineConverter.getAvailabilityWindowAnchorTime();
-
-                                if (periodStartAvailTime > availWindowAnchorTime) {
-                                    segmentAvailabilityRangeIsOk = false;
-                                }
-                            });
-                        });
-                    }
-
-                    if (segmentAvailabilityRangeIsOk) {
-                        _onStreamCanLoadNext(stream, previousStream);
-                    }
+                    _onStreamCanLoadNext(stream, previousStream);
                 }
             }
             i += 1;
@@ -850,48 +869,6 @@ function StreamController() {
         return null;
     }
 
-    function _composeStreams() {
-        try {
-            const streamsInfo = adapter.getStreamsInfo();
-
-            if (!activeStream && streamsInfo.length === 0) {
-                throw new Error('There are no streams');
-            }
-
-            if (activeStream) {
-                dashMetrics.updateManifestUpdateInfo({
-                    currentTime: playbackController.getTime(),
-                    buffered: videoModel.getBufferRange(),
-                    presentationStartTime: streamsInfo[0].start,
-                    clientTimeOffset: timelineConverter.getClientTimeOffset()
-                });
-            }
-
-            // Filter streams that are outdated and not included in the MPD anymore
-            if (streams.length > 0) {
-                _filterOutdatedStreams(streamsInfo);
-            }
-
-            for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
-                // If the Stream object does not exist we probably loaded the manifest the first time or it was
-                // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-                const streamInfo = streamsInfo[i];
-                _initializeOrUpdateStream(streamInfo);
-            }
-
-            if (!activeStream) {
-                _initializeForFirstStream(streamsInfo);
-            }
-
-            eventBus.trigger(Events.STREAMS_COMPOSED);
-
-        } catch (e) {
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
-            hasInitialisationError = true;
-            reset();
-        }
-    }
-
     function _initializeForFirstStream(streamsInfo) {
 
         // Add the DVR window so we can calculate the right starting point
@@ -933,6 +910,8 @@ function StreamController() {
     function _initializeOrUpdateStream(streamInfo) {
         let stream = getComposedStream(streamInfo);
 
+        // If the Stream object does not exist we probably loaded the manifest the first time or it was
+        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
         if (!stream) {
             stream = Stream(context).create({
                 manifestModel: manifestModel,
