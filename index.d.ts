@@ -347,10 +347,10 @@ declare namespace dashjs {
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionDataSet): void;
-        registerLicenseRequestFilter(filter: RequestFilter),
-        registerLicenseResponseFilter(filter: ResponseFilter),
-        unregisterLicenseRequestFilter(filter: RequestFilter),
-        unregisterLicenseResponseFilter(filter: ResponseFilter),
+        registerLicenseRequestFilter(filter: RequestFilter): void,
+        registerLicenseResponseFilter(filter: ResponseFilter): void,
+        unregisterLicenseRequestFilter(filter: RequestFilter): void,
+        unregisterLicenseResponseFilter(filter: ResponseFilter): void,
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
