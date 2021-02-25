@@ -115,8 +115,7 @@ function AbrController() {
         });
     }
 
-    function unRegisterStreamType(type, streamProcessor) {
-        const streamId = streamProcessor.getStreamInfo().id;
+    function unRegisterStreamType(type, streamId) {
         delete streamProcessorDict[streamId][type];
     }
 

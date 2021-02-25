@@ -49,7 +49,6 @@ function PlaybackController() {
         adapter,
         videoModel,
         timelineConverter,
-        streamSwitch,
         wallclockTimeIntervalId,
         liveDelay,
         streamInfo,
@@ -93,7 +92,6 @@ function PlaybackController() {
     function _initializeForFirstStream() {
         addAllListeners();
         isDynamic = streamInfo.manifestInfo.isDynamic;
-        streamSwitch = false;
         isLowLatencySeekingInProgress = false;
         playbackStalled = false;
 
@@ -121,7 +119,7 @@ function PlaybackController() {
      * @private
      */
     function _initializeAfterStreamSwitch() {
-        streamSwitch = true;
+
     }
 
     function getTimeToStreamEnd(sInfo = null) {
@@ -305,7 +303,6 @@ function PlaybackController() {
 
     function reset() {
         playOnceInitialized = false;
-        streamSwitch = false;
         liveDelay = 0;
         availabilityStartTime = 0;
         seekTarget = NaN;
