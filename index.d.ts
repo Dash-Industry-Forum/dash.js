@@ -25,6 +25,12 @@ declare namespace dashjs {
         setCalleeNameVisible(flag: boolean): void;
     }
 
+    interface DashJSError {
+        code: number | null;
+        message: string | null;
+        data: unknown | null;
+    }
+
     interface VideoModel { }
 
     interface ProtectionController {
@@ -689,13 +695,13 @@ declare namespace dashjs {
     export interface KeySessionEvent extends Event {
         type: MediaPlayerEvents['KEY_SESSION_CREATED'];
         data: SessionToken | null;
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface KeyStatusesChangedEvent extends Event {
         type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
         data: SessionToken;
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface KeySystemSelectedEvent extends Event {
@@ -710,7 +716,7 @@ declare namespace dashjs {
             sessionToken: SessionToken;
             messageType: string;
         };
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface LogEvent extends Event {
