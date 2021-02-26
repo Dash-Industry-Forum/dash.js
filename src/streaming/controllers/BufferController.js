@@ -97,27 +97,17 @@ function BufferController(config) {
         resetInitialSettings();
     }
 
-    function getBufferControllerType() {
-        return BUFFER_CONTROLLER_TYPE;
-    }
-
-    function setMediaSource(value, mediaInfo) {
-        mediaSource = value;
-        if (sourceBufferSink && mediaInfo) { //if we have a prebuffer, we should prepare to discharge it, and make a new sourceBuffer ready
-            if (typeof sourceBufferSink.discharge === 'function') {
-                dischargeBuffer = sourceBufferSink;
-                createBuffer(mediaInfo);
-            }
-        }
-    }
-
-    function initialize(Source) {
-        setMediaSource(Source);
+    /**
+     * Initialize the BufferController. Sets the media source and registers the event handlers.
+     * @param {object} mediaSource
+     */
+    function initialize(mediaSource) {
+        setMediaSource(mediaSource);
 
         requiredQuality = abrController.getQualityFor(type, streamInfo.id);
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
@@ -134,19 +124,61 @@ function BufferController(config) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
     }
 
+    /**
+     * Returns the stream id
+     * @return {string}
+     */
     function getStreamId() {
         return streamInfo.id;
     }
 
+    /**
+     * Returns the media type
+     * @return {type}
+     */
     function getType() {
         return type;
     }
 
+    /**
+     * Returns the type of the BufferController. We distinguish between standard buffer controllers and buffer controllers related to texttracks.
+     * @return {string}
+     */
+    function getBufferControllerType() {
+        return BUFFER_CONTROLLER_TYPE;
+    }
 
+    /**
+     * Sets the mediasource.
+     * @param {object} value
+     * @param {object} mediaInfo
+     */
+    function setMediaSource(value, mediaInfo = null) {
+        mediaSource = value;
+        if (sourceBufferSink && mediaInfo) { //if we have a prebuffer, we should prepare to discharge it, and make a new sourceBuffer ready
+            if (typeof sourceBufferSink.discharge === 'function') {
+                dischargeBuffer = sourceBufferSink;
+                createBuffer(mediaInfo);
+            }
+        }
+    }
+
+    /**
+     * Get the RepresentationInfo for a certain quality.
+     * @param {number} quality
+     * @return {object}
+     * @private
+     */
     function _getRepresentationInfo(quality) {
         return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
     }
 
+    /**
+     * Creates a SourceBufferSink object
+     * @param {array} mediaInfoArr
+     * @param {array} oldBufferSinks
+     * @return {object|null} SourceBufferSink
+     */
     function createBuffer(mediaInfoArr, oldBufferSinks) {
         if (!initCache || !mediaInfoArr) return null;
         const mediaInfo = mediaInfoArr[0];
@@ -215,13 +247,25 @@ function BufferController(config) {
         }
     }
 
-    function onInitFragmentLoaded(e) {
-        logger.info('Init fragment finished loading saving to', type + '\'s init cache');
-        initCache.save(e.chunk);
+    /**
+     * Callback handler when init segment has been loaded. Based on settings, the init segment is saved to the cache, and appended to the buffer.
+     * @param {object} e
+     * @private
+     */
+    function _onInitFragmentLoaded(e) {
+        if (settings.get().streaming.cacheInitSegments) {
+            logger.info('Init fragment finished loading saving to', type + '\'s init cache');
+            initCache.save(e.chunk);
+        }
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         appendToBuffer(e.chunk);
     }
 
+    /**
+     * Append the init segment for a certain representation to the buffer. If the init segment is cached we take the one from the cache.
+     * @param {string} representationId
+     * @return {boolean}
+     */
     function appendInitSegment(representationId) {
         // Get init segment from cache
         const chunk = initCache.extract(streamInfo.id, representationId);
@@ -348,7 +392,8 @@ function BufferController(config) {
     function onQualityChanged(e) {
         if (requiredQuality === e.newQuality || isBufferingCompleted) return;
 
-        updateBufferTimestampOffset(_getRepresentationInfo(e.newQuality));
+        const representationInfo = _getRepresentationInfo(e.newQuality);
+        updateBufferTimestampOffset(representationInfo);
         requiredQuality = e.newQuality;
     }
 
@@ -922,7 +967,7 @@ function BufferController(config) {
 
     function reset(errored, keepBuffers) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);

@@ -82,6 +82,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          manifestUpdateRetryInterval: 100,
  *          stallThreshold: 0.5,
  *          filterUnsupportedEssentialProperties: true,
+ *          cacheInitSegments: true,
  *          utcSynchronization: {
  *              backgroundAttempts: 2,
  *              timeBetweenSyncAttempts: 30,
@@ -364,6 +365,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * @property {boolean} [cacheInitSegments=true]
+ * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
  * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
@@ -627,6 +630,7 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
+            cacheInitSegments: true,
             utcSynchronization: {
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,

@@ -46,7 +46,7 @@ function TextBufferController(config) {
         // according to text type, we create corresponding buffer controller
         if (config.type === Constants.FRAGMENTED_TEXT) {
 
-            // in this case, internal buffer ocntroller is a classical BufferController object
+            // in this case, internal buffer controller is a classical BufferController object
             _BufferControllerImpl = BufferController(context).create({
                 streamInfo: config.streamInfo,
                 type: config.type,
@@ -70,7 +70,8 @@ function TextBufferController(config) {
                 type: config.type,
                 mimeType: config.mimeType,
                 fragmentModel: config.fragmentModel,
-                errHandler: config.errHandler
+                errHandler: config.errHandler,
+                settings: config.settings
             });
         }
     }

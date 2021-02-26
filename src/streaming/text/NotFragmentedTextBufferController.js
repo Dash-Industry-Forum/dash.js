@@ -51,6 +51,7 @@ function NotFragmentedTextBufferController(config) {
     const type = config.type;
     const mimeType = config.mimeType;
     const fragmentModel = config.fragmentModel;
+    const settings = config.settings;
 
     let instance,
         isBufferingCompleted,
@@ -173,7 +174,9 @@ function NotFragmentedTextBufferController(config) {
     function onInitFragmentLoaded(e) {
         if (!e.chunk.bytes) return;
 
-        initCache.save(e.chunk);
+        if (settings.get().streaming.cacheInitSegments) {
+            initCache.save(e.chunk);
+        }
         buffer.append(e.chunk);
 
         isBufferingCompleted = true;
