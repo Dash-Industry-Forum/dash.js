@@ -51,7 +51,6 @@ import EventController from './EventController';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
-const PREBUFFERING_CAN_START_INTERVAL = 500;
 const DVR_WAITING_OFFSET = 2;
 
 function StreamController() {
@@ -95,7 +94,6 @@ function StreamController() {
         isPaused,
         initialPlayback,
         playbackEndedTimerInterval,
-        prebufferingCanStartInterval,
         buffers,
         preloadingStreams,
         supportsChangeType,
@@ -317,7 +315,6 @@ function StreamController() {
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
-        _startCheckIfPrebufferingCanStartInterval();
     }
 
     /**
@@ -503,6 +500,8 @@ function StreamController() {
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
+        } else {
+            _checkIfPrebufferingCanStart();
         }
     }
 
@@ -523,21 +522,8 @@ function StreamController() {
         }
     }
 
-    function _startCheckIfPrebufferingCanStartInterval() {
-        if (!prebufferingCanStartInterval) {
-            prebufferingCanStartInterval = setInterval(function () {
-                _checkIfPrebufferingCanStart();
-            }, PREBUFFERING_CAN_START_INTERVAL);
-        }
-    }
-
-    function _stopCheckIfPrebufferingCanStartInterval() {
-        clearInterval(prebufferingCanStartInterval);
-        prebufferingCanStartInterval = null;
-    }
-
     function _checkIfPrebufferingCanStart() {
-        // In multiperiod situations, we constantly check if the streams have finished buffering so we can immediately start buffering the next stream
+        // In multiperiod situations, we can start buffering the next stream
         if (!activeStream || !hasStreamFinishedBuffering(activeStream)) {
             return;
         }
@@ -1254,7 +1240,6 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;
-        prebufferingCanStartInterval = null;
         preBufferingCheckInProgress = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
@@ -1304,7 +1289,6 @@ function StreamController() {
         }
 
         _stopPlaybackEndedTimerInterval();
-        _stopCheckIfPrebufferingCanStartInterval();
         eventBus.trigger(Events.STREAM_TEARDOWN_COMPLETE);
         resetInitialSettings();
     }
