@@ -65,8 +65,8 @@ function NotFragmentedTextBufferController(config) {
         mediaSource = null;
         isBufferingCompleted = false;
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
     }
 
     function getBufferControllerType() {
@@ -141,8 +141,8 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function reset(errored) {
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, instance);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
 
         if (!errored && buffer) {
             buffer.abort();
@@ -151,7 +151,7 @@ function NotFragmentedTextBufferController(config) {
         }
     }
 
-    function onDataUpdateCompleted(e) {
+    function _onDataUpdateCompleted(e) {
         if (initCache.extract(streamInfo.id, e.currentRepresentation.id) !== null) {
             return;
         }
@@ -171,7 +171,7 @@ function NotFragmentedTextBufferController(config) {
         return initCache.extract(streamInfo.id, representationId) !== null;
     }
 
-    function onInitFragmentLoaded(e) {
+    function _onInitFragmentLoaded(e) {
         if (!e.chunk.bytes) return;
 
         if (settings.get().streaming.cacheInitSegments) {

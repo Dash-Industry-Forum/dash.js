@@ -2,6 +2,7 @@ import NotFragmentedTextBufferController from '../../src/streaming/text/NotFragm
 import ObjectUtils from '../../src/streaming/utils/ObjectUtils';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
+import Settings from '../../src/core/Settings';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
@@ -20,6 +21,7 @@ const objectUtils = ObjectUtils(context).getInstance();
 
 describe('NotFragmentedTextBufferController', function () {
 
+    let settings = Settings(context).getInstance();
     let streamProcessorMock = new StreamProcessorMock(testType, streamInfo);
     let errorHandlerMock = new ErrorHandlerMock();
     let mediaSourceMock;
@@ -32,7 +34,8 @@ describe('NotFragmentedTextBufferController', function () {
             streamInfo: streamInfo,
             type: testType,
             errHandler: errorHandlerMock,
-            streamProcessor: streamProcessorMock
+            streamProcessor: streamProcessorMock,
+            settings
         });
         notFragmentedTextBufferController.initialize(mediaSourceMock);
     });

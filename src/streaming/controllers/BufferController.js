@@ -106,7 +106,7 @@ function BufferController(config) {
 
         requiredQuality = abrController.getQualityFor(type, streamInfo.id);
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
@@ -808,7 +808,7 @@ function BufferController(config) {
         }
     }
 
-    function onDataUpdateCompleted(e) {
+    function _onDataUpdateCompleted(e) {
         if (e.error || isBufferingCompleted) return;
         updateBufferTimestampOffset(e.currentRepresentation);
     }
@@ -966,7 +966,7 @@ function BufferController(config) {
     }
 
     function reset(errored, keepBuffers) {
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);

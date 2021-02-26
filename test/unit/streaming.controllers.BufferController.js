@@ -17,6 +17,7 @@ import TextControllerMock from './mocks/TextControllerMock';
 import RepresentationControllerMock from './mocks/RepresentationControllerMock';
 
 const chai = require('chai');
+const sinon = require('sinon');
 const expect = chai.expect;
 
 const context = {};
@@ -44,7 +45,7 @@ describe('BufferController', function () {
     const representationControllerMock = new RepresentationControllerMock();
     let bufferController;
     let mediaSourceMock;
-    const mediaInfo = [{ codec: 'video/webm; codecs="vp8, vorbis"'}];
+    const mediaInfo = [{ codec: 'video/webm; codecs="vp8, vorbis"' }];
 
     beforeEach(function () {
         global.navigator = {
@@ -129,14 +130,14 @@ describe('BufferController', function () {
 
             initCache.save(chunk);
 
-            bufferController.appendInitSegment('representationId');
+            bufferController.appendInitSegmentFromCache('representationId');
             expect(mediaSourceMock.buffers[0].chunk).to.equal(chunk.bytes);
         });
 
         it('should return false if no init data is cached', function () {
             // reset cache
             initCache.reset();
-            expect(bufferController.appendInitSegment('representationId')).to.equal(false);
+            expect(bufferController.appendInitSegmentFromCache('representationId')).to.equal(false);
         });
     });
 
@@ -267,18 +268,22 @@ describe('BufferController', function () {
     });
 
     describe('Event MEDIA_FRAGMENT_LOADED handler', function () {
+        let adapterStub;
+
         beforeEach(function () {
             bufferController.initialize(mediaSourceMock);
             bufferController.createBuffer(mediaInfo);
-            bufferController.getRepresentationInfo = function (quality) {
-                return {
-                    MSETimeOffset: quality
-                };
-            };
+
+            adapterStub = sinon.stub(adapterMock, 'convertDataToRepresentationInfo');
+        });
+
+        afterEach(function () {
+            adapterStub.restore();
+            adapterStub = null;
         });
 
         it('should not update buffer timestamp offset - wrong quality', function () {
-
+            adapterStub.returns({ MSETimeOffset: 0 });
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
             const event = {
@@ -295,6 +300,7 @@ describe('BufferController', function () {
         });
 
         it('should update buffer timestamp offset', function () {
+            adapterStub.returns({ MSETimeOffset: 2 });
             expect(mediaSourceMock.buffers[0].timestampOffset).to.equal(1);
 
             const event = {
