@@ -94,7 +94,7 @@ function StreamController() {
         isPaused,
         initialPlayback,
         playbackEndedTimerInterval,
-        buffers,
+        bufferSinks,
         preloadingStreams,
         supportsChangeType,
         settings,
@@ -588,7 +588,7 @@ function StreamController() {
             if (seamlessPeriodSwitch) {
                 nextStream.setPreloadingScheduled(true);
                 logger.info(`[onStreamCanLoadNext] Preloading next stream with id ${nextStream.getId()}`);
-                nextStream.preload(mediaSource, buffers);
+                nextStream.preload(mediaSource, bufferSinks);
                 preloadingStreams.push(nextStream);
                 nextStream.getProcessors().forEach(p => {
                     p.setBufferingTime(nextStream.getStartTime());
@@ -842,12 +842,12 @@ function StreamController() {
     }
 
     function activateStream(seekTime, keepBuffers) {
-        buffers = activeStream.activate(mediaSource, keepBuffers ? buffers : undefined);
+        bufferSinks = activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined);
 
         // check if change type is supported by the browser
-        if (buffers) {
-            const keys = Object.keys(buffers);
-            if (keys.length > 0 && buffers[keys[0]].getBuffer().changeType) {
+        if (bufferSinks) {
+            const keys = Object.keys(bufferSinks);
+            if (keys.length > 0 && bufferSinks[keys[0]].getBuffer().changeType) {
                 supportsChangeType = true;
             }
         }

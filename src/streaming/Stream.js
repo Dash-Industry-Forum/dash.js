@@ -181,22 +181,22 @@ function Stream(config) {
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
      * @memberof Stream#
-     * @param {SourceBuffer} previousBuffers
+     * @param {SourceBuffer} previousBufferSinks
      */
-    function activate(mediaSource, previousBuffers) {
+    function activate(mediaSource, previousBufferSinks) {
         if (!isStreamActivated) {
             let result;
             if (!getPreloaded()) {
                 eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-                result = initializeMedia(mediaSource, previousBuffers);
+                result = initializeMedia(mediaSource, previousBufferSinks);
             } else {
                 initializeAfterPreload();
-                result = previousBuffers;
+                result = previousBufferSinks;
             }
             isStreamActivated = true;
             return result;
         }
-        return previousBuffers;
+        return previousBufferSinks;
     }
 
     /**
@@ -548,7 +548,7 @@ function Stream(config) {
         }
     }
 
-    function initializeMedia(mediaSource, previousBuffers) {
+    function initializeMedia(mediaSource, previousBufferSinks) {
         checkConfig();
         let element = videoModel.getElement();
 
@@ -569,7 +569,7 @@ function Stream(config) {
         initializeMediaForType(Constants.IMAGE, mediaSource);
 
         //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
-        const buffers = createBuffers(previousBuffers);
+        const buffers = createBuffers(previousBufferSinks);
 
         isMediaInitialized = true;
         isUpdating = false;
