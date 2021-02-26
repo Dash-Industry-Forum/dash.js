@@ -795,7 +795,6 @@ declare namespace dashjs {
     export interface ProtectionCreatedEvent extends Event {
         type: MediaPlayerEvents['PROTECTION_CREATED'];
         controller: object;
-        manifest: object;
     }
 
     export interface ProtectionDestroyedEvent extends Event {

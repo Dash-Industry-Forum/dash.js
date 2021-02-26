@@ -52,6 +52,7 @@ import ConformanceViolationConstants from '../constants/ConformanceViolationCons
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const PREBUFFERING_CAN_START_INTERVAL = 500;
+const DVR_WAITING_OFFSET = 2;
 
 function StreamController() {
 
@@ -145,6 +146,17 @@ function StreamController() {
             settings
         });
         timeSyncController.initialize();
+
+        if (protectionController) {
+            eventBus.trigger(Events.PROTECTION_CREATED, {
+                controller: protectionController
+            });
+            protectionController.setMediaElement(videoModel.getElement());
+            if (protectionData) {
+                protectionController.setProtectionData(protectionData);
+            }
+        }
+
         registerEvents();
     }
 
@@ -184,6 +196,10 @@ function StreamController() {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, _onBufferClearedForStreamSwitch, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+    }
+
+    function _onTimeSyncCompleted( /*e*/) {
+        _composeStreams();
     }
 
     /**
@@ -228,6 +244,80 @@ function StreamController() {
             hasInitialisationError = true;
             reset();
         }
+    }
+
+    function _initializeOrUpdateStream(streamInfo) {
+        let stream = _getComposedStream(streamInfo);
+
+        // If the Stream object does not exist we probably loaded the manifest the first time or it was
+        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+        if (!stream) {
+            stream = Stream(context).create({
+                manifestModel,
+                mediaPlayerModel,
+                dashMetrics,
+                manifestUpdater,
+                adapter,
+                timelineConverter,
+                capabilities,
+                capabilitiesFilter,
+                errHandler,
+                baseURLController,
+                abrController,
+                playbackController,
+                eventController,
+                mediaController,
+                textController,
+                protectionController,
+                videoModel,
+                streamInfo,
+                settings
+            });
+            streams.push(stream);
+            stream.initialize();
+        } else {
+            stream.updateData(streamInfo);
+        }
+
+        dashMetrics.addManifestUpdateStreamInfo(streamInfo);
+    }
+
+    function _initializeForFirstStream(streamsInfo) {
+
+        // Add the DVR window so we can calculate the right starting point
+        addDVRMetric();
+
+        // If the start is in the future we need to wait
+        const dvrRange = dashMetrics.getCurrentDVRInfo().range;
+        if (dvrRange.end < dvrRange.start) {
+            if (waitForPlaybackStartTimeout) {
+                clearTimeout(waitForPlaybackStartTimeout);
+            }
+            const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
+            logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
+            eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
+            waitForPlaybackStartTimeout = setTimeout(() => {
+                _initializeForFirstStream(streamsInfo);
+            }, waitingTime);
+            return;
+        }
+
+        // Compute and set the live delay
+        if (adapter.getIsDynamic() && streams.length) {
+            const manifestInfo = streamsInfo[0].manifestInfo;
+            const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+        }
+
+        // Figure out the correct start time and the correct start period
+        const startTime = _getInitialStartTime();
+        let initialStream = getStreamForTime(startTime);
+        const startStream = initialStream !== null ? initialStream : streams[0];
+
+        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
+        _switchStream(startStream, null, startTime);
+        _startPlaybackEndedTimerInterval();
+        _startCheckIfPrebufferingCanStartInterval();
     }
 
     /**
@@ -860,87 +950,13 @@ function StreamController() {
         mediaSourceController.setDuration(mediaSource, manifestDuration);
     }
 
-    function getComposedStream(streamInfo) {
+    function _getComposedStream(streamInfo) {
         for (let i = 0, ln = streams.length; i < ln; i++) {
             if (streams[i].getId() === streamInfo.id) {
                 return streams[i];
             }
         }
         return null;
-    }
-
-    function _initializeForFirstStream(streamsInfo) {
-
-        // Add the DVR window so we can calculate the right starting point
-        addDVRMetric();
-
-        // If the start is in the future we need to wait
-        const dvrRange = dashMetrics.getCurrentDVRInfo().range;
-        if (dvrRange.end < dvrRange.start) {
-            if (waitForPlaybackStartTimeout) {
-                clearTimeout(waitForPlaybackStartTimeout);
-            }
-            const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + settings.get().streaming.waitingOffsetIfAstIsGreaterThanNow) * 1000, 2147483647);
-            logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-            eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
-            waitForPlaybackStartTimeout = setTimeout(() => {
-                _initializeForFirstStream(streamsInfo);
-            }, waitingTime);
-            return;
-        }
-
-        // Compute and set the live delay
-        if (adapter.getIsDynamic() && streams.length) {
-            const manifestInfo = streamsInfo[0].manifestInfo;
-            const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
-        }
-
-        // Figure out the correct start time and the correct start period
-        const startTime = _getInitialStartTime();
-        let initialStream = getStreamForTime(startTime);
-        const startStream = initialStream !== null ? initialStream : streams[0];
-
-        eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
-        _switchStream(startStream, null, startTime);
-        _startPlaybackEndedTimerInterval();
-        _startCheckIfPrebufferingCanStartInterval();
-    }
-
-    function _initializeOrUpdateStream(streamInfo) {
-        let stream = getComposedStream(streamInfo);
-
-        // If the Stream object does not exist we probably loaded the manifest the first time or it was
-        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-        if (!stream) {
-            stream = Stream(context).create({
-                manifestModel: manifestModel,
-                mediaPlayerModel: mediaPlayerModel,
-                dashMetrics: dashMetrics,
-                manifestUpdater: manifestUpdater,
-                adapter: adapter,
-                timelineConverter: timelineConverter,
-                capabilities: capabilities,
-                capabilitiesFilter,
-                errHandler: errHandler,
-                baseURLController: baseURLController,
-                abrController: abrController,
-                playbackController: playbackController,
-                eventController: eventController,
-                mediaController: mediaController,
-                textController: textController,
-                protectionController: protectionController,
-                videoModel: videoModel,
-                streamInfo: streamInfo,
-                settings: settings
-            });
-            streams.push(stream);
-            stream.initialize();
-        } else {
-            stream.updateData(streamInfo);
-        }
-
-        dashMetrics.addManifestUpdateStreamInfo(streamInfo);
     }
 
     function _filterOutdatedStreams(streamsInfo) {
@@ -1014,23 +1030,6 @@ function StreamController() {
         } catch (e) {
             return NaN;
         }
-    }
-
-    function _onTimeSyncCompleted( /*e*/) {
-        const manifest = manifestModel.getValue();
-        //TODO check if we can move this to initialize??
-        if (protectionController) {
-            eventBus.trigger(Events.PROTECTION_CREATED, {
-                controller: protectionController,
-                manifest: manifest
-            });
-            protectionController.setMediaElement(videoModel.getElement());
-            if (protectionData) {
-                protectionController.setProtectionData(protectionData);
-            }
-        }
-
-        _composeStreams();
     }
 
     function _onManifestUpdated(e) {

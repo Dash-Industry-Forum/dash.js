@@ -51,13 +51,13 @@ function Stream(config) {
 
     const manifestModel = config.manifestModel;
     const mediaPlayerModel = config.mediaPlayerModel;
+    const dashMetrics = config.dashMetrics;
     const manifestUpdater = config.manifestUpdater;
     const adapter = config.adapter;
+    const timelineConverter = config.timelineConverter;
     const capabilities = config.capabilities;
     const capabilitiesFilter = config.capabilitiesFilter;
     const errHandler = config.errHandler;
-    const timelineConverter = config.timelineConverter;
-    const dashMetrics = config.dashMetrics;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const eventController = config.eventController;
@@ -65,8 +65,9 @@ function Stream(config) {
     const textController = config.textController;
     const protectionController = config.protectionController;
     const videoModel = config.videoModel;
-    const settings = config.settings;
     let streamInfo = config.streamInfo;
+    const settings = config.settings;
+
 
     let instance,
         logger,
@@ -87,6 +88,9 @@ function Stream(config) {
         isEndedEventSignaled,
         trackChangedEvent;
 
+    /**
+     * Setup the stream
+     */
     function setup() {
         try {
             debug = Debug(context).getInstance();
@@ -110,24 +114,36 @@ function Stream(config) {
         }
     }
 
+    /**
+     * Initialize the events
+     */
     function initialize() {
         registerEvents();
         registerProtectionEvents();
         eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
+    /**
+     * Register the streaming events
+     */
     function registerEvents() {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
+    /**
+     * Unregister the streaming events
+     */
     function unRegisterEvents() {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
     }
 
+    /**
+     * Register the protection events
+     */
     function registerProtectionEvents() {
         if (protectionController) {
             eventBus.on(Events.KEY_ERROR, onProtectionError, instance);
@@ -139,6 +155,9 @@ function Stream(config) {
         }
     }
 
+    /**
+     * Unregister the protection events
+     */
     function unRegisterProtectionEvents() {
         if (protectionController) {
             eventBus.off(Events.KEY_ERROR, onProtectionError, instance);
@@ -150,6 +169,10 @@ function Stream(config) {
         }
     }
 
+    /**
+     * Returns the stream id
+     * @return {*|null}
+     */
     function getStreamId() {
         return streamInfo ? streamInfo.id : null;
     }

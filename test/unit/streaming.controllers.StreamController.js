@@ -153,11 +153,7 @@ describe('StreamController', function () {
         describe('error management', () => {
 
             it('should throw an exception when attempting to composeStreams while no manifest has been parsed', function () {
-                let spy = chai.spy();
-                eventBus.on(Events.PROTECTION_CREATED, spy);
-
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
-                expect(spy).to.have.been.called.exactly(1);
                 expect(errHandlerMock.errorValue).to.include('There are no streams');
             });
 
