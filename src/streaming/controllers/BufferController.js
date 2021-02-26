@@ -262,11 +262,11 @@ function BufferController(config) {
     }
 
     /**
-     * Append the init segment for a certain representation to the buffer. If the init segment is cached we take the one from the cache.
+     * Append the init segment for a certain representation to the buffer. If the init segment is cached we take the one from the cache. Otherwise the function returns false and the segment has to be requested again.
      * @param {string} representationId
      * @return {boolean}
      */
-    function appendInitSegment(representationId) {
+    function appendInitSegmentFromCache(representationId) {
         // Get init segment from cache
         const chunk = initCache.extract(streamInfo.id, representationId);
 
@@ -1000,7 +1000,7 @@ function BufferController(config) {
         getRangeAt,
         setMediaSource,
         getMediaSource,
-        appendInitSegment,
+        appendInitSegmentFromCache: appendInitSegmentFromCache,
         replaceBuffer,
         getIsBufferingCompleted,
         getIsPruningInProgress,

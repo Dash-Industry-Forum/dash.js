@@ -120,8 +120,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getIsBufferingCompleted();
     }
 
-    function appendInitSegment(representationId) {
-        _BufferControllerImpl.appendInitSegment(representationId);
+    function appendInitSegmentFromCache(representationId) {
+        _BufferControllerImpl.appendInitSegmentFromCache(representationId);
     }
 
     function getIsPruningInProgress() {
@@ -160,7 +160,7 @@ function TextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         dischargePreBuffer: dischargePreBuffer,
-        appendInitSegment: appendInitSegment,
+        appendInitSegmentFromCache: appendInitSegmentFromCache,
         getRangeAt: getRangeAt,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,

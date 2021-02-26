@@ -166,7 +166,7 @@ function NotFragmentedTextBufferController(config) {
         );
     }
 
-    function appendInitSegment(representationId) {
+    function appendInitSegmentFromCache(representationId) {
         // If text data file already in cache then no need to append it again
         return initCache.extract(streamInfo.id, representationId) !== null;
     }
@@ -210,7 +210,7 @@ function NotFragmentedTextBufferController(config) {
         getIsBufferingCompleted: getIsBufferingCompleted,
         getIsPruningInProgress: getIsPruningInProgress,
         dischargePreBuffer: dischargePreBuffer,
-        appendInitSegment: appendInitSegment,
+        appendInitSegmentFromCache: appendInitSegmentFromCache,
         getRangeAt: getRangeAt,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset

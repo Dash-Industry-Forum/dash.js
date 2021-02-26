@@ -432,7 +432,7 @@ function StreamProcessor(config) {
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
-            if (!bufferController.appendInitSegment(e.representationId)) {
+            if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
                 // Init segment not in cache, send new request
                 const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
                 scheduleController.processInitRequest(request);
