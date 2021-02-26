@@ -258,7 +258,7 @@ function BufferController(config) {
             initCache.save(e.chunk);
         }
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
-        appendToBuffer(e.chunk);
+        _appendToBuffer(e.chunk);
     }
 
     /**
@@ -277,10 +277,14 @@ function BufferController(config) {
 
         // Append init segment into buffer
         logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
-        appendToBuffer(chunk);
+        _appendToBuffer(chunk);
         return true;
     }
 
+    /**
+     * Calls the _appendToBuffer function to append the segment to the buffer. In case of a track switch the buffer might be cleared.
+     * @param {object} e
+     */
     function onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
 
@@ -296,11 +300,16 @@ function BufferController(config) {
                 }]);
             }
         } else {
-            appendToBuffer(chunk);
+            _appendToBuffer(chunk);
         }
     }
 
-    function appendToBuffer(chunk) {
+    /**
+     * Append data to the MSE buffer using the SourceBufferSink
+     * @param {object} chunk
+     * @private
+     */
+    function _appendToBuffer(chunk) {
         sourceBufferSink.append(chunk);
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
@@ -308,7 +317,7 @@ function BufferController(config) {
         }
     }
 
-    function showBufferRanges(ranges) {
+    function _showBufferRanges(ranges) {
         if (ranges && ranges.length > 0) {
             for (let i = 0, len = ranges.length; i < len; i++) {
                 logger.debug('Buffered range: ' + ranges.start(i) + ' - ' + ranges.end(i) + ', currentTime = ', playbackController.getTime());
@@ -317,12 +326,9 @@ function BufferController(config) {
     }
 
     function onAppended(e) {
-
-        if (e.streamId !== streamInfo.id || e.mediaType !== type) {
-            return;
-        }
-
         if (e.error) {
+
+            // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
                 isQuotaExceeded = true;
                 criticalBufferLevel = getTotalBufferedTime() * 0.8;
@@ -362,7 +368,7 @@ function BufferController(config) {
 
         const ranges = sourceBufferSink.getAllBufferRanges();
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-            showBufferRanges(ranges);
+            _showBufferRanges(ranges);
             onPlaybackProgression();
         } else if (replacingBuffer) {
             // When replacing buffer due to switch track, and once new initialization segment has been appended
@@ -757,7 +763,7 @@ function BufferController(config) {
 
         if (e.streamId === streamInfo.id) {
             const ranges = sourceBufferSink.getAllBufferRanges();
-            showBufferRanges(ranges);
+            _showBufferRanges(ranges);
         }
 
         if (pendingPruningRanges.length === 0) {
@@ -779,7 +785,7 @@ function BufferController(config) {
             } else {
                 replacingBuffer = false;
                 if (mediaChunk) {
-                    appendToBuffer(mediaChunk);
+                    _appendToBuffer(mediaChunk);
                 }
             }
             triggerEvent(Events.BUFFER_CLEARED, {
