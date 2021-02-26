@@ -163,7 +163,7 @@ function ManifestUpdater() {
             // successful update with no content implies existing manifest remains valid
             manifest = manifestModel.getValue();
 
-            // override load time to avoid invalid latency tracking
+            // override load time to avoid invalid latency tracking and ensure update cadence
             manifest.loadedTime = new Date();
         } else if (adapter.getIsPatch(manifest)) {
             // with patches the in-memory manifest is our base
@@ -194,6 +194,9 @@ function ManifestUpdater() {
                 refreshManifest(true);
                 return;
             }
+
+            // override load time to avoid invalid latency tracking and ensure update cadence
+            manifest.loadedTime = new Date();
         }
 
         // See DASH-IF IOP v4.3 section 4.6.4 "Transition Phase between Live and On-Demand"
