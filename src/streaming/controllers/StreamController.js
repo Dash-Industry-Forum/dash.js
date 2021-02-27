@@ -495,7 +495,8 @@ function StreamController() {
         }
     }
 
-    function _onStreamBufferingCompleted() {
+    function _onStreamBufferingCompleted(e) {
+        logger.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
@@ -524,7 +525,7 @@ function StreamController() {
 
     function _checkIfPrebufferingCanStart() {
         // In multiperiod situations, we can start buffering the next stream
-        if (!activeStream || !hasStreamFinishedBuffering(activeStream)) {
+        if (!activeStream || !activeStream.getHasFinishedBuffering()) {
             return;
         }
         const upcomingStreams = getNextStreams(activeStream);
@@ -535,36 +536,12 @@ function StreamController() {
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
-            if (!stream.getPreloadingScheduled() && (hasStreamFinishedBuffering(previousStream))) {
+            if (!stream.getPreloadingScheduled() && previousStream.getHasFinishedBuffering()) {
                 if (mediaSource) {
                     _onStreamCanLoadNext(stream, previousStream);
                 }
             }
             i += 1;
-        }
-    }
-
-    function hasStreamFinishedBuffering(stream) {
-        try {
-            if (!stream) {
-                return false;
-            }
-            const streamProcessors = stream.getProcessors().filter((sp) => {
-                return sp.getType() === Constants.AUDIO || sp.getType() === Constants.VIDEO;
-            });
-
-            if (!streamProcessors || streamProcessors.length === 0) {
-                return false;
-            }
-
-            const unfinishedStreamProcessors = streamProcessors.filter((sp) => {
-                return !sp.isBufferingCompleted();
-            });
-
-            return unfinishedStreamProcessors && unfinishedStreamProcessors.length === 0;
-
-        } catch (e) {
-            return false;
         }
     }
 
@@ -757,28 +734,28 @@ function StreamController() {
             toStreamInfo: stream.getStreamInfo()
         });
 
-        let seamlessPeriodSwitch = false;
+        let keepBuffers = false;
         activeStream = stream;
 
         if (previousStream) {
-            seamlessPeriodSwitch = _canSourceBuffersBeReused(stream, previousStream);
-            previousStream.deactivate(seamlessPeriodSwitch);
+            keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
+            previousStream.deactivate(keepBuffers);
         }
 
         // Determine seek time when switching to new period
         // - seek at given seek time
         // - or seek at period start if upcoming period is not prebuffered
-        seekTime = !isNaN(seekTime) ? seekTime : (!seamlessPeriodSwitch && previousStream ? stream.getStreamInfo().start : NaN);
-        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${seamlessPeriodSwitch}`);
+        seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
+        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
 
         preloadingStreams = preloadingStreams.filter((s) => {
             return s.getId() !== activeStream.getId();
         });
         playbackController.initialize(getActiveStreamInfo(), !!previousStream);
         if (videoModel.getElement()) {
-            openMediaSource(seekTime, (previousStream === null), false, seamlessPeriodSwitch);
+            openMediaSource(seekTime, !previousStream, false, keepBuffers);
         } else {
-            activateStream(seekTime, seamlessPeriodSwitch);
+            activateStream(seekTime, keepBuffers);
         }
     }
 
@@ -789,7 +766,7 @@ function StreamController() {
         }
     }
 
-    function openMediaSource(seekTime, sourceInitialized, streamActivated, keepBuffers) {
+    function openMediaSource(seekTime, isFirstStream, streamActivated, keepBuffers) {
         let sourceUrl;
 
         function onMediaSourceOpen() {
@@ -803,10 +780,6 @@ function StreamController() {
             setMediaDuration();
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             mediaSourceController.setSeekable(mediaSource, dvrInfo.range.start, dvrInfo.range.end);
-
-            if (!sourceInitialized) {
-                eventBus.trigger(Events.SOURCE_INITIALIZED);
-            }
 
             if (streamActivated) {
                 activeStream.setMediaSource(mediaSource);
@@ -824,9 +797,6 @@ function StreamController() {
         } else {
             if (keepBuffers) {
                 activateStream(seekTime, keepBuffers);
-                if (!sourceInitialized) {
-                    eventBus.trigger(Events.SOURCE_INITIALIZED);
-                }
             } else {
                 mediaSourceController.detachMediaSource(videoModel);
                 mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
@@ -842,7 +812,7 @@ function StreamController() {
     }
 
     function activateStream(seekTime, keepBuffers) {
-        bufferSinks = activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined);
+        bufferSinks = activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime);
 
         // check if change type is supported by the browser
         if (bufferSinks) {
@@ -852,15 +822,13 @@ function StreamController() {
             }
         }
 
-        if (!initialPlayback) {
-            if (!isNaN(seekTime)) {
-                // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
-                if (seekTime !== playbackController.getTime()) {
-                    logger.debug(`Stream activation requires seek to ${seekTime}`);
-                    playbackController.seek(seekTime);
-                } else if (!activeStream.getPreloaded()) {
-                    eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, { seekTarget: seekTime }, { streamId: activeStream.getStreamInfo().id });
-                }
+        if (!isNaN(seekTime)) {
+            // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
+            if (seekTime !== playbackController.getTime()) {
+                logger.debug(`Stream activation requires seek to ${seekTime}`);
+                playbackController.seek(seekTime);
+            } else if (!activeStream.getPreloaded()) {
+                eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, { seekTarget: seekTime }, { streamId: activeStream.getStreamInfo().id });
             }
         }
 
@@ -1126,7 +1094,7 @@ function StreamController() {
         return isStreamSwitchingInProgress;
     }
 
-    function getHasMediaOrIntialisationError() {
+    function getHasMediaOrInitialisationError() {
         return hasMediaError || hasInitialisationError;
     }
 
@@ -1323,8 +1291,7 @@ function StreamController() {
         setConfig,
         setProtectionData,
         getIsStreamSwitchInProgress,
-        getHasMediaOrIntialisationError,
-        hasStreamFinishedBuffering,
+        getHasMediaOrIntialisationError: getHasMediaOrInitialisationError,
         getStreams,
         getNextStream,
         getActiveStream,

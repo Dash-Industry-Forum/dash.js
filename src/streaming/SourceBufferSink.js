@@ -72,14 +72,16 @@ function SourceBufferSink(mSource) {
         type = mediaInfo.type;
         const codec = mediaInfo.codec;
 
+        _abortBeforeAppend();
+
         if (settings.get().streaming.useAppendWindow) {
             updateAppendWindow(mediaInfo.streamInfo);
         }
 
-        _abortBeforeAppend();
-
         if (buffer.changeType) {
-            buffer.changeType(codec);
+            waitForUpdateEnd(() => {
+                buffer.changeType(codec);
+            });
         }
 
         if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
@@ -341,7 +343,7 @@ function SourceBufferSink(mSource) {
                 waitForUpdateEnd(() => {
                     buffer.abort();
                 });
-            } else if (buffer.setTextTrack && mediaSource.readyState === 'ended') {
+            } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
                 buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
             }
         } catch (ex) {
@@ -395,7 +397,7 @@ function SourceBufferSink(mSource) {
     function _triggerEvent(type, payload) {
         payload.streamId = mediaInfo.streamInfo.id;
         payload.mediaType = mediaInfo.type;
-        eventBus.trigger(type, payload);
+        eventBus.trigger(type, payload, {streamId: payload.streamId, mediaType: payload.mediaType});
     }
 
     instance = {

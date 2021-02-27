@@ -75,6 +75,7 @@ function Stream(config) {
         isStreamInitialized,
         isStreamActivated,
         isMediaInitialized,
+        hasFinishedBuffering,
         hasVideoTrack,
         hasAudioTrack,
         updateError,
@@ -185,16 +186,16 @@ function Stream(config) {
      */
     function activate(mediaSource, previousBufferSinks) {
         if (!isStreamActivated) {
-            let result;
+            let bufferSinks;
             if (!getPreloaded()) {
                 eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-                result = initializeMedia(mediaSource, previousBufferSinks);
+                bufferSinks = initializeMedia(mediaSource, previousBufferSinks);
             } else {
                 initializeAfterPreload();
-                result = previousBufferSinks;
+                bufferSinks = previousBufferSinks;
             }
             isStreamActivated = true;
-            return result;
+            return bufferSinks;
         }
         return previousBufferSinks;
     }
@@ -252,6 +253,7 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         isStreamInitialized = false;
+        hasFinishedBuffering = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
         updateError = {};
@@ -389,8 +391,11 @@ function Stream(config) {
             return;
         }
 
+        hasFinishedBuffering = false;
+
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
+
 
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
@@ -569,7 +574,7 @@ function Stream(config) {
         initializeMediaForType(Constants.IMAGE, mediaSource);
 
         //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
-        const buffers = createBuffers(previousBufferSinks);
+        const bufferSinks = createBuffers(previousBufferSinks);
 
         isMediaInitialized = true;
         isUpdating = false;
@@ -582,7 +587,7 @@ function Stream(config) {
             checkIfInitializationCompleted();
         }
 
-        return buffers;
+        return bufferSinks;
     }
 
     function initializeAfterPreload() {
@@ -651,7 +656,7 @@ function Stream(config) {
         // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
         // - in case stream is complete but a track switch has been requested
         for (let i = 0; i < ln && streamProcessors[i]; i++) {
-            streamProcessors[i].getScheduleController().start();
+            //streamProcessors[i].getScheduleController().start();
         }
     }
 
@@ -699,7 +704,8 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo });
+        hasFinishedBuffering = true;
+        eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, {streamInfo});
     }
 
     function onDataUpdateCompleted(e) {
@@ -867,6 +873,10 @@ function Stream(config) {
         return preloaded;
     }
 
+    function getHasFinishedBuffering() {
+        return hasFinishedBuffering;
+    }
+
     function getAdapter() {
         return adapter;
     }
@@ -922,6 +932,7 @@ function Stream(config) {
         getIsEndedEventSignaled,
         setIsEndedEventSignaled,
         getAdapter,
+        getHasFinishedBuffering,
         setPreloaded
     };
 

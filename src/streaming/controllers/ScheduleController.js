@@ -93,7 +93,6 @@ function ScheduleController(config) {
             settings: settings
         });
 
-        //eventBus.on(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
         eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
@@ -130,8 +129,7 @@ function ScheduleController(config) {
         if (isStarted()) return;
         if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
 
-        logger.debug('Schedule Controller starts');
-        console.debug('Schedule Controller starts');
+        logger.debug(`ScheduleController for stream id ${streamInfo.id} starts`);
         isStopped = false;
         dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
 
@@ -145,7 +143,6 @@ function ScheduleController(config) {
     function stop() {
         if (isStopped) return;
 
-        logger.debug('Schedule Controller stops');
         logger.debug(type + ' Schedule Controller stops');
         isStopped = true;
         clearTimeout(scheduleTimeout);
@@ -219,7 +216,7 @@ function ScheduleController(config) {
 
             setFragmentProcessState(true);
             if (!isReplacement && checkPlaybackQuality) {
-                abrController.checkPlaybackQuality(type, getStreamId());
+                abrController.checkPlaybackQuality(type);
             }
 
             getNextFragment();
@@ -274,6 +271,7 @@ function ScheduleController(config) {
     }
 
     function setFragmentProcessState(state) {
+        logger.debug(`set isFragmentProcessingInProgress to ${state}`);
         if (isFragmentProcessingInProgress !== state) {
             isFragmentProcessingInProgress = state;
         } else {
@@ -290,11 +288,11 @@ function ScheduleController(config) {
 
     function processMediaRequest(request) {
         if (request) {
-            logger.debug('Next fragment request url is ' + request.url);
+            logger.debug(`Next fragment request url for stream id ${streamInfo.id} is ${request.url}`);
             fragmentModel.executeRequest(request);
         } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
             if (playbackController.getIsDynamic()) {
-                logger.debug('Next fragment seems to be at the bleeding live edge and is not available yet. Rescheduling.');
+                logger.debug(`Next fragment for stream id ${streamInfo.id} seems to be at the bleeding live edge and is not available yet. Rescheduling.`);
             }
             setFragmentProcessState(false);
             startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
@@ -349,7 +347,7 @@ function ScheduleController(config) {
     function onFragmentLoadingCompleted(e) {
         if (e.request.mediaInfo.streamInfo.id !== streamInfo.id || e.request.mediaType !== type) return;
 
-        logger.info('OnFragmentLoadingCompleted - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
+        logger.info('OnFragmentLoadingCompleted for stream id ' + streamInfo.id + ' and media type ' + type + ' - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
 
         if (adapter.getIsTextTrack(mimeType)) {
             setFragmentProcessState(false);
@@ -380,6 +378,7 @@ function ScheduleController(config) {
             fragmentModel.addExecutedRequest(mediaRequest);
         }
 
+        logger.debug(`Appended bytes for ${e.mediaType} and set fragment process state to false for ${type}`);
         setFragmentProcessState(false);
         if (isReplacementRequest && !isNaN(e.startTime)) {
             //replace requests process is in progress, call schedule in n seconds.
