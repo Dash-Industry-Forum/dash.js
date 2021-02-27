@@ -287,7 +287,10 @@ function BufferController(config) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 // Notify Schedulecontroller to stop scheduling until buffer has been pruned
-                triggerEvent(Events.QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                triggerEvent(Events.QUOTA_EXCEEDED, {
+                    criticalBufferLevel: criticalBufferLevel,
+                    quotaExceededTime: e.chunk.start
+                });
                 clearBuffers(getClearRanges());
             }
             return;
