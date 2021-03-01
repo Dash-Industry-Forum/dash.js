@@ -97,6 +97,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
+        eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, onSeekTarget, instance);
@@ -218,6 +219,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
+        eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, onSeekTarget, instance);
         eventBus.off(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
@@ -243,6 +245,19 @@ function StreamProcessor(config) {
         const clearRanges = bufferController.getAllRangesWithSafetyFactor(seekTime);
         // When everything has been pruned _onBufferClearedForSeek will be triggered
         bufferController.clearBuffers(clearRanges);
+    }
+
+    function _onOuterPeriodPlaybackSeeking() {
+        // Stop segment requests
+        scheduleController.stop();
+        fragmentModel.abortRequests();
+
+        if (type !== Constants.FRAGMENTED_TEXT) {
+            // remove buffer after seeking operations
+            bufferController.pruneAllSafely();
+        } else {
+            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, { mediaType: type });
+        }
     }
 
     function _onBufferClearedForSeek() {

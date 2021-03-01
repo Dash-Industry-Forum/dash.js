@@ -245,15 +245,39 @@ function Stream(config) {
         return bufferSinks;
     }
 
+    function preload(mediaSource, previousBuffers) {
+        if (!getPreloaded()) {
+            checkConfig();
+
+            capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
+
+            _initializeMediaForType(Constants.VIDEO, mediaSource);
+            _initializeMediaForType(Constants.AUDIO, mediaSource);
+            _initializeMediaForType(Constants.TEXT, mediaSource);
+            _initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+            _initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+            _initializeMediaForType(Constants.MUXED, mediaSource);
+            _initializeMediaForType(Constants.IMAGE, mediaSource);
+
+            _createBufferSinks(previousBuffers);
+
+            for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+                streamProcessors[i].getScheduleController().start();
+            }
+
+            setPreloaded(true);
+        }
+    }
+
     /**
      * Initialize the media for a period that has been preloaded
      * @private
      */
     function _initializeMediaAfterPreload() {
         isUpdating = true;
-        checkConfig();
-        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
+
+        addInlineEvents();
         isMediaInitialized = true;
         isUpdating = false;
         if (streamProcessors.length === 0) {
@@ -678,7 +702,7 @@ function Stream(config) {
         // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
         // - in case stream is complete but a track switch has been requested
         for (let i = 0; i < ln && streamProcessors[i]; i++) {
-            //streamProcessors[i].getScheduleController().start();
+            streamProcessors[i].getScheduleController().start();
         }
     }
 
@@ -891,29 +915,6 @@ function Stream(config) {
     function getAdapter() {
         return adapter;
     }
-
-    function preload(mediaSource, previousBuffers) {
-        if (!getPreloaded()) {
-            addInlineEvents();
-
-            _initializeMediaForType(Constants.VIDEO, mediaSource);
-            _initializeMediaForType(Constants.AUDIO, mediaSource);
-            _initializeMediaForType(Constants.TEXT, mediaSource);
-            _initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
-            _initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
-            _initializeMediaForType(Constants.MUXED, mediaSource);
-            _initializeMediaForType(Constants.IMAGE, mediaSource);
-
-            _createBufferSinks(previousBuffers);
-
-            for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
-                streamProcessors[i].getScheduleController().start();
-            }
-
-            setPreloaded(true);
-        }
-    }
-
 
     instance = {
         initialize: initialize,

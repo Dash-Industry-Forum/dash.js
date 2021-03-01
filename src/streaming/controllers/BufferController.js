@@ -120,7 +120,6 @@ function BufferController(config) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.on(MediaPlayerEvents.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
     }
 
@@ -415,26 +414,11 @@ function BufferController(config) {
         }
     }
 
-    function onOuterPeriodPlaybackSeeking(e) {
-        if (streamInfo.id !== e.streamId) {
-            return;
-        }
-
-        if (type !== Constants.FRAGMENTED_TEXT) {
-            // remove buffer after seeking operations
-            pruneAllSafely(true);
-        } else {
-            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, { mediaType: type });
-        }
-    }
-
-    function pruneAllSafely(seekTime, pruneForStreamSwitch = false) {
+    function pruneAllSafely() {
         sourceBufferSink.waitForUpdateEnd(() => {
-            const ranges = getAllRangesWithSafetyFactor(seekTime);
+            const ranges = getAllRangesWithSafetyFactor();
             if (!ranges || ranges.length === 0) {
-                if (pruneForStreamSwitch) {
-                    triggerEvent(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH);
-                }
+                triggerEvent(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH);
                 onPlaybackProgression();
             }
             clearBuffers(ranges);
@@ -444,19 +428,33 @@ function BufferController(config) {
     function getAllRangesWithSafetyFactor(seekTime) {
         const clearRanges = [];
         const ranges = sourceBufferSink.getAllBufferRanges();
+
+        // no valid ranges
         if (!ranges || ranges.length === 0) {
             return clearRanges;
         }
 
-        const behindPruningRange = _getRangeBehindForPruning(seekTime, ranges);
-        const aheadPruningRange = _getRangeAheadForPruning(seekTime, ranges);
-
-        if (behindPruningRange) {
-            clearRanges.push(behindPruningRange);
+        // if no target time is provided we clear everyhing
+        if (!seekTime || isNaN(seekTime)) {
+            clearRanges.push({
+                start: ranges.start(0),
+                end: ranges.end(ranges.length - 1)
+            });
         }
 
-        if (aheadPruningRange) {
-            clearRanges.push(aheadPruningRange);
+        // otherwise we need to calculate the correct pruning range
+        else {
+
+            const behindPruningRange = _getRangeBehindForPruning(seekTime, ranges);
+            const aheadPruningRange = _getRangeAheadForPruning(seekTime, ranges);
+
+            if (behindPruningRange) {
+                clearRanges.push(behindPruningRange);
+            }
+
+            if (aheadPruningRange) {
+                clearRanges.push(aheadPruningRange);
+            }
         }
 
         return clearRanges;
@@ -986,7 +984,6 @@ function BufferController(config) {
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, onPlaybackProgression, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.off(MediaPlayerEvents.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
 
 
@@ -1016,6 +1013,7 @@ function BufferController(config) {
         getAllRangesWithSafetyFactor,
         getContiniousBufferTimeForTargetTime,
         clearBuffers,
+        pruneAllSafely,
         updateBufferLevel
     };
 

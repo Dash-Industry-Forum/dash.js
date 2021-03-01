@@ -98,7 +98,6 @@ function ScheduleController(config) {
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
@@ -269,7 +268,6 @@ function ScheduleController(config) {
     }
 
     function setFragmentProcessState(state) {
-        logger.debug(`set isFragmentProcessingInProgress to ${state}`);
         if (isFragmentProcessingInProgress !== state) {
             isFragmentProcessingInProgress = state;
         } else {
@@ -444,16 +442,6 @@ function ScheduleController(config) {
         }
     }
 
-    function onOuterPeriodPlaybackSeeking() {
-        if (!isFragmentProcessingInProgress) {
-            // No pending request, request next segment at seek target
-            startScheduleTimer(0);
-        } else {
-            // Abort current request
-            fragmentModel.abortRequests();
-        }
-    }
-
     function onPlaybackRateChanged(e) {
         dashMetrics.updatePlayListTraceMetrics({ playbackspeed: e.playbackRate.toString() });
     }
@@ -498,7 +486,6 @@ function ScheduleController(config) {
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
-        eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, onOuterPeriodPlaybackSeeking, this);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);

@@ -446,23 +446,27 @@ function StreamController() {
      * @private
      */
     function _onPlaybackSeeking(e) {
-        const seekingStream = getStreamForTime(e.seekTime);
+        const seekToStream = getStreamForTime(e.seekTime);
 
-        // On every seek the buffer is cleared. All the prebuffered stuff is lost so we deactivate all preloading streams.
+        if (!seekToStream || seekToStream === activeStream) {
+            _cancelPreloading();
+            _handleInnerPeriodSeek(e);
+        } else if (seekToStream && seekToStream !== activeStream) {
+            _cancelPreloading();
+            _handleOuterPeriodSeek(e, seekToStream);
+        }
+
+        createPlaylistMetrics(PlayList.SEEK_START_REASON);
+    }
+
+    function _cancelPreloading() {
+        // we only prebuffer ahead of the current time. If we seek ahead there is no no need to cancel the prebuffering. If we seek backwards it gets complicated. Cancel the prebuffering for now but consider optimizing this function.
         if (preloadingStreams && preloadingStreams.length > 0) {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
             });
             preloadingStreams = [];
         }
-
-        if (!seekingStream || seekingStream === activeStream) {
-            _handleInnerPeriodSeek(e);
-        } else if (seekingStream && seekingStream !== activeStream) {
-            _handleOuterPeriodSeek(e, seekingStream);
-        }
-
-        createPlaylistMetrics(PlayList.SEEK_START_REASON);
     }
 
     /**
@@ -480,20 +484,19 @@ function StreamController() {
     /**
      * Handle an outer period seek. Dispatch the corresponding event to be handled in the BufferControllers and the ScheduleControllers
      * @param {object} e
-     * @param {object} seekingStream
+     * @param {object} seekToStream
      * @private
      */
-    function _handleOuterPeriodSeek(e, seekingStream) {
+    function _handleOuterPeriodSeek(e, seekToStream) {
         const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
         dataForStreamSwitchAfterSeek = {};
         dataForStreamSwitchAfterSeek.processedMediaTypes = {};
-        dataForStreamSwitchAfterSeek.seekingStream = seekingStream;
+        dataForStreamSwitchAfterSeek.seekingStream = seekToStream;
         dataForStreamSwitchAfterSeek.seekTime = seekTime;
 
         eventBus.trigger(Events.OUTER_PERIOD_PLAYBACK_SEEKING, {
-            streamId: e.streamId,
             seekTime
-        });
+        }, { streamId: e.streamId });
     }
 
     /**
@@ -837,6 +840,8 @@ function StreamController() {
                 logger.debug(`Stream activation requires seek to ${seekTime}`);
                 playbackController.seek(seekTime);
             } else if (!activeStream.getPreloaded()) {
+                // set buffer target to correct time
+                eventBus.trigger(Events.SEEK_TARGET, { time:seekTime }, { streamId: activeStream.getId() });
             }
         }
 
