@@ -318,6 +318,93 @@ function StreamController() {
     }
 
     /**
+     * Switch from the current stream (period) to the next stream (period).
+     * @param {object} stream
+     * @param {object} previousStream
+     * @param {number} seekTime
+     * @private
+     */
+    function _switchStream(stream, previousStream, seekTime) {
+
+        if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) {
+            return;
+        }
+
+        isStreamSwitchingInProgress = true;
+        eventBus.trigger(Events.STREAM_SWITCH_STARTED, {
+            fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
+            toStreamInfo: stream.getStreamInfo()
+        });
+
+        let keepBuffers = false;
+        activeStream = stream;
+
+        if (previousStream) {
+            keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
+            previousStream.deactivate(keepBuffers);
+        }
+
+        // Determine seek time when switching to new period
+        // - seek at given seek time
+        // - or seek at period start if upcoming period is not prebuffered
+        seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
+        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
+
+        preloadingStreams = preloadingStreams.filter((s) => {
+            return s.getId() !== activeStream.getId();
+        });
+        playbackController.initialize(getActiveStreamInfo(), !!previousStream);
+
+        if (videoModel.getElement()) {
+            _openMediaSource(seekTime, keepBuffers);
+        }
+    }
+
+    /**
+     * Setup the Media Source. Open MSE and attach event listeners
+     * @param {number} seekTime
+     * @param {boolean} keepBuffers
+     * @private
+     */
+    function _openMediaSource(seekTime, keepBuffers) {
+        let sourceUrl;
+
+        function _onMediaSourceOpen() {
+            // Manage situations in which a call to reset happens while MediaSource is being opened
+            if (!mediaSource || mediaSource.readyState !== 'open') return;
+
+            logger.debug('MediaSource is open!');
+            window.URL.revokeObjectURL(sourceUrl);
+            mediaSource.removeEventListener('sourceopen', _onMediaSourceOpen);
+            mediaSource.removeEventListener('webkitsourceopen', _onMediaSourceOpen);
+
+            _setMediaDuration();
+            const dvrInfo = dashMetrics.getCurrentDVRInfo();
+            mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
+            activateStream(seekTime, keepBuffers);
+        }
+
+        function _open() {
+            mediaSource.addEventListener('sourceopen', _onMediaSourceOpen, false);
+            mediaSource.addEventListener('webkitsourceopen', _onMediaSourceOpen, false);
+            sourceUrl = mediaSourceController.attachMediaSource(videoModel);
+            logger.debug('MediaSource attached to element.  Waiting on open...');
+        }
+
+        if (!mediaSource) {
+            mediaSource = mediaSourceController.createMediaSource();
+            _open();
+        } else {
+            if (keepBuffers) {
+                activateStream(seekTime, keepBuffers);
+            } else {
+                mediaSourceController.detachMediaSource(videoModel);
+                _open();
+            }
+        }
+    }
+
+    /**
      *
      * @private
      */
@@ -721,89 +808,9 @@ function StreamController() {
         }
     }
 
-    function _switchStream(stream, previousStream, seekTime) {
-
-        if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.isActive())) {
-            return;
-        }
-
-        isStreamSwitchingInProgress = true;
-        eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
-            fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
-            toStreamInfo: stream.getStreamInfo()
-        });
-
-        let keepBuffers = false;
-        activeStream = stream;
-
-        if (previousStream) {
-            keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
-            previousStream.deactivate(keepBuffers);
-        }
-
-        // Determine seek time when switching to new period
-        // - seek at given seek time
-        // - or seek at period start if upcoming period is not prebuffered
-        seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
-        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
-
-        preloadingStreams = preloadingStreams.filter((s) => {
-            return s.getId() !== activeStream.getId();
-        });
-        playbackController.initialize(getActiveStreamInfo(), !!previousStream);
-        if (videoModel.getElement()) {
-            openMediaSource(seekTime, !previousStream, false, keepBuffers);
-        } else {
-            activateStream(seekTime, keepBuffers);
-        }
-    }
-
-    function switchToVideoElement(seekTime) {
-        if (activeStream) {
-            playbackController.initialize(getActiveStreamInfo());
-            openMediaSource(seekTime, false, true, false);
-        }
-    }
-
-    function openMediaSource(seekTime, isFirstStream, streamActivated, keepBuffers) {
-        let sourceUrl;
-
-        function onMediaSourceOpen() {
-            // Manage situations in which a call to reset happens while MediaSource is being opened
-            if (!mediaSource || mediaSource.readyState !== 'open') return;
-
-            logger.debug('MediaSource is open!');
-            window.URL.revokeObjectURL(sourceUrl);
-            mediaSource.removeEventListener('sourceopen', onMediaSourceOpen);
-            mediaSource.removeEventListener('webkitsourceopen', onMediaSourceOpen);
-            setMediaDuration();
-            const dvrInfo = dashMetrics.getCurrentDVRInfo();
-            mediaSourceController.setSeekable(mediaSource, dvrInfo.range.start, dvrInfo.range.end);
-
-            if (streamActivated) {
-                activeStream.setMediaSource(mediaSource);
-            } else {
-                activateStream(seekTime, keepBuffers);
-            }
-        }
-
-        if (!mediaSource) {
-            mediaSource = mediaSourceController.createMediaSource();
-            mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
-            mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
-            sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-            logger.debug('MediaSource attached to element.  Waiting on open...');
-        } else {
-            if (keepBuffers) {
-                activateStream(seekTime, keepBuffers);
-            } else {
-                mediaSourceController.detachMediaSource(videoModel);
-                mediaSource.addEventListener('sourceopen', onMediaSourceOpen, false);
-                mediaSource.addEventListener('webkitsourceopen', onMediaSourceOpen, false);
-                sourceUrl = mediaSourceController.attachMediaSource(mediaSource, videoModel);
-                logger.debug('MediaSource attached to element.  Waiting on open...');
-            }
-        }
+    function _setMediaDuration(duration) {
+        const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
+        mediaSourceController.setDuration(manifestDuration);
     }
 
     function getActiveStream() {
@@ -895,11 +902,6 @@ function StreamController() {
         const posix = fragData.t.indexOf('posix:') !== -1 ? fragData.t.substring(6) === 'now' ? Date.now() / 1000 : parseInt(fragData.t.substring(6)) : NaN;
         let startTime = (isDynamic && !isNaN(posix)) ? posix - playbackController.getAvailabilityStartTime() / 1000 : parseInt(fragData.t) + refStreamStartTime;
         return startTime;
-    }
-
-    function setMediaDuration(duration) {
-        const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
-        mediaSourceController.setDuration(mediaSource, manifestDuration);
     }
 
     function _getComposedStream(streamInfo) {
@@ -1027,6 +1029,13 @@ function StreamController() {
         return activeStream ? activeStream.getHasAudioTrack() : false;
     }
 
+    function switchToVideoElement(seekTime) {
+        if (activeStream) {
+            playbackController.initialize(getActiveStreamInfo());
+            _openMediaSource(seekTime, false, true, false);
+        }
+    }
+
     function flushPlaylistMetrics(reason, time) {
         time = time || new Date();
 
@@ -1128,7 +1137,7 @@ function StreamController() {
 
     function onManifestValidityChanged(e) {
         if (!isNaN(e.newDuration)) {
-            setMediaDuration(e.newDuration);
+            _setMediaDuration(e.newDuration);
         }
     }
 
@@ -1265,7 +1274,7 @@ function StreamController() {
             //Should we normalize and union the two?
             const targetMediaType = hasAudioTrack() ? Constants.AUDIO : Constants.VIDEO;
             if (e.mediaType === targetMediaType) {
-                mediaSourceController.setSeekable(mediaSource, e.value.range.start, e.value.range.end);
+                mediaSourceController.setSeekable(e.value.range.start, e.value.range.end);
             }
         }
     }
@@ -1279,7 +1288,6 @@ function StreamController() {
         getActiveStreamInfo,
         hasVideoTrack,
         hasAudioTrack,
-        switchToVideoElement,
         getStreamById,
         getStreamForTime,
         getTimeRelativeToStreamId,
@@ -1289,7 +1297,8 @@ function StreamController() {
         setConfig,
         setProtectionData,
         getIsStreamSwitchInProgress,
-        getHasMediaOrIntialisationError: getHasMediaOrInitialisationError,
+        switchToVideoElement,
+        getHasMediaOrInitialisationError,
         getStreams,
         getNextStream,
         getActiveStream,

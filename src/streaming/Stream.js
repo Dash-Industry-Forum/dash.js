@@ -72,8 +72,8 @@ function Stream(config) {
     let instance,
         logger,
         streamProcessors,
-        isStreamInitialized,
-        isStreamActivated,
+        isInitialized,
+        isActivated,
         isMediaInitialized,
         hasFinishedBuffering,
         hasVideoTrack,
@@ -131,6 +131,7 @@ function Stream(config) {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
     /**
@@ -140,6 +141,7 @@ function Stream(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
     /**
@@ -181,23 +183,213 @@ function Stream(config) {
     /**
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
+     * @param {array} previousBufferSinks
      * @memberof Stream#
-     * @param {SourceBuffer} previousBufferSinks
      */
     function activate(mediaSource, previousBufferSinks) {
-        if (!isStreamActivated) {
+        if (!isActivated) {
             let bufferSinks;
             if (!getPreloaded()) {
-                eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-                bufferSinks = initializeMedia(mediaSource, previousBufferSinks);
+                bufferSinks = _initializeMedia(mediaSource, previousBufferSinks);
             } else {
-                initializeAfterPreload();
+                _initializeMediaAfterPreload();
                 bufferSinks = previousBufferSinks;
             }
-            isStreamActivated = true;
+            isActivated = true;
             return bufferSinks;
         }
         return previousBufferSinks;
+    }
+
+    /**
+     * Initialize the StreamProcessors for all media types of the period
+     * @param {object} mediaSource
+     * @param {array} previousBufferSinks
+     * @return {array} bufferSinks
+     * @private
+     */
+    function _initializeMedia(mediaSource, previousBufferSinks) {
+        checkConfig();
+        let element = videoModel.getElement();
+
+        addInlineEvents();
+
+        isUpdating = true;
+
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
+
+        if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
+            _initializeMediaForType(Constants.VIDEO, mediaSource);
+        }
+        _initializeMediaForType(Constants.AUDIO, mediaSource);
+        _initializeMediaForType(Constants.TEXT, mediaSource);
+        _initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+        _initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+        _initializeMediaForType(Constants.MUXED, mediaSource);
+        _initializeMediaForType(Constants.IMAGE, mediaSource);
+
+        //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
+        const bufferSinks = _createBufferSinks(previousBufferSinks);
+
+        isMediaInitialized = true;
+        isUpdating = false;
+
+        if (streamProcessors.length === 0) {
+            const msg = 'No streams to play.';
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
+            logger.fatal(msg);
+        } else {
+            checkIfInitializationCompleted();
+        }
+
+        return bufferSinks;
+    }
+
+    /**
+     * Initialize the media for a period that has been preloaded
+     * @private
+     */
+    function _initializeMediaAfterPreload() {
+        isUpdating = true;
+        checkConfig();
+        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
+
+        isMediaInitialized = true;
+        isUpdating = false;
+        if (streamProcessors.length === 0) {
+            const msg = 'No streams to play.';
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
+            logger.debug(msg);
+        } else {
+            checkIfInitializationCompleted();
+        }
+    }
+
+    /**
+     * Initialize for a given media type. Creates a corresponding StreamProcessor
+     * @param type
+     * @param mediaSource
+     * @private
+     */
+    function _initializeMediaForType(type, mediaSource) {
+        const allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+
+        let mediaInfo = null;
+        let initialMediaInfo;
+
+        if (!allMediaForType || allMediaForType.length === 0) {
+            logger.info('No ' + type + ' data.');
+            return;
+        }
+
+        if (type === Constants.VIDEO) {
+            hasVideoTrack = true;
+        }
+
+        if (type === Constants.AUDIO) {
+            hasAudioTrack = true;
+        }
+
+        for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
+            mediaInfo = allMediaForType[i];
+
+            if (type === Constants.EMBEDDED_TEXT) {
+                textController.addEmbeddedTrack(mediaInfo);
+            } else {
+                if (isMediaSupported(mediaInfo)) {
+                    mediaController.addTrack(mediaInfo);
+                }
+            }
+        }
+
+        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
+            return;
+        }
+
+        if (type === Constants.IMAGE) {
+            thumbnailController = ThumbnailController(context).create({
+                streamInfo: streamInfo,
+                adapter: adapter,
+                baseURLController: config.baseURLController,
+                timelineConverter: config.timelineConverter,
+                debug: debug,
+                eventBus: eventBus,
+                events: Events,
+                dashConstants: DashConstants
+            });
+            return;
+        }
+
+
+        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
+
+        eventBus.trigger(Events.STREAM_INITIALIZING, {
+            streamInfo: streamInfo,
+            mediaInfo: mediaInfo
+        });
+
+        _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
+    }
+
+    /**
+     * Creates the StreamProcessor for a given media type.
+     * @param {object} mediaInfo
+     * @param {array} allMediaForType
+     * @param {object} mediaSource
+     * @private
+     */
+    function _createStreamProcessor(mediaInfo, allMediaForType, mediaSource) {
+
+        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
+
+        let streamProcessor = StreamProcessor(context).create({
+            streamInfo: streamInfo,
+            type: mediaInfo ? mediaInfo.type : null,
+            mimeType: mediaInfo ? mediaInfo.mimeType : null,
+            timelineConverter: timelineConverter,
+            adapter: adapter,
+            manifestModel: manifestModel,
+            mediaPlayerModel: mediaPlayerModel,
+            fragmentModel: fragmentModel,
+            dashMetrics: config.dashMetrics,
+            baseURLController: config.baseURLController,
+            abrController: abrController,
+            playbackController: playbackController,
+            mediaController: mediaController,
+            textController: textController,
+            errHandler: errHandler,
+            settings: settings,
+            boxParser: boxParser
+        });
+
+        streamProcessor.initialize(mediaSource, hasVideoTrack);
+        abrController.updateTopQualityIndex(mediaInfo);
+        streamProcessors.push(streamProcessor);
+
+        if (mediaInfo && (mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
+            let idx;
+            for (let i = 0; i < allMediaForType.length; i++) {
+                if (allMediaForType[i].index === mediaInfo.index) {
+                    idx = i;
+                }
+                streamProcessor.addMediaInfo(allMediaForType[i]); //creates text tracks for all adaptations in one stream processor
+            }
+            streamProcessor.selectMediaInfo(allMediaForType[idx]); //sets the initial media info
+        } else {
+            streamProcessor.addMediaInfo(mediaInfo, true);
+        }
+    }
+
+    function _createBufferSinks(previousBuffers) {
+        const buffers = {};
+        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
+            const buffer = streamProcessors[i].createBuffer(previousBuffers);
+            if (buffer) {
+                buffers[streamProcessors[i].getType()] = buffer;
+            }
+        }
+        return buffers;
     }
 
     /**
@@ -214,16 +406,15 @@ function Stream(config) {
             streamProcessors[i].reset(errored, keepBuffers);
         }
         streamProcessors = [];
-        isStreamActivated = false;
+        isActivated = false;
         isMediaInitialized = false;
         setPreloaded(false);
         setPreloadingScheduled(false);
         setIsEndedEventSignaled(false);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
     }
 
     function isActive() {
-        return isStreamActivated;
+        return isActivated;
     }
 
     function setMediaSource(mediaSource) {
@@ -252,7 +443,7 @@ function Stream(config) {
 
     function resetInitialSettings() {
         deactivate();
-        isStreamInitialized = false;
+        isInitialized = false;
         hasFinishedBuffering = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
@@ -387,7 +578,7 @@ function Stream(config) {
     }
 
     function onCurrentTrackChanged(e) {
-        if (!streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) {
+        if (!isActivated || !streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) {
             return;
         }
 
@@ -424,122 +615,6 @@ function Stream(config) {
         }
     }
 
-    function createStreamProcessor(mediaInfo, allMediaForType, mediaSource, optionalSettings) {
-
-        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
-
-        let streamProcessor = StreamProcessor(context).create({
-            streamInfo: streamInfo,
-            type: mediaInfo ? mediaInfo.type : null,
-            mimeType: mediaInfo ? mediaInfo.mimeType : null,
-            timelineConverter: timelineConverter,
-            adapter: adapter,
-            manifestModel: manifestModel,
-            mediaPlayerModel: mediaPlayerModel,
-            fragmentModel: fragmentModel,
-            dashMetrics: config.dashMetrics,
-            baseURLController: config.baseURLController,
-            abrController: abrController,
-            playbackController: playbackController,
-            mediaController: mediaController,
-            textController: textController,
-            errHandler: errHandler,
-            settings: settings,
-            boxParser: boxParser
-        });
-
-        streamProcessor.initialize(mediaSource, hasVideoTrack);
-        abrController.updateTopQualityIndex(mediaInfo);
-
-        if (optionalSettings) {
-            streamProcessor.setBuffer(optionalSettings.buffer);
-            streamProcessor.setBufferingTime(optionalSettings.currentTime);
-            streamProcessors[optionalSettings.replaceIdx] = streamProcessor;
-        } else {
-            streamProcessors.push(streamProcessor);
-        }
-
-        if (optionalSettings && optionalSettings.ignoreMediaInfo) {
-            return;
-        }
-
-        if (mediaInfo && (mediaInfo.type === Constants.TEXT || mediaInfo.type === Constants.FRAGMENTED_TEXT)) {
-            let idx;
-            for (let i = 0; i < allMediaForType.length; i++) {
-                if (allMediaForType[i].index === mediaInfo.index) {
-                    idx = i;
-                }
-                streamProcessor.addMediaInfo(allMediaForType[i]); //creates text tracks for all adaptations in one stream processor
-            }
-            streamProcessor.selectMediaInfo(allMediaForType[idx]); //sets the initial media info
-        } else {
-            streamProcessor.addMediaInfo(mediaInfo, true);
-        }
-    }
-
-    function initializeMediaForType(type, mediaSource) {
-        const allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
-
-        let mediaInfo = null;
-        let initialMediaInfo;
-
-        if (!allMediaForType || allMediaForType.length === 0) {
-            logger.info('No ' + type + ' data.');
-            return;
-        }
-
-        if (type === Constants.VIDEO) {
-            hasVideoTrack = true;
-        }
-
-        if (type === Constants.AUDIO) {
-            hasAudioTrack = true;
-        }
-
-        for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
-            mediaInfo = allMediaForType[i];
-
-            if (type === Constants.EMBEDDED_TEXT) {
-                textController.addEmbeddedTrack(mediaInfo);
-            } else {
-                if (!isMediaSupported(mediaInfo)) continue;
-                mediaController.addTrack(mediaInfo);
-            }
-        }
-
-        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
-            return;
-        }
-
-        if (type === Constants.IMAGE) {
-            thumbnailController = ThumbnailController(context).create({
-                streamInfo: streamInfo,
-                adapter: adapter,
-                baseURLController: config.baseURLController,
-                timelineConverter: config.timelineConverter,
-                debug: debug,
-                eventBus: eventBus,
-                events: Events,
-                dashConstants: DashConstants
-            });
-            return;
-        }
-
-
-        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
-        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
-
-        eventBus.trigger(Events.STREAM_INITIALIZING, {
-            streamInfo: streamInfo,
-            mediaInfo: mediaInfo
-        });
-
-        // TODO : How to tell index handler live/duration?
-        // TODO : Pass to controller and then pass to each method on handler?
-
-        createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
-    }
-
     function addInlineEvents() {
         if (eventController) {
             const events = adapter.getEventsFor(streamInfo);
@@ -550,59 +625,6 @@ function Stream(config) {
     function addInbandEvents(events) {
         if (eventController) {
             eventController.addInbandEvents(events);
-        }
-    }
-
-    function initializeMedia(mediaSource, previousBufferSinks) {
-        checkConfig();
-        let element = videoModel.getElement();
-
-        addInlineEvents();
-
-        isUpdating = true;
-
-        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
-
-        if (!element || (element && (/^VIDEO$/i).test(element.nodeName))) {
-            initializeMediaForType(Constants.VIDEO, mediaSource);
-        }
-        initializeMediaForType(Constants.AUDIO, mediaSource);
-        initializeMediaForType(Constants.TEXT, mediaSource);
-        initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
-        initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
-        initializeMediaForType(Constants.MUXED, mediaSource);
-        initializeMediaForType(Constants.IMAGE, mediaSource);
-
-        //TODO. Consider initialization of TextSourceBuffer here if embeddedText, but no sideloadedText.
-        const bufferSinks = createBuffers(previousBufferSinks);
-
-        isMediaInitialized = true;
-        isUpdating = false;
-
-        if (streamProcessors.length === 0) {
-            const msg = 'No streams to play.';
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
-            logger.fatal(msg);
-        } else {
-            checkIfInitializationCompleted();
-        }
-
-        return bufferSinks;
-    }
-
-    function initializeAfterPreload() {
-        isUpdating = true;
-        checkConfig();
-        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
-
-        isMediaInitialized = true;
-        isUpdating = false;
-        if (streamProcessors.length === 0) {
-            const msg = 'No streams to play.';
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
-            logger.debug(msg);
-        } else {
-            checkIfInitializationCompleted();
         }
     }
 
@@ -640,8 +662,8 @@ function Stream(config) {
 
         if (error) {
             errHandler.error(error);
-        } else if (!isStreamInitialized) {
-            isStreamInitialized = true;
+        } else if (!isInitialized) {
+            isInitialized = true;
 
             eventBus.trigger(Events.STREAM_INITIALIZED, {
                 streamInfo
@@ -672,17 +694,6 @@ function Stream(config) {
         }
 
         return null;
-    }
-
-    function createBuffers(previousBuffers) {
-        const buffers = {};
-        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            const buffer = streamProcessors[i].createBuffer(previousBuffers);
-            if (buffer) {
-                buffers[streamProcessors[i].getType()] = buffer;
-            }
-        }
-        return buffers;
     }
 
     function onBufferingCompleted() {
@@ -750,7 +761,7 @@ function Stream(config) {
     function updateData(updatedStreamInfo) {
         logger.info('Manifest updated... updating data system wide.');
 
-        isStreamActivated = false;
+        isActivated = false;
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
@@ -885,17 +896,16 @@ function Stream(config) {
         if (!getPreloaded()) {
             addInlineEvents();
 
-            initializeMediaForType(Constants.VIDEO, mediaSource);
-            initializeMediaForType(Constants.AUDIO, mediaSource);
-            initializeMediaForType(Constants.TEXT, mediaSource);
-            initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
-            initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
-            initializeMediaForType(Constants.MUXED, mediaSource);
-            initializeMediaForType(Constants.IMAGE, mediaSource);
+            _initializeMediaForType(Constants.VIDEO, mediaSource);
+            _initializeMediaForType(Constants.AUDIO, mediaSource);
+            _initializeMediaForType(Constants.TEXT, mediaSource);
+            _initializeMediaForType(Constants.FRAGMENTED_TEXT, mediaSource);
+            _initializeMediaForType(Constants.EMBEDDED_TEXT, mediaSource);
+            _initializeMediaForType(Constants.MUXED, mediaSource);
+            _initializeMediaForType(Constants.IMAGE, mediaSource);
 
-            createBuffers(previousBuffers);
+            _createBufferSinks(previousBuffers);
 
-            eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
             for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
                 streamProcessors[i].getScheduleController().start();
             }

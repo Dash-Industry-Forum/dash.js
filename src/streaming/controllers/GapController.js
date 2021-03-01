@@ -162,7 +162,7 @@ function GapController() {
     function _shouldCheckForGaps() {
         return settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
             (!playbackController.isSeeking() || streamController.getActiveStream().getHasFinishedBuffering()) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
-            !streamController.getHasMediaOrIntialisationError() && !_isTrackSwitchInProgess();
+            !streamController.getHasMediaOrInitialisationError() && !_isTrackSwitchInProgess();
     }
 
     function getNextRangeIndex(ranges, currentTime) {

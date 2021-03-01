@@ -179,7 +179,7 @@ function BufferController(config) {
      * @param {array} oldBufferSinks
      * @return {object|null} SourceBufferSink
      */
-    function createBuffer(mediaInfoArr, oldBufferSinks) {
+    function createBuffer(mediaInfoArr, oldBufferSinks = []) {
         if (!initCache || !mediaInfoArr) return null;
         const mediaInfo = mediaInfoArr[0];
         if (mediaSource) {

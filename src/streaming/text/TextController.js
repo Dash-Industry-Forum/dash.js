@@ -91,7 +91,7 @@ function TextController() {
         *   - switch occurs but codecs in streams are different
         *   - switch occurs and codecs in streams are not different
         */
-        eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
+        eventBus.on(MediaPlayerEvents.STREAM_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, instance);
         eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
 
@@ -377,7 +377,7 @@ function TextController() {
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, onTextTracksAdded, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
-        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_STARTED, onPeriodSwitchStarted, instance);
+        eventBus.off(MediaPlayerEvents.STREAM_SWITCH_STARTED, onPeriodSwitchStarted, instance);
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, instance);
         eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, onPeriodSwitchCompleted, instance);
         textSourceBuffer.resetEmbedded();
