@@ -381,9 +381,8 @@ function StreamController() {
      */
     function _handleInnerPeriodSeek(e) {
         eventBus.trigger(Events.INNER_PERIOD_PLAYBACK_SEEKING, {
-            streamId: e.streamId,
             seekTime: e.seekTime
-        });
+        }, { streamId: e.streamId});
         flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
     }
 
@@ -828,7 +827,6 @@ function StreamController() {
                 logger.debug(`Stream activation requires seek to ${seekTime}`);
                 playbackController.seek(seekTime);
             } else if (!activeStream.getPreloaded()) {
-                eventBus.trigger(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, { seekTarget: seekTime }, { streamId: activeStream.getStreamInfo().id });
             }
         }
 

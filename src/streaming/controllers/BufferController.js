@@ -709,7 +709,7 @@ function BufferController(config) {
 
     function clearBuffers(ranges) {
         if (!ranges || !sourceBufferSink || ranges.length === 0) {
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
+            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES, {}, { streamId: streamInfo.id, mediaType: type });
             return;
         }
 
@@ -727,7 +727,7 @@ function BufferController(config) {
         if (pendingPruningRanges.length === 0 || !sourceBufferSink) {
             logger.debug('Nothing to prune, halt pruning');
             pendingPruningRanges = [];
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
+            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES, {}, { streamId: streamInfo.id, mediaType: type });
             isPruningInProgress = false;
             return;
         }
@@ -737,7 +737,7 @@ function BufferController(config) {
         if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
             logger.debug('SourceBuffer is empty (or does not exist), halt pruning');
             pendingPruningRanges = [];
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
+            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES, {}, { streamId: streamInfo.id, mediaType: type });
             isPruningInProgress = false;
             return;
         }
@@ -767,7 +767,7 @@ function BufferController(config) {
         }
 
         if (pendingPruningRanges.length === 0) {
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
+            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES, {}, { streamId: streamInfo.id, mediaType: type });
             updateBufferLevel(streamInfo.id);
             isPruningInProgress = false;
         }

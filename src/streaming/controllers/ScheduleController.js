@@ -64,7 +64,6 @@ function ScheduleController(config) {
         isFragmentProcessingInProgress,
         timeToLoadDelay,
         scheduleTimeout,
-        seekTarget,
         hasVideoTrack,
         bufferLevelRule,
         lastFragmentRequest,
@@ -105,7 +104,6 @@ function ScheduleController(config) {
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, this);
         eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
-        eventBus.on(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, onStreamSwitchCausedTimeAdjustment, this);
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
     }
 
@@ -206,7 +204,7 @@ function ScheduleController(config) {
                         checkPlaybackQuality = false;
                     } else {
                         eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
-                            { seekTarget: seekTarget, replacement: replacement },
+                            { replacement: replacement },
                             { streamId: streamInfo.id, mediaType: type }
                         );
                         checkPlaybackQuality = true;
@@ -259,7 +257,7 @@ function ScheduleController(config) {
                 logger.debug('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality && !replacingBuffer) {
                 // The buffer has better quality it in then what we would request so set append point to end of buffer!!
-                setSeekTarget(playbackController.getTime() + bufferLevel);
+                eventBus.trigger(Events.SEEK_TARGET, { time: playbackController.getTime() + bufferLevel }, { streamId: streamInfo.id });
             }
         }
     }
@@ -460,10 +458,6 @@ function ScheduleController(config) {
         dashMetrics.updatePlayListTraceMetrics({ playbackspeed: e.playbackRate.toString() });
     }
 
-    function setSeekTarget(value) {
-        seekTarget = value;
-    }
-
     function setTimeToLoadDelay(value) {
         timeToLoadDelay = value;
     }
@@ -476,15 +470,10 @@ function ScheduleController(config) {
         return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
     }
 
-    function onStreamSwitchCausedTimeAdjustment(e) {
-        seekTarget = e.seekTarget;
-    }
-
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
-        seekTarget = NaN;
         initialRequest = true;
         lastInitQuality = NaN;
         lastFragmentRequest = {
@@ -516,7 +505,6 @@ function ScheduleController(config) {
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, this);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, this);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, this);
-        eventBus.off(Events.STREAM_SWITCH_CAUSED_TIME_ADJUSTEMENT, onStreamSwitchCausedTimeAdjustment, this);
 
         stop();
         completeQualityChange(false);
@@ -532,7 +520,6 @@ function ScheduleController(config) {
         getType: getType,
         getStreamId: getStreamId,
         setCurrentRepresentation: setCurrentRepresentation,
-        setSeekTarget: setSeekTarget,
         setTimeToLoadDelay: setTimeToLoadDelay,
         getTimeToLoadDelay: getTimeToLoadDelay,
         switchTrackAsked: switchTrackAsked,

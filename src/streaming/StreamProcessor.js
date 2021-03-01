@@ -254,9 +254,8 @@ function StreamProcessor(config) {
 
         // Figure out the correct segment request time
         const targetTime = bufferController.getContiniousBufferTimeForTargetTime(seekTime);
-        scheduleController.setSeekTarget(targetTime);
+        seekTime = targetTime;
         scheduleController.start();
-        seekTime = NaN;
     }
 
     function onDataUpdateCompleted(e) {
@@ -445,9 +444,9 @@ function StreamProcessor(config) {
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
-            request = findNextRequest(e.seekTarget, e.replacement);
+            request = findNextRequest(e.replacement);
             if (request) {
-                scheduleController.setSeekTarget(NaN);
+                seekTime = NaN;
                 if (!e.replacement) {
                     if (!isNaN(request.startTime + request.duration)) {
                         bufferingTime = request.startTime + request.duration;
@@ -479,10 +478,10 @@ function StreamProcessor(config) {
         return request;
     }
 
-    function findNextRequest(seekTarget, requestToReplace) {
+    function findNextRequest(requestToReplace) {
         const representationInfo = getRepresentationInfo();
-        const hasSeekTarget = !isNaN(seekTarget);
-        let time = hasSeekTarget ? seekTarget : bufferingTime;
+        const hasSeekTarget = !isNaN(seekTime);
+        let time = seekTime ? seekTime : bufferingTime;
         let request;
 
         if (isNaN(time) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
@@ -632,8 +631,9 @@ function StreamProcessor(config) {
     }
 
     function onSeekTarget(e) {
-        bufferingTime = e.time;
-        scheduleController.setSeekTarget(e.time);
+        if (e && e.time) {
+            seekTime = e.time;
+        }
     }
 
     function setBufferingTime(value) {

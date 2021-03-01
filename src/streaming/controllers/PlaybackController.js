@@ -170,6 +170,7 @@ function PlaybackController() {
         } else {
             lastSeekWasInternal = false;
             seekTarget = time;
+            // PLAYBACK_SEEK_ASKED is only used for MSS
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
             logger.info('Requesting seek to time: ' + time);
             videoModel.setCurrentTime(time, stickToBuffered);

@@ -417,7 +417,7 @@ function Stream(config) {
                 processor.switchTrackAsked();
                 processor.getFragmentModel().abortRequests();
             } else {
-                processor.getScheduleController().setSeekTarget(currentTime);
+                //processor.getScheduleController().setSeekTarget(currentTime);
                 processor.setBufferingTime(currentTime);
                 processor.resetIndexHandler();
             }
