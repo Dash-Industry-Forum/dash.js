@@ -196,6 +196,10 @@ function StreamController() {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
+    /**
+     * When the UTC snychronization is completed we can compose the streams
+     * @private
+     */
     function _onTimeSyncCompleted( /*e*/) {
         _composeStreams();
     }
@@ -469,7 +473,7 @@ function StreamController() {
     function _handleInnerPeriodSeek(e) {
         eventBus.trigger(Events.INNER_PERIOD_PLAYBACK_SEEKING, {
             seekTime: e.seekTime
-        }, { streamId: e.streamId});
+        }, { streamId: e.streamId });
         flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
     }
 
@@ -829,7 +833,6 @@ function StreamController() {
         }
 
         if (!isNaN(seekTime)) {
-            // If the streamswitch has been triggered by a seek command there is no need to seek again. Still we need to trigger the seeking event in order for the controllers to adjust the new time
             if (seekTime !== playbackController.getTime()) {
                 logger.debug(`Stream activation requires seek to ${seekTime}`);
                 playbackController.seek(seekTime);

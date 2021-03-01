@@ -232,12 +232,12 @@ function StreamProcessor(config) {
     }
 
     function _onInnerPeriodPlaybackSeeking(e) {
-        seekTime = e.seekTime;
-        bufferController.prepareForPlaybackSeek();
-
         // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
         scheduleController.stop();
         fragmentModel.abortRequests();
+
+        seekTime = e.seekTime;
+        bufferController.prepareForPlaybackSeek();
 
         // Clear the buffer. We need to prune everything which is not in the target interval.
         const clearRanges = bufferController.getAllRangesWithSafetyFactor(seekTime);
@@ -245,8 +245,8 @@ function StreamProcessor(config) {
         bufferController.clearBuffers(clearRanges);
     }
 
-    function _onBufferClearedForSeek(e) {
-        if (e.streamId !== streamInfo.id || e.mediaType !== type || isNaN(seekTime)) {
+    function _onBufferClearedForSeek() {
+        if (isNaN(seekTime)) {
             return;
         }
 

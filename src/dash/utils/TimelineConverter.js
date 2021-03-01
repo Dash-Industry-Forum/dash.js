@@ -143,9 +143,7 @@ function TimelineConverter() {
     }
 
     function getAvailabilityWindowAnchorTime() {
-        const now = (Date.now() + clientServerTimeShift * 1000);
-
-        return now;
+        return Date.now() + clientServerTimeShift * 1000;
     }
 
     /**

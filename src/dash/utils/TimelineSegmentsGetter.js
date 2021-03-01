@@ -32,12 +32,13 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../../streaming/constants/Constants';
 
-import { getTimeBasedSegment } from './SegmentsUtils';
+import {getTimeBasedSegment} from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
     config = config || {};
     const timelineConverter = config.timelineConverter;
+    const dashMetrics = config.dashMetrics;
 
     let instance;
 
@@ -48,10 +49,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function iterateSegments(representation, iterFunc) {
-        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-                AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
         const list = base.SegmentURL_asArray;
 
@@ -95,12 +94,24 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
-                    let availabilityEnd = timelineConverter.getAvailabilityWindowAnchorEndTime(representation);
-                    repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
-                    representation.segmentDuration = frag.d / fTimescale;
+                    try {
+                        let availabilityEnd = 0;
+                        if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
+                            // use end of the Period
+                            availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+                        } else  {
+                            // use DVR window
+                            const dvrWindow = dashMetrics.getCurrentDVRInfo();
+                            availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
+                        }
+                        repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
+                        representation.segmentDuration = frag.d / fTimescale;
+                    } catch (e) {
+                        repeatEndTime = 0;
+                    }
                 }
 
-                repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
+                repeat = Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
