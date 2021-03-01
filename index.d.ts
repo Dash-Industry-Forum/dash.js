@@ -358,6 +358,7 @@ declare namespace dashjs {
         getCurrentTextTrackIndex(): number;
         preload(): void;
         reset(): void;
+        destroy(): void;
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
