@@ -237,6 +237,8 @@ declare namespace dashjs {
         }
     }
 
+    export type CapabilitiesFilter = (representation: Representation) => boolean;
+
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
@@ -351,6 +353,8 @@ declare namespace dashjs {
         registerLicenseResponseFilter(filter: ResponseFilter): void,
         unregisterLicenseRequestFilter(filter: RequestFilter): void,
         unregisterLicenseResponseFilter(filter: ResponseFilter): void,
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
