@@ -8,7 +8,7 @@ angular.module('DashCastReceiverApp.services', [])
     let player;
     let initialized = false;
 
-    const noop = () => {};
+    const noop = function () {};
     let _loadCallback = noop;
     let _errorCallback = noop;
     let _endedCallback = noop;
@@ -139,10 +139,10 @@ angular.module('DashCastReceiverApp.services', [])
         if (player && initialized) {
           let audioTracks = player.getTracksFor('audio');
           let textTracks = player.getTracksFor('fragmentedText');
-          audioTracks.forEach(track => {
+          audioTracks.forEach(function (track) {
               allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.AUDIO));
           });
-          textTracks.forEach(track => {
+          textTracks.forEach(function (track) {
               allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.TEXT));
           });
         }
@@ -188,12 +188,12 @@ angular.module('DashCastReceiverApp.services', [])
           for (let i = 0; i < 2; i++) {
             if (activeTrackIds[i] !== undefined) {
               let audioTracks = player.getTracksFor('audio');
-              audioTrack = audioTracks.find(track => track.index === activeTrackIds[i]);
+              audioTrack = audioTracks.find(function (track) { return track.index === activeTrackIds[i] });
               if (audioTrack) {
                 player.setCurrentTrack(audioTrack);
               } else {
                 let textTracks = player.getTracksFor('fragmentedText');
-                textTrack = textTracks.find(track => track.index === activeTrackIds[i]);
+                textTrack = textTracks.find(function (track) { return track.index === activeTrackIds[i] });
                 if (textTrack) {
                   player.enableText(true);
                   textEnable = true;

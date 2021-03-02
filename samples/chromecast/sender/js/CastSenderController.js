@@ -426,7 +426,7 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
 
     this.resumeMediaSession = function (mediaSession) {
         if (mediaSession.media) {
-            $scope.setStream($scope.availableStreams.find(item => item.url == mediaSession.media.contentId));
+            $scope.setStream($scope.availableStreams.find(function (item) { return item.url == mediaSession.media.contentId }));
             $scope.state = STATE_CASTING;
             $scope.playing = mediaSession.playerState === 'PLAYING';
             $scope.muted = mediaSession.volume.muted;

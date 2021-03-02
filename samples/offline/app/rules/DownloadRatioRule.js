@@ -52,7 +52,7 @@ function DownloadRatioRuleClass() {
     }
 
     function getBytesLength(request) {
-        return request.trace.reduce((a, b) => a + b.b[0], 0);
+        return request.trace.reduce(function (a, b) { return a + b.b[0] }, 0);
     }
 
     function getMaxIndex(rulesContext) {
