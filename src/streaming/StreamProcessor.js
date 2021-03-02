@@ -90,16 +90,16 @@ function StreamProcessor(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.on(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, onMediaFragmentNeeded, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
+        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
-        eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
+        eventBus.on(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
         eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
-        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
-        eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
+        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, onSeekTarget, instance);
         eventBus.on(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
     }
@@ -211,16 +211,16 @@ function StreamProcessor(config) {
             abrController.unRegisterStreamType(type, getStreamId());
         }
 
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(Events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance);
-        eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, onMediaFragmentNeeded, instance);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
-        eventBus.off(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
-        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
+        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
         eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
-        eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, instance);
+        eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, onSeekTarget, instance);
         eventBus.off(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
 
@@ -233,6 +233,11 @@ function StreamProcessor(config) {
         return representationController ? representationController.isUpdating() : false;
     }
 
+    /**
+     * When a period within the corresponding period occurs this event handler initiates the clearing of the buffer and sets the correct buffering time.
+     * @param e
+     * @private
+     */
     function _onInnerPeriodPlaybackSeeking(e) {
         // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
         scheduleController.stop();
@@ -273,25 +278,98 @@ function StreamProcessor(config) {
         scheduleController.start();
     }
 
-    function onDataUpdateCompleted(e) {
+    function _onInitFragmentNeeded(e) {
+        // Event propagation may have been stopped (see MssHandler)
+        if (!e.sender) return;
+
+        if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
+
+        if (bufferController && e.representationId) {
+            if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
+                // Init segment not in cache, send new request
+                const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
+                scheduleController.processInitRequest(request);
+            }
+        }
+    }
+
+    function _onMediaFragmentNeeded(e) {
+        let request;
+
+        // Todo check here if buffering is completed
+
+        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
+        if (!bufferController.getIsPruningInProgress()) {
+            request = _findNextRequest(e.replacement);
+            if (request) {
+                seekTime = NaN;
+                if (!e.replacement) {
+                    if (!isNaN(request.startTime + request.duration)) {
+                        bufferingTime = request.startTime + request.duration;
+                    }
+                    request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+                    scheduleController.setTimeToLoadDelay(0);
+                }
+            }
+        }
+
+        scheduleController.processMediaRequest(request);
+    }
+
+    function _findNextRequest(requestToReplace) {
+        const representationInfo = getRepresentationInfo();
+        const hasSeekTarget = !isNaN(seekTime);
+        let time = seekTime ? seekTime : bufferingTime;
+        let request;
+
+        if (isNaN(time) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
+            return null;
+        }
+
+        if (requestToReplace) {
+            time = requestToReplace.startTime + (requestToReplace.duration / 2);
+            request = _getFragmentRequest(representationInfo, time, {
+                timeThreshold: 0,
+                ignoreIsFinished: true
+            });
+        } else {
+            // Use time just whenever is strictly needed
+            const useTime = hasSeekTarget || bufferPruned;
+            request = _getFragmentRequest(representationInfo,
+                useTime ? time : undefined, {
+                    keepIdx: !useTime
+                });
+            bufferPruned = false;
+
+            // Then, check if this request was downloaded or not
+            while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
+                // loop until we found not loaded fragment, or no fragment
+                request = _getFragmentRequest(representationInfo);
+            }
+        }
+
+        return request;
+    }
+
+    function _onDataUpdateCompleted(e) {
         if (!e.error) {
             // Update representation if no error
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
         }
     }
 
-    function onQualityChanged(e) {
+    function _onQualityChanged(e) {
         let representationInfo = getRepresentationInfo(e.newQuality);
         scheduleController.setCurrentRepresentation(representationInfo);
         dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
         dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
     }
 
-    function onBufferLevelUpdated(e) {
+    function _onBufferLevelUpdated(e) {
         dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
     }
 
-    function onBufferLevelStateChanged(e) {
+    function _onBufferLevelStateChanged(e) {
         dashMetrics.addBufferState(type, e.state, scheduleController.getBufferTarget());
         if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
             // logger.info('Buffer is empty! Stalling!');
@@ -299,7 +377,7 @@ function StreamProcessor(config) {
         }
     }
 
-    function onBufferCleared(e) {
+    function _onBufferCleared(e) {
         // Remove executed requests not buffered anymore
         fragmentModel.syncExecutedRequestsWithBufferedRange(
             bufferController.getBuffer().getAllBufferRanges(),
@@ -439,42 +517,6 @@ function StreamProcessor(config) {
         return bufferController ? bufferController.getBufferLevel() : 0;
     }
 
-    function onInitFragmentNeeded(e) {
-        // Event propagation may have been stopped (see MssHandler)
-        if (!e.sender) return;
-
-        if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
-
-        if (bufferController && e.representationId) {
-            if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
-                // Init segment not in cache, send new request
-                const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
-                scheduleController.processInitRequest(request);
-            }
-        }
-    }
-
-    function onMediaFragmentNeeded(e) {
-        let request;
-
-        // Don't schedule next fragments while pruning to avoid buffer inconsistencies
-        if (!bufferController.getIsPruningInProgress()) {
-            request = findNextRequest(e.replacement);
-            if (request) {
-                seekTime = NaN;
-                if (!e.replacement) {
-                    if (!isNaN(request.startTime + request.duration)) {
-                        bufferingTime = request.startTime + request.duration;
-                    }
-                    request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-                    scheduleController.setTimeToLoadDelay(0);
-                }
-            }
-        }
-
-        scheduleController.processMediaRequest(request);
-    }
-
     /**
      * Probe the next request. This is used in the CMCD model to get information about the upcoming request. Note: No actual request is performed here.
      * @return {FragmentRequest|null}
@@ -489,41 +531,6 @@ function StreamProcessor(config) {
             getMediaInfo(),
             representation
         );
-
-        return request;
-    }
-
-    function findNextRequest(requestToReplace) {
-        const representationInfo = getRepresentationInfo();
-        const hasSeekTarget = !isNaN(seekTime);
-        let time = seekTime ? seekTime : bufferingTime;
-        let request;
-
-        if (isNaN(time) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
-            return null;
-        }
-
-        if (requestToReplace) {
-            time = requestToReplace.startTime + (requestToReplace.duration / 2);
-            request = getFragmentRequest(representationInfo, time, {
-                timeThreshold: 0,
-                ignoreIsFinished: true
-            });
-        } else {
-            // Use time just whenever is strictly needed
-            const useTime = hasSeekTarget || bufferPruned;
-            request = getFragmentRequest(representationInfo,
-                useTime ? time : undefined, {
-                    keepIdx: !useTime
-                });
-            bufferPruned = false;
-
-            // Then, check if this request was downloaded or not
-            while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
-                // loop until we found not loaded fragment, or no fragment
-                request = getFragmentRequest(representationInfo);
-            }
-        }
 
         return request;
     }
@@ -661,13 +668,7 @@ function StreamProcessor(config) {
         }
     }
 
-    function getInitRequest(quality) {
-        checkInteger(quality);
-        const representation = representationController ? representationController.getRepresentationForQuality(quality) : null;
-        return indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representation) : null;
-    }
-
-    function getFragmentRequest(representationInfo, time, options) {
+    function _getFragmentRequest(representationInfo, time, options) {
         let fragRequest = null;
 
         if (indexHandler) {
@@ -716,8 +717,6 @@ function StreamProcessor(config) {
         setBuffer: setBuffer,
         setBufferingTime: setBufferingTime,
         resetIndexHandler: resetIndexHandler,
-        getInitRequest: getInitRequest,
-        getFragmentRequest: getFragmentRequest,
         finalisePlayList: finalisePlayList,
         probeNextRequest: probeNextRequest,
         reset: reset

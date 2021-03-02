@@ -401,15 +401,15 @@ function SourceBufferSink(mSource) {
     }
 
     instance = {
-        getType: getType,
-        getAllBufferRanges: getAllBufferRanges,
-        getBuffer: getBuffer,
-        append: append,
-        remove: remove,
-        abort: abort,
-        reset: reset,
-        updateTimestampOffset: updateTimestampOffset,
-        waitForUpdateEnd: waitForUpdateEnd,
+        getType,
+        getAllBufferRanges,
+        getBuffer,
+        append,
+        remove,
+        abort,
+        reset,
+        updateTimestampOffset,
+        waitForUpdateEnd,
         initializeForStreamSwitch,
         initializeForFirstUse,
         updateAppendWindow
