@@ -58,10 +58,10 @@ function PlaybackController() {
         lastLivePlaybackTime,
         availabilityStartTime,
         seekTarget,
+        internalSeek,
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
-        lastSeekWasInternal,
         settings;
 
     function setup() {
@@ -94,6 +94,7 @@ function PlaybackController() {
         isDynamic = streamInfo.manifestInfo.isDynamic;
         isLowLatencySeekingInProgress = false;
         playbackStalled = false;
+        internalSeek = false;
 
         // Detect safari browser (special behavior for low latency streams)
         const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
@@ -153,28 +154,20 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
-    function seek(time, stickToBuffered, internalSeek) {
-        if (!streamInfo || !videoModel) {
-            return;
-        }
+    function seek(time, stickToBuffered, internal) {
+        if (!streamInfo || !videoModel) return;
 
         let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
-        if (time === currentTime) {
-            return;
-        }
+        if (time === currentTime) return;
 
-        if (internalSeek === true) {
-            lastSeekWasInternal = true;
-            logger.info('Requesting internal seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
-        } else {
-            lastSeekWasInternal = false;
+        internalSeek = (internal === true);
+
+        if (!internalSeek) {
             seekTarget = time;
-            // PLAYBACK_SEEK_ASKED is only used for MSS
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-            logger.info('Requesting seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
         }
+        logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
+        videoModel.setCurrentTime(time, stickToBuffered);
     }
 
     function seekToLive() {
@@ -442,22 +435,26 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeking() {
-        if (!lastSeekWasInternal) {
-            let seekTime = getTime();
-            // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
-            // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
-            if (!isNaN(seekTarget) && seekTarget !== seekTime) {
-                seekTime = seekTarget;
-            }
-            seekTarget = NaN;
-
-            logger.info('Seeking to: ' + seekTime);
-            startUpdatingWallclockTime();
-            eventBus.trigger(Events.PLAYBACK_SEEKING, {
-                seekTime: seekTime,
-                streamId: streamInfo.id
-            });
+        // Check if internal seeking to be ignored
+        if (internalSeek) {
+            internalSeek = false;
+            return;
         }
+
+        let seekTime = getTime();
+        // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
+        // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
+        if (!isNaN(seekTarget) && seekTarget !== seekTime) {
+            seekTime = seekTarget;
+        }
+        seekTarget = NaN;
+
+        logger.info('Seeking to: ' + seekTime);
+        startUpdatingWallclockTime();
+        eventBus.trigger(Events.PLAYBACK_SEEKING, {
+            seekTime: seekTime,
+            streamId: streamInfo.id
+        });
     }
 
     function onPlaybackSeeked() {

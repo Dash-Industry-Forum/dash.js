@@ -25,6 +25,12 @@ declare namespace dashjs {
         setCalleeNameVisible(flag: boolean): void;
     }
 
+    interface DashJSError {
+        code: number | null;
+        message: string | null;
+        data: unknown | null;
+    }
+
     interface VideoModel { }
 
     interface ProtectionController {
@@ -349,10 +355,10 @@ declare namespace dashjs {
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionDataSet): void;
-        registerLicenseRequestFilter(filter: RequestFilter),
-        registerLicenseResponseFilter(filter: ResponseFilter),
-        unregisterLicenseRequestFilter(filter: RequestFilter),
-        unregisterLicenseResponseFilter(filter: ResponseFilter),
+        registerLicenseRequestFilter(filter: RequestFilter): void,
+        registerLicenseResponseFilter(filter: ResponseFilter): void,
+        unregisterLicenseRequestFilter(filter: RequestFilter): void,
+        unregisterLicenseResponseFilter(filter: ResponseFilter): void,
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -360,6 +366,7 @@ declare namespace dashjs {
         getCurrentTextTrackIndex(): number;
         preload(): void;
         reset(): void;
+        destroy(): void;
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
@@ -691,12 +698,13 @@ declare namespace dashjs {
     export interface KeySessionEvent extends Event {
         type: MediaPlayerEvents['KEY_SESSION_CREATED'];
         data: SessionToken | null;
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface KeyStatusesChangedEvent extends Event {
         type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
         data: SessionToken;
+        error?: DashJSError;
     }
 
     export interface KeySystemSelectedEvent extends Event {
@@ -711,7 +719,7 @@ declare namespace dashjs {
             sessionToken: SessionToken;
             messageType: string;
         };
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface LogEvent extends Event {
