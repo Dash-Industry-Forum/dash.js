@@ -12,6 +12,7 @@ const audioSwitch = require('./tests/audioSwitch');
 const textSwitch = require('./tests/textSwitch');
 const initialAudio = require('./tests/initialAudio');
 const initialText = require('./tests/initialText');
+const autoHeapSnap = require('./tests/autoHeapSnap');
 const ended = require('./tests/ended');
 
 var registerSuites = function (stream) {
@@ -28,6 +29,7 @@ var registerSuites = function (stream) {
     if (suites.indexOf('textSwitch') !== -1) textSwitch.register(stream);
     if (suites.indexOf('initialAudio') !== -1) initialAudio.register(stream);
     if (suites.indexOf('initialText') !== -1) initialText.register(stream);
+    if (suites.indexOf('autoHeapSnap') !== -1) autoHeapSnap.register(stream);
     if (suites.indexOf('ended') !== -1) ended.register(stream);
 };
 
