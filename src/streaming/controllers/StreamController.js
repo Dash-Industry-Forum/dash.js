@@ -841,7 +841,7 @@ function StreamController() {
                 playbackController.seek(seekTime);
             } else if (!activeStream.getPreloaded()) {
                 // set buffer target to correct time
-                eventBus.trigger(Events.SEEK_TARGET, { time:seekTime }, { streamId: activeStream.getId() });
+                eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
             }
         }
 
@@ -1210,6 +1210,9 @@ function StreamController() {
 
     function setProtectionData(protData) {
         protectionData = protData;
+        if (protectionController) {
+            protectionController.setProtectionData(protectionData);
+        }
     }
 
     function resetInitialSettings() {
