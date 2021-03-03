@@ -213,7 +213,7 @@ function ScheduleController(config) {
 
             setFragmentProcessState(true);
             if (!isReplacement && checkPlaybackQuality) {
-                abrController.checkPlaybackQuality(type);
+                abrController.checkPlaybackQuality(type, streamInfo.id);
             }
 
             getNextFragment();
