@@ -124,7 +124,7 @@ function AbandonRequestsRule(config) {
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateList = abrController.getBitrateList(mediaInfo);
                     const quality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor, streamId);
-                    const minQuality = abrController.getMinAllowedIndexFor(mediaType);
+                    const minQuality = abrController.getMinAllowedIndexFor(mediaType, streamId);
                     const newQuality = (minQuality !== undefined) ? Math.max(minQuality, quality) : quality;
                     const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, streamId)].bitrate;
 

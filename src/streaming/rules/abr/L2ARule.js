@@ -362,7 +362,7 @@ function L2ARule(config) {
 
         switch (l2AState.state) {
             case L2A_STATE_STARTUP:
-                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);//During strat-up phase abr.controller is responsible for bitrate decisions.
+                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamInfo.id, latency);//During strat-up phase abr.controller is responsible for bitrate decisions.
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = safeThroughput;
                 l2AState.lastQuality = quality;
@@ -447,7 +447,7 @@ function L2ARule(config) {
             default:
                 // should not arrive here, try to recover
                 logger.debug('L2A ABR rule invoked in bad state.');
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
+                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamInfo.id, latency);
                 switchRequest.reason.state = l2AState.state;
                 switchRequest.reason.throughput = safeThroughput;
                 switchRequest.reason.latency = latency;

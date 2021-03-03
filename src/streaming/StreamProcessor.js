@@ -432,7 +432,7 @@ function StreamProcessor(config) {
         if (representationController) {
             const realAdaptation = representationController.getData();
             const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
-            const minIdx = abrController.getMinAllowedIndexFor(type);
+            const minIdx = abrController.getMinAllowedIndexFor(type, streamInfo.id);
 
             let quality,
                 averageThroughput;

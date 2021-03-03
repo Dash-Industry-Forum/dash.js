@@ -43,8 +43,8 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import Debug from '../../core/Debug';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
-import { checkInteger } from '../utils/SupervisorTools';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import {checkInteger} from '../utils/SupervisorTools';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
@@ -337,7 +337,7 @@ function AbrController() {
                 }
             }
             if (!!settings.get().streaming.abr.autoSwitchBitrate[type]) {
-                const minIdx = getMinAllowedIndexFor(type);
+                const minIdx = getMinAllowedIndexFor(type, streamId);
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 let newQuality = switchRequest.quality;
@@ -362,7 +362,7 @@ function AbrController() {
         }
     }
 
-    function setPlaybackQuality(type, streamInfo, newQuality, reason) {
+    function setPlaybackQuality(type, streamInfo, newQuality, reason = null) {
         const streamId = streamInfo.id;
         const oldQuality = getQualityFor(type, streamId);
 
@@ -381,7 +381,7 @@ function AbrController() {
                 const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
                 logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
             }
-            setQualityFor(type, streamId, newQuality);
+            setQualityFor(type, newQuality, streamId);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
                     oldQuality: oldQuality,
@@ -409,11 +409,11 @@ function AbrController() {
      * @param {MediaInfo} mediaInfo
      * @param {number} bitrate A bitrate value, kbps
      * @param {String} streamId Period ID
-     * @param {number} latency Expected latency of connection, ms
+     * @param {number|null} latency Expected latency of connection, ms
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
      */
-    function getQualityForBitrate(mediaInfo, bitrate, streamId, latency) {
+    function getQualityForBitrate(mediaInfo, bitrate, streamId, latency = null) {
         const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[streamId][mediaInfo.type].getRepresentationInfo() : null;
 
         if (settings.get().streaming.abr.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
@@ -534,7 +534,7 @@ function AbrController() {
         const streamId = mediaInfo.streamInfo.id;
         const max = mediaInfo.representationCount - 1;
 
-        setTopQualityIndex(type, streamId, max);
+        setTopQualityIndex(type, max, streamId);
 
         return max;
     }
@@ -575,14 +575,14 @@ function AbrController() {
         }
     }
 
-    function setQualityFor(type, id, value) {
-        qualityDict[id] = qualityDict[id] || {};
-        qualityDict[id][type] = value;
+    function setQualityFor(type, value, streamId) {
+        qualityDict[streamId] = qualityDict[streamId] || {};
+        qualityDict[streamId][type] = value;
     }
 
-    function setTopQualityIndex(type, id, value) {
-        topQualities[id] = topQualities[id] || {};
-        topQualities[id][type] = value;
+    function setTopQualityIndex(type, value, streamId) {
+        topQualities[streamId] = topQualities[streamId] || {};
+        topQualities[streamId][type] = value;
     }
 
     function checkMaxBitrate(idx, type, streamId) {
@@ -709,27 +709,27 @@ function AbrController() {
     }
 
     instance = {
-        isPlayingAtTopQuality: isPlayingAtTopQuality,
-        updateTopQualityIndex: updateTopQualityIndex,
-        getThroughputHistory: getThroughputHistory,
-        getBitrateList: getBitrateList,
-        getQualityForBitrate: getQualityForBitrate,
-        getTopBitrateInfoFor: getTopBitrateInfoFor,
-        getMaxAllowedIndexFor: getMaxAllowedIndexFor,
-        getMinAllowedIndexFor: getMinAllowedIndexFor,
-        getInitialBitrateFor: getInitialBitrateFor,
-        getQualityFor: getQualityFor,
-        getAbandonmentStateFor: getAbandonmentStateFor,
-        setPlaybackQuality: setPlaybackQuality,
-        checkPlaybackQuality: checkPlaybackQuality,
-        getTopQualityIndexFor: getTopQualityIndexFor,
-        setElementSize: setElementSize,
-        setWindowResizeEventCalled: setWindowResizeEventCalled,
-        createAbrRulesCollection: createAbrRulesCollection,
-        registerStreamType: registerStreamType,
-        unRegisterStreamType: unRegisterStreamType,
-        setConfig: setConfig,
-        reset: reset
+        isPlayingAtTopQuality,
+        updateTopQualityIndex,
+        getThroughputHistory,
+        getBitrateList,
+        getQualityForBitrate,
+        getTopBitrateInfoFor,
+        getMaxAllowedIndexFor,
+        getMinAllowedIndexFor,
+        getInitialBitrateFor,
+        getQualityFor,
+        getAbandonmentStateFor,
+        setPlaybackQuality,
+        checkPlaybackQuality,
+        getTopQualityIndexFor,
+        setElementSize,
+        setWindowResizeEventCalled,
+        createAbrRulesCollection,
+        registerStreamType,
+        unRegisterStreamType,
+        setConfig,
+        reset
     };
 
     setup();
