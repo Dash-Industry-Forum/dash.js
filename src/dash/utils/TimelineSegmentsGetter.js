@@ -99,7 +99,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                         if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
                             // use end of the Period
                             availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
-                        } else  {
+                        } else {
                             // use DVR window
                             const dvrWindow = dashMetrics.getCurrentDVRInfo();
                             availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;

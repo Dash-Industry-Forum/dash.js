@@ -291,8 +291,8 @@ function Stream(config) {
 
     /**
      * Initialize for a given media type. Creates a corresponding StreamProcessor
-     * @param type
-     * @param mediaSource
+     * @param {string} type
+     * @param {object} mediaSource
      * @private
      */
     function _initializeMediaForType(type, mediaSource) {
