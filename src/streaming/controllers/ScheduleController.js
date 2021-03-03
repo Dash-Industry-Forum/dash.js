@@ -145,13 +145,13 @@ function ScheduleController(config) {
         clearTimeout(scheduleTimeout);
     }
 
-    function hasTopQualityChanged(type, id) {
-        topQualityIndex[id] = topQualityIndex[id] || {};
-        const newTopQualityIndex = abrController.getTopQualityIndexFor(type, id);
+    function hasTopQualityChanged() {
+        const streamId = streamInfo.id;
+        const newTopQualityIndex = abrController.getTopQualityIndexFor(type, streamId);
 
-        if (topQualityIndex[id][type] != newTopQualityIndex) {
-            logger.info('Top quality ' + type + ' index has changed from ' + topQualityIndex[id][type] + ' to ' + newTopQualityIndex);
-            topQualityIndex[id][type] = newTopQualityIndex;
+        if (isNaN(topQualityIndex) || topQualityIndex != newTopQualityIndex) {
+            logger.info('Top quality ' + type + ' index has changed from ' + topQualityIndex + ' to ' + newTopQualityIndex);
+            topQualityIndex = newTopQualityIndex;
             return true;
         }
         return false;
@@ -171,7 +171,7 @@ function ScheduleController(config) {
 
         const isReplacement = replaceRequestArray.length > 0;
         if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
-            hasTopQualityChanged(type, streamInfo.id) ||
+            hasTopQualityChanged() ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
             const getNextFragment = function () {
                 if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
@@ -469,7 +469,7 @@ function ScheduleController(config) {
             quality: NaN,
             adaptationIndex: NaN
         };
-        topQualityIndex = {};
+        topQualityIndex = NaN;
         replaceRequestArray = [];
         isStopped = true;
         switchTrack = false;
