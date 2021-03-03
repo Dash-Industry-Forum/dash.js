@@ -598,8 +598,8 @@ function StreamProcessor(config) {
         }
     }
 
-    function createBuffer(previousBuffers) {
-        return (getBuffer() || bufferController ? bufferController.createBuffer(mediaInfoArr, previousBuffers) : null);
+    function createBufferSinks(previousBuffers) {
+        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfoArr, previousBuffers) : null);
     }
 
     function switchTrackAsked() {
@@ -691,35 +691,35 @@ function StreamProcessor(config) {
     }
 
     instance = {
-        initialize: initialize,
-        getStreamId: getStreamId,
-        getType: getType,
-        isUpdating: isUpdating,
-        getBufferController: getBufferController,
-        getFragmentModel: getFragmentModel,
-        getScheduleController: getScheduleController,
-        getRepresentationController: getRepresentationController,
-        getRepresentationInfo: getRepresentationInfo,
-        getBufferLevel: getBufferLevel,
-        isBufferingCompleted: isBufferingCompleted,
-        createBuffer: createBuffer,
-        updateStreamInfo: updateStreamInfo,
-        getStreamInfo: getStreamInfo,
-        selectMediaInfo: selectMediaInfo,
-        addMediaInfo: addMediaInfo,
-        switchTrackAsked: switchTrackAsked,
-        getMediaInfoArr: getMediaInfoArr,
-        getMediaInfo: getMediaInfo,
-        getMediaSource: getMediaSource,
-        setMediaSource: setMediaSource,
-        dischargePreBuffer: dischargePreBuffer,
-        getBuffer: getBuffer,
-        setBuffer: setBuffer,
-        setBufferingTime: setBufferingTime,
-        resetIndexHandler: resetIndexHandler,
-        finalisePlayList: finalisePlayList,
-        probeNextRequest: probeNextRequest,
-        reset: reset
+        initialize,
+        getStreamId,
+        getType,
+        isUpdating,
+        getBufferController,
+        getFragmentModel,
+        getScheduleController,
+        getRepresentationController,
+        getRepresentationInfo,
+        getBufferLevel,
+        isBufferingCompleted,
+        createBufferSinks,
+        updateStreamInfo,
+        getStreamInfo,
+        selectMediaInfo,
+        addMediaInfo,
+        switchTrackAsked,
+        getMediaInfoArr,
+        getMediaInfo,
+        getMediaSource,
+        setMediaSource,
+        dischargePreBuffer,
+        getBuffer,
+        setBuffer,
+        setBufferingTime,
+        resetIndexHandler,
+        finalisePlayList,
+        probeNextRequest,
+        reset
     };
 
     setup();

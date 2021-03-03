@@ -78,7 +78,7 @@ function NotFragmentedTextBufferController(config) {
         initCache = InitCache(context).getInstance();
     }
 
-    function createBuffer(mediaInfoArr) {
+    function createBufferSink(mediaInfoArr) {
         const mediaInfo = mediaInfoArr[0];
         try {
             buffer = SourceBufferSink(context).create(mediaSource);
@@ -198,22 +198,22 @@ function NotFragmentedTextBufferController(config) {
     }
 
     instance = {
-        getBufferControllerType: getBufferControllerType,
-        initialize: initialize,
-        createBuffer: createBuffer,
-        getStreamId: getStreamId,
-        getType: getType,
-        getBuffer: getBuffer,
-        getBufferLevel: getBufferLevel,
-        setMediaSource: setMediaSource,
-        getMediaSource: getMediaSource,
-        getIsBufferingCompleted: getIsBufferingCompleted,
-        getIsPruningInProgress: getIsPruningInProgress,
-        dischargePreBuffer: dischargePreBuffer,
-        appendInitSegmentFromCache: appendInitSegmentFromCache,
-        getRangeAt: getRangeAt,
-        reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        getBufferControllerType,
+        initialize,
+        createBufferSink,
+        getStreamId,
+        getType,
+        getBuffer,
+        getBufferLevel,
+        setMediaSource,
+        getMediaSource,
+        getIsBufferingCompleted,
+        getIsPruningInProgress,
+        dischargePreBuffer,
+        appendInitSegmentFromCache,
+        getRangeAt,
+        reset,
+        updateTimestampOffset
     };
 
     setup();

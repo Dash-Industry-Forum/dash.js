@@ -108,7 +108,7 @@ function BufferController(config) {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
@@ -157,7 +157,7 @@ function BufferController(config) {
         if (sourceBufferSink && mediaInfo) { //if we have a prebuffer, we should prepare to discharge it, and make a new sourceBuffer ready
             if (typeof sourceBufferSink.discharge === 'function') {
                 dischargeBuffer = sourceBufferSink;
-                createBuffer(mediaInfo);
+                createBufferSink(mediaInfo);
             }
         }
     }
@@ -178,7 +178,7 @@ function BufferController(config) {
      * @param {array} oldBufferSinks
      * @return {object|null} SourceBufferSink
      */
-    function createBuffer(mediaInfoArr, oldBufferSinks = []) {
+    function createBufferSink(mediaInfoArr, oldBufferSinks = []) {
         if (!initCache || !mediaInfoArr) return null;
         const mediaInfo = mediaInfoArr[0];
         if (mediaSource) {
@@ -284,7 +284,7 @@ function BufferController(config) {
      * Calls the _appendToBuffer function to append the segment to the buffer. In case of a track switch the buffer might be cleared.
      * @param {object} e
      */
-    function onMediaFragmentLoaded(e) {
+    function _onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
 
         if (replacingBuffer) {
@@ -326,28 +326,9 @@ function BufferController(config) {
 
     function onAppended(e) {
         if (e.error) {
-
             // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
-                isQuotaExceeded = true;
-                criticalBufferLevel = getTotalBufferedTime() * 0.8;
-                logger.warn('Quota exceeded, Critical Buffer: ' + criticalBufferLevel);
-
-                if (criticalBufferLevel > 0) {
-                    // recalculate buffer lengths according to criticalBufferLevel
-                    const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
-                    const bufferAhead = criticalBufferLevel - bufferToKeep;
-                    const bufferTimeAtTopQuality = Math.min(settings.get().streaming.bufferTimeAtTopQuality, bufferAhead * 0.9);
-                    const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
-                    const s = {
-                        streaming: {
-                            bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
-                            bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
-                            bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
-                        }
-                    };
-                    settings.update(s);
-                }
+                _handleQuotaExceededError();
             }
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
@@ -357,12 +338,12 @@ function BufferController(config) {
             }
             return;
         }
-        isQuotaExceeded = false;
 
+        isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
         if (appendedBytesInfo && !isNaN(appendedBytesInfo.index)) {
             maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
-            checkIfBufferingCompleted();
+            _checkIfBufferingCompleted();
         }
 
         const ranges = sourceBufferSink.getAllBufferRanges();
@@ -391,6 +372,28 @@ function BufferController(config) {
                 index: appendedBytesInfo.index,
                 bufferedRanges: ranges
             });
+        }
+    }
+
+    function _handleQuotaExceededError() {
+        isQuotaExceeded = true;
+        criticalBufferLevel = getTotalBufferedTime() * 0.8;
+        logger.warn('Quota exceeded, Critical Buffer: ' + criticalBufferLevel);
+
+        if (criticalBufferLevel > 0) {
+            // recalculate buffer lengths according to criticalBufferLevel
+            const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
+            const bufferAhead = criticalBufferLevel - bufferToKeep;
+            const bufferTimeAtTopQuality = Math.min(settings.get().streaming.bufferTimeAtTopQuality, bufferAhead * 0.9);
+            const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
+            const s = {
+                streaming: {
+                    bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
+                    bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
+                    bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
+                }
+            };
+            settings.update(s);
         }
     }
 
@@ -615,7 +618,7 @@ function BufferController(config) {
         }
     }
 
-    function checkIfBufferingCompleted() {
+    function _checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
         if (isLastIdxAppended && !isBufferingCompleted && sourceBufferSink.discharge === undefined) {
             isBufferingCompleted = true;
@@ -819,7 +822,7 @@ function BufferController(config) {
 
     function onStreamCompleted(e) {
         maximumIndex = e.request.index;
-        checkIfBufferingCompleted();
+        _checkIfBufferingCompleted();
     }
 
     function onCurrentTrackChanged(e) {
@@ -972,7 +975,7 @@ function BufferController(config) {
     function reset(errored, keepBuffers) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
-        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, this);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
@@ -995,7 +998,7 @@ function BufferController(config) {
         getStreamId,
         getType,
         getBufferControllerType,
-        createBuffer,
+        createBufferSink,
         dischargePreBuffer,
         getBuffer,
         setBuffer,
@@ -1003,7 +1006,7 @@ function BufferController(config) {
         getRangeAt,
         setMediaSource,
         getMediaSource,
-        appendInitSegmentFromCache: appendInitSegmentFromCache,
+        appendInitSegmentFromCache,
         replaceBuffer,
         getIsBufferingCompleted,
         getIsPruningInProgress,

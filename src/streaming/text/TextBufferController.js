@@ -84,8 +84,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.initialize(source, StreamProcessor);
     }
 
-    function createBuffer(mediaInfoArr, previousBuffers) {
-        return _BufferControllerImpl.createBuffer(mediaInfoArr, previousBuffers);
+    function createBufferSink(mediaInfoArr, previousBuffers) {
+        return _BufferControllerImpl.createBufferSink(mediaInfoArr, previousBuffers);
     }
 
     function getType() {
@@ -148,22 +148,22 @@ function TextBufferController(config) {
     }
 
     instance = {
-        getBufferControllerType: getBufferControllerType,
-        initialize: initialize,
-        createBuffer: createBuffer,
-        getType: getType,
-        getBuffer: getBuffer,
-        setBuffer: setBuffer,
-        getBufferLevel: getBufferLevel,
-        setMediaSource: setMediaSource,
-        getMediaSource: getMediaSource,
-        getIsBufferingCompleted: getIsBufferingCompleted,
-        getIsPruningInProgress: getIsPruningInProgress,
-        dischargePreBuffer: dischargePreBuffer,
-        appendInitSegmentFromCache: appendInitSegmentFromCache,
-        getRangeAt: getRangeAt,
-        reset: reset,
-        updateTimestampOffset: updateTimestampOffset,
+        getBufferControllerType,
+        initialize,
+        createBufferSink,
+        getType,
+        getBuffer,
+        setBuffer,
+        getBufferLevel,
+        setMediaSource,
+        getMediaSource,
+        getIsBufferingCompleted,
+        getIsPruningInProgress,
+        dischargePreBuffer,
+        appendInitSegmentFromCache,
+        getRangeAt,
+        reset,
+        updateTimestampOffset,
         updateAppendWindow
     };
 
