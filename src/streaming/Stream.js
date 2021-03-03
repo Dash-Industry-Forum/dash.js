@@ -408,7 +408,7 @@ function Stream(config) {
     function _createBufferSinks(previousBuffers) {
         const buffers = {};
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            const buffer = streamProcessors[i].createBuffer(previousBuffers);
+            const buffer = streamProcessors[i].createBufferSinks(previousBuffers);
             if (buffer) {
                 buffers[streamProcessors[i].getType()] = buffer;
             }
