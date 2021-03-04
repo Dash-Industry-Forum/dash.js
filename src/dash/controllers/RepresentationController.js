@@ -233,13 +233,13 @@ function RepresentationController(config) {
     }
 
     instance = {
-        getStreamId: getStreamId,
-        getType: getType,
-        getData: getData,
-        isUpdating: isUpdating,
-        updateData: updateData,
-        getCurrentRepresentation: getCurrentRepresentation,
-        getRepresentationForQuality: getRepresentationForQuality,
+        getStreamId,
+        getType,
+        getData,
+        isUpdating,
+        updateData,
+        getCurrentRepresentation,
+        getRepresentationForQuality,
         reset: reset
     };
 

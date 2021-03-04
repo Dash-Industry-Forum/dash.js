@@ -181,8 +181,8 @@ function NotFragmentedTextBufferController(config) {
 
         isBufferingCompleted = true;
 
-        eventBus.trigger(Events.STREAM_COMPLETED,
-            { request: e.request },
+        eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED,
+            { segmentIndex: e.request.index },
             { streamId: streamInfo.id, mediaType: type }
         );
     }

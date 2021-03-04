@@ -47,7 +47,6 @@ import Debug from '../core/Debug';
 import RequestModifier from './utils/RequestModifier';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
-import FragmentRequest from './vo/FragmentRequest';
 import {PlayListTrace} from './vo/metrics/PlayList';
 
 function StreamProcessor(config) {
@@ -300,9 +299,18 @@ function StreamProcessor(config) {
     }
 
     function _onMediaFragmentNeeded(e) {
-        let request;
+        let request = null;
 
-        // Todo check here if buffering is completed
+        const ignoreIsFinished = !!e.replacement;
+        const representation = representationController.getCurrentRepresentation();
+        const isMediaFinished = !ignoreIsFinished ? dashHandler.isMediaFinished(representation) : false;
+
+        if (isMediaFinished) {
+            const segmentIndex = dashHandler.getCurrentIndex();
+            logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
+            eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, {segmentIndex}, { streamId: streamInfo.id, mediaType: type });
+            return;
+        }
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
@@ -346,12 +354,6 @@ function StreamProcessor(config) {
                     keepIdx: !useTime
                 });
             bufferPruned = false;
-
-            // The seek target was already adjusted depending on that we have downloaded and what is in the buffer. No need to check here again.
-            while (request && request.action === FragmentRequest.ACTION_COMPLETE) {
-                // loop until we found not loaded fragment, or no fragment
-                request = _getFragmentRequest(representationInfo);
-            }
         }
 
         return request;

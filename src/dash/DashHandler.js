@@ -240,22 +240,17 @@ function DashHandler(config) {
     function isMediaFinished(representation) {
         let isFinished = false;
 
-        if (!representation) return isFinished;
+        if (!representation || !lastSegment) return isFinished;
 
-        if (!isDynamicManifest) {
-            if (segmentIndex >= representation.availableSegmentsNumber) {
-                isFinished = true;
-            }
-        } else {
-            if (dynamicStreamCompleted) {
-                isFinished = true;
-            } else if (lastSegment) {
-                const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
-                const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
-                const duration = representation.adaptation.period.duration;
 
-                isFinished = endTime >= duration || (isFinite(duration) && segmentIndex >= representation.availableSegmentsNumber);
-            }
+        if (isDynamicManifest && dynamicStreamCompleted) {
+            isFinished = true;
+        } else if (lastSegment) {
+            const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
+            const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
+            const duration = representation.adaptation.period.duration;
+
+            return isFinite(duration) && endTime >= duration - 0.1;
         }
 
         return isFinished;
@@ -270,7 +265,6 @@ function DashHandler(config) {
 
         const idx = segmentIndex;
         const keepIdx = options ? options.keepIdx : false;
-        const ignoreIsFinished = !!(options && options.ignoreIsFinished);
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
@@ -283,16 +277,6 @@ function DashHandler(config) {
             lastSegment = segment;
             logger.debug('Index for time ' + time + ' is ' + segmentIndex);
             request = _getRequestForSegment(mediaInfo, segment);
-        } else {
-            const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
-            if (finished) {
-                request = new FragmentRequest();
-                request.action = FragmentRequest.ACTION_COMPLETE;
-                request.index = segmentIndex - 1;
-                request.mediaType = type;
-                request.mediaInfo = mediaInfo;
-                logger.debug('Signal complete in getSegmentRequestForTime');
-            }
         }
 
         if (keepIdx && idx >= 0) {
@@ -359,16 +343,6 @@ function DashHandler(config) {
 
         if (segment) {
             lastSegment = segment;
-        } else {
-            const finished = isMediaFinished(representation, segment);
-            if (finished) {
-                request = new FragmentRequest();
-                request.action = FragmentRequest.ACTION_COMPLETE;
-                request.index = segmentIndex - 1;
-                request.mediaType = getType();
-                request.mediaInfo = mediaInfo;
-                logger.debug('Signal complete');
-            }
         }
 
         return request;

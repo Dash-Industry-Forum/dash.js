@@ -91,8 +91,10 @@ function ScheduleController(config) {
             settings: settings
         });
 
+        eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);
@@ -302,7 +304,8 @@ function ScheduleController(config) {
                 logger.debug('Reloading outdated fragment at index: ', request.index);
             } else if (request.quality > currentRepresentationInfo.quality && !shouldReplaceBuffer) {
                 // The buffer has better quality it in than what we would request so set append point to end of buffer!!
-                eventBus.trigger(Events.SEEK_TARGET, { time: playbackController.getTime() + bufferLevel }, { streamId: streamInfo.id });
+                logger.debug(`Adjusting seek target for ${type}. Set time to ${playbackController.getTime() + bufferLevel}`);
+                //eventBus.trigger(Events.SEEK_TARGET, { time: playbackController.getTime() + bufferLevel }, { streamId: streamInfo.id });
             }
         }
     }
@@ -361,7 +364,7 @@ function ScheduleController(config) {
         }
     }
 
-    function onStreamCompleted() {
+    function onStreamRequestingCompleted() {
         stop();
         setFragmentProcessState(false);
         logger.info(`Stream ${streamInfo.id} is complete`);
@@ -469,6 +472,14 @@ function ScheduleController(config) {
         dashMetrics.updatePlayListTraceMetrics({ playbackspeed: e.playbackRate.toString() });
     }
 
+    function onDataUpdateStarted() {
+        stop();
+    }
+
+    function onDataUpdateCompleted() {
+        start();
+    }
+
     function setTimeToLoadDelay(value) {
         timeToLoadDelay = value;
     }
@@ -501,8 +512,10 @@ function ScheduleController(config) {
     }
 
     function reset() {
+        eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
-        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.off(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, this);
         eventBus.off(Events.QUOTA_EXCEEDED, onQuotaExceeded, this);

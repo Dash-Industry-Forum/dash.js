@@ -109,7 +109,7 @@ function BufferController(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
-        eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
@@ -820,9 +820,11 @@ function BufferController(config) {
         updateBufferTimestampOffset(e.currentRepresentation);
     }
 
-    function onStreamCompleted(e) {
-        maximumIndex = e.request.index;
-        _checkIfBufferingCompleted();
+    function onStreamRequestingCompleted(e) {
+        if (!isNaN(e.segmentIndex)) {
+            maximumIndex = e.segmentIndex;
+            _checkIfBufferingCompleted();
+        }
     }
 
     function onCurrentTrackChanged(e) {
@@ -980,7 +982,7 @@ function BufferController(config) {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
         eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
-        eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
+        eventBus.off(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
 
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, onPlaybackPlaying, this);

@@ -201,15 +201,6 @@ function FragmentModel(config) {
 
     function executeRequest(request) {
         switch (request.action) {
-            case FragmentRequest.ACTION_COMPLETE:
-                executedRequests.push(request);
-                addSchedulingInfoMetrics(request, FRAGMENT_MODEL_EXECUTED);
-                logger.debug('STREAM_COMPLETED');
-                eventBus.trigger(events.STREAM_COMPLETED,
-                    { request: request },
-                    { streamId: request.mediaInfo.streamInfo.id, mediaType: request.mediaType }
-                );
-                break;
             case FragmentRequest.ACTION_DOWNLOAD:
                 addSchedulingInfoMetrics(request, FRAGMENT_MODEL_LOADING);
                 loadingRequests.push(request);
