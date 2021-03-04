@@ -788,16 +788,8 @@ function MediaPlayer() {
         let d = getVideoElement().duration;
 
         if (playbackController.getIsDynamic()) {
-
             let metric = dashMetrics.getCurrentDVRInfo();
-            let range;
-
-            if (!metric) {
-                return 0;
-            }
-
-            range = metric.range.end - metric.range.start;
-            d = range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+            d = metric ? (metric.range.end - metric.range.start) : 0;
         }
         return d;
     }
