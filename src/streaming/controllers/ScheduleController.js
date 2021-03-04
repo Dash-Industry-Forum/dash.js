@@ -59,7 +59,6 @@ function ScheduleController(config) {
     let instance,
         logger,
         currentRepresentationInfo,
-        initialRequest,
         isStopped,
         isFragmentProcessingInProgress,
         timeToLoadDelay,
@@ -71,7 +70,7 @@ function ScheduleController(config) {
         lastInitQuality,
         replaceRequestArray,
         switchTrack,
-        replacingBuffer,
+        shouldReplaceBuffer,
         mediaRequest,
         checkPlaybackQuality,
         isReplacementRequest;
@@ -92,7 +91,6 @@ function ScheduleController(config) {
             settings: settings
         });
 
-        eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.on(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
@@ -128,11 +126,6 @@ function ScheduleController(config) {
 
         logger.debug(`ScheduleController for stream id ${streamInfo.id} starts`);
         isStopped = false;
-        dashMetrics.createPlaylistTraceMetrics(currentRepresentationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
-
-        if (initialRequest) {
-            initialRequest = false;
-        }
 
         startScheduleTimer(0);
     }
@@ -143,6 +136,13 @@ function ScheduleController(config) {
         logger.debug(type + ' Schedule Controller stops');
         isStopped = true;
         clearTimeout(scheduleTimeout);
+    }
+
+
+    function startScheduleTimer(value) {
+        clearTimeout(scheduleTimeout);
+
+        scheduleTimeout = setTimeout(schedule, value);
     }
 
     function hasTopQualityChanged() {
@@ -158,72 +158,118 @@ function ScheduleController(config) {
 
     }
 
+    /**
+     * Schedule the request for an init or a media segment
+     */
     function schedule() {
-        if (isStopped || isFragmentProcessingInProgress ||
-            (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
-            ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()) ||
-            bufferController.getIsBufferingCompleted()) {
+        // Check if we are supposed to stop scheduling
+        if (_shouldStop()) {
             stop();
             return;
         }
 
-        validateExecutedFragmentRequest();
+        if (isFragmentProcessingInProgress) {
+            return;
+        }
+
+        // Validate the last executed request. In case of an ABR switch we might want to replace existing stuff in the buffer.
+        _validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
-            hasTopQualityChanged() ||
-            bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
-            const getNextFragment = function () {
-                if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
-                    if (switchTrack) {
-                        logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
-                        replacingBuffer = mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
-                        if (replacingBuffer && bufferController.replaceBuffer) {
-                            bufferController.replaceBuffer();
-                        }
-                        switchTrack = false;
-                    } else {
-                        logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
-                    }
-                    eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-                        { representationId: currentRepresentationInfo.id, sender: instance },
-                        { streamId: streamInfo.id, mediaType: type }
-                    );
-                    lastInitQuality = currentRepresentationInfo.quality;
-                    checkPlaybackQuality = false;
-                } else {
-                    const replacement = replaceRequestArray.shift();
-
-                    if (replacement && replacement.isInitializationRequest()) {
-                        // To be sure the specific init segment had not already been loaded
-                        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-                            { representationId: replacement.representationId, sender: instance },
-                            { streamId: streamInfo.id, mediaType: type }
-                        );
-                        checkPlaybackQuality = false;
-                    } else {
-                        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
-                            { replacement: replacement },
-                            { streamId: streamInfo.id, mediaType: type }
-                        );
-                        checkPlaybackQuality = true;
-                    }
-                }
-            };
-
+        if (_shouldScheduleNextRequest(isReplacement)) {
             setFragmentProcessState(true);
             if (!isReplacement && checkPlaybackQuality) {
+                // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation
                 abrController.checkPlaybackQuality(type, streamInfo.id);
             }
-
-            getNextFragment();
+            _getNextFragment();
 
         } else {
-            startScheduleTimer(500);
+            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
         }
     }
 
-    function validateExecutedFragmentRequest() {
+    /**
+     * Triggers the events to start requesting an init or a media segment. This will be picked up by the corresponding StreamProcessor.
+     * @private
+     */
+    function _getNextFragment() {
+
+        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
+        if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!shouldReplaceBuffer)) {
+            if (switchTrack) {
+                logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
+                shouldReplaceBuffer = mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
+                if (shouldReplaceBuffer && bufferController.replaceBuffer) {
+                    bufferController.setReplaceBuffer(true);
+                }
+                switchTrack = false;
+            } else {
+                logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
+            }
+            eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+                { representationId: currentRepresentationInfo.id, sender: instance },
+                { streamId: streamInfo.id, mediaType: type }
+            );
+            lastInitQuality = currentRepresentationInfo.quality;
+            checkPlaybackQuality = false;
+        }
+
+        // The quality has not changed and we are not changing the track
+        else {
+            // check if we need to replace anything we loaded before
+            const replacement = replaceRequestArray.shift();
+
+            if (replacement && replacement.isInitializationRequest()) {
+                // To be sure the specific init segment had not already been loaded
+                eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+                    { representationId: replacement.representationId, sender: instance },
+                    { streamId: streamInfo.id, mediaType: type }
+                );
+                checkPlaybackQuality = false;
+            } else {
+                eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
+                    { replacement: replacement },
+                    { streamId: streamInfo.id, mediaType: type }
+                );
+                checkPlaybackQuality = true;
+            }
+        }
+    }
+
+    /**
+     * Check if we need to stop scheduling for now.
+     * @return {boolean}
+     * @private
+     */
+    function _shouldStop() {
+        try {
+            return isStopped || (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) || ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()) || bufferController.getIsBufferingCompleted();
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Check if we can start scheduling the next request
+     * @param {boolean} isReplacement
+     * @return {boolean}
+     * @private
+     */
+    function _shouldScheduleNextRequest(isReplacement) {
+        try {
+            return shouldReplaceBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * If a switch in quality has occurred we check if we need to replace existing segments in the buffer.
+     * This will only happen if fastSwitch is enabled and the buffered quality is lower than the new quality.
+     * @private
+     */
+    function _validateExecutedFragmentRequest() {
         // Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
         const time = playbackController.getTime();
@@ -246,7 +292,7 @@ function ScheduleController(config) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(type);
 
-            // Only replace on track switch when NEVER_REPLACE
+            // Only replace the existing quality in the buffer on a track switch when set to NEVER_REPLACE
             const trackChanged = !mediaController.isCurrentTrack(request.mediaInfo) && mediaController.getSwitchMode(request.mediaInfo.type) === Constants.TRACK_SWITCH_MODE_NEVER_REPLACE;
             const qualityChanged = request.quality < currentRepresentationInfo.quality;
 
@@ -254,19 +300,17 @@ function ScheduleController(config) {
                 replaceRequest(request);
                 isReplacementRequest = true;
                 logger.debug('Reloading outdated fragment at index: ', request.index);
-            } else if (request.quality > currentRepresentationInfo.quality && !replacingBuffer) {
-                // The buffer has better quality it in then what we would request so set append point to end of buffer!!
+            } else if (request.quality > currentRepresentationInfo.quality && !shouldReplaceBuffer) {
+                // The buffer has better quality it in than what we would request so set append point to end of buffer!!
                 eventBus.trigger(Events.SEEK_TARGET, { time: playbackController.getTime() + bufferLevel }, { streamId: streamInfo.id });
             }
         }
     }
 
-    function startScheduleTimer(value) {
-        clearTimeout(scheduleTimeout);
-
-        scheduleTimeout = setTimeout(schedule, value);
-    }
-
+    /**
+     * Sets the processing state. When we have scheduled a new segment request this is set to true.
+     * @param state
+     */
     function setFragmentProcessState(state) {
         if (isFragmentProcessingInProgress !== state) {
             isFragmentProcessingInProgress = state;
@@ -275,26 +319,9 @@ function ScheduleController(config) {
         }
     }
 
-    function processInitRequest(request) {
-        if (request) {
-            setFragmentProcessState(true);
-            fragmentModel.executeRequest(request);
-        }
-    }
-
-    function processMediaRequest(request) {
-        if (request) {
-            logger.debug(`Next fragment request url for stream id ${streamInfo.id} is ${request.url}`);
-            fragmentModel.executeRequest(request);
-        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-            if (playbackController.getIsDynamic()) {
-                logger.debug(`Next fragment for stream id ${streamInfo.id} seems to be at the bleeding live edge and is not available yet. Rescheduling.`);
-            }
-            setFragmentProcessState(false);
-            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
-        }
-    }
-
+    /**
+     * The AdaptationSet is about to be changed.
+     */
     function switchTrackAsked() {
         switchTrack = true;
     }
@@ -355,7 +382,7 @@ function ScheduleController(config) {
             startScheduleTimer(0);
         }
 
-        if (replacingBuffer) {
+        if (shouldReplaceBuffer) {
             mediaRequest = e.request;
         }
     }
@@ -365,12 +392,12 @@ function ScheduleController(config) {
     }
 
     function getIsReplacingBuffer() {
-        return replacingBuffer;
+        return shouldReplaceBuffer;
     }
 
     function onBytesAppended(e) {
-        if (replacingBuffer && !isNaN(e.startTime)) {
-            replacingBuffer = false;
+        if (shouldReplaceBuffer && !isNaN(e.startTime)) {
+            shouldReplaceBuffer = false;
             fragmentModel.addExecutedRequest(mediaRequest);
         }
 
@@ -404,16 +431,12 @@ function ScheduleController(config) {
         startScheduleTimer(0);
     }
 
-    function onDataUpdateStarted(/*e*/) {
-        // stop();
-    }
-
     function onBufferingCompleted(/*e*/) {
         stop();
     }
 
     function onBufferCleared(e) {
-        if (replacingBuffer && settings.get().streaming.flushBufferAtTrackSwitch) {
+        if (shouldReplaceBuffer && settings.get().streaming.flushBufferAtTrackSwitch) {
             // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
             // otherwise audio track switch will be effective only once after previous buffered track is consumed
             playbackController.seek(playbackController.getTime() + 0.001, false, true);
@@ -462,7 +485,6 @@ function ScheduleController(config) {
         checkPlaybackQuality = true;
         isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
-        initialRequest = true;
         lastInitQuality = NaN;
         lastFragmentRequest = {
             mediaInfo: undefined,
@@ -473,14 +495,12 @@ function ScheduleController(config) {
         replaceRequestArray = [];
         isStopped = true;
         switchTrack = false;
-        replacingBuffer = false;
+        shouldReplaceBuffer = false;
         mediaRequest = null;
         isReplacementRequest = false;
     }
 
     function reset() {
-        //eventBus.off(Events.LIVE_EDGE_SEARCH_COMPLETED, onLiveEdgeSearchCompleted, this);
-        eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.off(Events.STREAM_COMPLETED, onStreamCompleted, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);
@@ -503,20 +523,20 @@ function ScheduleController(config) {
     }
 
     instance = {
-        initialize: initialize,
-        getType: getType,
-        getStreamId: getStreamId,
-        setCurrentRepresentation: setCurrentRepresentation,
-        setTimeToLoadDelay: setTimeToLoadDelay,
-        getTimeToLoadDelay: getTimeToLoadDelay,
-        switchTrackAsked: switchTrackAsked,
-        isStarted: isStarted,
-        start: start,
-        stop: stop,
-        reset: reset,
-        getBufferTarget: getBufferTarget,
-        processInitRequest: processInitRequest,
-        processMediaRequest: processMediaRequest,
+        initialize,
+        getType,
+        getStreamId,
+        setCurrentRepresentation,
+        setTimeToLoadDelay,
+        getTimeToLoadDelay,
+        setFragmentProcessState,
+        switchTrackAsked,
+        isStarted,
+        start,
+        startScheduleTimer,
+        stop,
+        reset,
+        getBufferTarget,
         getPlaybackController,
         getIsReplacingBuffer
     };

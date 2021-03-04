@@ -151,7 +151,12 @@ function DashHandler(config) {
         return true;
     }
 
-    function generateInitRequest(mediaInfo, representation, mediaType) {
+    function getInitRequest(mediaInfo, representation) {
+        if (!representation) return null;
+        return _generateInitRequest(mediaInfo, representation, getType());
+    }
+
+    function _generateInitRequest(mediaInfo, representation, mediaType) {
         const request = new FragmentRequest();
         const period = representation.adaptation.period;
         const presentationStartTime = period.start;
@@ -169,11 +174,6 @@ function DashHandler(config) {
             request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
             return request;
         }
-    }
-
-    function getInitRequest(mediaInfo, representation) {
-        if (!representation) return null;
-        return generateInitRequest(mediaInfo, representation, getType());
     }
 
     function setMimeType(newMimeType) {
@@ -200,7 +200,7 @@ function DashHandler(config) {
         }
     }
 
-    function getRequestForSegment(mediaInfo, segment) {
+    function _getRequestForSegment(mediaInfo, segment) {
         if (segment === null || segment === undefined) {
             return null;
         }
@@ -282,7 +282,7 @@ function DashHandler(config) {
             segmentIndex = segment.availabilityIdx;
             lastSegment = segment;
             logger.debug('Index for time ' + time + ' is ' + segmentIndex);
-            request = getRequestForSegment(mediaInfo, segment);
+            request = _getRequestForSegment(mediaInfo, segment);
         } else {
             const finished = !ignoreIsFinished ? isMediaFinished(representation) : false;
             if (finished) {
@@ -317,7 +317,7 @@ function DashHandler(config) {
             lastSegment ? lastSegment.mediaStartTime : -1
         );
         if (!segment) return null;
-        request = getRequestForSegment(mediaInfo, segment);
+        request = _getRequestForSegment(mediaInfo, segment);
         return request;
     }
 
@@ -346,7 +346,7 @@ function DashHandler(config) {
             return null;
         } else {
             if (segment) {
-                request = getRequestForSegment(mediaInfo, segment);
+                request = _getRequestForSegment(mediaInfo, segment);
                 segmentIndex = segment.availabilityIdx;
             } else {
                 if (isDynamicManifest) {
@@ -443,20 +443,19 @@ function DashHandler(config) {
     }
 
     instance = {
-        initialize: initialize,
-        getStreamId: getStreamId,
-        getType: getType,
-        getStreamInfo: getStreamInfo,
-        getInitRequest: getInitRequest,
-        getRequestForSegment: getRequestForSegment,
-        getSegmentRequestForTime: getSegmentRequestForTime,
-        getNextSegmentRequest: getNextSegmentRequest,
-        setCurrentIndex: setCurrentIndex,
-        getCurrentIndex: getCurrentIndex,
-        isMediaFinished: isMediaFinished,
-        reset: reset,
-        resetIndex: resetIndex,
-        setMimeType: setMimeType,
+        initialize,
+        getStreamId,
+        getType,
+        getStreamInfo,
+        getInitRequest,
+        getSegmentRequestForTime,
+        getNextSegmentRequest,
+        setCurrentIndex,
+        getCurrentIndex,
+        isMediaFinished,
+        reset,
+        resetIndex,
+        setMimeType,
         getNextSegmentRequestIdempotent
     };
 

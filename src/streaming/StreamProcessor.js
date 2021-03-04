@@ -82,7 +82,7 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         seekTime,
-        indexHandler,
+        dashHandler,
         bufferingTime,
         bufferPruned;
 
@@ -105,7 +105,7 @@ function StreamProcessor(config) {
     }
 
     function initialize(mediaSource, hasVideoTrack) {
-        indexHandler = DashHandler(context).create({
+        dashHandler = DashHandler(context).create({
             streamInfo: streamInfo,
             type: type,
             timelineConverter: timelineConverter,
@@ -128,7 +128,7 @@ function StreamProcessor(config) {
         isDynamic = streamInfo.manifestInfo.isDynamic;
 
         // Create/initialize controllers
-        indexHandler.initialize(isDynamic);
+        dashHandler.initialize(isDynamic);
         abrController.registerStreamType(type, instance);
 
         representationController = RepresentationController(context).create({
@@ -188,8 +188,8 @@ function StreamProcessor(config) {
     }
 
     function reset(errored, keepBuffers) {
-        if (indexHandler) {
-            indexHandler.reset();
+        if (dashHandler) {
+            dashHandler.reset();
         }
 
         if (bufferController) {
@@ -287,9 +287,15 @@ function StreamProcessor(config) {
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
                 // Init segment not in cache, send new request
-                const request = indexHandler ? indexHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
-                scheduleController.processInitRequest(request);
+                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
+                _processInitRequest(request);
             }
+        }
+    }
+
+    function _processInitRequest(request) {
+        if (request) {
+            fragmentModel.executeRequest(request);
         }
     }
 
@@ -313,7 +319,7 @@ function StreamProcessor(config) {
             }
         }
 
-        scheduleController.processMediaRequest(request);
+        _processMediaRequest(request);
     }
 
     function _findNextRequest(requestToReplace) {
@@ -341,14 +347,27 @@ function StreamProcessor(config) {
                 });
             bufferPruned = false;
 
-            // Then, check if this request was downloaded or not
-            while (request && request.action !== FragmentRequest.ACTION_COMPLETE && fragmentModel.isFragmentLoaded(request)) {
+            // The seek target was already adjusted depending on that we have downloaded and what is in the buffer. No need to check here again.
+            while (request && request.action === FragmentRequest.ACTION_COMPLETE) {
                 // loop until we found not loaded fragment, or no fragment
                 request = _getFragmentRequest(representationInfo);
             }
         }
 
         return request;
+    }
+
+    function _processMediaRequest(request) {
+        if (request) {
+            logger.debug(`Next fragment request url for stream id ${streamInfo.id} is ${request.url}`);
+            fragmentModel.executeRequest(request);
+        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+            if (playbackController.getIsDynamic()) {
+                logger.debug(`Next fragment for stream id ${streamInfo.id} seems to be at the bleeding live edge and is not available yet. Rescheduling.`);
+            }
+            scheduleController.setFragmentProcessState(false);
+            scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
+        }
     }
 
     function _onDataUpdateCompleted(e) {
@@ -452,7 +471,7 @@ function StreamProcessor(config) {
             if (quality > maxQuality) {
                 quality = maxQuality;
             }
-            indexHandler.setMimeType(mediaInfo ? mediaInfo.mimeType : null);
+            dashHandler.setMimeType(mediaInfo ? mediaInfo.mimeType : null);
             representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
         }
     }
@@ -527,7 +546,7 @@ function StreamProcessor(config) {
         const representation = representationController && representationInfo ?
             representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
-        let request = indexHandler.getNextSegmentRequestIdempotent(
+        let request = dashHandler.getNextSegmentRequestIdempotent(
             getMediaInfo(),
             representation
         );
@@ -662,24 +681,24 @@ function StreamProcessor(config) {
         bufferingTime = value;
     }
 
-    function resetIndexHandler() {
-        if (indexHandler) {
-            indexHandler.resetIndex();
+    function resetDashHandler() {
+        if (dashHandler) {
+            dashHandler.resetIndex();
         }
     }
 
     function _getFragmentRequest(representationInfo, time, options) {
         let fragRequest = null;
 
-        if (indexHandler) {
+        if (dashHandler) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
 
             // if time and options are undefined, it means the next segment is requested
             // otherwise, the segment at this specific time is requested.
             if (time !== undefined && options !== undefined) {
-                fragRequest = indexHandler.getSegmentRequestForTime(getMediaInfo(), representation, time, options);
+                fragRequest = dashHandler.getSegmentRequestForTime(getMediaInfo(), representation, time, options);
             } else {
-                fragRequest = indexHandler.getNextSegmentRequest(getMediaInfo(), representation);
+                fragRequest = dashHandler.getNextSegmentRequest(getMediaInfo(), representation);
             }
         }
 
@@ -716,7 +735,7 @@ function StreamProcessor(config) {
         getBuffer,
         setBuffer,
         setBufferingTime,
-        resetIndexHandler,
+        resetDashHandler,
         finalisePlayList,
         probeNextRequest,
         reset

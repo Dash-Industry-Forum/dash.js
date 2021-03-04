@@ -634,7 +634,7 @@ function Stream(config) {
             } else {
                 //processor.getScheduleController().setSeekTarget(currentTime);
                 processor.setBufferingTime(currentTime);
-                processor.resetIndexHandler();
+                processor.resetDashHandler();
             }
         }
     }

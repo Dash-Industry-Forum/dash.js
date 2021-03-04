@@ -876,8 +876,8 @@ function BufferController(config) {
         return mediaSource;
     }
 
-    function replaceBuffer() {
-        replacingBuffer = true;
+    function setReplaceBuffer(value) {
+        replacingBuffer = value;
     }
 
     function getIsBufferingCompleted() {
@@ -1007,7 +1007,7 @@ function BufferController(config) {
         setMediaSource,
         getMediaSource,
         appendInitSegmentFromCache,
-        replaceBuffer,
+        setReplaceBuffer,
         getIsBufferingCompleted,
         getIsPruningInProgress,
         reset,
