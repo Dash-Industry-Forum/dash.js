@@ -767,7 +767,7 @@ function MediaPlayer() {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
             let metric = dashMetrics.getCurrentDVRInfo();
-            t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
+            t = (metric === null || metric.time === 0) ? 0 : duration() - (metric.range.end - metric.time);
         }
 
         return t;
