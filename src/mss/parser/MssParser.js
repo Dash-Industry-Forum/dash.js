@@ -643,7 +643,7 @@ function MssParser(config) {
             // Duration will be set according to current segment timeline duration (see below)
         }
 
-        if (manifest.type === 'dynamic'  && manifest.timeShiftBufferDepth < Infinity) {
+        if (manifest.type === 'dynamic') {
             manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
@@ -741,6 +741,7 @@ function MssParser(config) {
             // Store initial buffer settings
             initialBufferSettings = {
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline,
                     'liveDelay': settings.get().streaming.liveDelay,
                     'stableBufferTime': settings.get().streaming.stableBufferTime,
                     'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
@@ -750,6 +751,7 @@ function MssParser(config) {
 
             settings.update({
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': true,
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,
