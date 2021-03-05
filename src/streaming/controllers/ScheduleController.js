@@ -164,29 +164,34 @@ function ScheduleController(config) {
      * Schedule the request for an init or a media segment
      */
     function schedule() {
-        // Check if we are supposed to stop scheduling
-        if (_shouldStop()) {
-            stop();
-            return;
-        }
-
-        if (isFragmentProcessingInProgress) {
-            return;
-        }
-
-        // Validate the last executed request. In case of an ABR switch we might want to replace existing stuff in the buffer.
-        _validateExecutedFragmentRequest();
-
-        const isReplacement = replaceRequestArray.length > 0;
-        if (_shouldScheduleNextRequest(isReplacement)) {
-            setFragmentProcessState(true);
-            if (!isReplacement && checkPlaybackQuality) {
-                // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation
-                abrController.checkPlaybackQuality(type, streamInfo.id);
+        try {
+            // Check if we are supposed to stop scheduling
+            if (_shouldStop()) {
+                stop();
+                return;
             }
-            _getNextFragment();
 
-        } else {
+            if (isFragmentProcessingInProgress) {
+                return;
+            }
+
+            // Validate the last executed request. In case of an ABR switch we might want to replace existing stuff in the buffer.
+            _validateExecutedFragmentRequest();
+
+            const isReplacement = replaceRequestArray.length > 0;
+            if (_shouldScheduleNextRequest(isReplacement)) {
+                setFragmentProcessState(true);
+                if (!isReplacement && checkPlaybackQuality) {
+                    // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation
+                    abrController.checkPlaybackQuality(type, streamInfo.id);
+                }
+                _getNextFragment();
+
+            } else {
+                startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
+            }
+        } catch (e) {
+            setFragmentProcessState(false);
             startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
         }
     }

@@ -295,6 +295,8 @@ function StreamProcessor(config) {
     function _processInitRequest(request) {
         if (request) {
             fragmentModel.executeRequest(request);
+        } else {
+            _onNoValidRequest();
         }
     }
 
@@ -367,9 +369,14 @@ function StreamProcessor(config) {
             if (playbackController.getIsDynamic()) {
                 logger.debug(`Next fragment for stream id ${streamInfo.id} seems to be at the bleeding live edge and is not available yet. Rescheduling.`);
             }
-            scheduleController.setFragmentProcessState(false);
-            scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
+            _onNoValidRequest();
+
         }
+    }
+
+    function _onNoValidRequest() {
+        scheduleController.setFragmentProcessState(false);
+        scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
     }
 
     function _onDataUpdateCompleted(e) {
