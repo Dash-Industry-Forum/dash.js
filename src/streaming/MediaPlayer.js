@@ -160,7 +160,8 @@ function MediaPlayer() {
         domStorage,
         segmentBaseController,
         licenseRequestFilters,
-        licenseResponseFilters;
+        licenseResponseFilters,
+        customCapabilitiesFilters;
 
     /*
     ---------------------------------------------------------------------------
@@ -186,6 +187,7 @@ function MediaPlayer() {
         uriFragmentModel = URIFragmentModel(context).getInstance();
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        customCapabilitiesFilters = [];
     }
 
     /**
@@ -407,6 +409,7 @@ function MediaPlayer() {
         reset();
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        customCapabilitiesFilters = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -1741,6 +1744,34 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCustomCapabilitiesFilter(filter) {
+        customCapabilitiesFilters.push(filter);
+        if (capabilitiesFilter) {
+            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
+        }
+    }
+
+    /**
+     * Unregisters a custom capabilities filter.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCustomCapabilitiesFilter(filter) {
+        unregisterFilter(customCapabilitiesFilters, filter);
+        if (capabilitiesFilter) {
+            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
+        }
+    }
+
     function unregisterFilter(filters, filter) {
         let index = -1;
         filters.some((item, i) => {
@@ -2043,6 +2074,7 @@ function MediaPlayer() {
             adapter,
             settings
         });
+        capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
 
         streamController.setConfig({
             capabilities: capabilities,
@@ -2404,6 +2436,8 @@ function MediaPlayer() {
         registerLicenseResponseFilter: registerLicenseResponseFilter,
         unregisterLicenseRequestFilter: unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter: unregisterLicenseResponseFilter,
+        registerCustomCapabilitiesFilter,
+        unregisterCustomCapabilitiesFilter,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,
