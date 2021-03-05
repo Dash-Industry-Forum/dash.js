@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
-    <title>Widevine DRM instantiation example</title>
+    <title>Custom capabilities filter example</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
     <!--dash.all.min.js should be used in production over dash.all.debug.js
@@ -17,11 +17,11 @@
                 url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
             var filterCapabilities = function (representation) {
-                console.log('REPRESENTATION', representation);
+                console.log('Representation', representation);
+                /* Filter representations based on certain attributes like the resolution. Return false to filter specific representation */
                 if (representation.mimeType === "video/mp4") {
                     return representation.height <= 720;
                 }
-                /* Here you can choose whether or not to use the representation */
                 return true;
             }
 
