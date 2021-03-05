@@ -6,6 +6,7 @@ import Constants from '../../src/streaming/constants/Constants';
 
 import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 import StreamProcessorMock from './mocks/StreamProcessorMock';
+import DashMetricsMock from './mocks/DashMetricsMock';
 import DebugMock from './mocks/DebugMock';
 import ISOBoxer from 'codem-isoboxer';
 
@@ -16,11 +17,13 @@ const context = {};
 const playbackController = PlaybackController(context).getInstance();
 const eventBus = EventBus(context).getInstance();
 const errorHandlerMock = new ErrorHandlerMock();
+const dashMetricsMock = new DashMetricsMock();
 const mssFragmentProcessor = MssFragmentProcessor(context).create({
     playbackController: playbackController,
     eventBus: eventBus,
     ISOBoxer: ISOBoxer,
     errHandler: errorHandlerMock,
+    dashMetrics: dashMetricsMock,
     debug: new DebugMock(),
     constants: Constants});
 

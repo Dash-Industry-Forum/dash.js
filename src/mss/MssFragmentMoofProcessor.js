@@ -151,21 +151,23 @@ function MssFragmentMoofProcessor(config) {
             }
             return;
         }
-        // In case of live streams, update segment timeline according to DVR window
-        else if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
-            // Get timestamp of the last segment
-            segment = segments[segments.length - 1];
-            t = segment.t;
+        else {
+            // In case of live streams, update segment timeline according to DVR window
+            if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
+                // Get timestamp of the last segment
+                segment = segments[segments.length - 1];
+                t = segment.t;
 
-            // Determine the segments' availability start time
-            availabilityStartTime = Math.round((t - (manifest.timeShiftBufferDepth * timescale)) / timescale);
+                // Determine the segments' availability start time
+                availabilityStartTime = Math.round((t - (manifest.timeShiftBufferDepth * timescale)) / timescale);
 
-            // Remove segments prior to availability start time
-            segment = segments[0];
-            while (Math.round(segment.t / timescale) < availabilityStartTime) {
-                // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
-                segments.splice(0, 1);
+                // Remove segments prior to availability start time
                 segment = segments[0];
+                while (Math.round(segment.t / timescale) < availabilityStartTime) {
+                    // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
+                    segments.splice(0, 1);
+                    segment = segments[0];
+                }
             }
 
             // Update DVR window range => set range end to end time of current segment
