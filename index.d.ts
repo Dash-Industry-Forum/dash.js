@@ -243,6 +243,18 @@ declare namespace dashjs {
         }
     }
 
+    export interface Representation {
+        bandwidth: number
+        codecs: string
+        frameRate: number
+        height: number
+        id: string
+        mimeType: string
+        sar: string
+        scanType: string
+        width: number
+    }
+
     export type CapabilitiesFilter = (representation: Representation) => boolean;
 
     export interface MediaPlayerClass {
