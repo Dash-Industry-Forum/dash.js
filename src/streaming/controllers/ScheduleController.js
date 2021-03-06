@@ -91,8 +91,6 @@ function ScheduleController(config) {
             settings: settings
         });
 
-        eventBus.on(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.on(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, this);
@@ -477,14 +475,6 @@ function ScheduleController(config) {
         dashMetrics.updatePlayListTraceMetrics({ playbackspeed: e.playbackRate.toString() });
     }
 
-    function onDataUpdateStarted() {
-        stop();
-    }
-
-    function onDataUpdateCompleted() {
-        start();
-    }
-
     function setTimeToLoadDelay(value) {
         timeToLoadDelay = value;
     }
@@ -517,8 +507,6 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        eventBus.off(Events.DATA_UPDATE_STARTED, onDataUpdateStarted, this);
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, this);
         eventBus.off(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
         eventBus.off(Events.BUFFER_CLEARED, onBufferCleared, this);

@@ -836,13 +836,9 @@ function StreamController() {
         }
 
         if (!isNaN(seekTime)) {
-            if (seekTime !== playbackController.getTime()) {
-                logger.debug(`Stream activation requires seek to ${seekTime}`);
-                playbackController.seek(seekTime);
-            } else if (!activeStream.getPreloaded()) {
-                // set buffer target to correct time
-                eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
-            }
+            eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
+            playbackController.seek(seekTime, false, true);
+            activeStream.startScheduleControllers();
         }
 
         if (autoPlay && initialPlayback) {

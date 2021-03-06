@@ -698,12 +698,6 @@ function Stream(config) {
             streamInfo
         });
 
-        // (Re)start ScheduleController:
-        // - in case stream initialization has been completed after 'play' event (case for SegmentBase streams)
-        // - in case stream is complete but a track switch has been requested
-        for (let i = 0; i < ln && streamProcessors[i]; i++) {
-            streamProcessors[i].getScheduleController().start();
-        }
     }
 
     function getMediaInfo(type) {
@@ -780,6 +774,13 @@ function Stream(config) {
         }
 
         return arr;
+    }
+
+    function startScheduleControllers() {
+        const ln = streamProcessors.length;
+        for (let i = 0; i < ln && streamProcessors[i]; i++) {
+            streamProcessors[i].getScheduleController().start();
+        }
     }
 
     function updateData(updatedStreamInfo) {
@@ -944,7 +945,8 @@ function Stream(config) {
         setIsEndedEventSignaled,
         getAdapter,
         getHasFinishedBuffering,
-        setPreloaded
+        setPreloaded,
+        startScheduleControllers
     };
 
     setup();
