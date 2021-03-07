@@ -643,7 +643,7 @@ function MssParser(config) {
             // Duration will be set according to current segment timeline duration (see below)
         }
 
-        if (manifest.type === 'dynamic'  && manifest.timeShiftBufferDepth < Infinity) {
+        if (manifest.type === 'dynamic') {
             manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
@@ -735,12 +735,13 @@ function MssParser(config) {
             }
             let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
-            // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
-            let bufferTime = liveDelay - segmentDuration;
+            // Consider a margin of more than one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
+            let bufferTime = liveDelay - (segmentDuration * 1.5);
 
             // Store initial buffer settings
             initialBufferSettings = {
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline,
                     'liveDelay': settings.get().streaming.liveDelay,
                     'stableBufferTime': settings.get().streaming.stableBufferTime,
                     'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
@@ -750,6 +751,7 @@ function MssParser(config) {
 
             settings.update({
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': true,
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,
