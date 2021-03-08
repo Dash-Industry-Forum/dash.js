@@ -303,7 +303,7 @@ function StreamProcessor(config) {
         }
     }
 
-    function _onMediaFragmentNeeded(e) {
+    function _onMediaFragmentNeeded() {
         let request = null;
 
         const representation = representationController.getCurrentRepresentation();
@@ -316,52 +316,49 @@ function StreamProcessor(config) {
                 streamId: streamInfo.id,
                 mediaType: type
             });
+            scheduleController.stop();
+            scheduleController.setFragmentProcessState(false);
             return;
         }
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
-            request = _findNextRequest(e.replacement);
+            request = _getFragmentRequest();
             if (request) {
                 shouldUseExplicitTimeForRequest = false;
-                if (!e.replacement) {
-                    if (!isNaN(request.startTime + request.duration)) {
-                        bufferingTime = request.startTime + request.duration;
-                    }
-                    request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
-                    scheduleController.setTimeToLoadDelay(0);
+                if (!isNaN(request.startTime + request.duration)) {
+                    bufferingTime = request.startTime + request.duration;
                 }
+                request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
+                scheduleController.setTimeToLoadDelay(0);
             }
         }
 
         _processMediaRequest(request);
     }
 
-    function _findNextRequest(requestToReplace) {
+    function _getFragmentRequest() {
         const representationInfo = getRepresentationInfo();
-        let time = bufferingTime;
         let request;
 
-        if (isNaN(time) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
+        if (isNaN(bufferingTime) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
             return null;
         }
 
-        if (requestToReplace) {
-            time = requestToReplace.startTime + (requestToReplace.duration / 2);
-            request = _getFragmentRequest(representationInfo, time, {
-                timeThreshold: 0,
-                ignoreIsFinished: true
-            });
-        } else {
-            // Use time just whenever is strictly needed
-            const useTime = shouldUseExplicitTimeForRequest || bufferPruned;
-            request = _getFragmentRequest(representationInfo,
-                useTime ? time : undefined, {
-                    keepIdx: !useTime
-                });
-            bufferPruned = false;
+        // Use time just whenever is strictly needed
+        const useTime = shouldUseExplicitTimeForRequest || bufferPruned;
+
+        if (dashHandler) {
+            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
+
+            if (useTime) {
+                request = dashHandler.getSegmentRequestForTime(getMediaInfo(), representation, bufferingTime);
+            } else {
+                request = dashHandler.getNextSegmentRequest(getMediaInfo(), representation);
+            }
         }
 
+        bufferPruned = false;
         return request;
     }
 
@@ -371,10 +368,9 @@ function StreamProcessor(config) {
             fragmentModel.executeRequest(request);
         } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
             if (playbackController.getIsDynamic()) {
-                logger.debug(`Next fragment for stream id ${streamInfo.id} seems to be at the bleeding live edge and is not available yet. Rescheduling.`);
+                logger.debug(`Next fragment for stream id ${streamInfo.id} is not available yet. We are either pruning the buffer or the segment is not completed yet. Rescheduling.`);
             }
             _noValidRequest();
-
         }
     }
 
@@ -766,24 +762,6 @@ function StreamProcessor(config) {
         if (dashHandler) {
             dashHandler.resetIndex();
         }
-    }
-
-    function _getFragmentRequest(representationInfo, time, options) {
-        let fragRequest = null;
-
-        if (dashHandler) {
-            const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
-
-            // if time and options are undefined, it means the next segment is requested
-            // otherwise, the segment at this specific time is requested.
-            if (time !== undefined && options !== undefined) {
-                fragRequest = dashHandler.getSegmentRequestForTime(getMediaInfo(), representation, time, options);
-            } else {
-                fragRequest = dashHandler.getNextSegmentRequest(getMediaInfo(), representation);
-            }
-        }
-
-        return fragRequest;
     }
 
     function finalisePlayList(time, reason) {

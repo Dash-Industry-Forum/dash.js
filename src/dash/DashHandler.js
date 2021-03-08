@@ -48,7 +48,6 @@ function DashHandler(config) {
     const eventBus = config.eventBus;
     const events = config.events;
     const debug = config.debug;
-    const dashConstants = config.dashConstants;
     const urlUtils = config.urlUtils;
     const type = config.type;
     const streamInfo = config.streamInfo;
@@ -255,21 +254,18 @@ function DashHandler(config) {
             const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
             const duration = representation.adaptation.period.duration;
 
-            return isFinite(duration) && endTime >= duration - 0.1;
+            return isFinite(duration) && endTime >= duration - 0.05;
         }
 
         return isFinished;
     }
 
-    function getSegmentRequestForTime(mediaInfo, representation, time, options) {
+    function getSegmentRequestForTime(mediaInfo, representation, time) {
         let request = null;
 
         if (!representation || !representation.segmentInfoType) {
             return request;
         }
-
-        const idx = segmentIndex;
-        const keepIdx = options ? options.keepIdx : false;
 
         if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
             requestedTime = time;
@@ -282,10 +278,6 @@ function DashHandler(config) {
             lastSegment = segment;
             logger.debug('Index for time ' + time + ' is ' + segmentIndex);
             request = _getRequestForSegment(mediaInfo, segment);
-        }
-
-        if (keepIdx && idx >= 0) {
-            segmentIndex = representation.segmentInfoType === dashConstants.SEGMENT_TIMELINE && isDynamicManifest ? segmentIndex : idx;
         }
 
         return request;

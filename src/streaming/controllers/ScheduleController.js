@@ -88,7 +88,6 @@ function ScheduleController(config) {
         });
 
 
-        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
@@ -184,7 +183,6 @@ function ScheduleController(config) {
                 startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
             }
         } catch (e) {
-            console.log('catch block');
             setFragmentProcessState(false);
             startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
         }
@@ -309,16 +307,6 @@ function ScheduleController(config) {
         }
     }
 
-    /**
-     * Triggered when we are done with requesting segments for the corresponding period. Stop scheduling.
-     * @private
-     */
-    function _onStreamRequestingCompleted() {
-        stop();
-        setFragmentProcessState(false);
-        logger.info(`Stream ${streamInfo.id} is complete`);
-    }
-
     function onPlaybackTimeUpdated() {
         completeQualityChange(true);
     }
@@ -403,7 +391,6 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        eventBus.off(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
