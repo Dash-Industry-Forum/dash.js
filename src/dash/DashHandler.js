@@ -237,10 +237,15 @@ function DashHandler(config) {
         }
     }
 
-    function isMediaFinished(representation) {
+    function isMediaFinished(representation, bufferingTime) {
         let isFinished = false;
 
         if (!representation || !lastSegment) return isFinished;
+
+        // we are replacing existing stuff.
+        if (lastSegment.startTime + lastSegment.duration > bufferingTime) {
+            return false;
+        }
 
 
         if (isDynamicManifest && dynamicStreamCompleted) {

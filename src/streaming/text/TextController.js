@@ -336,7 +336,7 @@ function TextController() {
                                     break;
                                 }
                             }
-                            streamProcessor.setBufferingTime(videoModel.getTime());
+                            streamProcessor.setExplicitBufferingTime(videoModel.getTime());
                             streamProcessor.getScheduleController().start();
                         }
                     }

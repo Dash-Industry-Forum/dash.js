@@ -633,7 +633,7 @@ function Stream(config) {
                 processor.getFragmentModel().abortRequests();
             } else {
                 //processor.getScheduleController().setSeekTarget(currentTime);
-                processor.setBufferingTime(currentTime);
+                processor.setExplicitBufferingTime(currentTime);
                 processor.resetDashHandler();
             }
         }

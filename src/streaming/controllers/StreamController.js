@@ -661,7 +661,7 @@ function StreamController() {
                 nextStream.preload(mediaSource, bufferSinks);
                 preloadingStreams.push(nextStream);
                 nextStream.getProcessors().forEach(p => {
-                    p.setBufferingTime(nextStream.getStartTime());
+                    p.setExplicitBufferingTime(nextStream.getStartTime());
                 });
             }
         }
