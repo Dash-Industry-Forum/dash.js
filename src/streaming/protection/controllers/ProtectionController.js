@@ -791,15 +791,17 @@ function ProtectionController(config) {
     function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
 
-        const cmcdMode = settings.get().streaming.cmcd.mode;
-        if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
-            const cmcdParams = cmcdModel.getQueryParameter({
-                url: request.url,
-                type: HTTPRequest.LICENSE
-            });
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
+                const cmcdParams = cmcdModel.getQueryParameter({
+                    url: request.url,
+                    type: HTTPRequest.LICENSE
+                });
 
-            if (cmcdParams) {
-                request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                if (cmcdParams) {
+                    request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                }
             }
         }
 
@@ -813,17 +815,20 @@ function ProtectionController(config) {
             xhr.setRequestHeader(key, request.headers[key]);
         }
 
-        if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
-            const cmcdHeaders = cmcdModel.getHeaderParameters({
-                url: request.url,
-                type: HTTPRequest.LICENSE
-            });
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
+                const cmcdHeaders = cmcdModel.getHeaderParameters({
+                    url: request.url,
+                    type: HTTPRequest.LICENSE
+                });
 
-            if (cmcdHeaders) {
-                for (const header in cmcdHeaders) {
-                    let value = cmcdHeaders[header];
-                    if (value) {
-                        xhr.setRequestHeader(header, value);
+                if (cmcdHeaders) {
+                    for (const header in cmcdHeaders) {
+                        let value = cmcdHeaders[header];
+                        if (value) {
+                            xhr.setRequestHeader(header, value);
+                        }
                     }
                 }
             }

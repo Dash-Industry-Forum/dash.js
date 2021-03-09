@@ -491,6 +491,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [mode]
+ * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers or 'mixed' to use both.
+ *
+ * If not specified this value defaults to 'query'.
  */
 
 /**

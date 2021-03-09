@@ -251,18 +251,20 @@ function HTTPLoader(cfg) {
             });
         }
 
+        let headers = null;
         let modifiedUrl = requestModifier.modifyRequestURL(request.url);
-        const cmcdMode = settings.get().streaming.cmcd.mode;
-        if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
-            const additionalQueryParameter = _getAdditionalQueryParameter(request);
-            modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
+                const additionalQueryParameter = _getAdditionalQueryParameter(request);
+                modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+            }
+            if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
+                headers = cmcdModel.getHeaderParameters(request);
+            }
         }
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
-        let headers = null;
-        if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
-            headers = cmcdModel.getHeaderParameters(request);
-        }
 
 
         httpRequest = {
