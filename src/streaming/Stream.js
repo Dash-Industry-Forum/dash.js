@@ -262,7 +262,7 @@ function Stream(config) {
             _createBufferSinks(previousBuffers);
 
             for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
-                streamProcessors[i].getScheduleController().start();
+                streamProcessors[i].getScheduleController().startScheduleTimer();
             }
 
             setPreloaded(true);
@@ -779,7 +779,7 @@ function Stream(config) {
     function startScheduleControllers() {
         const ln = streamProcessors.length;
         for (let i = 0; i < ln && streamProcessors[i]; i++) {
-            streamProcessors[i].getScheduleController().start();
+            streamProcessors[i].getScheduleController().startScheduleTimer();
         }
     }
 

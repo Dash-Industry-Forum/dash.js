@@ -56,7 +56,6 @@ function ScheduleController(config) {
     let instance,
         logger,
         currentRepresentationInfo,
-        isStopped,
         isFragmentProcessingInProgress,
         timeToLoadDelay,
         scheduleTimeout,
@@ -89,8 +88,7 @@ function ScheduleController(config) {
 
 
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
-        eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, instance);
         eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
@@ -109,33 +107,12 @@ function ScheduleController(config) {
         currentRepresentationInfo = representationInfo;
     }
 
-    function isStarted() {
-        return (isStopped === false);
-    }
-
-    function start() {
-        if (isStarted()) return;
+    function startScheduleTimer(value) {
         if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
 
-        logger.debug(`ScheduleController for stream id ${streamInfo.id} starts`);
-        isStopped = false;
-
-        startScheduleTimer(0);
-    }
-
-    function stop() {
-        if (isStopped) return;
-
-        logger.debug(type + ' Schedule Controller stops');
-        isStopped = true;
         clearScheduleTimer();
-    }
-
-
-    function startScheduleTimer(value) {
-        clearScheduleTimer();
-
-        scheduleTimeout = setTimeout(schedule, value);
+        const timeoutValue = !isNaN(value) ? value : 0;
+        scheduleTimeout = setTimeout(schedule, timeoutValue);
     }
 
     function clearScheduleTimer() {
@@ -161,8 +138,8 @@ function ScheduleController(config) {
     function schedule() {
         try {
             // Check if we are supposed to stop scheduling
-            if (_shouldStop()) {
-                stop();
+            if (_shouldClearScheduleTimer()) {
+                clearScheduleTimer();
                 return;
             }
 
@@ -172,7 +149,6 @@ function ScheduleController(config) {
             }
 
             if (_shouldScheduleNextRequest()) {
-                setFragmentProcessState(true);
                 if (checkPlaybackQuality) {
                     // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation
                     abrController.checkPlaybackQuality(type, streamInfo.id);
@@ -183,7 +159,6 @@ function ScheduleController(config) {
                 startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
             }
         } catch (e) {
-            setFragmentProcessState(false);
             startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
         }
     }
@@ -212,6 +187,7 @@ function ScheduleController(config) {
             );
             lastInitQuality = currentRepresentationInfo.quality;
             checkPlaybackQuality = false;
+            initSegmentRequired = false;
         }
 
         // Request a media segment instead
@@ -231,9 +207,9 @@ function ScheduleController(config) {
      * @return {boolean}
      * @private
      */
-    function _shouldStop() {
+    function _shouldClearScheduleTimer() {
         try {
-            return isStopped || (((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()));
+            return (((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()));
         } catch (e) {
             return false;
         }
@@ -241,7 +217,6 @@ function ScheduleController(config) {
 
     /**
      * Check if we can start scheduling the next request
-     * @param {boolean} isReplacement
      * @return {boolean}
      * @private
      */
@@ -250,18 +225,6 @@ function ScheduleController(config) {
             return shouldReplaceBuffer || isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack);
         } catch (e) {
             return false;
-        }
-    }
-
-    /**
-     * Sets the processing state. When we have scheduled a new segment request this is set to true.
-     * @param state
-     */
-    function setFragmentProcessState(state) {
-        if (isFragmentProcessingInProgress !== state) {
-            isFragmentProcessingInProgress = state;
-        } else {
-            logger.debug('isFragmentProcessingInProgress is already equal to', state);
         }
     }
 
@@ -315,14 +278,13 @@ function ScheduleController(config) {
         return shouldReplaceBuffer;
     }
 
-    function onBytesAppended(e) {
+    function _onBytesAppended(e) {
         if (shouldReplaceBuffer && !isNaN(e.startTime)) {
             shouldReplaceBuffer = false;
             fragmentModel.addExecutedRequest(mediaRequest);
         }
 
         logger.debug(`Appended bytes for ${e.mediaType} and set fragment process state to false for ${type}`);
-        setFragmentProcessState(false);
         startScheduleTimer(0);
     }
 
@@ -335,24 +297,18 @@ function ScheduleController(config) {
 
         // (Re)start schedule once buffer has been pruned after a QuotaExceededError
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
-            start();
+            startScheduleTimer();
         }
-    }
-
-    function _onQuotaExceeded(/*e*/) {
-        // Stop scheduler (will be restarted once buffer is pruned)
-        stop();
-        setFragmentProcessState(false);
     }
 
     function onURLResolutionFailed() {
         fragmentModel.abortRequests();
-        stop();
+        clearScheduleTimer();
     }
 
     function onPlaybackStarted() {
         if (!settings.get().streaming.scheduleWhilePaused) {
-            start();
+            startScheduleTimer();
         }
     }
 
@@ -372,6 +328,14 @@ function ScheduleController(config) {
         return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
     }
 
+    function setCheckPlaybackQuality(value) {
+        checkPlaybackQuality = value;
+    }
+
+    function setInitSegmentRequired(value) {
+        initSegmentRequired = value;
+    }
+
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         isFragmentProcessingInProgress = false;
@@ -383,7 +347,6 @@ function ScheduleController(config) {
             adaptationIndex: NaN
         };
         topQualityIndex = NaN;
-        isStopped = true;
         switchTrack = false;
         shouldReplaceBuffer = false;
         mediaRequest = null;
@@ -392,14 +355,13 @@ function ScheduleController(config) {
 
     function reset() {
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
-        eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, instance);
         eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
         eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, instance);
 
-        stop();
+        clearScheduleTimer();
         completeQualityChange(false);
         resetInitialSettings();
     }
@@ -415,17 +377,16 @@ function ScheduleController(config) {
         setCurrentRepresentation,
         setTimeToLoadDelay,
         getTimeToLoadDelay,
-        setFragmentProcessState,
         setSwitchTrack,
         getSwitchStrack,
-        isStarted,
-        start,
         startScheduleTimer,
-        stop,
+        clearScheduleTimer,
         reset,
         getBufferTarget,
         getPlaybackController,
-        getIsReplacingBuffer
+        getIsReplacingBuffer,
+        setCheckPlaybackQuality,
+        setInitSegmentRequired
     };
 
     setup();
