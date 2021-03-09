@@ -268,13 +268,6 @@ function StreamProcessor(config) {
         // Stop segment requests
         scheduleController.clearScheduleTimer();
         fragmentModel.abortRequests();
-
-        if (type !== Constants.FRAGMENTED_TEXT) {
-            // remove buffer after seeking operations
-            bufferController.pruneAllSafely();
-        } else {
-            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, { mediaType: type });
-        }
     }
 
     function _onBufferClearedForSeek() {
@@ -604,10 +597,6 @@ function StreamProcessor(config) {
         bufferController.setMediaSource(mediaSource, getMediaInfoArr());
     }
 
-    function dischargePreBuffer() {
-        bufferController.dischargePreBuffer();
-    }
-
     function getScheduleController() {
         return scheduleController;
     }
@@ -816,7 +805,6 @@ function StreamProcessor(config) {
         getMediaInfo,
         getMediaSource,
         setMediaSource,
-        dischargePreBuffer,
         getBuffer,
         setBuffer,
         setExplicitBufferingTime,

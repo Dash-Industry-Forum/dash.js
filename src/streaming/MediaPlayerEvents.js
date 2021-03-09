@@ -195,12 +195,6 @@ class MediaPlayerEvents extends EventsBase {
         this.STREAM_INITIALIZED = 'streamInitialized';
 
         /**
-         * Triggered when a stream (period) is switched
-         * @event MediaPlayerEvents#STREAM_INITIALIZED
-         */
-        this.STREAM_SWITCHED = 'streamSwitched';
-
-        /**
          * Triggered when the player has been reset.
          * @event MediaPlayerEvents#STREAM_TEARDOWN_COMPLETE
          */

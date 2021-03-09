@@ -843,10 +843,10 @@ function PlaybackController() {
     }
 
     function onStreamInitializing(e) {
-        applyServiceDescription(e.streamInfo, e.mediaInfo);
+        _applyServiceDescription(e.streamInfo, e.mediaInfo);
     }
 
-    function applyServiceDescription(streamInfo, mediaInfo) {
+    function _applyServiceDescription(streamInfo, mediaInfo) {
         if (streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.serviceDescriptions) {
             // is there a service description for low latency defined?
             let llsd;

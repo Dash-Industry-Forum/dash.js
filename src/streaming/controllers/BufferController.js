@@ -78,7 +78,6 @@ function BufferController(config) {
         maximumIndex,
         sourceBufferSink,
         dischargeBuffer,
-        dischargeFragments,
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
@@ -113,7 +112,7 @@ function BufferController(config) {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        eventBus.on(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
+        eventBus.on(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, onPlaybackPlaying, this);
@@ -201,49 +200,10 @@ function BufferController(config) {
                 errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
             }
         } else {
-            sourceBufferSink = PreBufferSink(context).create(onAppended.bind(this));
+            sourceBufferSink = PreBufferSink(context).create(_onAppended.bind(this));
         }
         updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
         return sourceBufferSink;
-    }
-
-    function dischargePreBuffer() {
-        if (sourceBufferSink && dischargeBuffer && typeof dischargeBuffer.discharge === 'function') {
-            const ranges = dischargeBuffer.getAllBufferRanges();
-
-            if (ranges.length > 0) {
-                let rangeStr = 'Beginning ' + type + 'PreBuffer discharge, adding buffer for:';
-                for (let i = 0; i < ranges.length; i++) {
-                    rangeStr += ' start: ' + ranges.start(i) + ', end: ' + ranges.end(i) + ';';
-                }
-                logger.debug(rangeStr);
-            } else {
-                logger.debug('PreBuffer discharge requested, but there were no media segments in the PreBuffer.');
-            }
-
-            //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a sourcebuffer silent.
-            dischargeFragments = [];
-            let chunks = dischargeBuffer.discharge();
-            let lastInit = null;
-            for (let j = 0; j < chunks.length; j++) {
-                const chunk = chunks[j];
-                if (chunk.segmentType !== 'InitializationSegment') {
-                    const initChunk = initCache.extract(chunk.streamId, chunk.representationId);
-                    if (initChunk) {
-                        if (lastInit !== initChunk) {
-                            dischargeFragments.push(initChunk);
-                            sourceBufferSink.append(initChunk);
-                            lastInit = initChunk;
-                        }
-                    }
-                }
-                dischargeFragments.push(chunk);
-                sourceBufferSink.append(chunk);
-            }
-
-            dischargeBuffer.reset();
-            dischargeBuffer = null;
-        }
     }
 
     /**
@@ -324,7 +284,7 @@ function BufferController(config) {
         }
     }
 
-    function onAppended(e) {
+    function _onAppended(e) {
         if (e.error) {
             // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
@@ -342,7 +302,7 @@ function BufferController(config) {
             return;
         }
 
-        updateBufferLevel();
+        _updateBufferLevel();
 
         isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
@@ -355,22 +315,9 @@ function BufferController(config) {
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             _showBufferRanges(ranges);
             onPlaybackProgression();
-        } else if (replacingBuffer) {
-            // When replacing buffer due to switch track, and once new initialization segment has been appended
-            // (and previous buffered data removed) then seek stream to current time
-            const currentTime = playbackController.getTime();
-            logger.debug('AppendToBuffer seek target should be ' + currentTime);
-            triggerEvent(Events.SEEK_TARGET, { time: currentTime });
         }
 
-        let suppressAppendedEvent = false;
-        if (dischargeFragments) {
-            if (dischargeFragments.indexOf(appendedBytesInfo) > 0) {
-                suppressAppendedEvent = true;
-            }
-            dischargeFragments = null;
-        }
-        if (appendedBytesInfo && !suppressAppendedEvent) {
+        if (appendedBytesInfo) {
             triggerEvent(appendedBytesInfo.endFragment ? Events.BYTES_APPENDED_END_FRAGMENT : Events.BYTES_APPENDED, {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
@@ -531,7 +478,7 @@ function BufferController(config) {
     function onPlaybackProgression(e) {
         if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
             const streamId = e && e.streamId ? e.streamId : null;
-            updateBufferLevel(streamId);
+            _updateBufferLevel(streamId);
         }
     }
 
@@ -612,7 +559,7 @@ function BufferController(config) {
         return length;
     }
 
-    function updateBufferLevel(streamId = null) {
+    function _updateBufferLevel(streamId = null) {
         if (playbackController) {
             const tolerance = settings.get().streaming.jumpGaps && !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : NaN;
             bufferLevel = getBufferLength(playbackController.getTime() || 0, tolerance);
@@ -774,7 +721,7 @@ function BufferController(config) {
 
         if (pendingPruningRanges.length === 0) {
             triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
-            updateBufferLevel(streamInfo.id);
+            _updateBufferLevel(streamInfo.id);
             isPruningInProgress = false;
         }
 
@@ -787,7 +734,7 @@ function BufferController(config) {
             clearNextRange();
         } else {
             if (!replacingBuffer) {
-                updateBufferLevel(streamInfo.id);
+                _updateBufferLevel(streamInfo.id);
             } else {
                 replacingBuffer = false;
                 if (mediaChunk) {
@@ -986,7 +933,7 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
-        eventBus.off(Events.BYTES_APPENDED_IN_SINK, onAppended, this);
+        eventBus.off(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
         eventBus.off(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
 
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
@@ -1006,7 +953,6 @@ function BufferController(config) {
         getType,
         getBufferControllerType,
         createBufferSink,
-        dischargePreBuffer,
         getBuffer,
         setBuffer,
         getBufferLevel,
@@ -1024,7 +970,7 @@ function BufferController(config) {
         getContiniousBufferTimeForTargetTime,
         clearBuffers,
         pruneAllSafely,
-        updateBufferLevel
+        updateBufferLevel: _updateBufferLevel
     };
 
     setup();
