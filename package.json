@@ -2,14 +2,14 @@
   "name": "dashjs",
   "version": "3.2.2",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
-  "main": "build/es5/index.js",
-  "types": "build/typings/index.d.ts",
+  "main": "dist/dash.all.min.js",
+  "types": "index.d.ts",
   "scripts": {
-    "build": "npx typescript && grunt",
+    "build": "webpack --config webpack.config.js",
+    "dev": "webpack --config webpack.config.js --mode development --watch --progress",
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha test/unit --require mochahook",
     "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
-    "dev": "grunt dev",
     "prepublish": "grunt githooks",
     "prepublishOnly": "grunt prepublish",
     "debug": "iron-mocha --require mochahook",
@@ -56,6 +56,8 @@
     "time-grunt": "^2.0.0",
     "typescript": "^4.1.5",
     "uglify-js": "^3.6.0",
+    "webpack": "4.44.1",
+    "webpack-cli": "3.3.12",
     "yargs": "16.0.3"
   },
   "dependencies": {
