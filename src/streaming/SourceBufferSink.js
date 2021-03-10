@@ -37,6 +37,8 @@ import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
 import Settings from '../core/Settings';
 
+const APPEND_WINDOW_START_OFFSET = 0.1;
+const APPEND_WINDOW_END_OFFSET = 0.01;
 
 /**
  * @class SourceBufferSink
@@ -178,8 +180,8 @@ function SourceBufferSink(mSource) {
                 }
                 if (buffer.appendWindowEnd !== appendWindowEnd || buffer.appendWindowStart !== appendWindowStart) {
                     buffer.appendWindowStart = 0;
-                    buffer.appendWindowEnd = appendWindowEnd;
-                    buffer.appendWindowStart = Math.max(appendWindowStart, 0);
+                    buffer.appendWindowEnd = appendWindowEnd + APPEND_WINDOW_END_OFFSET;
+                    buffer.appendWindowStart = Math.max(appendWindowStart - APPEND_WINDOW_START_OFFSET, 0);
                     logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
                 }
             } catch (e) {

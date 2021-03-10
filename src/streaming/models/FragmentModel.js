@@ -336,19 +336,19 @@ function FragmentModel(config) {
     }
 
     instance = {
-        getStreamId: getStreamId,
-        getType: getType,
-        getRequests: getRequests,
-        isFragmentLoaded: isFragmentLoaded,
-        isFragmentLoadedOrPending: isFragmentLoadedOrPending,
-        removeExecutedRequestsBeforeTime: removeExecutedRequestsBeforeTime,
-        removeExecutedRequestsAfterTime: removeExecutedRequestsAfterTime,
-        syncExecutedRequestsWithBufferedRange: syncExecutedRequestsWithBufferedRange,
-        abortRequests: abortRequests,
-        executeRequest: executeRequest,
-        reset: reset,
+        getStreamId,
+        getType,
+        getRequests,
+        isFragmentLoaded,
+        isFragmentLoadedOrPending,
+        removeExecutedRequestsBeforeTime,
+        removeExecutedRequestsAfterTime,
+        syncExecutedRequestsWithBufferedRange,
+        abortRequests,
+        executeRequest,
+        reset,
         resetInitialSettings,
-        addExecutedRequest: addExecutedRequest
+        addExecutedRequest
     };
 
     setup();
