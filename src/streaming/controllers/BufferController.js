@@ -618,7 +618,8 @@ function BufferController(config) {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
         if (isLastIdxAppended && !isBufferingCompleted) {
             isBufferingCompleted = true;
-            logger.debug('checkIfBufferingCompleted trigger BUFFERING_COMPLETED for ' + type);
+            logger.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
+            console.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
             triggerEvent(Events.BUFFERING_COMPLETED);
         }
     }

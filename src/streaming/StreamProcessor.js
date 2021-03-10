@@ -311,6 +311,7 @@ function StreamProcessor(config) {
         if (isMediaFinished) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
+            console.debug(`Segment requesting for stream ${streamInfo.id} and type ${type} has finished`);
             eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
                 streamId: streamInfo.id,
                 mediaType: type
@@ -766,6 +767,7 @@ function StreamProcessor(config) {
     function _onSeekTarget(e) {
         if (e && e.time) {
             setExplicitBufferingTime(e.time);
+            bufferController.setSeekTarget(e.time);
         }
     }
 

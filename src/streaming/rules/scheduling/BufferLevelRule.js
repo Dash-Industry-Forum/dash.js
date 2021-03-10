@@ -74,10 +74,14 @@ function BufferLevelRule(config) {
             }
         }  else if (type === Constants.AUDIO && hasVideoTrack) {
             const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
+            // For multiperiod we need to consider that audio and video segments might have different durations.
+            // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
+            // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading of the upcoming period.
+            // Should find a better solution than just adding 1
             if (isNaN(representationInfo.fragmentDuration)) {
-                bufferTarget = videoBufferLevel;
+                bufferTarget = videoBufferLevel + 1;
             } else {
-                bufferTarget = Math.max(videoBufferLevel, representationInfo.fragmentDuration);
+                bufferTarget = Math.max(videoBufferLevel + 1, representationInfo.fragmentDuration);
             }
         } else {
             const streamInfo = representationInfo.mediaInfo.streamInfo;
