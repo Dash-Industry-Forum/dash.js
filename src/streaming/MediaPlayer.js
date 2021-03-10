@@ -1185,38 +1185,6 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
-    /**
-     * Set default language for text. If default language is not one of text tracks, dash will choose the first one.
-     *
-     * @param {string} lang - default language
-     * @memberof module:MediaPlayer
-     * @instance
-     * @deprecated will be removed in version 3.2.0. Please use setInitialMediaSettingsFor("fragmentedText", { lang: lang }) instead
-     */
-    function setTextDefaultLanguage(lang) {
-        logger.warn('setTextDefaultLanguage is deprecated and will be removed in version 3.2.0. Please use setInitialMediaSettingsFor("fragmentedText", { lang: lang }) instead');
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
-        textController.setTextDefaultLanguage(lang);
-    }
-
-    /**
-     * Get default language for text.
-     *
-     * @return {string} the default language if it has been set using setTextDefaultLanguage
-     * @memberof module:MediaPlayer
-     * @instance
-     * @deprecated will be removed in version 3.2.0. Please use getInitialMediaSettingsFor("fragmentedText").lang instead
-     */
-    function getTextDefaultLanguage() {
-        logger.warn('getTextDefaultLanguage is deprecated and will be removed in version 3.2.0. Please use getInitialMediaSettingsFor("fragmentedText").lang instead');
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
-
-        return textController.getTextDefaultLanguage();
-    }
 
     /**
      * Set enabled default state.
@@ -2334,99 +2302,97 @@ function MediaPlayer() {
     }
 
     instance = {
-        initialize: initialize,
-        setConfig: setConfig,
-        on: on,
-        off: off,
-        extend: extend,
-        attachView: attachView,
-        attachSource: attachSource,
-        isReady: isReady,
-        preload: preload,
-        play: play,
-        isPaused: isPaused,
-        pause: pause,
-        isSeeking: isSeeking,
-        isDynamic: isDynamic,
-        seek: seek,
-        setPlaybackRate: setPlaybackRate,
-        getPlaybackRate: getPlaybackRate,
-        setMute: setMute,
-        isMuted: isMuted,
-        setVolume: setVolume,
-        getVolume: getVolume,
-        time: time,
-        duration: duration,
-        timeAsUTC: timeAsUTC,
-        durationAsUTC: durationAsUTC,
-        getActiveStream: getActiveStream,
-        getDVRWindowSize: getDVRWindowSize,
-        getDVRSeekOffset: getDVRSeekOffset,
-        convertToTimeCode: convertToTimeCode,
-        formatUTC: formatUTC,
-        getVersion: getVersion,
-        getDebug: getDebug,
-        getBufferLength: getBufferLength,
-        getTTMLRenderingDiv: getTTMLRenderingDiv,
-        getVideoElement: getVideoElement,
-        getSource: getSource,
-        getCurrentLiveLatency: getCurrentLiveLatency,
-        getTopBitrateInfoFor: getTopBitrateInfoFor,
-        setAutoPlay: setAutoPlay,
-        getAutoPlay: getAutoPlay,
-        getDashMetrics: getDashMetrics,
-        getQualityFor: getQualityFor,
-        setQualityFor: setQualityFor,
-        updatePortalSize: updatePortalSize,
-        setTextDefaultLanguage: setTextDefaultLanguage,
-        getTextDefaultLanguage: getTextDefaultLanguage,
-        setTextDefaultEnabled: setTextDefaultEnabled,
-        getTextDefaultEnabled: getTextDefaultEnabled,
-        enableText: enableText,
-        enableForcedTextStreaming: enableForcedTextStreaming,
-        isTextEnabled: isTextEnabled,
-        setTextTrack: setTextTrack,
-        getBitrateInfoListFor: getBitrateInfoListFor,
-        getStreamsFromManifest: getStreamsFromManifest,
-        getTracksFor: getTracksFor,
-        getTracksForTypeFromManifest: getTracksForTypeFromManifest,
-        getCurrentTrackFor: getCurrentTrackFor,
-        setInitialMediaSettingsFor: setInitialMediaSettingsFor,
-        getInitialMediaSettingsFor: getInitialMediaSettingsFor,
-        setCurrentTrack: setCurrentTrack,
-        getTrackSwitchModeFor: getTrackSwitchModeFor,
-        setTrackSwitchModeFor: setTrackSwitchModeFor,
-        setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
-        getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        addABRCustomRule: addABRCustomRule,
-        removeABRCustomRule: removeABRCustomRule,
-        removeAllABRCustomRule: removeAllABRCustomRule,
-        getAverageThroughput: getAverageThroughput,
-        retrieveManifest: retrieveManifest,
-        addUTCTimingSource: addUTCTimingSource,
-        removeUTCTimingSource: removeUTCTimingSource,
-        clearDefaultUTCTimingSources: clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources: restoreDefaultUTCTimingSources,
-        setXHRWithCredentialsForType: setXHRWithCredentialsForType,
-        getXHRWithCredentialsForType: getXHRWithCredentialsForType,
-        getProtectionController: getProtectionController,
-        attachProtectionController: attachProtectionController,
-        setProtectionData: setProtectionData,
-        registerLicenseRequestFilter: registerLicenseRequestFilter,
-        registerLicenseResponseFilter: registerLicenseResponseFilter,
-        unregisterLicenseRequestFilter: unregisterLicenseRequestFilter,
-        unregisterLicenseResponseFilter: unregisterLicenseResponseFilter,
-        displayCaptionsOnTop: displayCaptionsOnTop,
-        attachTTMLRenderingDiv: attachTTMLRenderingDiv,
-        getCurrentTextTrackIndex: getCurrentTextTrackIndex,
-        provideThumbnail: provideThumbnail,
-        getDashAdapter: getDashAdapter,
-        getOfflineController: getOfflineController,
-        getSettings: getSettings,
-        updateSettings: updateSettings,
-        resetSettings: resetSettings,
-        reset: reset,
-        destroy: destroy
+        initialize,
+        setConfig,
+        on,
+        off,
+        extend,
+        attachView,
+        attachSource,
+        isReady,
+        preload,
+        play,
+        isPaused,
+        pause,
+        isSeeking,
+        isDynamic,
+        seek,
+        setPlaybackRate,
+        getPlaybackRate,
+        setMute,
+        isMuted,
+        setVolume,
+        getVolume,
+        time,
+        duration,
+        timeAsUTC,
+        durationAsUTC,
+        getActiveStream,
+        getDVRWindowSize,
+        getDVRSeekOffset,
+        convertToTimeCode,
+        formatUTC,
+        getVersion,
+        getDebug,
+        getBufferLength,
+        getTTMLRenderingDiv,
+        getVideoElement,
+        getSource,
+        getCurrentLiveLatency,
+        getTopBitrateInfoFor,
+        setAutoPlay,
+        getAutoPlay,
+        getDashMetrics,
+        getQualityFor,
+        setQualityFor,
+        updatePortalSize,
+        setTextDefaultEnabled,
+        getTextDefaultEnabled,
+        enableText,
+        enableForcedTextStreaming,
+        isTextEnabled,
+        setTextTrack,
+        getBitrateInfoListFor,
+        getStreamsFromManifest,
+        getTracksFor,
+        getTracksForTypeFromManifest,
+        getCurrentTrackFor,
+        setInitialMediaSettingsFor,
+        getInitialMediaSettingsFor,
+        setCurrentTrack,
+        getTrackSwitchModeFor,
+        setTrackSwitchModeFor,
+        setSelectionModeForInitialTrack,
+        getSelectionModeForInitialTrack,
+        addABRCustomRule,
+        removeABRCustomRule,
+        removeAllABRCustomRule,
+        getAverageThroughput,
+        retrieveManifest,
+        addUTCTimingSource,
+        removeUTCTimingSource,
+        clearDefaultUTCTimingSources,
+        restoreDefaultUTCTimingSources,
+        setXHRWithCredentialsForType,
+        getXHRWithCredentialsForType,
+        getProtectionController,
+        attachProtectionController,
+        setProtectionData,
+        registerLicenseRequestFilter,
+        registerLicenseResponseFilter,
+        unregisterLicenseRequestFilter,
+        unregisterLicenseResponseFilter,
+        displayCaptionsOnTop,
+        attachTTMLRenderingDiv,
+        getCurrentTextTrackIndex,
+        provideThumbnail,
+        getDashAdapter,
+        getOfflineController,
+        getSettings,
+        updateSettings,
+        resetSettings,
+        reset,
+        destroy
     };
 
     setup();

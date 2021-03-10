@@ -36,6 +36,7 @@ import EventBus from '../../core/EventBus';
 const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 30;
 const GAP_THRESHOLD = 0.1;
+const GAP_JUMP_WAITING_TIME_OFFSET = 0.1;
 
 function GapController() {
     const context = this.context;
@@ -253,7 +254,7 @@ function GapController() {
             } else {
                 const isDynamic = playbackController.getIsDynamic();
                 const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
-                const timeToWait = !isDynamic ? 0 : timeUntilGapEnd * 1000;
+                const timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
 
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);

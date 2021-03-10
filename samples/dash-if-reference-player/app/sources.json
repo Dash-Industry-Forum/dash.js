@@ -58,6 +58,11 @@
             "acronym": "AWS",
             "name": "AWS",
             "url": "https://www.elemental.com/"
+        },
+        "dvb": {
+            "acronym": "DVB",
+            "name": "DVB",
+            "url": "https://dvb-2017-dm.s3.eu-central-1.amazonaws.com/overview.html"
         }
     },
     "items": [
@@ -225,6 +230,11 @@
                     "name": " Multiperiod SegmentTimeline/$Number$, compact manifest. 31s ad pod every 3 minutes",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
                     "provider": "aws"
+                },
+                {
+                    "name": " Multiperiod DVB 2017 0.mpd Live Clear AVC + AAC",
+                    "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/0.mpd",
+                    "provider": "dvb"
                 }
             ]
         },
