@@ -216,7 +216,7 @@ function Stream(config) {
     function startPreloading(mediaSource, previousBuffers) {
         try {
             if (!getPreloaded()) {
-                logger.info(`[onStreamCanLoadNext] Preloading next stream with id ${getId()}`);
+                logger.info(`[startPreloading] Preloading next stream with id ${getId()}`);
                 setPreloaded(true);
 
                 _commonMediaInitialization(mediaSource, previousBuffers);
@@ -409,6 +409,7 @@ function Stream(config) {
         }
         streamProcessors = [];
         isActive = false;
+        hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
     }
@@ -438,7 +439,6 @@ function Stream(config) {
     function resetInitialSettings() {
         deactivate();
         isInitialized = false;
-        hasFinishedBuffering = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
         updateError = {};
@@ -687,6 +687,7 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
+        console.debug(`onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED for stream id ${streamInfo.id}`);
         hasFinishedBuffering = true;
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
     }

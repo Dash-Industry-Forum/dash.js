@@ -242,7 +242,7 @@ function DashHandler(config) {
         if (!representation || !lastSegment) return isFinished;
 
         // we are replacing existing stuff.
-        if (lastSegment.startTime + lastSegment.duration > bufferingTime) {
+        if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
             return false;
         }
 

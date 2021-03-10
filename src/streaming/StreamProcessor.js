@@ -94,14 +94,13 @@ function StreamProcessor(config) {
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance, { priority: EventBus.EVENT_PRIORITY_HIGH }); // High priority to be notified before Stream
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
         eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
-        eventBus.on(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
         eventBus.on(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
@@ -221,14 +220,13 @@ function StreamProcessor(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
-        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
         eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
-        eventBus.off(Events.BUFFER_CLEARED_ALL_RANGES, _onBufferClearedForSeek, instance);
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
@@ -244,43 +242,41 @@ function StreamProcessor(config) {
     }
 
     /**
-     * When a period within the corresponding period occurs this event handler initiates the clearing of the buffer and sets the correct buffering time.
+     * When a seek within the corresponding period occurs this event handler initiates the clearing of the buffer and sets the correct buffering time.
      * @param {object} e
      * @private
      */
     function _onInnerPeriodPlaybackSeeking(e) {
-        innerPeriodSeekInProgress = true;
 
         // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
         scheduleController.clearScheduleTimer();
         fragmentModel.abortRequests();
-
-        setExplicitBufferingTime(e.seekTime);
         bufferController.prepareForPlaybackSeek();
 
         // Clear the buffer. We need to prune everything which is not in the target interval.
-        const clearRanges = bufferController.getAllRangesWithSafetyFactor(bufferingTime);
+        const clearRanges = bufferController.getAllRangesWithSafetyFactor(e.seekTime);
         // When everything has been pruned _onBufferClearedForSeek will be triggered
-        bufferController.clearBuffers(clearRanges);
+        bufferController.clearBuffers(clearRanges)
+            .then(() => {
+                // Figure out the correct segment request time
+                const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
+                setExplicitBufferingTime(targetTime);
+                bufferController.setSeekTarget(targetTime);
+
+                // Right after a seek we should not immediately check the playback quality
+                scheduleController.setCheckPlaybackQuality(false);
+                scheduleController.startScheduleTimer();
+            })
+            .catch((e) => {
+                logger.error(e);
+            });
     }
 
     function _onOuterPeriodPlaybackSeeking() {
         // Stop segment requests
         scheduleController.clearScheduleTimer();
         fragmentModel.abortRequests();
-    }
-
-    function _onBufferClearedForSeek() {
-        if (innerPeriodSeekInProgress) {
-            // Figure out the correct segment request time
-            const targetTime = bufferController.getContiniousBufferTimeForTargetTime(bufferingTime);
-            bufferingTime = targetTime;
-
-            // Right after a seek we should not immediately check the playback quality
-            scheduleController.setCheckPlaybackQuality(false);
-            scheduleController.startScheduleTimer();
-            innerPeriodSeekInProgress = false;
-        }
+        bufferController.prepareForPlaybackSeek();
     }
 
     function _onInitFragmentNeeded(e) {
@@ -385,6 +381,9 @@ function StreamProcessor(config) {
         if (!e.error) {
             // Update representation if no error
             scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
+            if (!bufferController.getIsBufferingCompleted()) {
+                bufferController.updateBufferTimestampOffset(e.currentRepresentation);
+            }
         }
     }
 
@@ -407,10 +406,12 @@ function StreamProcessor(config) {
             streamInfo.duration);
 
         // If buffer removed ahead current time (QuotaExceededError or automatic buffer pruning) then adjust current index handler time
-        if (e.from > playbackController.getTime()) {
+        /*
+        if (!innerPeriodSeekInProgress && e.from > playbackController.getTime()) {
             bufferingTime = e.from;
             bufferPruned = true;
         }
+        */
     }
 
     /**
@@ -645,7 +646,7 @@ function StreamProcessor(config) {
         return request;
     }
 
-    function onMediaFragmentLoaded(e) {
+    function _onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
 
         const bytes = chunk.bytes;

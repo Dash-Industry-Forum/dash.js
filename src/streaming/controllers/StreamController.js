@@ -337,38 +337,42 @@ function StreamController() {
      * @private
      */
     function _switchStream(stream, previousStream, seekTime) {
+        try {
+            if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.getIsActive())) {
+                return;
+            }
 
-        if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.getIsActive())) {
-            return;
-        }
+            isStreamSwitchingInProgress = true;
+            eventBus.trigger(Events.STREAM_SWITCH_STARTED, {
+                fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
+                toStreamInfo: stream.getStreamInfo()
+            });
 
-        isStreamSwitchingInProgress = true;
-        eventBus.trigger(Events.STREAM_SWITCH_STARTED, {
-            fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
-            toStreamInfo: stream.getStreamInfo()
-        });
+            let keepBuffers = false;
+            activeStream = stream;
 
-        let keepBuffers = false;
-        activeStream = stream;
+            if (previousStream) {
+                keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
+                previousStream.deactivate(keepBuffers);
+            }
 
-        if (previousStream) {
-            keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
-            previousStream.deactivate(keepBuffers);
-        }
+            // Determine seek time when switching to new period
+            // - seek at given seek time
+            // - or seek at period start if upcoming period is not prebuffered
+            seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
+            logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
+            console.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
 
-        // Determine seek time when switching to new period
-        // - seek at given seek time
-        // - or seek at period start if upcoming period is not prebuffered
-        seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
-        logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
+            preloadingStreams = preloadingStreams.filter((s) => {
+                return s.getId() !== activeStream.getId();
+            });
+            playbackController.initialize(getActiveStreamInfo(), !!previousStream);
 
-        preloadingStreams = preloadingStreams.filter((s) => {
-            return s.getId() !== activeStream.getId();
-        });
-        playbackController.initialize(getActiveStreamInfo(), !!previousStream);
-
-        if (videoModel.getElement()) {
-            _openMediaSource(seekTime, keepBuffers);
+            if (videoModel.getElement()) {
+                _openMediaSource(seekTime, keepBuffers);
+            }
+        } catch (e) {
+            isStreamSwitchingInProgress = false;
         }
     }
 
@@ -527,11 +531,26 @@ function StreamController() {
      */
     function _handleOuterPeriodSeek(e, seekToStream) {
         console.debug(`Handle outer period seek. Seeking from ${e.streamId} to ${seekToStream.getStreamId()}`);
+
+        // The preloading streams have been reset completely.The currently active stream might be done buffering or not. We signal a shutdown anyways.
         eventBus.trigger(Events.OUTER_PERIOD_PLAYBACK_SEEKING, {
             seekTime: e.seekTime
         });
         const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
-        _switchStream(seekToStream, activeStream, seekTime);
+
+        // Clear the buffers completely.
+        const streamProcessors = activeStream.getProcessors();
+        const promises = streamProcessors.map((sp) => {
+            return sp.getBufferController().pruneAllSafely();
+        });
+
+        Promise.all(promises)
+            .then(() => {
+                _switchStream(seekToStream, activeStream, seekTime);
+            })
+            .catch((e) => {
+                errHandler.error(e);
+            });
     }
 
 
@@ -546,8 +565,9 @@ function StreamController() {
         }
         const upcomingStreams = getNextStreams(activeStream);
         let i = 0;
+        let found = false;
 
-        while (i < upcomingStreams.length) {
+        while (i < upcomingStreams.length && !found) {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
@@ -555,6 +575,8 @@ function StreamController() {
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
                 if (mediaSource) {
                     _onStreamCanLoadNext(stream, previousStream);
+                    console.log(`Can preload ${stream.getId()}`);
+                    //found = true;
                 }
             }
             i += 1;
@@ -763,6 +785,7 @@ function StreamController() {
      */
     function _onStreamBufferingCompleted(e) {
         logger.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
+        console.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
@@ -838,7 +861,7 @@ function StreamController() {
     }
 
     function onPlaybackEnded(e) {
-        if (!activeStream.getIsEndedEventSignaled()) {
+        if (activeStream && !activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
             if (nextStream) {

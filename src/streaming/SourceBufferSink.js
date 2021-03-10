@@ -199,22 +199,20 @@ function SourceBufferSink(mSource) {
 
 
     function reset(keepBuffer) {
-        if (buffer) {
-            if (!keepBuffer) {
-                try {
-                    callbacks = [];
-                    _removeEventListeners();
-                    isAppendingInProgress = false;
-                    appendQueue = [];
-                    if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
-                        logger.debug(`Removing sourcebuffer from media source`);
-                        mediaSource.removeSourceBuffer(buffer);
-                    }
-                } catch (e) {
-                    logger.error('Failed to remove source buffer from media source.');
+        if (buffer && !keepBuffer) {
+            try {
+                callbacks = [];
+                _removeEventListeners();
+                isAppendingInProgress = false;
+                appendQueue = [];
+                if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
+                    logger.debug(`Removing sourcebuffer from media source`);
+                    mediaSource.removeSourceBuffer(buffer);
                 }
-                buffer = null;
+            } catch (e) {
+                logger.error('Failed to remove source buffer from media source.');
             }
+            buffer = null;
         }
     }
 
@@ -258,9 +256,12 @@ function SourceBufferSink(mSource) {
         });
     }
 
-    function remove(start, end, forceRemoval) {
+    function remove(range) {
         const sourceBufferSink = this;
         // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
+        const start = range.start;
+        const end = range.end;
+        const forceRemoval = range.force;
         waitForUpdateEnd(function () {
             try {
                 if ((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended')) {
@@ -274,6 +275,9 @@ function SourceBufferSink(mSource) {
                         to: end,
                         unintended: false
                     });
+                    if (range.resolve) {
+                        range.resolve();
+                    }
                 });
             } catch (err) {
                 _triggerEvent(Events.SOURCEBUFFER_REMOVE_COMPLETED, {
@@ -283,6 +287,9 @@ function SourceBufferSink(mSource) {
                     unintended: false,
                     error: new DashJSError(err.code, err.message)
                 });
+                if (range.reject) {
+                    range.reject(err);
+                }
             }
         });
     }
@@ -397,7 +404,7 @@ function SourceBufferSink(mSource) {
     function _triggerEvent(type, payload) {
         payload.streamId = mediaInfo.streamInfo.id;
         payload.mediaType = mediaInfo.type;
-        eventBus.trigger(type, payload, {streamId: payload.streamId, mediaType: payload.mediaType});
+        eventBus.trigger(type, payload, { streamId: payload.streamId, mediaType: payload.mediaType });
     }
 
     instance = {

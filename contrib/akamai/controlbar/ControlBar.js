@@ -66,7 +66,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         thumbnailElem,
         thumbnailTimeLabel,
         idSuffix,
-        startedPlaying;
+        startedPlaying,
+        seekbarBufferInterval;
 
     //************************************************************************************
     // THUMBNAIL CONSTANTS
@@ -165,12 +166,22 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var onPlaybackPaused = function (/*e*/) {
         togglePlayPauseBtnState();
+        if (!seekbarBufferInterval) {
+            seekbarBufferInterval = window.setInterval(function () {
+                if (seekbarBuffer) {
+                    seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
+                }
+            });
+        }
     };
 
     var onPlayStart = function (/*e*/) {
         setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.time());
         updateDuration();
         togglePlayPauseBtnState();
+        if (seekbarBufferInterval) {
+            clearInterval(seekbarBufferInterval);
+        }
     };
 
     var onPlayTimeUpdate = function (/*e*/) {
@@ -467,7 +478,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         if (document.fullscreenElement) {
             document.exitFullscreen();
         } else if (document.exitFullscreen) {
-           document.exitFullscreen();
+            document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
             document.mozCancelFullScreen();
         } else if (document.msExitFullscreen) {

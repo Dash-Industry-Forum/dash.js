@@ -86,6 +86,7 @@ function BufferController(config) {
         initCache,
         pendingPruningRanges,
         replacingBuffer,
+        seekTarget,
         mediaChunk;
 
 
@@ -105,19 +106,18 @@ function BufferController(config) {
 
         requiredQuality = abrController.getQualityFor(type, streamInfo.id);
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
-        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-        eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, _onRemoved, this);
         eventBus.on(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, onPlaybackPlaying, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
     }
@@ -314,7 +314,8 @@ function BufferController(config) {
         const ranges = sourceBufferSink.getAllBufferRanges();
         if (appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             _showBufferRanges(ranges);
-            onPlaybackProgression();
+            _onPlaybackProgression();
+            _adjustSeekTarget();
         }
 
         if (appendedBytesInfo) {
@@ -324,6 +325,39 @@ function BufferController(config) {
                 index: appendedBytesInfo.index,
                 bufferedRanges: ranges
             });
+        }
+    }
+
+    /**
+     * In some cases the segment we requested might start at a different time than we initially aimed for. segments timeline/template tolerance.
+     * We might need to do an internal seek if there is drift.
+     * @private
+     */
+    function _adjustSeekTarget() {
+        if (isNaN(seekTarget)) return;
+        // Check buffered data only for audio and video
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
+            seekTarget = NaN;
+            return;
+        }
+
+        // Check if current buffered range already contains seek target (and current video element time)
+        const currentTime = playbackController.getTime();
+        let range = getRangeAt(seekTarget, 0);
+        if (currentTime === seekTarget && range) {
+            seekTarget = NaN;
+            return;
+        }
+
+        // Get buffered range corresponding to the seek target
+        const segmentDuration = representationController.getCurrentRepresentation().segmentDuration;
+        range = getRangeAt(seekTarget, segmentDuration);
+        if (!range) return;
+
+        if (currentTime < range.start) {
+            // If appended buffer starts after seek target (segments timeline/template tolerance) then seek to range start
+            playbackController.seek(range.start, false, true);
+            seekTarget = NaN;
         }
     }
 
@@ -370,13 +404,22 @@ function BufferController(config) {
     }
 
     function pruneAllSafely() {
-        sourceBufferSink.waitForUpdateEnd(() => {
+        return new Promise((resolve, reject) => {
             const ranges = getAllRangesWithSafetyFactor();
+
             if (!ranges || ranges.length === 0) {
-                triggerEvent(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH);
-                onPlaybackProgression();
+                _onPlaybackProgression();
+                resolve();
+                return;
             }
-            clearBuffers(ranges);
+
+            clearBuffers(ranges)
+                .then(() => {
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
         });
     }
 
@@ -475,7 +518,7 @@ function BufferController(config) {
         return null;
     }
 
-    function onPlaybackProgression(e) {
+    function _onPlaybackProgression(e) {
         if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
             const streamId = e && e.streamId ? e.streamId : null;
             _updateBufferLevel(streamId);
@@ -486,8 +529,9 @@ function BufferController(config) {
         checkIfSufficientBuffer();
     }
 
-    function onPlaybackPlaying() {
+    function _onPlaybackPlaying() {
         checkIfSufficientBuffer();
+        seekTarget = NaN;
     }
 
     function getRangeAt(time, tolerance) {
@@ -572,7 +616,7 @@ function BufferController(config) {
 
     function _checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
-        if (isLastIdxAppended && !isBufferingCompleted && sourceBufferSink.discharge === undefined) {
+        if (isLastIdxAppended && !isBufferingCompleted) {
             isBufferingCompleted = true;
             logger.debug('checkIfBufferingCompleted trigger BUFFERING_COMPLETED for ' + type);
             triggerEvent(Events.BUFFERING_COMPLETED);
@@ -661,26 +705,45 @@ function BufferController(config) {
     }
 
     function clearBuffers(ranges) {
-        if (!ranges || !sourceBufferSink || ranges.length === 0) {
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
-            return;
-        }
+        return new Promise((resolve, reject) => {
+            if (!ranges || !sourceBufferSink || ranges.length === 0) {
+                resolve();
+                return;
+            }
 
-        pendingPruningRanges.push.apply(pendingPruningRanges, ranges);
-        if (isPruningInProgress) {
-            return;
-        }
+            const promises = [];
+            ranges.forEach((range) => {
+                promises.push(_addClearRangeWithPromise(range));
+            });
 
-        clearNextRange();
+
+            if (!isPruningInProgress) {
+                clearNextRange();
+            }
+
+            Promise.all(promises)
+                .then(() => {
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
     }
 
+    function _addClearRangeWithPromise(range) {
+        return new Promise((resolve, reject) => {
+            range.resolve = resolve;
+            range.reject = reject;
+            pendingPruningRanges.push(range);
+        });
+    }
 
     function clearNextRange() {
         // If there's nothing to prune reset state
         if (pendingPruningRanges.length === 0 || !sourceBufferSink) {
             logger.debug('Nothing to prune, halt pruning');
             pendingPruningRanges = [];
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
             isPruningInProgress = false;
             return;
         }
@@ -690,7 +753,6 @@ function BufferController(config) {
         if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
             logger.debug('SourceBuffer is empty (or does not exist), halt pruning');
             pendingPruningRanges = [];
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
             isPruningInProgress = false;
             return;
         }
@@ -706,21 +768,18 @@ function BufferController(config) {
             maxAppendedIndex = 0;
         }
 
-        sourceBufferSink.remove(range.start, range.end, range.force);
+        sourceBufferSink.remove(range);
     }
 
-    function onRemoved(e) {
+    function _onRemoved(e) {
         if (sourceBufferSink !== e.buffer) return;
 
         logger.debug('onRemoved buffer from:', e.from, 'to', e.to);
 
-        if (e.streamId === streamInfo.id) {
-            const ranges = sourceBufferSink.getAllBufferRanges();
-            _showBufferRanges(ranges);
-        }
+        const ranges = sourceBufferSink.getAllBufferRanges();
+        _showBufferRanges(ranges);
 
         if (pendingPruningRanges.length === 0) {
-            triggerEvent(Events.BUFFER_CLEARED_ALL_RANGES);
             _updateBufferLevel(streamInfo.id);
             isPruningInProgress = false;
         }
@@ -748,7 +807,6 @@ function BufferController(config) {
                 hasEnoughSpaceToAppend: hasEnoughSpaceToAppend(),
                 quotaExceeded: isQuotaExceeded
             });
-            eventBus.trigger(Events.BUFFER_CLEARED_FOR_STREAM_SWITCH, { mediaType: type });
         }
     }
 
@@ -767,12 +825,7 @@ function BufferController(config) {
         }
     }
 
-    function _onDataUpdateCompleted(e) {
-        if (e.error || isBufferingCompleted) return;
-        updateBufferTimestampOffset(e.currentRepresentation);
-    }
-
-    function onStreamRequestingCompleted(e) {
+    function _onStreamRequestingCompleted(e) {
         if (!isNaN(e.segmentIndex)) {
             maximumIndex = e.segmentIndex;
             _checkIfBufferingCompleted();
@@ -801,7 +854,7 @@ function BufferController(config) {
         }
     }
 
-    function onWallclockTimeUpdated() {
+    function _onWallclockTimeUpdated() {
         wallclockTicked++;
         const secondsElapsed = (wallclockTicked * (settings.get().streaming.wallclockTimeUpdateInterval / 1000));
         if ((secondsElapsed >= settings.get().streaming.bufferPruningInterval)) {
@@ -868,7 +921,7 @@ function BufferController(config) {
             const ranges = sourceBufferSink.getAllBufferRanges();
 
             if (!ranges || ranges.length === 0) {
-                return adjustedTime;
+                return targetTime;
             }
 
             let i = 0;
@@ -896,6 +949,10 @@ function BufferController(config) {
         return (totalBufferedTime < criticalBufferLevel);
     }
 
+    function setSeekTarget(value) {
+        seekTarget = value;
+    }
+
     function triggerEvent(eventType, data) {
         let payload = data || {};
         eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
@@ -914,6 +971,7 @@ function BufferController(config) {
         bufferLevel = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
+        seekTarget = NaN;
 
         if (sourceBufferSink) {
             if (!errored && !keepBuffers) {
@@ -927,19 +985,18 @@ function BufferController(config) {
     }
 
     function reset(errored, keepBuffers) {
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, this);
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
-        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, onWallclockTimeUpdated, this);
+        eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
-        eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, onRemoved, this);
+        eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, _onRemoved, this);
         eventBus.off(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
-        eventBus.off(Events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, this);
+        eventBus.off(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
 
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, onPlaybackPlaying, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
 
@@ -970,7 +1027,8 @@ function BufferController(config) {
         getContiniousBufferTimeForTargetTime,
         clearBuffers,
         pruneAllSafely,
-        updateBufferLevel: _updateBufferLevel
+        updateBufferTimestampOffset,
+        setSeekTarget
     };
 
     setup();
