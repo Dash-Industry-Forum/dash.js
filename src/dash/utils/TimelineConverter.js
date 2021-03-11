@@ -78,7 +78,7 @@ function TimelineConverter() {
             // When not present, the value is infinite.
             if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
                 // SAET = SAST + TSBD + seg@duration
-                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime + clientServerTimeShift + mpd.timeShiftBufferDepth) * 1000));
+                availabilityTime = new Date(availabilityStartTime.getTime() + ((presentationEndTime - clientServerTimeShift + mpd.timeShiftBufferDepth) * 1000));
             } else {
                 availabilityTime = mpd.availabilityEndTime;
             }
@@ -88,7 +88,7 @@ function TimelineConverter() {
                 // ASAST = SAST - ATO
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
                 // presentationEndTime = Period@start + seg@presentationStartTime + Segment@duration
-                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime + clientServerTimeShift - availabilityTimeOffset) * 1000);
+                availabilityTime = new Date(availabilityStartTime.getTime() + (presentationEndTime - clientServerTimeShift - availabilityTimeOffset) * 1000);
             } else {
                 // in static mpd, all segments are available at the same time
                 availabilityTime = availabilityStartTime;
@@ -107,11 +107,11 @@ function TimelineConverter() {
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
-        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
+        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() - clientServerTimeShift * 1000) / 1000);
     }
 
     function calcWallTimeFromPresentationTime(presentationTime, period) {
-        return ((presentationTime * 1000 + period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
+        return ((presentationTime * 1000 + period.mpd.availabilityStartTime.getTime() - clientServerTimeShift * 1000) / 1000);
     }
 
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
@@ -143,7 +143,7 @@ function TimelineConverter() {
     }
 
     function getAvailabilityWindowAnchorTime() {
-        return Date.now() + clientServerTimeShift * 1000;
+        return Date.now() - clientServerTimeShift * 1000;
     }
 
     /**
@@ -354,7 +354,6 @@ function TimelineConverter() {
         calcMediaTimeFromPresentationTime,
         calcWallTimeForSegment,
         calcTimeShiftBufferWindow,
-        calcWallTimeFromPresentationTime,
         getAvailabilityWindowAnchorTime,
         reset
     };
