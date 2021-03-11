@@ -255,11 +255,11 @@ function StreamProcessor(config) {
 
         // Clear the buffer. We need to prune everything which is not in the target interval.
         const clearRanges = bufferController.getAllRangesWithSafetyFactor(e.seekTime);
-        // When everything has been pruned _onBufferClearedForSeek will be triggered
+        // When everything has been pruned go on
         bufferController.clearBuffers(clearRanges)
             .then(() => {
-                // Figure out the correct segment request time
-                const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
+                // Figure out the correct segment request time. There might be prebuffered stuff in the buffer so we limit the target time to the period boundary
+                const targetTime = Math.min(streamInfo.start + streamInfo.duration, bufferController.getContiniousBufferTimeForTargetTime(e.seekTime));
                 setExplicitBufferingTime(targetTime);
                 bufferController.setSeekTarget(targetTime);
 

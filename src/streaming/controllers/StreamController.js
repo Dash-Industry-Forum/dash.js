@@ -481,13 +481,13 @@ function StreamController() {
      * @private
      */
     function _cancelPreloading(oldTime, newTime, seekToStream = null) {
-        // Inner period seek: We only prebuffer ahead of the current time. If we seek ahead and we are still in the same period as before there is no no need to cancel the prebuffering
+        // Inner period seek forward
         if (oldTime <= newTime && !seekToStream) {
-            return;
+            _deactivateAllPreloadingStreams();
         }
 
         // Inner period seek: If we seek backwards we might need to prune the period(s) that are currently being prebuffered. For now deactivate everything
-        if (oldTime > newTime && !seekToStream) {
+        else if (oldTime > newTime && !seekToStream) {
             _deactivateAllPreloadingStreams();
         }
 

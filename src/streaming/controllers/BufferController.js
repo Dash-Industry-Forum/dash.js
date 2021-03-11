@@ -108,8 +108,6 @@ function BufferController(config) {
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, _onRemoved, this);
-        eventBus.on(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
@@ -181,8 +179,8 @@ function BufferController(config) {
             try {
                 const selectedRepresentation = _getRepresentationInfo(requiredQuality);
                 if (oldBufferSinks && oldBufferSinks[type]) {
-                    sourceBufferSink = oldBufferSinks[type];
-                    sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation);
+                    sourceBufferSink = SourceBufferSink(context).create(mediaSource);
+                    sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation, oldBufferSinks[type]);
                 } else {
                     sourceBufferSink = SourceBufferSink(context).create(mediaSource);
                     sourceBufferSink.initializeForFirstUse(mediaInfo, selectedRepresentation);
@@ -251,7 +249,13 @@ function BufferController(config) {
      * @private
      */
     function _appendToBuffer(chunk) {
-        sourceBufferSink.append(chunk);
+        sourceBufferSink.append(chunk)
+            .then((e) => {
+                _onAppended(e);
+            })
+            .catch((e) => {
+                _onAppended(e);
+            });
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
             triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
@@ -408,7 +412,7 @@ function BufferController(config) {
                 return;
             }
 
-            if(forceRemoval) {
+            if (forceRemoval) {
                 ranges = ranges.map((range) => {
                     range.force = true;
                     return range;
@@ -743,48 +747,56 @@ function BufferController(config) {
     }
 
     function clearNextRange() {
-        // If there's nothing to prune reset state
-        if (pendingPruningRanges.length === 0 || !sourceBufferSink) {
-            logger.debug('Nothing to prune, halt pruning');
-            pendingPruningRanges = [];
+        try {
+            // If there's nothing to prune reset state
+            if (pendingPruningRanges.length === 0 || !sourceBufferSink) {
+                logger.debug('Nothing to prune, halt pruning');
+                pendingPruningRanges = [];
+                isPruningInProgress = false;
+                return;
+            }
+
+            const sourceBuffer = sourceBufferSink.getBuffer();
+            // If there's nothing buffered any pruning is invalid, so reset our state
+            if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
+                logger.debug('SourceBuffer is empty (or does not exist), halt pruning');
+                pendingPruningRanges = [];
+                isPruningInProgress = false;
+                return;
+            }
+
+            const range = pendingPruningRanges.shift();
+            logger.debug(`${type}: Removing buffer from: ${range.start} to ${range.end}`);
+            isPruningInProgress = true;
+
+            // If removing buffer ahead current playback position, update maxAppendedIndex
+            const currentTime = playbackController.getTime();
+            if (currentTime < range.end) {
+                isBufferingCompleted = false;
+                maxAppendedIndex = 0;
+            }
+
+            sourceBufferSink.remove(range)
+                .then((e) => {
+                    _onRemoved(e);
+                })
+                .catch((e) => {
+                    _onRemoved(e);
+                });
+        } catch (e) {
             isPruningInProgress = false;
-            return;
         }
-
-        const sourceBuffer = sourceBufferSink.getBuffer();
-        // If there's nothing buffered any pruning is invalid, so reset our state
-        if (!sourceBuffer || !sourceBuffer.buffered || sourceBuffer.buffered.length === 0) {
-            logger.debug('SourceBuffer is empty (or does not exist), halt pruning');
-            pendingPruningRanges = [];
-            isPruningInProgress = false;
-            return;
-        }
-
-        const range = pendingPruningRanges.shift();
-        logger.debug(`${type}: Removing buffer from: ${range.start} to ${range.end}`);
-        isPruningInProgress = true;
-
-        // If removing buffer ahead current playback position, update maxAppendedIndex
-        const currentTime = playbackController.getTime();
-        if (currentTime < range.end) {
-            isBufferingCompleted = false;
-            maxAppendedIndex = 0;
-        }
-
-        sourceBufferSink.remove(range);
     }
 
     function _onRemoved(e) {
-        if (sourceBufferSink !== e.buffer) return;
-
         logger.debug('onRemoved buffer from:', e.from, 'to', e.to);
 
         const ranges = sourceBufferSink.getAllBufferRanges();
         _showBufferRanges(ranges);
 
         if (pendingPruningRanges.length === 0) {
-            _updateBufferLevel(streamInfo.id);
             isPruningInProgress = false;
+            _updateBufferLevel(streamInfo.id);
         }
 
         if (e.unintended) {
@@ -966,8 +978,6 @@ function BufferController(config) {
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, _onRemoved, this);
-        eventBus.off(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
         eventBus.off(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
 
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);

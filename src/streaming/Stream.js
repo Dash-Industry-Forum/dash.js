@@ -197,6 +197,9 @@ function Stream(config) {
                 bufferSinks = previousBufferSinks;
             }
             isActive = true;
+            eventBus.trigger(Events.STREAM_ACTIVATED, {
+                streamInfo
+            });
             return bufferSinks;
         }
         return previousBufferSinks;
@@ -646,9 +649,8 @@ function Stream(config) {
             errHandler.error(error);
         } else if (!isInitialized) {
             isInitialized = true;
-
             eventBus.trigger(Events.STREAM_INITIALIZED, {
-                streamInfo
+                streamInfo: streamInfo
             });
         }
 
