@@ -133,7 +133,7 @@ function Stream(config) {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     /**
@@ -143,7 +143,7 @@ function Stream(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     /**
@@ -563,8 +563,8 @@ function Stream(config) {
         return true;
     }
 
-    function onCurrentTrackChanged(e) {
-        if (!isActive || !streamInfo || e.newMediaInfo.streamInfo.id !== streamInfo.id) {
+    function _onCurrentTrackChanged(e) {
+        if (!isActive || !streamInfo) {
             return;
         }
 
@@ -572,7 +572,6 @@ function Stream(config) {
 
         let mediaInfo = e.newMediaInfo;
         let manifest = manifestModel.getValue();
-
 
         adapter.setCurrentMediaInfo(streamInfo.id, mediaInfo.type, mediaInfo);
 
@@ -583,7 +582,9 @@ function Stream(config) {
         logger.info('Stream -  Process track changed at current time ' + currentTime);
 
         logger.debug('Stream -  Update stream controller');
-        if (manifest.refreshManifestOnSwitchTrack) { // Applies only for MSS streams
+
+        // Applies only for MSS streams
+        if (manifest.refreshManifestOnSwitchTrack) {
             logger.debug('Stream -  Refreshing manifest for switch track');
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
@@ -591,8 +592,7 @@ function Stream(config) {
             processor.selectMediaInfo(mediaInfo);
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 abrController.updateTopQualityIndex(mediaInfo);
-                processor.switchTrackAsked();
-                processor.getFragmentModel().abortRequests();
+                processor.prepareTrackSwitch();
             } else {
                 //processor.getScheduleController().setSeekTarget(currentTime);
                 processor.setExplicitBufferingTime(currentTime);
@@ -768,7 +768,7 @@ function Stream(config) {
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                 if (!processor) return;
-                processor.switchTrackAsked();
+                processor.prepareTrackSwitch();
                 trackChangedEvent = undefined;
             }
         }

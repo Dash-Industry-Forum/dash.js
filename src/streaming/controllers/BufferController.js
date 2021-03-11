@@ -58,7 +58,6 @@ function BufferController(config) {
     const errHandler = config.errHandler;
     const fragmentModel = config.fragmentModel;
     const representationController = config.representationController;
-    const mediaController = config.mediaController;
     const adapter = config.adapter;
     const textController = config.textController;
     const abrController = config.abrController;
@@ -86,8 +85,7 @@ function BufferController(config) {
         initCache,
         pendingPruningRanges,
         replacingBuffer,
-        seekTarget,
-        mediaChunk;
+        seekTarget;
 
 
     function setup() {
@@ -110,7 +108,6 @@ function BufferController(config) {
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.on(Events.SOURCEBUFFER_REMOVE_COMPLETED, _onRemoved, this);
         eventBus.on(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
 
@@ -245,22 +242,7 @@ function BufferController(config) {
      * @param {object} e
      */
     function _onMediaFragmentLoaded(e) {
-        const chunk = e.chunk;
-
-        if (replacingBuffer) {
-            mediaChunk = chunk;
-            const ranges = sourceBufferSink && sourceBufferSink.getAllBufferRanges();
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd() > settings.get().streaming.stallThreshold) {
-                logger.debug('Clearing buffer because track changed - ' + (ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD));
-                clearBuffers([{
-                    start: 0,
-                    end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD,
-                    force: true // Force buffer removal even when buffering is completed and MediaSource is ended
-                }]);
-            }
-        } else {
-            _appendToBuffer(chunk);
-        }
+        _appendToBuffer(e.chunk);
     }
 
     /**
@@ -323,7 +305,9 @@ function BufferController(config) {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,
-                bufferedRanges: ranges
+                bufferedRanges: ranges,
+                segmentType: appendedBytesInfo.segmentType,
+                mediaType: type
             });
         }
     }
@@ -403,14 +387,32 @@ function BufferController(config) {
         }
     }
 
-    function pruneAllSafely() {
+    function prepareForTrackSwitch() {
+
+        if (settings.get().streaming.useAppendWindow) {
+            updateAppendWindow();
+        }
+
+        sourceBufferSink.abort();
+        isBufferingCompleted = false;
+        maximumIndex = Number.POSITIVE_INFINITY;
+    }
+
+    function pruneAllSafely(forceRemoval = false) {
         return new Promise((resolve, reject) => {
-            const ranges = getAllRangesWithSafetyFactor();
+            let ranges = getAllRangesWithSafetyFactor();
 
             if (!ranges || ranges.length === 0) {
                 _onPlaybackProgression();
                 resolve();
                 return;
+            }
+
+            if(forceRemoval) {
+                ranges = ranges.map((range) => {
+                    range.force = true;
+                    return range;
+                });
             }
 
             clearBuffers(ranges)
@@ -436,7 +438,7 @@ function BufferController(config) {
         if (!seekTime || isNaN(seekTime)) {
             clearRanges.push({
                 start: ranges.start(0),
-                end: ranges.end(ranges.length - 1)
+                end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
             });
         }
 
@@ -797,9 +799,6 @@ function BufferController(config) {
                 _updateBufferLevel(streamInfo.id);
             } else {
                 replacingBuffer = false;
-                if (mediaChunk) {
-                    _appendToBuffer(mediaChunk);
-                }
             }
             triggerEvent(Events.BUFFER_CLEARED, {
                 from: e.from,
@@ -830,28 +829,6 @@ function BufferController(config) {
         if (!isNaN(e.segmentIndex)) {
             maximumIndex = e.segmentIndex;
             _checkIfBufferingCompleted();
-        }
-    }
-
-    function onCurrentTrackChanged(e) {
-        if (e.newMediaInfo.streamInfo.id !== streamInfo.id || e.newMediaInfo.type !== type) {
-            return;
-        }
-
-        const ranges = sourceBufferSink && sourceBufferSink.getAllBufferRanges();
-        if (!ranges) return;
-
-        logger.info('Track change asked');
-        if (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE) {
-            if (ranges && ranges.length > 0 && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold) {
-
-                if (settings.get().streaming.useAppendWindow) {
-                    updateAppendWindow();
-                }
-
-                isBufferingCompleted = false;
-                maximumIndex = Number.POSITIVE_INFINITY;
-            }
         }
     }
 
@@ -989,7 +966,6 @@ function BufferController(config) {
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, this);
         eventBus.off(Events.SOURCEBUFFER_REMOVE_COMPLETED, _onRemoved, this);
         eventBus.off(Events.BYTES_APPENDED_IN_SINK, _onAppended, this);
         eventBus.off(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
@@ -1023,6 +999,7 @@ function BufferController(config) {
         getIsPruningInProgress,
         reset,
         prepareForPlaybackSeek,
+        prepareForTrackSwitch,
         updateAppendWindow,
         getAllRangesWithSafetyFactor,
         getContiniousBufferTimeForTargetTime,

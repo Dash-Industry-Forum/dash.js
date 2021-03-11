@@ -194,7 +194,7 @@ function MediaController() {
                 oldMediaInfo: current,
                 newMediaInfo: track,
                 switchMode: getSwitchMode(type)
-            });
+            }, { streamId: id });
         }
 
         if (!noSettingsSave) {
@@ -378,7 +378,7 @@ function MediaController() {
             audioChannelConfiguration: mediaInfo.audioChannelConfiguration
         };
         let notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
-        (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
+            (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
 
         return notEmpty ? settings : null;
     }
@@ -409,13 +409,15 @@ function MediaController() {
         };
     }
 
-    function getTracksWithHighestBitrate (trackArr) {
+    function getTracksWithHighestBitrate(trackArr) {
         let max = 0;
         let result = [];
         let tmp;
 
         trackArr.forEach(function (track) {
-            tmp = Math.max.apply(Math, track.bitrateList.map(function (obj) { return obj.bandwidth; }));
+            tmp = Math.max.apply(Math, track.bitrateList.map(function (obj) {
+                return obj.bandwidth;
+            }));
 
             if (tmp > max) {
                 max = tmp;
@@ -428,7 +430,7 @@ function MediaController() {
         return result;
     }
 
-    function getTracksWithHighestEfficiency (trackArr) {
+    function getTracksWithHighestEfficiency(trackArr) {
         let min = Infinity;
         let result = [];
         let tmp;
@@ -452,7 +454,7 @@ function MediaController() {
         return result;
     }
 
-    function getTracksWithWidestRange (trackArr) {
+    function getTracksWithWidestRange(trackArr) {
         let max = 0;
         let result = [];
         let tmp;

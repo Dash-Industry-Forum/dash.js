@@ -32,6 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 30;
@@ -54,6 +55,7 @@ function GapController() {
         timelineConverter,
         adapter,
         jumpTimeoutHandler,
+        trackSwitchByMediaType,
         logger;
 
     function initialize() {
@@ -77,6 +79,7 @@ function GapController() {
         lastGapJumpPosition = NaN;
         wallclockTicked = 0;
         jumpTimeoutHandler = null;
+        trackSwitchByMediaType = {};
     }
 
     function setConfig(config) {
@@ -107,12 +110,16 @@ function GapController() {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.on(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
+        eventBus.on(Events.TRACK_REPLACEMENT_STARTED, _onTrackReplacementStarted, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
     function unregisterEvents() {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
+        eventBus.off(Events.TRACK_REPLACEMENT_STARTED, _onTrackReplacementStarted, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
     function _onPlaybackSeeking() {
@@ -120,6 +127,34 @@ function GapController() {
             clearTimeout(jumpTimeoutHandler);
             jumpTimeoutHandler = null;
         }
+    }
+
+    /**
+     *  If the track was changed in the current active period and the player might aggressively replace segments the buffer will be empty for a short period of time. Avoid gap jumping at that time.
+     *  We wait until the next media fragment of the target type has been appended before activating again
+     * @param e
+     * @private
+     */
+    function _onTrackReplacementStarted(e) {
+        try {
+            if (e.streamId !== streamController.getActiveStreamInfo().id || !e.mediaType) {
+                return;
+            }
+
+            if (e.streamId === streamController.getActiveStreamInfo().id) {
+                trackSwitchByMediaType[e.mediaType] = true;
+            }
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    function _onBytesAppended(e) {
+        if(!e || !e.segmentType || e.segmentType !== HTTPRequest.MEDIA_SEGMENT_TYPE || !e.mediaType) {
+            return;
+        }
+
+        trackSwitchByMediaType[e.mediaType] = false;
     }
 
     function _onInitialStreamSwitch() {
@@ -146,24 +181,14 @@ function GapController() {
         }
     }
 
-    function _isTrackSwitchInProgess() {
-        try {
-            const processors = streamController.getActiveStream().getProcessors();
-            const isTrackSwitchInProgess = processors.filter((processor) => {
-                return processor.getScheduleController().getIsReplacingBuffer();
-            }).length;
-
-            return isTrackSwitchInProgess;
-        } catch (e) {
-            return false;
-        }
-
-    }
-
     function _shouldCheckForGaps() {
-        return settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
+        const trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some((key) => {
+            return trackSwitchByMediaType[key];
+        });
+
+        return !trackSwitchInProgress && settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
             (!playbackController.isSeeking() || streamController.getActiveStream().getHasFinishedBuffering()) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
-            !streamController.getHasMediaOrInitialisationError() && !_isTrackSwitchInProgess();
+            !streamController.getHasMediaOrInitialisationError();
     }
 
     function getNextRangeIndex(ranges, currentTime) {

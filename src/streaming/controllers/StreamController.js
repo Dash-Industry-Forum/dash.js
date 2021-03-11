@@ -710,11 +710,8 @@ function StreamController() {
             return;
         }
 
-        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of
-        // specific AdaptationSets yet we need to remove everything
-        preloadingStreams.forEach((ps) => {
-            ps.deactivate(true);
-        });
+        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
+        _deactivateAllPreloadingStreams();
     }
 
     /**

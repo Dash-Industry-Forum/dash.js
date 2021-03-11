@@ -110,10 +110,6 @@ function TimelineConverter() {
         return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() - clientServerTimeShift * 1000) / 1000);
     }
 
-    function calcWallTimeFromPresentationTime(presentationTime, period) {
-        return ((presentationTime * 1000 + period.mpd.availabilityStartTime.getTime() - clientServerTimeShift * 1000) / 1000);
-    }
-
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
         const periodStart = representation.adaptation.period.start;
         const presentationOffset = representation.presentationTimeOffset;

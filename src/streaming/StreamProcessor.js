@@ -537,6 +537,10 @@ function StreamProcessor(config) {
         return streamInfo;
     }
 
+    /**
+     * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
+     * @param newMediaInfo
+     */
     function selectMediaInfo(newMediaInfo) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {
             mediaInfo = newMediaInfo;
@@ -714,9 +718,63 @@ function StreamProcessor(config) {
         return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfoArr, previousBuffers) : null);
     }
 
-    function switchTrackAsked() {
+    function prepareTrackSwitch() {
+
+        // when buffering is completed and we are not supposed to replace anything do nothing
+        if (bufferController.getIsBufferingCompleted() && mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_NEVER_REPLACE) {
+            return;
+        }
+
+        // We stop the schedule controller and signal a track switch. That way we request a new init segment next
+        scheduleController.clearScheduleTimer();
         scheduleController.setSwitchTrack(true);
+
+        // when we are supposed to replace it does not matter if buffering is already completed
+        if (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold) {
+
+            // Inform other classes like the GapController that we are replacing existing stuff
+            eventBus.trigger(Events.TRACK_REPLACEMENT_STARTED, {
+                mediaType: type,
+                streamId: streamInfo.id
+            }, { mediaType: type, streamId: streamInfo.id });
+
+            // Abort the current request it will be removed from the buffer anyways
+            fragmentModel.abortRequests();
+
+            // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
+            bufferController.prepareForTrackSwitch();
+
+            // Prune everything that is in the buffer right now
+            bufferController.pruneAllSafely(true)
+                .then(() => {
+                    _bufferClearedForTrackSwitch();
+                })
+                .catch(() => {
+                    _bufferClearedForTrackSwitch();
+                });
+        } else {
+            scheduleController.startScheduleTimer();
+        }
     }
+
+    /**
+     * For an instant track switch we need to adjust the buffering time after the buffer has been pruned.
+     * @private
+     */
+    function _bufferClearedForTrackSwitch() {
+        const targetTime = playbackController.getTime();
+
+        if (settings.get().streaming.flushBufferAtTrackSwitch) {
+            // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
+            // otherwise audio track switch will be effective only once after previous buffered track is consumed
+            playbackController.seek(targetTime + 0.001, false, true);
+        }
+
+        setExplicitBufferingTime(targetTime);
+        bufferController.setSeekTarget(targetTime);
+        scheduleController.startScheduleTimer();
+    }
+
 
     function createBufferControllerForType(type) {
         let controller = null;
@@ -803,7 +861,7 @@ function StreamProcessor(config) {
         getStreamInfo,
         selectMediaInfo,
         addMediaInfo,
-        switchTrackAsked,
+        prepareTrackSwitch,
         getMediaInfoArr,
         getMediaInfo,
         getMediaSource,

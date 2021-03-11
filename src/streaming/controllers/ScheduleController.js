@@ -49,14 +49,12 @@ function ScheduleController(config) {
     const textController = config.textController;
     const streamInfo = config.streamInfo;
     const type = config.type;
-    const mediaController = config.mediaController;
     const bufferController = config.bufferController;
     const settings = config.settings;
 
     let instance,
         logger,
         currentRepresentationInfo,
-        isFragmentProcessingInProgress,
         timeToLoadDelay,
         scheduleTimeout,
         hasVideoTrack,
@@ -65,7 +63,6 @@ function ScheduleController(config) {
         topQualityIndex,
         lastInitQuality,
         switchTrack,
-        shouldReplaceBuffer,
         initSegmentRequired,
         mediaRequest,
         checkPlaybackQuality;
@@ -116,7 +113,10 @@ function ScheduleController(config) {
     }
 
     function clearScheduleTimer() {
-        clearTimeout(scheduleTimeout);
+        if (scheduleTimeout) {
+            clearTimeout(scheduleTimeout);
+            scheduleTimeout = null;
+        }
     }
 
     function hasTopQualityChanged() {
@@ -143,11 +143,6 @@ function ScheduleController(config) {
                 return;
             }
 
-            // schedule will be called again once the segment has been appended to the buffer
-            if (isFragmentProcessingInProgress) {
-                return;
-            }
-
             if (_shouldScheduleNextRequest()) {
                 if (checkPlaybackQuality) {
                     // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation
@@ -170,13 +165,9 @@ function ScheduleController(config) {
     function _getNextFragment() {
 
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (initSegmentRequired || ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!shouldReplaceBuffer))) {
+        if (initSegmentRequired || ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack))) {
             if (switchTrack) {
                 logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
-                shouldReplaceBuffer = mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
-                if (shouldReplaceBuffer && bufferController.replaceBuffer) {
-                    bufferController.setReplaceBuffer(true);
-                }
                 switchTrack = false;
             } else {
                 logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentationInfo.id);
@@ -222,7 +213,7 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            return shouldReplaceBuffer || isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack);
+            return  isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack);
         } catch (e) {
             return false;
         }
@@ -274,27 +265,12 @@ function ScheduleController(config) {
         completeQualityChange(true);
     }
 
-    function getIsReplacingBuffer() {
-        return shouldReplaceBuffer;
-    }
-
     function _onBytesAppended(e) {
-        if (shouldReplaceBuffer && !isNaN(e.startTime)) {
-            shouldReplaceBuffer = false;
-            fragmentModel.addExecutedRequest(mediaRequest);
-        }
-
         logger.debug(`Appended bytes for ${e.mediaType} and set fragment process state to false for ${type}`);
         startScheduleTimer(0);
     }
 
     function _onBufferCleared(e) {
-        if (shouldReplaceBuffer && settings.get().streaming.flushBufferAtTrackSwitch) {
-            // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
-            // otherwise audio track switch will be effective only once after previous buffered track is consumed
-            playbackController.seek(playbackController.getTime() + 0.001, false, true);
-        }
-
         // (Re)start schedule once buffer has been pruned after a QuotaExceededError
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             startScheduleTimer();
@@ -338,7 +314,6 @@ function ScheduleController(config) {
 
     function resetInitialSettings() {
         checkPlaybackQuality = true;
-        isFragmentProcessingInProgress = false;
         timeToLoadDelay = 0;
         lastInitQuality = NaN;
         lastFragmentRequest = {
@@ -348,7 +323,6 @@ function ScheduleController(config) {
         };
         topQualityIndex = NaN;
         switchTrack = false;
-        shouldReplaceBuffer = false;
         mediaRequest = null;
         initSegmentRequired = false;
     }
@@ -384,9 +358,8 @@ function ScheduleController(config) {
         reset,
         getBufferTarget,
         getPlaybackController,
-        getIsReplacingBuffer,
         setCheckPlaybackQuality,
-        setInitSegmentRequired
+        setInitSegmentRequired,
     };
 
     setup();
