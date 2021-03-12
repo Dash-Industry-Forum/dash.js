@@ -72,25 +72,30 @@ function SourceBufferSink(mSource) {
         const codec = mediaInfo.codec;
 
         _copyPreviousSinkData(oldSourceBufferSink);
-
         _addEventListeners();
 
-        _abortBeforeAppend();
+        const promises = [];
 
-        if (settings.get().streaming.useAppendWindow) {
-            updateAppendWindow(mediaInfo.streamInfo);
-        }
-
-        if (buffer.changeType) {
-            waitForUpdateEnd(() => {
-                buffer.changeType(codec);
-            });
-        }
+        promises.push(_abortBeforeAppend);
+        promises.push(updateAppendWindow(mediaInfo.streamInfo));
+        promises.push(_changeType(codec));
 
         if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-            updateTimestampOffset(selectedRepresentation.MSETimeOffset);
+            promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
         }
 
+        return Promise.all(promises);
+    }
+
+    function _changeType(codec) {
+        return new Promise((resolve) => {
+            waitForUpdateEnd(() => {
+                if (buffer.changeType) {
+                    buffer.changeType(codec);
+                }
+                resolve();
+            });
+        });
     }
 
     function _copyPreviousSinkData(oldSourceBufferSink) {
@@ -98,39 +103,42 @@ function SourceBufferSink(mSource) {
     }
 
     function initializeForFirstUse(mInfo, selectedRepresentation) {
-        mediaInfo = mInfo;
-        type = mediaInfo.type;
-        const codec = mediaInfo.codec;
-        try {
-            // Safari claims to support anything starting 'application/mp4'.
-            // it definitely doesn't understand 'application/mp4;codecs="stpp"'
-            // - currently no browser does, so check for it and use our own
-            // implementation. The same is true for codecs="wvtt".
-            if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
-                throw new Error('not really supported');
+            mediaInfo = mInfo;
+            type = mediaInfo.type;
+            const codec = mediaInfo.codec;
+            try {
+                // Safari claims to support anything starting 'application/mp4'.
+                // it definitely doesn't understand 'application/mp4;codecs="stpp"'
+                // - currently no browser does, so check for it and use our own
+                // implementation. The same is true for codecs="wvtt".
+                if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
+                    throw new Error('not really supported');
+                }
+
+                buffer = mediaSource.addSourceBuffer(codec);
+
+                _addEventListeners();
+
+                const promises = [];
+
+                promises.push(updateAppendWindow(mediaInfo.streamInfo));
+
+                if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
+                    promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
+                }
+
+                return Promise.all(promises);
+
+            } catch (e) {
+                // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
+                if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
+                    const textController = TextController(context).getInstance();
+                    buffer = textController.getTextSourceBuffer();
+                    return Promise.resolve();
+                } else {
+                    return Promise.reject(e);
+                }
             }
-
-            buffer = mediaSource.addSourceBuffer(codec);
-
-            _addEventListeners();
-
-            if (settings.get().streaming.useAppendWindow) {
-                updateAppendWindow(mediaInfo.streamInfo);
-            }
-
-            if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-                updateTimestampOffset(selectedRepresentation.MSETimeOffset);
-            }
-
-        } catch (ex) {
-            // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
-                const textController = TextController(context).getInstance();
-                buffer = textController.getTextSourceBuffer();
-            } else {
-                throw ex;
-            }
-        }
     }
 
     function _addEventListeners() {
@@ -170,6 +178,12 @@ function SourceBufferSink(mSource) {
 
     function updateAppendWindow(sInfo) {
         return new Promise((resolve) => {
+
+            if (!buffer || !settings.get().streaming.useAppendWindow) {
+                resolve();
+                return;
+            }
+
             waitForUpdateEnd(() => {
                 try {
                     if (!buffer) {
@@ -203,6 +217,12 @@ function SourceBufferSink(mSource) {
 
     function updateTimestampOffset(MSETimeOffset) {
         return new Promise((resolve) => {
+
+            if (!buffer) {
+                resolve();
+                return;
+            }
+
             waitForUpdateEnd(() => {
                 try {
                     if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {

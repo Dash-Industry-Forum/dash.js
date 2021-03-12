@@ -243,45 +243,49 @@ function StreamProcessor(config) {
      * @private
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
+        return new Promise((resolve, reject) => {
+            // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
+            scheduleController.clearScheduleTimer();
+            fragmentModel.abortRequests();
 
-        // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
-        scheduleController.clearScheduleTimer();
-        fragmentModel.abortRequests();
+            // Abort operations to the SourceBuffer Sink and reset the BufferControllers isBufferingCompleted state.
+            bufferController.prepareForPlaybackSeek()
+                .then(() => {
+                    // Clear the buffer. We need to prune everything which is not in the target interval.
+                    const clearRanges = bufferController.getAllRangesWithSafetyFactor(e.seekTime);
+                    // When everything has been pruned go on
+                    return bufferController.clearBuffers(clearRanges);
+                })
+                .then(() => {
+                    // Figure out the correct segment request time.
+                    const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
 
-        // Abort operations to the SourceBuffer Sink and reset the BufferControllers isBufferingCompleted state.
-        bufferController.prepareForPlaybackSeek()
-            .then(() => {
-                // Clear the buffer. We need to prune everything which is not in the target interval.
-                const clearRanges = bufferController.getAllRangesWithSafetyFactor(e.seekTime);
-                // When everything has been pruned go on
-                return bufferController.clearBuffers(clearRanges);
-            })
-            .then(() => {
-                // Figure out the correct segment request time.
-                const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
+                    // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering again
+                    if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
+                        bufferController.setIsBufferingCompleted(true);
+                        resolve();
+                    } else {
+                        setExplicitBufferingTime(targetTime);
+                        bufferController.setSeekTarget(targetTime);
 
-                // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering again
-                if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
-                    bufferController.setIsBufferingCompleted(true);
-                } else {
-                    setExplicitBufferingTime(targetTime);
-                    bufferController.setSeekTarget(targetTime);
+                        // append window has been reset by abort() operation. Set the correct values again
+                        bufferController.updateAppendWindow()
+                            .then(() => {
+                                // We might have aborted the append operation of an init segment. Append init segment again.
+                                scheduleController.setInitSegmentRequired(true);
 
-                    // append window has been reset by abort() operation. Set the correct values again
-                    bufferController.updateAppendWindow()
-                        .then(() => {
-                            // We might have aborted the append operation of an init segment. Append init segment again.
-                            scheduleController.setInitSegmentRequired(true);
+                                // Right after a seek we should not immediately check the playback quality
+                                scheduleController.setCheckPlaybackQuality(false);
+                                scheduleController.startScheduleTimer();
+                                resolve();
+                            });
+                    }
+                })
+                .catch((e) => {
+                    logger.error(e);
+                });
+        })
 
-                            // Right after a seek we should not immediately check the playback quality
-                            scheduleController.setCheckPlaybackQuality(false);
-                            scheduleController.startScheduleTimer();
-                        });
-                }
-            })
-            .catch((e) => {
-                logger.error(e);
-            });
     }
 
     function prepareOuterPeriodPlaybackSeeking() {
@@ -559,7 +563,7 @@ function StreamProcessor(config) {
 
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
-        if (settings.get().streaming.useAppendWindow && !isBufferingCompleted()) {
+        if (!isBufferingCompleted()) {
             bufferController.updateAppendWindow();
         }
     }
@@ -746,7 +750,7 @@ function StreamProcessor(config) {
     }
 
     function createBufferSinks(previousBuffers) {
-        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfoArr, previousBuffers) : null);
+        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfoArr, previousBuffers) : Promise.resolve(null));
     }
 
     function prepareTrackSwitch() {

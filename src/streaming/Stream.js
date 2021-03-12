@@ -189,27 +189,37 @@ function Stream(config) {
      * @memberof Stream#
      */
     function activate(mediaSource, previousBufferSinks) {
-        if (!isActive) {
-            let bufferSinks;
-            if (!getPreloaded()) {
-                bufferSinks = _initializeMedia(mediaSource, previousBufferSinks);
-            } else {
-                bufferSinks = previousBufferSinks;
+        return new Promise((resolve, reject) => {
+            if (isActive) {
+                resolve(previousBufferSinks);
+                return;
             }
-            isActive = true;
-            eventBus.trigger(Events.STREAM_ACTIVATED, {
-                streamInfo
-            });
-            return bufferSinks;
-        }
-        return previousBufferSinks;
+
+            if (getPreloaded()) {
+                isActive = true;
+                eventBus.trigger(Events.STREAM_ACTIVATED, {
+                    streamInfo
+                });
+                resolve(previousBufferSinks);
+                return;
+            }
+
+
+            _initializeMedia(mediaSource, previousBufferSinks)
+                .then((bufferSinks) => {
+                    resolve(bufferSinks);
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
     }
 
     /**
-     * Initialize the StreamProcessors for all media types of the period
+     *
      * @param {object} mediaSource
      * @param {array} previousBufferSinks
-     * @return {array} bufferSinks
+     * @return {Promise<Array>}
      * @private
      */
     function _initializeMedia(mediaSource, previousBufferSinks) {
@@ -217,58 +227,78 @@ function Stream(config) {
     }
 
     function startPreloading(mediaSource, previousBuffers) {
-        try {
-            if (!getPreloaded()) {
-                logger.info(`[startPreloading] Preloading next stream with id ${getId()}`);
-                setPreloaded(true);
+        return new Promise((resolve, reject) => {
 
-                _commonMediaInitialization(mediaSource, previousBuffers);
-
-                for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
-                    streamProcessors[i].setExplicitBufferingTime(getStartTime());
-                    streamProcessors[i].getScheduleController().startScheduleTimer();
-                }
-
+            if (getPreloaded()) {
+                reject();
+                return;
             }
-        }
-        catch(e) {
-            setPreloaded(false);
-        }
+
+            logger.info(`[startPreloading] Preloading next stream with id ${getId()}`);
+            setPreloaded(true);
+
+            _commonMediaInitialization(mediaSource, previousBuffers)
+                .then(() => {
+                    for (let i = 0; i < streamProcessors.length && streamProcessors[i]; i++) {
+                        streamProcessors[i].setExplicitBufferingTime(getStartTime());
+                        streamProcessors[i].getScheduleController().startScheduleTimer();
+                    }
+                    resolve();
+                })
+                .catch(() => {
+                    setPreloaded(false);
+                    reject();
+                });
+        });
     }
 
     /**
-     * Steps to perform when the stream activated or initialized for preloading
-     * @param {object} mediaSource
-     * @param {array} previousBufferSinks
-     * @return {array}
+     *
+     * @param mediaSource
+     * @param previousBufferSinks
+     * @return {Promise<array>}
      * @private
      */
     function _commonMediaInitialization(mediaSource, previousBufferSinks) {
-        checkConfig();
+        return new Promise((resolve, reject) => {
+            checkConfig();
 
-        isUpdating = true;
-        addInlineEvents();
-        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
+            isUpdating = true;
+            addInlineEvents();
+            capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
 
-        let element = videoModel.getElement();
-        MEDIA_TYPES.forEach((mediaType) => {
-            if (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName))))
-                _initializeMediaForType(mediaType, mediaSource);
+            let element = videoModel.getElement();
+
+            const promises = MEDIA_TYPES.map((mediaType) => {
+                if (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName)))) {
+                    return _initializeMediaForType(mediaType, mediaSource);
+                }
+                return Promise.resolve();
+            });
+
+            Promise.all(promises)
+                .then(() => {
+                    return _createBufferSinks(previousBufferSinks);
+                })
+                .then((bufferSinks) => {
+                    isUpdating = false;
+
+                    if (streamProcessors.length === 0) {
+                        const msg = 'No streams to play.';
+                        errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
+                        logger.fatal(msg);
+                    } else {
+                        _checkIfInitializationCompleted();
+                    }
+                    resolve(bufferSinks);
+                })
+                .catch((e) => {
+                    reject(e);
+                });
         });
 
-        const bufferSinks = _createBufferSinks(previousBufferSinks);
-        isUpdating = false;
-
-        if (streamProcessors.length === 0) {
-            const msg = 'No streams to play.';
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
-            logger.fatal(msg);
-        } else {
-            _checkIfInitializationCompleted();
-        }
-
-        return bufferSinks;
     }
+
 
     /**
      * Initialize for a given media type. Creates a corresponding StreamProcessor
@@ -387,14 +417,25 @@ function Stream(config) {
     }
 
     function _createBufferSinks(previousBuffers) {
-        const buffers = {};
-        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            const buffer = streamProcessors[i].createBufferSinks(previousBuffers);
-            if (buffer) {
-                buffers[streamProcessors[i].getType()] = buffer;
-            }
-        }
-        return buffers;
+        return new Promise((resolve) => {
+            const buffers = {};
+            const promises = streamProcessors.map((sp) => {
+                return sp.createBufferSinks(previousBuffers);
+            });
+
+            Promise.all(promises)
+                .then((bufferSinks) => {
+                    bufferSinks.forEach((sink) => {
+                        if (sink) {
+                            buffers[sink.getType()] = sink;
+                        }
+                    });
+                    resolve(buffers);
+                })
+                .catch(() => {
+                    resolve(buffers);
+                });
+        });
     }
 
     /**

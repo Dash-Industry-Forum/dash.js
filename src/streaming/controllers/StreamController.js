@@ -426,29 +426,31 @@ function StreamController() {
      * @param keepBuffers
      */
     function _activateStream(seekTime, keepBuffers) {
-        bufferSinks = activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime);
+        activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime)
+            .then((sinks) => {
+                // check if change type is supported by the browser
+                if (sinks) {
+                    const keys = Object.keys(sinks);
+                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
+                        supportsChangeType = true;
+                    }
+                    bufferSinks = sinks;
+                }
 
-        // check if change type is supported by the browser
-        if (bufferSinks) {
-            const keys = Object.keys(bufferSinks);
-            if (keys.length > 0 && bufferSinks[keys[0]].getBuffer().changeType) {
-                supportsChangeType = true;
-            }
-        }
+                // Set the initial time for this stream in the StreamProcessor
+                if (!isNaN(seekTime)) {
+                    eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
+                    playbackController.seek(seekTime, false, true);
+                    activeStream.startScheduleControllers();
+                }
 
-        // Set the initial time for this stream in the StreamProcessor
-        if (!isNaN(seekTime)) {
-            eventBus.trigger(Events.SEEK_TARGET, { time: seekTime }, { streamId: activeStream.getId() });
-            playbackController.seek(seekTime, false, true);
-            activeStream.startScheduleControllers();
-        }
+                if (autoPlay && initialPlayback) {
+                    playbackController.play();
+                }
 
-        if (autoPlay && initialPlayback) {
-            playbackController.play();
-        }
-
-        isStreamSwitchingInProgress = false;
-        eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
+                isStreamSwitchingInProgress = false;
+                eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
+            });
     }
 
     /**
@@ -503,12 +505,16 @@ function StreamController() {
      * @private
      */
     function _deactivateAllPreloadingStreams() {
+        const start = Date.now();
         if (preloadingStreams && preloadingStreams.length > 0) {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
             });
             preloadingStreams = [];
         }
+        const end = Date.now();
+
+        console.log(`Deactivation of preloading streams took ${end - start}`);
     }
 
     /**
@@ -520,7 +526,7 @@ function StreamController() {
         const streamProcessors = activeStream.getProcessors();
 
         streamProcessors.forEach((sp) => {
-            sp.prepareInnerPeriodPlaybackSeeking(e);
+            return sp.prepareInnerPeriodPlaybackSeeking(e);
         });
 
         _flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
@@ -565,9 +571,8 @@ function StreamController() {
         }
         const upcomingStreams = getNextStreams(activeStream);
         let i = 0;
-        let found = false;
 
-        while (i < upcomingStreams.length && !found) {
+        while (i < upcomingStreams.length) {
             const stream = upcomingStreams[i];
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
@@ -575,8 +580,6 @@ function StreamController() {
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
                 if (mediaSource) {
                     _onStreamCanLoadNext(stream, previousStream);
-                    console.log(`Can preload ${stream.getId()}`);
-                    //found = true;
                 }
             }
             i += 1;
@@ -614,8 +617,10 @@ function StreamController() {
             let seamlessPeriodSwitch = _canSourceBuffersBeReused(nextStream, previousStream);
 
             if (seamlessPeriodSwitch) {
-                nextStream.startPreloading(mediaSource, bufferSinks);
-                preloadingStreams.push(nextStream);
+                nextStream.startPreloading(mediaSource, bufferSinks)
+                    .then(() => {
+                        preloadingStreams.push(nextStream);
+                    });
             }
         }
     }

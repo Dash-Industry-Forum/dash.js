@@ -173,33 +173,42 @@ function BufferController(config) {
      * @return {object|null} SourceBufferSink
      */
     function createBufferSink(mediaInfoArr, oldBufferSinks = []) {
-        if (!initCache || !mediaInfoArr) return null;
-        const mediaInfo = mediaInfoArr[0];
-        if (mediaSource) {
-            try {
-                const selectedRepresentation = _getRepresentationInfo(requiredQuality);
-                if (oldBufferSinks && oldBufferSinks[type]) {
-                    sourceBufferSink = SourceBufferSink(context).create(mediaSource);
-                    sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation, oldBufferSinks[type]);
-                } else {
-                    sourceBufferSink = SourceBufferSink(context).create(mediaSource);
-                    sourceBufferSink.initializeForFirstUse(mediaInfo, selectedRepresentation);
-                }
-
-                if (typeof sourceBufferSink.getBuffer().initialize === 'function') {
-                    sourceBufferSink.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
-                }
-
-            } catch (e) {
-                logger.fatal('Caught error on create SourceBuffer: ' + e);
-                errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
+        return new Promise((resolve, reject) => {
+            if (!initCache || !mediaInfoArr || mediaInfoArr.length === 0 || !mediaSource) {
+                resolve(null);
+                return;
             }
-        } else {
-            sourceBufferSink = PreBufferSink(context).create(_onAppended.bind(this));
-        }
-        updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
-        return sourceBufferSink;
+
+            sourceBufferSink = SourceBufferSink(context).create(mediaSource);
+            _initializeSink(mediaInfoArr, oldBufferSinks)
+                .then(() => {
+                    if (typeof sourceBufferSink.getBuffer().initialize === 'function') {
+                        sourceBufferSink.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
+                    }
+                    return updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
+                })
+                .then(() => {
+                    resolve(sourceBufferSink);
+                })
+                .catch((e) => {
+                    logger.fatal('Caught error on create SourceBuffer: ' + e);
+                    errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
+                    reject(e);
+                });
+        });
     }
+
+    function _initializeSink(mediaInfoArr, oldBufferSinks) {
+        const mediaInfo = mediaInfoArr[0];
+        const selectedRepresentation = _getRepresentationInfo(requiredQuality);
+
+        if (oldBufferSinks && oldBufferSinks[type]) {
+            return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation, oldBufferSinks[type]);
+        } else {
+            return sourceBufferSink.initializeForFirstUse(mediaInfo, selectedRepresentation);
+        }
+    }
+
 
     /**
      * Callback handler when init segment has been loaded. Based on settings, the init segment is saved to the cache, and appended to the buffer.
@@ -839,7 +848,7 @@ function BufferController(config) {
     }
 
     function updateAppendWindow() {
-        if (sourceBufferSink && !isBufferingCompleted && settings.get().streaming.useAppendWindow) {
+        if (sourceBufferSink && !isBufferingCompleted) {
             return sourceBufferSink.updateAppendWindow(streamInfo);
         }
         return Promise.resolve();
