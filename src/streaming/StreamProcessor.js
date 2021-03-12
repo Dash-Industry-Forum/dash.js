@@ -95,7 +95,6 @@ function StreamProcessor(config) {
         eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.on(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
@@ -219,7 +218,6 @@ function StreamProcessor(config) {
         eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.off(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
@@ -243,7 +241,7 @@ function StreamProcessor(config) {
      * @private
      */
     function prepareInnerPeriodPlaybackSeeking(e) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
             scheduleController.clearScheduleTimer();
             fragmentModel.abortRequests();
@@ -268,8 +266,16 @@ function StreamProcessor(config) {
                         setExplicitBufferingTime(targetTime);
                         bufferController.setSeekTarget(targetTime);
 
+                        const promises = [];
+
                         // append window has been reset by abort() operation. Set the correct values again
-                        bufferController.updateAppendWindow()
+                        promises.push(bufferController.updateAppendWindow());
+
+                        // Timestamp offset couldve been changed by preloading period
+                        const representationInfo = getRepresentationInfo();
+                        promises.push(bufferController.updateBufferTimestampOffset(representationInfo));
+
+                        Promise.all(promises)
                             .then(() => {
                                 // We might have aborted the append operation of an init segment. Append init segment again.
                                 scheduleController.setInitSegmentRequired(true);
@@ -284,7 +290,7 @@ function StreamProcessor(config) {
                 .catch((e) => {
                     logger.error(e);
                 });
-        })
+        });
 
     }
 
@@ -307,8 +313,7 @@ function StreamProcessor(config) {
                         resolve();
                     });
 
-            }
-            catch(e) {
+            } catch (e) {
                 reject(e);
             }
         });
@@ -421,10 +426,6 @@ function StreamProcessor(config) {
                 bufferController.updateBufferTimestampOffset(e.currentRepresentation);
             }
         }
-    }
-
-    function _onBufferLevelUpdated(e) {
-        dashMetrics.addBufferLevel(type, new Date(), e.bufferLevel * 1000);
     }
 
     function _onBufferLevelStateChanged(e) {

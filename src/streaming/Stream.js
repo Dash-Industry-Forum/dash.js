@@ -207,6 +207,10 @@ function Stream(config) {
 
             _initializeMedia(mediaSource, previousBufferSinks)
                 .then((bufferSinks) => {
+                    isActive = true;
+                    eventBus.trigger(Events.STREAM_ACTIVATED, {
+                        streamInfo
+                    });
                     resolve(bufferSinks);
                 })
                 .catch((e) => {

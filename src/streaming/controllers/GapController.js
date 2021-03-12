@@ -283,7 +283,7 @@ function GapController() {
 
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
-                    logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
+                    logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }

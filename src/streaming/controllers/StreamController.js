@@ -174,6 +174,7 @@ function StreamController() {
         eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.on(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     }
 
     function unRegisterEvents() {
@@ -192,6 +193,7 @@ function StreamController() {
         eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.off(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     }
 
     /**
@@ -701,6 +703,12 @@ function StreamController() {
                 });
             }
         } catch (e) {
+        }
+    }
+
+    function _onBufferLevelUpdated(e) {
+        if(e && e.mediaType) {
+            dashMetrics.addBufferLevel(e.mediaType, new Date(), e.bufferLevel * 1000);
         }
     }
 

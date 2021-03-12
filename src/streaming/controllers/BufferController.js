@@ -541,10 +541,9 @@ function BufferController(config) {
         return null;
     }
 
-    function _onPlaybackProgression(e) {
+    function _onPlaybackProgression() {
         if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
-            const streamId = e && e.streamId ? e.streamId : null;
-            _updateBufferLevel(streamId);
+            _updateBufferLevel();
         }
     }
 
@@ -626,13 +625,11 @@ function BufferController(config) {
         return length;
     }
 
-    function _updateBufferLevel(streamId = null) {
+    function _updateBufferLevel() {
         if (playbackController) {
             const tolerance = settings.get().streaming.jumpGaps && !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : NaN;
             bufferLevel = getBufferLength(playbackController.getTime() || 0, tolerance);
-            if (!streamId || streamId === streamInfo.id) {
-                triggerEvent(Events.BUFFER_LEVEL_UPDATED, { bufferLevel: bufferLevel });
-            }
+            triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
     }
@@ -812,7 +809,7 @@ function BufferController(config) {
 
         if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;
-            _updateBufferLevel(streamInfo.id);
+            _updateBufferLevel();
         }
 
         if (e.unintended) {
@@ -824,7 +821,7 @@ function BufferController(config) {
             clearNextRange();
         } else {
             if (!replacingBuffer) {
-                _updateBufferLevel(streamInfo.id);
+                _updateBufferLevel();
             } else {
                 replacingBuffer = false;
             }
@@ -839,12 +836,22 @@ function BufferController(config) {
     }
 
     function updateBufferTimestampOffset(representationInfo) {
-        if (!representationInfo || representationInfo.MSETimeOffset === undefined) return;
-        // Each track can have its own @presentationTimeOffset, so we should set the offset
-        // if it has changed after switching the quality or updating an mpd
-        if (sourceBufferSink && sourceBufferSink.updateTimestampOffset) {
-            sourceBufferSink.updateTimestampOffset(representationInfo.MSETimeOffset);
-        }
+        return new Promise((resolve) => {
+            if (!representationInfo || representationInfo.MSETimeOffset === undefined || !sourceBufferSink || !sourceBufferSink.updateTimestampOffset) {
+                resolve();
+                return;
+            }
+            // Each track can have its own @presentationTimeOffset, so we should set the offset
+            // if it has changed after switching the quality or updating an mpd
+            sourceBufferSink.updateTimestampOffset(representationInfo.MSETimeOffset)
+                .then(() => {
+                    resolve();
+                })
+                .catch(() => {
+                    resolve();
+                });
+        });
+
     }
 
     function updateAppendWindow() {
