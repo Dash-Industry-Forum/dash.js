@@ -169,38 +169,51 @@ function SourceBufferSink(mSource) {
     }
 
     function updateAppendWindow(sInfo) {
-        waitForUpdateEnd(() => {
-            try {
-                if (!buffer) {
-                    return;
-                }
+        return new Promise((resolve) => {
+            waitForUpdateEnd(() => {
+                try {
+                    if (!buffer) {
+                        resolve();
+                        return;
+                    }
 
-                let appendWindowEnd = mediaSource.duration;
-                let appendWindowStart = 0;
-                if (sInfo && !isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
-                    appendWindowEnd = sInfo.start + sInfo.duration;
+                    let appendWindowEnd = mediaSource.duration;
+                    let appendWindowStart = 0;
+                    if (sInfo && !isNaN(sInfo.start) && !isNaN(sInfo.duration) && isFinite(sInfo.duration)) {
+                        appendWindowEnd = sInfo.start + sInfo.duration;
+                    }
+                    if (sInfo && !isNaN(sInfo.start)) {
+                        appendWindowStart = sInfo.start;
+                    }
+                    if (buffer.appendWindowEnd !== appendWindowEnd || buffer.appendWindowStart !== appendWindowStart) {
+                        buffer.appendWindowStart = 0;
+                        buffer.appendWindowEnd = appendWindowEnd + APPEND_WINDOW_END_OFFSET;
+                        buffer.appendWindowStart = Math.max(appendWindowStart - APPEND_WINDOW_START_OFFSET, 0);
+                        logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
+                    }
+
+                    resolve();
+                } catch (e) {
+                    logger.warn(`Failed to set append window`);
+                    resolve();
                 }
-                if (sInfo && !isNaN(sInfo.start)) {
-                    appendWindowStart = sInfo.start;
-                }
-                if (buffer.appendWindowEnd !== appendWindowEnd || buffer.appendWindowStart !== appendWindowStart) {
-                    buffer.appendWindowStart = 0;
-                    buffer.appendWindowEnd = appendWindowEnd + APPEND_WINDOW_END_OFFSET;
-                    buffer.appendWindowStart = Math.max(appendWindowStart - APPEND_WINDOW_START_OFFSET, 0);
-                    logger.debug(`Updated append window for ${mediaInfo.type}. Set start to ${buffer.appendWindowStart} and end to ${buffer.appendWindowEnd}`);
-                }
-            } catch (e) {
-                logger.warn(`Failed to set append window`);
-            }
+            });
         });
     }
 
     function updateTimestampOffset(MSETimeOffset) {
-        waitForUpdateEnd(() => {
-            if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-                buffer.timestampOffset = MSETimeOffset;
-                logger.debug(`Set MSE timestamp offset to ${MSETimeOffset}`);
-            }
+        return new Promise((resolve) => {
+            waitForUpdateEnd(() => {
+                try {
+                    if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
+                        buffer.timestampOffset = MSETimeOffset;
+                        logger.debug(`Set MSE timestamp offset to ${MSETimeOffset}`);
+                    }
+                    resolve();
+                } catch (e) {
+                    resolve();
+                }
+            });
         });
     }
 
@@ -251,16 +264,17 @@ function SourceBufferSink(mSource) {
     }
 
     function _abortBeforeAppend() {
-        waitForUpdateEnd(() => {
-            // Save the append window, which is reset on abort().
-            const appendWindowStart = buffer.appendWindowStart;
-            const appendWindowEnd = buffer.appendWindowEnd;
+        return new Promise((resolve) => {
+            waitForUpdateEnd(() => {
+                // Save the append window, which is reset on abort().
+                const appendWindowStart = buffer.appendWindowStart;
+                const appendWindowEnd = buffer.appendWindowEnd;
 
-            buffer.abort();
-
-            // Restore the append window.
-            buffer.appendWindowStart = appendWindowStart;
-            buffer.appendWindowEnd = appendWindowEnd;
+                buffer.abort();
+                buffer.appendWindowStart = appendWindowStart;
+                buffer.appendWindowEnd = appendWindowEnd;
+                resolve();
+            });
         });
     }
 
@@ -349,18 +363,24 @@ function SourceBufferSink(mSource) {
     }
 
     function abort() {
-        try {
-            if (mediaSource.readyState === 'open') {
-                waitForUpdateEnd(() => {
-                    buffer.abort();
-                });
-            } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
-                buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
+        return new Promise((resolve) => {
+            try {
+                appendQueue = [];
+                if (mediaSource.readyState === 'open') {
+                    waitForUpdateEnd(() => {
+                        buffer.abort();
+                        resolve();
+                    });
+                } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
+                    buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
+                    resolve();
+                }
+            } catch (e) {
+                resolve();
+                logger.error('SourceBuffer append abort failed: "' + e + '"');
             }
-        } catch (ex) {
-            logger.error('SourceBuffer append abort failed: "' + ex + '"');
-        }
-        appendQueue = [];
+        });
+
     }
 
     function executeCallback() {

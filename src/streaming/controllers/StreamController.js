@@ -541,10 +541,7 @@ function StreamController() {
 
         const promises = streamProcessors.map((sp) => {
             // Cancel everything in case the active stream is still buffering
-            sp.prepareOuterPeriodPlaybackSeeking(e);
-
-            // Clear the buffers completely.
-            return sp.getBufferController().pruneAllSafely();
+            return sp.prepareOuterPeriodPlaybackSeeking(e);
         });
 
         Promise.all(promises)

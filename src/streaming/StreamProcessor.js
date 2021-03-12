@@ -247,27 +247,36 @@ function StreamProcessor(config) {
         // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
         scheduleController.clearScheduleTimer();
         fragmentModel.abortRequests();
-        // Abort operations to the SourceBuffer Sink and reset the BufferControllers isBufferingCompleted state
-        bufferController.prepareForPlaybackSeek();
 
-        // Clear the buffer. We need to prune everything which is not in the target interval.
-        const clearRanges = bufferController.getAllRangesWithSafetyFactor(e.seekTime);
-        // When everything has been pruned go on
-        bufferController.clearBuffers(clearRanges)
+        // Abort operations to the SourceBuffer Sink and reset the BufferControllers isBufferingCompleted state.
+        bufferController.prepareForPlaybackSeek()
+            .then(() => {
+                // Clear the buffer. We need to prune everything which is not in the target interval.
+                const clearRanges = bufferController.getAllRangesWithSafetyFactor(e.seekTime);
+                // When everything has been pruned go on
+                return bufferController.clearBuffers(clearRanges);
+            })
             .then(() => {
                 // Figure out the correct segment request time.
                 const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
 
-                // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event again in order to start prebuffering again
-                if(!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
+                // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering again
+                if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
                     bufferController.setIsBufferingCompleted(true);
                 } else {
                     setExplicitBufferingTime(targetTime);
                     bufferController.setSeekTarget(targetTime);
 
-                    // Right after a seek we should not immediately check the playback quality
-                    scheduleController.setCheckPlaybackQuality(false);
-                    scheduleController.startScheduleTimer();
+                    // append window has been reset by abort() operation. Set the correct values again
+                    bufferController.updateAppendWindow()
+                        .then(() => {
+                            // We might have aborted the append operation of an init segment. Append init segment again.
+                            scheduleController.setInitSegmentRequired(true);
+
+                            // Right after a seek we should not immediately check the playback quality
+                            scheduleController.setCheckPlaybackQuality(false);
+                            scheduleController.startScheduleTimer();
+                        });
                 }
             })
             .catch((e) => {
@@ -276,9 +285,29 @@ function StreamProcessor(config) {
     }
 
     function prepareOuterPeriodPlaybackSeeking() {
-        scheduleController.clearScheduleTimer();
-        fragmentModel.abortRequests();
-        bufferController.prepareForPlaybackSeek();
+        return new Promise((resolve, reject) => {
+            try {
+                // Stop scheduling
+                scheduleController.clearScheduleTimer();
+
+                // Abort all ongoing requests
+                fragmentModel.abortRequests();
+
+                // buffering not complete anymore and abort current append operation to SourceBuffer
+                bufferController.prepareForPlaybackSeek()
+                    .then(() => {
+                        // Clear the buffers completely.
+                        return bufferController.pruneAllSafely();
+                    })
+                    .then(() => {
+                        resolve();
+                    });
+
+            }
+            catch(e) {
+                reject(e);
+            }
+        });
     }
 
     function _onInitFragmentNeeded(e) {

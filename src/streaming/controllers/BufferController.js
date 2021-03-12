@@ -383,23 +383,31 @@ function BufferController(config) {
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
     function prepareForPlaybackSeek() {
-        sourceBufferSink.abort(); // Abort the current request and empty all possible segments to be appended
         if (isBufferingCompleted) {
             isBufferingCompleted = false;
             //a seek command has occured, reset maximum index value, it will be set next time that onStreamCompleted will be called.
             maximumIndex = Number.POSITIVE_INFINITY;
         }
+
+        // Abort the current request and empty all possible segments to be appended
+        return sourceBufferSink.abort();
     }
 
     function prepareForTrackSwitch() {
-
-        if (settings.get().streaming.useAppendWindow) {
-            updateAppendWindow();
-        }
-
-        sourceBufferSink.abort();
-        isBufferingCompleted = false;
-        maximumIndex = Number.POSITIVE_INFINITY;
+        return new Promise((resolve, reject) => {
+            sourceBufferSink.abort()
+                .then(() => {
+                    return updateAppendWindow();
+                })
+                .then(() => {
+                    isBufferingCompleted = false;
+                    maximumIndex = Number.POSITIVE_INFINITY;
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
     }
 
     function pruneAllSafely(forceRemoval = false) {
@@ -831,9 +839,10 @@ function BufferController(config) {
     }
 
     function updateAppendWindow() {
-        if (sourceBufferSink && !isBufferingCompleted) {
-            sourceBufferSink.updateAppendWindow(streamInfo);
+        if (sourceBufferSink && !isBufferingCompleted && settings.get().streaming.useAppendWindow) {
+            return sourceBufferSink.updateAppendWindow(streamInfo);
         }
+        return Promise.resolve();
     }
 
     function _onStreamRequestingCompleted(e) {
