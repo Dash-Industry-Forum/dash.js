@@ -517,9 +517,12 @@ function StreamController() {
      * @private
      */
     function _handleInnerPeriodSeek(e) {
-        eventBus.trigger(Events.INNER_PERIOD_PLAYBACK_SEEKING, {
-            seekTime: e.seekTime
-        }, { streamId: e.streamId });
+        const streamProcessors = activeStream.getProcessors();
+
+        streamProcessors.forEach((sp) => {
+            sp.prepareInnerPeriodPlaybackSeeking(e);
+        });
+
         _flushPlaylistMetrics(PlayListTrace.USER_REQUEST_STOP_REASON);
     }
 
@@ -532,15 +535,15 @@ function StreamController() {
     function _handleOuterPeriodSeek(e, seekToStream) {
         console.debug(`Handle outer period seek. Seeking from ${e.streamId} to ${seekToStream.getStreamId()}`);
 
-        // The preloading streams have been reset completely.The currently active stream might be done buffering or not. We signal a shutdown anyways.
-        eventBus.trigger(Events.OUTER_PERIOD_PLAYBACK_SEEKING, {
-            seekTime: e.seekTime
-        });
+        // Stop segment requests
         const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
-
-        // Clear the buffers completely.
         const streamProcessors = activeStream.getProcessors();
+
         const promises = streamProcessors.map((sp) => {
+            // Cancel everything in case the active stream is still buffering
+            sp.prepareOuterPeriodPlaybackSeeking(e);
+
+            // Clear the buffers completely.
             return sp.getBufferController().pruneAllSafely();
         });
 

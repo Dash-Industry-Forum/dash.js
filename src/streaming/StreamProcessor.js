@@ -96,8 +96,6 @@ function StreamProcessor(config) {
         eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
-        eventBus.on(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
-        eventBus.on(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
@@ -223,8 +221,6 @@ function StreamProcessor(config) {
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
-        eventBus.off(Events.INNER_PERIOD_PLAYBACK_SEEKING, _onInnerPeriodPlaybackSeeking, instance);
-        eventBus.off(Events.OUTER_PERIOD_PLAYBACK_SEEKING, _onOuterPeriodPlaybackSeeking, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
@@ -246,11 +242,12 @@ function StreamProcessor(config) {
      * @param {object} e
      * @private
      */
-    function _onInnerPeriodPlaybackSeeking(e) {
+    function prepareInnerPeriodPlaybackSeeking(e) {
 
         // Stop segment requests until we have figured out for which time we need to request a segment. We don't want to replace existing segments.
         scheduleController.clearScheduleTimer();
         fragmentModel.abortRequests();
+        // Abort operations to the SourceBuffer Sink and reset the BufferControllers isBufferingCompleted state
         bufferController.prepareForPlaybackSeek();
 
         // Clear the buffer. We need to prune everything which is not in the target interval.
@@ -258,22 +255,27 @@ function StreamProcessor(config) {
         // When everything has been pruned go on
         bufferController.clearBuffers(clearRanges)
             .then(() => {
-                // Figure out the correct segment request time. There might be prebuffered stuff in the buffer so we limit the target time to the period boundary
-                const targetTime = Math.min(streamInfo.start + streamInfo.duration, bufferController.getContiniousBufferTimeForTargetTime(e.seekTime));
-                setExplicitBufferingTime(targetTime);
-                bufferController.setSeekTarget(targetTime);
+                // Figure out the correct segment request time.
+                const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
 
-                // Right after a seek we should not immediately check the playback quality
-                scheduleController.setCheckPlaybackQuality(false);
-                scheduleController.startScheduleTimer();
+                // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event again in order to start prebuffering again
+                if(!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
+                    bufferController.setIsBufferingCompleted(true);
+                } else {
+                    setExplicitBufferingTime(targetTime);
+                    bufferController.setSeekTarget(targetTime);
+
+                    // Right after a seek we should not immediately check the playback quality
+                    scheduleController.setCheckPlaybackQuality(false);
+                    scheduleController.startScheduleTimer();
+                }
             })
             .catch((e) => {
                 logger.error(e);
             });
     }
 
-    function _onOuterPeriodPlaybackSeeking() {
-        // Stop segment requests
+    function prepareOuterPeriodPlaybackSeeking() {
         scheduleController.clearScheduleTimer();
         fragmentModel.abortRequests();
         bufferController.prepareForPlaybackSeek();
@@ -872,6 +874,8 @@ function StreamProcessor(config) {
         resetDashHandler,
         finalisePlayList,
         probeNextRequest,
+        prepareInnerPeriodPlaybackSeeking,
+        prepareOuterPeriodPlaybackSeeking,
         reset
     };
 

@@ -241,6 +241,8 @@ function DashHandler(config) {
 
         if (!representation || !lastSegment) return isFinished;
 
+        // if the buffer is filled up we are done
+
         // we are replacing existing stuff.
         if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
             return false;

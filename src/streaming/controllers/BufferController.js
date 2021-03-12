@@ -625,7 +625,6 @@ function BufferController(config) {
         if (isLastIdxAppended && !isBufferingCompleted) {
             isBufferingCompleted = true;
             logger.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
-            console.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
             triggerEvent(Events.BUFFERING_COMPLETED);
         }
     }
@@ -881,6 +880,18 @@ function BufferController(config) {
         return isBufferingCompleted;
     }
 
+    function setIsBufferingCompleted(value) {
+        if (isBufferingCompleted === value) {
+            return;
+        }
+
+        isBufferingCompleted = value;
+
+        if (isBufferingCompleted) {
+            triggerEvent(Events.BUFFERING_COMPLETED);
+        }
+    }
+
     function getIsPruningInProgress() {
         return isPruningInProgress;
     }
@@ -1006,6 +1017,7 @@ function BufferController(config) {
         appendInitSegmentFromCache,
         setReplaceBuffer,
         getIsBufferingCompleted,
+        setIsBufferingCompleted,
         getIsPruningInProgress,
         reset,
         prepareForPlaybackSeek,
