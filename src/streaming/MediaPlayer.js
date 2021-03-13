@@ -38,6 +38,7 @@ import GapController from './controllers/GapController';
 import MediaController from './controllers/MediaController';
 import BaseURLController from './controllers/BaseURLController';
 import ManifestLoader from './ManifestLoader';
+import CaptionsLoader from './CaptionsLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import CapabilitiesFilter from './utils/CapabilitiesFilter';
@@ -1289,6 +1290,45 @@ function MediaPlayer() {
     }
 
     /**
+     * Use this method to add a captions from an external URL (for captions not listed in the manifest).
+     * @param {string} url - URL of the captions file to load.  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
+     * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addTextTrack(url) {
+        if (!streamingInitialized) {
+            throw STREAMING_NOT_INITIALIZED_ERROR;
+        }
+
+        if (textController === undefined) {
+            textController = TextController(context).getInstance();
+        }
+
+        /********* END ***********/
+        let captionsLoader = createCaptionsLoader();
+        let self = this;
+
+        const handler = function (e) {
+            if (!e.error) {
+                let textTracks = TextTracks(context).getInstance();
+                textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, e.captions);
+            } else {
+                // ????
+            }
+            eventBus.off(Events.EXTERNAL_CAPTIONS_LOADED, handler, self);
+            captionsLoader.reset();
+        };
+
+        eventBus.on(Events.EXTERNAL_CAPTIONS_LOADED, handler, self);
+
+        uriFragmentModel.initialize(url);
+        captionsLoader.load(url);
+        /********* END ***********/
+    }
+
+    /**
      * Use this method to change the current text track for both external time text files and fragmented text tracks. There is no need to
      * set the track mode on the video object to switch a track when using this method.
      * @param {number} idx - Index of track based on the order of the order the tracks are added Use -1 to disable all tracks. (turn captions off).  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
@@ -2159,6 +2199,18 @@ function MediaPlayer() {
         });
     }
 
+    function createCaptionsLoader() {
+        return CaptionsLoader(context).create({
+            debug: debug,
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            requestModifier: RequestModifier(context).getInstance(),
+            mssHandler: mssHandler,
+            settings: settings
+        });
+    }
+
     function detectProtection() {
         if (protectionController) {
             return protectionController;
@@ -2405,6 +2457,7 @@ function MediaPlayer() {
         enableText: enableText,
         enableForcedTextStreaming: enableForcedTextStreaming,
         isTextEnabled: isTextEnabled,
+        addTextTrack: addTextTrack,
         setTextTrack: setTextTrack,
         getBitrateInfoListFor: getBitrateInfoListFor,
         getStreamsFromManifest: getStreamsFromManifest,

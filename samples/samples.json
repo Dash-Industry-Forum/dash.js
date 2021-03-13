@@ -154,6 +154,11 @@
                 "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html"
+            },
+            {
+                "title": "Load external VTT captions",
+                "description": "Example showing how to load external VTT captions.",
+                "href": "captioning/external-caption-vtt.html"
             }
         ]
     },
