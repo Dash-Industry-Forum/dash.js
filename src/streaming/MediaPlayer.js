@@ -43,6 +43,7 @@ import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import CapabilitiesFilter from './utils/CapabilitiesFilter';
 import TextTracks from './text/TextTracks';
+import TextTrackInfo from './vo/TextTrackInfo';
 import RequestModifier from './utils/RequestModifier';
 import TextController from './text/TextController';
 import URIFragmentModel from './models/URIFragmentModel';
@@ -1313,7 +1314,40 @@ function MediaPlayer() {
         const handler = function (e) {
             if (!e.error) {
                 let textTracks = TextTracks(context).getInstance();
-                textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, e.captions);
+
+                const textTrackInfo = new TextTrackInfo();
+                const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
+                const getKind = function () {
+                    let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+                    kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+                    return kind;
+                };
+
+                const checkTTML = function () {
+                    let ttml = false;
+                    if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
+                        ttml = true;
+                    }
+                    if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
+                        ttml = true;
+                    }
+                    return ttml;
+                };
+
+                textTrackInfo.captionData = e.captions;
+                textTrackInfo.lang = 'en-US'; // mediaInfo.lang;
+                textTrackInfo.labels = ['malthe']; // mediaInfo.labels;
+                textTrackInfo.id = 1; // mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
+                textTrackInfo.index = 1; // mediaInfo.index; // AdaptationSet index in manifest
+                textTrackInfo.isTTML = false; // checkTTML();
+                textTrackInfo.defaultTrack = false; // getIsDefault(mediaInfo);
+                textTrackInfo.isFragmented = false; // !adapter.getIsTextTrack(mediaInfo.mimeType);
+                textTrackInfo.isEmbedded = false; // mediaInfo.isEmbedded ? true : false;
+                textTrackInfo.kind = trackKindMap.caption; // getKind();
+                // textTrackInfo.roles = mediaInfo.roles;
+                // textTrackInfo.accessibility = mediaInfo.accessibility;
+                const totalNrTracks = 2; // (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
+                textTracks.addTextTrack(textTrackInfo, totalNrTracks);
             } else {
                 // ????
             }
