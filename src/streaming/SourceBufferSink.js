@@ -151,11 +151,11 @@ function SourceBufferSink(mSource) {
 
             } catch (err) {
                 // use setInterval to periodically check if updating has been completed
-                intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+                intervalId = setInterval(updateEndHandler, CHECK_INTERVAL);
             }
         } else {
             // use setInterval to periodically check if updating has been completed
-            intervalId = setInterval(checkIsUpdateEnded, CHECK_INTERVAL);
+            intervalId = setInterval(updateEndHandler, CHECK_INTERVAL);
         }
     }
 
@@ -405,10 +405,8 @@ function SourceBufferSink(mSource) {
 
     function executeCallback() {
         if (callbacks.length > 0) {
-            const cb = callbacks.shift();
-            if (buffer.updating) {
-                waitForUpdateEnd(cb);
-            } else {
+            if (!buffer.updating) {
+                const cb = callbacks.shift();
                 cb();
                 // Try to execute next callback if still not updating
                 executeCallback();
@@ -416,20 +414,13 @@ function SourceBufferSink(mSource) {
         }
     }
 
-    function checkIsUpdateEnded() {
+    function updateEndHandler() {
         // if updating is still in progress do nothing and wait for the next check again.
         if (buffer.updating) {
             return;
         }
+
         // updating is completed, now we can stop checking and resolve the promise
-        executeCallback();
-    }
-
-    function updateEndHandler() {
-        if (buffer.updating) {
-            return;
-        }
-
         executeCallback();
     }
 
