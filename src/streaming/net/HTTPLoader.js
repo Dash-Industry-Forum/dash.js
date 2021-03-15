@@ -355,6 +355,11 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
 
         requests.forEach(x => {
+            // MSS patch: ignore FragmentInfo requests
+            if (x.request.type === 'FragmentInfoSegment') {
+                return;
+            }
+
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
