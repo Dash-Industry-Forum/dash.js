@@ -163,7 +163,7 @@ function MssFragmentMoofProcessor(config) {
 
                 // Remove segments prior to availability start time
                 segment = segments[0];
-                while (Math.round(segment.t / timescale) < availabilityStartTime) {
+                while (Math.round((segment.t + segment.d) / timescale) < availabilityStartTime) {
                     // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                     segments.splice(0, 1);
                     segment = segments[0];
