@@ -111,7 +111,7 @@ function GapController() {
         eventBus.on(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
         eventBus.on(Events.TRACK_REPLACEMENT_STARTED, _onTrackReplacementStarted, instance);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
+        eventBus.on(Events.TRACK_CHANGE_RENDERED, _onTrackChangeRendered, instance);
     }
 
     function unregisterEvents() {
@@ -119,7 +119,7 @@ function GapController() {
         eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
         eventBus.off(Events.TRACK_REPLACEMENT_STARTED, _onTrackReplacementStarted, instance);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onTrackChangeRendered, instance);
     }
 
     function _onPlaybackSeeking() {
@@ -149,8 +149,8 @@ function GapController() {
         }
     }
 
-    function _onBytesAppended(e) {
-        if(!e || !e.segmentType || e.segmentType !== HTTPRequest.MEDIA_SEGMENT_TYPE || !e.mediaType) {
+    function _onTrackChangeRendered(e) {
+        if(!e || !e.mediaType) {
             return;
         }
 

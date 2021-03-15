@@ -265,7 +265,7 @@ function ScheduleController(config) {
     }
 
     function _onBytesAppended(e) {
-        logger.debug(`Appended bytes for ${e.mediaType} and set fragment process state to false for ${type}`);
+        logger.debug(`Appended bytes for ${e.mediaType}`);
         startScheduleTimer(0);
     }
 
