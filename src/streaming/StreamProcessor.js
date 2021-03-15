@@ -778,10 +778,16 @@ function StreamProcessor(config) {
             fragmentModel.abortRequests();
 
             // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-            bufferController.prepareForTrackSwitch();
-
-            // Prune everything that is in the buffer right now
-            bufferController.pruneAllSafely(true)
+            bufferController.prepareForTrackSwitch()
+                .then(() => {
+                    // Prune everything that is in the buffer right now
+                    return bufferController.pruneAllSafely(true);
+                })
+                .then(() => {
+                    // Timestamp offset couldve been changed by preloading period
+                    const representationInfo = getRepresentationInfo();
+                    return bufferController.updateBufferTimestampOffset(representationInfo);
+                })
                 .then(() => {
                     _bufferClearedForTrackSwitch();
                 })
