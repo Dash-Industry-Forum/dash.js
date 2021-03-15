@@ -103,42 +103,41 @@ function SourceBufferSink(mSource) {
     }
 
     function initializeForFirstUse(mInfo, selectedRepresentation) {
-            mediaInfo = mInfo;
-            type = mediaInfo.type;
-            const codec = mediaInfo.codec;
-            try {
-                // Safari claims to support anything starting 'application/mp4'.
-                // it definitely doesn't understand 'application/mp4;codecs="stpp"'
-                // - currently no browser does, so check for it and use our own
-                // implementation. The same is true for codecs="wvtt".
-                if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
-                    throw new Error('not really supported');
-                }
-
-                buffer = mediaSource.addSourceBuffer(codec);
-
-                _addEventListeners();
-
-                const promises = [];
-
-                promises.push(updateAppendWindow(mediaInfo.streamInfo));
-
-                if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
-                    promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
-                }
-
-                return Promise.all(promises);
-
-            } catch (e) {
-                // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-                if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
-                    const textController = TextController(context).getInstance();
-                    buffer = textController.getTextSourceBuffer();
-                    return Promise.resolve();
-                } else {
-                    return Promise.reject(e);
-                }
+        mediaInfo = mInfo;
+        type = mediaInfo.type;
+        const codec = mediaInfo.codec;
+        try {
+            // Safari claims to support anything starting 'application/mp4'.
+            // it definitely doesn't understand 'application/mp4;codecs="stpp"'
+            // - currently no browser does, so check for it and use our own
+            // implementation. The same is true for codecs="wvtt".
+            if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
+                return _initializeForText();
             }
+
+            buffer = mediaSource.addSourceBuffer(codec);
+
+            _addEventListeners();
+
+            const promises = [];
+
+            promises.push(updateAppendWindow(mediaInfo.streamInfo));
+
+            if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
+                promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
+            }
+
+            return Promise.all(promises);
+
+        } catch (e) {
+            return Promise.reject(e);
+        }
+    }
+
+    function _initializeForText() {
+        const textController = TextController(context).getInstance();
+        buffer = textController.getTextSourceBuffer();
+        return Promise.resolve();
     }
 
     function _addEventListeners() {

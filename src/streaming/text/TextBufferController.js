@@ -136,11 +136,8 @@ function TextBufferController(config) {
         return _BufferControllerImpl.getRangeAt(time);
     }
 
-    function updateTimestampOffset(MSETimeOffset) {
-        const buffer = getBuffer();
-        if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-            buffer.timestampOffset = MSETimeOffset;
-        }
+    function updateBufferTimestampOffset(representationInfo) {
+        _BufferControllerImpl.updateBufferTimestampOffset(representationInfo);
     }
 
     function updateAppendWindow() {
@@ -163,7 +160,7 @@ function TextBufferController(config) {
         appendInitSegmentFromCache,
         getRangeAt,
         reset,
-        updateTimestampOffset,
+        updateBufferTimestampOffset,
         updateAppendWindow
     };
 

@@ -191,10 +191,8 @@ function NotFragmentedTextBufferController(config) {
         return null;
     }
 
-    function updateTimestampOffset(MSETimeOffset) {
-        if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-            buffer.timestampOffset = MSETimeOffset;
-        }
+    function updateBufferTimestampOffset(representationInfo) {
+        return Promise.resolve();
     }
 
     instance = {
@@ -213,7 +211,7 @@ function NotFragmentedTextBufferController(config) {
         appendInitSegmentFromCache,
         getRangeAt,
         reset,
-        updateTimestampOffset
+        updateBufferTimestampOffset
     };
 
     setup();

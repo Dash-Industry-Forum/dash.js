@@ -507,16 +507,12 @@ function StreamController() {
      * @private
      */
     function _deactivateAllPreloadingStreams() {
-        const start = Date.now();
         if (preloadingStreams && preloadingStreams.length > 0) {
             preloadingStreams.forEach((s) => {
                 s.deactivate(true);
             });
             preloadingStreams = [];
         }
-        const end = Date.now();
-
-        console.log(`Deactivation of preloading streams took ${end - start}`);
     }
 
     /**

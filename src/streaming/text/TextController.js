@@ -66,7 +66,6 @@ function TextController() {
         previousPeriodSelectedTrack;
 
     function setup() {
-
         defaultSettings = null;
         lastEnabledIndex = -1;
         forceTextStreaming = false;
