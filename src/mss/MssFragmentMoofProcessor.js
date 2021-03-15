@@ -187,6 +187,7 @@ function MssFragmentMoofProcessor(config) {
         if (!dvrInfos || (range.end > dvrInfos.range.end)) {
             logger.debug('Update DVR range: [' + range.start + ' - ' + range.end + ']');
             dashMetrics.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
+            playbackController.updateCurrentTime(type);
         }
     }
 

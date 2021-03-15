@@ -386,8 +386,8 @@ function PlaybackController() {
         return startTime;
     }
 
-    function getActualPresentationTime(currentTime) {
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo();
+    function getActualPresentationTime(currentTime, mediatype) {
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo(mediatype);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         let actualTime;
 
@@ -430,10 +430,10 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
     }
 
-    function updateCurrentTime() {
+    function updateCurrentTime(mediaType) {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
         const currentTime = getNormalizedTime();
-        const actualTime = getActualPresentationTime(currentTime);
+        const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
         if (timeChanged) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
@@ -977,6 +977,7 @@ function PlaybackController() {
         isSeeking: isSeeking,
         getStreamEndTime,
         seek: seek,
+        updateCurrentTime: updateCurrentTime,
         reset: reset
     };
 
