@@ -435,7 +435,7 @@ function PlaybackController() {
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged) {
+        if (timeChanged && !isSeeking()) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
