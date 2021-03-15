@@ -84,7 +84,6 @@ function ScheduleController(config) {
         });
 
 
-        eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, instance);
@@ -270,13 +269,6 @@ function ScheduleController(config) {
         startScheduleTimer(0);
     }
 
-    function _onBufferCleared(e) {
-        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
-        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
-            startScheduleTimer();
-        }
-    }
-
     function onURLResolutionFailed() {
         fragmentModel.abortRequests();
         clearScheduleTimer();
@@ -328,7 +320,6 @@ function ScheduleController(config) {
     }
 
     function reset() {
-        eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
         eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, instance);

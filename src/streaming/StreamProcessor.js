@@ -84,8 +84,7 @@ function StreamProcessor(config) {
         dashHandler,
         bufferingTime,
         replaceInProgress,
-        innerPeriodSeekInProgress,
-        bufferPruned;
+        innerPeriodSeekInProgress;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -169,7 +168,6 @@ function StreamProcessor(config) {
 
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
-        bufferPruned = false;
         replaceInProgress = false;
     }
 
@@ -385,7 +383,7 @@ function StreamProcessor(config) {
         }
 
         // Use time just whenever is strictly needed
-        const useTime = shouldUseExplicitTimeForRequest || bufferPruned;
+        const useTime = shouldUseExplicitTimeForRequest;
 
         if (dashHandler) {
             const representation = representationController && representationInfo ? representationController.getRepresentationForQuality(representationInfo.quality) : null;
@@ -397,7 +395,6 @@ function StreamProcessor(config) {
             }
         }
 
-        bufferPruned = false;
         return request;
     }
 
@@ -443,12 +440,15 @@ function StreamProcessor(config) {
             streamInfo.duration);
 
         // If buffer removed ahead current time (QuotaExceededError or automatic buffer pruning) then adjust current index handler time
-        /*
-        if (!innerPeriodSeekInProgress && e.from > playbackController.getTime()) {
-            bufferingTime = e.from;
-            bufferPruned = true;
+        if (e.quotaExceeded && e.from > playbackController.getTime()) {
+            setExplicitBufferingTime(e.from);
         }
-        */
+
+        // (Re)start schedule once buffer has been pruned after a QuotaExceededError
+        if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
+            scheduleController.startScheduleTimer();
+        }
+
     }
 
     /**
