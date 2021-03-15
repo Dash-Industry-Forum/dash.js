@@ -724,6 +724,8 @@ function Settings() {
                     } else {
                         dest[n] = Utils.clone(source[n]);
                     }
+                } else {
+                    dest[n] = Utils.clone(source[n]);
                 }
             }
         }
