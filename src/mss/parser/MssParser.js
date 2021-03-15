@@ -722,6 +722,7 @@ function MssParser(config) {
         // In case of live streams:
         // 1- configure player buffering properties according to target live delay
         // 2- adapt live delay and then buffers length in case timeShiftBufferDepth is too small compared to target live delay (see PlaybackController.computeLiveDelay())
+        // 3- Set retry attempts and intervals for FragmentInfo requests
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
@@ -750,7 +751,13 @@ function MssParser(config) {
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,
-                    'bufferTimeAtTopQualityLongForm': bufferTime
+                    'bufferTimeAtTopQualityLongForm': bufferTime,
+                    'retryAttempts': {
+                        'FragmentInfoSegment': 3
+                    },
+                    'retryIntervals': {
+                        'FragmentInfoSegment': 1000
+                    }
                 }
             });
         }
