@@ -69,7 +69,6 @@ function MssFragmentInfoController(config) {
         logger.debug('Start');
 
         started = true;
-        startTime = new Date().getTime();
         index = 0;
 
         loadNextFragmentInfo();
@@ -167,6 +166,10 @@ function MssFragmentInfoController(config) {
             delay;
 
         // logger.debug('FragmentInfo loaded: ', request.url);
+
+        if (startTime === null) {
+            startTime = new Date().getTime();
+        }
 
         if (!startFragmentTime) {
             startFragmentTime = request.startTime;
