@@ -3,6 +3,7 @@ import EventBus from '../../src/core/EventBus';
 import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 const context = {};
@@ -13,6 +14,7 @@ describe('EventController', function () {
 
     let manifestUpdaterMock = new ManifestUpdaterMock();
     let playbackControllerMock = new PlaybackControllerMock();
+    const settings = Settings(context).getInstance();
 
     const manifestExpiredEventStub = {
         'duration': 0,
@@ -58,7 +60,8 @@ describe('EventController', function () {
             eventController.reset();
             eventController.setConfig({
                 manifestUpdater: manifestUpdaterMock,
-                playbackController: playbackControllerMock
+                playbackController: playbackControllerMock,
+                settings
             });
         });
 

@@ -138,7 +138,8 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
-            filterUnsupportedEssentialProperties?: true
+            filterUnsupportedEssentialProperties?: boolean;
+            eventControllerRefreshDelay?: number;
             utcSynchronization?: {
                 backgroundAttempts?: number,
                 timeBetweenSyncAttempts?: number,
