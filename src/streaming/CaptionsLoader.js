@@ -93,23 +93,18 @@ function CaptionsLoader(config) {
             request: request,
             success: function (data, textStatus, responseURL) {
                 let actualUrl,
-                    baseUri,
                     captions;
 
                 // Handle redirects for the MPD - as per RFC3986 Section 5.1.3
                 // also handily resolves relative MPD URLs to absolute
                 if (responseURL && responseURL !== url) {
-                    baseUri = urlUtils.parseBaseUrl(responseURL);
                     actualUrl = responseURL;
                 } else {
                     // usually this case will be caught and resolved by
                     // responseURL above but it is not available for IE11 and Edge/12 and Edge/13
-                    // baseUri must be absolute for BaseURL resolution later
                     if (urlUtils.isRelative(url)) {
                         url = urlUtils.resolve(url, window.location.href);
                     }
-
-                    baseUri = urlUtils.parseBaseUrl(url);
                 }
 
                 // A response of no content implies in-memory is properly up to date
