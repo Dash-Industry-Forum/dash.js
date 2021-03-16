@@ -70,6 +70,7 @@ function StreamController() {
         mediaSourceController,
         timeSyncController,
         baseURLController,
+        segmentBaseController,
         uriFragmentModel,
         abrController,
         mediaController,
@@ -270,6 +271,7 @@ function StreamController() {
                 capabilitiesFilter,
                 errHandler,
                 baseURLController,
+                segmentBaseController,
                 abrController,
                 playbackController,
                 eventController,
@@ -1293,6 +1295,9 @@ function StreamController() {
         }
         if (config.uriFragmentModel) {
             uriFragmentModel = config.uriFragmentModel;
+        }
+        if (config.segmentBaseController) {
+            segmentBaseController = config.segmentBaseController;
         }
     }
 

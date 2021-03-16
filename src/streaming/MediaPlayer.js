@@ -2025,24 +2025,25 @@ function MediaPlayer() {
         });
 
         streamController.setConfig({
-            capabilities: capabilities,
+            capabilities,
             capabilitiesFilter,
-            manifestLoader: manifestLoader,
-            manifestModel: manifestModel,
-            mediaPlayerModel: mediaPlayerModel,
-            protectionController: protectionController,
-            adapter: adapter,
-            dashMetrics: dashMetrics,
-            errHandler: errHandler,
-            timelineConverter: timelineConverter,
-            videoModel: videoModel,
-            playbackController: playbackController,
-            abrController: abrController,
-            mediaController: mediaController,
-            textController: textController,
-            settings: settings,
-            baseURLController: baseURLController,
-            uriFragmentModel
+            manifestLoader,
+            manifestModel,
+            mediaPlayerModel,
+            protectionController,
+            adapter,
+            dashMetrics,
+            errHandler,
+            timelineConverter,
+            videoModel,
+            playbackController,
+            abrController,
+            mediaController,
+            textController,
+            settings,
+            baseURLController,
+            uriFragmentModel,
+            segmentBaseController
         });
 
         gapController.setConfig({
@@ -2055,32 +2056,32 @@ function MediaPlayer() {
         });
 
         playbackController.setConfig({
-            streamController: streamController,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            adapter: adapter,
-            videoModel: videoModel,
-            timelineConverter: timelineConverter,
-            settings: settings
+            streamController,
+            dashMetrics,
+            mediaPlayerModel,
+            adapter,
+            videoModel,
+            timelineConverter,
+            settings
         });
 
         abrController.setConfig({
-            streamController: streamController,
-            domStorage: domStorage,
-            mediaPlayerModel: mediaPlayerModel,
-            dashMetrics: dashMetrics,
-            adapter: adapter,
-            videoModel: videoModel,
-            settings: settings
+            streamController,
+            domStorage,
+            mediaPlayerModel,
+            dashMetrics,
+            adapter,
+            videoModel,
+            settings
         });
 
         textController.setConfig({
-            errHandler: errHandler,
-            manifestModel: manifestModel,
-            adapter: adapter,
-            mediaController: mediaController,
-            streamController: streamController,
-            videoModel: videoModel
+            errHandler,
+            manifestModel,
+            adapter,
+            mediaController,
+            streamController,
+            videoModel
         });
 
         cmcdModel.setConfig({

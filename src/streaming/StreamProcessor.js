@@ -48,6 +48,7 @@ import RequestModifier from './utils/RequestModifier';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
+import SegmentsController from '../dash/controllers/SegmentsController';
 
 function StreamProcessor(config) {
 
@@ -82,6 +83,7 @@ function StreamProcessor(config) {
         representationController,
         shouldUseExplicitTimeForRequest,
         dashHandler,
+        segmentsController,
         bufferingTime,
         replaceInProgress,
         innerPeriodSeekInProgress;
@@ -104,18 +106,29 @@ function StreamProcessor(config) {
     }
 
     function initialize(mediaSource, hasVideoTrack) {
-        dashHandler = DashHandler(context).create({
-            streamInfo: streamInfo,
-            type: type,
-            timelineConverter: timelineConverter,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            baseURLController: config.baseURLController,
-            errHandler: errHandler,
-            settings: settings,
-            boxParser: boxParser,
+
+        segmentsController = SegmentsController(context).create({
             events: Events,
-            eventBus: eventBus,
+            eventBus,
+            streamInfo,
+            dashConstants: DashConstants,
+            segmentBaseController: config.segmentBaseController,
+            type
+        });
+
+        dashHandler = DashHandler(context).create({
+            streamInfo,
+            type,
+            timelineConverter,
+            dashMetrics,
+            mediaPlayerModel,
+            baseURLController: config.baseURLController,
+            errHandler,
+            segmentsController,
+            settings,
+            boxParser,
+            events: Events,
+            eventBus,
             errors: Errors,
             debug: Debug(context).getInstance(),
             requestModifier: RequestModifier(context).getInstance(),
@@ -131,16 +144,18 @@ function StreamProcessor(config) {
         abrController.registerStreamType(type, instance);
 
         representationController = RepresentationController(context).create({
-            streamInfo: streamInfo,
-            type: type,
-            abrController: abrController,
-            dashMetrics: dashMetrics,
-            playbackController: playbackController,
-            timelineConverter: timelineConverter,
+            streamInfo,
+            type,
+            abrController,
+            dashMetrics,
+            playbackController,
+            timelineConverter,
             dashConstants: DashConstants,
             events: Events,
-            eventBus: eventBus,
-            errors: Errors
+            eventBus,
+            errors: Errors,
+            isDynamic,
+            segmentsController
         });
 
         bufferController = createBufferControllerForType(type);
@@ -206,6 +221,10 @@ function StreamProcessor(config) {
         if (representationController) {
             representationController.reset();
             representationController = null;
+        }
+
+        if (segmentsController) {
+            segmentsController = null;
         }
 
         if (abrController && !keepBuffers) {
@@ -608,7 +627,6 @@ function StreamProcessor(config) {
             if (quality > maxQuality) {
                 quality = maxQuality;
             }
-            dashHandler.setMimeType(mediaInfo ? mediaInfo.mimeType : null);
             representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
         }
     }

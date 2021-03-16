@@ -393,6 +393,7 @@ function Stream(config) {
             fragmentModel: fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
+            segmentBaseController: config.segmentBaseController,
             abrController: abrController,
             playbackController: playbackController,
             mediaController: mediaController,

@@ -30,6 +30,7 @@
  */
 import Constants from '../../streaming/constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
+import {getTimeBasedSegment} from '../utils/SegmentsUtils';
 
 function RepresentationController(config) {
 
@@ -43,6 +44,8 @@ function RepresentationController(config) {
     const type = config.type;
     const streamInfo = config.streamInfo;
     const dashConstants = config.dashConstants;
+    const segmentsController = config.segmentsController;
+    const isDynamic = config.isDynamic;
 
     let instance,
         realAdaptation,
@@ -54,7 +57,6 @@ function RepresentationController(config) {
         resetInitialSettings();
 
         eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.on(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
@@ -92,7 +94,6 @@ function RepresentationController(config) {
 
     function reset() {
         eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(events.REPRESENTATION_UPDATE_COMPLETED, onRepresentationUpdated, instance);
         eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
@@ -114,10 +115,75 @@ function RepresentationController(config) {
         }
 
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
-            eventBus.trigger(events.REPRESENTATION_UPDATE_STARTED, {
-                sender: instance,
-                representation: voAvailableRepresentations[i]
+            const currentRep = voAvailableRepresentations[i];
+            _updateRepresentation(currentRep);
+        }
+    }
+
+    function _updateRepresentation(currentRep) {
+        const hasInitialization = currentRep.hasInitialization();
+        const hasSegments = currentRep.hasSegments();
+
+        // If representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
+        // otherwise, it means that a request has to be made to get initialization and/or segments informations
+        const promises = [];
+
+        promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
+        promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+
+        Promise.all(promises)
+            .then((data) => {
+                if (data[0] && !data[0].error) {
+                    _onInitLoaded(currentRep, data[0]);
+                }
+                if (data[1] && !data[1].error) {
+                    _onSegmentsLoaded(currentRep, data[1]);
+                }
+                _onRepresentationUpdated({representation: currentRep});
             });
+    }
+
+    function _onInitLoaded(representation, e) {
+        if (!e || e.error || !e.representation) return;
+        representation = e.representation;
+    }
+
+    function _onSegmentsLoaded(representation, e) {
+        if (!e || e.error) return;
+
+        const fragments = e.segments;
+        const segments = [];
+        let count = 0;
+
+        let i,
+            len,
+            s,
+            seg;
+
+        for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
+            s = fragments[i];
+
+            seg = getTimeBasedSegment(
+                timelineConverter,
+                isDynamic,
+                representation,
+                s.startTime,
+                s.duration,
+                s.timescale,
+                s.media,
+                s.mediaRange,
+                count);
+
+            if (seg) {
+                segments.push(seg);
+                seg = null;
+                count++;
+            }
+        }
+
+        if (segments.length > 0) {
+            representation.availableSegmentsNumber = segments.length;
+            representation.segments = segments;
         }
     }
 
@@ -172,7 +238,7 @@ function RepresentationController(config) {
         );
     }
 
-    function onRepresentationUpdated(e) {
+    function _onRepresentationUpdated(e) {
         if (!isUpdating()) return;
 
         if (e.error) {
@@ -205,7 +271,7 @@ function RepresentationController(config) {
             abrController.setPlaybackQuality(getType(), streamInfo, getQualityForRepresentation(currentVoRepresentation));
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             if (dvrInfo) {
-                dashMetrics.updateManifestUpdateInfo({latency: dvrInfo.range.end - playbackController.getTime()});
+                dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
             }
 
             repSwitch = dashMetrics.getCurrentRepresentationSwitch(getCurrentRepresentation().adaptation.type);

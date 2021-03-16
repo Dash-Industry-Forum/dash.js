@@ -459,6 +459,9 @@ function DashManifestModel() {
                 if (realRepresentation.hasOwnProperty(DashConstants.CODECS)) {
                     voRepresentation.codecs = realRepresentation.codecs;
                 }
+                if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE)) {
+                    voRepresentation.mimeType = realRepresentation[DashConstants.MIME_TYPE];
+                }
                 if (realRepresentation.hasOwnProperty(DashConstants.CODEC_PRIVATE_DATA)) {
                     voRepresentation.codecPrivateData = realRepresentation.codecPrivateData;
                 }

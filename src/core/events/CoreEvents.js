@@ -52,7 +52,6 @@ class CoreEvents extends EventsBase {
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
         this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.INBAND_EVENTS = 'inbandEvents';
-        this.INITIALIZATION_LOADED = 'initializationLoaded';
         this.INITIAL_STREAM_SWITCH = 'initialStreamSwitch';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
@@ -68,7 +67,6 @@ class CoreEvents extends EventsBase {
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
         this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.REPRESENTATION_UPDATE_STARTED = 'representationUpdateStarted';
         this.REPRESENTATION_UPDATE_COMPLETED = 'representationUpdateCompleted';
         this.SEGMENTS_LOADED = 'segmentsLoaded';
         this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
@@ -85,7 +83,6 @@ class CoreEvents extends EventsBase {
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
-        this.SEGMENTBASE_INIT_REQUEST_NEEDED = 'segmentBaseInitRequestNeeded';
         this.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED = 'segmentBaseSegmentsListRequestNeeded';
         this.SEEK_TARGET = 'seekTarget';
     }

@@ -43,6 +43,7 @@ class Representation {
         this.segmentInfoType = null;
         this.initialization = null;
         this.codecs = null;
+        this.mimeType = null;
         this.codecPrivateData = null;
         this.segmentDuration = NaN;
         this.timescale = 1;
