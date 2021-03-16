@@ -1293,12 +1293,13 @@ function MediaPlayer() {
     /**
      * Use this method to add a captions from an external URL (for captions not listed in the manifest).
      * @param {string} url - URL of the captions file to load.  Use module:MediaPlayer#dashjs.MediaPlayer.events.TEXT_TRACK_ADDED.
+     * @param {MediaInfo} mediaInfo - A MediaInfo object with details about the text track.
      * @see {@link MediaPlayerEvents#event:TEXT_TRACK_ADDED dashjs.MediaPlayer.events.TEXT_TRACK_ADDED}
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @memberof module:MediaPlayer
      * @instance
      */
-    function addTextTrack(url) {
+    function addTextTrack(url, mediaInfo) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
@@ -1335,17 +1336,17 @@ function MediaPlayer() {
                 };
 
                 textTrackInfo.captionData = e.captions;
-                textTrackInfo.lang = 'en-US'; // mediaInfo.lang;
-                textTrackInfo.labels = ['malthe']; // mediaInfo.labels;
-                textTrackInfo.id = 1; // mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
-                textTrackInfo.index = 1; // mediaInfo.index; // AdaptationSet index in manifest
-                textTrackInfo.isTTML = false; // checkTTML();
+                textTrackInfo.lang = mediaInfo.lang;
+                textTrackInfo.labels = mediaInfo.labels;
+                textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
+                textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
+                textTrackInfo.isTTML = checkTTML();
                 textTrackInfo.defaultTrack = false; // getIsDefault(mediaInfo);
                 textTrackInfo.isFragmented = false; // !adapter.getIsTextTrack(mediaInfo.mimeType);
-                textTrackInfo.isEmbedded = false; // mediaInfo.isEmbedded ? true : false;
-                textTrackInfo.kind = trackKindMap.caption; // getKind();
-                // textTrackInfo.roles = mediaInfo.roles;
-                // textTrackInfo.accessibility = mediaInfo.accessibility;
+                textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
+                textTrackInfo.kind = getKind();
+                textTrackInfo.roles = mediaInfo.roles;
+                textTrackInfo.accessibility = mediaInfo.accessibility;
                 const totalNrTracks = 2; // (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
                 textTracks.addTextTrack(textTrackInfo, totalNrTracks);
             } else {

@@ -21,8 +21,26 @@
             player.initialize(video, url, true);
             player.setTextDefaultEnabled(true);
 
+            var mediaInfo = {
+                id: 1,
+                lang: 'en-US',
+                index: null,
+                type: null,
+                streamInfo: null,
+                representationCount: 0,
+                viewpoint: null,
+                roles: [],
+                codec: null,
+                mimeType: null,
+                contentProtection: null,
+                isText: true,
+                KID: null,
+                bitrateList: null,
+            }
+
             player.on(dashjs.MediaPlayer.events['STREAM_INITIALIZED'], function handleEvent(e) {
-                player.addTextTrack('http://localhost:3001/samples/captioning/external-captions.vtt');
+                player.addTextTrack('http://localhost:3001/samples/captioning/external-captions.vtt', mediaInfo);
+                player.setTextTrack(2);
             });
         }
     </script>
