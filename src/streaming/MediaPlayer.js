@@ -1347,7 +1347,7 @@ function MediaPlayer() {
                 textTrackInfo.kind = getKind();
                 textTrackInfo.roles = mediaInfo.roles;
                 textTrackInfo.accessibility = mediaInfo.accessibility;
-                const totalNrTracks = 2; // (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
+                const totalNrTracks = textTracks.getNumberOfTextTracks() + 1;
                 textTracks.addTextTrack(textTrackInfo, totalNrTracks);
             } else {
                 // ????
