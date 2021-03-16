@@ -131,23 +131,11 @@ function CaptionsLoader(config) {
                     return;
                 }
 
-                // const dataView = new DataView(bytes, 0, bytes.byteLength);
-                // ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
                 try {
                     captions = parser.parse(data, 0);
                 } catch (e) {
                     errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, data));
                 }
-                // } catch (e) {
-                //     eventBus.trigger(Events.EXTERNAL_CAPTIONS_LOADED, {
-                //         captions: null,
-                //         error: new DashJSError(
-                //             Errors.CAPTIONS_LOADER_PARSING_FAILURE_ERROR_CODE,
-                //             Errors.CAPTIONS_LOADER_PARSING_FAILURE_ERROR_MESSAGE + `${url}`
-                //         )
-                //     });
-                //     return;
-                // }
 
                 if (captions) {
                     eventBus.trigger(Events.EXTERNAL_CAPTIONS_LOADED, { captions: captions });
