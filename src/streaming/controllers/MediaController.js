@@ -53,6 +53,7 @@ function MediaController() {
 
     const validTrackSelectionModes = [
         Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+        Constants.TRACK_SELECTION_MODE_FIRST_TRACK,
         Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
         Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
     ];
@@ -480,6 +481,9 @@ function MediaController() {
                 if (tmpArr.length > 1) {
                     tmpArr = getTracksWithWidestRange(tmpArr);
                 }
+                break;
+            case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                tmpArr.push(tracks[0]);
                 break;
             case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
                 tmpArr = getTracksWithHighestEfficiency(tracks);
