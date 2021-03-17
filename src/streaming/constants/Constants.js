@@ -228,6 +228,13 @@ class Constants {
         this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 
         /**
+         *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_FIRST_TRACK = 'firstTrack';
+
+        /**
          *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
          *  @memberof Constants#
          *  @static

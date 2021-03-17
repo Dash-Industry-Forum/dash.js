@@ -1608,6 +1608,9 @@ function MediaPlayer() {
      * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
+     * Constants.TRACK_SELECTION_MODE_FIRST_TRACK
+     * This mode makes the player select the select the first track found in the manifest.
+     *
      * Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
      * This mode makes the player select the track with the lowest bitrate per pixel average.
      *
