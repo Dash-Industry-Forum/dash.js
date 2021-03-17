@@ -187,7 +187,7 @@ function SegmentBaseLoader() {
         });
     }
 
-    function _loadSegmentsRecursively(representation, mediaType, range, callback, resolve, loadingInfo) {
+    function _loadSegmentsRecursively(representation, mediaType, range, resolve, callback, loadingInfo) {
         if (range && (range.start === undefined || range.end === undefined)) {
             const parts = range ? range.toString().split('-') : null;
             range = parts ? { start: parseFloat(parts[0]), end: parseFloat(parts[1]) } : null;
@@ -236,7 +236,7 @@ function SegmentBaseLoader() {
                         info.range.end += extraBytes;
                     }
                 }
-                _loadSegmentsRecursively(representation, mediaType, info.range, null, resolve, info);
+                _loadSegmentsRecursively(representation, mediaType, info.range, resolve, null, info);
             } else {
                 const ref = sidx.references;
                 let loadMultiSidx,
@@ -254,7 +254,7 @@ function SegmentBaseLoader() {
                     let segs = [];
                     let count = 0;
                     let offset = (sidx.offset || info.range.start) + sidx.size;
-                    const tmpCallback = function (streamId, mediaType, result) {
+                    const tmpCallback = function (result) {
                         if (result) {
                             segs = segs.concat(result);
                             count++;
@@ -264,7 +264,7 @@ function SegmentBaseLoader() {
                                 segs.sort(function (a, b) {
                                     return a.startTime - b.startTime < 0 ? -1 : 0;
                                 });
-                                callback(segments, representation, resolve);
+                                callback(segs, representation, resolve);
                             }
                         } else {
                             callback(null, representation, resolve);
@@ -276,7 +276,7 @@ function SegmentBaseLoader() {
                         se = offset + ref[j].referenced_size - 1;
                         offset = offset + ref[j].referenced_size;
                         r = { start: ss, end: se };
-                        _loadSegmentsRecursively(representation, mediaType, r, tmpCallback, resolve, info);
+                        _loadSegmentsRecursively(representation, mediaType, r, resolve, tmpCallback, info);
                     }
 
                 } else {

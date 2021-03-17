@@ -71,7 +71,7 @@ function SegmentsController(config) {
         if (hasSegments) {
             return Promise.resolve();
         }
-        return segmentBaseController.getSegmentListBaseInitSegment({
+        return segmentBaseController.getSegmentList({
             mimeType: voRepresentation.mimeType,
             representation: voRepresentation,
             mediaType: type

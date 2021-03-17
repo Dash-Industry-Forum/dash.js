@@ -100,7 +100,7 @@ function SegmentBaseController(config) {
         }
     }
 
-    function getSegmentListBaseInitSegment(e) {
+    function getSegmentList(e) {
         if (isWebM(e.mimeType)) {
             return webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null);
         } else {
@@ -117,7 +117,7 @@ function SegmentBaseController(config) {
     instance = {
         initialize,
         getSegmentBaseInitSegment,
-        getSegmentListBaseInitSegment,
+        getSegmentList,
         reset
     };
 

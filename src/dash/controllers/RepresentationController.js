@@ -124,7 +124,7 @@ function RepresentationController(config) {
         const hasInitialization = currentRep.hasInitialization();
         const hasSegments = currentRep.hasSegments();
 
-        // If representation has initialization and segments information, REPRESENTATION_UPDATE_COMPLETED can be triggered immediately
+        // If representation has initialization and segments information we are done
         // otherwise, it means that a request has to be made to get initialization and/or segments informations
         const promises = [];
 

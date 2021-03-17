@@ -104,7 +104,7 @@ function ScheduleController(config) {
     }
 
     function startScheduleTimer(value) {
-        if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
+        if (bufferController.getIsBufferingCompleted()) return;
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;
@@ -212,7 +212,7 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            return  isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack);
+            return  currentRepresentationInfo && (isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
         } catch (e) {
             return false;
         }
