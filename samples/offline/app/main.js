@@ -1084,9 +1084,8 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             }
         });
         representations.fragmentedText = [];
-        var self = this;
         $('input[type="checkbox"][name="fragmentedText"]:checked').each(function () {
-            representations.fragmentedText.push($(self).attr('value'));
+            representations.fragmentedText.push($(this).attr('value'));
         });
 
         return representations;
