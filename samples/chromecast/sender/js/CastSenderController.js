@@ -313,7 +313,7 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
 
     $scope.setStream = function (item) {
         $scope.selectedItem = item;
-    }
+    };
 
 
     // -----------------------------------
@@ -324,17 +324,17 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
         $scope.state = STATE_CASTING;
         caster.loadMedia($scope.selectedItem.url, $scope.selectedItem.isLive);
         $scope.playing = true;
-    }
+    };
 
     $scope.stopCast = function () {
         $scope.state = STATE_READY;
         caster.stopPlayback();
         $scope.playing = false;
-    }
+    };
 
     $scope.togglePlayback = function () {
         caster.playOrPause();
-    }
+    };
 
     $scope.doSeek = function () {
         var x = event.layerX,
@@ -342,11 +342,11 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
             p = x / w,
             v = $scope.duration * p;
         caster.seekMedia(v);
-    }
+    };
 
     $scope.toggleMute = function () {
         caster.muteOrUnmute();
-    }
+    };
 
     $scope.turnVolumeDown = function () {
         $scope.volume -= 0.1;
@@ -354,7 +354,7 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
             $scope.volume = 0;
         }
         caster.setMediaVolume($scope.volume);
-    }
+    };
 
     $scope.turnVolumeUp = function () {
         $scope.volume += 0.1;
@@ -362,11 +362,11 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
             $scope.volume = 1;
         }
         caster.setMediaVolume($scope.volume);
-    }
+    };
 
     $scope.toggleStats = function () {
         caster.toggleStats();
-    }
+    };
 
     // -----------------------------------
     // Initialization
@@ -395,42 +395,42 @@ app.controller('CastSenderController', ['$scope', '$window', 'caster', function(
             $scope.state = STATE_READY;
         }
         $scope.$apply();
-    }
+    };
 
     this.onTimeUpdate = function (time) {
         $scope.currentTime = time;
         var scrubber = document.getElementById("scrubber-content");
         var p = ($scope.currentTime / $scope.duration) * 100;
         angular.element(scrubber).width(p + "%");
-    }
+    };
 
     this.onDurationChange = function (duration) {
         $scope.duration = duration;
-    }
+    };
 
     this.onPausedChange = function (isPaused) {
         $scope.playing = !isPaused;
-    }
+    };
 
     this.onMutedChange = function (isMuted) {
         $scope.muted = isMuted;
-    }
+    };
 
     this.onVolumeChange = function (level) {
         $scope.volume = level;
-    }
+    };
 
     this.onEnded = function () {
 
-    }
+    };
 
     this.resumeMediaSession = function (mediaSession) {
         if (mediaSession.media) {
-            $scope.setStream($scope.availableStreams.find(item => item.url == mediaSession.media.contentId));
+            $scope.setStream($scope.availableStreams.find(function (item) { return item.url == mediaSession.media.contentId; }));
             $scope.state = STATE_CASTING;
             $scope.playing = mediaSession.playerState === 'PLAYING';
             $scope.muted = mediaSession.volume.muted;
             $scope.$apply();
         }
-    }
+    };
 }]);

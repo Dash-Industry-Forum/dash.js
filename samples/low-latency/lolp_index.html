@@ -217,7 +217,7 @@
         const player = init();
         const video = document.querySelector('video')
         let stallingAt = null;
-        const CMA = () => {
+        const CMA = function () {
             let average = 0;
             let count = 0;
 
@@ -251,11 +251,11 @@
             document.getElementById('buffer-tag').innerHTML = currentBuffer + ' secs';
         }, 200);
 
-        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, (e) => {
+        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
             console.warn('Quality changed requested', e);
         });
 
-        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, (e) => {
+        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
             if (e.mediaType === 'video') {
                 console.warn('Quality changed', e);
                 const quality = player.getBitrateInfoListFor('video')[e.newQuality];
@@ -266,7 +266,7 @@
             }
         });
 
-        window.startRecording = () => {
+        window.startRecording = function () {
             console.info('Begin recording');
 
             const latencyCMA = CMA();
@@ -282,7 +282,7 @@
             recordSwitch(player.getBitrateInfoListFor('video')[player.getQualityFor('video')]);
 
             let pollInterval = -1;
-            window.stopRecording = () => {
+            window.stopRecording = function () {
                 clearInterval(pollInterval);
                 checkStallResolution();
                 const lastQuality = history.switchHistory[history.switchHistory.length - 1];
@@ -300,15 +300,15 @@
             }, 200);
 
 
-            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, (e) => {
+            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
                 recordSwitch(player.getBitrateInfoListFor('video')[e.newQuality]);
             });
 
-            video.addEventListener('waiting', (e) => {
+            video.addEventListener('waiting', function (e) {
                 stallingAt = performance.now();
             });
 
-            video.addEventListener('timeupdate', () => {
+            video.addEventListener('timeupdate', function () {
                 checkStallResolution();
             });
 
