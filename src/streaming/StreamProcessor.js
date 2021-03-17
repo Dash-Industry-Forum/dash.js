@@ -111,6 +111,7 @@ function StreamProcessor(config) {
             events: Events,
             eventBus,
             streamInfo,
+            timelineConverter,
             dashConstants: DashConstants,
             segmentBaseController: config.segmentBaseController,
             type
@@ -164,19 +165,19 @@ function StreamProcessor(config) {
         }
 
         scheduleController = ScheduleController(context).create({
-            streamInfo: streamInfo,
-            type: type,
-            mimeType: mimeType,
-            adapter: adapter,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            fragmentModel: fragmentModel,
-            abrController: abrController,
-            playbackController: playbackController,
-            textController: textController,
-            mediaController: mediaController,
-            bufferController: bufferController,
-            settings: settings
+            streamInfo,
+            type,
+            mimeType,
+            adapter,
+            dashMetrics,
+            mediaPlayerModel,
+            fragmentModel,
+            abrController,
+            playbackController,
+            textController,
+            mediaController,
+            bufferController,
+            settings
         });
 
         scheduleController.initialize(hasVideoTrack);
