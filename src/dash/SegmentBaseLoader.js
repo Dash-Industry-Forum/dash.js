@@ -168,7 +168,7 @@ function SegmentBaseLoader() {
                 resolve(representation);
             } else {
                 info.range.end = info.bytesLoaded + info.bytesToLoad;
-                return loadInitialization(representation, mediaType, resolve, info);
+                return _loadInitializationRecursively(representation, mediaType, resolve, info);
             }
         };
 

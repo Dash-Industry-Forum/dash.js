@@ -92,11 +92,11 @@ function SegmentBaseController(config) {
         webmSegmentBaseLoader.initialize();
     }
 
-    function getSegmentBaseInitSegment(e) {
-        if (isWebM(e.mimeType)) {
-            return webmSegmentBaseLoader.loadInitialization(e.representation, e.mediaType);
+    function getSegmentBaseInitSegment(data) {
+        if (isWebM(data.representation.mimeType)) {
+            return webmSegmentBaseLoader.loadInitialization(data.representation, data.mediaType);
         } else {
-            return segmentBaseLoader.loadInitialization(e.representation, e.mediaType);
+            return segmentBaseLoader.loadInitialization(data.representation, data.mediaType);
         }
     }
 

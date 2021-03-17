@@ -61,7 +61,6 @@ function SegmentsController(config) {
             return Promise.resolve();
         }
         return segmentBaseController.getSegmentBaseInitSegment({
-            mimeType: voRepresentation.mimeType,
             representation: voRepresentation,
             mediaType: type
         });

@@ -134,18 +134,20 @@ function RepresentationController(config) {
         Promise.all(promises)
             .then((data) => {
                 if (data[0] && !data[0].error) {
-                    _onInitLoaded(currentRep, data[0]);
+                    currentRep = _onInitLoaded(currentRep, data[0]);
                 }
                 if (data[1] && !data[1].error) {
-                    _onSegmentsLoaded(currentRep, data[1]);
+                    currentRep = _onSegmentsLoaded(currentRep, data[1]);
                 }
-                _onRepresentationUpdated({representation: currentRep});
+                _onRepresentationUpdated(currentRep);
             });
     }
 
     function _onInitLoaded(representation, e) {
-        if (!e || e.error || !e.representation) return;
-        representation = e.representation;
+        if (!e || e.error || !e.representation) {
+            return representation;
+        }
+        return e.representation;
     }
 
     function _onSegmentsLoaded(representation, e) {
@@ -185,6 +187,8 @@ function RepresentationController(config) {
             representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
         }
+
+        return representation;
     }
 
     function addRepresentationSwitch() {
@@ -240,11 +244,6 @@ function RepresentationController(config) {
 
     function _onRepresentationUpdated(e) {
         if (!isUpdating()) return;
-
-        if (e.error) {
-            endDataUpdate(e.error);
-            return;
-        }
 
         let r = e.representation;
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
