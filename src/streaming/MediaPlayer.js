@@ -2021,7 +2021,9 @@ function MediaPlayer() {
         capabilitiesFilter.setConfig({
             capabilities,
             adapter,
-            settings
+            settings,
+            manifestModel,
+            errHandler
         });
 
         streamController.setConfig({

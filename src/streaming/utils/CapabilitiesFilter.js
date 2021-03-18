@@ -1,12 +1,16 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
+import DashJSError from "../vo/DashJSError";
+import Errors from "../../core/errors/Errors";
 
 function CapabilitiesFilter() {
     const context = this.context;
     let instance,
         adapter,
         capabilities,
+        manifestModel,
+        errHandler,
         settings,
         logger;
 
@@ -30,6 +34,14 @@ function CapabilitiesFilter() {
 
         if (config.settings) {
             settings = config.settings;
+        }
+
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
         }
 
     }
@@ -103,12 +115,42 @@ function CapabilitiesFilter() {
 
             return as.Representation_asArray && as.Representation_asArray.length > 0;
         });
+    }
 
+    function isMediaSupported(mediaInfo) {
+        const type = mediaInfo ? mediaInfo.type : null;
+        let codec,
+            msg;
+
+        if (type === Constants.MUXED) {
+            msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
+            logger.fatal(msg);
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
+            return false;
+        }
+
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
+            return true;
+        }
+
+        codec = mediaInfo.codec;
+        logger.debug(type + ' codec: ' + codec);
+
+        if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
+            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
+        } else if (!capabilities.supportsCodec(codec)) {
+            msg = type + 'Codec (' + codec + ') is not supported.';
+            logger.error(msg);
+            return false;
+        }
+
+        return true;
     }
 
     instance = {
         setConfig,
-        filterUnsupportedFeaturesOfPeriod
+        filterUnsupportedFeaturesOfPeriod,
+        isMediaSupported
     };
 
     setup();

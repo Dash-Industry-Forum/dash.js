@@ -54,7 +54,8 @@ function ThumbnailController(config) {
             debug: config.debug,
             eventBus: config.eventBus,
             events: config.events,
-            dashConstants: config.dashConstants
+            dashConstants: config.dashConstants,
+            segmentBaseController: config.segmentBaseController,
         });
     }
 

@@ -38,6 +38,7 @@ import Events from '../../core/events/Events';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
+import SegmentsController from '../../dash/controllers/SegmentsController';
 
 export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
                                    'http://dashif.org/guidelines/thumbnail_tile'];
@@ -57,9 +58,10 @@ function ThumbnailTracks(config) {
 
     let instance,
         tracks,
-        indexHandler,
+        dashHandler,
         currentTrackIndex,
         mediaInfo,
+        segmentsController,
         loader,
         boxParser;
 
@@ -68,54 +70,34 @@ function ThumbnailTracks(config) {
         loader = XHRLoader(context).create({});
         boxParser = BoxParser(context).getInstance();
 
-        indexHandler = DashHandler(context).create({
-            streamInfo: streamInfo,
-            timelineConverter: timelineConverter,
-            baseURLController: baseURLController,
-            debug: debug,
-            eventBus: eventBus,
-            events: events,
-            dashConstants: dashConstants,
-            urlUtils: urlUtils
+        segmentsController = SegmentsController(context).create({
+            events,
+            eventBus,
+            streamInfo,
+            timelineConverter,
+            dashConstants,
+            segmentBaseController: config.segmentBaseController,
+            type: Constants.IMAGE
+        });
+
+        dashHandler = DashHandler(context).create({
+            streamInfo,
+            type: Constants.IMAGE,
+            timelineConverter,
+            segmentsController,
+            baseURLController,
+            debug,
+            eventBus,
+            events,
+            dashConstants,
+            urlUtils
         });
 
         // initialize controllers
-        indexHandler.initialize(adapter ? adapter.getIsDynamic() : false);
+        dashHandler.initialize(adapter ? adapter.getIsDynamic() : false);
 
         // parse representation and create tracks
         addTracks();
-    }
-
-    function normalizeSegments(fragments, representation) {
-        const segments = [];
-        let count = 0;
-
-        let i,
-            len,
-            s,
-            seg;
-
-        for (i = 0, len = fragments.length; i < len; i++) {
-            s = fragments[i];
-
-            seg = getTimeBasedSegment(
-                timelineConverter,
-                adapter.getIsDynamic(),
-                representation,
-                s.startTime,
-                s.duration,
-                s.timescale,
-                s.media,
-                s.mediaRange,
-                count);
-
-            if (seg) {
-                segments.push(seg);
-                seg = null;
-                count++;
-            }
-        }
-        return segments;
     }
 
     function addTracks() {
@@ -172,57 +154,11 @@ function ThumbnailTracks(config) {
         }
 
         if (useSegmentBase) {
-            eventBus.trigger(Events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, {
-                streamId: streamInfo.id,
-                mediaType: Constants.IMAGE,
-                mimeType: mediaInfo.mimeType,
-                representation: representation,
-                callback: function (streamId, mediaType, segments, representation) {
-                    let cache = [];
-                    segments = normalizeSegments(segments, representation);
-                    track.segmentDuration = segments[0].duration; //assume all segments have the same duration
-                    track.readThumbnail = function (time, callback) {
+            segmentsController.updateSegmentData(representation)
+                .then((data) => {
+                    _handleUpdatedSegmentData(track,representation,data);
+                });
 
-                        let cached = null;
-                        cache.some(el => {
-                            if (el.start <= time && el.end > time) {
-                                cached = el.url;
-                                return true;
-                            }
-                        });
-                        if (cached) {
-                            callback(cached);
-                        } else {
-                            segments.some((ss) => {
-                                if (ss.mediaStartTime <= time && ss.mediaStartTime + ss.duration > time) {
-                                    const baseURL = baseURLController.resolve(representation.path);
-                                    loader.load({
-                                        method: 'get',
-                                        url: baseURL.url,
-                                        request: {
-                                            range: ss.mediaRange,
-                                            responseType: 'arraybuffer'
-                                        },
-                                        onload: function (e) {
-                                            let info = boxParser.getSamplesInfo(e.target.response);
-                                            let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: 'image/jpeg' } );
-                                            let imageUrl = window.URL.createObjectURL( blob );
-                                            cache.push({
-                                                start: ss.mediaStartTime,
-                                                end: ss.mediaStartTime + ss.duration,
-                                                url: imageUrl
-                                            });
-                                            if (callback)
-                                                callback(imageUrl);
-                                        }
-                                    });
-                                    return true;
-                                }
-                            });
-                        }
-                    };
-                }
-            });
         } else {
             track.startNumber = representation.startNumber;
             track.segmentDuration = representation.segmentDuration;
@@ -236,6 +172,86 @@ function ThumbnailTracks(config) {
             track.heightPerTile = track.height / track.tilesVert;
             tracks.push(track);
         }
+    }
+
+    function _handleUpdatedSegmentData(track,representation,data) {
+        let cache = [];
+        const segments = _normalizeSegments(data, representation);
+        representation.segments = segments;
+        track.segmentDuration = representation.segments[0].duration; //assume all segments have the same duration
+
+        track.readThumbnail = function (time, callback) {
+
+            let cached = null;
+            cache.some(el => {
+                if (el.start <= time && el.end > time) {
+                    cached = el.url;
+                    return true;
+                }
+            });
+            if (cached) {
+                callback(cached);
+            } else {
+                representation.segments.some((ss) => {
+                    if (ss.mediaStartTime <= time && ss.mediaStartTime + ss.duration > time) {
+                        const baseURL = baseURLController.resolve(representation.path);
+                        loader.load({
+                            method: 'get',
+                            url: baseURL.url,
+                            request: {
+                                range: ss.mediaRange,
+                                responseType: 'arraybuffer'
+                            },
+                            onload: function (e) {
+                                let info = boxParser.getSamplesInfo(e.target.response);
+                                let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: 'image/jpeg' } );
+                                let imageUrl = window.URL.createObjectURL( blob );
+                                cache.push({
+                                    start: ss.mediaStartTime,
+                                    end: ss.mediaStartTime + ss.duration,
+                                    url: imageUrl
+                                });
+                                if (callback)
+                                    callback(imageUrl);
+                            }
+                        });
+                        return true;
+                    }
+                });
+            }
+        };
+    }
+
+    function _normalizeSegments(data, representation) {
+        const segments = [];
+        let count = 0;
+
+        let i,
+            len,
+            s,
+            seg;
+
+        for (i = 0, len = data.segments.length; i < len; i++) {
+            s = data.segments[i];
+
+            seg = getTimeBasedSegment(
+                timelineConverter,
+                adapter.getIsDynamic(),
+                representation,
+                s.startTime,
+                s.duration,
+                s.timescale,
+                s.media,
+                s.mediaRange,
+                count);
+
+            if (seg) {
+                segments.push(seg);
+                seg = null;
+                count++;
+            }
+        }
+        return segments;
     }
 
     function buildTemplateUrl(representation) {
@@ -285,7 +301,7 @@ function ThumbnailTracks(config) {
             }
         }
 
-        return indexHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
+        return dashHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
     }
 
     function reset() {

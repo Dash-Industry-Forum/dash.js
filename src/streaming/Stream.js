@@ -335,7 +335,7 @@ function Stream(config) {
             if (type === Constants.EMBEDDED_TEXT) {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
-                if (isMediaSupported(mediaInfo)) {
+                if (capabilitiesFilter.isMediaSupported(mediaInfo)) {
                     mediaController.addTrack(mediaInfo);
                 }
             }
@@ -354,7 +354,8 @@ function Stream(config) {
                 debug: debug,
                 eventBus: eventBus,
                 events: Events,
-                dashConstants: DashConstants
+                dashConstants: DashConstants,
+                segmentBaseController: config.segmentBaseController,
             });
             return;
         }
@@ -469,7 +470,7 @@ function Stream(config) {
 
     function setMediaSource(mediaSource) {
         for (let i = 0; i < streamProcessors.length;) {
-            if (isMediaSupported(streamProcessors[i].getMediaInfo())) {
+            if (capabilitiesFilter.isMediaSupported(streamProcessors[i].getMediaInfo())) {
                 streamProcessors[i].setMediaSource(mediaSource);
                 i++;
             } else {
@@ -581,35 +582,6 @@ function Stream(config) {
             logger.fatal(event.error.message);
             reset();
         }
-    }
-
-    function isMediaSupported(mediaInfo) {
-        const type = mediaInfo ? mediaInfo.type : null;
-        let codec,
-            msg;
-
-        if (type === Constants.MUXED) {
-            msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
-            logger.fatal(msg);
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
-            return false;
-        }
-
-        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
-            return true;
-        }
-        codec = mediaInfo.codec;
-        logger.debug(type + ' codec: ' + codec);
-
-        if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
-        } else if (!capabilities.supportsCodec(codec)) {
-            msg = type + 'Codec (' + codec + ') is not supported.';
-            logger.error(msg);
-            return false;
-        }
-
-        return true;
     }
 
     function _onCurrentTrackChanged(e) {
