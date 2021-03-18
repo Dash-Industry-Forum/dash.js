@@ -365,7 +365,6 @@ function StreamController() {
             // - or seek at period start if upcoming period is not prebuffered
             seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
             logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
-            console.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
 
             preloadingStreams = preloadingStreams.filter((s) => {
                 return s.getId() !== activeStream.getId();
@@ -539,8 +538,6 @@ function StreamController() {
      * @private
      */
     function _handleOuterPeriodSeek(e, seekToStream) {
-        console.debug(`Handle outer period seek. Seeking from ${e.streamId} to ${seekToStream.getStreamId()}`);
-
         // Stop segment requests
         const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
         const streamProcessors = activeStream.getProcessors();
@@ -793,7 +790,6 @@ function StreamController() {
      */
     function _onStreamBufferingCompleted(e) {
         logger.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
-        console.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
         const isLast = getActiveStreamInfo().isLast;
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');

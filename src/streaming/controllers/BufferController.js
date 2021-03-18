@@ -32,7 +32,6 @@ import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferSink from '../SourceBufferSink';
-import PreBufferSink from '../PreBufferSink';
 import AbrController from './AbrController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
@@ -301,6 +300,11 @@ function BufferController(config) {
 
         isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
+
+        if (!appendedBytesInfo.endFragment) {
+            return;
+        }
+
         if (appendedBytesInfo && !isNaN(appendedBytesInfo.index)) {
             maxAppendedIndex = Math.max(appendedBytesInfo.index, maxAppendedIndex);
             _checkIfBufferingCompleted();
@@ -314,7 +318,7 @@ function BufferController(config) {
         }
 
         if (appendedBytesInfo) {
-            triggerEvent(appendedBytesInfo.endFragment ? Events.BYTES_APPENDED_END_FRAGMENT : Events.BYTES_APPENDED, {
+            triggerEvent(Events.BYTES_APPENDED_END_FRAGMENT, {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,

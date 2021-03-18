@@ -349,16 +349,15 @@ function SourceBufferSink(mSource) {
             appendQueue.splice(0, 1);
 
             const afterSuccess = function () {
+                isAppendingInProgress = false;
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);
-                } else {
-                    isAppendingInProgress = false;
                 }
                 nextChunk.promise.resolve({ chunk: nextChunk.data });
             };
 
             try {
-                if (nextChunk.data.bytes.length === 0) {
+                if (nextChunk.data.bytes.byteLength === 0) {
                     afterSuccess.call(this);
                 } else {
                     if (buffer.appendBuffer) {
