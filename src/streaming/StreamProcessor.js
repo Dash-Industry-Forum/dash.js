@@ -343,6 +343,10 @@ function StreamProcessor(config) {
 
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
+        if (adapter.getIsTextTrack(mimeType)) {
+            console.log('text');
+        }
+
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
                 // Init segment not in cache, send new request
@@ -365,6 +369,10 @@ function StreamProcessor(config) {
 
         const representation = representationController.getCurrentRepresentation();
         const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
+
+        if (adapter.getIsTextTrack(mimeType)) {
+            console.log('text');
+        }
 
         if (isMediaFinished) {
             const segmentIndex = dashHandler.getCurrentIndex();

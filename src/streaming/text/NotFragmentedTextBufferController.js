@@ -172,7 +172,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function _onInitFragmentLoaded(e) {
-        if (!e.chunk.bytes) return;
+        if (!e.chunk.bytes || isBufferingCompleted) return;
 
         if (settings.get().streaming.cacheInitSegments) {
             initCache.save(e.chunk);
@@ -191,7 +191,7 @@ function NotFragmentedTextBufferController(config) {
         return null;
     }
 
-    function updateBufferTimestampOffset(representationInfo) {
+    function updateBufferTimestampOffset() {
         return Promise.resolve();
     }
 

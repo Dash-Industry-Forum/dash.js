@@ -409,7 +409,7 @@ function Stream(config) {
         streamProcessors.push(streamProcessor);
 
         if (initialMediaInfo && (initialMediaInfo.type === Constants.TEXT || initialMediaInfo.type === Constants.FRAGMENTED_TEXT)) {
-            let idx;
+            let idx = 0;
             for (let i = 0; i < allMediaForType.length; i++) {
                 if (allMediaForType[i].index === initialMediaInfo.index) {
                     idx = i;

@@ -130,6 +130,10 @@ function SourceBufferSink(mSource) {
             return Promise.all(promises);
 
         } catch (e) {
+            // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
+            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
+                return _initializeForText();
+            }
             return Promise.reject(e);
         }
     }
