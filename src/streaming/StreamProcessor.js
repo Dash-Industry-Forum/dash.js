@@ -33,7 +33,6 @@ import DashConstants from '../dash/constants/DashConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import FragmentModel from './models/FragmentModel';
 import BufferController from './controllers/BufferController';
-import TextBufferController from './text/TextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
@@ -49,6 +48,7 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
+import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferController';
 
 function StreamProcessor(config) {
 
@@ -852,7 +852,7 @@ function StreamProcessor(config) {
             return null;
         }
 
-        if (type === Constants.VIDEO || type === Constants.AUDIO) {
+        if (type === Constants.VIDEO || type === Constants.AUDIO || type === Constants.FRAGMENTED_TEXT) {
             controller = BufferController(context).create({
                 streamInfo: streamInfo,
                 type: type,
@@ -869,7 +869,7 @@ function StreamProcessor(config) {
                 settings: settings
             });
         } else {
-            controller = TextBufferController(context).create({
+            controller = NotFragmentedTextBufferController(context).create({
                 streamInfo: streamInfo,
                 type: type,
                 mimeType: mimeType,

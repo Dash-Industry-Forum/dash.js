@@ -679,19 +679,19 @@ function TextTracks() {
     }
 
     instance = {
-        initialize: initialize,
-        setDisplayCConTop: setDisplayCConTop,
-        addTextTrack: addTextTrack,
-        addCaptions: addCaptions,
-        getCurrentTrackIdx: getCurrentTrackIdx,
-        setCurrentTrackIdx: setCurrentTrackIdx,
-        getTrackIdxForId: getTrackIdxForId,
-        getCurrentTrackInfo: getCurrentTrackInfo,
-        setModeForTrackIdx: setModeForTrackIdx,
-        deleteCuesFromTrackIdx: deleteCuesFromTrackIdx,
-        deleteAllTextTracks: deleteAllTextTracks,
-        deleteTextTrack: deleteTextTrack,
-        setConfig: setConfig
+        initialize,
+        setDisplayCConTop,
+        addTextTrack,
+        addCaptions,
+        getCurrentTrackIdx,
+        setCurrentTrackIdx,
+        getTrackIdxForId,
+        getCurrentTrackInfo,
+        setModeForTrackIdx,
+        deleteCuesFromTrackIdx,
+        deleteAllTextTracks,
+        deleteTextTrack,
+        setConfig
     };
 
     setup();

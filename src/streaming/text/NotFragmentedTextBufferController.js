@@ -158,12 +158,6 @@ function NotFragmentedTextBufferController(config) {
 
         // Representation has changed, clear buffer
         isBufferingCompleted = false;
-
-        // // Text data file is contained in initialization segment
-        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-            { representationId: e.currentRepresentation.id, sender: instance },
-            { streamId: streamInfo.id, mediaType: type }
-        );
     }
 
     function appendInitSegmentFromCache(representationId) {

@@ -62,7 +62,7 @@ function TextSourceBuffer() {
         ttmlParser,
         mediaInfos,
         textTracks,
-        fragmentedFragmentModel,
+        fragmentModel,
         initializationSegmentReceived,
         timescale,
         fragmentedTracks,
@@ -83,8 +83,41 @@ function TextSourceBuffer() {
         resetInitialSettings();
     }
 
-    function resetFragmented() {
-        fragmentedFragmentModel = null;
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+        if (config.adapter) {
+            adapter = config.adapter;
+        }
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+        if (config.mediaController) {
+            mediaController = config.mediaController;
+        }
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+        if (config.streamController) {
+            streamController = config.streamController;
+        }
+        if (config.textTracks) {
+            textTracks = config.textTracks;
+        }
+        if (config.vttParser) {
+            vttParser = config.vttParser;
+        }
+        if (config.ttmlParser) {
+            ttmlParser = config.ttmlParser;
+        }
+    }
+
+    function _resetFragmented() {
+        fragmentModel = null;
         timescale = NaN;
         fragmentedTracks = [];
         firstFragmentedSubtitleStart = null;
@@ -92,7 +125,7 @@ function TextSourceBuffer() {
     }
 
     function resetInitialSettings() {
-        resetFragmented();
+        _resetFragmented();
 
         mediaInfos = [];
         parser = null;
@@ -100,7 +133,7 @@ function TextSourceBuffer() {
 
     function initialize(mimeType, streamInfo, mediaInfoArr, fragmentModel) {
         if (!embeddedInitialized) {
-            initEmbedded();
+            _initEmbedded();
         }
 
         textTracks.setConfig({
@@ -112,16 +145,16 @@ function TextSourceBuffer() {
             boxParser = BoxParser(context).getInstance();
         }
 
-        addMediaInfos(mimeType, streamInfo, mediaInfoArr, fragmentModel);
+        _addMediaInfos(mimeType, streamInfo, mediaInfoArr, fragmentModel);
     }
 
-    function addMediaInfos(mimeType, streamInfo, mediaInfoArr, fragmentModel) {
+    function _addMediaInfos(mimeType, streamInfo, mediaInfoArr, fModel) {
         const isFragmented = !adapter.getIsTextTrack(mimeType);
 
         mediaInfos = mediaInfos.concat(mediaInfoArr);
 
         if (isFragmented) {
-            fragmentedFragmentModel = fragmentModel;
+            fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
             fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo);
             const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo);
@@ -134,20 +167,18 @@ function TextSourceBuffer() {
         }
 
         for (let i = 0; i < mediaInfos.length; i++) {
-            createTextTrackFromMediaInfo(null, mediaInfos[i]);
+            _createTextTrackFromMediaInfo(mediaInfos[i]);
         }
     }
 
     function abort() {
-        textTracks.deleteAllTextTracks();
-        resetFragmented();
-        boxParser = null;
-        mediaInfos = [];
     }
 
     function reset() {
         resetInitialSettings();
 
+        mediaInfos = [];
+        boxParser = null;
         streamController = null;
         videoModel = null;
         textTracks = null;
@@ -161,7 +192,7 @@ function TextSourceBuffer() {
         }
     }
 
-    function initEmbedded() {
+    function _initEmbedded() {
         embeddedTracks = [];
         textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
@@ -201,9 +232,11 @@ function TextSourceBuffer() {
     }
 
     function addEmbeddedTrack(mediaInfo) {
+
         if (!embeddedInitialized) {
-            initEmbedded();
+            return;
         }
+
         if (mediaInfo) {
             if (mediaInfo.id === Constants.CC1 || mediaInfo.id === Constants.CC3) {
                 for (let i = 0; i < embeddedTracks.length; i++) {
@@ -218,42 +251,9 @@ function TextSourceBuffer() {
         }
     }
 
-    function setConfig(config) {
-        if (!config) {
-            return;
-        }
-        if (config.errHandler) {
-            errHandler = config.errHandler;
-        }
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-        if (config.mediaController) {
-            mediaController = config.mediaController;
-        }
-        if (config.videoModel) {
-            videoModel = config.videoModel;
-        }
-        if (config.streamController) {
-            streamController = config.streamController;
-        }
-        if (config.textTracks) {
-            textTracks = config.textTracks;
-        }
-        if (config.vttParser) {
-            vttParser = config.vttParser;
-        }
-        if (config.ttmlParser) {
-            ttmlParser = config.ttmlParser;
-        }
-    }
-
     function getConfig() {
         const config = {
-            fragmentModel: fragmentedFragmentModel,
+            fragmentModel: fragmentModel,
             fragmentedTracks: fragmentedTracks,
             videoModel: videoModel
         };
@@ -265,40 +265,36 @@ function TextSourceBuffer() {
         currFragmentedTrackIdx = idx;
     }
 
-    function createTextTrackFromMediaInfo(captionData, mediaInfo) {
+    function _createTextTrackFromMediaInfo(mediaInfo) {
         const textTrackInfo = new TextTrackInfo();
         const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-        const getKind = function () {
-            let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
-            kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
-            return kind;
-        };
 
-        const checkTTML = function () {
-            let ttml = false;
-            if (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) {
-                ttml = true;
-            }
-            if (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0) {
-                ttml = true;
-            }
-            return ttml;
-        };
 
-        textTrackInfo.captionData = captionData;
         textTrackInfo.lang = mediaInfo.lang;
         textTrackInfo.labels = mediaInfo.labels;
         textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
         textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
-        textTrackInfo.isTTML = checkTTML();
+        textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
         textTrackInfo.isFragmented = !adapter.getIsTextTrack(mediaInfo.mimeType);
         textTrackInfo.isEmbedded = mediaInfo.isEmbedded ? true : false;
-        textTrackInfo.kind = getKind();
+        textTrackInfo.kind = _getKind(mediaInfo, trackKindMap);
         textTrackInfo.roles = mediaInfo.roles;
         textTrackInfo.accessibility = mediaInfo.accessibility;
         const totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
         textTracks.addTextTrack(textTrackInfo, totalNrTracks);
+    }
+
+    function _checkTtml(mediaInfo) {
+        return (mediaInfo.codec && mediaInfo.codec.search(Constants.STPP) >= 0) || (mediaInfo.mimeType && mediaInfo.mimeType.search(Constants.TTML) >= 0);
+    }
+
+    function _getKind(mediaInfo, trackKindMap) {
+        let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+
+        kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+
+        return kind;
     }
 
     function append(bytes, chunk) {
@@ -328,7 +324,7 @@ function TextSourceBuffer() {
             samplesInfo,
             ccContent;
 
-        if (!initializationSegmentReceived && chunk.segmentType === 'InitializationSegment') {
+        if (chunk.segmentType === 'InitializationSegment') {
             initializationSegmentReceived = true;
             timescale = boxParser.getMediaTimescaleFromMoov(bytes);
         } else {
@@ -346,7 +342,7 @@ function TextSourceBuffer() {
                     const sample = sampleList[i];
                     const sampleStart = sample.cts;
                     const sampleRelStart = sampleStart - firstFragmentedSubtitleStart;
-                    this.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
+                    instance.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
                     const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
                     ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
                     const images = [];
@@ -364,7 +360,7 @@ function TextSourceBuffer() {
                         result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                         textTracks.addCaptions(currFragmentedTrackIdx, firstFragmentedSubtitleStart / timescale, result);
                     } catch (e) {
-                        fragmentedFragmentModel.removeExecutedRequestsBeforeTime();
+                        fragmentModel.removeExecutedRequestsBeforeTime();
                         this.remove();
                         logger.error('TTML parser error: ' + e.message);
                     }
@@ -375,7 +371,7 @@ function TextSourceBuffer() {
                 for (i = 0; i < sampleList.length; i++) {
                     const sample = sampleList[i];
                     sample.cts -= firstFragmentedSubtitleStart;
-                    this.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
+                    instance.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
                     const sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
                     // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
                     const sampleBoxes = ISOBoxer.parseBuffer(sampleData);
@@ -437,7 +433,7 @@ function TextSourceBuffer() {
             if (embeddedTimescale === 0) {
                 embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
                 for (i = 0; i < embeddedTracks.length; i++) {
-                    createTextTrackFromMediaInfo(null, embeddedTracks[i]);
+                    _createTextTrackFromMediaInfo(embeddedTracks[i]);
                 }
             }
         } else { // MediaSegment
@@ -600,10 +596,10 @@ function TextSourceBuffer() {
     function remove(start, end) {
         //if start and end are not defined, remove all
         if ((start === undefined) && (start === end)) {
-            start = this.buffered.start(0);
-            end = this.buffered.end(this.buffered.length - 1);
+            start = instance.buffered.start(0);
+            end = instance.buffered.end(instance.buffered.length - 1);
         }
-        this.buffered.remove(start, end);
+        instance.buffered.remove(start, end);
     }
 
     function onVideoBufferCleared(e) {
@@ -616,16 +612,16 @@ function TextSourceBuffer() {
     }
 
     instance = {
-        initialize: initialize,
-        append: append,
-        abort: abort,
-        addEmbeddedTrack: addEmbeddedTrack,
-        resetEmbedded: resetEmbedded,
-        setConfig: setConfig,
-        getConfig: getConfig,
-        setCurrentFragmentedTrackIdx: setCurrentFragmentedTrackIdx,
-        remove: remove,
-        reset: reset
+        initialize,
+        append,
+        abort,
+        addEmbeddedTrack,
+        resetEmbedded,
+        setConfig,
+        getConfig,
+        setCurrentFragmentedTrackIdx,
+        remove,
+        reset
     };
 
     setup();
