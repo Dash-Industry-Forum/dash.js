@@ -321,7 +321,6 @@ function TextController() {
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let fragmentedTracks = config.fragmentedTracks;
-        let videoModel = config.videoModel;
 
         for (let i = 0; i < fragmentedTracks.length; i++) {
             let mediaInfo = fragmentedTracks[i];
@@ -346,10 +345,7 @@ function TextController() {
                         break;
                     }
                 }
-                streamProcessor.getBufferController().setIsBufferingCompleted(false);
-                streamProcessor.setExplicitBufferingTime(videoModel.getTime());
-                streamProcessor.getScheduleController().setInitSegmentRequired(true);
-                streamProcessor.getScheduleController().startScheduleTimer();
+                _prepareStreamProcessorForTrackSwitch(streamProcessor);
             }
         }
     }
@@ -372,14 +368,18 @@ function TextController() {
             for (let i = 0; i < mediaInfosArr.length; i++) {
                 if (mediaInfosArr[i].index === currentTrackInfo.index && mediaInfosArr[i].lang === currentTrackInfo.lang) {
                     streamProcessor.selectMediaInfo(mediaInfosArr[i]);
-                    streamProcessor.getBufferController().setIsBufferingCompleted(false);
-                    streamProcessor.setExplicitBufferingTime(videoModel.getTime());
-                    streamProcessor.getScheduleController().setInitSegmentRequired(true);
-                    streamProcessor.getScheduleController().startScheduleTimer();
+                    _prepareStreamProcessorForTrackSwitch(streamProcessor);
                     break;
                 }
             }
         }
+    }
+
+    function _prepareStreamProcessorForTrackSwitch(streamProcessor) {
+        streamProcessor.getBufferController().setIsBufferingCompleted(false);
+        streamProcessor.setExplicitBufferingTime(videoModel.getTime());
+        streamProcessor.getScheduleController().setInitSegmentRequired(true);
+        streamProcessor.getScheduleController().startScheduleTimer();
     }
 
     function getCurrentTrackIdx() {
