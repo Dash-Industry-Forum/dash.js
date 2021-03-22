@@ -37,7 +37,7 @@ import TTMLParser from '../utils/TTMLParser';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import { checkParameterType } from '../utils/SupervisorTools';
+import {checkParameterType} from '../utils/SupervisorTools';
 
 function TextController() {
 
@@ -207,7 +207,7 @@ function TextController() {
             });
         }
 
-        if (textDefaultEnabled === false || ( textDefaultEnabled === undefined && !defaultSettings ) || disableTextBeforeTextTracksAdded) {
+        if (textDefaultEnabled === false || (textDefaultEnabled === undefined && !defaultSettings) || disableTextBeforeTextTracksAdded) {
             // disable text at startup if explicitely configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             this.setTextTrack(-1);
         }
@@ -235,7 +235,7 @@ function TextController() {
     }
 
     function setTextDefaultEnabled(enable) {
-        checkParameterType(enable,'boolean');
+        checkParameterType(enable, 'boolean');
         textDefaultEnabled = enable;
 
         if (!textDefaultEnabled) {
@@ -251,7 +251,7 @@ function TextController() {
     }
 
     function enableText(enable) {
-        checkParameterType(enable,'boolean');
+        checkParameterType(enable, 'boolean');
         if (!textDefaultEnabled && enable) {
             textDefaultEnabled = true;
         }
@@ -284,79 +284,99 @@ function TextController() {
 
     // when set to true ScheduleController will allow schedule of chunks even if tracks are all disabled. Allowing streaming to hidden track for external players to work with.
     function enableForcedTextStreaming(enable) {
-        checkParameterType(enable,'boolean');
+        checkParameterType(enable, 'boolean');
         forceTextStreaming = enable;
     }
 
     function setTextTrack(idx) {
         //For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
+        allTracksAreDisabled = idx === -1;
+
+        let oldTrackIdx = textTracks.getCurrentTrackIdx();
+
+        // No change, no action required
+        if (oldTrackIdx === idx) {
+            return;
+        }
+
+        if (allTracksAreDisabled && mediaController) {
+            mediaController.saveTextSettingsDisabled();
+        }
+
+        textTracks.setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
+        textTracks.setCurrentTrackIdx(idx);
+        textTracks.setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
+
+        let currentTrackInfo = textTracks.getCurrentTrackInfo();
+
+        if (currentTrackInfo && currentTrackInfo.isFragmented) {
+            _setFragmentedTextTrack(currentTrackInfo, oldTrackIdx);
+        } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
+            _setNonFragmentedTextTrack(currentTrackInfo);
+        }
+    }
+
+    function _setFragmentedTextTrack(currentTrackInfo, oldTrackIdx) {
         let config = textSourceBuffer.getConfig();
         let fragmentModel = config.fragmentModel;
         let fragmentedTracks = config.fragmentedTracks;
         let videoModel = config.videoModel;
-        let mediaInfosArr,
-            streamProcessor;
 
-        allTracksAreDisabled = idx === -1 ? true : false;
+        for (let i = 0; i < fragmentedTracks.length; i++) {
+            let mediaInfo = fragmentedTracks[i];
+            if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
+                (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
+                let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
 
-        let oldTrackIdx = textTracks.getCurrentTrackIdx();
-        if (oldTrackIdx !== idx) {
-            if (allTracksAreDisabled && mediaController) {
-                mediaController.saveTextSettingsDisabled();
-            }
-            textTracks.setModeForTrackIdx(oldTrackIdx, Constants.TEXT_HIDDEN);
-            textTracks.setCurrentTrackIdx(idx);
-            textTracks.setModeForTrackIdx(idx, Constants.TEXT_SHOWING);
-
-            let currentTrackInfo = textTracks.getCurrentTrackInfo();
-
-            if (currentTrackInfo && currentTrackInfo.isFragmented && !currentTrackInfo.isEmbedded) {
-                for (let i = 0; i < fragmentedTracks.length; i++) {
-                    let mediaInfo = fragmentedTracks[i];
-                    if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                        (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
-                        let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamController.getActiveStreamInfo());
-                        if (mediaInfo !== currentFragTrack) {
-                            fragmentModel.abortRequests();
-                            fragmentModel.removeExecutedRequestsBeforeTime();
-                            textSourceBuffer.remove();
-                            textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
-                            mediaController.setTrack(mediaInfo);
-                            textSourceBuffer.setCurrentFragmentedTrackIdx(i);
-                        } else if (oldTrackIdx === -1) {
-                            //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
-                            //no CURRENT_TRACK_CHANGED event will be trigger, so dashHandler current time has to be updated and the scheduleController
-                            //has to be restarted.
-                            const streamProcessors = streamController.getActiveStreamProcessors();
-                            for (let i = 0; i < streamProcessors.length; i++) {
-                                if (streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
-                                    streamProcessor = streamProcessors[i];
-                                    break;
-                                }
-                            }
-                            streamProcessor.setExplicitBufferingTime(videoModel.getTime());
-                            streamProcessor.getScheduleController().startScheduleTimer();
-                        }
-                    }
+                if (mediaInfo !== currentFragTrack) {
+                    fragmentModel.abortRequests();
+                    fragmentModel.removeExecutedRequestsBeforeTime();
+                    textSourceBuffer.remove();
+                    textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
+                    mediaController.setTrack(mediaInfo);
+                    textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                 }
-            } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
+
                 const streamProcessors = streamController.getActiveStreamProcessors();
+                let streamProcessor;
                 for (let i = 0; i < streamProcessors.length; i++) {
-                    if (streamProcessors[i].getType() === Constants.TEXT) {
+                    if (streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
                         streamProcessor = streamProcessors[i];
-                        mediaInfosArr = streamProcessor.getMediaInfoArr();
                         break;
                     }
                 }
+                streamProcessor.getBufferController().setIsBufferingCompleted(false);
+                streamProcessor.setExplicitBufferingTime(videoModel.getTime());
+                streamProcessor.getScheduleController().setInitSegmentRequired(true);
+                streamProcessor.getScheduleController().startScheduleTimer();
+            }
+        }
+    }
 
-                if (streamProcessor && mediaInfosArr) {
-                    for (let i = 0; i < mediaInfosArr.length; i++) {
-                        if (mediaInfosArr[i].index === currentTrackInfo.index && mediaInfosArr[i].lang === currentTrackInfo.lang) {
-                            streamProcessor.selectMediaInfo(mediaInfosArr[i]);
-                            break;
-                        }
-                    }
+    function _setNonFragmentedTextTrack(currentTrackInfo) {
+        let mediaInfosArr,
+            streamProcessor;
+
+        const streamProcessors = streamController.getActiveStreamProcessors();
+
+        for (let i = 0; i < streamProcessors.length; i++) {
+            if (streamProcessors[i].getType() === Constants.TEXT) {
+                streamProcessor = streamProcessors[i];
+                mediaInfosArr = streamProcessor.getMediaInfoArr();
+                break;
+            }
+        }
+
+        if (streamProcessor && mediaInfosArr) {
+            for (let i = 0; i < mediaInfosArr.length; i++) {
+                if (mediaInfosArr[i].index === currentTrackInfo.index && mediaInfosArr[i].lang === currentTrackInfo.lang) {
+                    streamProcessor.selectMediaInfo(mediaInfosArr[i]);
+                    streamProcessor.getBufferController().setIsBufferingCompleted(false);
+                    streamProcessor.setExplicitBufferingTime(videoModel.getTime());
+                    streamProcessor.getScheduleController().setInitSegmentRequired(true);
+                    streamProcessor.getScheduleController().startScheduleTimer();
+                    break;
                 }
             }
         }
@@ -384,21 +404,21 @@ function TextController() {
     }
 
     instance = {
-        setConfig: setConfig,
-        getTextSourceBuffer: getTextSourceBuffer,
-        getAllTracksAreDisabled: getAllTracksAreDisabled,
-        addEmbeddedTrack: addEmbeddedTrack,
-        getTextDefaultLanguage: getTextDefaultLanguage,
-        setTextDefaultLanguage: setTextDefaultLanguage,
-        setTextDefaultEnabled: setTextDefaultEnabled,
-        getTextDefaultEnabled: getTextDefaultEnabled,
-        setInitialSettings: setInitialSettings,
-        enableText: enableText,
-        isTextEnabled: isTextEnabled,
-        setTextTrack: setTextTrack,
-        getCurrentTrackIdx: getCurrentTrackIdx,
-        enableForcedTextStreaming: enableForcedTextStreaming,
-        reset: reset
+        setConfig,
+        getTextSourceBuffer,
+        getAllTracksAreDisabled,
+        addEmbeddedTrack,
+        getTextDefaultLanguage,
+        setTextDefaultLanguage,
+        setTextDefaultEnabled,
+        getTextDefaultEnabled,
+        setInitialSettings,
+        enableText,
+        isTextEnabled,
+        setTextTrack,
+        getCurrentTrackIdx,
+        enableForcedTextStreaming,
+        reset
     };
     setup();
     return instance;

@@ -1016,7 +1016,7 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
-        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropperties(realAdaptation);
+        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
 
         return mediaInfo;
     }

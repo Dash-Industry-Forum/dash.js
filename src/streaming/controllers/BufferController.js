@@ -112,8 +112,8 @@ function BufferController(config) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, _onPlaybackStalled, this);
     }
 
     /**
@@ -178,7 +178,7 @@ function BufferController(config) {
                 return;
             }
 
-            sourceBufferSink = SourceBufferSink(context).create(mediaSource);
+            sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
             _initializeSink(mediaInfoArr, oldBufferSinks)
                 .then(() => {
                     if (typeof sourceBufferSink.getBuffer().initialize === 'function') {
@@ -221,6 +221,10 @@ function BufferController(config) {
         }
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         _appendToBuffer(e.chunk);
+
+        if (type === Constants.TEXT) {
+            setIsBufferingCompleted(true);
+        }
     }
 
     /**
@@ -240,6 +244,11 @@ function BufferController(config) {
         // Append init segment into buffer
         logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
         _appendToBuffer(chunk);
+
+        if (type === Constants.TEXT) {
+            setIsBufferingCompleted(true);
+        }
+
         return true;
     }
 
@@ -396,10 +405,14 @@ function BufferController(config) {
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
     function prepareForPlaybackSeek() {
+
+        // For text we are alreay done buffering. Nothing to do here
+        if (type === Constants.TEXT) {
+            return Promise.resolve();
+        }
+
         if (isBufferingCompleted) {
-            isBufferingCompleted = false;
-            //a seek command has occured, reset maximum index value, it will be set next time that onStreamCompleted will be called.
-            maximumIndex = Number.POSITIVE_INFINITY;
+            setIsBufferingCompleted(false);
         }
 
         // Abort the current request and empty all possible segments to be appended
@@ -413,8 +426,7 @@ function BufferController(config) {
                     return updateAppendWindow();
                 })
                 .then(() => {
-                    isBufferingCompleted = false;
-                    maximumIndex = Number.POSITIVE_INFINITY;
+                    setIsBufferingCompleted(false);
                     resolve();
                 })
                 .catch((e) => {
@@ -423,7 +435,7 @@ function BufferController(config) {
         });
     }
 
-    function pruneAllSafely(forceRemoval = false) {
+    function pruneAllSafely() {
         return new Promise((resolve, reject) => {
             let ranges = getAllRangesWithSafetyFactor();
 
@@ -431,13 +443,6 @@ function BufferController(config) {
                 _onPlaybackProgression();
                 resolve();
                 return;
-            }
-
-            if (forceRemoval) {
-                ranges = ranges.map((range) => {
-                    range.force = true;
-                    return range;
-                });
             }
 
             clearBuffers(ranges)
@@ -551,7 +556,7 @@ function BufferController(config) {
         }
     }
 
-    function onPlaybackStalled() {
+    function _onPlaybackStalled() {
         checkIfSufficientBuffer();
     }
 
@@ -641,9 +646,8 @@ function BufferController(config) {
     function _checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
         if (isLastIdxAppended && !isBufferingCompleted) {
-            isBufferingCompleted = true;
+            setIsBufferingCompleted(true);
             logger.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
-            triggerEvent(Events.BUFFERING_COMPLETED);
         }
     }
 
@@ -789,8 +793,7 @@ function BufferController(config) {
             // If removing buffer ahead current playback position, update maxAppendedIndex
             const currentTime = playbackController.getTime();
             if (currentTime < range.end) {
-                isBufferingCompleted = false;
-                maxAppendedIndex = 0;
+                setIsBufferingCompleted(false);
             }
 
             sourceBufferSink.remove(range)
@@ -881,16 +884,12 @@ function BufferController(config) {
         }
     }
 
-    function onPlaybackRateChanged() {
+    function _onPlaybackRateChanged() {
         checkIfSufficientBuffer();
     }
 
     function getBuffer() {
         return sourceBufferSink;
-    }
-
-    function setBuffer(newBuffer) {
-        sourceBufferSink = newBuffer;
     }
 
     function getBufferLevel() {
@@ -899,10 +898,6 @@ function BufferController(config) {
 
     function getMediaSource() {
         return mediaSource;
-    }
-
-    function setReplaceBuffer(value) {
-        replacingBuffer = value;
     }
 
     function getIsBufferingCompleted() {
@@ -918,6 +913,8 @@ function BufferController(config) {
 
         if (isBufferingCompleted) {
             triggerEvent(Events.BUFFERING_COMPLETED);
+        } else {
+            maximumIndex = Number.POSITIVE_INFINITY;
         }
     }
 
@@ -945,7 +942,7 @@ function BufferController(config) {
      * As soon as there is a gap we return the time before the gap starts
      * @param {number} targetTime
      */
-    function getContiniousBufferTimeForTargetTime(targetTime) {
+    function getContinuousBufferTimeForTargetTime(targetTime) {
         try {
             let adjustedTime = targetTime;
             const ranges = sourceBufferSink.getAllBufferRanges();
@@ -1024,8 +1021,8 @@ function BufferController(config) {
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_STALLED, onPlaybackStalled, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STALLED, _onPlaybackStalled, this);
 
 
         resetInitialSettings(errored, keepBuffers);
@@ -1038,13 +1035,11 @@ function BufferController(config) {
         getBufferControllerType,
         createBufferSink,
         getBuffer,
-        setBuffer,
         getBufferLevel,
         getRangeAt,
         setMediaSource,
         getMediaSource,
         appendInitSegmentFromCache,
-        setReplaceBuffer,
         getIsBufferingCompleted,
         setIsBufferingCompleted,
         getIsPruningInProgress,
@@ -1053,7 +1048,7 @@ function BufferController(config) {
         prepareForTrackSwitch,
         updateAppendWindow,
         getAllRangesWithSafetyFactor,
-        getContiniousBufferTimeForTargetTime,
+        getContinuousBufferTimeForTargetTime,
         clearBuffers,
         pruneAllSafely,
         updateBufferTimestampOffset,

@@ -33,6 +33,7 @@ import DashConstants from '../dash/constants/DashConstants';
 import MetricsConstants from './constants/MetricsConstants';
 import FragmentModel from './models/FragmentModel';
 import BufferController from './controllers/BufferController';
+import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferController';
 import ScheduleController from './controllers/ScheduleController';
 import RepresentationController from '../dash/controllers/RepresentationController';
 import FactoryMaker from '../core/FactoryMaker';
@@ -48,7 +49,6 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
-import NotFragmentedTextBufferController from './text/NotFragmentedTextBufferController';
 
 function StreamProcessor(config) {
 
@@ -84,9 +84,7 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest,
         dashHandler,
         segmentsController,
-        bufferingTime,
-        replaceInProgress,
-        innerPeriodSeekInProgress;
+        bufferingTime;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -159,7 +157,7 @@ function StreamProcessor(config) {
             segmentsController
         });
 
-        bufferController = createBufferControllerForType(type);
+        bufferController = _createBufferControllerForType(type);
         if (bufferController) {
             bufferController.initialize(mediaSource);
         }
@@ -184,7 +182,6 @@ function StreamProcessor(config) {
 
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
-        replaceInProgress = false;
     }
 
     function getStreamId() {
@@ -200,8 +197,6 @@ function StreamProcessor(config) {
         mediaInfo = null;
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
-        replaceInProgress = false;
-        innerPeriodSeekInProgress = false;
     }
 
     function reset(errored, keepBuffers) {
@@ -274,7 +269,7 @@ function StreamProcessor(config) {
                 })
                 .then(() => {
                     // Figure out the correct segment request time.
-                    const targetTime = bufferController.getContiniousBufferTimeForTargetTime(e.seekTime);
+                    const targetTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
 
                     // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering again
                     if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
@@ -343,10 +338,6 @@ function StreamProcessor(config) {
 
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
-        if (adapter.getIsTextTrack(mimeType)) {
-            console.log('text');
-        }
-
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
                 // Init segment not in cache, send new request
@@ -369,10 +360,6 @@ function StreamProcessor(config) {
 
         const representation = representationController.getCurrentRepresentation();
         const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
-
-        if (adapter.getIsTextTrack(mimeType)) {
-            console.log('text');
-        }
 
         if (isMediaFinished) {
             const segmentIndex = dashHandler.getCurrentIndex();
@@ -575,10 +562,6 @@ function StreamProcessor(config) {
 
     function getBuffer() {
         return bufferController ? bufferController.getBuffer() : null;
-    }
-
-    function setBuffer(buffer) {
-        bufferController.setBuffer(buffer);
     }
 
     function getBufferController() {
@@ -807,7 +790,7 @@ function StreamProcessor(config) {
             bufferController.prepareForTrackSwitch()
                 .then(() => {
                     // Prune everything that is in the buffer right now
-                    return bufferController.pruneAllSafely(true);
+                    return bufferController.pruneAllSafely();
                 })
                 .then(() => {
                     // Timestamp offset couldve been changed by preloading period
@@ -844,7 +827,7 @@ function StreamProcessor(config) {
     }
 
 
-    function createBufferControllerForType(type) {
+    function _createBufferControllerForType(type) {
         let controller = null;
 
         if (!type) {
@@ -852,38 +835,31 @@ function StreamProcessor(config) {
             return null;
         }
 
-        if (type === Constants.VIDEO || type === Constants.AUDIO || type === Constants.FRAGMENTED_TEXT) {
-            controller = BufferController(context).create({
-                streamInfo: streamInfo,
-                type: type,
-                mediaPlayerModel: mediaPlayerModel,
-                manifestModel: manifestModel,
-                fragmentModel: fragmentModel,
-                errHandler: errHandler,
-                mediaController: mediaController,
-                representationController: representationController,
-                adapter: adapter,
-                textController: textController,
-                abrController: abrController,
-                playbackController: playbackController,
-                settings: settings
+        if (type === Constants.TEXT) {
+            controller = NotFragmentedTextBufferController(context).create({
+                streamInfo,
+                type,
+                mimeType,
+                fragmentModel,
+                textController,
+                errHandler,
+                settings
             });
         } else {
-            controller = NotFragmentedTextBufferController(context).create({
-                streamInfo: streamInfo,
-                type: type,
-                mimeType: mimeType,
-                mediaPlayerModel: mediaPlayerModel,
-                manifestModel: manifestModel,
-                fragmentModel: fragmentModel,
-                errHandler: errHandler,
-                mediaController: mediaController,
-                representationController: representationController,
-                adapter: adapter,
-                textController: textController,
-                abrController: abrController,
-                playbackController: playbackController,
-                settings: settings
+            controller = BufferController(context).create({
+                streamInfo,
+                type,
+                mediaPlayerModel,
+                manifestModel,
+                fragmentModel,
+                errHandler,
+                mediaController,
+                representationController,
+                adapter,
+                textController,
+                abrController,
+                playbackController,
+                settings
             });
         }
 
@@ -935,7 +911,6 @@ function StreamProcessor(config) {
         getMediaSource,
         setMediaSource,
         getBuffer,
-        setBuffer,
         setExplicitBufferingTime,
         resetDashHandler,
         finalisePlayList,

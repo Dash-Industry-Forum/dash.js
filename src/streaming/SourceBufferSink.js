@@ -31,7 +31,6 @@
 import Debug from '../core/Debug';
 import DashJSError from './vo/DashJSError';
 import FactoryMaker from '../core/FactoryMaker';
-import TextController from './text/TextController';
 import Errors from '../core/errors/Errors';
 import Settings from '../core/Settings';
 
@@ -46,9 +45,10 @@ const APPEND_WINDOW_END_OFFSET = 0.01;
 
 const CHECK_INTERVAL = 50;
 
-function SourceBufferSink(mSource) {
+function SourceBufferSink(config) {
     const context = this.context;
     const settings = Settings(context).getInstance();
+    const textController = config.textController;
 
     let instance,
         type,
@@ -60,7 +60,7 @@ function SourceBufferSink(mSource) {
     let callbacks = [];
     let appendQueue = [];
     let isAppendingInProgress = false;
-    let mediaSource = mSource;
+    let mediaSource = config.mediaSource;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -139,7 +139,6 @@ function SourceBufferSink(mSource) {
     }
 
     function _initializeForText() {
-        const textController = TextController(context).getInstance();
         buffer = textController.getTextSourceBuffer();
         return Promise.resolve();
     }
@@ -305,10 +304,9 @@ function SourceBufferSink(mSource) {
         return new Promise((resolve, reject) => {
             const start = range.start;
             const end = range.end;
-            const forceRemoval = range.force;
 
             // make sure that the given time range is correct. Otherwise we will get InvalidAccessError
-            if (!((start >= 0) && (end > start) && (forceRemoval || mediaSource.readyState !== 'ended'))) {
+            if (!((start >= 0) && (end > start))) {
                 resolve();
                 return;
             }
@@ -395,6 +393,8 @@ function SourceBufferSink(mSource) {
                     });
                 } else if (buffer && buffer.setTextTrack && mediaSource.readyState === 'ended') {
                     buffer.abort(); //The cues need to be removed from the TextSourceBuffer via a call to abort()
+                    resolve();
+                } else {
                     resolve();
                 }
             } catch (e) {

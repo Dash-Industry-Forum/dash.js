@@ -608,7 +608,7 @@ function Settings() {
             liveDelayFragmentCount: NaN,
             liveDelay: NaN,
             scheduleWhilePaused: true,
-            fastSwitchEnabled: false,
+            fastSwitchEnabled: true,
             flushBufferAtTrackSwitch: false,
             calcSegmentAvailabilityRangeFromTimeline: false,
             reuseExistingSourceBuffers: true,
