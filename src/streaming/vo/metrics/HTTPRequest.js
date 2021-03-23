@@ -109,7 +109,7 @@ class HTTPRequest {
          */
         this._tfinish = null;
         /**
-         * The duration of the media requests, if available, in milliseconds.
+         * The duration of the media requests, if available, in seconds.
          * @public
          */
         this._mediaduration = null;

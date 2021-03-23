@@ -289,6 +289,41 @@ describe('CapabilitiesFilter', function () {
             });
         });
 
+        describe('custom filters', function () {
+
+            it('should use provided custom filters', function () {
+                const periodAsArray = {
+                    AdaptationSet_asArray: [{
+                        mimeType: 'video/mp4',
+                        Representation_asArray: [
+                            {
+                                mimeType: 'video/mp4',
+                                height: 1080
+                            },
+                            {
+                                mimeType: 'video/mp4',
+                                height: 720
+                            },
+                            {
+                                mimeType: 'video/mp4',
+                                height: 480
+                            }
+                        ]
+                    }]
+                };
+                const streamInfo = { index: 0 };
+
+                prepareAdapterMock(periodAsArray);
+                capabilitiesFilter.setCustomCapabilitiesFilters([function (representation) {
+                    return representation.height <= 720;
+                }]);
+                capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
+
+                expect(periodAsArray.AdaptationSet_asArray).to.have.lengthOf(1);
+                expect(periodAsArray.AdaptationSet_asArray[0].Representation_asArray).to.have.lengthOf(2);
+            });
+        });
+
 
     });
 });

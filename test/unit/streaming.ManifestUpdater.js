@@ -107,6 +107,7 @@ describe('ManifestUpdater', function () {
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {manifest: patch});
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
+        expect(inMemoryManifest.loadedTime).to.not.equal(originalTime);
         expect(patchCheckStub.called).to.be.true; // jshint ignore:line
         expect(isPatchValidStub.called).to.be.true; // jshint ignore:line
         expect(applyPatchStub.calledWith(inMemoryManifest, patch)).to.be.true; // jshint ignore:line

@@ -209,7 +209,7 @@ describe('DashAdapter', function () {
             const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
 
             expect(event).to.be.an('object');
-            expect(event.calculatedPresentationTime).to.be.equal(22);
+            expect(event.calculatedPresentationTime).to.be.equal(12);
         });
 
         it('should calculate correct start time for a version 1 event with PTO in eventStream and representation', function () {
@@ -220,7 +220,7 @@ describe('DashAdapter', function () {
             const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
 
             expect(event).to.be.an('object');
-            expect(event.calculatedPresentationTime).to.be.equal(17);
+            expect(event.calculatedPresentationTime).to.be.equal(12);
         });
 
         it('should calculate correct start time for a version 1 event with timescale > 1 and PTO in eventStream', function () {

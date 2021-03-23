@@ -228,6 +228,7 @@ function ScheduleController(config) {
     }
 
     function validateExecutedFragmentRequest() {
+        if (!isNaN(seekTarget)) return;
         // Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
         const time = playbackController.getTime();

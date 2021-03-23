@@ -447,14 +447,13 @@ function DashAdapter() {
             const timescale = eventBox.timescale || 1;
             const periodStart = voRepresentation.adaptation.period.start;
             const eventStream = eventStreams[schemeIdUri + '/' + value];
+            const presentationTimeOffset = !isNaN(voRepresentation.presentationTimeOffset) ? voRepresentation.presentationTimeOffset : !isNaN(eventStream.presentationTimeOffset) ? eventStream.presentationTimeOffset : 0;
             let presentationTimeDelta = eventBox.presentation_time_delta / timescale; // In case of version 1 events the presentation_time is parsed as presentation_time_delta
             let calculatedPresentationTime;
 
             if (eventBox.version === 0) {
-                const presentationTimeOffset = voRepresentation.presentationTimeOffset || 0;
                 calculatedPresentationTime = periodStart + mediaStartTime - presentationTimeOffset + presentationTimeDelta;
             } else {
-                const presentationTimeOffset = eventStream.presentationTimeOffset || 0;
                 calculatedPresentationTime = periodStart - presentationTimeOffset + presentationTimeDelta;
             }
 

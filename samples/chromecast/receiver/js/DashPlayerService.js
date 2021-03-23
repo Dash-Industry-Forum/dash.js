@@ -8,7 +8,7 @@ angular.module('DashCastReceiverApp.services', [])
     let player;
     let initialized = false;
 
-    const noop = () => {};
+    const noop = function () {};
     let _loadCallback = noop;
     let _errorCallback = noop;
     let _endedCallback = noop;
@@ -43,6 +43,7 @@ angular.module('DashCastReceiverApp.services', [])
         _state = cast.receiver.media.PlayerState.BUFFERING;
         player = dashjs.MediaPlayer().create();
         player.initialize(videoElt, url, true);
+        player.updateSettings({ 'streaming': { 'flushBufferAtTrackSwitch': true }});
         player.setProtectionData(protData);
         initialized = true;
         player.attachTTMLRenderingDiv(captionElt);
@@ -126,7 +127,7 @@ angular.module('DashCastReceiverApp.services', [])
                 numBitratesValue: numBitratesValue,
                 bufferLengthValue: bufferLengthValue,
                 droppedFramesValue: droppedFramesValue
-            }
+            };
         }
         else {
             return null;
@@ -138,10 +139,10 @@ angular.module('DashCastReceiverApp.services', [])
         if (player && initialized) {
           let audioTracks = player.getTracksFor('audio');
           let textTracks = player.getTracksFor('fragmentedText');
-          audioTracks.forEach(track => {
+          audioTracks.forEach(function (track) {
               allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.AUDIO));
           });
-          textTracks.forEach(track => {
+          textTracks.forEach(function (track) {
               allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.TEXT));
           });
         }
@@ -187,12 +188,12 @@ angular.module('DashCastReceiverApp.services', [])
           for (let i = 0; i < 2; i++) {
             if (activeTrackIds[i] !== undefined) {
               let audioTracks = player.getTracksFor('audio');
-              audioTrack = audioTracks.find(track => track.index === activeTrackIds[i]);
+              audioTrack = audioTracks.find(function (track) { return track.index === activeTrackIds[i]; });
               if (audioTrack) {
                 player.setCurrentTrack(audioTrack);
               } else {
                 let textTracks = player.getTracksFor('fragmentedText');
-                textTrack = textTracks.find(track => track.index === activeTrackIds[i]);
+                textTrack = textTracks.find(function (track) { return track.index === activeTrackIds[i]; });
                 if (textTrack) {
                   player.enableText(true);
                   textEnable = true;
@@ -214,7 +215,7 @@ angular.module('DashCastReceiverApp.services', [])
           return 0;
         }
       },
-      
+
       getDurationSec () {
         if (player) {
           return player.duration();
@@ -283,7 +284,7 @@ angular.module('DashCastReceiverApp.services', [])
 
       setVolume (volume) {
         videoElt.volume = volume.level;
-        videoElt.muted = volume.muted; 
+        videoElt.muted = volume.muted;
       },
 
       unregisterEndedCallback (callback) {

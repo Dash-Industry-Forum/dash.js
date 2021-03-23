@@ -96,6 +96,25 @@ class Utils {
         }
     }
 
+    static parseHttpHeaders (headerStr) {
+        let headers = {};
+        if (!headerStr) {
+            return headers;
+        }
+
+        // Trim headerStr to fix a MS Edge bug with xhr.getAllResponseHeaders method
+        // which send a string starting with a "\n" character
+        let headerPairs = headerStr.trim().split('\u000d\u000a');
+        for (let i = 0, ilen = headerPairs.length; i < ilen; i++) {
+            let headerPair = headerPairs[i];
+            let index = headerPair.indexOf('\u003a\u0020');
+            if (index > 0) {
+                headers[headerPair.substring(0, index)] = headerPair.substring(index + 2);
+            }
+        }
+        return headers;
+    }
+
     static generateUuid() {
         let dt = new Date().getTime();
         const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {

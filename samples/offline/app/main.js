@@ -1064,21 +1064,21 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.getSelectedRepresentations = function () {
         let representations = {};
         representations.video = [];
-        $scope.downloadableRepresentations.video.forEach((item) => {
+        $scope.downloadableRepresentations.video.forEach(function (item) {
             if (item.selected) {
                 representations.video.push(item);
             }
         });
 
         representations.audio = [];
-        $scope.downloadableRepresentations.audio.forEach((item) => {
+        $scope.downloadableRepresentations.audio.forEach(function (item) {
             if (item.selected) {
                 representations.audio.push(item);
             }
         });
 
         representations.text = [];
-        $scope.downloadableRepresentations.text.forEach((item) => {
+        $scope.downloadableRepresentations.text.forEach(function (item) {
             if (item.selected) {
                 representations.text.push(item);
             }
@@ -1093,9 +1093,9 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
     $scope.getSelectedMediaInfos = function () {
         let mediaInfos = [];
-        $scope.mediaInfos.forEach(mediaInfo => {
+        $scope.mediaInfos.forEach(function (mediaInfo) {
             let selected = false;
-            mediaInfo.bitrateList = mediaInfo.bitrateList.filter(bitrate => {
+            mediaInfo.bitrateList = mediaInfo.bitrateList.filter(function (bitrate) {
                 selected = selected || bitrate.selected;
                 return bitrate.selected;
             });

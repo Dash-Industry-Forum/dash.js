@@ -3,7 +3,7 @@ const fs = require('fs');
 
 module.exports.getStreams = function () {
     // Get streams from reference sample application
-    var sources = JSON.parse(fs.readFileSync('./samples/dash-if-reference-player/app/sources.json', 'utf8'));
+    var sources = JSON.parse(fs.readFileSync(intern.config.source, 'utf8'));
 
     var streams = [];
 
@@ -18,14 +18,14 @@ module.exports.getStreams = function () {
     }
 
     // Filter streams according to application protocol (http/https)
-    streams = streams.filter(stream => /^(https?|)/.exec(stream.url)[0] === intern.config.protocol)
+    streams = streams.filter(stream => /^(https?|)/.exec(stream.url)[0] === intern.config.protocol);
 
     // Filter streams if input stream name is set
     if (intern.config.streams) {
         streams = streams.filter(stream => {
             return stream.name.indexOf(intern.config.streams) !== -1;
         });
-    };
+    }
 
     // If input manifest url is provided then use it
     if (intern.config.mpd) {
@@ -36,4 +36,4 @@ module.exports.getStreams = function () {
     }
 
     return streams;
-}
+};

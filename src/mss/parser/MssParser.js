@@ -118,7 +118,8 @@ function MssParser(config) {
         let qualityLevels,
             representation,
             segments,
-            i;
+            i,
+            index;
 
         const name = streamIndex.getAttribute('Name');
         const type = streamIndex.getAttribute('Type');
@@ -160,7 +161,8 @@ function MssParser(config) {
             qualityLevels[i].mimeType = adaptationSet.mimeType;
 
             // Set quality level id
-            qualityLevels[i].Id = adaptationSet.id + '_' + qualityLevels[i].getAttribute('Index');
+            index = qualityLevels[i].getAttribute('Index');
+            qualityLevels[i].Id = adaptationSet.id + ((index !== null) ? ('_' + index) : '');
 
             // Map Representation to QualityLevel
             representation = mapRepresentation(qualityLevels[i], streamIndex);
@@ -191,12 +193,18 @@ function MssParser(config) {
         const representation = {};
         const type = streamIndex.getAttribute('Type');
         let fourCCValue = null;
+        let width = null;
+        let height = null;
 
         representation.id = qualityLevel.Id;
         representation.bandwidth = parseInt(qualityLevel.getAttribute('Bitrate'), 10);
         representation.mimeType = qualityLevel.mimeType;
-        representation.width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
-        representation.height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+
+        width = parseInt(qualityLevel.getAttribute('MaxWidth'), 10);
+        height = parseInt(qualityLevel.getAttribute('MaxHeight'), 10);
+        if (!isNaN(width)) representation.width = width;
+        if (!isNaN(height)) representation.height = height;
+
 
         fourCCValue = qualityLevel.getAttribute('FourCC');
 
@@ -624,7 +632,7 @@ function MssParser(config) {
             // Duration will be set according to current segment timeline duration (see below)
         }
 
-        if (manifest.type === 'dynamic'  && manifest.timeShiftBufferDepth < Infinity) {
+        if (manifest.type === 'dynamic') {
             manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
@@ -714,12 +722,13 @@ function MssParser(config) {
             }
             let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
-            // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
-            let bufferTime = liveDelay - segmentDuration;
+            // Consider a margin of more than one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
+            let bufferTime = liveDelay - (segmentDuration * 1.5);
 
             // Store initial buffer settings
             initialBufferSettings = {
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline,
                     'liveDelay': settings.get().streaming.liveDelay,
                     'stableBufferTime': settings.get().streaming.stableBufferTime,
                     'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
@@ -729,6 +738,7 @@ function MssParser(config) {
 
             settings.update({
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': true,
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,

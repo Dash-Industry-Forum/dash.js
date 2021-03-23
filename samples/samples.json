@@ -78,7 +78,12 @@
                 "title": "Synchronized live playback with the catchup mode",
                 "description": "Example showing a synchronized live playback of two videos using the live playback catchup mode.",
                 "href": "live-streaming/synchronized-live-playback.html"
-            },
+            }
+        ]
+    },
+    {
+        "section": "Live Low Latency",
+        "samples": [
             {
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
@@ -93,26 +98,6 @@
                 "title": "Low latency with LoL+",
                 "description": "Example showing how to use dash.js to play low latency streams using the LoL+ ABR algorithm.",
                 "href": "low-latency/lolp_index.html"
-            }
-        ]
-    },
-    {
-        "section": "MSS",
-        "samples": [
-            {
-                "title": "Microsoft Smooth Streaming",
-                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
-                "href": "smooth-streaming/mss.html"
-            }
-        ]
-    },
-    {
-        "section": "Thumbnails",
-        "samples": [
-            {
-                "title": "Thumbnails",
-                "description": "Example showing how to use streams with thumbnails representations.",
-                "href": "thumbnails/thumbnails.html"
             }
         ]
     },
@@ -133,7 +118,13 @@
                 "title": "ClearKey",
                 "description": "This example shows how to use dash.js to play streams with ClearKey DRM protection.",
                 "href": "drm/clearkey.html"
+            },
+            {
+                "title": "License wrapping",
+                "description": "This example shows how to use dash.js to filter and wrap license requests and responses",
+                "href": "drm/license-wrapping.html"
             }
+
         ]
     },
     {
@@ -147,17 +138,7 @@
         ]
     },
     {
-        "section": "Audio only",
-        "samples": [
-            {
-                "title": "Only audio stream",
-                "description": "This example shows how to play audio-only streams in dash.js.",
-                "href": "audio-only/index.html"
-            }
-        ]
-    },
-    {
-        "section": "Captioning",
+        "section": "Subtitles & Captions",
         "samples": [
             {
                 "title": "Caption VTT",
@@ -177,12 +158,42 @@
         ]
     },
     {
+        "section": "Multi-Audio",
+        "samples": [
+            {
+                "title": "Multiple audio tracks",
+                "description": "This example shows how content with multiple audio tracks can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
+                "href": "multi-audio/multi-audio.html"
+            }
+        ]
+    },
+    {
+        "section": "Thumbnails",
+        "samples": [
+            {
+                "title": "Thumbnails",
+                "description": "Example showing how to use streams with thumbnails representations.",
+                "href": "thumbnails/thumbnails.html"
+            }
+        ]
+    },
+    {
         "section": "Preload",
         "samples": [
             {
                 "title": "Preload video",
                 "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
                 "href": "getting-started/pre-load-video.html"
+            }
+        ]
+    },
+    {
+        "section": "Audio only",
+        "samples": [
+            {
+                "title": "Only audio stream",
+                "description": "This example shows how to play audio-only streams in dash.js.",
+                "href": "audio-only/index.html"
             }
         ]
     },
@@ -223,6 +234,11 @@
                 "title": "CMCD Reporting",
                 "description": "This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5005).",
                 "href": "advanced/cmcd.html"
+            },
+            {
+                "title": "Custom Capabilities Filters",
+                "description": "This sample shows how to filter representations.",
+                "href": "advanced/custom-capabilities-filters.html"
             }
         ]
     },
@@ -233,6 +249,16 @@
                 "title": "Offline mode",
                 "description": "Example showing how store and read back streams without network connection to Dash",
                 "href": "offline/index.html"
+            }
+        ]
+    },
+    {
+        "section": "MSS",
+        "samples": [
+            {
+                "title": "Microsoft Smooth Streaming",
+                "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
+                "href": "smooth-streaming/mss.html"
             }
         ]
     }

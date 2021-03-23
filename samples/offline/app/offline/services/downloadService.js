@@ -9,7 +9,7 @@ service('DownloadService', function () {
     let records = [];
 
     this.getRecord = function (id) {
-        let element = records.find((record) => {
+        let element = records.find(function (record) {
             return record.id === id;
         });
 
@@ -23,23 +23,24 @@ service('DownloadService', function () {
     this.init = function (playerInstance) {
         player = playerInstance;
         offlineController = player.getOfflineController();
+        var self = this;
 
-        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STARTED, (e) => {
-            let record = this.getRecord(e.id);
+        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STARTED, function (e) {
+            let record = self.getRecord(e.id);
             if (record) {
                 record.status = 'started';
             }
         }, this);
 
-        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_FINISHED, (e) => {
-            let record = this.getRecord(e.id);
+        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_FINISHED, function (e) {
+            let record = self.getRecord(e.id);
             if (record) {
                 record.status = 'finished';
             }
         }, this);
 
-        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STOPPED, (e) => {
-            let record = this.getRecord(e.id);
+        player.on(dashjs.MediaPlayer.events.OFFLINE_RECORD_STOPPED, function (e) {
+            let record = self.getRecord(e.id);
             if (record) {
                 record.status = 'stopped';
             }
@@ -69,29 +70,31 @@ service('DownloadService', function () {
             }
         }, this);
 
-        offlineController.loadRecordsFromStorage().then(() => {
-            this.getAllRecords();
+        offlineController.loadRecordsFromStorage().then(function () {
+            self.getAllRecords();
         });
     };
 
     this.getAllRecords = function () {
         records.splice(0, records.length);
-        offlineController.getAllRecords().forEach(element => {
+        offlineController.getAllRecords().forEach(function (element) {
             records.push(element);
         });
     };
 
     this.doDownload = function (url) {
-        offlineController.createRecord(url).then((id) => {
+        var self = this;
+        offlineController.createRecord(url).then(function (id) {
             id = id;
             // new record has been created, let's refresh record list
-            this.getAllRecords();
+            self.getAllRecords();
         });
     };
 
     this.doDeleteRecord = function (id) {
-        offlineController.deleteRecord(id).then(() => {
-            this.getAllRecords();
+        var self = this;
+        offlineController.deleteRecord(id).then(function () {
+            self.getAllRecords();
         });
     };
 

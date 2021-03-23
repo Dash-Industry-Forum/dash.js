@@ -25,6 +25,12 @@ declare namespace dashjs {
         setCalleeNameVisible(flag: boolean): void;
     }
 
+    interface DashJSError {
+        code: number | null;
+        message: string | null;
+        data: unknown | null;
+    }
+
     interface VideoModel { }
 
     interface ProtectionController {
@@ -132,7 +138,21 @@ declare namespace dashjs {
             useAppendWindow?: boolean,
             manifestUpdateRetryInterval?: number;
             stallThreshold?: number;
-            filterUnsupportedEssentialProperties?: true
+            filterUnsupportedEssentialProperties?: boolean;
+            eventControllerRefreshDelay?: number;
+            utcSynchronization?: {
+                backgroundAttempts?: number,
+                timeBetweenSyncAttempts?: number,
+                maximumTimeBetweenSyncAttempts?: number,
+                minimumTimeBetweenSyncAttempts?: number,
+                timeBetweenSyncAttemptsAdjustmentFactor?: number,
+                maximumAllowedDrift?: number,
+                enableBackgroundSyncAfterSegmentDownloadError?: boolean,
+                defaultTimingSource?: {
+                    scheme?: string,
+                    value?: string
+                }
+            },
             liveCatchup?: {
                 minDrift?: number;
                 maxDrift?: number;
@@ -223,6 +243,20 @@ declare namespace dashjs {
             }
         }
     }
+
+    export interface Representation {
+        bandwidth: number
+        codecs: string
+        frameRate: number
+        height: number
+        id: string
+        mimeType: string
+        sar: string
+        scanType: string
+        width: number
+    }
+
+    export type CapabilitiesFilter = (representation: Representation) => boolean;
 
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
@@ -334,6 +368,12 @@ declare namespace dashjs {
         getProtectionController(): ProtectionController;
         attachProtectionController(value: ProtectionController): void;
         setProtectionData(value: ProtectionDataSet): void;
+        registerLicenseRequestFilter(filter: RequestFilter): void,
+        registerLicenseResponseFilter(filter: ResponseFilter): void,
+        unregisterLicenseRequestFilter(filter: RequestFilter): void,
+        unregisterLicenseResponseFilter(filter: ResponseFilter): void,
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -341,6 +381,7 @@ declare namespace dashjs {
         getCurrentTextTrackIndex(): number;
         preload(): void;
         reset(): void;
+        destroy(): void;
         addABRCustomRule(type: string, rulename: string, rule: object): void;
         removeABRCustomRule(rulename: string): void;
         removeAllABRCustomRule(): void;
@@ -672,12 +713,13 @@ declare namespace dashjs {
     export interface KeySessionEvent extends Event {
         type: MediaPlayerEvents['KEY_SESSION_CREATED'];
         data: SessionToken | null;
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface KeyStatusesChangedEvent extends Event {
         type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
         data: SessionToken;
+        error?: DashJSError;
     }
 
     export interface KeySystemSelectedEvent extends Event {
@@ -692,7 +734,7 @@ declare namespace dashjs {
             sessionToken: SessionToken;
             messageType: string;
         };
-        error?: string;
+        error?: DashJSError;
     }
 
     export interface LogEvent extends Event {
@@ -1002,6 +1044,26 @@ declare namespace dashjs {
         sessionId: string | null;
     }
 
+    export interface LicenseRequest {
+        url: string;
+        method: string;
+        responseType: string;
+        headers: object;
+        withCredentials: boolean;
+        messageType: string;
+        sessionId: string;
+        data: ArrayBuffer;
+    }
+
+    export interface LicenseResponse {
+        url: string;
+        headers: object;
+        data: ArrayBuffer;
+    }
+
+    export type RequestFilter = (request: LicenseRequest) => Promise<any>;
+    export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
+
     export interface IBufferLevel {
         level: number;
         t: Date;
@@ -1093,7 +1155,7 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestBitrate' | 'highestEfficiency' | 'widestRange';
+    export type TrackSelectionMode = 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
     export function supportsMediaSource(): boolean;
 
 }
