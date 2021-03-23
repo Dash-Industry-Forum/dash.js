@@ -30,6 +30,7 @@
  */
 
 import FragmentRequest from '../streaming/vo/FragmentRequest';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 function MssFragmentInfoController(config) {
 
@@ -113,7 +114,7 @@ function MssFragmentInfoController(config) {
         let request = new FragmentRequest();
 
         request.mediaType = type;
-        request.type = 'FragmentInfoSegment';
+        request.type = HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE;
         // request.range = segment.mediaRange;
         request.startTime = segment.t / timescale;
         request.duration = segment.d / timescale;

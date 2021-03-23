@@ -159,7 +159,7 @@ function HTTPLoader(cfg) {
                         internalLoad(config, remainingAttempts);
                     }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
-                    if (request.type === 'FragmentInfoSegment') {
+                    if (request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
                         return;
                     }
 
@@ -360,7 +360,7 @@ function HTTPLoader(cfg) {
 
         requests.forEach(x => {
             // MSS patch: ignore FragmentInfo requests
-            if (x.request.type === 'FragmentInfoSegment') {
+            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
                 return;
             }
 
