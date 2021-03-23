@@ -751,13 +751,7 @@ function MssParser(config) {
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,
-                    'bufferTimeAtTopQualityLongForm': bufferTime,
-                    'retryAttempts': {
-                        'FragmentInfoSegment': 3
-                    },
-                    'retryIntervals': {
-                        'FragmentInfoSegment': 1000
-                    }
+                    'bufferTimeAtTopQualityLongForm': bufferTime
                 }
             });
         }
