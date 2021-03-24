@@ -577,7 +577,6 @@ function StreamController() {
      * @private
      */
     function _checkIfPrebufferingCanStart() {
-        return false;
         // In multiperiod situations, we can start buffering the next stream
         if (!activeStream || !activeStream.getHasFinishedBuffering()) {
             return;
