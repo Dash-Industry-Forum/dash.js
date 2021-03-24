@@ -404,6 +404,9 @@ function BufferController(config) {
                     return sourceBufferSink.changeType(codec);
                 })
                 .then(() => {
+                    return pruneAllSafely();
+                })
+                .then(() => {
                     setIsBufferingCompleted(false);
                     resolve();
                 })

@@ -627,11 +627,13 @@ function Stream(config) {
             trackChangedEvent = e;
             manifestUpdater.refreshManifest();
         } else {
-            processor.selectMediaInfo(mediaInfo);
-            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
-                abrController.updateTopQualityIndex(mediaInfo);
-            }
-            processor.prepareTrackSwitch();
+            processor.selectMediaInfo(mediaInfo)
+                .then(() => {
+                    if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                        abrController.updateTopQualityIndex(mediaInfo);
+                    }
+                    processor.prepareTrackSwitch();
+                });
         }
     }
 

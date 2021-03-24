@@ -114,33 +114,42 @@ function RepresentationController(config) {
             return;
         }
 
+        const promises = [];
         for (let i = 0, ln = voAvailableRepresentations.length; i < ln; i++) {
             const currentRep = voAvailableRepresentations[i];
-            _updateRepresentation(currentRep);
+            promises.push(_updateRepresentation(currentRep));
         }
+
+        return Promise.all(promises);
     }
 
     function _updateRepresentation(currentRep) {
-        const hasInitialization = currentRep.hasInitialization();
-        const hasSegments = currentRep.hasSegments();
+        return new Promise((resolve, reject) => {
+            const hasInitialization = currentRep.hasInitialization();
+            const hasSegments = currentRep.hasSegments();
 
-        // If representation has initialization and segments information we are done
-        // otherwise, it means that a request has to be made to get initialization and/or segments informations
-        const promises = [];
+            // If representation has initialization and segments information we are done
+            // otherwise, it means that a request has to be made to get initialization and/or segments informations
+            const promises = [];
 
-        promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
-        promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
+            promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
+            promises.push(segmentsController.updateSegmentData(currentRep, hasSegments));
 
-        Promise.all(promises)
-            .then((data) => {
-                if (data[0] && !data[0].error) {
-                    currentRep = _onInitLoaded(currentRep, data[0]);
-                }
-                if (data[1] && !data[1].error) {
-                    currentRep = _onSegmentsLoaded(currentRep, data[1]);
-                }
-                _onRepresentationUpdated(currentRep);
-            });
+            Promise.all(promises)
+                .then((data) => {
+                    if (data[0] && !data[0].error) {
+                        currentRep = _onInitLoaded(currentRep, data[0]);
+                    }
+                    if (data[1] && !data[1].error) {
+                        currentRep = _onSegmentsLoaded(currentRep, data[1]);
+                    }
+                    _onRepresentationUpdated(currentRep);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
     }
 
     function _onInitLoaded(representation, e) {

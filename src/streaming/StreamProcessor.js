@@ -476,7 +476,7 @@ function StreamProcessor(config) {
         scheduleController.setCurrentRepresentation(representationInfo);
 
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
-        if (settings.get().streaming.fastSwitchEnabled) {
+        if (settings.get().streaming.fastSwitchEnabled && type === Constants.VIDEO) {
             const time = playbackController.getTime();
             let safeBufferLevel = 1.5;
             const request = fragmentModel.getRequests({
@@ -611,7 +611,9 @@ function StreamProcessor(config) {
             if (quality > maxQuality) {
                 quality = maxQuality;
             }
-            representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
+            return representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
+        } else {
+            return Promise.resolve();
         }
     }
 
@@ -782,10 +784,6 @@ function StreamProcessor(config) {
 
             // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
             bufferController.prepareForTrackSwitch(mediaInfo.codec)
-                .then(() => {
-                    // Prune everything that is in the buffer right now
-                    return bufferController.pruneAllSafely();
-                })
                 .then(() => {
                     // Timestamp offset couldve been changed by preloading period
                     const representationInfo = getRepresentationInfo();
