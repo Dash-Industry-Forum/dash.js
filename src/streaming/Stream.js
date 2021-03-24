@@ -41,6 +41,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
 import BoxParser from './utils/BoxParser';
 import URLUtils from './utils/URLUtils';
+import TextController from "./text/TextController";
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.FRAGMENTED_TEXT, Constants.EMBEDDED_TEXT, Constants.MUXED, Constants.IMAGE];
@@ -66,7 +67,6 @@ function Stream(config) {
     const playbackController = config.playbackController;
     const eventController = config.eventController;
     const mediaController = config.mediaController;
-    const textController = config.textController;
     const protectionController = config.protectionController;
     const videoModel = config.videoModel;
     let streamInfo = config.streamInfo;
@@ -84,6 +84,7 @@ function Stream(config) {
         updateError,
         isUpdating,
         fragmentController,
+        textController,
         thumbnailController,
         preloaded,
         boxParser,
@@ -112,6 +113,17 @@ function Stream(config) {
                 dashConstants: DashConstants,
                 urlUtils: urlUtils
             });
+
+            textController = TextController(context).create({
+                streamInfo,
+                errHandler,
+                manifestModel,
+                adapter,
+                mediaController,
+                videoModel,
+                stream: instance
+            });
+
         } catch (e) {
             throw e;
         }
@@ -273,17 +285,13 @@ function Stream(config) {
 
             let element = videoModel.getElement();
 
-            const promises = MEDIA_TYPES.map((mediaType) => {
+            MEDIA_TYPES.forEach((mediaType) => {
                 if (mediaType !== Constants.VIDEO || (!element || (element && (/^VIDEO$/i).test(element.nodeName)))) {
-                    return _initializeMediaForType(mediaType, mediaSource);
+                    _initializeMediaForType(mediaType, mediaSource);
                 }
-                return Promise.resolve();
             });
 
-            Promise.all(promises)
-                .then(() => {
-                    return _createBufferSinks(previousBufferSinks);
-                })
+            _createBufferSinks(previousBufferSinks)
                 .then((bufferSinks) => {
                     isUpdating = false;
 
@@ -294,6 +302,10 @@ function Stream(config) {
                     } else {
                         _checkIfInitializationCompleted();
                     }
+
+                    // All mediaInfos shouldve been added to the TextSourceBuffer now. We can start creating the tracks
+                    textController.createTracks();
+
                     resolve(bufferSinks);
                 })
                 .catch((e) => {
@@ -382,11 +394,13 @@ function Stream(config) {
     function _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource) {
 
         let fragmentModel = fragmentController.getModel(initialMediaInfo ? initialMediaInfo.type : null);
+        const type = initialMediaInfo ? initialMediaInfo.type : null;
+        const mimeType = initialMediaInfo ? initialMediaInfo.mimeType : null;
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
-            type: initialMediaInfo ? initialMediaInfo.type : null,
-            mimeType: initialMediaInfo ? initialMediaInfo.mimeType : null,
+            type: type,
+            mimeType: mimeType,
             timelineConverter: timelineConverter,
             adapter: adapter,
             manifestModel: manifestModel,
@@ -408,17 +422,16 @@ function Stream(config) {
         abrController.updateTopQualityIndex(initialMediaInfo);
         streamProcessors.push(streamProcessor);
 
-        if (initialMediaInfo && (initialMediaInfo.type === Constants.TEXT || initialMediaInfo.type === Constants.FRAGMENTED_TEXT)) {
-            let idx = 0;
-            for (let i = 0; i < allMediaForType.length; i++) {
-                if (allMediaForType[i].index === initialMediaInfo.index) {
-                    idx = i;
-                }
-                streamProcessor.addMediaInfo(allMediaForType[i]); //creates text tracks for all adaptations in one stream processor
-            }
-            streamProcessor.selectMediaInfo(allMediaForType[idx]); //sets the initial media info
-        } else {
-            streamProcessor.addMediaInfo(initialMediaInfo, true);
+        for (let i = 0; i < allMediaForType.length; i++) {
+            streamProcessor.addMediaInfo(allMediaForType[i]);
+        }
+
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT) {
+            textController.addMediaInfosToBuffer(allMediaForType, mimeType, fragmentModel);
+        }
+
+        if (initialMediaInfo) {
+            streamProcessor.selectMediaInfo(initialMediaInfo);
         }
     }
 
@@ -456,6 +469,9 @@ function Stream(config) {
             let fragmentModel = streamProcessors[i].getFragmentModel();
             fragmentModel.resetInitialSettings();
             streamProcessors[i].reset(errored, keepBuffers);
+        }
+        if (textController) {
+            textController.deactivate();
         }
         streamProcessors = [];
         isActive = false;
@@ -505,6 +521,11 @@ function Stream(config) {
         if (fragmentController) {
             fragmentController.reset();
             fragmentController = null;
+        }
+
+        if (textController) {
+            textController.reset();
+            textController = null;
         }
 
         streamInfo = null;
@@ -613,12 +634,8 @@ function Stream(config) {
             processor.selectMediaInfo(mediaInfo);
             if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
                 abrController.updateTopQualityIndex(mediaInfo);
-                processor.prepareTrackSwitch();
-            } else {
-                //processor.getScheduleController().setSeekTarget(currentTime);
-                processor.setExplicitBufferingTime(currentTime);
-                processor.resetDashHandler();
             }
+            processor.prepareTrackSwitch();
         }
     }
 
@@ -891,6 +908,10 @@ function Stream(config) {
         return adapter;
     }
 
+    function getTextController() {
+        return textController;
+    }
+
     instance = {
         initialize,
         getStreamId,
@@ -918,7 +939,8 @@ function Stream(config) {
         getAdapter,
         getHasFinishedBuffering,
         setPreloaded,
-        startScheduleControllers
+        startScheduleControllers,
+        getTextController,
     };
 
     setup();

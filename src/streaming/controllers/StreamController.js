@@ -75,7 +75,6 @@ function StreamController() {
         abrController,
         mediaController,
         eventController,
-        textController,
         initCache,
         urlUtils,
         errHandler,
@@ -276,7 +275,6 @@ function StreamController() {
                 playbackController,
                 eventController,
                 mediaController,
-                textController,
                 protectionController,
                 videoModel,
                 streamInfo,
@@ -1279,9 +1277,6 @@ function StreamController() {
         }
         if (config.mediaController) {
             mediaController = config.mediaController;
-        }
-        if (config.textController) {
-            textController = config.textController;
         }
         if (config.settings) {
             settings = config.settings;

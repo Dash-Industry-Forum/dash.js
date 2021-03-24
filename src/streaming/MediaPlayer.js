@@ -41,9 +41,8 @@ import ManifestLoader from './ManifestLoader';
 import ErrorHandler from './utils/ErrorHandler';
 import Capabilities from './utils/Capabilities';
 import CapabilitiesFilter from './utils/CapabilitiesFilter';
-import TextTracks from './text/TextTracks';
 import RequestModifier from './utils/RequestModifier';
-import TextController from './text/TextController';
+import TextTracks from './text/TextTracks';
 import URIFragmentModel from './models/URIFragmentModel';
 import ManifestModel from './models/ManifestModel';
 import MediaPlayerModel from './models/MediaPlayerModel';
@@ -155,7 +154,6 @@ function MediaPlayer() {
         manifestModel,
         cmcdModel,
         videoModel,
-        textController,
         uriFragmentModel,
         domStorage,
         segmentBaseController,
@@ -305,7 +303,7 @@ function MediaPlayer() {
         dashMetrics = DashMetrics(context).getInstance({
             settings: settings
         });
-        textController = TextController(context).getInstance();
+
         domStorage = DOMStorage(context).getInstance({
             settings: settings
         });
@@ -1187,35 +1185,20 @@ function MediaPlayer() {
     */
 
     /**
-     * Set enabled default state.
-     * This is used to enable/disable text when a file is loaded.
-     * During playback, use enableText to enable text for the file
-     *
-     * @param {boolean} enable - true to enable text, false otherwise
-     * @memberof module:MediaPlayer
-     * @instance
+     * Returns the instance of TextController of the currently playing stream object.
+     * @return {object|null}
+     * @private
      */
-    function setTextDefaultEnabled(enable) {
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
+    function _getTextControllerOfActiveStream() {
+        let textController = null;
+
+        const activeStream = streamController.getActiveStream();
+
+        if (activeStream) {
+            textController = activeStream.getTextController();
         }
 
-        textController.setTextDefaultEnabled(enable);
-    }
-
-    /**
-     * Get enabled default state.
-     *
-     * @return {boolean}  default enable state
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getTextDefaultEnabled() {
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
-
-        return textController.getTextDefaultEnabled();
+        return textController;
     }
 
     /**
@@ -1227,11 +1210,11 @@ function MediaPlayer() {
      * @instance
      */
     function enableText(enable) {
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
+        const textController = _getTextControllerOfActiveStream();
 
-        textController.enableText(enable);
+        if (textController) {
+            textController.enableText(enable);
+        }
     }
 
     /**
@@ -1243,11 +1226,11 @@ function MediaPlayer() {
      * @instance
      */
     function enableForcedTextStreaming(enable) {
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
+        const textController = _getTextControllerOfActiveStream();
 
-        textController.enableForcedTextStreaming(enable);
+        if (textController) {
+            textController.enableForcedTextStreaming(enable);
+        }
     }
 
     /**
@@ -1258,11 +1241,11 @@ function MediaPlayer() {
      * @instance
      */
     function isTextEnabled() {
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
+        const textController = _getTextControllerOfActiveStream();
 
-        return textController.isTextEnabled();
+        if (textController) {
+            return textController.isTextEnabled();
+        }
     }
 
     /**
@@ -1279,18 +1262,21 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        if (textController === undefined) {
-            textController = TextController(context).getInstance();
-        }
+        const textController = _getTextControllerOfActiveStream();
 
-        textController.setTextTrack(idx);
+        if (textController) {
+            textController.setTextTrack(idx);
+        }
     }
 
     function getCurrentTextTrackIndex() {
         let idx = NaN;
+        const textController = _getTextControllerOfActiveStream();
+
         if (textController) {
             idx = textController.getCurrentTrackIdx();
         }
+
         return idx;
     }
 
@@ -1302,12 +1288,15 @@ function MediaPlayer() {
      * @instance
      */
     function displayCaptionsOnTop(value) {
+        /*
         let textTracks = TextTracks(context).getInstance();
         textTracks.setConfig({
             videoModel: videoModel
         });
         textTracks.initialize();
         textTracks.setDisplayCConTop(value);
+        */
+
     }
 
     /*
@@ -1499,9 +1488,6 @@ function MediaPlayer() {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
         mediaController.setInitialSettings(type, value);
-        if (type === Constants.FRAGMENTED_TEXT) {
-            textController.setInitialSettings(value);
-        }
     }
 
     /**
@@ -1984,9 +1970,9 @@ function MediaPlayer() {
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
-    //***********************************
-    // PRIVATE METHODS
-    //***********************************
+//***********************************
+// PRIVATE METHODS
+//***********************************
 
     function resetPlaybackControllers() {
         playbackInitialized = false;
@@ -1997,7 +1983,6 @@ function MediaPlayer() {
         playbackController.reset();
         abrController.reset();
         mediaController.reset();
-        textController.reset();
         if (protectionController) {
             if (settings.get().streaming.keepProtectionMediaKeys) {
                 protectionController.stop();
@@ -2041,7 +2026,6 @@ function MediaPlayer() {
             playbackController,
             abrController,
             mediaController,
-            textController,
             settings,
             baseURLController,
             uriFragmentModel,
@@ -2075,15 +2059,6 @@ function MediaPlayer() {
             adapter,
             videoModel,
             settings
-        });
-
-        textController.setConfig({
-            errHandler,
-            manifestModel,
-            adapter,
-            mediaController,
-            streamController,
-            videoModel
         });
 
         cmcdModel.setConfig({
@@ -2349,8 +2324,6 @@ function MediaPlayer() {
         getQualityFor,
         setQualityFor,
         updatePortalSize,
-        setTextDefaultEnabled,
-        getTextDefaultEnabled,
         enableText,
         enableForcedTextStreaming,
         isTextEnabled,

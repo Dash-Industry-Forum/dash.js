@@ -730,7 +730,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 });
             }
         }
-        $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
+        $scope.player.updateSettings({streaming: {text: {defaultEnabled: $scope.initialSettings.textEnabled}}});
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
         $scope.controlbar.enable();
     };

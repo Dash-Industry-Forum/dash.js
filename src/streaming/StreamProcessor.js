@@ -645,7 +645,7 @@ function StreamProcessor(config) {
     }
 
     function setMediaSource(mediaSource) {
-        bufferController.setMediaSource(mediaSource, getMediaInfoArr());
+        bufferController.setMediaSource(mediaSource);
     }
 
     function getScheduleController() {
@@ -764,9 +764,10 @@ function StreamProcessor(config) {
     }
 
     function prepareTrackSwitch() {
+        const shouldReplace = type === Constants.FRAGMENTED_TEXT || (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold);
 
         // when buffering is completed and we are not supposed to replace anything do nothing
-        if (bufferController.getIsBufferingCompleted() && mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_NEVER_REPLACE) {
+        if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
             return;
         }
 
@@ -775,7 +776,7 @@ function StreamProcessor(config) {
         scheduleController.setSwitchTrack(true);
 
         // when we are supposed to replace it does not matter if buffering is already completed
-        if (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold) {
+        if (shouldReplace) {
 
             // Inform other classes like the GapController that we are replacing existing stuff
             eventBus.trigger(Events.TRACK_REPLACEMENT_STARTED, {
@@ -878,12 +879,6 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = true;
     }
 
-    function resetDashHandler() {
-        if (dashHandler) {
-            dashHandler.resetIndex();
-        }
-    }
-
     function finalisePlayList(time, reason) {
         dashMetrics.pushPlayListTraceMetrics(time, reason);
     }
@@ -912,7 +907,6 @@ function StreamProcessor(config) {
         setMediaSource,
         getBuffer,
         setExplicitBufferingTime,
-        resetDashHandler,
         finalisePlayList,
         probeNextRequest,
         prepareInnerPeriodPlaybackSeeking,

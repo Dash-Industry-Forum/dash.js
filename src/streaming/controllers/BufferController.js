@@ -145,14 +145,8 @@ function BufferController(config) {
      * @param {object} value
      * @param {object} mediaInfo
      */
-    function setMediaSource(value, mediaInfo = null) {
+    function setMediaSource(value) {
         mediaSource = value;
-        if (sourceBufferSink && mediaInfo) { //if we have a prebuffer, we should prepare to discharge it, and make a new sourceBuffer ready
-            if (typeof sourceBufferSink.discharge === 'function') {
-                dischargeBuffer = sourceBufferSink;
-                createBufferSink(mediaInfo);
-            }
-        }
     }
 
     /**
@@ -181,9 +175,6 @@ function BufferController(config) {
             sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
             _initializeSink(mediaInfoArr, oldBufferSinks)
                 .then(() => {
-                    if (typeof sourceBufferSink.getBuffer().initialize === 'function') {
-                        sourceBufferSink.getBuffer().initialize(type, streamInfo, mediaInfoArr, fragmentModel);
-                    }
                     return updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
                 })
                 .then(() => {
@@ -405,12 +396,6 @@ function BufferController(config) {
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
     function prepareForPlaybackSeek() {
-
-        // For text we are alreay done buffering. Nothing to do here
-        if (type === Constants.TEXT) {
-            return Promise.resolve();
-        }
-
         if (isBufferingCompleted) {
             setIsBufferingCompleted(false);
         }

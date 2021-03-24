@@ -644,6 +644,9 @@ function Settings() {
                     value: 'http://time.akamai.com/?iso&ms'
                 }
             },
+            text: {
+                defaultEnabled: true
+            },
             liveCatchup: {
                 minDrift: 0.02,
                 maxDrift: 0,

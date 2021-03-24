@@ -103,21 +103,19 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
-        self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_ACTIVATED, onStreamActivated, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
-    }
+    };
 
     var removePlayerEventsListeners = function () {
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_STARTED, onPlayStart, this);
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
-        self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_ACTIVATED, onStreamActivated, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
-    }
+    };
 
     var getControlId = function (id) {
         return id + (idSuffix ? idSuffix : '');
@@ -360,19 +358,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         thumbnailContainer.style.display = 'none';
     };
 
-    var getScrollOffset = function () {
-        if (window.pageXOffset) {
-            return {
-                x: window.pageXOffset,
-                y: window.pageYOffset
-            };
-        }
-        return {
-            x: document.documentElement.scrollLeft,
-            y: document.documentElement.scrollTop
-        };
-    };
-
     var seekLive = function () {
         self.player.seek(self.player.duration());
     };
@@ -510,44 +495,29 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     // Audio Video MENU
     //************************************************************************************
 
-    var onTracksAdded = function (e) {
-        // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
-        if (!captionMenu) {
-            var contentFunc = function (element, index) {
-                if (isNaN(index)) {
-                    return 'OFF';
-                }
-
-                var label = getLabelForLocale(element.labels);
-                if (label) {
-                    return label + ' : ' + element.kind;
-                }
-
-                return element.lang + ' : ' + element.kind;
-            };
-            captionMenu = createMenu({ menuType: 'caption', arr: e.tracks }, contentFunc);
-
-            var func = function () {
-                onMenuClick(captionMenu, captionBtn);
-            }
-            menuHandlersList.push(func);
-            captionBtn.addEventListener('click', func);
-            captionBtn.classList.remove('hide');
-        } else if (e.index !== undefined) {
-            setMenuItemsState(e.index + 1, 'caption-list');
-        }
-    };
-
     var onSourceInitialized = function () {
         startedPlaying = false;
     };
 
     var onStreamActivated = function (/*e*/) {
         updateDuration();
-        var contentFunc;
+
         //Bitrate Menu
+        createBitrateSwitchMenu();
+
+        //Track Switch Menu
+        createTrackSwitchMenu();
+
+        //Text Switch Menu
+        createCaptionSwitchMenu();
+    };
+
+    var createBitrateSwitchMenu = function () {
+        var contentFunc;
+
         if (bitrateListBtn) {
-            destroyBitrateMenu();
+            destroyMenu(bitrateListMenu, bitrateListBtn);
+            bitrateListMenu = null;
             var availableBitrates = { menuType: 'bitrate' };
             availableBitrates.audio = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('audio') || [];
             availableBitrates.video = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('video') || [];
@@ -571,8 +541,16 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 bitrateListBtn.classList.add('hide');
             }
         }
-        //Track Switch Menu
-        if (!trackSwitchMenu && trackSwitchBtn) {
+    };
+
+    var createTrackSwitchMenu = function () {
+        var contentFunc;
+
+        if (trackSwitchBtn) {
+
+            destroyMenu(trackSwitchMenu, trackSwitchBtn);
+            trackSwitchMenu = null;
+
             var availableTracks = { menuType: 'track' };
             availableTracks.audio = self.player.getTracksFor('audio');
             availableTracks.video = self.player.getTracksFor('video'); // these return empty arrays so no need to check for null
@@ -588,6 +566,41 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 menuHandlersList.push(func);
                 trackSwitchBtn.addEventListener('click', func);
                 trackSwitchBtn.classList.remove('hide');
+            }
+        }
+    };
+
+    var createCaptionSwitchMenu = function () {
+        // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
+        if (captionBtn) {
+
+            destroyMenu(captionMenu, captionBtn);
+            captionMenu = null;
+
+            var availableTracks = self.player.getTracksFor('text').concat(self.player.getTracksFor('fragmentedText')).concat(self.player.getTracksFor('embeddedText'));
+
+            if(availableTracks.length > 0) {
+
+                var contentFunc = function (element, index) {
+                    if (isNaN(index)) {
+                        return 'OFF';
+                    }
+
+                    var label = getLabelForLocale(element.labels);
+                    if (label) {
+                        return label + ' : ' + element.type;
+                    }
+
+                    return element.lang + ' : ' + element.type;
+                };
+                captionMenu = createMenu({ menuType: 'caption', arr: availableTracks }, contentFunc);
+
+                var func = function () {
+                    onMenuClick(captionMenu, captionBtn);
+                };
+                menuHandlersList.push(func);
+                captionBtn.addEventListener('click', func);
+                captionBtn.classList.remove('hide');
             }
         }
     };
@@ -768,51 +781,57 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var setMenuItemsState = function (value, type) {
-        var item = typeof value === 'number' ? document.getElementById(type + 'Item_' + value) : this;
-        var nodes = item.parentElement.children;
+        try {
+            var item = typeof value === 'number' ? document.getElementById(type + 'Item_' + value) : this;
+            if (item) {
+                var nodes = item.parentElement.children;
 
-        for (var i = 0; i < nodes.length; i++) {
-            nodes[i].selected = false;
-            nodes[i].classList.remove('menu-item-selected');
-            nodes[i].classList.add('menu-item-unselected');
-        }
-        item.selected = true;
-        item.classList.remove('menu-item-over');
-        item.classList.remove('menu-item-unselected');
-        item.classList.add('menu-item-selected');
+                for (var i = 0; i < nodes.length; i++) {
+                    nodes[i].selected = false;
+                    nodes[i].classList.remove('menu-item-selected');
+                    nodes[i].classList.add('menu-item-unselected');
+                }
+                item.selected = true;
+                item.classList.remove('menu-item-over');
+                item.classList.remove('menu-item-unselected');
+                item.classList.add('menu-item-selected');
 
-        if (type === undefined) { // User clicked so type is part of item binding.
-            switch (item.name) {
-                case 'video-bitrate-list':
-                case 'audio-bitrate-list':
-                    var cfg = {
-                        'streaming': {
-                            'abr': {
-                                'autoSwitchBitrate': {}
+                if (type === undefined) { // User clicked so type is part of item binding.
+                    switch (item.name) {
+                        case 'video-bitrate-list':
+                        case 'audio-bitrate-list':
+                            var cfg = {
+                                'streaming': {
+                                    'abr': {
+                                        'autoSwitchBitrate': {}
+                                    }
+                                }
+                            };
+
+                            if (item.index > 0) {
+                                cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
+                                self.player.updateSettings(cfg);
+                                self.player.setQualityFor(item.mediaType, item.index - 1);
+                            } else {
+                                cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
+                                self.player.updateSettings(cfg);
                             }
-                        }
-                    };
-
-                    if (item.index > 0) {
-                        cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
-                        self.player.updateSettings(cfg);
-                        self.player.setQualityFor(item.mediaType, item.index - 1);
-                    } else {
-                        cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
-                        self.player.updateSettings(cfg);
+                            break;
+                        case 'image-bitrate-list':
+                            player.setQualityFor(self.mediaType, self.index);
+                            break;
+                        case 'caption-list':
+                            self.player.setTextTrack(item.index - 1);
+                            break;
+                        case 'video-track-list':
+                        case 'audio-track-list':
+                            self.player.setCurrentTrack(self.player.getTracksFor(item.mediaType)[item.index]);
+                            break;
                     }
-                    break;
-                case 'image-bitrate-list':
-                    player.setQualityFor(self.mediaType, self.index);
-                    break;
-                case 'caption-list':
-                    self.player.setTextTrack(item.index - 1);
-                    break;
-                case 'video-track-list':
-                case 'audio-track-list':
-                    self.player.setCurrentTrack(self.player.getTracksFor(item.mediaType)[item.index]);
-                    break;
+                }
             }
+        } catch (e) {
+            console.error(e);
         }
     };
 
@@ -839,13 +858,30 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         menu.style.top = menu_y + 'px';
     };
 
-    var destroyBitrateMenu = function () {
-        if (bitrateListMenu) {
-            menuHandlersList.forEach(function (item) {
-                bitrateListBtn.removeEventListener('click', item);
-            });
-            videoController.removeChild(bitrateListMenu);
-            bitrateListMenu = null;
+    var destroyMenu = function (menu, btn) {
+        try {
+            if (menu && videoController) {
+                menuHandlersList.forEach(function (item) {
+                    btn.removeEventListener('click', item);
+                });
+                videoController.removeChild(menu);
+            }
+        }
+        catch(e) {
+            console.error(e);
+        }
+    };
+
+    var removeMenu = function (menu) {
+        try {
+            if (menu) {
+                menu.removeChild(trackSwitchMenu);
+                menu = null;
+                menu.classList.add('hide');
+            }
+        }
+        catch(e) {
+            console.error(e);
         }
     };
 
@@ -881,7 +917,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         return !!navigator.userAgent.match(/Trident.*rv[ :]*11\./);
     };
 
-
     //************************************************************************************
     // PUBLIC API
     //************************************************************************************
@@ -891,6 +926,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         setDuration: setDuration,
         setTime: setTime,
         setPlayer: setPlayer,
+        removeMenu: removeMenu,
 
         initialize: function (suffix) {
 
@@ -951,23 +987,25 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             videoController.classList.remove('disable');
         },
 
-        reset: function () {
-            window.removeEventListener('resize', handleMenuPositionOnResize);
-            destroyBitrateMenu();
+        resetSelectionMenus: function () {
+            destroyMenu();
             menuHandlersList.forEach(function (item) {
                 if (trackSwitchBtn) trackSwitchBtn.removeEventListener('click', item);
                 if (captionBtn) captionBtn.removeEventListener('click', item);
             });
             if (captionMenu) {
-                videoController.removeChild(captionMenu);
-                captionMenu = null;
-                captionBtn.classList.add('hide');
+                this.removeMenu(captionMenu);
             }
             if (trackSwitchMenu) {
-                videoController.removeChild(trackSwitchMenu);
-                trackSwitchMenu = null;
-                trackSwitchBtn.classList.add('hide');
+                this.removeMenu(trackSwitchMenu);
             }
+        },
+
+        reset: function () {
+            window.removeEventListener('resize', handleMenuPositionOnResize);
+
+            this.resetSelectionMenus();
+
             menuHandlersList = [];
             seeking = false;
 
