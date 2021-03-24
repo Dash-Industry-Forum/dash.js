@@ -145,7 +145,6 @@ function Stream(config) {
         eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     /**
@@ -155,7 +154,6 @@ function Stream(config) {
         eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
         eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
         eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
-        eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
 
     /**
@@ -605,7 +603,7 @@ function Stream(config) {
         }
     }
 
-    function _onCurrentTrackChanged(e) {
+    function prepareTrackChange(e) {
         if (!isActive || !streamInfo) {
             return;
         }
@@ -622,8 +620,6 @@ function Stream(config) {
 
         let currentTime = playbackController.getTime();
         logger.info('Stream -  Process track changed at current time ' + currentTime);
-
-        logger.debug('Stream -  Update stream controller');
 
         // Applies only for MSS streams
         if (manifest.refreshManifestOnSwitchTrack) {
@@ -941,6 +937,7 @@ function Stream(config) {
         setPreloaded,
         startScheduleControllers,
         getTextController,
+        prepareTrackChange
     };
 
     setup();

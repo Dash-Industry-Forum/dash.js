@@ -478,14 +478,7 @@ function StreamProcessor(config) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
         if (settings.get().streaming.fastSwitchEnabled) {
             const time = playbackController.getTime();
-            const oldRepresentationInfo = getRepresentationInfo(e.oldQuality);
             let safeBufferLevel = 1.5;
-            if (isNaN(oldRepresentationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
-                // call metrics function to have data in the latest scheduling info...
-                // if no metric, returns 0. In this case, rule will return false.
-                const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(type);
-                safeBufferLevel = schedulingInfo ? schedulingInfo.duration * 1.5 : 1.5;
-            }
             const request = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
                 time: time + safeBufferLevel,
@@ -760,7 +753,7 @@ function StreamProcessor(config) {
     }
 
     function createBufferSinks(previousBuffers) {
-        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfoArr, previousBuffers) : Promise.resolve(null));
+        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfo, previousBuffers) : Promise.resolve(null));
     }
 
     function prepareTrackSwitch() {
@@ -788,7 +781,7 @@ function StreamProcessor(config) {
             fragmentModel.abortRequests();
 
             // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-            bufferController.prepareForTrackSwitch()
+            bufferController.prepareForTrackSwitch(mediaInfo.codec)
                 .then(() => {
                     // Prune everything that is in the buffer right now
                     return bufferController.pruneAllSafely();

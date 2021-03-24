@@ -242,10 +242,9 @@ function RepresentationController(config) {
         );
     }
 
-    function _onRepresentationUpdated(e) {
+    function _onRepresentationUpdated(r) {
         if (!isUpdating()) return;
 
-        let r = e.representation;
         let manifestUpdateInfo = dashMetrics.getCurrentManifestUpdate();
         let alreadyAdded = false;
         let repInfo,

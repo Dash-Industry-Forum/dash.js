@@ -75,7 +75,6 @@ function BufferController(config) {
         maxAppendedIndex,
         maximumIndex,
         sourceBufferSink,
-        dischargeBuffer,
         bufferState,
         appendedBytesInfo,
         wallclockTicked,
@@ -165,15 +164,15 @@ function BufferController(config) {
      * @param {array} oldBufferSinks
      * @return {object|null} SourceBufferSink
      */
-    function createBufferSink(mediaInfoArr, oldBufferSinks = []) {
+    function createBufferSink(mediaInfo, oldBufferSinks = []) {
         return new Promise((resolve, reject) => {
-            if (!initCache || !mediaInfoArr || mediaInfoArr.length === 0 || !mediaSource) {
+            if (!initCache || !mediaInfo || !mediaSource) {
                 resolve(null);
                 return;
             }
 
             sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
-            _initializeSink(mediaInfoArr, oldBufferSinks)
+            _initializeSink(mediaInfo, oldBufferSinks)
                 .then(() => {
                     return updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
                 })
@@ -188,8 +187,7 @@ function BufferController(config) {
         });
     }
 
-    function _initializeSink(mediaInfoArr, oldBufferSinks) {
-        const mediaInfo = mediaInfoArr[0];
+    function _initializeSink(mediaInfo, oldBufferSinks) {
         const selectedRepresentation = _getRepresentationInfo(requiredQuality);
 
         if (oldBufferSinks && oldBufferSinks[type]) {
@@ -212,10 +210,6 @@ function BufferController(config) {
         }
         logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representationId, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
         _appendToBuffer(e.chunk);
-
-        if (type === Constants.TEXT) {
-            setIsBufferingCompleted(true);
-        }
     }
 
     /**
@@ -235,10 +229,6 @@ function BufferController(config) {
         // Append init segment into buffer
         logger.info('Append Init fragment', type, ' with representationId:', chunk.representationId, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
         _appendToBuffer(chunk);
-
-        if (type === Constants.TEXT) {
-            setIsBufferingCompleted(true);
-        }
 
         return true;
     }
@@ -404,11 +394,14 @@ function BufferController(config) {
         return sourceBufferSink.abort();
     }
 
-    function prepareForTrackSwitch() {
+    function prepareForTrackSwitch(codec) {
         return new Promise((resolve, reject) => {
             sourceBufferSink.abort()
                 .then(() => {
                     return updateAppendWindow();
+                })
+                .then(() => {
+                    return sourceBufferSink.changeType(codec);
                 })
                 .then(() => {
                     setIsBufferingCompleted(false);
@@ -630,7 +623,9 @@ function BufferController(config) {
 
     function _checkIfBufferingCompleted() {
         const isLastIdxAppended = maxAppendedIndex >= maximumIndex - 1; // Handles 0 and non 0 based request index
-        if (isLastIdxAppended && !isBufferingCompleted) {
+        const periodBuffered = playbackController.getTimeToStreamEnd(streamInfo) - bufferLevel <= 0;
+
+        if ((isLastIdxAppended || periodBuffered) && !isBufferingCompleted) {
             setIsBufferingCompleted(true);
             logger.debug(`checkIfBufferingCompleted trigger BUFFERING_COMPLETED for stream id ${streamInfo.id} and type ${type}`);
         }

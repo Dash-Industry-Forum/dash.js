@@ -89,7 +89,8 @@ function TextController(config) {
             videoModel,
             textTracks,
             vttParser,
-            ttmlParser
+            ttmlParser,
+            streamInfo
         });
 
         textSourceBuffer.initialize();
@@ -100,6 +101,9 @@ function TextController(config) {
         resetInitialSettings();
     }
 
+    /**
+     * All media infos have been added. Start creating the track objects
+     */
     function createTracks() {
         const e = textTracks.createTracks();
 
@@ -113,7 +117,7 @@ function TextController(config) {
      * @param fragmentModel
      */
     function addMediaInfosToBuffer(mInfos, mimeType, fragmentModel) {
-        textSourceBuffer.addMediaInfos(streamInfo, mInfos, mimeType, fragmentModel);
+        textSourceBuffer.addMediaInfos(mInfos, mimeType, fragmentModel);
     }
 
     function getTextSourceBuffer() {
@@ -154,11 +158,13 @@ function TextController(config) {
         }
 
         lastEnabledIndex = index;
+        /*
         eventBus.trigger(MediaPlayerEvents.TEXT_TRACKS_ADDED, {
             enabled: isTextEnabled(),
             index: index,
             tracks: tracks
         });
+        */
         textTracksAdded = true;
     }
 
@@ -257,16 +263,6 @@ function TextController(config) {
                     mediaController.setTrack(mediaInfo);
                     textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                 }
-
-                const streamProcessors = stream.getProcessors();
-                let streamProcessor;
-                for (let i = 0; i < streamProcessors.length; i++) {
-                    if (streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
-                        streamProcessor = streamProcessors[i];
-                        break;
-                    }
-                }
-                _prepareStreamProcessorForTrackSwitch(streamProcessor);
             }
         }
     }

@@ -78,7 +78,7 @@ function SourceBufferSink(config) {
 
         promises.push(_abortBeforeAppend);
         promises.push(updateAppendWindow(mediaInfo.streamInfo));
-        promises.push(_changeType(codec));
+        promises.push(changeType(codec));
 
         if (selectedRepresentation && selectedRepresentation.MSETimeOffset !== undefined) {
             promises.push(updateTimestampOffset(selectedRepresentation.MSETimeOffset));
@@ -87,7 +87,7 @@ function SourceBufferSink(config) {
         return Promise.all(promises);
     }
 
-    function _changeType(codec) {
+    function changeType(codec) {
         return new Promise((resolve) => {
             waitForUpdateEnd(() => {
                 if (buffer.changeType) {
@@ -450,7 +450,8 @@ function SourceBufferSink(config) {
         waitForUpdateEnd,
         initializeForStreamSwitch,
         initializeForFirstUse,
-        updateAppendWindow
+        updateAppendWindow,
+        changeType
     };
 
     setup();

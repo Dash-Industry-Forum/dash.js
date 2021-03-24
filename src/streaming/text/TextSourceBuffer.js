@@ -52,7 +52,7 @@ function TextSourceBuffer(config) {
     const textTracks = config.textTracks;
     const vttParser = config.vttParser;
     const ttmlParser = config.ttmlParser;
-
+    const streamInfo = config.streamInfo;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
@@ -73,8 +73,7 @@ function TextSourceBuffer(config) {
         embeddedTimescale,
         embeddedLastSequenceNumber,
         embeddedCea608FieldParsers,
-        embeddedTextHtmlRender,
-        mseTimeOffset;
+        embeddedTextHtmlRender;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -113,7 +112,7 @@ function TextSourceBuffer(config) {
      * @param mInfos
      * @param fModel
      */
-    function addMediaInfos(streamInfo, mInfos, mimeType, fModel) {
+    function addMediaInfos(mInfos, mimeType, fModel) {
         const isFragmented = !adapter.getIsTextTrack(mimeType);
 
         mediaInfos = mediaInfos.concat(mInfos);
@@ -263,15 +262,15 @@ function TextSourceBuffer(config) {
         }
 
         if (mediaType === Constants.FRAGMENTED_TEXT) {
-            _handleFragmentedText(bytes, chunk, codecType);
+            _appendFragmentedText(bytes, chunk, codecType);
         } else if (mediaType === Constants.TEXT) {
-            _handleText(bytes, chunk, codecType);
+            _appendText(bytes, chunk, codecType);
         } else if (mediaType === Constants.VIDEO) {
-            _handleEmbeddedText(bytes, chunk);
+            _appendEmbeddedText(bytes, chunk);
         }
     }
 
-    function _handleFragmentedText(bytes, chunk, codecType) {
+    function _appendFragmentedText(bytes, chunk, codecType) {
         let sampleList,
             samplesInfo;
 
@@ -284,42 +283,47 @@ function TextSourceBuffer(config) {
             }
             samplesInfo = boxParser.getSamplesInfo(bytes);
             sampleList = samplesInfo.sampleList;
-            if (firstFragmentedSubtitleStart === null && sampleList.length > 0) {
+            if (sampleList.length > 0) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
             if (codecType.search(Constants.STPP) >= 0) {
-                _handleFragmentedSttp(bytes, sampleList, codecType);
+                _appendFragmentedSttp(bytes, sampleList, codecType);
             } else {
-                _handleFragmentedWebVtt(bytes, sampleList);
+                _appendFragmentedWebVtt(bytes, sampleList);
             }
         }
     }
 
-    function _handleFragmentedSttp(bytes, sampleList, codecType) {
+    function _appendFragmentedSttp(bytes, sampleList, codecType) {
         let i, j;
 
         parser = parser !== null ? parser : getParser(codecType);
+
         for (i = 0; i < sampleList.length; i++) {
             const sample = sampleList[i];
             const sampleStart = sample.cts;
-            const sampleRelStart = sampleStart - firstFragmentedSubtitleStart;
-            instance.buffered.add(sampleRelStart / timescale, (sampleRelStart + sample.duration) / timescale);
+            const timestampOffset = _getTimestampOffset();
+            const start = timestampOffset + sampleStart / timescale;
+            const end = start + sample.duration / timescale;
+            instance.buffered.add(start, end);
             const dataView = new DataView(bytes, sample.offset, sample.subSizes[0]);
             let ccContent = ISOBoxer.Utils.dataViewToString(dataView, Constants.UTF8);
             const images = [];
             let subOffset = sample.offset + sample.subSizes[0];
+
             for (j = 1; j < sample.subSizes.length; j++) {
                 const inData = new Uint8Array(bytes, subOffset, sample.subSizes[j]);
                 const raw = String.fromCharCode.apply(null, inData);
                 images.push(raw);
                 subOffset += sample.subSizes[j];
             }
+
             try {
                 // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const manifest = manifestModel.getValue();
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                 const result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
-                textTracks.addCaptions(currFragmentedTrackIdx, firstFragmentedSubtitleStart / timescale, result);
+                textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
                 this.remove();
@@ -328,14 +332,17 @@ function TextSourceBuffer(config) {
         }
     }
 
-    function _handleFragmentedWebVtt(bytes, sampleList) {
+    function _appendFragmentedWebVtt(bytes, sampleList) {
         let i, j, k;
 
         const captionArray = [];
         for (i = 0; i < sampleList.length; i++) {
             const sample = sampleList[i];
             sample.cts -= firstFragmentedSubtitleStart;
-            instance.buffered.add(sample.cts / timescale, (sample.cts + sample.duration) / timescale);
+            const timestampOffset = _getTimestampOffset();
+            const start = timestampOffset + sample.cts / timescale;
+            const end = start + sample.duration / timescale;
+            instance.buffered.add(start, end);
             const sampleData = bytes.slice(sample.offset, sample.offset + sample.size);
             // There are boxes inside the sampleData, so we need a ISOBoxer to get at it.
             const sampleBoxes = ISOBoxer.parseBuffer(sampleData);
@@ -373,7 +380,7 @@ function TextSourceBuffer(config) {
         }
     }
 
-    function _handleText(bytes, chunk, codecType) {
+    function _appendText(bytes, chunk, codecType) {
         let result,
             ccContent;
 
@@ -388,7 +395,7 @@ function TextSourceBuffer(config) {
         }
     }
 
-    function _handleEmbeddedText(bytes, chunk) {
+    function _appendEmbeddedText(bytes, chunk) {
         let i, samplesInfo;
 
         if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
@@ -506,7 +513,8 @@ function TextSourceBuffer(config) {
                         } else {
                             idx += 1;
                         }
-                        allCcData.fields[k].push([sample.cts + (mseTimeOffset * embeddedTimescale), ccData[k], idx]);
+                        const timestampOffset = _getTimestampOffset();
+                        allCcData.fields[k].push([sample.cts + (timestampOffset * embeddedTimescale), ccData[k], idx]);
                         lastSampleTime = sample.cts;
                     }
                 }
@@ -526,6 +534,10 @@ function TextSourceBuffer(config) {
         });
 
         return allCcData;
+    }
+
+    function _getTimestampOffset() {
+        return !isNaN(instance.timestampOffset) ? instance.timestampOffset : 0;
     }
 
     function getIsDefault(mediaInfo) {

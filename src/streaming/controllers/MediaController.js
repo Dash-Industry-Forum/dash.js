@@ -189,7 +189,7 @@ function MediaController() {
 
         tracks[id][type].current = track;
 
-        if (tracks[id][type].current && !(noSettingsSave && type === Constants.FRAGMENTED_TEXT)) {
+        if (tracks[id][type].current) {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,

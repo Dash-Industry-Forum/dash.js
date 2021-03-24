@@ -554,12 +554,30 @@ function StreamController() {
             });
     }
 
+    /**
+     * A track change occured. We deactivate the preloading streams
+     * @param {object} e
+     * @private
+     */
+    function _onCurrentTrackChanged(e) {
+        // Track was changed in non active stream. No need to do anything, this only happens when a stream starts preloading
+        if (e.newMediaInfo.streamInfo.id !== activeStream.getId()) {
+            return;
+        }
+
+        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
+        _deactivateAllPreloadingStreams();
+
+        activeStream.prepareTrackChange(e);
+    }
+
 
     /**
      * Check if we can start prebuffering the next period.
      * @private
      */
     function _checkIfPrebufferingCanStart() {
+        return false;
         // In multiperiod situations, we can start buffering the next stream
         if (!activeStream || !activeStream.getHasFinishedBuffering()) {
             return;
@@ -700,24 +718,9 @@ function StreamController() {
     }
 
     function _onBufferLevelUpdated(e) {
-        if(e && e.mediaType) {
+        if (e && e.mediaType) {
             dashMetrics.addBufferLevel(e.mediaType, new Date(), e.bufferLevel * 1000);
         }
-    }
-
-    /**
-     * A track change occured. We deactivate the preloading streams
-     * @param {object} e
-     * @private
-     */
-    function _onCurrentTrackChanged(e) {
-        // Track was changed in non active stream. No need to do anything, this only happens when a stream starts preloading
-        if (e.newMediaInfo.streamInfo.id !== activeStream.getId()) {
-            return;
-        }
-
-        // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
-        _deactivateAllPreloadingStreams();
     }
 
     /**

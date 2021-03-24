@@ -422,7 +422,7 @@ function TextTracks(config) {
             track.isFromCEA608 = currentItem.isFromCEA608;
 
             if (currentItem.type === 'html' && captionContainer) {
-                cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, '');
+                cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
                 cue.images = currentItem.images;
