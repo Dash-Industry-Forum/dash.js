@@ -454,7 +454,7 @@ function ScheduleController(config) {
             start();
         }
 
-        const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
+        const latency = currentRepresentationInfo && currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         dashMetrics.updateManifestUpdateInfo({
             latency: latency
         });
