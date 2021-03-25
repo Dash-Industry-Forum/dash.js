@@ -236,6 +236,7 @@ function ScheduleController(config) {
                 time: playbackController.getTime(),
                 threshold: 0
             })[0];
+
             if (item && playbackController.getTime() >= item.startTime) {
                 if ((!lastFragmentRequest.mediaInfo || (item.mediaInfo.type === lastFragmentRequest.mediaInfo.type && item.mediaInfo.id !== lastFragmentRequest.mediaInfo.id)) && trigger) {
                     eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
@@ -245,6 +246,7 @@ function ScheduleController(config) {
                     });
                 }
                 if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
+                    logger.debug(`Quality change rendered for streamId ${streamInfo.id} and type ${type}`);
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
                         oldQuality: lastFragmentRequest.quality,

@@ -240,8 +240,8 @@ function SourceBufferSink(config) {
     }
 
 
-    function reset(keepBuffer) {
-        if (buffer && !keepBuffer) {
+    function reset() {
+        if (buffer) {
             try {
                 callbacks = [];
                 _removeEventListeners();
@@ -252,7 +252,7 @@ function SourceBufferSink(config) {
                     mediaSource.removeSourceBuffer(buffer);
                 }
             } catch (e) {
-                logger.error('Failed to remove source buffer from media source.');
+
             }
             buffer = null;
         }
@@ -399,7 +399,6 @@ function SourceBufferSink(config) {
                 }
             } catch (e) {
                 resolve();
-                logger.error('SourceBuffer append abort failed: "' + e + '"');
             }
         });
 

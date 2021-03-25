@@ -985,10 +985,14 @@ function BufferController(config) {
 
         if (sourceBufferSink) {
             if (!errored && !keepBuffers) {
-                sourceBufferSink.abort();
+                sourceBufferSink.abort()
+                    .then(() => {
+                        sourceBufferSink.reset(keepBuffers);
+                        sourceBufferSink = null;
+                    });
+            } else {
+                sourceBufferSink = null;
             }
-            sourceBufferSink.reset(keepBuffers);
-            sourceBufferSink = null;
         }
 
         replacingBuffer = false;
