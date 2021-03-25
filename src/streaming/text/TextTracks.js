@@ -42,6 +42,7 @@ function TextTracks(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const videoModel = config.videoModel;
+    const streamInfo = config.streamInfo;
 
     let instance,
         logger,
@@ -93,6 +94,10 @@ function TextTracks(config) {
         } else if (document.mozFullScreen) { // Firefox
             fullscreenAttribute = 'mozFullScreen';
         }
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     function _createTrackForUserAgent(element) {
@@ -676,6 +681,7 @@ function TextTracks(config) {
 
     instance = {
         initialize,
+        getStreamId,
         setDisplayCConTop,
         addTextTrack,
         addCaptions,

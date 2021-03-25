@@ -190,7 +190,7 @@ function BufferController(config) {
     function _initializeSink(mediaInfo, oldBufferSinks) {
         const selectedRepresentation = _getRepresentationInfo(requiredQuality);
 
-        if (oldBufferSinks && oldBufferSinks[type]) {
+        if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
             return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation, oldBufferSinks[type]);
         } else {
             return sourceBufferSink.initializeForFirstUse(mediaInfo, selectedRepresentation);

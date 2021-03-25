@@ -75,7 +75,8 @@ function TextController(config) {
         disableTextBeforeTextTracksAdded = false;
 
         textTracks = TextTracks(context).create({
-            videoModel
+            videoModel,
+            streamInfo
         });
         textTracks.initialize();
 
@@ -99,6 +100,10 @@ function TextController(config) {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
 
         resetInitialSettings();
+    }
+
+    function getStreamId() {
+        return streamInfo.id;
     }
 
     /**
@@ -325,6 +330,7 @@ function TextController(config) {
 
     instance = {
         deactivate,
+        getStreamId,
         createTracks,
         getTextSourceBuffer,
         getAllTracksAreDisabled,

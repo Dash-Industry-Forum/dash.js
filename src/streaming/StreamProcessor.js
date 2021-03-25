@@ -476,7 +476,7 @@ function StreamProcessor(config) {
         scheduleController.setCurrentRepresentation(representationInfo);
 
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
-        if (settings.get().streaming.fastSwitchEnabled && type === Constants.VIDEO) {
+        if (settings.get().streaming.fastSwitchEnabled) {
             const time = playbackController.getTime();
             let safeBufferLevel = 1.5;
             const request = fragmentModel.getRequests({

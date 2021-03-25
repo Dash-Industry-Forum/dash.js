@@ -82,6 +82,10 @@ function TextSourceBuffer(config) {
         resetInitialSettings();
     }
 
+    function getStreamId() {
+        return streamInfo.id;
+    }
+
     function _resetFragmented() {
         fragmentModel = null;
         timescale = NaN;
@@ -593,6 +597,7 @@ function TextSourceBuffer(config) {
         initialize,
         addMediaInfos,
         resetMediaInfos,
+        getStreamId,
         append,
         abort,
         addEmbeddedTrack,
