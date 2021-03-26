@@ -476,7 +476,6 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
-        abrController.clearDataForStream(streamInfo.id);
     }
 
     function getIsActive() {
@@ -501,8 +500,8 @@ function Stream(config) {
         }
     }
 
-    function resetInitialSettings() {
-        deactivate();
+    function resetInitialSettings(keepBuffers) {
+        deactivate(keepBuffers);
         isInitialized = false;
         hasVideoTrack = false;
         hasAudioTrack = false;
@@ -511,11 +510,7 @@ function Stream(config) {
         isEndedEventSignaled = false;
     }
 
-    function reset() {
-
-        if (playbackController) {
-            playbackController.pause();
-        }
+    function reset(keepBuffers) {
 
         if (fragmentController) {
             fragmentController.reset();
@@ -527,9 +522,13 @@ function Stream(config) {
             textController = null;
         }
 
-        streamInfo = null;
+        if (streamInfo) {
+            abrController.clearDataForStream(streamInfo.id);
+        }
 
-        resetInitialSettings();
+        resetInitialSettings(keepBuffers);
+
+        streamInfo = null;
 
         unRegisterEvents();
 
@@ -817,19 +816,19 @@ function Stream(config) {
         return compareCodecs(newStream, Constants.VIDEO, previousStream) && compareCodecs(newStream, Constants.AUDIO, previousStream);
     }
 
-    function isProtectionCompatible(stream, previousStream = null) {
-        return compareProtectionConfig(stream, Constants.VIDEO, previousStream) && compareProtectionConfig(stream, Constants.AUDIO, previousStream);
+    function isProtectionCompatible(newStream) {
+        if (!newStream) {
+            return true;
+        }
+        return _compareProtectionConfig(Constants.VIDEO, newStream) && _compareProtectionConfig(Constants.AUDIO, newStream);
     }
 
-    function compareProtectionConfig(stream, type, previousStream = null) {
-        if (!stream) {
-            return false;
-        }
-        const newStreamInfo = stream.getStreamInfo();
-        const currentStreamInfo = previousStream ? previousStream.getStreamInfo() : getStreamInfo();
+    function _compareProtectionConfig(type, newStream) {
+        const currentStreamInfo = getStreamInfo();
+        const newStreamInfo = newStream.getStreamInfo();
 
         if (!newStreamInfo || !currentStreamInfo) {
-            return false;
+            return true;
         }
 
         const newAdaptation = adapter.getAdaptationForType(newStreamInfo.index, type, newStreamInfo);
@@ -841,10 +840,10 @@ function Stream(config) {
         }
 
         // If the current period is unencrypted and the upcoming one is encrypted we need to reset sourcebuffers.
-        return !(!isAdaptationDrmProtected(currentAdaptation) && isAdaptationDrmProtected(newAdaptation));
+        return !(!_isAdaptationDrmProtected(currentAdaptation) && _isAdaptationDrmProtected(newAdaptation));
     }
 
-    function isAdaptationDrmProtected(adaptation) {
+    function _isAdaptationDrmProtected(adaptation) {
 
         if (!adaptation) {
             // If there is no adaptation for neither the old or the new stream they're compatible

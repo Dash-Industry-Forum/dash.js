@@ -145,10 +145,23 @@ function AbrController() {
         }
     }
 
-    function unRegisterStreamType(type, streamId) {
-        delete streamProcessorDict[streamId][type];
-        delete switchHistoryDict[streamId][type];
-        delete abandonmentStateDict[streamId][type];
+    function unRegisterStreamType(streamId, type) {
+        try {
+            if (streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+                delete streamProcessorDict[streamId][type];
+            }
+
+            if (switchHistoryDict[streamId] && switchHistoryDict[streamId][type]) {
+                delete switchHistoryDict[streamId][type];
+            }
+
+            if (abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type]) {
+                delete abandonmentStateDict[streamId][type];
+            }
+
+        } catch (e) {
+
+        }
     }
 
     function resetInitialSettings() {

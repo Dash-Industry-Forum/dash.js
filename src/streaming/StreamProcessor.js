@@ -223,8 +223,8 @@ function StreamProcessor(config) {
             segmentsController = null;
         }
 
-        if (abrController && !keepBuffers) {
-            abrController.unRegisterStreamType(type, getStreamId());
+        if (abrController) {
+            abrController.unRegisterStreamType(getStreamId(), type);
         }
 
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);

@@ -168,6 +168,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
+        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
@@ -187,6 +188,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
+        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
@@ -202,6 +204,14 @@ function StreamController() {
      */
     function _onTimeSyncCompleted( /*e*/) {
         _composeStreams();
+    }
+
+    /**
+     *
+     * @private
+     */
+    function _onKeySessionUpdated() {
+        firstLicenseIsFetched = true;
     }
 
     /**
@@ -610,8 +620,7 @@ function StreamController() {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method implemented by browser or periods use the same codec.
-            return (settings.get().streaming.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream, previousStream) || firstLicenseIsFetched) &&
-                (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)) && !hasCriticalTexttracks(nextStream));
+            return (settings.get().streaming.reuseExistingSourceBuffers && (previousStream.isProtectionCompatible(nextStream) || firstLicenseIsFetched) && (supportsChangeType || previousStream.isMediaCodecCompatible(nextStream, previousStream)));
         } catch (e) {
             return false;
         }
@@ -634,26 +643,6 @@ function StreamController() {
                         preloadingStreams.push(nextStream);
                     });
             }
-        }
-    }
-
-    /**
-     * In some cases we can not reuse the source buffer for specific text track types.
-     * @param stream
-     * @return {boolean}
-     */
-    function hasCriticalTexttracks(stream) {
-        try {
-            // if the upcoming stream has stpp or wvtt texttracks we need to reset the sourcebuffers and can not prebuffer
-            const streamInfo = stream.getStreamInfo();
-            const as = adapter.getAdaptationForType(streamInfo.index, Constants.FRAGMENTED_TEXT, streamInfo);
-            if (!as) {
-                return false;
-            }
-
-            return (as.codecs.indexOf('stpp') !== -1) || (as.codecs.indexOf('wvtt') !== -1);
-        } catch (e) {
-            return false;
         }
     }
 
@@ -720,14 +709,6 @@ function StreamController() {
         if (e && e.mediaType) {
             dashMetrics.addBufferLevel(e.mediaType, new Date(), e.bufferLevel * 1000);
         }
-    }
-
-    /**
-     *
-     * @private
-     */
-    function _onKeySessionUpdated() {
-        firstLicenseIsFetched = true;
     }
 
     /**
@@ -1017,6 +998,7 @@ function StreamController() {
 
             if (!shouldKeepStream) {
                 logger.debug(`Removing stream ${stream.getId()}`);
+                stream.reset(true);
             }
 
             return shouldKeepStream;
