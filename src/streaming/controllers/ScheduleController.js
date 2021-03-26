@@ -242,7 +242,8 @@ function ScheduleController(config) {
                     eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
                         mediaType: type,
                         oldMediaInfo: lastFragmentRequest.mediaInfo,
-                        newMediaInfo: item.mediaInfo
+                        newMediaInfo: item.mediaInfo,
+                        streamId: streamInfo.id
                     });
                 }
                 if ((item.quality !== lastFragmentRequest.quality || item.adaptationIndex !== lastFragmentRequest.adaptationIndex) && trigger) {
@@ -250,7 +251,8 @@ function ScheduleController(config) {
                     eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
                         mediaType: type,
                         oldQuality: lastFragmentRequest.quality,
-                        newQuality: item.quality
+                        newQuality: item.quality,
+                        streamId: streamInfo.id
                     });
                 }
                 lastFragmentRequest = {

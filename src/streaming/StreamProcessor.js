@@ -487,7 +487,7 @@ function StreamProcessor(config) {
 
             if (request && !adapter.getIsTextTrack(mimeType)) {
                 const bufferLevel = bufferController.getBufferLevel();
-                const abandonmentState = abrController.getAbandonmentStateFor(type);
+                const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
                 if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
                     setExplicitBufferingTime(time + safeBufferLevel);

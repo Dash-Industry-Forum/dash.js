@@ -98,7 +98,7 @@ function LoLPRule(config) {
                 return switchRequest;
             }
 
-            if (abrController.getAbandonmentStateFor(mediaType) === MetricsConstants.ABANDON_LOAD) {
+            if (abrController.getAbandonmentStateFor(streamInfo.id, mediaType) === MetricsConstants.ABANDON_LOAD) {
                 return switchRequest;
             }
 

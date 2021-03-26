@@ -1,4 +1,3 @@
-
 import FactoryMaker from '../../../core/FactoryMaker';
 import SwitchRequest from '../SwitchRequest';
 import Debug from '../../../core/Debug';
@@ -22,13 +21,23 @@ function DroppedFramesRule() {
         if (!rulesContext || !rulesContext.hasOwnProperty('getDroppedFramesHistory')) {
             return switchRequest;
         }
+
         const droppedFramesHistory = rulesContext.getDroppedFramesHistory();
+        const streamId = rulesContext.getStreamInfo().id;
+
         if (droppedFramesHistory) {
-            const dfh = droppedFramesHistory.getFrameHistory();
+            const dfh = droppedFramesHistory.getFrameHistory(streamId);
+
+            if (!dfh || dfh.length === 0) {
+                return switchRequest;
+            }
+
             let droppedFrames = 0;
             let totalFrames = 0;
             let maxIndex = SwitchRequest.NO_CHANGE;
-            for (let i = 1; i < dfh.length; i++) { //No point in measuring dropped frames for the zeroeth index.
+
+            //No point in measuring dropped frames for the zeroeth index.
+            for (let i = 1; i < dfh.length; i++) {
                 if (dfh[i]) {
                     droppedFrames = dfh[i].droppedVideoFrames;
                     totalFrames = dfh[i].totalVideoFrames;
@@ -40,14 +49,14 @@ function DroppedFramesRule() {
                     }
                 }
             }
-            return SwitchRequest(context).create(maxIndex, {droppedFrames: droppedFrames});
+            return SwitchRequest(context).create(maxIndex, { droppedFrames: droppedFrames });
         }
 
         return switchRequest;
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getMaxIndex
     };
 
     setup();

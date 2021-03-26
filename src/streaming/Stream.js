@@ -476,6 +476,7 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
+        abrController.clearDroppedFramesHistoryForStream(streamInfo.id);
     }
 
     function getIsActive() {
@@ -573,7 +574,7 @@ function Stream(config) {
     }
 
     function checkConfig() {
-        if (!videoModel || !abrController || !abrController.hasOwnProperty('getBitrateList') || !adapter || !adapter.hasOwnProperty('getAllMediaInfoForType') || !adapter.hasOwnProperty('getEventsFor')) {
+        if (!videoModel || !abrController) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }

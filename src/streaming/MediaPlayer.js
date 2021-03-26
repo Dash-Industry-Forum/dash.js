@@ -2068,6 +2068,7 @@ function MediaPlayer() {
         });
 
         // initialises controller
+        abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
         gapController.initialize();
         cmcdModel.initialize();
