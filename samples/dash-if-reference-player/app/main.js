@@ -188,6 +188,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.videoBitrate = 0;
     $scope.videoIndex = 0;
     $scope.videoPendingIndex = 0;
+    $scope.videoPendingMaxIndex = 0;
     $scope.videoMaxIndex = 0;
     $scope.videoBufferLength = 0;
     $scope.videoDroppedFrames = 0;
@@ -202,6 +203,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.audioBitrate = 0;
     $scope.audioIndex = 0;
     $scope.audioPendingIndex = '';
+    $scope.audioPendingMaxIndex = '';
     $scope.audioMaxIndex = 0;
     $scope.audioBufferLength = 0;
     $scope.audioDroppedFrames = 0;
@@ -366,8 +368,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
-        $scope[e.mediaType + 'Index'] = e.oldQuality + 1;
+        var dashAdapter = $scope.player.getDashAdapter();
+        var maxIndex = dashAdapter.getMaxIndexForBufferType(e.mediaType, e.streamInfo.index);
+
         $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
+        $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
