@@ -39,7 +39,7 @@ import MetricsConstants from '../../constants/MetricsConstants';
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
+    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.7;
     const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;

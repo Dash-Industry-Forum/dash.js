@@ -426,7 +426,7 @@ function StreamProcessor(config) {
 
     function _noValidRequest() {
         logger.debug(`No valid request found for ${type}`);
-        scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
+        scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
     }
 
     function _onDataUpdateCompleted(e) {

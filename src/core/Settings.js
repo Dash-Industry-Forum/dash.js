@@ -644,6 +644,10 @@ function Settings() {
                     value: 'http://time.akamai.com/?iso&ms'
                 }
             },
+            scheduling: {
+              defaultTimeout: 300,
+              lowLatencyTimeout: 100
+            },
             text: {
                 defaultEnabled: true
             },

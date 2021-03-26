@@ -150,10 +150,10 @@ function ScheduleController(config) {
                 _getNextFragment();
 
             } else {
-                startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
+                startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
             }
         } catch (e) {
-            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? 100 : 500);
+            startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
         }
     }
 

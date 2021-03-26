@@ -136,9 +136,9 @@ function AbrController() {
         abandonmentStateDict[streamId][type] = {};
         abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
 
-        isUsingBufferOccupancyABRDict[type] = false;
-        isUsingL2AABRDict[type] = false;
-        isUsingLoLPBRDict[type] = false;
+        isUsingBufferOccupancyABRDict[type] = isUsingBufferOccupancyABRDict[type] || false;
+        isUsingL2AABRDict[type] = isUsingL2AABRDict[type] || false;
+        isUsingLoLPBRDict[type] = isUsingLoLPBRDict[type] || false;
 
         if (type === Constants.VIDEO) {
             setElementSize();
@@ -270,12 +270,9 @@ function AbrController() {
             streamId = streamController.getActiveStreamInfo().id;
         }
         if (type && streamProcessorDict && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
-            const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            if (streamInfo && streamInfo.id) {
-                const idx = getTopQualityIndexFor(type, streamInfo.id);
-                const bitrates = getBitrateList(streamProcessorDict[streamId][type].getMediaInfo());
-                return bitrates[idx] ? bitrates[idx] : null;
-            }
+            const idx = getTopQualityIndexFor(type, streamId);
+            const bitrates = getBitrateList(streamProcessorDict[streamId][type].getMediaInfo());
+            return bitrates[idx] ? bitrates[idx] : null;
         }
         return null;
     }
@@ -287,9 +284,11 @@ function AbrController() {
      */
     function getInitialBitrateFor(type) {
         checkConfig();
+
         if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
             return NaN;
         }
+
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
         let configBitrate = settings.get().streaming.abr.initialBitrate[type];
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
@@ -368,11 +367,13 @@ function AbrController() {
                     droppedFramesHistory.push(streamId, playbackIndex, playbackQuality);
                 }
             }
+
             if (!!settings.get().streaming.abr.autoSwitchBitrate[type]) {
                 const minIdx = getMinAllowedIndexFor(type, streamId);
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 let newQuality = switchRequest.quality;
+
                 if (minIdx !== undefined && ((newQuality > SwitchRequest.NO_CHANGE) ? newQuality : oldQuality) < minIdx) {
                     newQuality = minIdx;
                 }
@@ -736,9 +737,19 @@ function AbrController() {
         }
     }
 
-    function clearDroppedFramesHistoryForStream(streamId) {
-        if(droppedFramesHistory) {
+    function clearDataForStream(streamId) {
+        if (droppedFramesHistory) {
             droppedFramesHistory.clearForStream(streamId);
+        }
+        if (streamProcessorDict[streamId]) {
+            delete streamProcessorDict[streamId];
+        }
+        if (switchHistoryDict[streamId]) {
+            delete switchHistoryDict[streamId];
+        }
+
+        if (abandonmentStateDict[streamId]) {
+            delete abandonmentStateDict[streamId];
         }
     }
 
@@ -746,7 +757,7 @@ function AbrController() {
         initialize,
         isPlayingAtTopQuality,
         updateTopQualityIndex,
-        clearDroppedFramesHistoryForStream,
+        clearDataForStream,
         getThroughputHistory,
         getBitrateList,
         getQualityForBitrate,

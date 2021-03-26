@@ -476,7 +476,7 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
-        abrController.clearDroppedFramesHistoryForStream(streamInfo.id);
+        abrController.clearDataForStream(streamInfo.id);
     }
 
     function getIsActive() {
