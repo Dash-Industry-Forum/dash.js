@@ -121,6 +121,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 1000,
  *              MediaSegment: 1000,
  *              BitstreamSwitchingSegment: 1000,
+ *              FragmentInfoSegment: 1000,
  *              other: 1000,
  *              lowLatencyReductionFactor: 10
  *          },
@@ -131,6 +132,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 3,
  *              MediaSegment: 3,
  *              BitstreamSwitchingSegment: 3,
+ *              FragmentInfoSegment: 3,
  *              other: 3,
  *              lowLatencyMultiplyFactor: 5
  *          },
