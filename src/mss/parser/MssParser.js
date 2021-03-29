@@ -592,7 +592,7 @@ function MssParser(config) {
         return widevineCP;
     }
 
-    function processManifest(xmlDoc/*, manifestLoadedTime*/) {
+    function processManifest(xmlDoc) {
         const manifest = {};
         const contentProtections = [];
         const smoothStreamingMedia = xmlDoc.getElementsByTagName('SmoothStreamingMedia')[0];
