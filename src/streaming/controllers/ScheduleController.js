@@ -49,7 +49,6 @@ function ScheduleController(config) {
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const textController = config.textController;
-    const streamInfo = config.streamInfo;
     const type = config.type;
     const mimeType = config.mimeType;
     const mediaController = config.mediaController;
@@ -57,6 +56,7 @@ function ScheduleController(config) {
     const settings = config.settings;
 
     let instance,
+        streamInfo,
         logger,
         currentRepresentationInfo,
         initialRequest,
@@ -80,6 +80,7 @@ function ScheduleController(config) {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
+        streamInfo = config.streamInfo;
     }
 
     function initialize(_hasVideoTrack) {
@@ -126,6 +127,7 @@ function ScheduleController(config) {
     }
 
     function start() {
+        if (!streamInfo) return;
         if (isStarted()) return;
         if (!currentRepresentationInfo || bufferController.getIsBufferingCompleted()) return;
 
@@ -163,6 +165,7 @@ function ScheduleController(config) {
     }
 
     function schedule() {
+        if (!streamInfo) return;
         if (isStopped || isFragmentProcessingInProgress ||
             (playbackController.isPaused() && !settings.get().streaming.scheduleWhilePaused) ||
             ((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()) ||
@@ -443,6 +446,7 @@ function ScheduleController(config) {
     }
 
     function onPlaybackSeeking(e) {
+        if (!streamInfo) return;
         setSeekTarget(e.seekTime);
         setTimeToLoadDelay(0);
 
@@ -450,7 +454,7 @@ function ScheduleController(config) {
             start();
         }
 
-        const latency = currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
+        const latency = currentRepresentationInfo && currentRepresentationInfo.DVRWindow && playbackController ? currentRepresentationInfo.DVRWindow.end - playbackController.getTime() : NaN;
         dashMetrics.updateManifestUpdateInfo({
             latency: latency
         });
@@ -524,6 +528,7 @@ function ScheduleController(config) {
         stop();
         completeQualityChange(false);
         resetInitialSettings();
+        streamInfo = null;
     }
 
     function getPlaybackController() {
