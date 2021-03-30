@@ -241,7 +241,8 @@ declare namespace dashjs {
                 sid?: string,
                 cid?: string,
                 rtp?: number,
-                rtpSafetyFactor?: number
+                rtpSafetyFactor?: number,
+                mode?: 'query' | 'header'
             }
         }
     }

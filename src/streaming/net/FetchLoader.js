@@ -59,6 +59,15 @@ function FetchLoader(cfg) {
             headers.append('Range', 'bytes=' + request.range);
         }
 
+        if (httpRequest.headers) {
+            for (let header in httpRequest.headers) {
+                let value = httpRequest.headers[header];
+                if (value) {
+                    headers.append(header, value);
+                }
+            }
+        }
+
         if (!request.requestStartDate) {
             request.requestStartDate = requestStartTime;
         }

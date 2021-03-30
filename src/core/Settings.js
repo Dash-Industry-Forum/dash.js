@@ -157,7 +157,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              sid: null,
  *              cid: null,
  *              rtp: null,
- *              rtpSafetyFactor: 5
+ *              rtpSafetyFactor: 5,
+ *              mode: Constants.CMCD_MODE_QUERY
  *          }
  *      }
  * }
@@ -500,6 +501,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [mode]
+ * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
+ *
+ * If not specified this value defaults to 'query'.
  */
 
 /**
@@ -712,7 +717,8 @@ function Settings() {
                 sid: null,
                 cid: null,
                 rtp: null,
-                rtpSafetyFactor: 5
+                rtpSafetyFactor: 5,
+                mode: Constants.CMCD_MODE_QUERY
             }
         }
     };

@@ -68,6 +68,15 @@ function XHRLoader(cfg) {
             xhr = requestModifier.modifyRequestHeader(xhr);
         }
 
+        if (httpRequest.headers) {
+            for (let header in httpRequest.headers) {
+                let value = httpRequest.headers[header];
+                if (value) {
+                    xhr.setRequestHeader(header, value);
+                }
+            }
+        }
+
         xhr.withCredentials = httpRequest.withCredentials;
 
         xhr.onload = httpRequest.onload;

@@ -2187,7 +2187,8 @@ function MediaPlayer() {
                 events: Events,
                 BASE64: BASE64,
                 constants: Constants,
-                cmcdModel: cmcdModel
+                cmcdModel: cmcdModel,
+                settings: settings
             });
             if (protectionController) {
                 protectionController.setLicenseRequestFilters(licenseRequestFilters);
