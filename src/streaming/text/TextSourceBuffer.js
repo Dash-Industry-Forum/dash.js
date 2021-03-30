@@ -174,7 +174,7 @@ function TextSourceBuffer(config) {
         boxParser = null;
     }
 
-    function onVideoChunkReceived(e) {
+    function _onVideoChunkReceived(e) {
         const chunk = e.chunk;
 
         if (chunk.mediaInfo.embeddedCaptions) {
@@ -184,7 +184,6 @@ function TextSourceBuffer(config) {
 
     function _initEmbedded() {
         embeddedTracks = [];
-        boxParser = BoxParser(context).getInstance();
         currFragmentedTrackIdx = null;
         embeddedTimescale = 0;
         embeddedCea608FieldParsers = [];
@@ -192,13 +191,13 @@ function TextSourceBuffer(config) {
         embeddedInitialized = true;
         embeddedTextHtmlRender = EmbeddedTextHtmlRender(context).getInstance();
 
-        eventBus.on(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
-        eventBus.on(Events.BUFFER_CLEARED, onVideoBufferCleared, this);
+        eventBus.on(Events.VIDEO_CHUNK_RECEIVED, _onVideoChunkReceived, instance);
+        eventBus.on(Events.BUFFER_CLEARED, onVideoBufferCleared, instance);
     }
 
     function resetEmbedded() {
-        eventBus.off(Events.VIDEO_CHUNK_RECEIVED, onVideoChunkReceived, this);
-        eventBus.off(Events.BUFFER_CLEARED, onVideoBufferCleared, this);
+        eventBus.off(Events.VIDEO_CHUNK_RECEIVED, _onVideoChunkReceived, instance);
+        eventBus.off(Events.BUFFER_CLEARED, onVideoBufferCleared, instance);
         if (textTracks) {
             textTracks.deleteAllTextTracks();
         }
@@ -323,9 +322,11 @@ function TextSourceBuffer(config) {
             }
 
             try {
-                // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const manifest = manifestModel.getValue();
+
+                // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
+
                 const result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
             } catch (e) {
@@ -402,6 +403,7 @@ function TextSourceBuffer(config) {
     function _appendEmbeddedText(bytes, chunk) {
         let i, samplesInfo;
 
+        // Init segment
         if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
             if (embeddedTimescale === 0) {
                 embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
@@ -409,32 +411,15 @@ function TextSourceBuffer(config) {
                     _createTextTrackFromMediaInfo(embeddedTracks[i]);
                 }
             }
-        } else { // MediaSegment
+        }
+
+        // MediaSegment
+        else if (chunk.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+
             if (embeddedTimescale === 0) {
                 logger.warn('CEA-608: No timescale for embeddedTextTrack yet');
                 return;
             }
-            const makeCueAdderForIndex = function (self, trackIndex) {
-                function newCue(startTime, endTime, captionScreen) {
-                    let captionsArray = null;
-                    if (videoModel.getTTMLRenderingDiv()) {
-                        captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
-                    } else {
-                        const text = captionScreen.getDisplayText();
-                        captionsArray = [{
-                            start: startTime,
-                            end: endTime,
-                            data: text,
-                            styles: {}
-                        }];
-                    }
-                    if (captionsArray) {
-                        textTracks.addCaptions(trackIndex, 0, captionsArray);
-                    }
-                }
-
-                return newCue;
-            };
 
             samplesInfo = boxParser.getSamplesInfo(bytes);
 
@@ -442,7 +427,7 @@ function TextSourceBuffer(config) {
 
             if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
                 // Time to setup the CEA-608 parsing
-                let field, handler, trackIdx;
+                let field, trackIdx;
                 for (i = 0; i < embeddedTracks.length; i++) {
                     if (embeddedTracks[i].id === Constants.CC1) {
                         field = 0;
@@ -455,9 +440,24 @@ function TextSourceBuffer(config) {
                         logger.warn('CEA-608: data before track is ready.');
                         return;
                     }
-                    handler = makeCueAdderForIndex(this, trackIdx);
                     embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i + 1, {
-                        'newCue': handler
+                        'newCue': function (startTime, endTime, captionScreen) {
+                            let captionsArray = null;
+                            if (videoModel.getTTMLRenderingDiv()) {
+                                captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
+                            } else {
+                                const text = captionScreen.getDisplayText();
+                                captionsArray = [{
+                                    start: startTime,
+                                    end: endTime,
+                                    data: text,
+                                    styles: {}
+                                }];
+                            }
+                            if (captionsArray) {
+                                textTracks.addCaptions(trackIdx, 0, captionsArray);
+                            }
+                        }
                     }, null);
                 }
             }
@@ -471,7 +471,7 @@ function TextSourceBuffer(config) {
                     }
                 }
 
-                const allCcData = extractCea608Data(bytes, samplesInfo.sampleList);
+                const allCcData = _extractCea608Data(bytes, samplesInfo.sampleList);
 
                 for (let fieldNr = 0; fieldNr < embeddedCea608FieldParsers.length; fieldNr++) {
                     const ccData = allCcData.fields[fieldNr];
@@ -493,7 +493,7 @@ function TextSourceBuffer(config) {
      * @param {Array} samples cue information
      * @returns {Object|null} ccData corresponding to one segment.
      */
-    function extractCea608Data(data, samples) {
+    function _extractCea608Data(data, samples) {
         if (samples.length === 0) {
             return null;
         }

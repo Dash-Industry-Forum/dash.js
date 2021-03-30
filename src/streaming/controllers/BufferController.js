@@ -102,17 +102,17 @@ function BufferController(config) {
 
         requiredQuality = abrController.getQualityFor(type, streamInfo.id);
 
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
-        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
-        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, instance);
+        eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
 
-        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, _onPlaybackStalled, this);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STALLED, _onPlaybackStalled, instance);
     }
 
     /**
