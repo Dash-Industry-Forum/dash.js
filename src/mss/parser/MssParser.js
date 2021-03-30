@@ -592,7 +592,7 @@ function MssParser(config) {
         return widevineCP;
     }
 
-    function processManifest(xmlDoc, manifestLoadedTime) {
+    function processManifest(xmlDoc) {
         const manifest = {};
         const contentProtections = [];
         const smoothStreamingMedia = xmlDoc.getElementsByTagName('SmoothStreamingMedia')[0];
@@ -706,11 +706,6 @@ function MssParser(config) {
                 manifest.minBufferTime = segmentDuration;
 
                 if (manifest.type === 'dynamic' ) {
-                    // Set availabilityStartTime
-                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
-                    let endTime = (segments[segments.length - 1].t + segments[segments.length - 1].d) / adaptations[i].SegmentTemplate.timescale * 1000;
-                    manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - endTime);
-
                     // Match timeShiftBufferDepth to video segment timeline duration
                     if (manifest.timeShiftBufferDepth > 0 &&
                         manifest.timeShiftBufferDepth !== Infinity &&
@@ -727,6 +722,7 @@ function MssParser(config) {
         // In case of live streams:
         // 1- configure player buffering properties according to target live delay
         // 2- adapt live delay and then buffers length in case timeShiftBufferDepth is too small compared to target live delay (see PlaybackController.computeLiveDelay())
+        // 3- Set retry attempts and intervals for FragmentInfo requests
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {

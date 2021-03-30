@@ -84,6 +84,7 @@ function MssFragmentMoofProcessor(config) {
             range;
         let segment = null;
         let t = 0;
+        let endTime;
         let availabilityStartTime = null;
 
         if (entries.length === 0) {
@@ -144,9 +145,9 @@ function MssFragmentMoofProcessor(config) {
         if (manifest.type === 'static') {
             if (type === 'video') {
                 segment = segments[segments.length - 1];
-                var end = (segment.t + segment.d) / timescale;
-                if (end > representation.adaptation.period.duration) {
-                    eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: this, newDuration: end });
+                endTime = (segment.t + segment.d) / timescale;
+                if (endTime > representation.adaptation.period.duration) {
+                    eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: this, newDuration: endTime });
                 }
             }
             return;
@@ -159,14 +160,20 @@ function MssFragmentMoofProcessor(config) {
                 t = segment.t;
 
                 // Determine the segments' availability start time
-                availabilityStartTime = Math.round((t - (manifest.timeShiftBufferDepth * timescale)) / timescale);
+                availabilityStartTime = (t - (manifest.timeShiftBufferDepth * timescale)) / timescale;
 
                 // Remove segments prior to availability start time
                 segment = segments[0];
-                while (Math.round(segment.t / timescale) < availabilityStartTime) {
+                endTime = (segment.t + segment.d) / timescale;
+                while (endTime < availabilityStartTime) {
+                    // Check if not currently playing the segment to be removed
+                    if (!playbackController.isPaused() && playbackController.getTime() < endTime) {
+                        break;
+                    }
                     // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                     segments.splice(0, 1);
                     segment = segments[0];
+                    endTime =  (segment.t + segment.d) / timescale;
                 }
             }
 
@@ -183,10 +190,12 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateDVR(type, range, manifestInfo) {
+        if (type !== 'video' && type !== 'audio') return;
         const dvrInfos = dashMetrics.getCurrentDVRInfo(type);
         if (!dvrInfos || (range.end > dvrInfos.range.end)) {
             logger.debug('Update DVR range: [' + range.start + ' - ' + range.end + ']');
             dashMetrics.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
+            playbackController.updateCurrentTime(type);
         }
     }
 

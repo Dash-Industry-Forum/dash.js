@@ -187,6 +187,7 @@ declare namespace dashjs {
                 'InitializationSegment'?:     number;
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
+                'FragmentInfoSegment'?:       number;
                 'other'?:                     number;
                 'lowLatencyReductionFactor'?:  number;
             };
@@ -197,6 +198,7 @@ declare namespace dashjs {
                 'InitializationSegment'?:     number;
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
+                'FragmentInfoSegment'?:       number;
                 'other'?:                     number;
                 'lowLatencyMultiplyFactor'?:  number;
             };

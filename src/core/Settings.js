@@ -121,6 +121,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 1000,
  *              MediaSegment: 1000,
  *              BitstreamSwitchingSegment: 1000,
+ *              FragmentInfoSegment: 1000,
  *              other: 1000,
  *              lowLatencyReductionFactor: 10
  *          },
@@ -131,6 +132,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 3,
  *              MediaSegment: 3,
  *              BitstreamSwitchingSegment: 3,
+ *              FragmentInfoSegment: 3,
  *              other: 3,
  *              lowLatencyMultiplyFactor: 5
  *          },
@@ -462,6 +464,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Request to retrieve a media segment (video/audio/image/text chunk).
  * @property {number} [BitstreamSwitchingSegment]
  * Bitrate stream switching type of request.
+ * @property {number} [FragmentInfoSegment]
+ * Request to retrieve a FragmentInfo segment (specific to Smooth Streaming live streams).
  * @property {number} [other]
  * Other type of request.
  * @property {number} [lowLatencyReductionFactor]
@@ -672,6 +676,7 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
+                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.OTHER_TYPE]: 1000,
                 lowLatencyReductionFactor: 10
             },
@@ -682,6 +687,7 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 3,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
+                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
                 [HTTPRequest.OTHER_TYPE]: 3,
                 lowLatencyMultiplyFactor: 5
             },
