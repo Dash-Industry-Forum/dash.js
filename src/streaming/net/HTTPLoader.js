@@ -160,6 +160,10 @@ function HTTPLoader(cfg) {
                         internalLoad(config, remainingAttempts);
                     }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
+                    if (request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                        return;
+                    }
+
                     errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
                         request: request,
                         response: httpRequest.response
@@ -366,6 +370,11 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
 
         requests.forEach(x => {
+            // MSS patch: ignore FragmentInfo requests
+            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                return;
+            }
+
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called

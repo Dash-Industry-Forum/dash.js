@@ -37,6 +37,7 @@ import MssParser from './parser/MssParser';
 import MssErrors from './errors/MssErrors';
 import DashJSError from '../streaming/vo/DashJSError';
 import InitCache from '../streaming/utils/InitCache';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 function MssHandler(config) {
 
@@ -176,7 +177,7 @@ function MssHandler(config) {
         // Process moof to transcode it from MSS to DASH (or to update segment timeline for SegmentInfo fragments)
         mssFragmentProcessor.processFragment(e, streamProcessor);
 
-        if (e.request.type === 'FragmentInfoSegment') {
+        if (e.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
             // If FragmentInfo loaded, then notify corresponding MssFragmentInfoController
             let fragmentInfoController = getFragmentInfoController(e.request.mediaType);
             if (fragmentInfoController) {

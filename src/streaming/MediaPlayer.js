@@ -160,7 +160,8 @@ function MediaPlayer() {
         domStorage,
         segmentBaseController,
         licenseRequestFilters,
-        licenseResponseFilters;
+        licenseResponseFilters,
+        customCapabilitiesFilters;
 
     /*
     ---------------------------------------------------------------------------
@@ -186,6 +187,7 @@ function MediaPlayer() {
         uriFragmentModel = URIFragmentModel(context).getInstance();
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        customCapabilitiesFilters = [];
     }
 
     /**
@@ -407,6 +409,7 @@ function MediaPlayer() {
         reset();
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        customCapabilitiesFilters = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -767,7 +770,7 @@ function MediaPlayer() {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
             let metric = dashMetrics.getCurrentDVRInfo();
-            t = (metric === null) ? 0 : duration() - (metric.range.end - metric.time);
+            t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
         }
 
         return t;
@@ -788,16 +791,8 @@ function MediaPlayer() {
         let d = getVideoElement().duration;
 
         if (playbackController.getIsDynamic()) {
-
             let metric = dashMetrics.getCurrentDVRInfo();
-            let range;
-
-            if (!metric) {
-                return 0;
-            }
-
-            range = metric.range.end - metric.range.start;
-            d = range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+            d = metric ? (metric.range.end - metric.range.start) : 0;
         }
         return d;
     }
@@ -1613,6 +1608,9 @@ function MediaPlayer() {
      * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
      * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
      *
+     * Constants.TRACK_SELECTION_MODE_FIRST_TRACK
+     * This mode makes the player select the select the first track found in the manifest.
+     *
      * Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
      * This mode makes the player select the track with the lowest bitrate per pixel average.
      *
@@ -1746,6 +1744,34 @@ function MediaPlayer() {
         unregisterFilter(licenseResponseFilters, filter);
         if (protectionController) {
             protectionController.setLicenseResponseFilters(licenseResponseFilters);
+        }
+    }
+
+    /**
+     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCustomCapabilitiesFilter(filter) {
+        customCapabilitiesFilters.push(filter);
+        if (capabilitiesFilter) {
+            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
+        }
+    }
+
+    /**
+     * Unregisters a custom capabilities filter.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCustomCapabilitiesFilter(filter) {
+        unregisterFilter(customCapabilitiesFilters, filter);
+        if (capabilitiesFilter) {
+            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
         }
     }
 
@@ -2051,6 +2077,7 @@ function MediaPlayer() {
             adapter,
             settings
         });
+        capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
 
         streamController.setConfig({
             capabilities: capabilities,
@@ -2413,6 +2440,8 @@ function MediaPlayer() {
         registerLicenseResponseFilter: registerLicenseResponseFilter,
         unregisterLicenseRequestFilter: unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter: unregisterLicenseResponseFilter,
+        registerCustomCapabilitiesFilter,
+        unregisterCustomCapabilitiesFilter,
         displayCaptionsOnTop: displayCaptionsOnTop,
         attachTTMLRenderingDiv: attachTTMLRenderingDiv,
         getCurrentTextTrackIndex: getCurrentTextTrackIndex,

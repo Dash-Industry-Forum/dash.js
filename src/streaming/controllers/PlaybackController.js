@@ -60,6 +60,7 @@ function PlaybackController() {
         lastLivePlaybackTime,
         availabilityStartTime,
         seekTarget,
+        internalSeek,
         isLowLatencySeekingInProgress,
         playbackStalled,
         minPlaybackRateChange,
@@ -80,6 +81,7 @@ function PlaybackController() {
         playbackStalled = false;
         streamSwitch = periodSwitch === true;
         streamSeekTime = seekTime;
+        internalSeek = false;
 
         const ua = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
 
@@ -176,24 +178,20 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
-    function seek(time, stickToBuffered, internalSeek) {
+    function seek(time, stickToBuffered, internal) {
         if (!streamInfo || !videoModel) return;
 
         let currentTime = !isNaN(seekTarget) ? seekTarget : videoModel.getTime();
         if (time === currentTime) return;
 
-        if (internalSeek === true) {
-            // Internal seek = seek video model only (disable 'seeking' listener)
-            // buffer(s) are already appended at requested time
-            videoModel.removeEventListener('seeking', onPlaybackSeeking);
-            logger.info('Requesting internal seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
-        } else {
+        internalSeek = (internal === true);
+
+        if (!internalSeek) {
             seekTarget = time;
             eventBus.trigger(Events.PLAYBACK_SEEK_ASKED);
-            logger.info('Requesting seek to time: ' + time);
-            videoModel.setCurrentTime(time, stickToBuffered);
         }
+        logger.info('Requesting seek to time: ' + time + (internalSeek ? ' (internal)' : ''));
+        videoModel.setCurrentTime(time, stickToBuffered);
     }
 
     function seekToLive() {
@@ -388,8 +386,8 @@ function PlaybackController() {
         return startTime;
     }
 
-    function getActualPresentationTime(currentTime) {
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo();
+    function getActualPresentationTime(currentTime, mediatype) {
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo(mediatype);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         let actualTime;
 
@@ -432,12 +430,12 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
     }
 
-    function updateCurrentTime() {
+    function updateCurrentTime(mediaType) {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0) return;
         const currentTime = getNormalizedTime();
-        const actualTime = getActualPresentationTime(currentTime);
+        const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged) {
+        if (timeChanged && !isSeeking()) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
@@ -482,6 +480,12 @@ function PlaybackController() {
     }
 
     function onPlaybackSeeking() {
+        // Check if internal seeking to be ignored
+        if (internalSeek) {
+            internalSeek = false;
+            return;
+        }
+
         let seekTime = getTime();
         // On some browsers/devices, in case of live streams, setting current time on video element fails when there is no buffered data at requested time
         // Then re-set seek target time and video element will be seeked afterwhile once data is buffered (see BufferContoller)
@@ -498,8 +502,6 @@ function PlaybackController() {
     function onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
         eventBus.trigger(Events.PLAYBACK_SEEKED);
-        // Reactivate 'seeking' event listener (see seek())
-        videoModel.addEventListener('seeking', onPlaybackSeeking);
     }
 
     function onPlaybackTimeUpdated() {
@@ -540,7 +542,9 @@ function PlaybackController() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamController.getActiveStreamInfo().isLast });
+        const streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+        if (!streamInfo) return;
+        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamInfo.isLast });
     }
 
     // Handle DASH PLAYBACK_ENDED event
@@ -975,6 +979,7 @@ function PlaybackController() {
         isSeeking: isSeeking,
         getStreamEndTime,
         seek: seek,
+        updateCurrentTime: updateCurrentTime,
         reset: reset
     };
 

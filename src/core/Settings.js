@@ -82,6 +82,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          manifestUpdateRetryInterval: 100,
  *          stallThreshold: 0.5,
  *          filterUnsupportedEssentialProperties: true,
+ *          eventControllerRefreshDelay: 100,
  *          utcSynchronization: {
  *              backgroundAttempts: 2,
  *              timeBetweenSyncAttempts: 30,
@@ -120,6 +121,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 1000,
  *              MediaSegment: 1000,
  *              BitstreamSwitchingSegment: 1000,
+ *              FragmentInfoSegment: 1000,
  *              other: 1000,
  *              lowLatencyReductionFactor: 10
  *          },
@@ -130,6 +132,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *              IndexSegment: 3,
  *              MediaSegment: 3,
  *              BitstreamSwitchingSegment: 3,
+ *              FragmentInfoSegment: 3,
  *              other: 3,
  *              lowLatencyMultiplyFactor: 5
  *          },
@@ -365,6 +368,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * @property {number} [eventControllerRefreshDelay=100]
+ * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
  * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
@@ -399,6 +404,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
  * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+ *
+ * - Constants.TRACK_SELECTION_MODE_FIRST_TRACK
+ * This mode makes the player select the first track found in the manifest.
  *
  * - Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
  * This mode makes the player select the track with the lowest bitrate per pixel average.
@@ -457,6 +465,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Request to retrieve a media segment (video/audio/image/text chunk).
  * @property {number} [BitstreamSwitchingSegment]
  * Bitrate stream switching type of request.
+ * @property {number} [FragmentInfoSegment]
+ * Request to retrieve a FragmentInfo segment (specific to Smooth Streaming live streams).
  * @property {number} [other]
  * Other type of request.
  * @property {number} [lowLatencyReductionFactor]
@@ -632,6 +642,7 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
+            eventControllerRefreshDelay: 100,
             utcSynchronization: {
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,
@@ -670,6 +681,7 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
+                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.OTHER_TYPE]: 1000,
                 lowLatencyReductionFactor: 10
             },
@@ -680,6 +692,7 @@ function Settings() {
                 [HTTPRequest.INIT_SEGMENT_TYPE]: 3,
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
+                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
                 [HTTPRequest.OTHER_TYPE]: 3,
                 lowLatencyMultiplyFactor: 5
             },

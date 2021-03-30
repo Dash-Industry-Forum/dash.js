@@ -234,6 +234,11 @@
                 "title": "CMCD Reporting",
                 "description": "This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5005).",
                 "href": "advanced/cmcd.html"
+            },
+            {
+                "title": "Custom Capabilities Filters",
+                "description": "This sample shows how to filter representations.",
+                "href": "advanced/custom-capabilities-filters.html"
             }
         ]
     },

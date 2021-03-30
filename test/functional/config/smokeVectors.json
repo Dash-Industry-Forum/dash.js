@@ -1,0 +1,64 @@
+{
+    "items": [
+        {
+            "name": "Video on Demand (VoD)",
+            "submenu": [
+                {
+                    "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                    "name": "Segment Template, number based",
+                    "description": "Segment Template, number based"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+                    "name": "Segment Base",
+                    "description": "Segment Base"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd",
+                    "name": "Segment Timeline, time based",
+                    "description": "Segment Timeline, time based"
+                },                
+                {
+                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
+                    "name": "Clear Segment List",
+                    "description": "Clear Segment List"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/2/TearsOfSteel_onDem5secSegSubTitles.mpd",
+                    "name": "Fragmented text, TTML",
+                    "description": "Fragmented text, TTML"
+                },                
+                {
+                    "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
+                    "name": "Multi Audio",
+                    "description": "Multi Audio"
+                },
+                {
+                    "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd",
+                    "name": "Multiperiod with presentationTimeOffset",
+                    "description": "Multiperiod with presentationTimeOffset"
+                }
+            ]
+        },
+        {
+            "name": "Live content",
+            "submenu": [
+                {
+                    "url": "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd",
+                    "name": "Segment Template without manifest updates",
+                    "description": "Segment Template without manifest updates"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/segtimeline_1/testpic_2s/Manifest.mpd",
+                    "name": "Segment Timeline",
+                    "description": "Segment Timeline"
+                },
+                {
+                    "url": "https://livesim.dashif.org/livesim/periods_60/continuous_1/testpic_2s/Manifest.mpd",
+                    "name": "Multiperiod Segment Template",
+                    "description": "Multiperiod Segment Template"
+                }
+            ]
+        }
+    ]
+}
