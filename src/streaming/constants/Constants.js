@@ -269,12 +269,6 @@ class Constants {
          */
         this.CMCD_MODE_HEADER = 'header';
 
-        /**
-         *  @constant {string} CMCD_MODE_MIXED specifies to attach CMCD metrics as query parameter as well as HTTP headers.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.CMCD_MODE_MIXED = 'mixed';
 
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';

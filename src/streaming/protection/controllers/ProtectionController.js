@@ -793,7 +793,7 @@ function ProtectionController(config) {
 
         if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
             const cmcdMode = settings.get().streaming.cmcd.mode;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY || cmcdMode === Constants.CMCD_MODE_MIXED) {
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const cmcdParams = cmcdModel.getQueryParameter({
                     url: request.url,
                     type: HTTPRequest.LICENSE
@@ -817,7 +817,7 @@ function ProtectionController(config) {
 
         if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
             const cmcdMode = settings.get().streaming.cmcd.mode;
-            if (cmcdMode === Constants.CMCD_MODE_HEADER || cmcdMode === Constants.CMCD_MODE_MIXED) {
+            if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 const cmcdHeaders = cmcdModel.getHeaderParameters({
                     url: request.url,
                     type: HTTPRequest.LICENSE

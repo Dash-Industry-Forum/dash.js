@@ -242,7 +242,7 @@ declare namespace dashjs {
                 cid?: string,
                 rtp?: number,
                 rtpSafetyFactor?: number,
-                mode?: string
+                mode?: 'query' | 'header'
             }
         }
     }
