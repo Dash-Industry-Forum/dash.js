@@ -117,7 +117,7 @@ function TextSourceBuffer(config) {
      * @param fModel
      */
     function addMediaInfos(mInfos, mimeType, fModel) {
-        const isFragmented = !adapter.getIsTextTrack(mimeType);
+        const isFragmented = mimeType && !adapter.getIsTextTrack(mimeType);
 
         mediaInfos = mediaInfos.concat(mInfos);
 
@@ -134,9 +134,10 @@ function TextSourceBuffer(config) {
             }
         }
 
-        for (let i = 0; i < mediaInfos.length; i++) {
-            _createTextTrackFromMediaInfo(mediaInfos[i]);
+        for (let i = 0; i < mInfos.length; i++) {
+            _createTextTrackFromMediaInfo(mInfos[i]);
         }
+
     }
 
     /**
@@ -147,7 +148,6 @@ function TextSourceBuffer(config) {
     function _createTextTrackFromMediaInfo(mediaInfo) {
         const textTrackInfo = new TextTrackInfo();
         const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
-        const totalNrTracks = (mediaInfos ? mediaInfos.length : 0) + embeddedTracks.length;
 
         textTrackInfo.lang = mediaInfo.lang;
         textTrackInfo.labels = mediaInfo.labels;
@@ -161,7 +161,7 @@ function TextSourceBuffer(config) {
         textTrackInfo.roles = mediaInfo.roles;
         textTrackInfo.accessibility = mediaInfo.accessibility;
 
-        textTracks.addTextTrack(textTrackInfo, totalNrTracks);
+        textTracks.addTextTrack(textTrackInfo);
     }
 
     function abort() {
@@ -407,9 +407,6 @@ function TextSourceBuffer(config) {
         if (chunk.segmentType === HTTPRequest.INIT_SEGMENT_TYPE) {
             if (embeddedTimescale === 0) {
                 embeddedTimescale = boxParser.getMediaTimescaleFromMoov(bytes);
-                for (i = 0; i < embeddedTracks.length; i++) {
-                    _createTextTrackFromMediaInfo(embeddedTracks[i]);
-                }
             }
         }
 
@@ -424,42 +421,8 @@ function TextSourceBuffer(config) {
             samplesInfo = boxParser.getSamplesInfo(bytes);
 
             const sequenceNumber = samplesInfo.lastSequenceNumber;
-
             if (!embeddedCea608FieldParsers[0] && !embeddedCea608FieldParsers[1]) {
-                // Time to setup the CEA-608 parsing
-                let field, trackIdx;
-                for (i = 0; i < embeddedTracks.length; i++) {
-                    if (embeddedTracks[i].id === Constants.CC1) {
-                        field = 0;
-                        trackIdx = textTracks.getTrackIdxForId(Constants.CC1);
-                    } else if (embeddedTracks[i].id === Constants.CC3) {
-                        field = 1;
-                        trackIdx = textTracks.getTrackIdxForId(Constants.CC3);
-                    }
-                    if (trackIdx === -1) {
-                        logger.warn('CEA-608: data before track is ready.');
-                        return;
-                    }
-                    embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i + 1, {
-                        'newCue': function (startTime, endTime, captionScreen) {
-                            let captionsArray = null;
-                            if (videoModel.getTTMLRenderingDiv()) {
-                                captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
-                            } else {
-                                const text = captionScreen.getDisplayText();
-                                captionsArray = [{
-                                    start: startTime,
-                                    end: endTime,
-                                    data: text,
-                                    styles: {}
-                                }];
-                            }
-                            if (captionsArray) {
-                                textTracks.addCaptions(trackIdx, 0, captionsArray);
-                            }
-                        }
-                    }, null);
-                }
+                _setupCeaParser();
             }
 
             if (embeddedTimescale) {
@@ -485,6 +448,45 @@ function TextSourceBuffer(config) {
                 embeddedLastSequenceNumber = sequenceNumber;
             }
         }
+    }
+
+    function _setupCeaParser() {
+        // Time to setup the CEA-608 parsing
+        let trackIdx;
+        for (let i = 0; i < embeddedTracks.length; i++) {
+            trackIdx = textTracks.getTrackIdxForId(embeddedTracks[i].id);
+
+            if (trackIdx === -1) {
+                logger.warn('CEA-608: data before track is ready.');
+                return;
+            }
+
+            const handler = _makeCueAdderForIndex(trackIdx);
+            embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i + 1, {
+                newCue: handler
+            }, null);
+        }
+    }
+
+    function _makeCueAdderForIndex(trackIndex) {
+        function newCue(startTime, endTime, captionScreen) {
+            let captionsArray;
+            if (videoModel.getTTMLRenderingDiv()) {
+                captionsArray = embeddedTextHtmlRender.createHTMLCaptionsFromScreen(videoModel.getElement(), startTime, endTime, captionScreen);
+            } else {
+                const text = captionScreen.getDisplayText();
+                captionsArray = [{
+                    start: startTime,
+                    end: endTime,
+                    data: text,
+                    styles: {}
+                }];
+            }
+            if (captionsArray) {
+                textTracks.addCaptions(trackIndex, 0, captionsArray);
+            }
+        }
+        return newCue;
     }
 
     /**

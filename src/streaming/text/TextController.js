@@ -98,6 +98,7 @@ function TextController(config) {
 
         eventBus = EventBus(context).getInstance();
         eventBus.on(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
 
         resetInitialSettings();
     }
@@ -110,9 +111,7 @@ function TextController(config) {
      * All media infos have been added. Start creating the track objects
      */
     function createTracks() {
-        const e = textTracks.createTracks();
-
-        _onTextTracksAdded(e);
+        textTracks.createTracks();
     }
 
     /**
@@ -163,13 +162,14 @@ function TextController(config) {
         }
 
         lastEnabledIndex = index;
-        /*
+
         eventBus.trigger(MediaPlayerEvents.TEXT_TRACKS_ADDED, {
             enabled: isTextEnabled(),
             index: index,
-            tracks: tracks
+            tracks: tracks,
+            streamInfo
         });
-        */
+
         textTracksAdded = true;
     }
 
@@ -246,7 +246,7 @@ function TextController(config) {
 
         let currentTrackInfo = textTracks.getCurrentTrackInfo();
 
-        if (currentTrackInfo && currentTrackInfo.isFragmented) {
+        if (currentTrackInfo && currentTrackInfo.isFragmented && !currentTrackInfo.isEmbedded) {
             _setFragmentedTextTrack(currentTrackInfo, oldTrackIdx);
         } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
             _setNonFragmentedTextTrack(currentTrackInfo);
@@ -324,6 +324,7 @@ function TextController(config) {
     function reset() {
         resetInitialSettings();
         eventBus.off(Events.CURRENT_TRACK_CHANGED, onCurrentTrackChanged, instance);
+        eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         textSourceBuffer.resetEmbedded();
         textSourceBuffer.reset();
     }

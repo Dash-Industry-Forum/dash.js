@@ -301,7 +301,7 @@ function Stream(config) {
                         _checkIfInitializationCompleted();
                     }
 
-                    // All mediaInfos shouldve been added to the TextSourceBuffer now. We can start creating the tracks
+                    // All mediaInfos for fragmented and external texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
                     textController.createTracks();
 
                     resolve(bufferSinks);
@@ -349,6 +349,10 @@ function Stream(config) {
                     mediaController.addTrack(mediaInfo);
                 }
             }
+        }
+
+        if (type === Constants.EMBEDDED_TEXT) {
+            textController.addMediaInfosToBuffer(allMediaForType);
         }
 
         if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
@@ -424,7 +428,7 @@ function Stream(config) {
             streamProcessor.addMediaInfo(allMediaForType[i]);
         }
 
-        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT) {
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
             textController.addMediaInfosToBuffer(allMediaForType, mimeType, fragmentModel);
         }
 
@@ -476,6 +480,7 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
+        eventBus.trigger(Events.STREAM_DEACTIVATED, {streamInfo});
     }
 
     function getIsActive() {
@@ -716,7 +721,7 @@ function Stream(config) {
         for (let i = 0; i < ln; i++) {
             //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
             if (!processors[i].isBufferingCompleted() && (processors[i].getType() === Constants.AUDIO || processors[i].getType() === Constants.VIDEO)) {
-                logger.warn('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
+                logger.debug('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
                 return;
             }
         }

@@ -195,6 +195,12 @@ class MediaPlayerEvents extends EventsBase {
         this.STREAM_ACTIVATED = 'streamActivated';
 
         /**
+         * Triggered when a stream (period) is deactivated
+         * @event MediaPlayerEvents#STREAM_DEACTIVATED
+         */
+        this.STREAM_DEACTIVATED = 'streamDeactivated';
+
+        /**
          * Triggered when a stream (period) is activated
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */

@@ -47,6 +47,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var seeking = false;
     var videoControllerVisibleTimeout = 0;
     var liveThresholdSecs = 12;
+    var textTrackList = {};
     var video,
         videoContainer,
         videoController,
@@ -104,8 +105,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         self.player.on(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_ACTIVATED, onStreamActivated, this);
+        self.player.on(dashjs.MediaPlayer.events.STREAM_DEACTIVATED, onStreamDeactivated, this);
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
+        self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
     };
 
     var removePlayerEventsListeners = function () {
@@ -113,8 +116,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, onPlaybackPaused, this);
         self.player.off(dashjs.MediaPlayer.events.PLAYBACK_TIME_UPDATED, onPlayTimeUpdate, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_ACTIVATED, onStreamActivated, this);
+        self.player.off(dashjs.MediaPlayer.events.STREAM_DEACTIVATED, onStreamDeactivated, this);
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
+        self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
     };
 
     var getControlId = function (id) {
@@ -499,7 +504,15 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         startedPlaying = false;
     };
 
-    var onStreamActivated = function (/*e*/) {
+    var onStreamDeactivated = function (e) {
+        if (textTrackList[e.streamInfo.id]) {
+            delete textTrackList[e.streamInfo.id];
+        }
+    };
+
+    var onStreamActivated = function (e) {
+        var streamInfo = e.streamInfo;
+
         updateDuration();
 
         //Bitrate Menu
@@ -509,7 +522,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         createTrackSwitchMenu();
 
         //Text Switch Menu
-        createCaptionSwitchMenu();
+        createCaptionSwitchMenu(streamInfo);
     };
 
     var createBitrateSwitchMenu = function () {
@@ -522,6 +535,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             availableBitrates.audio = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('audio') || [];
             availableBitrates.video = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('video') || [];
             availableBitrates.images = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('image') || [];
+
             if (availableBitrates.audio.length > 1 || availableBitrates.video.length > 1 || availableBitrates.images.length > 1) {
                 contentFunc = function (element, index) {
                     var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate / 1000) + ' kbps';
@@ -570,39 +584,49 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var createCaptionSwitchMenu = function () {
+    var createCaptionSwitchMenu = function (streamInfo) {
         // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
-        if (captionBtn) {
+        var activeStreamInfo = player.getActiveStream().getStreamInfo();
+
+        if (captionBtn && (!activeStreamInfo.id || activeStreamInfo.id === streamInfo.id)) {
 
             destroyMenu(captionMenu, captionBtn);
             captionMenu = null;
 
-            var availableTracks = self.player.getTracksFor('text').concat(self.player.getTracksFor('fragmentedText')).concat(self.player.getTracksFor('embeddedText'));
+            var tracks = textTrackList[streamInfo.id] || [];
+            var contentFunc = function (element, index) {
+                if (isNaN(index)) {
+                    return 'OFF';
+                }
 
-            if(availableTracks.length > 0) {
+                var label = getLabelForLocale(element.labels);
+                if (label) {
+                    return label + ' : ' + element.type;
+                }
 
-                var contentFunc = function (element, index) {
-                    if (isNaN(index)) {
-                        return 'OFF';
-                    }
+                return element.lang + ' : ' + element.kind;
+            };
+            captionMenu = createMenu({ menuType: 'caption', arr: tracks }, contentFunc);
 
-                    var label = getLabelForLocale(element.labels);
-                    if (label) {
-                        return label + ' : ' + element.type;
-                    }
+            var func = function () {
+                onMenuClick(captionMenu, captionBtn);
+            };
 
-                    return element.lang + ' : ' + element.type;
-                };
-                captionMenu = createMenu({ menuType: 'caption', arr: availableTracks }, contentFunc);
-
-                var func = function () {
-                    onMenuClick(captionMenu, captionBtn);
-                };
-                menuHandlersList.push(func);
-                captionBtn.addEventListener('click', func);
-                captionBtn.classList.remove('hide');
-            }
+            menuHandlersList.push(func);
+            captionBtn.addEventListener('click', func);
+            captionBtn.classList.remove('hide');
         }
+
+    };
+
+    var onTracksAdded = function (e) {
+        // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
+        if (!textTrackList[e.streamInfo.id]) {
+            textTrackList[e.streamInfo.id] = [];
+        }
+
+        textTrackList[e.streamInfo.id] = textTrackList[e.streamInfo.id].concat(e.tracks);
+        createCaptionSwitchMenu(e.streamInfo);
     };
 
     var onStreamTeardownComplete = function (/*e*/) {
@@ -866,22 +890,18 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 });
                 videoController.removeChild(menu);
             }
-        }
-        catch(e) {
-            console.error(e);
+        } catch (e) {
         }
     };
 
-    var removeMenu = function (menu) {
+    var removeMenu = function (menu, btn) {
         try {
             if (menu) {
-                menu.removeChild(trackSwitchMenu);
+                videoController.removeChild(menu);
                 menu = null;
-                menu.classList.add('hide');
+                btn.classList.add('hide');
             }
-        }
-        catch(e) {
-            console.error(e);
+        } catch (e) {
         }
     };
 
@@ -994,10 +1014,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 if (captionBtn) captionBtn.removeEventListener('click', item);
             });
             if (captionMenu) {
-                this.removeMenu(captionMenu);
+                this.removeMenu(captionMenu, captionBtn);
             }
             if (trackSwitchMenu) {
-                this.removeMenu(trackSwitchMenu);
+                this.removeMenu(trackSwitchMenu, trackSwitchBtn);
             }
         },
 
