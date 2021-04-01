@@ -48,7 +48,6 @@ function DashAdapter() {
         dashManifestModel,
         patchManifestModel,
         voPeriods,
-        voAdaptations,
         currentMediaInfo,
         constants,
         cea608parser;
@@ -65,10 +64,6 @@ function DashAdapter() {
 
     // #region PUBLIC FUNCTIONS
     // --------------------------------------------------
-    function getVoAdaptations() {
-        return voAdaptations;
-    }
-
     function getVoPeriods() {
         return voPeriods;
     }
@@ -136,14 +131,13 @@ function DashAdapter() {
         let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
         if (!selectedVoPeriod) return null;
 
-        let periodId = selectedVoPeriod.id;
-        voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
+        const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
         let realAdaptation = getAdaptationForType(streamInfo.index, type, streamInfo);
         if (!realAdaptation) return null;
         let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, voPeriods[0].mpd.manifest, streamInfo.index);
 
-        return convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
+        return convertAdaptationToMediaInfo(voAdaptations[idx]);
     }
 
     /**
@@ -256,12 +250,12 @@ function DashAdapter() {
 
         if (!adaptationsForType || adaptationsForType.length === 0) return mediaArr;
 
-        voAdaptations[periodId] = voAdaptations[periodId] || dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
+        const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
         for (i = 0, ln = adaptationsForType.length; i < ln; i++) {
             data = adaptationsForType[i];
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
-            media = convertAdaptationToMediaInfo(voAdaptations[periodId][idx]);
+            media = convertAdaptationToMediaInfo(voAdaptations[idx]);
 
             if (type === constants.EMBEDDED_TEXT) {
                 let accessibilityLength = media.accessibility.length;
@@ -276,7 +270,7 @@ function DashAdapter() {
                         if (parts[0].substring(0, 2) === 'CC') {
                             for (j = 0; j < parts.length; j++) {
                                 if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[periodId][idx]);
+                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
                                 }
                                 convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
                                 mediaArr.push(media);
@@ -285,7 +279,7 @@ function DashAdapter() {
                         } else {
                             for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
                                 if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[periodId][idx]);
+                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
                                 }
                                 convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
                                 mediaArr.push(media);
@@ -323,8 +317,6 @@ function DashAdapter() {
         checkConfig();
 
         voPeriods = getRegularPeriods(newManifest);
-
-        voAdaptations = {};
     }
 
     /**
@@ -805,7 +797,6 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
-        voAdaptations = {};
         currentMediaInfo = {};
     }
 
@@ -944,8 +935,11 @@ function DashAdapter() {
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-        if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations[mediaInfo.streamInfo.id]) return null;
-        return voAdaptations[mediaInfo.streamInfo.id][mediaInfo.index];
+        const selectedVoPeriod = getPeriodForStreamInfo(mediaInfo.streamInfo, voPeriods);
+        const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
+
+        if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) return null;
+        return voAdaptations[mediaInfo.index];
     }
 
     function getPeriodForStreamInfo(streamInfo, voPeriodsArray) {
@@ -1169,7 +1163,6 @@ function DashAdapter() {
         getBaseURLsFromElement: getBaseURLsFromElement,
         getRepresentationSortFunction: getRepresentationSortFunction,
         getCodec: getCodec,
-        getVoAdaptations: getVoAdaptations,
         getVoPeriods: getVoPeriods,
         getPeriodById,
         setCurrentMediaInfo: setCurrentMediaInfo,
