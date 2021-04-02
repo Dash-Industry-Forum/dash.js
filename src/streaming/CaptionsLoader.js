@@ -80,7 +80,7 @@ function CaptionsLoader(config) {
         return null;
     }
 
-    function load(url) {
+    function load(url, mediaInfo) {
 
         const request = new TextRequest(url, HTTPRequest.MEDIA_SEGMENT_TYPE);
 
@@ -128,7 +128,7 @@ function CaptionsLoader(config) {
                 }
 
                 if (captions) {
-                    eventBus.trigger(Events.EXTERNAL_CAPTIONS_LOADED, { captions: captions });
+                    eventBus.trigger(Events.EXTERNAL_CAPTIONS_LOADED, { captions: captions, mediaInfo: mediaInfo });
                 } else {
                     eventBus.trigger(Events.EXTERNAL_CAPTIONS_LOADED, {
                         captions: null,

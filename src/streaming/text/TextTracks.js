@@ -549,10 +549,6 @@ function TextTracks() {
         }
     }
 
-    function getNumberOfTextTracks() {
-        return trackElementArr.length;
-    }
-
     function setCueStyleOnTrack(track) {
         clearCaptionContainer.call(this);
         if (track) {
@@ -688,7 +684,6 @@ function TextTracks() {
         addCaptions: addCaptions,
         getCurrentTrackIdx: getCurrentTrackIdx,
         setCurrentTrackIdx: setCurrentTrackIdx,
-        getNumberOfTextTracks: getNumberOfTextTracks,
         getTrackIdxForId: getTrackIdxForId,
         getCurrentTrackInfo: getCurrentTrackInfo,
         setModeForTrackIdx: setModeForTrackIdx,

@@ -81,6 +81,8 @@ function TextSourceBuffer() {
         logger = Debug(context).getInstance().getLogger(instance);
 
         resetInitialSettings();
+
+        eventBus.on(Events.EXTERNAL_CAPTIONS_LOADED, onExternalCaptionsLoaded, instance);
     }
 
     function resetFragmented () {
@@ -263,6 +265,18 @@ function TextSourceBuffer() {
 
     function setCurrentFragmentedTrackIdx(idx) {
         currFragmentedTrackIdx = idx;
+    }
+
+
+    function onExternalCaptionsLoaded(e) {
+        if (!e.error) {
+            // Extend `mediaInfos`-array to ensure `totalNrTracks` is increased.
+            mediaInfos = mediaInfos.concat([e.mediaInfo]);
+            createTextTrackFromMediaInfo(e.captions, e.mediaInfo);
+        } else {
+            logger.error('Unable to load external captions: ' + e.error.message);
+        }
+        eventBus.off(Events.EXTERNAL_CAPTIONS_LOADED, onExternalCaptionsLoaded, this);
     }
 
     function createTextTrackFromMediaInfo(captionData, mediaInfo) {
