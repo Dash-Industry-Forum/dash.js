@@ -77,11 +77,6 @@ function CaptionsLoader(config) {
         if (data.indexOf('WEBVTT') > -1) {
             return VTTParser(context).getInstance();
         }
-        // } else if (data.indexOf('MPD') > -1 || data.indexOf('Patch') > -1) {
-        //     return DashParser(context).create({debug: debug});
-        // } else {
-        //     return parser;
-        // }
         return null;
     }
 
