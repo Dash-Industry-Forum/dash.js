@@ -96,4 +96,4 @@ function RNG() {
 }
 
 RNG.__dashjs_factory_name = 'RNG';
-export default dashjs.FactoryMaker.getSingletonFactory(RNG); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(RNG);

@@ -880,4 +880,4 @@ function MssParser(config) {
 }
 
 MssParser.__dashjs_factory_name = 'MssParser';
-export default dashjs.FactoryMaker.getClassFactory(MssParser); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(MssParser);

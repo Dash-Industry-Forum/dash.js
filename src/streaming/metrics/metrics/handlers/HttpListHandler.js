@@ -109,4 +109,4 @@ function HttpListHandler(config) {
 }
 
 HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-export default dashjs.FactoryMaker.getClassFactory(HttpListHandler); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(HttpListHandler);

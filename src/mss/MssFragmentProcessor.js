@@ -185,4 +185,4 @@ function MssFragmentProcessor(config) {
 }
 
 MssFragmentProcessor.__dashjs_factory_name = 'MssFragmentProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentProcessor); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentProcessor);

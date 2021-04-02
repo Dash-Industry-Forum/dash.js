@@ -54,7 +54,7 @@ function FetchLoader(cfg) {
         const requestStartTime = new Date();
         const request = httpRequest.request;
 
-        const headers = new Headers(); /*jshint ignore:line*/
+        const headers = new Headers();
         if (request.range) {
             headers.append('Range', 'bytes=' + request.range);
         }
@@ -86,7 +86,7 @@ function FetchLoader(cfg) {
 
         let abortController;
         if (typeof window.AbortController === 'function') {
-            abortController = new AbortController(); /*jshint ignore:line*/
+            abortController = new AbortController();
             httpRequest.abortController = abortController;
             abortController.signal.onabort = httpRequest.onabort;
         }
@@ -184,7 +184,7 @@ function FetchLoader(cfg) {
                             // Store the beginning time of each chunk download in array StartTimeData
                             lastChunkWasFinished = false;
                             startTimeData.push({
-                                ts: performance.now(), /* jshint ignore:line */
+                                ts: performance.now(),
                                 bytes: value.length
                             });
                         }
@@ -198,7 +198,7 @@ function FetchLoader(cfg) {
                         if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
                             lastChunkWasFinished = true;
                             endTimeData.push({
-                                ts: performance.now(), /* jshint ignore:line */
+                                ts: performance.now(),
                                 bytes: remaining.length
                             });
                         }

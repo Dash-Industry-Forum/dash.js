@@ -191,4 +191,4 @@ function KeySystemClearKey(config) {
 }
 
 KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey);

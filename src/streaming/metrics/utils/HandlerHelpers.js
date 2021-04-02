@@ -71,4 +71,4 @@ function HandlerHelpers() {
 }
 
 HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
-export default dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getSingletonFactory(HandlerHelpers);

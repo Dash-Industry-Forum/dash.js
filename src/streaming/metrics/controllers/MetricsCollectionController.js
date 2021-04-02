@@ -108,4 +108,4 @@ function MetricsCollectionController(config) {
 }
 
 MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController';
-export default dashjs.FactoryMaker.getClassFactory(MetricsCollectionController); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(MetricsCollectionController);

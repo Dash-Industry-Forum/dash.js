@@ -133,8 +133,6 @@ function TextTracks() {
 
                 if (textTrackQueue[i].defaultTrack) {
                     // track.default is an object property identifier that is a reserved word
-                    // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-                    /*jshint -W024 */
                     track.default = true;
                     defaultIndex = i;
                 }

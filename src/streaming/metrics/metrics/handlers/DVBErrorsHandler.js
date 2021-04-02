@@ -87,4 +87,4 @@ function DVBErrorsHandler(config) {
     return instance;
 }
 
-export default dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler); /* jshint ignore:line */
+export default dashjs.FactoryMaker.getClassFactory(DVBErrorsHandler);
