@@ -49,7 +49,6 @@ class CoreEvents extends EventsBase {
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
-        this.DATA_UPDATE_STARTED = 'dataUpdateStarted';
         this.INBAND_EVENTS = 'inbandEvents';
         this.INITIAL_STREAM_SWITCH = 'initialStreamSwitch';
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';

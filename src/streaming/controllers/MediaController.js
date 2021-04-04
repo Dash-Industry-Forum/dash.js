@@ -47,17 +47,6 @@ function MediaController() {
         lastSelectedTracks,
         domStorage;
 
-    const validTrackSwitchModes = [
-        Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
-        Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
-    ];
-
-    const validTrackSelectionModes = [
-        Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
-        Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
-        Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
-    ];
-
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         reset();
@@ -68,7 +57,7 @@ function MediaController() {
      * @param {StreamInfo} streamInfo
      * @memberof MediaController#
      */
-    function checkInitialMediaSettingsForType(type, streamInfo) {
+    function setInitialMediaSettingsForType(type, streamInfo) {
         let settings = lastSelectedTracks[type] || getInitialSettings(type);
         const tracksForType = getTracksFor(type, streamInfo);
         const tracks = [];
@@ -89,10 +78,10 @@ function MediaController() {
         }
 
         if (tracks.length === 0) {
-            setTrack(this.selectInitialTrack(type, tracksForType), true);
+            setTrack(_selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(this.selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
+                setTrack(_selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
             } else {
                 setTrack(tracks[0]);
             }
@@ -107,7 +96,7 @@ function MediaController() {
         if (!track) return;
 
         const mediaType = track.type;
-        if (!isMultiTrackSupportedByType(mediaType)) return;
+        if (!_isMultiTrackSupportedByType(mediaType)) return;
 
         let streamId = track.streamInfo.id;
         if (!tracks[streamId]) {
@@ -252,57 +241,11 @@ function MediaController() {
 
     /**
      * @param {string} type
-     * @param {string} mode
-     * @memberof MediaController#
-     * @deprecated Please use updateSettings({streaming: { trackSwitchMode: mode } }) instead
-     */
-    function setSwitchMode(type, mode) {
-        logger.warn('deprecated: Please use updateSettings({streaming: { trackSwitchMode: mode } }) instead');
-        const isModeSupported = (validTrackSwitchModes.indexOf(mode) !== -1);
-
-        if (!isModeSupported) {
-            logger.warn('Track switch mode is not supported: ' + mode);
-            return;
-        }
-
-        let switchMode = {};
-        switchMode[type] = mode;
-
-        settings.update({
-            streaming: {
-                trackSwitchMode: switchMode
-            }
-        });
-    }
-
-    /**
-     * @param {string} type
      * @returns {string} mode
      * @memberof MediaController#
      */
     function getSwitchMode(type) {
         return settings.get().streaming.trackSwitchMode[type];
-    }
-
-    /**
-     * @param {string} mode
-     * @memberof MediaController#
-     * @deprecated Please use updateSettings({streaming: { selectionModeForInitialTrack: mode } }) instead
-     */
-    function setSelectionModeForInitialTrack(mode) {
-        logger.warn('deprecated: Please use updateSettings({streaming: { selectionModeForInitialTrack: mode } }) instead');
-        const isModeSupported = (validTrackSelectionModes.indexOf(mode) !== -1);
-
-        if (!isModeSupported) {
-            logger.warn('Track selection mode is not supported: ' + mode);
-            return;
-        }
-
-        settings.update({
-            streaming: {
-                selectionModeForInitialTrack: mode
-            }
-        });
     }
 
     /**
@@ -318,7 +261,7 @@ function MediaController() {
      * @returns {boolean}
      * @memberof MediaController#
      */
-    function isMultiTrackSupportedByType(type) {
+    function _isMultiTrackSupportedByType(type) {
         return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT ||
             type === Constants.FRAGMENTED_TEXT || type === Constants.IMAGE);
     }
@@ -473,7 +416,7 @@ function MediaController() {
         return result;
     }
 
-    function selectInitialTrack(type, tracks) {
+    function _selectInitialTrack(type, tracks) {
         if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
 
         let mode = getSelectionModeForInitialTrack();
@@ -540,28 +483,24 @@ function MediaController() {
     }
 
     instance = {
-        checkInitialMediaSettingsForType: checkInitialMediaSettingsForType,
-        addTrack: addTrack,
-        getTracksFor: getTracksFor,
-        getCurrentTrackFor: getCurrentTrackFor,
-        isCurrentTrack: isCurrentTrack,
-        setTrack: setTrack,
-        setInitialSettings: setInitialSettings,
-        getInitialSettings: getInitialSettings,
-        setSwitchMode: setSwitchMode,
-        getSwitchMode: getSwitchMode,
-        selectInitialTrack: selectInitialTrack,
-        getTracksWithHighestBitrate: getTracksWithHighestBitrate,
-        getTracksWithHighestEfficiency: getTracksWithHighestEfficiency,
-        getTracksWithWidestRange: getTracksWithWidestRange,
-        setSelectionModeForInitialTrack: setSelectionModeForInitialTrack,
-        getSelectionModeForInitialTrack: getSelectionModeForInitialTrack,
-        isMultiTrackSupportedByType: isMultiTrackSupportedByType,
-        isTracksEqual: isTracksEqual,
-        matchSettings: matchSettings,
-        saveTextSettingsDisabled: saveTextSettingsDisabled,
-        setConfig: setConfig,
-        reset: reset
+        setInitialMediaSettingsForType,
+        addTrack,
+        getTracksFor,
+        getCurrentTrackFor,
+        isCurrentTrack,
+        setTrack,
+        setInitialSettings,
+        getInitialSettings,
+        getSwitchMode,
+        getTracksWithHighestBitrate,
+        getTracksWithHighestEfficiency,
+        getTracksWithWidestRange,
+        getSelectionModeForInitialTrack,
+        isTracksEqual,
+        matchSettings,
+        saveTextSettingsDisabled,
+        setConfig,
+        reset
     };
 
     setup();

@@ -75,16 +75,6 @@
             "name": "VOD (Static MPD)",
             "submenu": [
                 {
-                    "url": "https://csm-e.tls1.yospace.com/csm/access/246544053/eF9uZ3R2X3ZsLzE5NTU3NC82MzcwODAxNTg4Mzg2MzQ5NjQvRFRBRy10ZXN0LWNsaXAtMjVwX2RldV8yMF8xMzAwa19TRF9IXzI2NF9JU01WLmlzbS9pbmRleC5tcGQ=?yo.p.rd=true",
-                    "name": "YoSpace 1",
-                    "provider": "telekom"
-                },
-                {
-                    "url": "https://csm-e.tls1.yospace.com/csm/access/246544053/eF9uZ3R2X3ZsLzE5NTU4NS82MzcwODAxNTgxMTA3ODE4NjcvRFRBRy10ZXN0LWNsaXAtMjVwX2RldV8yMF8xMzAwa19IRF9IXzI2NF9JU01WLmlzbS9pbmRleC5tcGQ=?yo.p.rd=true",
-                    "name": "YoSpace 2",
-                    "provider": "telekom"
-                },
-                {
                     "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
                     "name": "SegmentBase, ondemand profile",
                     "provider": "dashif"

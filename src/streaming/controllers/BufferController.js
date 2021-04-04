@@ -394,7 +394,7 @@ function BufferController(config) {
         return sourceBufferSink.abort();
     }
 
-    function prepareForTrackSwitch(codec) {
+    function prepareForReplacementTrackSwitch(codec) {
         return new Promise((resolve, reject) => {
             sourceBufferSink.abort()
                 .then(() => {
@@ -408,6 +408,21 @@ function BufferController(config) {
                 })
                 .then(() => {
                     setIsBufferingCompleted(false);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForNonReplacementTrackSwitch(codec) {
+        return new Promise((resolve, reject) => {
+            updateAppendWindow()
+                .then(() => {
+                    return sourceBufferSink.changeType(codec);
+                })
+                .then(() => {
                     resolve();
                 })
                 .catch((e) => {
@@ -1032,7 +1047,8 @@ function BufferController(config) {
         getIsPruningInProgress,
         reset,
         prepareForPlaybackSeek,
-        prepareForTrackSwitch,
+        prepareForReplacementTrackSwitch,
+        prepareForNonReplacementTrackSwitch,
         updateAppendWindow,
         getAllRangesWithSafetyFactor,
         getContinuousBufferTimeForTargetTime,

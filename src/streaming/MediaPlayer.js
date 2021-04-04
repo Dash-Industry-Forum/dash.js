@@ -1541,54 +1541,6 @@ function MediaPlayer() {
     }
 
     /**
-     * This method sets the current track switch mode. Available options are:
-     *
-     * Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
-     * (used to forbid clearing the buffered data (prior to current playback position) after track switch.
-     * Defers to fastSwitchEnabled for placement of new data. Default for video)
-     *
-     * Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE
-     * (used to clear the buffered data (prior to current playback position) after track switch. Default for audio)
-     *
-     * @param {MediaType} type
-     * @param {string} mode
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-     * @instance
-     */
-    function setTrackSwitchModeFor(type, mode) {
-        if (!mediaPlayerInitialized) {
-            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-        }
-        mediaController.setSwitchMode(type, mode);
-    }
-
-    /**
-     * This method sets the selection mode for the initial track. This mode defines how the initial track will be selected
-     * if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
-     *
-     * Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
-     * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
-     *
-     * Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY
-     * This mode makes the player select the track with the lowest bitrate per pixel average.
-     *
-     * Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
-     * This mode makes the player select the track with a widest range of bitrates.
-     *
-     * @param {string} mode
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-     * @instance
-     */
-    function setSelectionModeForInitialTrack(mode) {
-        if (!mediaPlayerInitialized) {
-            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-        }
-        mediaController.setSelectionModeForInitialTrack(mode);
-    }
-
-    /**
      * This method returns the track selection mode.
      *
      * @returns {string} mode
@@ -2337,8 +2289,6 @@ function MediaPlayer() {
         getInitialMediaSettingsFor,
         setCurrentTrack,
         getTrackSwitchModeFor,
-        setTrackSwitchModeFor,
-        setSelectionModeForInitialTrack,
         getSelectionModeForInitialTrack,
         addABRCustomRule,
         removeABRCustomRule,

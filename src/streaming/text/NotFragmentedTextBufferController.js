@@ -48,7 +48,6 @@ function NotFragmentedTextBufferController(config) {
     const errHandler = config.errHandler;
     const streamInfo = config.streamInfo;
     const type = config.type;
-    const fragmentModel = config.fragmentModel;
     const settings = config.settings;
 
     let instance,
@@ -190,7 +189,7 @@ function NotFragmentedTextBufferController(config) {
         return Promise.resolve();
     }
 
-    function prepareForTrackSwitch() {
+    function prepareForReplacementTrackSwitch() {
         isBufferingCompleted = false;
         return Promise.resolve();
     }
@@ -228,7 +227,7 @@ function NotFragmentedTextBufferController(config) {
         reset,
         clearBuffers,
         prepareForPlaybackSeek,
-        prepareForTrackSwitch,
+        prepareForReplacementTrackSwitch,
         setSeekTarget,
         updateAppendWindow,
         updateBufferTimestampOffset

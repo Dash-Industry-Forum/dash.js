@@ -301,7 +301,7 @@ function Stream(config) {
                         _checkIfInitializationCompleted();
                     }
 
-                    // All mediaInfos for fragmented and external texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
+                    // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
                     textController.createTracks();
 
                     resolve(bufferSinks);
@@ -375,7 +375,7 @@ function Stream(config) {
         }
 
 
-        mediaController.checkInitialMediaSettingsForType(type, streamInfo);
+        mediaController.setInitialMediaSettingsForType(type, streamInfo);
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
 
         eventBus.trigger(Events.STREAM_INITIALIZING, {
@@ -437,6 +437,12 @@ function Stream(config) {
         }
     }
 
+    /**
+     * Creates the SourceBufferSink objects for all StreamProcessors
+     * @param previousBuffers
+     * @return {Promise<object>}
+     * @private
+     */
     function _createBufferSinks(previousBuffers) {
         return new Promise((resolve) => {
             const buffers = {};
@@ -460,7 +466,7 @@ function Stream(config) {
     }
 
     /**
-     * Partially resets some of the Stream elements
+     * Partially resets some of the Stream elements. This function is called when preloading of streams is canceled or a stream switch occurs.
      * @memberof Stream#
      * @param {boolean} keepBuffers
      */

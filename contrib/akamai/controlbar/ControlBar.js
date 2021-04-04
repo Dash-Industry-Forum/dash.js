@@ -505,7 +505,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var onStreamDeactivated = function (e) {
-        if (textTrackList[e.streamInfo.id]) {
+        if (e.streamInfo && textTrackList[e.streamInfo.id]) {
             delete textTrackList[e.streamInfo.id];
         }
     };

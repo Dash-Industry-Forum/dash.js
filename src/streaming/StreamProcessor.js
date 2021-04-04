@@ -773,7 +773,6 @@ function StreamProcessor(config) {
 
         // when we are supposed to replace it does not matter if buffering is already completed
         if (shouldReplace) {
-
             // Inform other classes like the GapController that we are replacing existing stuff
             eventBus.trigger(Events.TRACK_REPLACEMENT_STARTED, {
                 mediaType: type,
@@ -784,20 +783,28 @@ function StreamProcessor(config) {
             fragmentModel.abortRequests();
 
             // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-            bufferController.prepareForTrackSwitch(mediaInfo.codec)
+            bufferController.prepareForReplacementTrackSwitch(mediaInfo.codec)
                 .then(() => {
                     // Timestamp offset couldve been changed by preloading period
                     const representationInfo = getRepresentationInfo();
                     return bufferController.updateBufferTimestampOffset(representationInfo);
                 })
                 .then(() => {
-                    _bufferClearedForTrackSwitch();
+                    _bufferClearedForReplacementTrackSwitch();
                 })
                 .catch(() => {
-                    _bufferClearedForTrackSwitch();
+                    _bufferClearedForReplacementTrackSwitch();
                 });
         } else {
-            scheduleController.startScheduleTimer();
+            // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
+            bufferController.prepareForNonReplacementTrackSwitch(mediaInfo.codec)
+                .then(() => {
+                    _bufferClearedForNonReplacementTrackSwitch();
+                })
+                .catch
+                (() => {
+                    _bufferClearedForNonReplacementTrackSwitch();
+                });
         }
     }
 
@@ -805,7 +812,7 @@ function StreamProcessor(config) {
      * For an instant track switch we need to adjust the buffering time after the buffer has been pruned.
      * @private
      */
-    function _bufferClearedForTrackSwitch() {
+    function _bufferClearedForReplacementTrackSwitch() {
         const targetTime = playbackController.getTime();
 
         if (settings.get().streaming.flushBufferAtTrackSwitch) {
@@ -816,6 +823,14 @@ function StreamProcessor(config) {
 
         setExplicitBufferingTime(targetTime);
         bufferController.setSeekTarget(targetTime);
+        scheduleController.startScheduleTimer();
+    }
+
+    function _bufferClearedForNonReplacementTrackSwitch() {
+        const time = playbackController.getTime();
+        const targetTime = bufferController.getContinuousBufferTimeForTargetTime(time);
+
+        setExplicitBufferingTime(targetTime);
         scheduleController.startScheduleTimer();
     }
 

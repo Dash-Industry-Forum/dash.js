@@ -102,7 +102,7 @@ function RepresentationController(config) {
     function updateData(newRealAdaptation, availableRepresentations, type, quality) {
         checkConfig();
 
-        startDataUpdate();
+        updating = true;
 
         voAvailableRepresentations = availableRepresentations;
 
@@ -111,7 +111,7 @@ function RepresentationController(config) {
 
         if (type !== Constants.VIDEO && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
             endDataUpdate();
-            return;
+            return Promise.resolve();
         }
 
         const promises = [];
@@ -129,7 +129,7 @@ function RepresentationController(config) {
             const hasSegments = currentRep.hasSegments();
 
             // If representation has initialization and segments information we are done
-            // otherwise, it means that a request has to be made to get initialization and/or segments informations
+            // otherwise, it means that a request has to be made to get initialization and/or segments information
             const promises = [];
 
             promises.push(segmentsController.updateInitData(currentRep, hasInitialization));
@@ -229,14 +229,6 @@ function RepresentationController(config) {
         }
 
         return true;
-    }
-
-    function startDataUpdate() {
-        updating = true;
-        eventBus.trigger(events.DATA_UPDATE_STARTED,
-            {},
-            { streamId: streamInfo.id, mediaType: type }
-        );
     }
 
     function endDataUpdate(error) {
