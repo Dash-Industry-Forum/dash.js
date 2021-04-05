@@ -164,7 +164,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
@@ -184,7 +184,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, onPlaybackEnded, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
@@ -521,7 +521,7 @@ function StreamController() {
     }
 
     /**
-     * Handle an inner period seek. Dispatch the corresponding event to be handled in the BufferControllers and the ScheduleControllers
+     * Handle an inner period seek. Prepare all StreamProcessors for the seek.
      * @param {object} e
      * @private
      */
@@ -575,33 +575,6 @@ function StreamController() {
         _deactivateAllPreloadingStreams();
 
         activeStream.prepareTrackChange(e);
-    }
-
-
-    /**
-     * Check if we can start prebuffering the next period.
-     * @private
-     */
-    function _checkIfPrebufferingCanStart() {
-        // In multiperiod situations, we can start buffering the next stream
-        if (!activeStream || !activeStream.getHasFinishedBuffering()) {
-            return;
-        }
-        const upcomingStreams = getNextStreams(activeStream);
-        let i = 0;
-
-        while (i < upcomingStreams.length) {
-            const stream = upcomingStreams[i];
-            const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
-
-            // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
-            if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
-                if (mediaSource) {
-                    _onStreamCanLoadNext(stream, previousStream);
-                }
-            }
-            i += 1;
-        }
     }
 
     /**
@@ -701,6 +674,12 @@ function StreamController() {
         }
     }
 
+    /**
+     * The buffer level for a certain media type has been updated. If this is the initial playback and we want to autoplay the content we check if we can start playback now.
+     * For livestreams we might have a drift of the target live delay compared to the current live delay because reaching the initial buffer level took time. Do an internal seek to the live edge.
+     * @param e
+     * @private
+     */
     function _onBufferLevelUpdated(e) {
 
         // check if this is the initial playback and we reached the buffer target. If autoplay is true we start playback
@@ -708,16 +687,23 @@ function StreamController() {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
 
             if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel()) {
-                let seekTime = 0;
+
+                // For livestreams we seek to the live edge again. Nothing to do for VoD
                 if (playbackController.getIsDynamic()) {
+                    let seekTime = NaN;
                     const metric = dashMetrics.getCurrentDVRInfo();
 
                     if (metric) {
                         const liveDelay = playbackController.getLiveDelay();
                         seekTime = metric.range.end - liveDelay;
                     }
+                    if (!isNaN(seekTime)) {
+                        playbackController.seek(seekTime, true, true);
+                    }
                 }
-                playbackController.seek(seekTime, true, true);
+
+                initialPlayback = false;
+                createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
             }
         }
@@ -756,14 +742,9 @@ function StreamController() {
      */
     function _onPlaybackStarted( /*e*/) {
         logger.debug('[onPlaybackStarted]');
-        if (initialPlayback) {
-            initialPlayback = false;
-            createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
-        } else {
-            if (isPaused) {
-                isPaused = false;
-                createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
-            }
+        if (!initialPlayback && isPaused) {
+            isPaused = false;
+            createPlaylistMetrics(PlayList.RESUME_FROM_PAUSE_START_REASON);
         }
     }
 
@@ -793,6 +774,32 @@ function StreamController() {
             mediaSourceController.signalEndOfStream(mediaSource);
         } else {
             _checkIfPrebufferingCanStart();
+        }
+    }
+
+    /**
+     * Check if we can start prebuffering the next period.
+     * @private
+     */
+    function _checkIfPrebufferingCanStart() {
+        // In multiperiod situations, we can start buffering the next stream
+        if (!activeStream || !activeStream.getHasFinishedBuffering()) {
+            return;
+        }
+        const upcomingStreams = getNextStreams(activeStream);
+        let i = 0;
+
+        while (i < upcomingStreams.length) {
+            const stream = upcomingStreams[i];
+            const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
+
+            // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
+            if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
+                if (mediaSource) {
+                    _onStreamCanLoadNext(stream, previousStream);
+                }
+            }
+            i += 1;
         }
     }
 
@@ -857,11 +864,19 @@ function StreamController() {
         return null;
     }
 
+    /**
+     * Returns the streamProcessors of the active stream.
+     * @return {*|*[]}
+     */
     function getActiveStreamProcessors() {
         return activeStream ? activeStream.getProcessors() : [];
     }
 
-    function onPlaybackEnded(e) {
+    /**
+     * Once playback has ended we switch to the next stream
+     * @param e
+     */
+    function _onPlaybackEnded(e) {
         if (activeStream && !activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
@@ -879,6 +894,11 @@ function StreamController() {
         }
     }
 
+    /**
+     * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active stream.
+     * @param stream
+     * @return {null|*}
+     */
     function getNextStream(stream = null) {
         const refStream = stream ? stream : activeStream ? activeStream : null;
         if (refStream) {
@@ -911,7 +931,12 @@ function StreamController() {
         return null;
     }
 
-    function getNextStreams(stream) {
+    /**
+     * Returns all upcoming streams relative to the provided stream. If no stream is provided we use the active stream.
+     * @param stream
+     * @return {*[]|*}
+     */
+    function getNextStreams(stream = null) {
         try {
             const refStream = stream ? stream : activeStream ? activeStream : null;
 
@@ -927,11 +952,20 @@ function StreamController() {
         }
     }
 
+    /**
+     * Sets the duration attribute of the MediaSource using the MediaSourceController.
+     * @param duration
+     * @private
+     */
     function _setMediaDuration(duration) {
         const manifestDuration = duration ? duration : getActiveStreamInfo().manifestInfo.duration;
         mediaSourceController.setDuration(manifestDuration);
     }
 
+    /**
+     * Returns the active stream
+     * @return {*}
+     */
     function getActiveStream() {
         return activeStream;
     }

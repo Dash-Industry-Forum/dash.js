@@ -249,7 +249,7 @@ function StreamProcessor(config) {
     }
 
     /**
-     * When a seek within the corresponding period occurs this event handler initiates the clearing of the buffer and sets the correct buffering time.
+     * When a seek within the corresponding period occurs this function initiates the clearing of the buffer and sets the correct buffering time.
      * @param {object} e
      * @private
      */

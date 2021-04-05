@@ -34,7 +34,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
 import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
-import Events from '../../core/events/Events';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
