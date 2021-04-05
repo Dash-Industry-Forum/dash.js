@@ -655,12 +655,6 @@ function Stream(config) {
         }
     }
 
-    function addInbandEvents(events) {
-        if (eventController) {
-            eventController.addInbandEvents(events);
-        }
-    }
-
     function _checkIfInitializationCompleted() {
         const ln = streamProcessors.length;
         const hasError = !!updateError.audio || !!updateError.video;
@@ -744,7 +738,9 @@ function Stream(config) {
     }
 
     function onInbandEvents(e) {
-        addInbandEvents(e.events);
+        if (eventController) {
+            eventController.addInbandEvents(e.events);
+        }
     }
 
     function getProcessorForMediaInfo(mediaInfo) {

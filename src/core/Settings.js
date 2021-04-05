@@ -617,6 +617,7 @@ function Settings() {
             jumpGaps: true,
             jumpLargeGaps: true,
             smallGapLimit: 1.5,
+            initialBufferLevel: NaN,
             stableBufferTime: 12,
             bufferTimeAtTopQuality: 30,
             bufferTimeAtTopQualityLongForm: 60,

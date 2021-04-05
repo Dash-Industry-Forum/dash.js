@@ -167,6 +167,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, onPlaybackEnded, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
 
         eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
@@ -175,7 +176,6 @@ function StreamController() {
         eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
-        eventBus.on(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     }
 
     function unRegisterEvents() {
@@ -187,6 +187,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, onPlaybackEnded, instance);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
 
         eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
@@ -195,7 +196,6 @@ function StreamController() {
         eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
-        eventBus.off(Events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     }
 
     /**
@@ -455,10 +455,6 @@ function StreamController() {
                     activeStream.startScheduleControllers();
                 }
 
-                if (autoPlay && initialPlayback) {
-                    playbackController.play();
-                }
-
                 isStreamSwitchingInProgress = false;
                 eventBus.trigger(Events.PERIOD_SWITCH_COMPLETED, { toStreamInfo: getActiveStreamInfo() });
             });
@@ -706,6 +702,26 @@ function StreamController() {
     }
 
     function _onBufferLevelUpdated(e) {
+
+        // check if this is the initial playback and we reached the buffer target. If autoplay is true we start playback
+        if (initialPlayback && autoPlay) {
+            const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
+
+            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel()) {
+                let seekTime = 0;
+                if (playbackController.getIsDynamic()) {
+                    const metric = dashMetrics.getCurrentDVRInfo();
+
+                    if (metric) {
+                        const liveDelay = playbackController.getLiveDelay();
+                        seekTime = metric.range.end - liveDelay;
+                    }
+                }
+                playbackController.seek(seekTime, true, true);
+                playbackController.play();
+            }
+        }
+
         if (e && e.mediaType) {
             dashMetrics.addBufferLevel(e.mediaType, new Date(), e.bufferLevel * 1000);
         }

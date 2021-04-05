@@ -294,6 +294,7 @@ function PlaybackController() {
     }
 
     function reset() {
+        pause();
         playOnceInitialized = false;
         liveDelay = 0;
         availabilityStartTime = 0;
@@ -930,6 +931,7 @@ function PlaybackController() {
         initialize,
         setConfig,
         getTimeToStreamEnd,
+        getBufferLevel,
         getTime,
         getNormalizedTime,
         getPlaybackRate,

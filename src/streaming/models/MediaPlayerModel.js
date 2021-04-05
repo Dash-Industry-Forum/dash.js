@@ -114,6 +114,16 @@ function MediaPlayerModel() {
         }
     }
 
+    function getInitialBufferLevel() {
+        const initialBufferLevel = settings.get().streaming.initialBufferLevel;
+
+        if (isNaN(initialBufferLevel) || initialBufferLevel < 0) {
+            return 0;
+        }
+
+        return Math.min(getStableBufferTime(), initialBufferLevel);
+    }
+
     function getStableBufferTime() {
         if (settings.get().streaming.lowLatencyEnabled) {
             return getLiveDelay() * 0.6;
@@ -227,6 +237,7 @@ function MediaPlayerModel() {
         addABRCustomRule,
         removeABRCustomRule,
         getStableBufferTime,
+        getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
         getLiveDelay,

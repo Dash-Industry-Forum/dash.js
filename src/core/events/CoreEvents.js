@@ -43,7 +43,6 @@ class CoreEvents extends EventsBase {
         this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
-        this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
         this.BYTES_APPENDED_IN_SINK = 'bytesAppendedInSink';
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';

@@ -27,7 +27,7 @@
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
- */
+ *
 
 /**
  * @module ControlBar
@@ -109,6 +109,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
         self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+        self.player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
     };
 
     var removePlayerEventsListeners = function () {
@@ -120,6 +121,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.SOURCE_INITIALIZED, onSourceInitialized, this);
         self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, onTracksAdded, this);
+        self.player.off(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
     };
 
     var getControlId = function (id) {
@@ -169,13 +171,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var onPlaybackPaused = function (/*e*/) {
         togglePlayPauseBtnState();
-        if (!seekbarBufferInterval) {
-            seekbarBufferInterval = window.setInterval(function () {
-                if (seekbarBuffer) {
-                    seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
-                }
-            });
-        }
     };
 
     var onPlayStart = function (/*e*/) {
@@ -193,9 +188,6 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
             if (seekbarPlay) {
                 seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
-            }
-            if (seekbarBuffer) {
-                seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
             }
 
             if (seekbar.getAttribute('type') === 'range') {
@@ -627,6 +619,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         textTrackList[e.streamInfo.id] = textTrackList[e.streamInfo.id].concat(e.tracks);
         createCaptionSwitchMenu(e.streamInfo);
+    };
+
+    var _onBufferLevelUpdated = function () {
+        if (seekbarBuffer) {
+            seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
+        }
     };
 
     var onStreamTeardownComplete = function (/*e*/) {

@@ -70,6 +70,12 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
         /**
+         * Triggered when the buffer level of a media type has been updated
+         * @event MediaPlayerEvents#BUFFER_LEVEL_UPDATED
+         */
+        this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+
+        /**
          * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
          * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
          */
