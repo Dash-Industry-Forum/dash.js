@@ -10,7 +10,7 @@ const config = {
         publicPath: '/dist/',
         library: 'dashjs',
         libraryTarget: 'umd',
-        libraryExport: 'default',
+        libraryExport: 'default'
     },
     module: {
         rules: [
@@ -27,7 +27,6 @@ const config = {
         ]
     },
     plugins: [
-        new CleanWebpackPlugin(),
         new ESLintPlugin({
             files: [
                 'src/**/*.js',
