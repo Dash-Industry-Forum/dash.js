@@ -68,6 +68,11 @@
             "acronym": "HbbTV",
             "name": "HbbTV",
             "url": "https://www.hbbtv.org/"
+        },
+        "google": {
+            "acronym": "Google",
+            "name": "Google",
+            "url": "https://www.google.com"    
         }
     },
     "items": [

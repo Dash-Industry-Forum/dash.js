@@ -50,6 +50,7 @@ function TextController(config) {
     const mediaController = config.mediaController;
     const videoModel = config.videoModel;
     const stream = config.stream;
+    const settings = config.settings;
 
     let instance,
         textSourceBuffer,
@@ -60,7 +61,6 @@ function TextController(config) {
         defaultSettings,
         initialSettingsSet,
         lastEnabledIndex,
-        textDefaultEnabled, // this is used for default settings (each time a file is loaded, we check value of this settings )
         allTracksAreDisabled, // this is used for one session (when a file has been loaded, we use this settings to enable/disable text)
         forceTextStreaming,
         textTracksAdded,
@@ -145,20 +145,24 @@ function TextController(config) {
         let tracks = e.tracks;
         let index = e.index;
 
-        if (defaultSettings) {
-            tracks.some((item, idx) => {
-                // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
-                if (mediaController.matchSettings(defaultSettings, item)) {
-                    setTextTrack(idx);
-                    index = idx;
-                    return true;
-                }
-            });
-        }
 
-        if (textDefaultEnabled === false || (textDefaultEnabled === undefined && !defaultSettings) || disableTextBeforeTextTracksAdded) {
-            // disable text at startup if explicitely configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
+        const textDefaultEnabled = settings.get().streaming.text.defaultEnabled;
+
+        if (textDefaultEnabled === false || disableTextBeforeTextTracksAdded) {
+            // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             setTextTrack(-1);
+        } else {
+            if (defaultSettings) {
+                tracks.some((item, idx) => {
+                    // matchSettings is compatible with setTextDefaultLanguage and setInitialSettings
+                    if (mediaController.matchSettings(defaultSettings, item)) {
+                        setTextTrack(idx);
+                        index = idx;
+                        return true;
+                    }
+                });
+            }
+            allTracksAreDisabled = false;
         }
 
         lastEnabledIndex = index;
@@ -188,8 +192,8 @@ function TextController(config) {
 
     function enableText(enable) {
         checkParameterType(enable, 'boolean');
-        if (!textDefaultEnabled && enable) {
-            textDefaultEnabled = true;
+        if (enable) {
+            settings.update({ streaming: { text: { defaultEnabled: true } } });
         }
         if (isTextEnabled() !== enable) {
             // change track selection
@@ -262,12 +266,27 @@ function TextController(config) {
             if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
                 (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
                 let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo);
-
                 if (mediaInfo !== currentFragTrack) {
                     textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
                     mediaController.setTrack(mediaInfo);
                     textSourceBuffer.setCurrentFragmentedTrackIdx(i);
                 }
+            } else if (oldTrackIdx === -1) {
+                //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
+                //no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
+                // For that reason we reactivate the StreamProcessor and the ScheduleController
+                const streamProcessors = stream.getProcessors();
+                let streamProcessor;
+
+                for (let i = 0; i < streamProcessors.length; i++) {
+                    if (streamProcessors[i].getType() === Constants.FRAGMENTED_TEXT) {
+                        streamProcessor = streamProcessors[i];
+                        break;
+                    }
+                }
+
+                streamProcessor.setExplicitBufferingTime(videoModel.getTime());
+                streamProcessor.getScheduleController().startScheduleTimer();
             }
         }
     }

@@ -121,6 +121,7 @@ function Stream(config) {
                 adapter,
                 mediaController,
                 videoModel,
+                settings,
                 stream: instance
             });
 

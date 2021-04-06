@@ -35,7 +35,6 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import {renderHTML} from 'imsc';
-import {checkParameterType} from '../utils/SupervisorTools';
 
 function TextTracks(config) {
 
@@ -109,15 +108,6 @@ function TextTracks(config) {
         const track = videoModel.addTextTrack(kind, label, lang, isTTML, isEmbedded);
 
         return track;
-    }
-
-    function setDisplayCConTop(value) {
-        checkParameterType(value, 'boolean');
-        displayCCOnTop = value;
-        if (!captionContainer || document[fullscreenAttribute]) {
-            return;
-        }
-        captionContainer.style.zIndex = value ? topZIndex : null;
     }
 
     function addTextTrack(textTrackInfoVO) {
@@ -682,7 +672,6 @@ function TextTracks(config) {
     instance = {
         initialize,
         getStreamId,
-        setDisplayCConTop,
         addTextTrack,
         addCaptions,
         createTracks,

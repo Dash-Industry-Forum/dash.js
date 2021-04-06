@@ -60,7 +60,7 @@ import Settings from '../core/Settings';
 import {
     getVersionString
 }
-    from './../core/Version';
+    from '../core/Version';
 
 //Dash
 import SegmentBaseController from '../dash/controllers/SegmentBaseController';
@@ -475,28 +475,6 @@ function MediaPlayer() {
 
     ---------------------------------------------------------------------------
     */
-
-    /**
-     * Causes the player to begin streaming the media as set by the {@link module:MediaPlayer#attachSource attachSource()}
-     * method in preparation for playing. It specifically does not require a view to be attached with {@link module:MediaPlayer#attachSource attachView()} to begin preloading.
-     * When a view is attached after preloading, the buffered data is transferred to the attached mediaSource buffers.
-     *
-     * @see {@link module:MediaPlayer#attachSource attachSource()}
-     * @see {@link module:MediaPlayer#attachView attachView()}
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
-     * @instance
-     */
-    function preload() {
-        if (videoModel.getElement() || streamingInitialized) {
-            return false;
-        }
-        if (source) {
-            initializePlayback();
-        } else {
-            throw SOURCE_NOT_ATTACHED_ERROR;
-        }
-    }
 
     /**
      * The play method initiates playback of the media defined by the {@link module:MediaPlayer#attachSource attachSource()} method.
@@ -1277,25 +1255,6 @@ function MediaPlayer() {
         }
 
         return idx;
-    }
-
-    /**
-     * This method serves to control captions z-index value. If 'true' is passed, the captions will have the highest z-index and be
-     * displayed on top of other html elements. Default value is 'false' (z-index is not set).
-     * @param {boolean} value
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function displayCaptionsOnTop(value) {
-        /*
-        let textTracks = TextTracks(context).getInstance();
-        textTracks.setConfig({
-            videoModel: videoModel
-        });
-        textTracks.initialize();
-        textTracks.setDisplayCConTop(value);
-        */
-
     }
 
     /*
@@ -2240,7 +2199,6 @@ function MediaPlayer() {
         attachView,
         attachSource,
         isReady,
-        preload,
         play,
         isPaused,
         pause,
@@ -2308,7 +2266,6 @@ function MediaPlayer() {
         registerLicenseResponseFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,
-        displayCaptionsOnTop,
         attachTTMLRenderingDiv,
         getCurrentTextTrackIndex,
         provideThumbnail,
