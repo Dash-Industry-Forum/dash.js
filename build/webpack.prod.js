@@ -1,8 +1,7 @@
 const { merge } = require('webpack-merge');
 const common = require('./webpack.base.js').config;
 
-const config =
-  merge(common, {
+const config = merge(common, {
     mode: 'production',
     entry: {
         'dash.all': './index.js',
@@ -15,6 +14,6 @@ const config =
         filename: '[name].js',
     },
     performance: { hints: false }
-  });
+});
 
 module.exports = config;

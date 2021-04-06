@@ -12,7 +12,7 @@
       "WebKitMediaKeys": true,
       "MSMediaKeys": true,
       "MediaKeys": true
-},
+  },
   "parser": "babel-eslint",
   "rules": {
     "no-caller": 2,

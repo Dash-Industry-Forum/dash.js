@@ -1,10 +1,9 @@
-const webpack = require("webpack");
 const { merge } = require('webpack-merge');
 const common = require('./webpack.base.js').config;
+const webpack = require("webpack");
 const path = require('path');
 
-const config =
-  merge(common, {
+const config = merge(common, {
     mode: 'development',
     entry: {
         'dash.all': './index.js',
@@ -28,6 +27,6 @@ const config =
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
     ]
-  });
+});
 
 module.exports = config;
