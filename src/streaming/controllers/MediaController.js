@@ -284,11 +284,12 @@ function MediaController() {
         const sameId = t1.id === t2.id;
         const sameViewpoint = t1.viewpoint === t2.viewpoint;
         const sameLang = t1.lang === t2.lang;
+        const sameCodec = !t1.codec || !t2.codec || t1.codec === t2.codec;
         const sameRoles = t1.roles.toString() === t2.roles.toString();
         const sameAccessibility = t1.accessibility.toString() === t2.accessibility.toString();
         const sameAudioChannelConfiguration = t1.audioChannelConfiguration.toString() === t2.audioChannelConfiguration.toString();
 
-        return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
     function setConfig(config) {
