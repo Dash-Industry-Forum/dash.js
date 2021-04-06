@@ -64,7 +64,7 @@ function ThumbnailTracks(config) {
         loader,
         boxParser;
 
-    function initialize() {
+    function setup() {
         reset();
         loader = XHRLoader(context).create({});
         boxParser = BoxParser(context).getInstance();
@@ -75,6 +75,7 @@ function ThumbnailTracks(config) {
             streamInfo,
             timelineConverter,
             dashConstants,
+            dashMetrics: config.dashMetrics,
             segmentBaseController: config.segmentBaseController,
             type: Constants.IMAGE
         });
@@ -310,16 +311,15 @@ function ThumbnailTracks(config) {
     }
 
     instance = {
-        initialize: initialize,
-        getTracks: getTracks,
-        reset: reset,
-        setTrackByIndex: setTrackByIndex,
-        getCurrentTrack: getCurrentTrack,
-        getCurrentTrackIndex: getCurrentTrackIndex,
-        getThumbnailRequestForTime: getThumbnailRequestForTime
+        getTracks,
+        reset,
+        setTrackByIndex,
+        getCurrentTrack,
+        getCurrentTrackIndex,
+        getThumbnailRequestForTime
     };
 
-    initialize();
+    setup();
 
     return instance;
 }

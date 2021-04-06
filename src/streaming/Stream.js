@@ -370,6 +370,7 @@ function Stream(config) {
                 eventBus: eventBus,
                 events: Events,
                 dashConstants: DashConstants,
+                dashMetrics: config.dashMetrics,
                 segmentBaseController: config.segmentBaseController,
             });
             return;
