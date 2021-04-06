@@ -1,0 +1,14 @@
+{
+    "items": [
+        {
+            "name": "Video on Demand (VoD)",
+            "submenu": [
+                {
+                    "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                    "name": "Segment Template, number based",
+                    "description": "Segment Template, number based"
+                }
+            ]
+        }
+    ]
+}

@@ -4,6 +4,8 @@ const applications = require('./config/applications.json');
 const yargs = require('yargs');
 const os = require('os');
 
+const DEFAULT_SOURCE_PATH = './samples/dash-if-reference-player/app/sources.json';
+
 var args = yargs
     .usage('$0 [options]')
     .alias('h', 'help')
@@ -45,6 +47,10 @@ var args = yargs
         'streams': {
             describe: 'Name filter for streams to be tested',
             default: 'all'
+        },
+        'source': {
+            describe: 'Path to the JSON file containing the testvectors',
+            default: DEFAULT_SOURCE_PATH
         },
         'mpd': {
             describe: 'Manifest url of the stream to be tested',
@@ -154,10 +160,10 @@ reportersNames.forEach(name => {
     if (name === 'junit') {
         reporter.options = {
             filename: 'test/functional/reports/junit/results_' + (new Date().getFullYear())+'-'+(new Date().getMonth()+1)+'-'+(new Date().getDate())+'_'+(new Date().getHours())+'-'+(new Date().getMinutes()) + '.xml'
-        }
+        };
     }
     config.reporters.push(reporter);
-})
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Tests configuration parameters
@@ -176,8 +182,8 @@ if (args.appurl) {
 
 // Set application protocol
 if (!config.testPage.startsWith('http')) {
-    config.testPage = config.protocol + '://' + config.testPage
-};
+    config.testPage = config.protocol + '://' + config.testPage;
+}
 
 
 // tests suites
@@ -193,6 +199,8 @@ if (args.streams !== 'all') {
 if (args.mpd !== '') {
     config.mpd = args.mpd;
 }
+
+config.source = args.source;
 
 // Debug logs
 config.debug = args.debug;

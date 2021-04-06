@@ -17,32 +17,32 @@ angular.module('DashCastSenderApp.services', [])
         },
 
         addListeners = function() {
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.CURRENT_TIME_CHANGED, e => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.CURRENT_TIME_CHANGED, function (e) {
                 if (remotePlayer && remotePlayer.isMediaLoaded) {
                     delegate.onTimeUpdate(remotePlayer.currentTime);
                 }
             });
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.DURATION_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.DURATION_CHANGED, function () {
                 if (remotePlayer && remotePlayer.duration) {
                     delegate.onDurationChange(remotePlayer.duration);
                 }
             });
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.MEDIA_INFO_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.MEDIA_INFO_CHANGED, function () {
                 if (remotePlayer && remotePlayer.mediaInfo) {
                     delegate.onDurationChange(remotePlayer.mediaInfo.duration);
                 }
             });
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_PAUSED_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_PAUSED_CHANGED, function () {
                 if (remotePlayer) {
                     delegate.onPausedChange(remotePlayer.isPaused);
                 }
             });
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_MUTED_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.IS_MUTED_CHANGED, function () {
                 if (remotePlayer) {
                     delegate.onMutedChange(remotePlayer.isMuted);
                 }
             });
-            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.VOLUME_LEVEL_CHANGED, () => {
+            remotePlayerController.addEventListener(cast.framework.RemotePlayerEventType.VOLUME_LEVEL_CHANGED, function () {
                 if (remotePlayer) {
                     delegate.onVolumeChange(remotePlayer.volumeLevel);
                 }
@@ -53,7 +53,7 @@ angular.module('DashCastSenderApp.services', [])
             if (castSession) {
                 castSession.sendMessage(NAMESPACE, {
                     type: 'TOGGLE_STATS'
-                }).then(err => {
+                }).then(function (err) {
                     onMessageSent(err);
                 });
             }
@@ -124,7 +124,7 @@ angular.module('DashCastSenderApp.services', [])
               receiverApplicationId: APP_ID,
               autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
-            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, e => {
+            castContext.addEventListener(cast.framework.CastContextEventType.CAST_STATE_CHANGED, function (e) {
                 console.log('[Cast]', e);
                 if (e.castState === cast.framework.CastState.CONNECTED && onReady) {
                     onReady();
@@ -133,11 +133,11 @@ angular.module('DashCastSenderApp.services', [])
                         let mediaSession = castSession.getMediaSession();
                         if (mediaSession) {
                             // call getStatus in order to retrieve data of the media when the session is resumed
-                            mediaSession.getStatus(null, () => {
+                            mediaSession.getStatus(null, function () {
                                 if (mediaSession.media) {
                                     delegate.resumeMediaSession(mediaSession);
                                 }
-                            }, (err) => {
+                            }, function (err) {
                                 console.error('Error getting status', err);
                             });
                         }

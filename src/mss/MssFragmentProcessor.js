@@ -31,6 +31,8 @@
 
 import MssFragmentMoofProcessor from './MssFragmentMoofProcessor';
 import MssFragmentMoovProcessor from './MssFragmentMoovProcessor';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
+
 
 // Add specific box processors not provided by codem-isoboxer library
 
@@ -163,7 +165,7 @@ function MssFragmentProcessor(config) {
             // MediaSegment => convert to Smooth Streaming moof format
             mssFragmentMoofProcessor.convertFragment(e, streamProcessor);
 
-        } else if (e.request.type === 'FragmentInfoSegment') {
+        } else if (e.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
             // FragmentInfo (live) => update segments list
             mssFragmentMoofProcessor.updateSegmentList(e, streamProcessor);
 

@@ -99,6 +99,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.BUFFER_LEVEL_UPDATED, onBufferLevelUpdated, instance);
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, onBufferCleared, instance);
+        eventBus.on(Events.QUOTA_EXCEEDED, onQuotaExceeded, instance);
         eventBus.on(Events.SEEK_TARGET, onSeekTarget, instance);
     }
 
@@ -286,6 +287,11 @@ function StreamProcessor(config) {
             bufferingTime = e.from;
             bufferPruned = true;
         }
+    }
+
+    function onQuotaExceeded(e) {
+        bufferingTime = e.quotaExceededTime;
+        bufferPruned = true;
     }
 
     function addDVRMetric() {
