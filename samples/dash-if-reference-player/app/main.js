@@ -781,6 +781,22 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
     };
 
+    $scope.setCmcdMode = function () {
+        var mode = $("input[name='cmcd-mode']:checked").val();
+        switch (mode) {
+            case 'query':
+                $scope.player.updateSettings({ streaming: { cmcd: { mode: 'query' }}});
+                break;
+
+            case 'header':
+                $scope.player.updateSettings({ streaming: { cmcd: { mode: 'header' }}});
+                break;
+
+            default:
+                $scope.player.updateSettings({ streaming: { cmcd: { mode: 'query' }}});
+        }
+    };
+
     $scope.hasLogo = function (item) {
         return (item.hasOwnProperty('logo') && item.logo);
     };

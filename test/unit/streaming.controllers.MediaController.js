@@ -578,6 +578,44 @@ describe('MediaController', function () {
                     [ { bandwidth: 2000 } ]
                 );
             });
+
+            it('should select track with highest bitrate, expected list only one entry"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 2100 } ],
+                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ]
+                );
+            });
+        });
+
+        describe('"firstTrack" mode', function () {
+            beforeEach(function () {
+                mediaController.setSelectionModeForInitialTrack(Constants.TRACK_SELECTION_MODE_FIRST_TRACK);
+            });
+
+            it('should select first track', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 1000 } ],
+                    [ { bandwidth: 2000 } ]
+                );
+            });
+
+            it('should select first track, other bitrate list more than one entry"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 2000 }],
+                    [ { bandwidth: 3000 }, { bandwidth: 1000 } ]
+                );
+            });
+
+            it('should select first track, expected bitrate list more than one entry"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [{ bandwidth: 3000 }, { bandwidth: 1000 }],
+                    [ { bandwidth: 2000 } ]
+                );
+            });
         });
 
         describe('"highestEfficiency" mode', function () {

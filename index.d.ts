@@ -141,6 +141,7 @@ declare namespace dashjs {
             stallThreshold?: number;
             cacheInitSegments?: boolean;
             filterUnsupportedEssentialProperties?: boolean;
+            eventControllerRefreshDelay?: number;
             utcSynchronization?: {
                 backgroundAttempts?: number,
                 timeBetweenSyncAttempts?: number,
@@ -188,6 +189,7 @@ declare namespace dashjs {
                 'InitializationSegment'?:     number;
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
+                'FragmentInfoSegment'?:       number;
                 'other'?:                     number;
                 'lowLatencyReductionFactor'?:  number;
             };
@@ -198,6 +200,7 @@ declare namespace dashjs {
                 'InitializationSegment'?:     number;
                 'BitstreamSwitchingSegment'?: number;
                 'IndexSegment'?:              number;
+                'FragmentInfoSegment'?:       number;
                 'other'?:                     number;
                 'lowLatencyMultiplyFactor'?:  number;
             };
@@ -240,10 +243,25 @@ declare namespace dashjs {
                 sid?: string,
                 cid?: string,
                 rtp?: number,
-                rtpSafetyFactor?: number
+                rtpSafetyFactor?: number,
+                mode?: 'query' | 'header'
             }
         }
     }
+
+    export interface Representation {
+        bandwidth: number
+        codecs: string
+        frameRate: number
+        height: number
+        id: string
+        mimeType: string
+        sar: string
+        scanType: string
+        width: number
+    }
+
+    export type CapabilitiesFilter = (representation: Representation) => boolean;
 
     export interface MediaPlayerClass {
         initialize(view?: HTMLElement, source?: string, autoPlay?: boolean): void;
@@ -359,6 +377,8 @@ declare namespace dashjs {
         registerLicenseResponseFilter(filter: ResponseFilter): void,
         unregisterLicenseRequestFilter(filter: RequestFilter): void,
         unregisterLicenseResponseFilter(filter: ResponseFilter): void,
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
         getOfflineController(): OfflineController;
         enableManifestDateHeaderTimeSource(value: boolean): void;
         displayCaptionsOnTop(value: boolean): void;
@@ -1139,7 +1159,7 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestBitrate' | 'highestEfficiency' | 'widestRange';
+    export type TrackSelectionMode = 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
     export function supportsMediaSource(): boolean;
 
 }

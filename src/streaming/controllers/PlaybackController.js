@@ -384,12 +384,12 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
     }
 
-    function updateCurrentTime() {
+    function updateCurrentTime(mediaType) {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking()) return;
         const currentTime = getNormalizedTime();
-        const actualTime = getActualPresentationTime(currentTime);
+        const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged) {
+        if (timeChanged && !isSeeking()) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
@@ -505,7 +505,9 @@ function PlaybackController() {
         logger.info('Native video element event: ended');
         pause();
         stopUpdatingWallclockTime();
-        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamController.getActiveStreamInfo().isLast });
+        const streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+        if (!streamInfo) return;
+        eventBus.trigger(Events.PLAYBACK_ENDED, { 'isLast': streamInfo.isLast });
     }
 
     // Handle DASH PLAYBACK_ENDED event
@@ -950,6 +952,7 @@ function PlaybackController() {
         getStreamEndTime,
         seek,
         reset,
+        updateCurrentTime,
         getAvailabilityStartTime
     };
 

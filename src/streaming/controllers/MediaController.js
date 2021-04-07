@@ -431,6 +431,9 @@ function MediaController() {
                     tmpArr = getTracksWithWidestRange(tmpArr);
                 }
                 break;
+            case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                tmpArr.push(tracks[0]);
+                break;
             case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
                 tmpArr = getTracksWithHighestEfficiency(tracks);
 

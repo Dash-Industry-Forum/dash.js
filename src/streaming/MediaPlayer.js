@@ -157,7 +157,8 @@ function MediaPlayer() {
         domStorage,
         segmentBaseController,
         licenseRequestFilters,
-        licenseResponseFilters;
+        licenseResponseFilters,
+        customCapabilitiesFilters;
 
     /*
     ---------------------------------------------------------------------------
@@ -183,6 +184,7 @@ function MediaPlayer() {
         uriFragmentModel = URIFragmentModel(context).getInstance();
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        customCapabilitiesFilters = [];
     }
 
     /**
@@ -404,6 +406,7 @@ function MediaPlayer() {
         reset();
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        customCapabilitiesFilters = [];
         FactoryMaker.deleteSingletonInstances(context);
     }
 
@@ -742,11 +745,7 @@ function MediaPlayer() {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
             let metric = dashMetrics.getCurrentDVRInfo();
-            t = (metric === null) ? 0 : metric.time - metric.range.start;
-
-            if (t < 0) {
-                t = 0;
-            }
+            t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
         }
 
         return t;
@@ -767,16 +766,8 @@ function MediaPlayer() {
         let d = getVideoElement().duration;
 
         if (playbackController.getIsDynamic()) {
-
             let metric = dashMetrics.getCurrentDVRInfo();
-            let range;
-
-            if (!metric) {
-                return 0;
-            }
-
-            range = metric.range.end - metric.range.start;
-            d = range < metric.manifestInfo.DVRWindowSize ? range : metric.manifestInfo.DVRWindowSize;
+            d = metric ? (metric.range.end - metric.range.start) : 0;
         }
         return d;
     }
@@ -1617,6 +1608,34 @@ function MediaPlayer() {
         }
     }
 
+    /**
+     * Registers a custom capabilities filter. This enables application to filter representations to use.
+     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCustomCapabilitiesFilter(filter) {
+        customCapabilitiesFilters.push(filter);
+        if (capabilitiesFilter) {
+            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
+        }
+    }
+
+    /**
+     * Unregisters a custom capabilities filter.
+     * @param {function} filter - the custom capabilities filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCustomCapabilitiesFilter(filter) {
+        unregisterFilter(customCapabilitiesFilters, filter);
+        if (capabilitiesFilter) {
+            capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
+        }
+    }
+
     function unregisterFilter(filters, filter) {
         let index = -1;
         filters.some((item, i) => {
@@ -1920,6 +1939,7 @@ function MediaPlayer() {
             manifestModel,
             errHandler
         });
+        capabilitiesFilter.setCustomCapabilitiesFilters(customCapabilitiesFilters);
 
         streamController.setConfig({
             capabilities,
@@ -2021,7 +2041,8 @@ function MediaPlayer() {
                 events: Events,
                 BASE64: BASE64,
                 constants: Constants,
-                cmcdModel: cmcdModel
+                cmcdModel: cmcdModel,
+                settings: settings
             });
             if (protectionController) {
                 protectionController.setLicenseRequestFilters(licenseRequestFilters);
@@ -2266,6 +2287,8 @@ function MediaPlayer() {
         registerLicenseResponseFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,
+        registerCustomCapabilitiesFilter,
+        unregisterCustomCapabilitiesFilter,
         attachTTMLRenderingDiv,
         getCurrentTextTrackIndex,
         provideThumbnail,

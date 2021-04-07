@@ -1,8 +1,6 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
-import DashJSError from "../vo/DashJSError";
-import Errors from "../../core/errors/Errors";
 
 function CapabilitiesFilter() {
     const context = this.context;
@@ -12,7 +10,8 @@ function CapabilitiesFilter() {
         manifestModel,
         errHandler,
         settings,
-        logger;
+        logger,
+        customCapabilitiesFilters;
 
 
     function setup() {
@@ -58,6 +57,7 @@ function CapabilitiesFilter() {
                     if (settings.get().streaming.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
                     }
+                    _applyCustomFilters(manifest);
                     resolve();
                 })
                 .catch(() => {
@@ -189,9 +189,37 @@ function CapabilitiesFilter() {
         });
     }
 
+    function _applyCustomFilters(streamInfo) {
+        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0) return;
+
+        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
+
+        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
+            return;
+        }
+
+        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
+
+            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                return true;
+            }
+
+            as.Representation_asArray = as.Representation_asArray.filter((representation) => {
+                return !customCapabilitiesFilters.some(customFilter => !customFilter(representation));
+            });
+
+            return as.Representation_asArray && as.Representation_asArray.length > 0;
+        });
+    }
+
+    function setCustomCapabilitiesFilters(customFilters) {
+        customCapabilitiesFilters = customFilters;
+    }
+
     instance = {
         setConfig,
-        filterUnsupportedFeatures
+        filterUnsupportedFeatures,
+        setCustomCapabilitiesFilters
     };
 
     setup();

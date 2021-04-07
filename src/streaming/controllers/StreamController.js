@@ -133,7 +133,8 @@ function StreamController() {
         eventController = EventController(context).getInstance();
         eventController.setConfig({
             manifestUpdater: manifestUpdater,
-            playbackController: playbackController
+            playbackController: playbackController,
+            settings
         });
         eventController.start();
 

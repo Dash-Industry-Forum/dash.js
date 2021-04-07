@@ -463,6 +463,19 @@
                        title="This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor. If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.">RTP
                     safety factor:</label>
                 <input type="text" class="form-control" placeholder="Default 5" ng-model="cmcdRtpSafetyFactor">
+                <label class="options-label" title="Specifies the CMCD data transition mode">Transition Mode:</label>
+                <label data-toggle="tooltip" data-placement="right"
+                       title="Send the CMCD metrics via query parameter">
+                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off" name="cmcd-mode"
+                           ng-click="setCmcdMode()">
+                    Query
+                </label>
+                <label data-toggle="tooltip" data-placement="right"
+                       title="Send the CMCD metrics via custom HTTP header">
+                    <input type="radio" id="cmcd-header" value="header" autocomplete="off" name="cmcd-mode"
+                           ng-click="setCmcdMode()">
+                    Header
+                </label>
             </div>
         </div>
 

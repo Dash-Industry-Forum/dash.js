@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Custom capabilities filter example</title>
+
+    <script src="../../dist/dash.all.debug.js"></script>
+    <!--dash.all.min.js should be used in production over dash.all.debug.js
+        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
+    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <script class="code">
+        function init() {
+
+            var video,
+                player,
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+
+            var filterCapabilities = function (representation) {
+                console.log('Representation', representation);
+                /* Filter representations based on certain attributes like the resolution. Return false to filter specific representation */
+                if (representation.mimeType === "video/mp4") {
+                    return representation.height <= 720;
+                }
+                return true;
+            }
+
+            video = document.querySelector("video");
+            player = dashjs.MediaPlayer().create();
+
+            player.registerCustomCapabilitiesFilter(filterCapabilities) ;            
+
+            player.initialize(video, url, true);
+        }
+    </script>
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <video controls="true">
+    </video>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

@@ -47,12 +47,12 @@ function ScheduleController(config) {
     const abrController = config.abrController;
     const playbackController = config.playbackController;
     const textController = config.textController;
-    const streamInfo = config.streamInfo;
     const type = config.type;
     const bufferController = config.bufferController;
     const settings = config.settings;
 
     let instance,
+        streamInfo,
         logger,
         currentRepresentationInfo,
         timeToLoadDelay,
@@ -70,6 +70,7 @@ function ScheduleController(config) {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
+        streamInfo = config.streamInfo;
     }
 
     function initialize(_hasVideoTrack) {
@@ -333,6 +334,7 @@ function ScheduleController(config) {
         clearScheduleTimer();
         completeQualityChange(false);
         resetInitialSettings();
+        streamInfo = null;
     }
 
     function getPlaybackController() {

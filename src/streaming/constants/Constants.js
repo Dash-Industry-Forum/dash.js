@@ -228,6 +228,13 @@ class Constants {
         this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
 
         /**
+         *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.TRACK_SELECTION_MODE_FIRST_TRACK = 'firstTrack';
+
+        /**
          *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
          *  @memberof Constants#
          *  @static
@@ -247,6 +254,21 @@ class Constants {
          *  @static
          */
         this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
+
+        /**
+         *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_QUERY = 'query';
+
+        /**
+         *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_HEADER = 'header';
+
 
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
