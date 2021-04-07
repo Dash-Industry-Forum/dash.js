@@ -192,9 +192,7 @@ function TextController(config) {
 
     function enableText(enable) {
         checkParameterType(enable, 'boolean');
-        if (enable) {
-            settings.update({ streaming: { text: { defaultEnabled: true } } });
-        }
+        settings.update({ streaming: { text: { defaultEnabled: enable } } });
         if (isTextEnabled() !== enable) {
             // change track selection
             if (enable) {
@@ -232,6 +230,8 @@ function TextController(config) {
         //For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         allTracksAreDisabled = idx === -1;
+
+        settings.update({ streaming: { text: { defaultEnabled: allTracksAreDisabled } } });
 
         if (allTracksAreDisabled && mediaController) {
             mediaController.saveTextSettingsDisabled();
