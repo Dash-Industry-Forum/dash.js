@@ -382,7 +382,7 @@ function ScheduleController(config) {
         setFragmentProcessState(false);
         if (isNaN(e.index)) {
             lastInitializedRepresentationInfo = bufferController.getRepresentationInfo(e.quality);
-            logger.info('[' + type + ']' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
+            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
         }
         if (isReplacementRequest && !isNaN(e.startTime)) {
             //replace requests process is in progress, call schedule in n seconds.
