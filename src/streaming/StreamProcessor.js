@@ -307,6 +307,10 @@ function StreamProcessor(config) {
 
     }
 
+    /**
+     * Seek outside of the current period.
+     * @return {Promise<unknown>}
+     */
     function prepareOuterPeriodPlaybackSeeking() {
         return new Promise((resolve, reject) => {
             try {
@@ -332,6 +336,11 @@ function StreamProcessor(config) {
         });
     }
 
+    /**
+     * ScheduleController indicates that an init segment needs to be fetched.
+     * @param e
+     * @private
+     */
     function _onInitFragmentNeeded(e) {
         // Event propagation may have been stopped (see MssHandler)
         if (!e.sender) return;
@@ -342,25 +351,26 @@ function StreamProcessor(config) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
                 // Init segment not in cache, send new request
                 const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
-                _processInitRequest(request);
+                if (request) {
+                    fragmentModel.executeRequest(request);
+                } else {
+                    _noValidRequest();
+                }
             }
         }
     }
 
-    function _processInitRequest(request) {
-        if (request) {
-            fragmentModel.executeRequest(request);
-        } else {
-            _noValidRequest();
-        }
-    }
-
+    /**
+     * ScheduleController indicates that a media segment is needed
+     * @private
+     */
     function _onMediaFragmentNeeded() {
         let request = null;
 
         const representation = representationController.getCurrentRepresentation();
         const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
 
+        // Check if the media is finished. If so, no need to schedule another request
         if (isMediaFinished) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
@@ -385,9 +395,20 @@ function StreamProcessor(config) {
             }
         }
 
-        _processMediaRequest(request);
+        if (request) {
+            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
+            fragmentModel.executeRequest(request);
+        } else {
+            // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+            _noValidRequest();
+        }
     }
 
+    /**
+     * Get the init or media segment request using the DashHandler.
+     * @return {null|FragmentRequest|null}
+     * @private
+     */
     function _getFragmentRequest() {
         const representationInfo = getRepresentationInfo();
         let request;
@@ -412,18 +433,10 @@ function StreamProcessor(config) {
         return request;
     }
 
-    function _processMediaRequest(request) {
-        if (request) {
-            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
-            fragmentModel.executeRequest(request);
-        } else { // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-            if (playbackController.getIsDynamic()) {
-                logger.debug(`Next fragment for stream id ${streamInfo.id} is not available yet. We are either pruning the buffer or the segment is not completed yet. Rescheduling.`);
-            }
-            _noValidRequest();
-        }
-    }
-
+    /**
+     * Whenever we can not generate a valid request we restart scheduling according to the timeouts defined in the settings.
+     * @private
+     */
     function _noValidRequest() {
         logger.debug(`No valid request found for ${type}`);
         scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);

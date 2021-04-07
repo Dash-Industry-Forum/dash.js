@@ -265,7 +265,7 @@ function StreamController() {
      * @private
      */
     function _initializeOrUpdateStream(streamInfo) {
-        let stream = _getComposedStream(streamInfo);
+        let stream = getStreamById(streamInfo.id);
 
         // If the Stream object does not exist we probably loaded the manifest the first time or it was
         // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
@@ -1013,6 +1013,12 @@ function StreamController() {
         return startTime;
     }
 
+    /**
+     * 23009-1 Annex C.4 defines MPD anchors to use URI fragment syntax to start a presentation at a given time and a given state
+     * @param isDynamic
+     * @return {number|*|number}
+     * @private
+     */
     function _getStartTimeFromUriParameters(isDynamic) {
         const fragData = uriFragmentModel.getURIFragmentData();
         if (!fragData || !fragData.t) {
@@ -1030,15 +1036,11 @@ function StreamController() {
         return startTime;
     }
 
-    function _getComposedStream(streamInfo) {
-        for (let i = 0, ln = streams.length; i < ln; i++) {
-            if (streams[i].getId() === streamInfo.id) {
-                return streams[i];
-            }
-        }
-        return null;
-    }
-
+    /**
+     * Streams that are no longer in the manifest can be filtered
+     * @param streamsInfo
+     * @private
+     */
     function _filterOutdatedStreams(streamsInfo) {
         streams = streams.filter((stream) => {
             const isStillIncluded = streamsInfo.filter((sInfo) => {
@@ -1056,6 +1058,13 @@ function StreamController() {
         });
     }
 
+    /**
+     * In order to calculate the initial live delay we might required the duration of the segments.
+     * @param streamInfos
+     * @param manifestInfo
+     * @return {number|*}
+     * @private
+     */
     function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
         try {
             let fragmentDuration = NaN;
@@ -1113,6 +1122,12 @@ function StreamController() {
         }
     }
 
+    /**
+     * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
+     * Finally attempt UTC sync
+     * @param e
+     * @private
+     */
     function _onManifestUpdated(e) {
         if (!e.error) {
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
@@ -1140,6 +1155,7 @@ function StreamController() {
                 }
             });
 
+            // It is important to filter before initializing the baseUrlController. Otherwise we might end up with wrong references in case we remove AdaptationSets.
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     baseURLController.initialize(manifest);
@@ -1151,18 +1167,27 @@ function StreamController() {
         }
     }
 
+    /**
+     * Check if the stream has a video track
+     * @return {*|boolean}
+     */
     function hasVideoTrack() {
         return activeStream ? activeStream.getHasVideoTrack() : false;
     }
 
+    /**
+     * Check if the stream has an audio track
+     * @return {*|boolean}
+     */
     function hasAudioTrack() {
         return activeStream ? activeStream.getHasAudioTrack() : false;
     }
 
+
     function switchToVideoElement(seekTime) {
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
-            _openMediaSource(seekTime, false, true, false);
+            _openMediaSource(seekTime, false);
         }
     }
 
@@ -1236,9 +1261,12 @@ function StreamController() {
     }
 
     function getStreamById(id) {
-        return streams.filter(function (item) {
-            return item.getId() === id;
-        })[0];
+        for (let i = 0, ln = streams.length; i < ln; i++) {
+            if (streams[i].getId() === id) {
+                return streams[i];
+            }
+        }
+        return null;
     }
 
     function checkConfig() {

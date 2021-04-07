@@ -342,8 +342,8 @@ function PlaybackController() {
         }
     }
 
-    function getActualPresentationTime(currentTime) {
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo();
+    function getActualPresentationTime(currentTime, mediatype) {
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo(mediatype);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
         let actualTime;
 
