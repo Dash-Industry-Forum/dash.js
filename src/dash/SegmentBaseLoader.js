@@ -292,7 +292,7 @@ function SegmentBaseLoader() {
         };
 
         urlLoader.load({ request: request, success: onload, error: onerror });
-        logger.debug('Perform SIDX load: ' + info.url + ' with range : ' + info.range.start + ' - ' + info.range.end);
+        logger.debug(`Perform SIDX load for type ${mediaType} : ${info.url} with range ${info.range.start} - ${info.range.end}`);
     }
 
     function onLoaded(segments, representation, resolve) {

@@ -46,41 +46,113 @@ function CapabilitiesFilter() {
 
     }
 
-    function filterUnsupportedFeaturesOfPeriod(streamInfo) {
-        _filterUnsupportedCodecs(Constants.VIDEO, streamInfo);
-        _filterUnsupportedCodecs(Constants.AUDIO, streamInfo);
+    function filterUnsupportedFeatures(manifest) {
+        return new Promise((resolve) => {
+            const promises = [];
 
-        if (settings.get().streaming.filterUnsupportedEssentialProperties) {
-            _filterUnsupportedEssentialProperties(streamInfo);
-        }
+            promises.push(_filterUnsupportedCodecs(Constants.VIDEO, manifest));
+            promises.push(_filterUnsupportedCodecs(Constants.AUDIO, manifest));
+
+            Promise.all(promises)
+                .then(() => {
+                    if (settings.get().streaming.filterUnsupportedEssentialProperties) {
+                        _filterUnsupportedEssentialProperties(manifest);
+                    }
+                    resolve();
+                })
+                .catch(() => {
+                    resolve();
+                });
+        });
     }
 
 
-    function _filterUnsupportedCodecs(type, streamInfo) {
-        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
-
-        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
-            return;
+    function _filterUnsupportedCodecs(type, manifest) {
+        if(!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+            return Promise.resolve();
         }
 
-        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
-
-            if (!as.Representation_asArray || as.Representation_asArray.length === 0 || !adapter.getIsTypeOf(as, type)) {
-                return true;
-            }
-
-            as.Representation_asArray = as.Representation_asArray.filter((_, i) => {
-                const codec = adapter.getCodec(as, i, true);
-                if (!capabilities.supportsCodec(codec)) {
-                    logger.error('[Stream] codec not supported: ' + codec);
-                    return false;
-                }
-                return true;
-            });
-
-            return as.Representation_asArray && as.Representation_asArray.length > 0;
+        const promises = [];
+        manifest.Period_asArray.forEach((period) => {
+            promises.push(_filterUnsupportedAdaptationSetsOfPeriod(period, type));
         });
 
+        return Promise.all(promises);
+    }
+
+    function _filterUnsupportedAdaptationSetsOfPeriod(period, type) {
+        return new Promise((resolve) => {
+
+            if (!period || !period.AdaptationSet_asArray || period.AdaptationSet_asArray.length === 0) {
+                resolve();
+                return;
+            }
+
+            const promises = [];
+            period.AdaptationSet_asArray.forEach((as) => {
+                if (adapter.getIsTypeOf(as, type)) {
+                    promises.push(_filterUnsupportedRepresentationsOfAdaptation(as, type));
+                }
+            });
+
+            Promise.all(promises)
+                .then(() => {
+                    period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
+                        return as.Representation_asArray && as.Representation_asArray.length > 0;
+                    });
+
+                    resolve();
+                })
+                .catch(() => {
+                    resolve();
+                });
+        });
+
+    }
+
+    function _filterUnsupportedRepresentationsOfAdaptation(as, type) {
+        return new Promise((resolve) => {
+
+            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                resolve();
+                return;
+            }
+
+            const promises = [];
+            const configurations = [];
+
+            as.Representation_asArray.forEach((rep, i) => {
+                const codec = adapter.getCodec(as, i, false);
+                const width = rep.width || null;
+                const height = rep.height || null;
+                const framerate = rep.frameRate || null;
+                const bitrate = rep.bandwidth || null;
+                const config = {
+                    codec,
+                    width,
+                    height,
+                    framerate,
+                    bitrate,
+                };
+
+                configurations.push(config);
+                promises.push(capabilities.supportsCodec(config, type));
+            });
+
+            Promise.all(promises)
+                .then((supported) => {
+                    as.Representation_asArray = as.Representation_asArray.filter((_, i) => {
+                        if (!supported[i]) {
+                            logger.debug(`[Stream] Codec ${configurations[i].codec} not supported `);
+                        }
+                        return supported[i];
+                    });
+                    resolve();
+                })
+                .catch(() => {
+                    resolve();
+                });
+        });
     }
 
     function _filterUnsupportedEssentialProperties(streamInfo) {
@@ -117,40 +189,9 @@ function CapabilitiesFilter() {
         });
     }
 
-    function isMediaSupported(mediaInfo) {
-        const type = mediaInfo ? mediaInfo.type : null;
-        let codec,
-            msg;
-
-        if (type === Constants.MUXED) {
-            msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
-            logger.fatal(msg);
-            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
-            return false;
-        }
-
-        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
-            return true;
-        }
-
-        codec = mediaInfo.codec;
-        logger.debug(type + ' codec: ' + codec);
-
-        if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
-            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
-        } else if (!capabilities.supportsCodec(codec)) {
-            msg = type + 'Codec (' + codec + ') is not supported.';
-            logger.error(msg);
-            return false;
-        }
-
-        return true;
-    }
-
     instance = {
         setConfig,
-        filterUnsupportedFeaturesOfPeriod,
-        isMediaSupported
+        filterUnsupportedFeatures
     };
 
     setup();

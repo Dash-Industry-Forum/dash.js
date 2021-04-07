@@ -30,6 +30,9 @@
  */
 import FactoryMaker from '../../core/FactoryMaker';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../thumbnail/ThumbnailTracks';
+import Constants from '../constants/Constants';
+import DashJSError from "../vo/DashJSError";
+import Errors from "../../core/errors/Errors";
 
 const codecCompatibilityTable = [
     {
@@ -77,20 +80,98 @@ function Capabilities() {
     }
 
     /**
-     * Check if a codec is supported by the MediaSource
-     * @param {string} codec
-     * @return {boolean}
+     * Check if a codec is supported by the MediaSource. We use the MediaCapabilities API or the MSE to check.
+     * @param {object} config
+     * @param {string} type
+     * @return {Promise<boolean>}
      */
-    function supportsCodec(codec) {
-        if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
-            return true;
+    function supportsCodec(config, type) {
+
+        if (type !== Constants.AUDIO && type !== Constants.VIDEO) {
+            return Promise.resolve(true);
         }
 
-        if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(codec)) {
-            return true;
+        if (_canUseMediaCapabilitiesApi(config, type)) {
+            return _checkCodecWithMediaCapabilities(config, type);
         }
 
-        return false;
+        return _checkCodecWithMse(config);
+    }
+
+    /**
+     * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required information.
+     * @param config
+     * @param type
+     * @return {*|boolean|boolean}
+     * @private
+     */
+    function _canUseMediaCapabilitiesApi(config, type) {
+        return navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate))
+    }
+
+    /**
+     * Check codec support using the MSE
+     * @param codec
+     * @return {Promise<void> | Promise<boolean>}
+     * @private
+     */
+    function _checkCodecWithMse(config) {
+        return new Promise((resolve) => {
+            if (!config || !config.codec) {
+                resolve(false);
+                return;
+            }
+
+            let codec = config.codec;
+            if (config.width && config.height) {
+                codec += ';width="' + config.width + '";height="' + config.height + '"';
+            }
+
+            if ('MediaSource' in window && MediaSource.isTypeSupported(codec)) {
+                resolve(true);
+                return;
+            } else if ('WebKitMediaSource' in window && WebKitMediaSource.isTypeSupported(codec)) {
+                resolve(true);
+                return;
+            }
+
+            resolve(false);
+        });
+
+    }
+
+    /**
+     * Check codec support using the MediaCapabilities API
+     * @return {Promise<void> | Promise<boolean>}
+     * @private
+     */
+    function _checkCodecWithMediaCapabilities(config, type) {
+        return new Promise((resolve) => {
+
+            if (!config || !config.codec) {
+                resolve(false);
+                return;
+            }
+
+            const configuration = {
+                type: 'media-source'
+            };
+
+            configuration[type] = {};
+            configuration[type].contentType = config.codec;
+            configuration[type].width = config.width;
+            configuration[type].height = config.height;
+            configuration[type].bitrate = parseInt(config.bitrate);
+            configuration[type].framerate = parseInt(config.framerate);
+
+            navigator.mediaCapabilities.decodingInfo(configuration)
+                .then((result) => {
+                    resolve(result.supported);
+                })
+                .catch(() => {
+                    resolve(false);
+                });
+        });
     }
 
     /**

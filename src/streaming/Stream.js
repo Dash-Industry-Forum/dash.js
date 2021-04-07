@@ -61,7 +61,6 @@ function Stream(config) {
     const adapter = config.adapter;
     const timelineConverter = config.timelineConverter;
     const capabilities = config.capabilities;
-    const capabilitiesFilter = config.capabilitiesFilter;
     const errHandler = config.errHandler;
     const abrController = config.abrController;
     const playbackController = config.playbackController;
@@ -280,7 +279,7 @@ function Stream(config) {
 
             isUpdating = true;
             addInlineEvents();
-            capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
+
 
             let element = videoModel.getElement();
 
@@ -346,7 +345,7 @@ function Stream(config) {
             if (type === Constants.EMBEDDED_TEXT) {
                 textController.addEmbeddedTrack(mediaInfo);
             } else {
-                if (capabilitiesFilter.isMediaSupported(mediaInfo)) {
+                if (_isMediaSupported(mediaInfo)) {
                     mediaController.addTrack(mediaInfo);
                 }
             }
@@ -386,6 +385,29 @@ function Stream(config) {
         });
 
         _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
+    }
+
+    function _isMediaSupported(mediaInfo) {
+        const type = mediaInfo ? mediaInfo.type : null;
+        let msg;
+
+        if (type === Constants.MUXED) {
+            msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
+            logger.fatal(msg);
+            errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
+            return false;
+        }
+
+        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT || type === Constants.EMBEDDED_TEXT || type === Constants.IMAGE) {
+            return true;
+        }
+
+        if (!!mediaInfo.contentProtection && !capabilities.supportsEncryptedMedia()) {
+            errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIAKEYS_ERROR_CODE, Errors.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -488,7 +510,7 @@ function Stream(config) {
         hasFinishedBuffering = false;
         setPreloaded(false);
         setIsEndedEventSignaled(false);
-        eventBus.trigger(Events.STREAM_DEACTIVATED, {streamInfo});
+        eventBus.trigger(Events.STREAM_DEACTIVATED, { streamInfo });
     }
 
     function getIsActive() {
@@ -497,7 +519,7 @@ function Stream(config) {
 
     function setMediaSource(mediaSource) {
         for (let i = 0; i < streamProcessors.length;) {
-            if (capabilitiesFilter.isMediaSupported(streamProcessors[i].getMediaInfo())) {
+            if (_isMediaSupported(streamProcessors[i].getMediaInfo())) {
                 streamProcessors[i].setMediaSource(mediaSource);
                 i++;
             } else {
@@ -794,8 +816,6 @@ function Stream(config) {
             addInlineEvents();
         }
 
-        capabilitiesFilter.filterUnsupportedFeaturesOfPeriod(streamInfo);
-
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
             streamProcessor.updateStreamInfo(streamInfo);
@@ -819,6 +839,7 @@ function Stream(config) {
 
         isUpdating = false;
         _checkIfInitializationCompleted();
+
     }
 
     function isMediaCodecCompatible(newStream, previousStream = null) {

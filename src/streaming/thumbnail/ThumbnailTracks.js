@@ -33,14 +33,14 @@ import DashConstants from '../../dash/constants/DashConstants';
 import FactoryMaker from '../../core/FactoryMaker';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
 import URLUtils from '../../streaming/utils/URLUtils';
-import { replaceIDForTemplate, getTimeBasedSegment } from '../../dash/utils/SegmentsUtils';
+import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils';
 import BoxParser from '../../streaming/utils/BoxParser';
 import XHRLoader from '../../streaming/net/XHRLoader';
 import DashHandler from '../../dash/DashHandler';
 import SegmentsController from '../../dash/controllers/SegmentsController';
 
 export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
-                                   'http://dashif.org/guidelines/thumbnail_tile'];
+    'http://dashif.org/guidelines/thumbnail_tile'];
 
 function ThumbnailTracks(config) {
     const context = this.context;
@@ -116,7 +116,7 @@ function ThumbnailTracks(config) {
         if (voReps && voReps.length > 0) {
             voReps.forEach((rep) => {
                 if ((rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media) ||
-                     rep.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
+                    rep.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
                     createTrack(rep);
                 }
                 if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
@@ -156,7 +156,7 @@ function ThumbnailTracks(config) {
         if (useSegmentBase) {
             segmentsController.updateSegmentData(representation)
                 .then((data) => {
-                    _handleUpdatedSegmentData(track,representation,data);
+                    _handleUpdatedSegmentData(track, representation, data);
                 });
 
         } else {
@@ -174,7 +174,7 @@ function ThumbnailTracks(config) {
         }
     }
 
-    function _handleUpdatedSegmentData(track,representation,data) {
+    function _handleUpdatedSegmentData(track, representation, data) {
         let cache = [];
         const segments = _normalizeSegments(data, representation);
         representation.segments = segments;
@@ -204,8 +204,8 @@ function ThumbnailTracks(config) {
                             },
                             onload: function (e) {
                                 let info = boxParser.getSamplesInfo(e.target.response);
-                                let blob = new Blob( [ e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size) ], { type: 'image/jpeg' } );
-                                let imageUrl = window.URL.createObjectURL( blob );
+                                let blob = new Blob([e.target.response.slice(info.sampleList[0].offset, info.sampleList[0].offset + info.sampleList[0].size)], { type: 'image/jpeg' });
+                                let imageUrl = window.URL.createObjectURL(blob);
                                 cache.push({
                                     start: ss.mediaStartTime,
                                     end: ss.mediaStartTime + ss.duration,

@@ -1139,8 +1139,11 @@ function StreamController() {
                 }
             });
 
-            baseURLController.initialize(manifest);
-            timeSyncController.attemptSync(allUTCTimingSources);
+            capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                .then(() => {
+                    baseURLController.initialize(manifest);
+                    timeSyncController.attemptSync(allUTCTimingSources);
+                });
         } else {
             hasInitialisationError = true;
             reset();
