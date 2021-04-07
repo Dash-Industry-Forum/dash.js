@@ -202,6 +202,10 @@ function NotFragmentedTextBufferController(config) {
 
     }
 
+    function pruneAllSafely() {
+        return Promise.resolve();
+    }
+
     function triggerEvent(eventType, data) {
         let payload = data || {};
         eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
@@ -230,6 +234,7 @@ function NotFragmentedTextBufferController(config) {
         prepareForReplacementTrackSwitch,
         setSeekTarget,
         updateAppendWindow,
+        pruneAllSafely,
         updateBufferTimestampOffset
     };
 
