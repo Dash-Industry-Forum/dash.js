@@ -68,7 +68,7 @@ function CapabilitiesFilter() {
 
 
     function _filterUnsupportedCodecs(type, manifest) {
-        if(!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+        if (!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
             return Promise.resolve();
         }
 
@@ -155,60 +155,60 @@ function CapabilitiesFilter() {
         });
     }
 
-    function _filterUnsupportedEssentialProperties(streamInfo) {
-        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
+    function _filterUnsupportedEssentialProperties(manifest) {
 
-        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
+        if (!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
             return;
         }
 
-        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
+        manifest.Period_asArray.forEach((period) => {
+            period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
 
-            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
-                return true;
-            }
-
-            as.Representation_asArray = as.Representation_asArray.filter((rep) => {
-                const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
-
-                if (essentialProperties && essentialProperties.length > 0) {
-                    let i = 0;
-                    while (i < essentialProperties.length) {
-                        if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
-                            logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
-                            return false;
-                        }
-                        i += 1;
-                    }
+                if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                    return true;
                 }
 
-                return true;
-            });
+                as.Representation_asArray = as.Representation_asArray.filter((rep) => {
+                    const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
 
-            return as.Representation_asArray && as.Representation_asArray.length > 0;
+                    if (essentialProperties && essentialProperties.length > 0) {
+                        let i = 0;
+                        while (i < essentialProperties.length) {
+                            if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
+                                logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
+                                return false;
+                            }
+                            i += 1;
+                        }
+                    }
+
+                    return true;
+                });
+
+                return as.Representation_asArray && as.Representation_asArray.length > 0;
+            });
         });
+
     }
 
-    function _applyCustomFilters(streamInfo) {
-        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0) return;
-
-        const realPeriod = adapter.getRealPeriodByIndex(streamInfo ? streamInfo.index : null);
-
-        if (!realPeriod || !realPeriod.AdaptationSet_asArray || realPeriod.AdaptationSet_asArray.length === 0) {
+    function _applyCustomFilters(manifest) {
+        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
             return;
         }
 
-        realPeriod.AdaptationSet_asArray = realPeriod.AdaptationSet_asArray.filter((as) => {
+        manifest.Period_asArray.forEach((period) => {
+            period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
 
-            if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
-                return true;
-            }
+                if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                    return true;
+                }
 
-            as.Representation_asArray = as.Representation_asArray.filter((representation) => {
-                return !customCapabilitiesFilters.some(customFilter => !customFilter(representation));
+                as.Representation_asArray = as.Representation_asArray.filter((representation) => {
+                    return !customCapabilitiesFilters.some(customFilter => !customFilter(representation));
+                });
+
+                return as.Representation_asArray && as.Representation_asArray.length > 0;
             });
-
-            return as.Representation_asArray && as.Representation_asArray.length > 0;
         });
     }
 
