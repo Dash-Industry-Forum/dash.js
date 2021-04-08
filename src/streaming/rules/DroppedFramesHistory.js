@@ -8,7 +8,7 @@ function DroppedFramesHistory() {
 
     function push(streamId, index, playbackQuality) {
 
-        if(!index) {
+        if (!index) {
             return;
         }
 
@@ -47,8 +47,7 @@ function DroppedFramesHistory() {
             delete values[streamId];
             delete lastDroppedFrames[streamId];
             delete lastTotalFrames[streamId];
-        }
-        catch(e) {
+        } catch (e) {
 
         }
     }

@@ -261,7 +261,7 @@ function StreamController() {
 
     /**
      * Called for each stream when composition is performed. Either a new instance of Stream is created or the existing one is updated.
-     * @param streamInfo
+     * @param {object} streamInfo
      * @private
      */
     function _initializeOrUpdateStream(streamInfo) {
@@ -302,7 +302,7 @@ function StreamController() {
 
     /**
      * Initialize playback for the first period.
-     * @param streamsInfo
+     * @param {object} streamsInfo
      * @private
      */
     function _initializeForFirstStream(streamsInfo) {
@@ -434,8 +434,8 @@ function StreamController() {
 
     /**
      * Activates a new stream.
-     * @param seekTime
-     * @param keepBuffers
+     * @param {number} seekTime
+     * @param {boolean} keepBuffers
      */
     function _activateStream(seekTime, keepBuffers) {
         activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime)
@@ -485,9 +485,9 @@ function StreamController() {
 
     /**
      * Cancels the preloading of certain streams based on the position we are seeking to.
-     * @param oldTime
-     * @param newTime
-     * @param isInnerPeriodSeek
+     * @param {number} oldTime
+     * @param {number} newTime
+     * @param {boolean} isInnerPeriodSeek
      * @private
      */
     function _cancelPreloading(oldTime, newTime, seekToStream = null) {
@@ -580,9 +580,9 @@ function StreamController() {
 
     /**
      * If the source buffer can be reused we can potentially start buffering the next period
-     * @param nextStream
-     * @param previousStream
-     * @return {*|boolean}
+     * @param {object} nextStream
+     * @param {object} previousStream
+     * @return {boolean}
      * @private
      */
     function _canSourceBuffersBeReused(nextStream, previousStream) {
@@ -598,8 +598,8 @@ function StreamController() {
 
     /**
      * Initiate the preloading of the next stream
-     * @param nextStream
-     * @param previousStream
+     * @param {object} nextStream
+     * @param {object} previousStream
      * @private
      */
     function _onStreamCanLoadNext(nextStream, previousStream = null) {
@@ -618,8 +618,8 @@ function StreamController() {
 
     /**
      * Returns the corresponding stream object for a specific presentation time.
-     * @param time
-     * @return {null|*}
+     * @param {number} time
+     * @return {null|object}
      */
     function getStreamForTime(time) {
 
@@ -678,7 +678,7 @@ function StreamController() {
     /**
      * The buffer level for a certain media type has been updated. If this is the initial playback and we want to autoplay the content we check if we can start playback now.
      * For livestreams we might have a drift of the target live delay compared to the current live delay because reaching the initial buffer level took time. Do an internal seek to the live edge.
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onBufferLevelUpdated(e) {
@@ -751,7 +751,7 @@ function StreamController() {
 
     /**
      * Once playback is paused flush metrics
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onPlaybackPaused(e) {
@@ -764,7 +764,7 @@ function StreamController() {
 
     /**
      * Callback once a stream/period is completely buffered. We can either signal the end of the stream or start prebuffering the next period.
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onStreamBufferingCompleted(e) {
@@ -867,7 +867,7 @@ function StreamController() {
 
     /**
      * Returns the streamProcessors of the active stream.
-     * @return {*|*[]}
+     * @return {array}
      */
     function getActiveStreamProcessors() {
         return activeStream ? activeStream.getProcessors() : [];
@@ -875,7 +875,7 @@ function StreamController() {
 
     /**
      * Once playback has ended we switch to the next stream
-     * @param e
+     * @param {object} e
      */
     function _onPlaybackEnded(e) {
         if (activeStream && !activeStream.getIsEndedEventSignaled()) {
@@ -897,8 +897,8 @@ function StreamController() {
 
     /**
      * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active stream.
-     * @param stream
-     * @return {null|*}
+     * @param {object} stream
+     * @return {null|object}
      */
     function getNextStream(stream = null) {
         const refStream = stream ? stream : activeStream ? activeStream : null;
@@ -934,8 +934,8 @@ function StreamController() {
 
     /**
      * Returns all upcoming streams relative to the provided stream. If no stream is provided we use the active stream.
-     * @param stream
-     * @return {*[]|*}
+     * @param {object} stream
+     * @return {array}
      */
     function getNextStreams(stream = null) {
         try {
@@ -955,7 +955,7 @@ function StreamController() {
 
     /**
      * Sets the duration attribute of the MediaSource using the MediaSourceController.
-     * @param duration
+     * @param {number} duration
      * @private
      */
     function _setMediaDuration(duration) {
@@ -965,7 +965,7 @@ function StreamController() {
 
     /**
      * Returns the active stream
-     * @return {*}
+     * @return {object}
      */
     function getActiveStream() {
         return activeStream;
@@ -1015,8 +1015,8 @@ function StreamController() {
 
     /**
      * 23009-1 Annex C.4 defines MPD anchors to use URI fragment syntax to start a presentation at a given time and a given state
-     * @param isDynamic
-     * @return {number|*|number}
+     * @param {boolean} isDynamic
+     * @return {number}
      * @private
      */
     function _getStartTimeFromUriParameters(isDynamic) {
@@ -1038,7 +1038,7 @@ function StreamController() {
 
     /**
      * Streams that are no longer in the manifest can be filtered
-     * @param streamsInfo
+     * @param {object} streamsInfo
      * @private
      */
     function _filterOutdatedStreams(streamsInfo) {
@@ -1060,9 +1060,9 @@ function StreamController() {
 
     /**
      * In order to calculate the initial live delay we might required the duration of the segments.
-     * @param streamInfos
-     * @param manifestInfo
-     * @return {number|*}
+     * @param {array} streamInfos
+     * @param {object} manifestInfo
+     * @return {number}
      * @private
      */
     function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
@@ -1125,7 +1125,7 @@ function StreamController() {
     /**
      * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
      * Finally attempt UTC sync
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onManifestUpdated(e) {
@@ -1169,7 +1169,7 @@ function StreamController() {
 
     /**
      * Check if the stream has a video track
-     * @return {*|boolean}
+     * @return {boolean}
      */
     function hasVideoTrack() {
         return activeStream ? activeStream.getHasVideoTrack() : false;
@@ -1177,7 +1177,7 @@ function StreamController() {
 
     /**
      * Check if the stream has an audio track
-     * @return {*|boolean}
+     * @return {boolean}
      */
     function hasAudioTrack() {
         return activeStream ? activeStream.getHasAudioTrack() : false;

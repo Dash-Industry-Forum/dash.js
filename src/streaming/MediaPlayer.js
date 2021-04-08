@@ -1911,9 +1911,9 @@ function MediaPlayer() {
         return adapter;
     }
 
-//***********************************
-// PRIVATE METHODS
-//***********************************
+    //***********************************
+    // PRIVATE METHODS
+    //***********************************
 
     function _resetPlaybackControllers() {
         playbackInitialized = false;

@@ -116,9 +116,9 @@ function TextController(config) {
 
     /**
      * Adds the new mediaInfo objects to the textSourceBuffer.
-     * @param mInfos
-     * @param mimeType
-     * @param fragmentModel
+     * @param {array} mInfos
+     * @param {string} mimeType
+     * @param {object} fragmentModel
      */
     function addMediaInfosToBuffer(mInfos, mimeType, fragmentModel) {
         textSourceBuffer.addMediaInfos(mInfos, mimeType, fragmentModel);

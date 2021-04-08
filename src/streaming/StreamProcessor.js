@@ -338,7 +338,7 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that an init segment needs to be fetched.
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onInitFragmentNeeded(e) {
@@ -481,7 +481,7 @@ function StreamProcessor(config) {
     /**
      * The quality has changed which means we have switched to a different representation.
      * If we want to aggressively replace existing parts in the buffer we need to make sure that the new quality is higher than the already buffered one.
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onQualityChanged(e) {
@@ -515,7 +515,7 @@ function StreamProcessor(config) {
 
     /**
      * We have canceled the download of a fragment and need to adjust the buffer time or reload an init segment
-     * @param e
+     * @param {object} e
      */
     function _onFragmentLoadingAbandoned(e) {
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
@@ -591,7 +591,7 @@ function StreamProcessor(config) {
 
     /**
      * Called once the StreamProcessor is initialized and when the track is switched. We only have one StreamProcessor per media type. So we need to adjust the mediaInfo once we switch/select a track.
-     * @param newMediaInfo
+     * @param {object} newMediaInfo
      */
     function selectMediaInfo(newMediaInfo) {
         if (newMediaInfo !== mediaInfo && (!newMediaInfo || !mediaInfo || (newMediaInfo.type === mediaInfo.type))) {

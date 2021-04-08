@@ -254,9 +254,9 @@ function AbrController() {
 
     /**
      * Returns the highest possible index taking limitations like maxBitrate and portal size into account.
-     * @param type
-     * @param streamId
-     * @return {*|number}
+     * @param {string} type
+     * @param {string} streamId
+     * @return {number}
      */
     function getTopQualityIndexFor(type, streamId) {
         let idx;

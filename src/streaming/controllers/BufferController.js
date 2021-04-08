@@ -142,7 +142,6 @@ function BufferController(config) {
     /**
      * Sets the mediasource.
      * @param {object} value
-     * @param {object} mediaInfo
      */
     function setMediaSource(value) {
         mediaSource = value;
@@ -160,7 +159,7 @@ function BufferController(config) {
 
     /**
      * Creates a SourceBufferSink object
-     * @param {array} mediaInfoArr
+     * @param {object} mediaInfo
      * @param {array} oldBufferSinks
      * @return {object|null} SourceBufferSink
      */

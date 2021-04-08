@@ -32,7 +32,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
 import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 
 const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 30;
@@ -132,7 +131,7 @@ function GapController() {
     /**
      *  If the track was changed in the current active period and the player might aggressively replace segments the buffer will be empty for a short period of time. Avoid gap jumping at that time.
      *  We wait until the next media fragment of the target type has been appended before activating again
-     * @param e
+     * @param {object} e
      * @private
      */
     function _onTrackReplacementStarted(e) {
@@ -150,7 +149,7 @@ function GapController() {
     }
 
     function _onTrackChangeRendered(e) {
-        if(!e || !e.mediaType) {
+        if (!e || !e.mediaType) {
             return;
         }
 

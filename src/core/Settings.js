@@ -662,8 +662,8 @@ function Settings() {
                 }
             },
             scheduling: {
-              defaultTimeout: 300,
-              lowLatencyTimeout: 100
+                defaultTimeout: 300,
+                lowLatencyTimeout: 100
             },
             text: {
                 defaultEnabled: true

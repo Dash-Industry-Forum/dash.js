@@ -132,7 +132,7 @@ function CapabilitiesFilter() {
                     width,
                     height,
                     framerate,
-                    bitrate,
+                    bitrate
                 };
 
                 configurations.push(config);

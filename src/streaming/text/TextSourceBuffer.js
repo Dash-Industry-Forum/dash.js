@@ -111,10 +111,9 @@ function TextSourceBuffer(config) {
 
     /**
      * There might be media infos of different types. For instance text and fragmentedText.
-     * @param mimeType
-     * @param streamInfo
-     * @param mInfos
-     * @param fModel
+     * @param {array} mInfos
+     * @param {string} mimeType
+     * @param {object} fModel
      */
     function addMediaInfos(mInfos, mimeType, fModel) {
         const isFragmented = mimeType && !adapter.getIsTextTrack(mimeType);
@@ -142,7 +141,7 @@ function TextSourceBuffer(config) {
 
     /**
      * Create a new track based on the mediaInfo information
-     * @param mediaInfo
+     * @param {object} mediaInfo
      * @private
      */
     function _createTextTrackFromMediaInfo(mediaInfo) {

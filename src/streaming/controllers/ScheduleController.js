@@ -213,15 +213,12 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            return  currentRepresentationInfo && (isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
+            return currentRepresentationInfo && (isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
         } catch (e) {
             return false;
         }
     }
 
-    /**
-     * The AdaptationSet is about to be changed.
-     */
     function setSwitchTrack(value) {
         switchTrack = value;
     }
@@ -356,7 +353,7 @@ function ScheduleController(config) {
         getBufferTarget,
         getPlaybackController,
         setCheckPlaybackQuality,
-        setInitSegmentRequired,
+        setInitSegmentRequired
     };
 
     setup();

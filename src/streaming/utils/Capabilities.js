@@ -31,8 +31,6 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import {THUMBNAILS_SCHEME_ID_URIS} from '../thumbnail/ThumbnailTracks';
 import Constants from '../constants/Constants';
-import DashJSError from "../vo/DashJSError";
-import Errors from "../../core/errors/Errors";
 
 const codecCompatibilityTable = [
     {
@@ -100,18 +98,18 @@ function Capabilities() {
 
     /**
      * MediaCapabilitiesAPI throws an error if one of the attribute is missing. We only use it if we have all required information.
-     * @param config
-     * @param type
+     * @param {object} config
+     * @param {string} type
      * @return {*|boolean|boolean}
      * @private
      */
     function _canUseMediaCapabilitiesApi(config, type) {
-        return navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate))
+        return navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
     }
 
     /**
      * Check codec support using the MSE
-     * @param codec
+     * @param {object} config
      * @return {Promise<void> | Promise<boolean>}
      * @private
      */
@@ -142,7 +140,9 @@ function Capabilities() {
 
     /**
      * Check codec support using the MediaCapabilities API
-     * @return {Promise<void> | Promise<boolean>}
+     * @param {object} config
+     * @param {string} type
+     * @return {Promise<boolean>}
      * @private
      */
     function _checkCodecWithMediaCapabilities(config, type) {

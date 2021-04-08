@@ -41,7 +41,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
 import BoxParser from './utils/BoxParser';
 import URLUtils from './utils/URLUtils';
-import TextController from "./text/TextController";
+import TextController from './text/TextController';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.FRAGMENTED_TEXT, Constants.EMBEDDED_TEXT, Constants.MUXED, Constants.IMAGE];
@@ -268,8 +268,8 @@ function Stream(config) {
 
     /**
      *
-     * @param mediaSource
-     * @param previousBufferSinks
+     * @param {object} mediaSource
+     * @param {array} previousBufferSinks
      * @return {Promise<array>}
      * @private
      */
@@ -370,7 +370,7 @@ function Stream(config) {
                 events: Events,
                 dashConstants: DashConstants,
                 dashMetrics: config.dashMetrics,
-                segmentBaseController: config.segmentBaseController,
+                segmentBaseController: config.segmentBaseController
             });
             return;
         }
@@ -463,7 +463,7 @@ function Stream(config) {
 
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
-     * @param previousBuffers
+     * @param {array} previousBuffers
      * @return {Promise<object>}
      * @private
      */
