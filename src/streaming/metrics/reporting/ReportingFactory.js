@@ -78,4 +78,4 @@ function ReportingFactory(config) {
 }
 
 ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
-export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory);
+export default dashjs.FactoryMaker.getSingletonFactory(ReportingFactory); /* jshint ignore:line */

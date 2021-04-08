@@ -99,4 +99,4 @@ function MetricsHandlerFactory(config) {
 }
 
 MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
-export default dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory);
+export default dashjs.FactoryMaker.getSingletonFactory(MetricsHandlerFactory); /* jshint ignore:line */

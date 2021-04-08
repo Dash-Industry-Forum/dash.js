@@ -313,4 +313,4 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady);
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady); /* jshint ignore:line */

@@ -68,4 +68,4 @@ function Widevine() {
 }
 
 Widevine.__dashjs_factory_name = 'Widevine';
-export default dashjs.FactoryMaker.getSingletonFactory(Widevine);
+export default dashjs.FactoryMaker.getSingletonFactory(Widevine); /* jshint ignore:line */

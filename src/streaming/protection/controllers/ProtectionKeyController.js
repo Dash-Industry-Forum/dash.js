@@ -358,4 +358,4 @@ function ProtectionKeyController() {
 }
 
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-export default dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController);
+export default dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyController); /* jshint ignore:line */

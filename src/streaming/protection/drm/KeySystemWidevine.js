@@ -103,4 +103,4 @@ function KeySystemWidevine(config) {
 }
 
 KeySystemWidevine.__dashjs_factory_name = 'KeySystemWidevine';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine);
+export default dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine); /* jshint ignore:line */

@@ -184,8 +184,8 @@ function Protection() {
 }
 
 Protection.__dashjs_factory_name = 'Protection';
-const factory = dashjs.FactoryMaker.getClassFactory(Protection);
+const factory = dashjs.FactoryMaker.getClassFactory(Protection); /* jshint ignore:line */
 factory.events = ProtectionEvents;
 factory.errors = ProtectionErrors;
-dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory);
+dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory); /* jshint ignore:line */
 export default factory;

@@ -2167,7 +2167,7 @@ function MediaPlayer() {
             return protectionController;
         }
         // do not require Protection as dependencies as this is optional and intended to be loaded separately
-        let Protection = dashjs.Protection;
+        let Protection = dashjs.Protection; /* jshint ignore:line */
         if (typeof Protection === 'function') { //TODO need a better way to register/detect plugin components
             let protection = Protection(context).create();
             Events.extend(Protection.events);
@@ -2205,7 +2205,7 @@ function MediaPlayer() {
             return;
         }
         // do not require MetricsReporting as dependencies as this is optional and intended to be loaded separately
-        let MetricsReporting = dashjs.MetricsReporting;
+        let MetricsReporting = dashjs.MetricsReporting; /* jshint ignore:line */
         if (typeof MetricsReporting === 'function') { //TODO need a better way to register/detect plugin components
             let metricsReporting = MetricsReporting(context).create();
 
@@ -2227,7 +2227,7 @@ function MediaPlayer() {
             return;
         }
         // do not require MssHandler as dependencies as this is optional and intended to be loaded separately
-        let MssHandler = dashjs.MssHandler;
+        let MssHandler = dashjs.MssHandler; /* jshint ignore:line */
         if (typeof MssHandler === 'function') { //TODO need a better way to register/detect plugin components
             Errors.extend(MssHandler.errors);
             mssHandler = MssHandler(context).create({
@@ -2261,7 +2261,7 @@ function MediaPlayer() {
         }
 
         // do not require Offline as dependencies as this is optional and intended to be loaded separately
-        let OfflineController = dashjs.OfflineController;
+        let OfflineController = dashjs.OfflineController; /* jshint ignore:line */
 
         if (typeof OfflineController === 'function') { //TODO need a better way to register/detect plugin components
             Events.extend(OfflineController.events);

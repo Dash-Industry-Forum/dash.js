@@ -104,4 +104,4 @@ function DRMToday(config) {
 }
 
 DRMToday.__dashjs_factory_name = 'DRMToday';
-export default dashjs.FactoryMaker.getSingletonFactory(DRMToday);
+export default dashjs.FactoryMaker.getSingletonFactory(DRMToday); /* jshint ignore:line */

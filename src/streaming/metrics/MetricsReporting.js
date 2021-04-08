@@ -83,7 +83,7 @@ function MetricsReporting() {
 }
 
 MetricsReporting.__dashjs_factory_name = 'MetricsReporting';
-const factory = dashjs.FactoryMaker.getClassFactory(MetricsReporting);
+const factory = dashjs.FactoryMaker.getClassFactory(MetricsReporting); /* jshint ignore:line */
 factory.events = MetricsReportingEvents;
-dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory);
+dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory); /* jshint ignore:line */
 export default factory;

@@ -354,4 +354,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor);
+export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */
