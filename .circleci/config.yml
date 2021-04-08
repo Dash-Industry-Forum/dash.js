@@ -49,7 +49,9 @@ commands:
         steps:
             - run:
                 name: Build and run unit tests
-                command: npm run build
+                command: |
+                    npm run build
+                    npm run test
 
 jobs:
     build-and-unit-test:
