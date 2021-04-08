@@ -1,5 +1,6 @@
 const path = require('path');
 const ESLintPlugin = require('eslint-webpack-plugin');
+const pkg = require('../package.json');
 
 const out_dir = '../dist';
 
@@ -14,6 +15,14 @@ const config = {
     },
     module: {
         rules: [
+            {
+                test: /\.(js)$/,
+                loader: 'string-replace-loader',
+                options: {
+                    search: '__VERSION__',
+                    replace: pkg.version,
+                }
+            },
             {
                 test: /\.(js)$/,
                 exclude: /node_modules/,

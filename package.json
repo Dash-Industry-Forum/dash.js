@@ -46,6 +46,7 @@
     "replace-in-file": "^6.2.0",
     "rimraf": "^3.0.2",
     "sinon": "^7.3.2",
+    "string-replace-loader": "^3.0.1",
     "typescript": "^4.1.5",
     "webpack": "^4.44.1",
     "webpack-cli": "^4.5.0",
