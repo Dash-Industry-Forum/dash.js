@@ -384,8 +384,19 @@ function PlaybackController() {
         wallclockTimeIntervalId = null;
     }
 
-    function updateCurrentTime(mediaType) {
+    /**
+     * Compare the current time of the video against the DVR window. If we are out of the DVR window we need to seek.
+     * Note: In some cases we filter certain media types completely. This happens after the first entry to the DVR metric has been added.
+     * Now the DVR window for the filtered media type is not updated anymore. Consequently always provide a target mediaType to get a valid DVR window.
+     * @param {object} mediaType
+     */
+    function updateCurrentTime(mediaType = null) {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking()) return;
+
+        if (!mediaType) {
+            mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        }
+        // Compare the current time of the video element against the range defined in the DVR window.
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
