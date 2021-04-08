@@ -350,7 +350,7 @@ function MediaPlayer() {
         setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
 
         // Detect and initialize offline module to support offline contents playback
-        detectOffline();
+        _detectOffline();
 
         if (view) {
             attachView(view);
@@ -683,7 +683,7 @@ function MediaPlayer() {
     /**
      * The timeShiftBufferLength (DVR Window), in seconds.
      *
-     * @returns {number} The window of allowable play time behind the live point of a live stream.
+     * @returns {number} The window of allowable play time behind the live point of a live stream as defined in the manifest.
      * @memberof module:MediaPlayer
      * @instance
      */
@@ -754,7 +754,7 @@ function MediaPlayer() {
     /**
      * Duration of the media's playback, in seconds.
      *
-     * @returns {number} The current duration of the media.
+     * @returns {number} The current duration of the media. For a dynamic stream this will return DVRWindow.end - DVRWindow.start
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
@@ -788,7 +788,7 @@ function MediaPlayer() {
         if (time() < 0) {
             return NaN;
         }
-        return getAsUTC(time());
+        return _getAsUTC(time());
     }
 
     /**
@@ -804,7 +804,7 @@ function MediaPlayer() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
-        return getAsUTC(duration());
+        return _getAsUTC(duration());
     }
 
     /*
@@ -938,7 +938,7 @@ function MediaPlayer() {
     /**
      * @memberof module:MediaPlayer
      * @instance
-     * @returns {number|NaN} Current live stream latency in seconds. It is the difference between current time and time position at the playback head.
+     * @returns {number|NaN} Current live stream latency in seconds. It is the difference between now time and time position at the playback head.
      * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
      */
     function getCurrentLiveLatency() {
@@ -1121,7 +1121,7 @@ function MediaPlayer() {
      * @instance
      */
     function getOfflineController() {
-        return detectOffline();
+        return _detectOffline();
     }
 
     /*
@@ -1286,9 +1286,9 @@ function MediaPlayer() {
         videoModel.setElement(element);
 
         if (element) {
-            detectProtection();
-            detectMetricsReporting();
-            detectMss();
+            _detectProtection();
+            _detectMetricsReporting();
+            _detectMss();
 
             if (streamController) {
                 streamController.switchToVideoElement();
@@ -1296,10 +1296,10 @@ function MediaPlayer() {
         }
 
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
-            resetPlaybackControllers();
+            _resetPlaybackControllers();
         }
 
-        initializePlayback();
+        _initializePlayback();
     }
 
     /**
@@ -1519,7 +1519,7 @@ function MediaPlayer() {
      * @instance
      */
     function getProtectionController() {
-        return detectProtection();
+        return _detectProtection();
     }
 
     /**
@@ -1707,7 +1707,7 @@ function MediaPlayer() {
      * @instance
      */
     function retrieveManifest(url, callback) {
-        let manifestLoader = createManifestLoader();
+        let manifestLoader = _createManifestLoader();
         let self = this;
 
         const handler = function (e) {
@@ -1766,11 +1766,11 @@ function MediaPlayer() {
         source = urlOrManifest;
 
         if (streamingInitialized || playbackInitialized) {
-            resetPlaybackControllers();
+            _resetPlaybackControllers();
         }
 
         if (isReady()) {
-            initializePlayback();
+            _initializePlayback();
         }
     }
 
@@ -1899,11 +1899,23 @@ function MediaPlayer() {
         return streamInfo ? streamController.getStreamById(streamInfo.id) : null;
     }
 
+    /**
+     * Returns the DashAdapter.js Module.
+     *
+     * @see {@link module:DashAdapter}
+     * @returns {Object}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getDashAdapter() {
+        return adapter;
+    }
+
 //***********************************
 // PRIVATE METHODS
 //***********************************
 
-    function resetPlaybackControllers() {
+    function _resetPlaybackControllers() {
         playbackInitialized = false;
         streamingInitialized = false;
         adapter.reset();
@@ -1918,15 +1930,15 @@ function MediaPlayer() {
             } else {
                 protectionController.reset();
                 protectionController = null;
-                detectProtection();
+                _detectProtection();
             }
         }
         cmcdModel.reset();
     }
 
-    function createPlaybackControllers() {
+    function _createPlaybackControllers() {
         // creates or get objects instances
-        const manifestLoader = createManifestLoader();
+        const manifestLoader = _createManifestLoader();
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
@@ -2004,7 +2016,7 @@ function MediaPlayer() {
         cmcdModel.initialize();
     }
 
-    function createManifestLoader() {
+    function _createManifestLoader() {
         return ManifestLoader(context).create({
             debug: debug,
             errHandler: errHandler,
@@ -2016,7 +2028,7 @@ function MediaPlayer() {
         });
     }
 
-    function detectProtection() {
+    function _detectProtection() {
         if (protectionController) {
             return protectionController;
         }
@@ -2054,7 +2066,7 @@ function MediaPlayer() {
         return null;
     }
 
-    function detectMetricsReporting() {
+    function _detectMetricsReporting() {
         if (metricsReportingController) {
             return;
         }
@@ -2076,7 +2088,7 @@ function MediaPlayer() {
         }
     }
 
-    function detectMss() {
+    function _detectMss() {
         if (mssHandler) {
             return;
         }
@@ -2105,7 +2117,7 @@ function MediaPlayer() {
         }
     }
 
-    function detectOffline() {
+    function _detectOffline() {
         if (!mediaPlayerInitialized) {
             throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
         }
@@ -2124,7 +2136,7 @@ function MediaPlayer() {
             });
             Errors.extend(OfflineController.errors);
 
-            const manifestLoader = createManifestLoader();
+            const manifestLoader = _createManifestLoader();
             const manifestUpdater = ManifestUpdater(context).create();
 
             manifestUpdater.setConfig({
@@ -2162,7 +2174,7 @@ function MediaPlayer() {
         return null;
     }
 
-    function getAsUTC(valToConvert) {
+    function _getAsUTC(valToConvert) {
         let metric = dashMetrics.getCurrentDVRInfo();
         let availableFrom,
             utcValue;
@@ -2175,7 +2187,7 @@ function MediaPlayer() {
         return utcValue;
     }
 
-    function initializePlayback() {
+    function _initializePlayback() {
 
         if (offlineController) {
             offlineController.resetRecords();
@@ -2184,7 +2196,7 @@ function MediaPlayer() {
         if (!streamingInitialized && source) {
             streamingInitialized = true;
             logger.info('Streaming Initialized');
-            createPlaybackControllers();
+            _createPlaybackControllers();
 
             if (typeof source === 'string') {
                 streamController.load(source);
@@ -2197,18 +2209,6 @@ function MediaPlayer() {
             playbackInitialized = true;
             logger.info('Playback Initialized');
         }
-    }
-
-    /**
-     * Returns the DashAdapter.js Module.
-     *
-     * @see {@link module:DashAdapter}
-     * @returns {Object}
-     * @memberof module:MediaPlayer
-     * @instance
-     */
-    function getDashAdapter() {
-        return adapter;
     }
 
     instance = {
