@@ -34,15 +34,17 @@ var config = {
     host: argv.host,
     port: argv.port,
     localRoot: __dirname + "../",
-    include: [
-        'contrib/**',
-        'dist/**',
-        'test/functional/tests.html',
-        'test/functional/testsCommon.js',
-        'test/functional/config/**',
-        'test/functional/tests/**',
-        'samples/**'
-    ],
+    remoteRoot: '/dummy',
+    include: [],
+    // include: [
+    //     'contrib/**',
+    //     'dist/**',
+    //     'test/functional/tests.html',
+    //     'test/functional/testsCommon.js',
+    //     'test/functional/config/**',
+    //     'test/functional/tests/**',
+    //     'samples/**'
+    // ],
     // delete ALL existing files at destination before uploading, if true
     deleteRemote: false,
     // Passive mode is forced (EPSV command is not sent)
@@ -50,8 +52,6 @@ var config = {
     // use sftp or ftp
     sftp: false
 };
-
-console.log('ftp deploy');
 
 ftpDeploy
     .deploy(config)
