@@ -98,7 +98,13 @@ function CapabilitiesFilter() {
             Promise.all(promises)
                 .then(() => {
                     period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
-                        return as.Representation_asArray && as.Representation_asArray.length > 0;
+                        const supported = as.Representation_asArray && as.Representation_asArray.length > 0;
+
+                        if(!supported) {
+                            logger.warn(`AdaptationSet has been removed because of no supported Representation`);
+                        }
+
+                        return supported;
                     });
 
                     resolve();

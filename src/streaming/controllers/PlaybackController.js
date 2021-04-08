@@ -272,14 +272,6 @@ function PlaybackController() {
         return liveDelay;
     }
 
-    function setLiveDelay(value, useMaxValue = false) {
-        if (useMaxValue && value < liveDelay) {
-            return;
-        }
-
-        liveDelay = value;
-    }
-
     function getCurrentLiveLatency() {
         if (!isDynamic || isNaN(availabilityStartTime)) {
             return NaN;
@@ -386,13 +378,13 @@ function PlaybackController() {
 
     /**
      * Compare the current time of the video against the DVR window. If we are out of the DVR window we need to seek.
-     * Note: In some cases we filter certain media types completely. This happens after the first entry to the DVR metric has been added.
-     * Now the DVR window for the filtered media type is not updated anymore. Consequently always provide a target mediaType to get a valid DVR window.
      * @param {object} mediaType
      */
     function updateCurrentTime(mediaType = null) {
         if (isPaused() || !isDynamic || videoModel.getReadyState() === 0 || isSeeking()) return;
 
+        // Note: In some cases we filter certain media types completely (for instance due to an unsupported video codec). This happens after the first entry to the DVR metric has been added.
+        // Now the DVR window for the filtered media type is not updated anymore. Consequently, always use a mediaType that is available to get a valid DVR window.
         if (!mediaType) {
             mediaType = streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         }
@@ -954,7 +946,6 @@ function PlaybackController() {
         getStreamController,
         computeAndSetLiveDelay,
         getLiveDelay,
-        setLiveDelay,
         getCurrentLiveLatency,
         play,
         isPaused,

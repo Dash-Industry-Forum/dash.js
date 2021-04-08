@@ -185,8 +185,7 @@ function GapController() {
             return trackSwitchByMediaType[key];
         });
 
-        return !trackSwitchInProgress && settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
-            (!playbackController.isSeeking() || streamController.getActiveStream().getHasFinishedBuffering()) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
+        return !trackSwitchInProgress && settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && !playbackController.isSeeking() && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
             !streamController.getHasMediaOrInitialisationError();
     }
 

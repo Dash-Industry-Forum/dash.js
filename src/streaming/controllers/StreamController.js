@@ -677,8 +677,7 @@ function StreamController() {
 
     /**
      * The buffer level for a certain media type has been updated. If this is the initial playback and we want to autoplay the content we check if we can start playback now.
-     * For livestreams we might have a drift of the target live delay compared to the current live delay because reaching the initial buffer level took time. Do an internal seek to the live edge.
-     * @param {object} e
+     * For livestreams we might have a drift of the target live delay compared to the current live delay because reaching the initial buffer level took time.
      * @private
      */
     function _onBufferLevelUpdated(e) {
@@ -687,22 +686,7 @@ function StreamController() {
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
 
-            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel()) {
-
-                // For livestreams we seek to the live edge again. Nothing to do for VoD
-                if (playbackController.getIsDynamic()) {
-                    let seekTime = NaN;
-                    const metric = dashMetrics.getCurrentDVRInfo();
-
-                    if (metric) {
-                        const liveDelay = playbackController.getLiveDelay();
-                        seekTime = metric.range.end - liveDelay;
-                    }
-                    if (!isNaN(seekTime)) {
-                        playbackController.seek(seekTime, true, true);
-                    }
-                }
-
+            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || initialBufferLevel > playbackController.getLiveDelay()) {
                 initialPlayback = false;
                 createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
