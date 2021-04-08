@@ -3,7 +3,7 @@
     "browser": true,
     "es6": true,
     "mocha": true,
-    "node": true,
+    "node": true
   },
   "globals": {
       "dashjs": true,
