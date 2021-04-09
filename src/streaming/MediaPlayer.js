@@ -2024,6 +2024,7 @@ function MediaPlayer() {
         // initialises controller
         abrController.initialize();
         streamController.initialize(autoPlay, protectionData);
+        textController.initialize();
         gapController.initialize();
         cmcdModel.initialize();
     }

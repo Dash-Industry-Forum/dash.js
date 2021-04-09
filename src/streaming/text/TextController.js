@@ -74,12 +74,14 @@ function TextController(config) {
 
         vttParser = VTTParser(context).getInstance();
         ttmlParser = TTMLParser(context).getInstance();
-
         eventBus = EventBus(context).getInstance();
-        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
-        eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
 
         resetInitialSettings();
+    }
+
+    function initialize() {
+        eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
+        eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
     }
 
     function initializeForStream(streamInfo) {
@@ -292,7 +294,7 @@ function TextController(config) {
                 (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
                 let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo);
                 if (mediaInfo !== currentFragTrack) {
-                    textTracks.deleteCuesFromTrackIdx(oldTrackIdx);
+                    textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
                     mediaController.setTrack(mediaInfo);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
                 }
@@ -356,6 +358,7 @@ function TextController(config) {
 
     instance = {
         deactivateStream,
+        initialize,
         initializeForStream,
         createTracks,
         getTextSourceBuffer,
