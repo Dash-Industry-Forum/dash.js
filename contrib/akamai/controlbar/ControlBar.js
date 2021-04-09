@@ -576,16 +576,16 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         }
     };
 
-    var createCaptionSwitchMenu = function (streamInfo) {
+    var createCaptionSwitchMenu = function (streamId) {
         // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
         var activeStreamInfo = player.getActiveStream().getStreamInfo();
 
-        if (captionBtn && (!activeStreamInfo.id || activeStreamInfo.id === streamInfo.id)) {
+        if (captionBtn && (!activeStreamInfo.id || activeStreamInfo.id === streamId)) {
 
             destroyMenu(captionMenu, captionBtn);
             captionMenu = null;
 
-            var tracks = textTrackList[streamInfo.id] || [];
+            var tracks = textTrackList[streamId] || [];
             var contentFunc = function (element, index) {
                 if (isNaN(index)) {
                     return 'OFF';
@@ -613,12 +613,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var onTracksAdded = function (e) {
         // Subtitles/Captions Menu //XXX we need to add two layers for captions & subtitles if present.
-        if (!textTrackList[e.streamInfo.id]) {
-            textTrackList[e.streamInfo.id] = [];
+        if (!textTrackList[e.streamId]) {
+            textTrackList[e.streamId] = [];
         }
 
-        textTrackList[e.streamInfo.id] = textTrackList[e.streamInfo.id].concat(e.tracks);
-        createCaptionSwitchMenu(e.streamInfo);
+        textTrackList[e.streamId] = textTrackList[e.streamId].concat(e.tracks);
+        createCaptionSwitchMenu(e.streamId);
     };
 
     var _onBufferLevelUpdated = function () {

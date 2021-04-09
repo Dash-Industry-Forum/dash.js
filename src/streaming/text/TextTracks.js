@@ -178,8 +178,9 @@ function TextTracks(config) {
 
         eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, {
             index: currentTrackIdx,
-            tracks: textTrackQueue
-        }, { streamId: streamInfo.id });
+            tracks: textTrackQueue,
+            streamId: streamInfo.id
+        });
     }
 
     function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight, aspectRatio, use80Percent) {

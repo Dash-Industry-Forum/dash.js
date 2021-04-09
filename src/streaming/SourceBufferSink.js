@@ -102,7 +102,7 @@ function SourceBufferSink(config) {
         buffer = oldSourceBufferSink.getBuffer();
     }
 
-    function initializeForFirstUse(mInfo, selectedRepresentation) {
+    function initializeForFirstUse(streamInfo, mInfo, selectedRepresentation) {
         mediaInfo = mInfo;
         type = mediaInfo.type;
         const codec = mediaInfo.codec;
@@ -112,7 +112,7 @@ function SourceBufferSink(config) {
             // - currently no browser does, so check for it and use our own
             // implementation. The same is true for codecs="wvtt".
             if (codec.match(/application\/mp4;\s*codecs="(stpp|wvtt).*"/i)) {
-                return _initializeForText();
+                return _initializeForText(streamInfo);
             }
 
             buffer = mediaSource.addSourceBuffer(codec);
@@ -132,14 +132,14 @@ function SourceBufferSink(config) {
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
             if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="wvtt') !== -1)) {
-                return _initializeForText();
+                return _initializeForText(streamInfo);
             }
             return Promise.reject(e);
         }
     }
 
-    function _initializeForText() {
-        buffer = textController.getTextSourceBuffer();
+    function _initializeForText(streamInfo) {
+        buffer = textController.getTextSourceBuffer(streamInfo);
         return Promise.resolve();
     }
 

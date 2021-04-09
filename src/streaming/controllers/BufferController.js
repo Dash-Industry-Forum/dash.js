@@ -192,7 +192,7 @@ function BufferController(config) {
         if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
             return sourceBufferSink.initializeForStreamSwitch(mediaInfo, selectedRepresentation, oldBufferSinks[type]);
         } else {
-            return sourceBufferSink.initializeForFirstUse(mediaInfo, selectedRepresentation);
+            return sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo, selectedRepresentation);
         }
     }
 

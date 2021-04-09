@@ -77,6 +77,7 @@ import {checkParameterType} from './utils/SupervisorTools';
 import ManifestUpdater from './ManifestUpdater';
 import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
+import TextController from './text/TextController';
 
 /* jscs:disable */
 /**
@@ -147,6 +148,7 @@ function MediaPlayer() {
         capabilities,
         capabilitiesFilter,
         streamController,
+        textController,
         gapController,
         playbackController,
         dashMetrics,
@@ -206,6 +208,9 @@ function MediaPlayer() {
         }
         if (config.streamController) {
             streamController = config.streamController;
+        }
+        if (config.textController) {
+            textController = config.textController;
         }
         if (config.gapController) {
             gapController = config.gapController;
@@ -1153,23 +1158,6 @@ function MediaPlayer() {
     */
 
     /**
-     * Returns the instance of TextController of the currently playing stream object.
-     * @return {object|null}
-     * @private
-     */
-    function _getTextControllerOfActiveStream() {
-        let textController = null;
-
-        const activeStream = streamController.getActiveStream();
-
-        if (activeStream) {
-            textController = activeStream.getTextController();
-        }
-
-        return textController;
-    }
-
-    /**
      * Enable/disable text
      * When enabling text, dash will choose the previous selected text track
      *
@@ -1178,11 +1166,13 @@ function MediaPlayer() {
      * @instance
      */
     function enableText(enable) {
-        const textController = _getTextControllerOfActiveStream();
+        const activeStreamInfo = streamController.getActiveStreamInfo();
 
-        if (textController) {
-            textController.enableText(enable);
+        if (!activeStreamInfo || !textController) {
+            return false;
         }
+
+        return textController.enableText(activeStreamInfo.id, enable);
     }
 
     /**
@@ -1194,11 +1184,13 @@ function MediaPlayer() {
      * @instance
      */
     function enableForcedTextStreaming(enable) {
-        const textController = _getTextControllerOfActiveStream();
+        const activeStreamInfo = streamController.getActiveStreamInfo();
 
-        if (textController) {
-            textController.enableForcedTextStreaming(enable);
+        if (!activeStreamInfo || !textController) {
+            return false;
         }
+
+        return textController.enableForcedTextStreaming(activeStreamInfo.id, enable);
     }
 
     /**
@@ -1209,11 +1201,13 @@ function MediaPlayer() {
      * @instance
      */
     function isTextEnabled() {
-        const textController = _getTextControllerOfActiveStream();
+        const activeStreamInfo = streamController.getActiveStreamInfo();
 
-        if (textController) {
-            return textController.isTextEnabled();
+        if (!activeStreamInfo || !textController) {
+            return false;
         }
+
+        return textController.isTextEnabled(activeStreamInfo);
     }
 
     /**
@@ -1230,20 +1224,25 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        const textController = _getTextControllerOfActiveStream();
+        const activeStreamInfo = streamController.getActiveStreamInfo();
 
-        if (textController) {
-            textController.setTextTrack(idx);
+        if (!activeStreamInfo || !textController) {
+            return;
         }
+
+        textController.setTextTrack(activeStreamInfo.id, idx);
     }
 
     function getCurrentTextTrackIndex() {
         let idx = NaN;
-        const textController = _getTextControllerOfActiveStream();
 
-        if (textController) {
-            idx = textController.getCurrentTrackIdx();
+        const activeStreamInfo = streamController.getActiveStreamInfo();
+
+        if (!activeStreamInfo || !textController) {
+            return;
         }
+
+        idx = textController.getCurrentTrackIdx(activeStreamInfo.id);
 
         return idx;
     }
@@ -1933,6 +1932,7 @@ function MediaPlayer() {
                 _detectProtection();
             }
         }
+        textController.reset();
         cmcdModel.reset();
     }
 
@@ -1942,6 +1942,17 @@ function MediaPlayer() {
 
         if (!streamController) {
             streamController = StreamController(context).getInstance();
+        }
+
+        if (!textController) {
+            textController = TextController(context).create({
+                errHandler,
+                manifestModel,
+                adapter,
+                mediaController,
+                videoModel,
+                settings
+            });
         }
 
         capabilitiesFilter.setConfig({
@@ -1960,6 +1971,7 @@ function MediaPlayer() {
             manifestModel,
             mediaPlayerModel,
             protectionController,
+            textController,
             adapter,
             dashMetrics,
             errHandler,

@@ -101,6 +101,8 @@ function StreamProcessor(config) {
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
+        eventBus.on(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
+        eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack) {
@@ -237,6 +239,8 @@ function StreamProcessor(config) {
         eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
+        eventBus.off(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
+        eventBus.off(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
 
         resetInitialSettings();
@@ -553,6 +557,42 @@ function StreamProcessor(config) {
         if (e.error && e.request.serviceLocation) {
             setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2));
             scheduleController.startScheduleTimer(0);
+        }
+    }
+
+    /**
+     * Callback function triggered by the TextController whenever a track is changed for fragmented text. Will only be triggered if textracks have previously been disabled.
+     * @private
+     */
+    function _onSetFragmentedTextAfterDisabled() {
+        setExplicitBufferingTime(playbackController.getTime());
+        getScheduleController().startScheduleTimer();
+    }
+
+    /**
+     * Callback function triggered by the TextController whenever a track is changed for non fragmented text
+     * @param {object} e
+     * @private
+     */
+    function _onSetNonFragmentedText(e) {
+        const currentTrackInfo = e.currentTrackInfo;
+
+        if (!currentTrackInfo) {
+            return;
+        }
+
+        const mInfo = mediaInfoArr.find((info) => {
+            return info.index === currentTrackInfo.index && info.lang === currentTrackInfo.lang;
+        });
+
+        if (mInfo) {
+            selectMediaInfo(mInfo)
+                .then(() => {
+                    bufferController.setIsBufferingCompleted(false);
+                    setExplicitBufferingTime(playbackController.getTime());
+                    scheduleController.setInitSegmentRequired(true);
+                    scheduleController.startScheduleTimer();
+                });
         }
     }
 

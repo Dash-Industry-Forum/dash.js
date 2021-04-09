@@ -41,7 +41,6 @@ import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
 import BoxParser from './utils/BoxParser';
 import URLUtils from './utils/URLUtils';
-import TextController from './text/TextController';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.FRAGMENTED_TEXT, Constants.EMBEDDED_TEXT, Constants.MUXED, Constants.IMAGE];
@@ -67,6 +66,7 @@ function Stream(config) {
     const eventController = config.eventController;
     const mediaController = config.mediaController;
     const protectionController = config.protectionController;
+    const textController = config.textController;
     const videoModel = config.videoModel;
     let streamInfo = config.streamInfo;
     const settings = config.settings;
@@ -83,7 +83,6 @@ function Stream(config) {
         updateError,
         isUpdating,
         fragmentController,
-        textController,
         thumbnailController,
         preloaded,
         boxParser,
@@ -113,17 +112,6 @@ function Stream(config) {
                 urlUtils: urlUtils
             });
 
-            textController = TextController(context).create({
-                streamInfo,
-                errHandler,
-                manifestModel,
-                adapter,
-                mediaController,
-                videoModel,
-                settings,
-                stream: instance
-            });
-
         } catch (e) {
             throw e;
         }
@@ -135,6 +123,7 @@ function Stream(config) {
     function initialize() {
         registerEvents();
         registerProtectionEvents();
+        textController.initializeForStream(streamInfo);
         eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
     }
 
@@ -302,7 +291,7 @@ function Stream(config) {
                     }
 
                     // All mediaInfos for texttracks are added to the TextSourceBuffer by now. We can start creating the tracks
-                    textController.createTracks();
+                    textController.createTracks(streamInfo);
 
                     resolve(bufferSinks);
                 })
@@ -343,7 +332,7 @@ function Stream(config) {
             mediaInfo = allMediaForType[i];
 
             if (type === Constants.EMBEDDED_TEXT) {
-                textController.addEmbeddedTrack(mediaInfo);
+                textController.addEmbeddedTrack(streamInfo, mediaInfo);
             } else {
                 if (_isMediaSupported(mediaInfo)) {
                     mediaController.addTrack(mediaInfo);
@@ -352,7 +341,7 @@ function Stream(config) {
         }
 
         if (type === Constants.EMBEDDED_TEXT) {
-            textController.addMediaInfosToBuffer(allMediaForType);
+            textController.addMediaInfosToBuffer(streamInfo, allMediaForType);
         }
 
         if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
@@ -453,7 +442,7 @@ function Stream(config) {
         }
 
         if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
-            textController.addMediaInfosToBuffer(allMediaForType, mimeType, fragmentModel);
+            textController.addMediaInfosToBuffer(streamInfo, allMediaForType, mimeType, fragmentModel);
         }
 
         if (initialMediaInfo) {
@@ -503,7 +492,7 @@ function Stream(config) {
             streamProcessors[i].reset(errored, keepBuffers);
         }
         if (textController) {
-            textController.deactivate();
+            textController.deactivateStream(streamInfo);
         }
         streamProcessors = [];
         isActive = false;
@@ -550,11 +539,6 @@ function Stream(config) {
         if (fragmentController) {
             fragmentController.reset();
             fragmentController = null;
-        }
-
-        if (textController) {
-            textController.reset();
-            textController = null;
         }
 
         if (streamInfo) {
@@ -936,10 +920,6 @@ function Stream(config) {
         return adapter;
     }
 
-    function getTextController() {
-        return textController;
-    }
-
     instance = {
         initialize,
         getStreamId,
@@ -968,7 +948,6 @@ function Stream(config) {
         getHasFinishedBuffering,
         setPreloaded,
         startScheduleControllers,
-        getTextController,
         prepareTrackChange
     };
 

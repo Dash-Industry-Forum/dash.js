@@ -82,6 +82,7 @@ function StreamController() {
         streams,
         activeStream,
         protectionController,
+        textController,
         protectionData,
         autoPlay,
         isStreamSwitchingInProgress,
@@ -282,6 +283,7 @@ function StreamController() {
                 errHandler,
                 baseURLController,
                 segmentBaseController,
+                textController,
                 abrController,
                 playbackController,
                 eventController,
@@ -1321,6 +1323,9 @@ function StreamController() {
         }
         if (config.playbackController) {
             playbackController = config.playbackController;
+        }
+        if (config.textController) {
+            textController = config.textController;
         }
         if (config.abrController) {
             abrController = config.abrController;

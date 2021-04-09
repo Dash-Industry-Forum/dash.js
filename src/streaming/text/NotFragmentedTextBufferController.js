@@ -79,7 +79,7 @@ function NotFragmentedTextBufferController(config) {
         return new Promise((resolve, reject) => {
             try {
                 sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
-                sourceBufferSink.initializeForFirstUse(mediaInfo);
+                sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo);
                 if (!initialized) {
                     if (typeof sourceBufferSink.getBuffer().initialize === 'function') {
                         sourceBufferSink.getBuffer().initialize();
