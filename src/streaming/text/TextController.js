@@ -113,6 +113,7 @@ function TextController(config) {
 
     /**
      * All media infos have been added. Start creating the track objects
+     * @param {object} streamInfo
      */
     function createTracks(streamInfo) {
         const streamId = streamInfo.id;

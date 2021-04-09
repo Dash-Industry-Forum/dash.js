@@ -680,6 +680,7 @@ function StreamController() {
     /**
      * The buffer level for a certain media type has been updated. If this is the initial playback and we want to autoplay the content we check if we can start playback now.
      * For livestreams we might have a drift of the target live delay compared to the current live delay because reaching the initial buffer level took time.
+     * @param {object} e
      * @private
      */
     function _onBufferLevelUpdated(e) {

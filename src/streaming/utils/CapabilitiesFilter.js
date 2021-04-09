@@ -100,7 +100,7 @@ function CapabilitiesFilter() {
                     period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
                         const supported = as.Representation_asArray && as.Representation_asArray.length > 0;
 
-                        if(!supported) {
+                        if (!supported) {
                             logger.warn(`AdaptationSet has been removed because of no supported Representation`);
                         }
 
