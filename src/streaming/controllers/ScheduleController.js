@@ -178,7 +178,7 @@ function ScheduleController(config) {
 
         const isReplacement = replaceRequestArray.length > 0;
         const lastInitializedQuality = lastInitializedRepresentationInfo ? lastInitializedRepresentationInfo.quality : NaN;
-        if (replacingBuffer || !lastInitializedRepresentationInfo || switchTrack || isReplacement ||
+        if (replacingBuffer || isNaN(lastInitializedQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamInfo.id) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
             const getNextFragment = function () {
