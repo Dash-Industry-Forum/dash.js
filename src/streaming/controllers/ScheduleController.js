@@ -61,7 +61,7 @@ function ScheduleController(config) {
         bufferLevelRule,
         lastFragmentRequest,
         topQualityIndex,
-        lastInitializedRepresentationInfo,
+        lastInitializedQuality,
         switchTrack,
         initSegmentRequired,
         mediaRequest,
@@ -86,10 +86,10 @@ function ScheduleController(config) {
 
 
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
-        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
-        eventBus.on(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, instance);
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
-        eventBus.on(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, instance);
+        eventBus.on(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.on(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.on(Events.URL_RESOLUTION_FAILED, _onURLResolutionFailed, instance);
     }
 
     function getType() {
@@ -164,8 +164,7 @@ function ScheduleController(config) {
      */
     function _getNextFragment() {
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        const lastInitializedQuality = lastInitializedRepresentationInfo ? lastInitializedRepresentationInfo.quality : NaN;
-        if (initSegmentRequired || ((currentRepresentationInfo.quality !== lastInitializedQuality || switchTrack))) {
+        if (initSegmentRequired || currentRepresentationInfo.quality !== lastInitializedQuality || switchTrack) {
             if (switchTrack) {
                 logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
                 switchTrack = false;
@@ -212,7 +211,6 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            const lastInitializedQuality = lastInitializedRepresentationInfo ? lastInitializedRepresentationInfo.quality : NaN;
             return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
         } catch (e) {
             return false;
@@ -227,7 +225,11 @@ function ScheduleController(config) {
         return switchTrack;
     }
 
-    function completeQualityChange(trigger) {
+    function _onPlaybackTimeUpdated() {
+        _completeQualityChange(true);
+    }
+
+    function _completeQualityChange(trigger) {
         if (playbackController && fragmentModel) {
             const item = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -262,31 +264,30 @@ function ScheduleController(config) {
         }
     }
 
-    function onPlaybackTimeUpdated() {
-        completeQualityChange(true);
-    }
-
     function _onBytesAppended(e) {
         logger.debug(`Appended bytes for ${e.mediaType}`);
+
+        // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
         if (isNaN(e.index)) {
-            lastInitializedRepresentationInfo = bufferController.getRepresentationInfo(e.quality);
+            lastInitializedQuality = e.quality;
             logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
         }
+
         startScheduleTimer(0);
     }
 
-    function onURLResolutionFailed() {
+    function _onURLResolutionFailed() {
         fragmentModel.abortRequests();
         clearScheduleTimer();
     }
 
-    function onPlaybackStarted() {
+    function _onPlaybackStarted() {
         if (!settings.get().streaming.scheduleWhilePaused) {
             startScheduleTimer();
         }
     }
 
-    function onPlaybackRateChanged(e) {
+    function _onPlaybackRateChanged(e) {
         dashMetrics.updatePlayListTraceMetrics({ playbackspeed: e.playbackRate.toString() });
     }
 
@@ -313,7 +314,7 @@ function ScheduleController(config) {
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         timeToLoadDelay = 0;
-        lastInitializedRepresentationInfo = undefined;
+        lastInitializedQuality = NaN;
         lastFragmentRequest = {
             mediaInfo: undefined,
             quality: NaN,
@@ -327,13 +328,13 @@ function ScheduleController(config) {
 
     function reset() {
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
-        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, instance);
-        eventBus.off(Events.PLAYBACK_RATE_CHANGED, onPlaybackRateChanged, instance);
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackTimeUpdated, instance);
-        eventBus.off(Events.URL_RESOLUTION_FAILED, onURLResolutionFailed, instance);
+        eventBus.off(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
+        eventBus.off(Events.URL_RESOLUTION_FAILED, _onURLResolutionFailed, instance);
 
         clearScheduleTimer();
-        completeQualityChange(false);
+        _completeQualityChange(false);
         resetInitialSettings();
         streamInfo = null;
     }

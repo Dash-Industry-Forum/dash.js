@@ -275,7 +275,7 @@ function StreamProcessor(config) {
                     // Figure out the correct segment request time.
                     const targetTime = bufferController.getContinuousBufferTimeForTargetTime(e.seekTime);
 
-                    // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering again
+                    // If the buffer is continuous and exceeds the duration of the period we are still done buffering. We need to trigger the buffering completed event in order to start prebuffering upcoming periods again
                     if (!isNaN(streamInfo.duration) && isFinite(streamInfo.duration) && targetTime >= streamInfo.start + streamInfo.duration) {
                         bufferController.setIsBufferingCompleted(true);
                         resolve();
