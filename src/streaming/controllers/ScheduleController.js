@@ -69,7 +69,7 @@ function ScheduleController(config) {
         bufferLevelRule,
         lastFragmentRequest,
         topQualityIndex,
-        lastInitQuality,
+        lastInitializedRepresentationInfo,
         replaceRequestArray,
         switchTrack,
         replacingBuffer,
@@ -177,11 +177,12 @@ function ScheduleController(config) {
         validateExecutedFragmentRequest();
 
         const isReplacement = replaceRequestArray.length > 0;
-        if (replacingBuffer || isNaN(lastInitQuality) || switchTrack || isReplacement ||
+        const lastInitializedQuality = lastInitializedRepresentationInfo ? lastInitializedRepresentationInfo.quality : NaN;
+        if (replacingBuffer || isNaN(lastInitializedQuality) || switchTrack || isReplacement ||
             hasTopQualityChanged(type, streamInfo.id) ||
             bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack)) {
             const getNextFragment = function () {
-                if ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack) && (!replacingBuffer)) {
+                if ((currentRepresentationInfo.quality !== lastInitializedQuality || switchTrack) && (!replacingBuffer)) {
                     if (switchTrack) {
                         logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
                         replacingBuffer = mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE;
@@ -196,7 +197,6 @@ function ScheduleController(config) {
                         { representationId: currentRepresentationInfo.id, sender: instance },
                         { streamId: streamInfo.id, mediaType: type }
                     );
-                    lastInitQuality = currentRepresentationInfo.quality;
                     checkPlaybackQuality = false;
                 } else {
                     const replacement = replaceRequestArray.shift();
@@ -232,12 +232,13 @@ function ScheduleController(config) {
 
     function validateExecutedFragmentRequest() {
         if (!isNaN(seekTarget)) return;
+        if (!lastInitializedRepresentationInfo) return;
         // Validate that the fragment request executed and appended into the source buffer is as
         // good of quality as the current quality and is the correct media track.
         const time = playbackController.getTime();
         let safeBufferLevel = 1.5;
 
-        if (isNaN(currentRepresentationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
+        if (isNaN(lastInitializedRepresentationInfo.fragmentDuration)) { //fragmentDuration of representationInfo is not defined,
             // call metrics function to have data in the latest scheduling info...
             // if no metric, returns 0. In this case, rule will return false.
             const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(currentRepresentationInfo.mediaInfo.type);
@@ -256,13 +257,13 @@ function ScheduleController(config) {
 
             // Only replace on track switch when NEVER_REPLACE
             const trackChanged = !mediaController.isCurrentTrack(request.mediaInfo) && mediaController.getSwitchMode(request.mediaInfo.type) === Constants.TRACK_SWITCH_MODE_NEVER_REPLACE;
-            const qualityChanged = request.quality < currentRepresentationInfo.quality;
+            const qualityChanged = request.quality < lastInitializedRepresentationInfo.quality;
 
             if (fastSwitchModeEnabled && (trackChanged || qualityChanged) && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
                 replaceRequest(request);
                 isReplacementRequest = true;
                 logger.debug('Reloading outdated fragment at index: ', request.index);
-            } else if (request.quality > currentRepresentationInfo.quality && !replacingBuffer) {
+            } else if (request.quality > lastInitializedRepresentationInfo.quality && !replacingBuffer) {
                 // The buffer has better quality it in then what we would request so set append point to end of buffer!!
                 setSeekTarget(playbackController.getTime() + bufferLevel);
             }
@@ -379,6 +380,10 @@ function ScheduleController(config) {
         }
 
         setFragmentProcessState(false);
+        if (isNaN(e.index)) {
+            lastInitializedRepresentationInfo = bufferController.getRepresentationInfo(e.quality);
+            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
+        }
         if (isReplacementRequest && !isNaN(e.startTime)) {
             //replace requests process is in progress, call schedule in n seconds.
             //it is done in order to not add a fragment at the new quality at the end of the buffer before replace process is over.
@@ -494,7 +499,7 @@ function ScheduleController(config) {
         timeToLoadDelay = 0;
         seekTarget = NaN;
         initialRequest = true;
-        lastInitQuality = NaN;
+        lastInitializedRepresentationInfo = undefined;
         lastFragmentRequest = {
             mediaInfo: undefined,
             quality: NaN,
