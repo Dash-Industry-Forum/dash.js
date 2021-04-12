@@ -92,6 +92,20 @@ class ObjectsHelper {
             }
         };
     }
+
+    getDummySegmentsController() {
+        return {
+            initialize: () => {
+
+            },
+            getSegmentByTime: () => {
+                return null;
+            },
+            getSegmentByIndex: () => {
+
+            }
+        };
+    }
 }
 
 export default ObjectsHelper;

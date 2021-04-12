@@ -22,22 +22,8 @@ describe('StreamProcessor', function () {
             streamProcessor.reset();
         });
 
-        it('setBufferingTime should not throw an error', function () {
-            expect(streamProcessor.setBufferingTime.bind(streamProcessor)).to.not.throw();
-        });
-
-        it('getInitRequest should return null', function () {
-            const initRequest = streamProcessor.getInitRequest(0);
-            expect(initRequest).to.be.null; // jshint ignore:line
-        });
-
-        it('getInitRequest should throw an error when quality is not a number', function () {
-            expect(streamProcessor.getInitRequest.bind(streamProcessor, {})).to.be.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
-        });
-
-        it('getFragmentRequest should return null', function () {
-            const nextFragRequest = streamProcessor.getFragmentRequest();
-            expect(nextFragRequest).to.be.null; // jshint ignore:line
+        it('setExplicitBufferingTime should not throw an error', function () {
+            expect(streamProcessor.setExplicitBufferingTime.bind(streamProcessor)).to.not.throw();
         });
 
         it('getRepresentationInfo should throw an error when quality is not a number', function () {

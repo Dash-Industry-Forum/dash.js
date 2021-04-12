@@ -22,7 +22,6 @@ describe('DashHandler', function () {
     // Arrange
     const context = {};
     const testType = Constants.VIDEO;
-    const settings = Settings(context).getInstance();
     const eventBus = EventBus(context).getInstance();
     const debug = Debug(context).getInstance();
 
@@ -31,23 +30,21 @@ describe('DashHandler', function () {
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const baseURLController = objectsHelper.getDummyBaseURLController();
-    const mediaPlayerModel = new MediaPlayerModelMock();
-    const dashMetricsMock = new DashMetricsMock();
+    const segmentsController = objectsHelper.getDummySegmentsController();
+    const dashMetrics = new DashMetricsMock();
+
 
     const config = {
-        streamInfo: { id: 'id' },
-        type: 'video',
-        mimeType: streamProcessor.getMediaInfo().mimeType,
-        timelineConverter: timelineConverter,
-        baseURLController: baseURLController,
-        mediaPlayerModel: mediaPlayerModel,
-        dashMetrics: dashMetricsMock,
-        settings: settings,
-        eventBus: eventBus,
+        eventBus,
         events: Events,
-        debug: debug,
-        dashConstants: DashConstants,
-        urlUtils: URLUtils(context).getInstance()
+        debug,
+        urlUtils: URLUtils(context).getInstance(),
+        type: 'video',
+        streamInfo: { id: 'id' },
+        segmentsController,
+        timelineConverter,
+        baseURLController,
+        dashMetrics
     };
 
     const dashHandler = DashHandler(context).create(config);
