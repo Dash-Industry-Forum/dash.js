@@ -751,23 +751,27 @@ function StreamProcessor(config) {
         const bytes = chunk.bytes;
         const quality = chunk.quality;
         const currentRepresentation = getRepresentationInfo(quality);
-
         const voRepresentation = representationController && currentRepresentation ? representationController.getRepresentationForQuality(currentRepresentation.quality) : null;
-        const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
-        const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
-        if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
-            const request = fragmentModel.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                quality: quality,
-                index: chunk.index
-            })[0];
+        // If we switch tracks this event might be fired after the representations in the RepresentationController have been updated according to the new MediaInfo.
+        // In this case there will be no currentRepresentation and voRepresentation matching the "old" quality
+        if (currentRepresentation && voRepresentation) {
+            const eventStreamMedia = adapter.getEventsFor(currentRepresentation.mediaInfo);
+            const eventStreamTrack = adapter.getEventsFor(currentRepresentation, voRepresentation);
 
-            const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
-            eventBus.trigger(Events.INBAND_EVENTS,
-                { events: events },
-                { streamId: streamInfo.id }
-            );
+            if (eventStreamMedia && eventStreamMedia.length > 0 || eventStreamTrack && eventStreamTrack.length > 0) {
+                const request = fragmentModel.getRequests({
+                    state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+                    quality: quality,
+                    index: chunk.index
+                })[0];
+
+                const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+                eventBus.trigger(Events.INBAND_EVENTS,
+                    { events: events },
+                    { streamId: streamInfo.id }
+                );
+            }
         }
     }
 

@@ -344,7 +344,7 @@ function Stream(config) {
             textController.addMediaInfosToBuffer(streamInfo, allMediaForType);
         }
 
-        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo).length === 0) {
+        if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo.id).length === 0) {
             return;
         }
 
@@ -366,7 +366,7 @@ function Stream(config) {
 
 
         mediaController.setInitialMediaSettingsForType(type, streamInfo);
-        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo);
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
 
         eventBus.trigger(Events.STREAM_INITIALIZING, {
             streamInfo: streamInfo,

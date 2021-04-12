@@ -43,7 +43,6 @@ function TextController(config) {
 
     let context = this.context;
 
-    const streamInfo = config.streamInfo;
     const adapter = config.adapter;
     const errHandler = config.errHandler;
     const manifestModel = config.manifestModel;
@@ -174,7 +173,7 @@ function TextController(config) {
 
         const textDefaultEnabled = settings.get().streaming.text.defaultEnabled;
 
-        if (textDefaultEnabled === false || disableTextBeforeTextTracksAdded) {
+        if ((textDefaultEnabled === false && !isTextEnabled()) || disableTextBeforeTextTracksAdded) {
             // disable text at startup if explicitly configured with setTextDefaultEnabled(false) or if there is no defaultSettings (configuration or from domStorage)
             setTextTrack(streamId, -1);
         } else {
@@ -293,7 +292,7 @@ function TextController(config) {
             let mediaInfo = fragmentedTracks[i];
             if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
                 (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
-                let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo);
+                let currentFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamId);
                 if (mediaInfo !== currentFragTrack) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
                     mediaController.setTrack(mediaInfo);

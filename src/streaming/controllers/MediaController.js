@@ -59,7 +59,7 @@ function MediaController() {
      */
     function setInitialMediaSettingsForType(type, streamInfo) {
         let settings = lastSelectedTracks[type] || getInitialSettings(type);
-        const tracksForType = getTracksFor(type, streamInfo);
+        const tracksForType = getTracksFor(type, streamInfo.id);
         const tracks = [];
 
         if (!settings) {
@@ -114,36 +114,34 @@ function MediaController() {
         mediaTracks.push(track);
 
         let initSettings = getInitialSettings(mediaType);
-        if (initSettings && (matchSettings(initSettings, track)) && !getCurrentTrackFor(mediaType, track.streamInfo)) {
+        if (initSettings && (matchSettings(initSettings, track)) && !getCurrentTrackFor(mediaType, track.streamInfo.id)) {
             setTrack(track);
         }
     }
 
     /**
      * @param {string} type
-     * @param {StreamInfo} streamInfo
+     * @param {string} streamId
      * @returns {Array}
      * @memberof MediaController#
      */
-    function getTracksFor(type, streamInfo) {
-        if (!type || !streamInfo) return [];
+    function getTracksFor(type, streamId) {
+        if (!type) return [];
 
-        const id = streamInfo.id;
+        if (!tracks[streamId] || !tracks[streamId][type]) return [];
 
-        if (!tracks[id] || !tracks[id][type]) return [];
-
-        return tracks[id][type].list;
+        return tracks[streamId][type].list;
     }
 
     /**
      * @param {string} type
-     * @param {StreamInfo} streamInfo
+     * @param {string} streamId
      * @returns {Object|null}
      * @memberof MediaController#
      */
-    function getCurrentTrackFor(type, streamInfo) {
-        if (!type || !streamInfo || (streamInfo && !tracks[streamInfo.id])) return null;
-        return tracks[streamInfo.id][type].current;
+    function getCurrentTrackFor(type, streamId) {
+        if (!type || !tracks[streamId]) return null;
+        return tracks[streamId][type].current;
     }
 
     /**
@@ -172,7 +170,7 @@ function MediaController() {
         const type = track.type;
         const streamInfo = track.streamInfo;
         const id = streamInfo.id;
-        const current = getCurrentTrackFor(type, streamInfo);
+        const current = getCurrentTrackFor(type, id);
 
         if (!tracks[id] || !tracks[id][type] || isTracksEqual(track, current)) return;
 

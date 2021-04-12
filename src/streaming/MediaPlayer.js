@@ -1376,7 +1376,7 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
-        return mediaController.getTracksFor(type, streamInfo);
+        return mediaController.getTracksFor(type, streamInfo.id);
     }
 
     /**
@@ -1412,7 +1412,7 @@ function MediaPlayer() {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let streamInfo = streamController.getActiveStreamInfo();
-        return mediaController.getCurrentTrackFor(type, streamInfo);
+        return mediaController.getCurrentTrackFor(type, streamInfo.id);
     }
 
     /**

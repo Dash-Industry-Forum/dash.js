@@ -123,8 +123,8 @@ function TextSourceBuffer(config) {
         if (isFragmented) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo);
-            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo);
+            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
+            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
             for (let i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
                     setCurrentFragmentedTrackIdx(i);
