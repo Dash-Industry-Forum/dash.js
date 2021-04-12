@@ -359,6 +359,7 @@ function StreamProcessor(config) {
                     fragmentModel.executeRequest(request);
                 } else {
                     _noValidRequest();
+                    scheduleController.setInitSegmentRequired(true);
                 }
             }
         }
@@ -459,7 +460,7 @@ function StreamProcessor(config) {
     function _onBufferLevelStateChanged(e) {
         dashMetrics.addBufferState(type, e.state, scheduleController.getBufferTarget());
         if (e.state === MetricsConstants.BUFFER_EMPTY && !playbackController.isSeeking()) {
-            // logger.info('Buffer is empty! Stalling!');
+            logger.info('Buffer is empty! Stalling!');
             dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REBUFFERING_REASON);
         }
     }
