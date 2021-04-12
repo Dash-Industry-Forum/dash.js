@@ -61,7 +61,7 @@ function ScheduleController(config) {
         bufferLevelRule,
         lastFragmentRequest,
         topQualityIndex,
-        lastInitQuality,
+        lastInitializedRepresentationInfo,
         switchTrack,
         initSegmentRequired,
         mediaRequest,
@@ -163,9 +163,9 @@ function ScheduleController(config) {
      * @private
      */
     function _getNextFragment() {
-
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (initSegmentRequired || ((currentRepresentationInfo.quality !== lastInitQuality || switchTrack))) {
+        const lastInitializedQuality = lastInitializedRepresentationInfo ? lastInitializedRepresentationInfo.quality : NaN;
+        if (initSegmentRequired || ((currentRepresentationInfo.quality !== lastInitializedQuality || switchTrack))) {
             if (switchTrack) {
                 logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentationInfo.id);
                 switchTrack = false;
@@ -176,7 +176,6 @@ function ScheduleController(config) {
                 { representationId: currentRepresentationInfo.id, sender: instance },
                 { streamId: streamInfo.id, mediaType: type }
             );
-            lastInitQuality = currentRepresentationInfo.quality;
             checkPlaybackQuality = false;
             initSegmentRequired = false;
         }
@@ -213,7 +212,8 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            return currentRepresentationInfo && (isNaN(lastInitQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
+            const lastInitializedQuality = lastInitializedRepresentationInfo ? lastInitializedRepresentationInfo.quality : NaN;
+            return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
         } catch (e) {
             return false;
         }
@@ -268,6 +268,10 @@ function ScheduleController(config) {
 
     function _onBytesAppended(e) {
         logger.debug(`Appended bytes for ${e.mediaType}`);
+        if (isNaN(e.index)) {
+            lastInitializedRepresentationInfo = bufferController.getRepresentationInfo(e.quality);
+            logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
+        }
         startScheduleTimer(0);
     }
 
@@ -309,7 +313,7 @@ function ScheduleController(config) {
     function resetInitialSettings() {
         checkPlaybackQuality = true;
         timeToLoadDelay = 0;
-        lastInitQuality = NaN;
+        lastInitializedRepresentationInfo = undefined;
         lastFragmentRequest = {
             mediaInfo: undefined,
             quality: NaN,
