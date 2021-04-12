@@ -375,6 +375,11 @@ function HTTPLoader(cfg) {
                 return;
             }
 
+            // Do not abort initialization segment types
+            if (x.request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                return;
+            }
+
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called
