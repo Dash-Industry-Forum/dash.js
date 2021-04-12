@@ -60,7 +60,6 @@
     "html-entities": "^1.2.1",
     "imsc": "^1.0.2",
     "localforage": "^1.7.1",
-    "polyjuice": "^2.2.4",
     "request": "^2.87.0",
     "request-promise": "^4.2.2"
   },
