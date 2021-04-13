@@ -353,11 +353,11 @@ function SegmentBaseLoader() {
     }
 
     instance = {
-        setConfig: setConfig,
-        initialize: initialize,
-        loadInitialization: loadInitialization,
-        loadSegments: loadSegments,
-        reset: reset
+        setConfig,
+        initialize,
+        loadInitialization,
+        loadSegments,
+        reset
     };
 
     setup();
