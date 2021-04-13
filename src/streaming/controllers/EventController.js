@@ -43,7 +43,6 @@ function EventController() {
     const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
     const MPD_CALLBACK_VALUE = 1;
 
-    const REFRESH_DELAY = 100;
     const REMAINING_EVENTS_THRESHOLD = 300;
 
     const EVENT_HANDLED_STATES = {
@@ -63,6 +62,7 @@ function EventController() {
         lastEventTimerCall,
         manifestUpdater,
         playbackController,
+        settings,
         eventHandlingInProgress,
         isStarted;
 
@@ -118,9 +118,10 @@ function EventController() {
         try {
             checkConfig();
             logger.debug('Start Event Controller');
-            if (!isStarted && !isNaN(REFRESH_DELAY)) {
+            const refreshDelay = settings.get().streaming.eventControllerRefreshDelay;
+            if (!isStarted && !isNaN(refreshDelay)) {
                 isStarted = true;
-                eventInterval = setInterval(_onEventTimer, REFRESH_DELAY);
+                eventInterval = setInterval(_onEventTimer, refreshDelay);
             }
         } catch (e) {
             throw e;
@@ -504,14 +505,16 @@ function EventController() {
             if (!config) {
                 return;
             }
-
             if (config.manifestUpdater) {
                 manifestUpdater = config.manifestUpdater;
             }
-
             if (config.playbackController) {
                 playbackController = config.playbackController;
             }
+            if (config.settings) {
+                settings = config.settings;
+            }
+
         } catch (e) {
             throw e;
         }

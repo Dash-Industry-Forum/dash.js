@@ -13,6 +13,7 @@ const intern = require('intern').default;
 const { suite, before, test} = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
 
+const constants = require('./scripts/constants.js');
 const utils = require('./scripts/utils.js');
 const player = require('./scripts/player.js');
 
@@ -51,7 +52,8 @@ exports.register = function (stream) {
                     // set initial track
                     utils.log(NAME, 'set initial text track: ' + stream.textTracks[textType][i].lang);
                     await command.execute(player.setInitialMediaSettingsFor, [textType, {
-                        lang: stream.textTracks[textType][i].lang
+                        lang: stream.textTracks[textType][i].lang,
+                        index: stream.textTracks[textType][i].index
                     }]);
                     await command.execute(player.loadStream, [stream]);
                     await command.execute(player.play, []);
@@ -63,6 +65,11 @@ exports.register = function (stream) {
                     const newTrack = await command.execute(player.getCurrentTrackFor, [textType]);
                     utils.log(NAME, 'current audio track: ' + newTrack.lang);
                     assert.deepEqual(newTrack.lang, stream.textTracks[textType][i].lang);
+                    assert.deepEqual(newTrack.index, stream.textTracks[textType][i].index);
+
+                    utils.log(NAME, 'Check if playing');
+                    const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                    assert.isTrue(progressing);
                 }
             }
         });

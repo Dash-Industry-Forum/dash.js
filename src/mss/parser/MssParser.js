@@ -592,7 +592,7 @@ function MssParser(config) {
         return widevineCP;
     }
 
-    function processManifest(xmlDoc, manifestLoadedTime) {
+    function processManifest(xmlDoc) {
         const manifest = {};
         const contentProtections = [];
         const smoothStreamingMedia = xmlDoc.getElementsByTagName('SmoothStreamingMedia')[0];
@@ -643,7 +643,7 @@ function MssParser(config) {
             // Duration will be set according to current segment timeline duration (see below)
         }
 
-        if (manifest.type === 'dynamic'  && manifest.timeShiftBufferDepth < Infinity) {
+        if (manifest.type === 'dynamic') {
             manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
@@ -706,11 +706,6 @@ function MssParser(config) {
                 manifest.minBufferTime = segmentDuration;
 
                 if (manifest.type === 'dynamic' ) {
-                    // Set availabilityStartTime
-                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
-                    let endTime = (segments[segments.length - 1].t + segments[segments.length - 1].d) / adaptations[i].SegmentTemplate.timescale * 1000;
-                    manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - endTime);
-
                     // Match timeShiftBufferDepth to video segment timeline duration
                     if (manifest.timeShiftBufferDepth > 0 &&
                         manifest.timeShiftBufferDepth !== Infinity &&
@@ -727,6 +722,7 @@ function MssParser(config) {
         // In case of live streams:
         // 1- configure player buffering properties according to target live delay
         // 2- adapt live delay and then buffers length in case timeShiftBufferDepth is too small compared to target live delay (see PlaybackController.computeLiveDelay())
+        // 3- Set retry attempts and intervals for FragmentInfo requests
         if (manifest.type === 'dynamic') {
             let targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
@@ -735,12 +731,13 @@ function MssParser(config) {
             }
             let targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10/*END_OF_PLAYLIST_PADDING*/, manifest.timeShiftBufferDepth / 2);
             let liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
-            // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
-            let bufferTime = liveDelay - segmentDuration;
+            // Consider a margin of more than one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
+            let bufferTime = liveDelay - (segmentDuration * 1.5);
 
             // Store initial buffer settings
             initialBufferSettings = {
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline,
                     'liveDelay': settings.get().streaming.liveDelay,
                     'stableBufferTime': settings.get().streaming.stableBufferTime,
                     'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
@@ -750,6 +747,7 @@ function MssParser(config) {
 
             settings.update({
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': true,
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,
