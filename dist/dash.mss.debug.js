@@ -1148,6 +1148,8 @@ var _streamingVoFragmentRequest = _dereq_(17);
 
 var _streamingVoFragmentRequest2 = _interopRequireDefault(_streamingVoFragmentRequest);
 
+var _streamingVoMetricsHTTPRequest = _dereq_(18);
+
 function MssFragmentInfoController(config) {
 
     config = config || {};
@@ -1186,7 +1188,6 @@ function MssFragmentInfoController(config) {
         logger.debug('Start');
 
         started = true;
-        startTime = new Date().getTime();
         index = 0;
 
         loadNextFragmentInfo();
@@ -1231,7 +1232,7 @@ function MssFragmentInfoController(config) {
         var request = new _streamingVoFragmentRequest2['default']();
 
         request.mediaType = type;
-        request.type = 'FragmentInfoSegment';
+        request.type = _streamingVoMetricsHTTPRequest.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE;
         // request.range = segment.mediaRange;
         request.startTime = segment.t / timescale;
         request.duration = segment.d / timescale;
@@ -1285,6 +1286,10 @@ function MssFragmentInfoController(config) {
 
         // logger.debug('FragmentInfo loaded: ', request.url);
 
+        if (startTime === null) {
+            startTime = new Date().getTime();
+        }
+
         if (!startFragmentTime) {
             startFragmentTime = request.startTime;
         }
@@ -1325,7 +1330,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(MssFragmentInfoControll
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"17":17}],6:[function(_dereq_,module,exports){
+},{"17":17,"18":18}],6:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1427,6 +1432,7 @@ function MssFragmentMoofProcessor(config) {
             range = undefined;
         var segment = null;
         var t = 0;
+        var endTime = undefined;
         var availabilityStartTime = null;
 
         if (entries.length === 0) {
@@ -1487,47 +1493,56 @@ function MssFragmentMoofProcessor(config) {
         if (manifest.type === 'static') {
             if (type === 'video') {
                 segment = segments[segments.length - 1];
-                var end = (segment.t + segment.d) / timescale;
-                if (end > representation.adaptation.period.duration) {
-                    eventBus.trigger(_streamingMediaPlayerEvents2['default'].MANIFEST_VALIDITY_CHANGED, { sender: this, newDuration: end });
+                endTime = (segment.t + segment.d) / timescale;
+                if (endTime > representation.adaptation.period.duration) {
+                    eventBus.trigger(_streamingMediaPlayerEvents2['default'].MANIFEST_VALIDITY_CHANGED, { sender: this, newDuration: endTime });
                 }
             }
             return;
-        }
-        // In case of live streams, update segment timeline according to DVR window
-        else if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
+        } else {
+            // In case of live streams, update segment timeline according to DVR window
+            if (manifest.timeShiftBufferDepth && manifest.timeShiftBufferDepth > 0) {
                 // Get timestamp of the last segment
                 segment = segments[segments.length - 1];
                 t = segment.t;
 
                 // Determine the segments' availability start time
-                availabilityStartTime = Math.round((t - manifest.timeShiftBufferDepth * timescale) / timescale);
+                availabilityStartTime = (t - manifest.timeShiftBufferDepth * timescale) / timescale;
 
                 // Remove segments prior to availability start time
                 segment = segments[0];
-                while (Math.round(segment.t / timescale) < availabilityStartTime) {
+                endTime = (segment.t + segment.d) / timescale;
+                while (endTime < availabilityStartTime) {
+                    // Check if not currently playing the segment to be removed
+                    if (!playbackController.isPaused() && playbackController.getTime() < endTime) {
+                        break;
+                    }
                     // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                     segments.splice(0, 1);
                     segment = segments[0];
+                    endTime = (segment.t + segment.d) / timescale;
                 }
-
-                // Update DVR window range => set range end to end time of current segment
-                range = {
-                    start: segments[0].t / timescale,
-                    end: tfdt.baseMediaDecodeTime / timescale + request.duration
-                };
-
-                updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
             }
+
+            // Update DVR window range => set range end to end time of current segment
+            range = {
+                start: segments[0].t / timescale,
+                end: tfdt.baseMediaDecodeTime / timescale + request.duration
+            };
+
+            updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
+        }
 
         representationController.updateRepresentation(representation, true);
     }
 
     function updateDVR(type, range, manifestInfo) {
+        if (type !== 'video' && type !== 'audio') return;
         var dvrInfos = dashMetrics.getCurrentDVRInfo(type);
         if (!dvrInfos || range.end > dvrInfos.range.end) {
             logger.debug('Update DVR range: [' + range.start + ' - ' + range.end + ']');
             dashMetrics.addDVRInfo(type, playbackController.getTime(), manifestInfo, range);
+            playbackController.updateCurrentTime(type);
         }
     }
 
@@ -2400,6 +2415,8 @@ var _MssFragmentMoovProcessor = _dereq_(7);
 
 var _MssFragmentMoovProcessor2 = _interopRequireDefault(_MssFragmentMoovProcessor);
 
+var _streamingVoMetricsHTTPRequest = _dereq_(18);
+
 // Add specific box processors not provided by codem-isoboxer library
 
 function arrayEqual(arr1, arr2) {
@@ -2530,7 +2547,7 @@ function MssFragmentProcessor(config) {
         if (e.request.type === 'MediaSegment') {
             // MediaSegment => convert to Smooth Streaming moof format
             mssFragmentMoofProcessor.convertFragment(e, streamProcessor);
-        } else if (e.request.type === 'FragmentInfoSegment') {
+        } else if (e.request.type === _streamingVoMetricsHTTPRequest.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
             // FragmentInfo (live) => update segments list
             mssFragmentMoofProcessor.updateSegmentList(e, streamProcessor);
 
@@ -2554,7 +2571,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(MssFragmentProcessor);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"6":6,"7":7}],9:[function(_dereq_,module,exports){
+},{"18":18,"6":6,"7":7}],9:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2625,6 +2642,8 @@ var _streamingVoDashJSError2 = _interopRequireDefault(_streamingVoDashJSError);
 var _streamingUtilsInitCache = _dereq_(14);
 
 var _streamingUtilsInitCache2 = _interopRequireDefault(_streamingUtilsInitCache);
+
+var _streamingVoMetricsHTTPRequest = _dereq_(18);
 
 function MssHandler(config) {
 
@@ -2759,7 +2778,7 @@ function MssHandler(config) {
         // Process moof to transcode it from MSS to DASH (or to update segment timeline for SegmentInfo fragments)
         mssFragmentProcessor.processFragment(e, streamProcessor);
 
-        if (e.request.type === 'FragmentInfoSegment') {
+        if (e.request.type === _streamingVoMetricsHTTPRequest.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
             // If FragmentInfo loaded, then notify corresponding MssFragmentInfoController
             var fragmentInfoController = getFragmentInfoController(e.request.mediaType);
             if (fragmentInfoController) {
@@ -2842,7 +2861,7 @@ exports['default'] = factory;
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"10":10,"12":12,"14":14,"15":15,"16":16,"17":17,"5":5,"8":8}],10:[function(_dereq_,module,exports){
+},{"10":10,"12":12,"14":14,"15":15,"16":16,"17":17,"18":18,"5":5,"8":8}],10:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3585,7 +3604,7 @@ function MssParser(config) {
         return widevineCP;
     }
 
-    function processManifest(xmlDoc, manifestLoadedTime) {
+    function processManifest(xmlDoc) {
         var manifest = {};
         var contentProtections = [];
         var smoothStreamingMedia = xmlDoc.getElementsByTagName('SmoothStreamingMedia')[0];
@@ -3637,7 +3656,7 @@ function MssParser(config) {
             // Duration will be set according to current segment timeline duration (see below)
         }
 
-        if (manifest.type === 'dynamic' && manifest.timeShiftBufferDepth < Infinity) {
+        if (manifest.type === 'dynamic') {
             manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
@@ -3700,11 +3719,6 @@ function MssParser(config) {
                 manifest.minBufferTime = segmentDuration;
 
                 if (manifest.type === 'dynamic') {
-                    // Set availabilityStartTime
-                    segments = adaptations[i].SegmentTemplate.SegmentTimeline.S_asArray;
-                    var endTime = (segments[segments.length - 1].t + segments[segments.length - 1].d) / adaptations[i].SegmentTemplate.timescale * 1000;
-                    manifest.availabilityStartTime = new Date(manifestLoadedTime.getTime() - endTime);
-
                     // Match timeShiftBufferDepth to video segment timeline duration
                     if (manifest.timeShiftBufferDepth > 0 && manifest.timeShiftBufferDepth !== Infinity && manifest.timeShiftBufferDepth > adaptations[i].SegmentTemplate.SegmentTimeline.duration) {
                         manifest.timeShiftBufferDepth = adaptations[i].SegmentTemplate.SegmentTimeline.duration;
@@ -3719,6 +3733,7 @@ function MssParser(config) {
         // In case of live streams:
         // 1- configure player buffering properties according to target live delay
         // 2- adapt live delay and then buffers length in case timeShiftBufferDepth is too small compared to target live delay (see PlaybackController.computeLiveDelay())
+        // 3- Set retry attempts and intervals for FragmentInfo requests
         if (manifest.type === 'dynamic') {
             var targetLiveDelay = mediaPlayerModel.getLiveDelay();
             if (!targetLiveDelay) {
@@ -3727,12 +3742,13 @@ function MssParser(config) {
             }
             var targetDelayCapping = Math.max(manifest.timeShiftBufferDepth - 10, /*END_OF_PLAYLIST_PADDING*/manifest.timeShiftBufferDepth / 2);
             var liveDelay = Math.min(targetDelayCapping, targetLiveDelay);
-            // Consider a margin of one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
-            var bufferTime = liveDelay - segmentDuration;
+            // Consider a margin of more than one segment in order to avoid Precondition Failed errors (412), for example if audio and video are not correctly synchronized
+            var bufferTime = liveDelay - segmentDuration * 1.5;
 
             // Store initial buffer settings
             initialBufferSettings = {
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline,
                     'liveDelay': settings.get().streaming.liveDelay,
                     'stableBufferTime': settings.get().streaming.stableBufferTime,
                     'bufferTimeAtTopQuality': settings.get().streaming.bufferTimeAtTopQuality,
@@ -3742,6 +3758,7 @@ function MssParser(config) {
 
             settings.update({
                 'streaming': {
+                    'calcSegmentAvailabilityRangeFromTimeline': true,
                     'liveDelay': liveDelay,
                     'stableBufferTime': bufferTime,
                     'bufferTimeAtTopQuality': bufferTime,
@@ -4777,6 +4794,7 @@ HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
 HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
 HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
+HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 

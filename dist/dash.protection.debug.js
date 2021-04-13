@@ -352,6 +352,320 @@ module.exports = exports['default'];
  */
 
 /**
+ * Constants declaration
+ * @class
+ * @ignore
+ * @hideconstructor
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var Constants = (function () {
+  _createClass(Constants, [{
+    key: 'init',
+    value: function init() {
+      /**
+       *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
+       *  @memberof Constants#
+       *  @static
+       */
+      this.STREAM = 'stream';
+
+      /**
+       *  @constant {string} VIDEO Video media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.VIDEO = 'video';
+
+      /**
+       *  @constant {string} AUDIO Audio media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.AUDIO = 'audio';
+
+      /**
+       *  @constant {string} TEXT Text media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TEXT = 'text';
+
+      /**
+       *  @constant {string} FRAGMENTED_TEXT Fragmented text media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.FRAGMENTED_TEXT = 'fragmentedText';
+
+      /**
+       *  @constant {string} EMBEDDED_TEXT Embedded text media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.EMBEDDED_TEXT = 'embeddedText';
+
+      /**
+       *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MUXED = 'muxed';
+
+      /**
+       *  @constant {string} IMAGE Image media type
+       *  @memberof Constants#
+       *  @static
+       */
+      this.IMAGE = 'image';
+
+      /**
+       *  @constant {string} STPP STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.STPP = 'stpp';
+
+      /**
+       *  @constant {string} TTML STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TTML = 'ttml';
+
+      /**
+       *  @constant {string} VTT STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.VTT = 'vtt';
+
+      /**
+       *  @constant {string} WVTT STTP Subtitles format
+       *  @memberof Constants#
+       *  @static
+       */
+      this.WVTT = 'wvtt';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_BOLA Adaptive bitrate algorithm based on Bola (buffer level)
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_BOLA = 'abrBola';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_L2A = 'abrL2A';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_LoLP Adaptive bitrate algorithm based on LoL+
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_LoLP = 'abrLoLP';
+
+      /**
+       *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+
+      /**
+       *  @constant {string} ABR_FETCH_THROUGHPUT_CALUCUALTION_DOWNLOADED_DATA Throughput calculation based on downloaded data array
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA = 'abrFetchThroughputCalculationDownloadedData';
+
+      /**
+       *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING Throughput calculation based on moof parsing
+       *  @memberof Constants#
+       *  @static
+       */
+      this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
+
+      /**
+       *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
+       *  @memberof Constants#
+       *  @static
+       */
+      this.LIVE_CATCHUP_MODE_DEFAULT = 'liveCatchupModeDefault';
+
+      /**
+       *  @constant {string} LIVE_CATCHUP_MODE_LOLP Throughput calculation based on moof parsing
+       *  @memberof Constants#
+       *  @static
+       */
+      this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
+
+      /**
+       *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+
+      /**
+       *  @constant {string} EWMA Exponential moving average
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MOVING_AVERAGE_EWMA = 'ewma';
+
+      /**
+       *  @constant {string} BAD_ARGUMENT_ERROR Invalid Arguments type of error
+       *  @memberof Constants#
+       *  @static
+       */
+      this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
+
+      /**
+       *  @constant {string} MISSING_CONFIG_ERROR Missing configuration parameters type of error
+       *  @memberof Constants#
+       *  @static
+       */
+      this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+
+      /**
+       *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
+
+      /**
+       *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
+
+      /**
+       *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TRACK_SELECTION_MODE_FIRST_TRACK = 'firstTrack';
+
+      /**
+       *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
+
+      /**
+       *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY = 'highestEfficiency';
+
+      /**
+       *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
+       *  @memberof Constants#
+       *  @static
+       */
+      this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
+
+      /**
+       *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+       *  @memberof Constants#
+       *  @static
+       */
+      this.CMCD_MODE_QUERY = 'query';
+
+      /**
+       *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+       *  @memberof Constants#
+       *  @static
+       */
+      this.CMCD_MODE_HEADER = 'header';
+
+      this.LOCATION = 'Location';
+      this.INITIALIZE = 'initialize';
+      this.TEXT_SHOWING = 'showing';
+      this.TEXT_HIDDEN = 'hidden';
+      this.CC1 = 'CC1';
+      this.CC3 = 'CC3';
+      this.UTF8 = 'utf-8';
+      this.SCHEME_ID_URI = 'schemeIdUri';
+      this.START_TIME = 'starttime';
+      this.SERVICE_DESCRIPTION_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
+      this.SUPPLEMENTAL_PROPERTY_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
+      this.XML = 'XML';
+      this.ARRAY_BUFFER = 'ArrayBuffer';
+      this.DVB_REPORTING_URL = 'dvb:reportingUrl';
+      this.DVB_PROBABILITY = 'dvb:probability';
+    }
+  }]);
+
+  function Constants() {
+    _classCallCheck(this, Constants);
+
+    this.init();
+  }
+
+  return Constants;
+})();
+
+var constants = new Constants();
+exports['default'] = constants;
+module.exports = exports['default'];
+
+},{}],5:[function(_dereq_,module,exports){
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
  * Protection Constants declaration
  * @class
  * @ignore
@@ -389,7 +703,7 @@ var constants = new ProtectionConstants();
 exports['default'] = constants;
 module.exports = exports['default'];
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -635,7 +949,7 @@ var CommonEncryption = (function () {
 exports['default'] = CommonEncryption;
 module.exports = exports['default'];
 
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -674,31 +988,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionController = _dereq_(8);
+var _controllersProtectionController = _dereq_(9);
 
 var _controllersProtectionController2 = _interopRequireDefault(_controllersProtectionController);
 
-var _controllersProtectionKeyController = _dereq_(9);
+var _controllersProtectionKeyController = _dereq_(10);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _ProtectionEvents = _dereq_(7);
+var _ProtectionEvents = _dereq_(8);
 
 var _ProtectionEvents2 = _interopRequireDefault(_ProtectionEvents);
 
-var _errorsProtectionErrors = _dereq_(14);
+var _errorsProtectionErrors = _dereq_(15);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _modelsProtectionModel_21Jan2015 = _dereq_(16);
+var _modelsProtectionModel_21Jan2015 = _dereq_(17);
 
 var _modelsProtectionModel_21Jan20152 = _interopRequireDefault(_modelsProtectionModel_21Jan2015);
 
-var _modelsProtectionModel_3Feb2014 = _dereq_(17);
+var _modelsProtectionModel_3Feb2014 = _dereq_(18);
 
 var _modelsProtectionModel_3Feb20142 = _interopRequireDefault(_modelsProtectionModel_3Feb2014);
 
-var _modelsProtectionModel_01b = _dereq_(15);
+var _modelsProtectionModel_01b = _dereq_(16);
 
 var _modelsProtectionModel_01b2 = _interopRequireDefault(_modelsProtectionModel_01b);
 
@@ -795,7 +1109,8 @@ function Protection() {
                 events: config.events,
                 BASE64: config.BASE64,
                 constants: config.constants,
-                cmcdModel: config.cmcdModel
+                cmcdModel: config.cmcdModel,
+                settings: config.settings
             });
             config.capabilities.setEncryptedMediaSupported(true);
         }
@@ -854,7 +1169,7 @@ dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory
 exports['default'] = factory;
 module.exports = exports['default'];
 
-},{"14":14,"15":15,"16":16,"17":17,"7":7,"8":8,"9":9}],7:[function(_dereq_,module,exports){
+},{"10":10,"15":15,"16":16,"17":17,"18":18,"8":8,"9":9}],8:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1068,7 +1383,7 @@ var protectionEvents = new ProtectionEvents();
 exports['default'] = protectionEvents;
 module.exports = exports['default'];
 
-},{"3":3}],8:[function(_dereq_,module,exports){
+},{"3":3}],9:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -1108,39 +1423,43 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(5);
+var _CommonEncryption = _dereq_(6);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _voMediaCapability = _dereq_(29);
+var _voMediaCapability = _dereq_(30);
 
 var _voMediaCapability2 = _interopRequireDefault(_voMediaCapability);
 
-var _voKeySystemConfiguration = _dereq_(26);
+var _voKeySystemConfiguration = _dereq_(27);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _errorsProtectionErrors = _dereq_(14);
+var _errorsProtectionErrors = _dereq_(15);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _voDashJSError = _dereq_(31);
+var _voDashJSError = _dereq_(32);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _voLicenseRequest = _dereq_(27);
+var _voLicenseRequest = _dereq_(28);
 
 var _voLicenseRequest2 = _interopRequireDefault(_voLicenseRequest);
 
-var _voLicenseResponse = _dereq_(28);
+var _voLicenseResponse = _dereq_(29);
 
 var _voLicenseResponse2 = _interopRequireDefault(_voLicenseResponse);
 
-var _voMetricsHTTPRequest = _dereq_(32);
+var _voMetricsHTTPRequest = _dereq_(33);
 
 var _coreUtils = _dereq_(1);
 
 var _coreUtils2 = _interopRequireDefault(_coreUtils);
+
+var _constantsConstants = _dereq_(4);
+
+var _constantsConstants2 = _interopRequireDefault(_constantsConstants);
 
 var NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 var NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -1175,6 +1494,7 @@ function ProtectionController(config) {
     var constants = config.constants;
     var needkeyRetries = [];
     var cmcdModel = config.cmcdModel;
+    var settings = config.settings;
 
     var instance = undefined,
         logger = undefined,
@@ -1885,13 +2205,18 @@ function ProtectionController(config) {
     function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         var xhr = new XMLHttpRequest();
 
-        var cmcdParams = cmcdModel.getQueryParameter({
-            url: request.url,
-            type: _voMetricsHTTPRequest.HTTPRequest.LICENSE
-        });
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            var cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === _constantsConstants2['default'].CMCD_MODE_QUERY) {
+                var cmcdParams = cmcdModel.getQueryParameter({
+                    url: request.url,
+                    type: _voMetricsHTTPRequest.HTTPRequest.LICENSE
+                });
 
-        if (cmcdParams) {
-            request.url = _coreUtils2['default'].addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                if (cmcdParams) {
+                    request.url = _coreUtils2['default'].addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                }
+            }
         }
 
         xhr.open(request.method, request.url, true);
@@ -1902,6 +2227,25 @@ function ProtectionController(config) {
         }
         for (var key in request.headers) {
             xhr.setRequestHeader(key, request.headers[key]);
+        }
+
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            var cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === _constantsConstants2['default'].CMCD_MODE_HEADER) {
+                var cmcdHeaders = cmcdModel.getHeaderParameters({
+                    url: request.url,
+                    type: _voMetricsHTTPRequest.HTTPRequest.LICENSE
+                });
+
+                if (cmcdHeaders) {
+                    for (var header in cmcdHeaders) {
+                        var value = cmcdHeaders[header];
+                        if (value) {
+                            xhr.setRequestHeader(header, value);
+                        }
+                    }
+                }
+            }
         }
 
         var retryRequest = function retryRequest() {
@@ -2051,7 +2395,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionController);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"1":1,"14":14,"26":26,"27":27,"28":28,"29":29,"31":31,"32":32,"5":5}],9:[function(_dereq_,module,exports){
+},{"1":1,"15":15,"27":27,"28":28,"29":29,"30":30,"32":32,"33":33,"4":4,"6":6}],10:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2090,43 +2434,43 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(5);
+var _CommonEncryption = _dereq_(6);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _drmKeySystemClearKey = _dereq_(10);
+var _drmKeySystemClearKey = _dereq_(11);
 
 var _drmKeySystemClearKey2 = _interopRequireDefault(_drmKeySystemClearKey);
 
-var _drmKeySystemW3CClearKey = _dereq_(12);
+var _drmKeySystemW3CClearKey = _dereq_(13);
 
 var _drmKeySystemW3CClearKey2 = _interopRequireDefault(_drmKeySystemW3CClearKey);
 
-var _drmKeySystemWidevine = _dereq_(13);
+var _drmKeySystemWidevine = _dereq_(14);
 
 var _drmKeySystemWidevine2 = _interopRequireDefault(_drmKeySystemWidevine);
 
-var _drmKeySystemPlayReady = _dereq_(11);
+var _drmKeySystemPlayReady = _dereq_(12);
 
 var _drmKeySystemPlayReady2 = _interopRequireDefault(_drmKeySystemPlayReady);
 
-var _serversDRMToday = _dereq_(19);
+var _serversDRMToday = _dereq_(20);
 
 var _serversDRMToday2 = _interopRequireDefault(_serversDRMToday);
 
-var _serversPlayReady = _dereq_(20);
+var _serversPlayReady = _dereq_(21);
 
 var _serversPlayReady2 = _interopRequireDefault(_serversPlayReady);
 
-var _serversWidevine = _dereq_(21);
+var _serversWidevine = _dereq_(22);
 
 var _serversWidevine2 = _interopRequireDefault(_serversWidevine);
 
-var _serversClearKey = _dereq_(18);
+var _serversClearKey = _dereq_(19);
 
 var _serversClearKey2 = _interopRequireDefault(_serversClearKey);
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2458,7 +2802,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(ProtectionKeyContro
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"10":10,"11":11,"12":12,"13":13,"18":18,"19":19,"20":20,"21":21,"4":4,"5":5}],10:[function(_dereq_,module,exports){
+},{"11":11,"12":12,"13":13,"14":14,"19":19,"20":20,"21":21,"22":22,"5":5,"6":6}],11:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2498,19 +2842,19 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voKeyPair = _dereq_(24);
+var _voKeyPair = _dereq_(25);
 
 var _voKeyPair2 = _interopRequireDefault(_voKeyPair);
 
-var _voClearKeyKeySet = _dereq_(22);
+var _voClearKeyKeySet = _dereq_(23);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
-var _CommonEncryption = _dereq_(5);
+var _CommonEncryption = _dereq_(6);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -2674,7 +3018,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"22":22,"24":24,"4":4,"5":5}],11:[function(_dereq_,module,exports){
+},{"23":23,"25":25,"5":5,"6":6}],12:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -2720,11 +3064,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(5);
+var _CommonEncryption = _dereq_(6);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -3004,7 +3348,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady)
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"4":4,"5":5}],12:[function(_dereq_,module,exports){
+},{"5":5,"6":6}],13:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3044,19 +3388,19 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voKeyPair = _dereq_(24);
+var _voKeyPair = _dereq_(25);
 
 var _voKeyPair2 = _interopRequireDefault(_voKeyPair);
 
-var _voClearKeyKeySet = _dereq_(22);
+var _voClearKeyKeySet = _dereq_(23);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
-var _CommonEncryption = _dereq_(5);
+var _CommonEncryption = _dereq_(6);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -3146,7 +3490,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemW3CClearKe
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"22":22,"24":24,"4":4,"5":5}],13:[function(_dereq_,module,exports){
+},{"23":23,"25":25,"5":5,"6":6}],14:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3193,11 +3537,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _CommonEncryption = _dereq_(5);
+var _CommonEncryption = _dereq_(6);
 
 var _CommonEncryption2 = _interopRequireDefault(_CommonEncryption);
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -3269,7 +3613,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(KeySystemWidevine);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"4":4,"5":5}],14:[function(_dereq_,module,exports){
+},{"5":5,"6":6}],15:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3415,7 +3759,7 @@ var protectionErrors = new ProtectionErrors();
 exports['default'] = protectionErrors;
 module.exports = exports['default'];
 
-},{"2":2}],15:[function(_dereq_,module,exports){
+},{"2":2}],16:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3463,31 +3807,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionKeyController = _dereq_(9);
+var _controllersProtectionKeyController = _dereq_(10);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _voNeedKey = _dereq_(30);
+var _voNeedKey = _dereq_(31);
 
 var _voNeedKey2 = _interopRequireDefault(_voNeedKey);
 
-var _voDashJSError = _dereq_(31);
+var _voDashJSError = _dereq_(32);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _voKeyMessage = _dereq_(23);
+var _voKeyMessage = _dereq_(24);
 
 var _voKeyMessage2 = _interopRequireDefault(_voKeyMessage);
 
-var _voKeySystemConfiguration = _dereq_(26);
+var _voKeySystemConfiguration = _dereq_(27);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _voKeySystemAccess = _dereq_(25);
+var _voKeySystemAccess = _dereq_(26);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _errorsProtectionErrors = _dereq_(14);
+var _errorsProtectionErrors = _dereq_(15);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
@@ -3875,7 +4219,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionModel_01b);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"14":14,"23":23,"25":25,"26":26,"30":30,"31":31,"9":9}],16:[function(_dereq_,module,exports){
+},{"10":10,"15":15,"24":24,"26":26,"27":27,"31":31,"32":32}],17:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3923,31 +4267,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionKeyController = _dereq_(9);
+var _controllersProtectionKeyController = _dereq_(10);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _voNeedKey = _dereq_(30);
+var _voNeedKey = _dereq_(31);
 
 var _voNeedKey2 = _interopRequireDefault(_voNeedKey);
 
-var _errorsProtectionErrors = _dereq_(14);
+var _errorsProtectionErrors = _dereq_(15);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _voDashJSError = _dereq_(31);
+var _voDashJSError = _dereq_(32);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _voKeyMessage = _dereq_(23);
+var _voKeyMessage = _dereq_(24);
 
 var _voKeyMessage2 = _interopRequireDefault(_voKeyMessage);
 
-var _voKeySystemAccess = _dereq_(25);
+var _voKeySystemAccess = _dereq_(26);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -4403,7 +4747,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionModel_21Jan20
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"14":14,"23":23,"25":25,"30":30,"31":31,"4":4,"9":9}],17:[function(_dereq_,module,exports){
+},{"10":10,"15":15,"24":24,"26":26,"31":31,"32":32,"5":5}],18:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4452,31 +4796,31 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _controllersProtectionKeyController = _dereq_(9);
+var _controllersProtectionKeyController = _dereq_(10);
 
 var _controllersProtectionKeyController2 = _interopRequireDefault(_controllersProtectionKeyController);
 
-var _voNeedKey = _dereq_(30);
+var _voNeedKey = _dereq_(31);
 
 var _voNeedKey2 = _interopRequireDefault(_voNeedKey);
 
-var _voDashJSError = _dereq_(31);
+var _voDashJSError = _dereq_(32);
 
 var _voDashJSError2 = _interopRequireDefault(_voDashJSError);
 
-var _errorsProtectionErrors = _dereq_(14);
+var _errorsProtectionErrors = _dereq_(15);
 
 var _errorsProtectionErrors2 = _interopRequireDefault(_errorsProtectionErrors);
 
-var _voKeyMessage = _dereq_(23);
+var _voKeyMessage = _dereq_(24);
 
 var _voKeyMessage2 = _interopRequireDefault(_voKeyMessage);
 
-var _voKeySystemConfiguration = _dereq_(26);
+var _voKeySystemConfiguration = _dereq_(27);
 
 var _voKeySystemConfiguration2 = _interopRequireDefault(_voKeySystemConfiguration);
 
-var _voKeySystemAccess = _dereq_(25);
+var _voKeySystemAccess = _dereq_(26);
 
 var _voKeySystemAccess2 = _interopRequireDefault(_voKeySystemAccess);
 
@@ -4813,7 +5157,7 @@ exports['default'] = dashjs.FactoryMaker.getClassFactory(ProtectionModel_3Feb201
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"14":14,"23":23,"25":25,"26":26,"30":30,"31":31,"9":9}],18:[function(_dereq_,module,exports){
+},{"10":10,"15":15,"24":24,"26":26,"27":27,"31":31,"32":32}],19:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4862,11 +5206,11 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _voKeyPair = _dereq_(24);
+var _voKeyPair = _dereq_(25);
 
 var _voKeyPair2 = _interopRequireDefault(_voKeyPair);
 
-var _voClearKeyKeySet = _dereq_(22);
+var _voClearKeyKeySet = _dereq_(23);
 
 var _voClearKeyKeySet2 = _interopRequireDefault(_voClearKeyKeySet);
 
@@ -4921,7 +5265,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(ClearKey);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"22":22,"24":24}],19:[function(_dereq_,module,exports){
+},{"23":23,"25":25}],20:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4968,7 +5312,7 @@ Object.defineProperty(exports, '__esModule', {
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _constantsProtectionConstants = _dereq_(4);
+var _constantsProtectionConstants = _dereq_(5);
 
 var _constantsProtectionConstants2 = _interopRequireDefault(_constantsProtectionConstants);
 
@@ -5042,7 +5386,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(DRMToday);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{"4":4}],20:[function(_dereq_,module,exports){
+},{"5":5}],21:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5199,7 +5543,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(PlayReady);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5279,7 +5623,7 @@ exports['default'] = dashjs.FactoryMaker.getSingletonFactory(Widevine);
 /* jshint ignore:line */
 module.exports = exports['default'];
 
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5385,7 +5729,7 @@ var ClearKeyKeySet = (function () {
 exports['default'] = ClearKeyKeySet;
 module.exports = exports['default'];
 
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5450,7 +5794,7 @@ function KeyMessage(sessionToken, message, defaultURL, messageType) {
 exports['default'] = KeyMessage;
 module.exports = exports['default'];
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5510,7 +5854,7 @@ function KeyPair(keyID, key) {
 exports["default"] = KeyPair;
 module.exports = exports["default"];
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5574,7 +5918,7 @@ function KeySystemAccess(keySystem, ksConfiguration) {
 exports["default"] = KeySystemAccess;
 module.exports = exports["default"];
 
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5653,7 +5997,7 @@ function KeySystemConfiguration(audioCapabilities, videoCapabilities, distinctiv
 exports['default'] = KeySystemConfiguration;
 module.exports = exports['default'];
 
-},{}],27:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5749,7 +6093,7 @@ function LicenseRequest(url, method, responseType, headers, withCredentials, mes
 exports["default"] = LicenseRequest;
 module.exports = exports["default"];
 
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5820,7 +6164,7 @@ function LicenseResponse(url, headers, data) {
 exports["default"] = LicenseResponse;
 module.exports = exports["default"];
 
-},{}],29:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5880,7 +6224,7 @@ function MediaCapability(contentType, robustness) {
 exports["default"] = MediaCapability;
 module.exports = exports["default"];
 
-},{}],30:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5939,7 +6283,7 @@ function NeedKey(initData, initDataType) {
 exports["default"] = NeedKey;
 module.exports = exports["default"];
 
-},{}],31:[function(_dereq_,module,exports){
+},{}],32:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -5993,7 +6337,7 @@ var DashJSError = function DashJSError(code, message, data) {
 exports["default"] = DashJSError;
 module.exports = exports["default"];
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -6174,12 +6518,13 @@ HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
 HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
 HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
+HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.OTHER_TYPE = 'other';
 
 exports.HTTPRequest = HTTPRequest;
 exports.HTTPRequestTrace = HTTPRequestTrace;
 
-},{}]},{},[6])(6)
+},{}]},{},[7])(7)
 });
 //# sourceMappingURL=dash.protection.debug.js.map
