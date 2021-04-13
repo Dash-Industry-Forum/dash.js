@@ -839,7 +839,7 @@ function DashAdapter() {
                     return;
                 }
 
-                let {name, target, leaf} = result;
+                let { name, target, leaf } = result;
 
                 // short circuit for attribute selectors
                 if (operation.xpath.findsAttribute()) {
@@ -935,11 +935,15 @@ function DashAdapter() {
     }
 
     function getAdaptationForMediaInfo(mediaInfo) {
-        const selectedVoPeriod = getPeriodForStreamInfo(mediaInfo.streamInfo, voPeriods);
-        const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
+        try {
+            const selectedVoPeriod = getPeriodForStreamInfo(mediaInfo.streamInfo, voPeriods);
+            const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
-        if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) return null;
-        return voAdaptations[mediaInfo.index];
+            if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) return null;
+            return voAdaptations[mediaInfo.index];
+        } catch (e) {
+            return null;
+        }
     }
 
     function getPeriodForStreamInfo(streamInfo, voPeriodsArray) {
