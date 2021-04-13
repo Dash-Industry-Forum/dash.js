@@ -7,7 +7,8 @@ const config = merge(common, {
     mode: 'development',
     entry: {
         'dash.all': './index.js',
-        'dash.mss': './src/mss/index.js'
+        'dash.mss': './src/mss/index.js',
+        'dash.offline': './src/offline/index.js'
     },
     output: {
         filename: '[name].debug.js',
