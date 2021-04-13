@@ -6,7 +6,8 @@ const entries = {
     'dash.mss': './src/mss/index.js',
     'dash.mediaplayer': './index_mediaplayerOnly.js',
     'dash.protection': './src/streaming/protection/Protection.js',
-    'dash.reporting': './src/streaming/metrics/MetricsReporting.js'
+    'dash.reporting': './src/streaming/metrics/MetricsReporting.js',
+    'dash.offline': './src/offline/index.js'
 }
 
 const configDev = merge(common, {
