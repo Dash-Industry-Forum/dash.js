@@ -1,8 +1,9 @@
-var argv = require('yargs').argv;
-var child = require('child_process');
-var replace = require('replace-in-file');
-var FtpDeploy = require("ftp-deploy");
-var ftpDeploy = new FtpDeploy();
+const argv = require('yargs').argv;
+const path = require('path');
+const child = require('child_process');
+const replace = require('replace-in-file');
+const FtpDeploy = require("ftp-deploy");
+const ftpDeploy = new FtpDeploy();
 
 function execSync(command) {
     // console.info('Exec command: ' + command);
@@ -25,6 +26,7 @@ try {
     });
 } catch (e) {
     console.error('Failed to replace git info: ', e);
+    process.exit(1);
 }
 
 // Push files ont ftp server
@@ -33,7 +35,7 @@ var config = {
     password: argv.password,
     host: argv.host,
     port: argv.port,
-    localRoot: __dirname + "../",
+    localRoot: path.join(__dirname, '..'),
     remoteRoot: '/dummy',
     include: [],
     // include: [
@@ -56,7 +58,10 @@ var config = {
 ftpDeploy
     .deploy(config)
     .then(res => console.log("finished:", res))
-    .catch(err => console.log(err));
+    .catch(err => {
+        console.log(err);
+        process.exit(1);
+    });
 
 
 
