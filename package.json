@@ -2,12 +2,9 @@
   "name": "dashjs",
   "version": "3.2.2",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
+  "author": "Dash Industry Forum",
+  "license": "BSD-3-Clause",
   "main": "dist/dash.all.debug.js",
-  "files": [
-    "index.d.ts",
-    "dist",
-    "doc"
-  ],
   "types": "index.d.ts",
   "scripts": {
     "dev": "webpack --config build/webpack.dev.js --mode development --watch --progress",
@@ -15,12 +12,12 @@
     "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
     "build": "rimraf dist && webpack --config build/webpack.prod.js",
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json",
+    "coverage": "istanbul cover node_modules/mocha/bin/_mocha --require mochahook -- test/",
     "debug": "iron-mocha --require mochahook",
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha test/unit --require mochahook",
     "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
-    "prepack": "npm run build",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha --require mochahook -- test/"
+    "prepack": "npm run build"
   },
   "devDependencies": {
     "@babel/core": "^7.13.8",
@@ -67,6 +64,9 @@
     "type": "git",
     "url": "https://github.com/Dash-Industry-Forum/dash.js.git"
   },
-  "author": "Dash Industry Forum",
-  "license": "BSD-3-Clause"
+  "files": [
+    "index.d.ts",
+    "dist",
+    "doc"
+  ]
 }
