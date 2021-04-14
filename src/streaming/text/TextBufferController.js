@@ -146,6 +146,10 @@ function TextBufferController(config) {
         _BufferControllerImpl.updateAppendWindow();
     }
 
+    function getRepresentationInfo(quality) {
+        return _BufferControllerImpl.getRepresentationInfo(quality);
+    }
+
     instance = {
         getBufferControllerType: getBufferControllerType,
         initialize: initialize,
@@ -163,7 +167,8 @@ function TextBufferController(config) {
         getRangeAt: getRangeAt,
         reset: reset,
         updateTimestampOffset: updateTimestampOffset,
-        updateAppendWindow
+        updateAppendWindow,
+        getRepresentationInfo
     };
 
     setup();

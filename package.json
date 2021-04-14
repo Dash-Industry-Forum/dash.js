@@ -17,6 +17,7 @@
     "debug-mocha": "iron-node node_modules/mocha/bin/_mocha --require mochahook",
     "test": "mocha test/unit --require mochahook",
     "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
+    "postinstall": "node githook.js",
     "prepack": "npm run build"
   },
   "devDependencies": {
