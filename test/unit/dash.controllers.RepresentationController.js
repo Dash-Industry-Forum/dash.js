@@ -13,6 +13,7 @@ import SpecHelper from './helpers/SpecHelper';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import SegmentsControllerMock from './mocks/SegmentsControllerMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -42,6 +43,7 @@ describe('RepresentationController', function () {
     const abrControllerMock = new AbrControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const dashMetricsMock = new DashMetricsMock();
+    const segmentsController = new SegmentsControllerMock();
 
     abrControllerMock.registerStreamType();
 
@@ -78,6 +80,7 @@ describe('RepresentationController', function () {
             representationController = RepresentationController(context).create({
                 streamInfo: streamProcessor.getStreamInfo(),
                 abrController: abrControllerMock,
+                segmentsController,
                 timelineConverter: timelineConverter,
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock,
@@ -93,26 +96,6 @@ describe('RepresentationController', function () {
             representationController = null;
         });
 
-        describe('when data update started', function () {
-            let spy;
-
-            beforeEach(function () {
-                spy = chai.spy();
-                eventBus.on(Events.DATA_UPDATE_STARTED, spy);
-            });
-
-            afterEach(function () {
-                eventBus.off(Events.DATA_UPDATE_STARTED, spy);
-            });
-
-            it('should fire dataUpdateStarted event when new data is set', function () {
-                // Act
-                representationController.updateData(data, voRepresentations, testType, 0);
-
-                // Assert
-                expect(spy).to.have.been.called.exactly(1);
-            });
-        });
 
         describe('when data update completed', function () {
             beforeEach(function (done) {
@@ -159,13 +142,6 @@ describe('RepresentationController', function () {
                 expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
             });
 
-            it('when a REPRESENTATION_UPDATE_COMPLETED event occurs, should notify data update completed', function () {
-                let spy = chai.spy();
-                eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
-
-                eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
-                expect(spy).to.have.been.called.exactly(1);
-            });
         });
 
         describe('when a call to reset is done', function () {
