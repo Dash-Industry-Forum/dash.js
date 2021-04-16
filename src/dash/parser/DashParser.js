@@ -98,7 +98,7 @@ function DashParser(config) {
         let manifest;
         const startTime = window.performance.now();
 
-        manifest = parseXml(data, DashConstants.MPD);
+        manifest = parseXml(data);
 
         if (!manifest) {
             throw new Error('failed to parse the manifest');
@@ -138,6 +138,9 @@ function DashParser(config) {
                 for (let key in root) {
                     if (Array.isArray(root[key])) {
                         ret[key] = root[key][0];
+                        break;
+                    } else if (typeof root[key] === 'object') {
+                        ret[key] = root[key];
                         break;
                     }
                 }
