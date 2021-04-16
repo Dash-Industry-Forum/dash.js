@@ -325,6 +325,9 @@ function TextController(config) {
     }
 
     function deactivateStream(streamInfo) {
+        if (!streamInfo) {
+            return;
+        }
         const streamId = streamInfo.id;
 
         if (textSourceBuffers[streamId]) {
