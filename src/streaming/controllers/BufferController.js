@@ -377,8 +377,8 @@ function BufferController(config) {
         if (requiredQuality === e.newQuality || isBufferingCompleted) return;
 
         const representationInfo = _getRepresentationInfo(e.newQuality);
-        updateBufferTimestampOffset(representationInfo);
         requiredQuality = e.newQuality;
+        updateBufferTimestampOffset(representationInfo);
     }
 
     //**********************************************************************
