@@ -1043,9 +1043,7 @@ function DashManifestModel() {
         if (manifest && manifest.hasOwnProperty(Constants.LOCATION)) {
             // for now, do not support multiple Locations -
             // just set Location to the first Location.
-            manifest.Location = manifest.Location[0];
-
-            return manifest.Location;
+            return manifest.Location[0];
         }
 
         // may well be undefined
