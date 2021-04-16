@@ -137,6 +137,9 @@ class DashConstants {
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
         this.ORIGINAL_MPD_ID = 'mpdId';
+        this.REPLACE = 'replace';
+        this.ADD = 'add';
+        this.REMOVE = 'remove';
     }
 
     constructor () {

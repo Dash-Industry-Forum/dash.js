@@ -58,7 +58,11 @@ const arrayNodes = [
     DashConstants.SERVICE_DESCRIPTION,
     DashConstants.SUPPLEMENTAL_PROPERTY,
     DashConstants.METRICS,
-    DashConstants.REPORTING
+    DashConstants.REPORTING,
+    DashConstants.PATCH_LOCATION,
+    DashConstants.REPLACE,
+    DashConstants.ADD,
+    DashConstants.REMOVE
 ];
 
 function DashParser(config) {
