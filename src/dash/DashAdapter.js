@@ -993,7 +993,7 @@ function DashAdapter() {
             return audioChannelConfiguration.value;
         });
 
-        if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation.length > 0) {
+        if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
             mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]).map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
