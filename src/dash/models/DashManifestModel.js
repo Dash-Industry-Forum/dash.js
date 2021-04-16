@@ -1053,9 +1053,7 @@ function DashManifestModel() {
     function getPatchLocation(manifest) {
         if (manifest && manifest.hasOwnProperty(DashConstants.PATCH_LOCATION)) {
             // only include support for single patch location currently
-            manifest.PatchLocation = manifest.PatchLocation[0];
-
-            return manifest.PatchLocation;
+            return manifest.PatchLocation[0];
         }
 
         // no patch location provided
