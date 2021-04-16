@@ -160,18 +160,6 @@ describe('Stream', function () {
             expect(bitrateList).to.be.empty; // jshint ignore:line
         });
 
-        it('should not call STREAM_INITIALIZED event if initializeMedia has not been called when updateData is called', () => {
-            const spy = sinon.spy();
-
-            eventBus.on(MediaPlayerEvents.STREAM_INITIALIZED, spy);
-
-            stream.updateData(streamInfo);
-
-            expect(spy.notCalled).to.be.true; // jshint ignore:line
-
-            eventBus.off(MediaPlayerEvents.STREAM_INITIALIZED, spy);
-        });
-
         it('License expired behavior', function () {
             stream.initialize();
 

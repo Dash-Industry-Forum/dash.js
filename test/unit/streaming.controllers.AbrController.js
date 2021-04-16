@@ -42,6 +42,7 @@ describe('AbrController', function () {
             settings: settings,
             streamController: streamControllerMock
         });
+        abrCtrl.initialize();
         abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
     });
 
@@ -51,7 +52,7 @@ describe('AbrController', function () {
     });
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
-        const state = abrCtrl.getAbandonmentStateFor(Constants.AUDIO);
+        const state = abrCtrl.getAbandonmentStateFor('1', Constants.AUDIO);
         expect(state).to.be.null;    // jshint ignore:line
     });
 

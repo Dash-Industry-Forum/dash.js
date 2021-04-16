@@ -449,7 +449,7 @@ function AbrController() {
     }
 
     function getAbandonmentStateFor(streamId, type) {
-        return abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type].state : null;
+        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type].state : null;
     }
 
     /**
