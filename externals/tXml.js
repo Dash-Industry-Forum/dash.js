@@ -43,11 +43,11 @@
 
  * @return {tNode[]}
  */
-function tXml(S, options, attrMatchers, arrayChildNames) {
+function tXml(S, options) {
     "use strict";
     options = options || {};
-    attrMatchers = attrMatchers || [];
-    arrayChildNames = arrayChildNames || [];
+    var attrMatchers = options.attrMatchers || [];
+    var nodesAsArray = options.nodesAsArray || [];
 
     var pos = options.pos || 0;
 
@@ -121,7 +121,7 @@ function tXml(S, options, attrMatchers, arrayChildNames) {
                 if (parent) {
                     let tagName = child.tagName;
                     delete child.tagName;
-                    if (arrayChildNames.indexOf(tagName) !== -1) {
+                    if (nodesAsArray.indexOf(tagName) !== -1) {
                         if (!parent[tagName]) {
                             parent[tagName] = [];
                         }
