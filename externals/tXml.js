@@ -46,7 +46,7 @@
 function tXml(S, options, attrMatchers, arrayChildNames) {
     "use strict";
     options = options || {};
-    attrMatchers = attrMatchers || {};
+    attrMatchers = attrMatchers || [];
     arrayChildNames = arrayChildNames || [];
 
     var pos = options.pos || 0;
