@@ -953,24 +953,24 @@ function ProtectionController(config) {
     }
 
     instance = {
-        initializeForMedia: initializeForMedia,
-        clearMediaInfoArrayByStreamId: clearMediaInfoArrayByStreamId,
-        createKeySession: createKeySession,
-        loadKeySession: loadKeySession,
-        removeKeySession: removeKeySession,
-        closeKeySession: closeKeySession,
-        setServerCertificate: setServerCertificate,
-        setMediaElement: setMediaElement,
-        setSessionType: setSessionType,
-        setRobustnessLevel: setRobustnessLevel,
-        setProtectionData: setProtectionData,
-        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
-        getKeySystems: getKeySystems,
-        setKeySystems: setKeySystems,
-        setLicenseRequestFilters: setLicenseRequestFilters,
-        setLicenseResponseFilters: setLicenseResponseFilters,
-        stop: stop,
-        reset: reset
+        initializeForMedia,
+        clearMediaInfoArrayByStreamId,
+        createKeySession,
+        loadKeySession,
+        removeKeySession,
+        closeKeySession,
+        setServerCertificate,
+        setMediaElement,
+        setSessionType,
+        setRobustnessLevel,
+        setProtectionData,
+        getSupportedKeySystemsFromContentProtection,
+        getKeySystems,
+        setKeySystems,
+        setLicenseRequestFilters,
+        setLicenseResponseFilters,
+        stop,
+        reset
     };
 
     setup();
