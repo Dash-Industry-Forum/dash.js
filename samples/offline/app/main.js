@@ -355,8 +355,8 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.bufferTimeAtTopQualityLongForm;
     $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
 
-    var initVideoTrackSwitchMode = $scope.player.getTrackSwitchModeFor('video');
-    var initAudioTrackSwitchMode = $scope.player.getTrackSwitchModeFor('audio');
+    var initVideoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
+    var initAudioTrackSwitchMode = currentConfig.streaming.trackSwitchMode.audio;
 
     //get default track switch mode
     if (initVideoTrackSwitchMode === 'alwaysReplace') {

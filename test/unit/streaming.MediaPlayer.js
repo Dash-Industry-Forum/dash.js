@@ -979,14 +979,6 @@ describe('MediaPlayer', function () {
                 expect(player.getInitialMediaSettingsFor).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method getTrackSwitchModeFor should throw an exception', function () {
-                expect(player.getTrackSwitchModeFor).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
-            });
-
-            it('Method getSelectionModeForInitialTrack should throw an exception', function () {
-                expect(player.getSelectionModeForInitialTrack).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
-            });
-
             it('Method getCurrentLiveLatency should throw an exception', function () {
                 expect(player.getCurrentLiveLatency).to.throw(MEDIA_PLAYER_NOT_INITIALIZED_ERROR);
             });

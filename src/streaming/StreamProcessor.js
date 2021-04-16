@@ -818,7 +818,7 @@ function StreamProcessor(config) {
 
     function prepareTrackSwitch() {
         logger.debug(`Preparing track switch for type ${type}`);
-        const shouldReplace = type === Constants.FRAGMENTED_TEXT || (mediaController.getSwitchMode(type) === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold);
+        const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold);
 
         // when buffering is completed and we are not supposed to replace anything do nothing
         if (bufferController.getIsBufferingCompleted() && !shouldReplace) {

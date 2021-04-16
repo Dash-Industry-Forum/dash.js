@@ -1473,37 +1473,6 @@ function MediaPlayer() {
         mediaController.setTrack(track);
     }
 
-    /**
-     * This method returns the current track switch mode.
-     *
-     * @param {MediaType} type
-     * @returns {string} mode
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-     * @instance
-     */
-    function getTrackSwitchModeFor(type) {
-        if (!mediaPlayerInitialized) {
-            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-        }
-        return mediaController.getSwitchMode(type);
-    }
-
-    /**
-     * This method returns the track selection mode.
-     *
-     * @returns {string} mode
-     * @memberof module:MediaPlayer
-     * @throws {@link module:MediaPlayer~MEDIA_PLAYER_NOT_INITIALIZED_ERROR MEDIA_PLAYER_NOT_INITIALIZED_ERROR} if called before initialize function
-     * @instance
-     */
-    function getSelectionModeForInitialTrack() {
-        if (!mediaPlayerInitialized) {
-            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-        }
-        return mediaController.getSelectionModeForInitialTrack();
-    }
-
     /*
     ---------------------------------------------------------------------------
 
@@ -2280,8 +2249,6 @@ function MediaPlayer() {
         setInitialMediaSettingsFor,
         getInitialMediaSettingsFor,
         setCurrentTrack,
-        getTrackSwitchModeFor,
-        getSelectionModeForInitialTrack,
         addABRCustomRule,
         removeABRCustomRule,
         removeAllABRCustomRule,

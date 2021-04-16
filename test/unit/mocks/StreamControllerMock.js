@@ -89,6 +89,10 @@ class StreamControllerMock {
         return this.activeStream;
     }
 
+    hasVideoTrack() {
+        return true;
+    }
+
 }
 
 export default StreamControllerMock;

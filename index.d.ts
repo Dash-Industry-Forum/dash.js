@@ -359,10 +359,6 @@ declare namespace dashjs {
         setInitialMediaSettingsFor(type: MediaType, value: MediaSettings): void;
         getInitialMediaSettingsFor(type: MediaType): MediaSettings;
         setCurrentTrack(track: MediaInfo): void;
-        getTrackSwitchModeFor(type: MediaType): TrackSwitchMode;
-        setTrackSwitchModeFor(type: MediaType, mode: TrackSwitchMode): void;
-        setSelectionModeForInitialTrack(mode: TrackSelectionMode): void;
-        getSelectionModeForInitialTrack(): TrackSelectionMode;
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
         addUTCTimingSource(schemeIdUri: string, value: string): void;
         removeUTCTimingSource(schemeIdUri: string, value: string): void;

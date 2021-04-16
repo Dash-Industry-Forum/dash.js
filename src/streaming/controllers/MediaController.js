@@ -78,10 +78,10 @@ function MediaController() {
         }
 
         if (tracks.length === 0) {
-            setTrack(_selectInitialTrack(type, tracksForType), true);
+            setTrack(selectInitialTrack(type, tracksForType), true);
         } else {
             if (tracks.length > 1) {
-                setTrack(_selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
+                setTrack(selectInitialTrack(type, tracks, !!lastSelectedTracks[type]));
             } else {
                 setTrack(tracks[0]);
             }
@@ -164,7 +164,7 @@ function MediaController() {
      * @param {boolean} noSettingsSave specify if settings must be not be saved
      * @memberof MediaController#
      */
-    function setTrack(track, noSettingsSave) {
+    function setTrack(track, noSettingsSave = false) {
         if (!track || !track.streamInfo) return;
 
         const type = track.type;
@@ -180,7 +180,7 @@ function MediaController() {
             eventBus.trigger(Events.CURRENT_TRACK_CHANGED, {
                 oldMediaInfo: current,
                 newMediaInfo: track,
-                switchMode: getSwitchMode(type)
+                switchMode: settings.get().streaming.trackSwitchMode[type]
             }, { streamId: id });
         }
 
@@ -235,23 +235,6 @@ function MediaController() {
      */
     function saveTextSettingsDisabled() {
         domStorage.setSavedMediaSettings(Constants.FRAGMENTED_TEXT, null);
-    }
-
-    /**
-     * @param {string} type
-     * @returns {string} mode
-     * @memberof MediaController#
-     */
-    function getSwitchMode(type) {
-        return settings.get().streaming.trackSwitchMode[type];
-    }
-
-    /**
-     * @returns {string} mode
-     * @memberof MediaController#
-     */
-    function getSelectionModeForInitialTrack() {
-        return settings.get().streaming.selectionModeForInitialTrack;
     }
 
     /**
@@ -415,10 +398,10 @@ function MediaController() {
         return result;
     }
 
-    function _selectInitialTrack(type, tracks) {
+    function selectInitialTrack(type, tracks) {
         if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
 
-        let mode = getSelectionModeForInitialTrack();
+        let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr = [];
 
         switch (mode) {
@@ -491,13 +474,12 @@ function MediaController() {
         getCurrentTrackFor,
         isCurrentTrack,
         setTrack,
+        selectInitialTrack,
         setInitialSettings,
         getInitialSettings,
-        getSwitchMode,
         getTracksWithHighestBitrate,
         getTracksWithHighestEfficiency,
         getTracksWithWidestRange,
-        getSelectionModeForInitialTrack,
         isTracksEqual,
         matchSettings,
         saveTextSettingsDisabled,
