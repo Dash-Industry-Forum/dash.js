@@ -66,6 +66,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          reuseExistingSourceBuffers: true,
  *          bufferPruningInterval: 10,
  *          bufferToKeep: 20,
+ *          minBufferToKeep: 0,
  *          jumpGaps: true,
  *          jumpLargeGaps: true,
  *          smallGapLimit: 1.5,
@@ -322,6 +323,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * Allows you to modify the buffer that is kept in source buffer in seconds.
  * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+ * @property {boolean} [minBufferToKeep=true]
+ * bufferToKeep can be changed by internally. Minimum value of bufferToKeep.
  * @property {boolean} [jumpGaps=true]
  * Sets whether player should jump small gaps (discontinuities) in the buffer.
  * @property {boolean} [jumpLargeGaps=true]
@@ -611,6 +614,7 @@ function Settings() {
             reuseExistingSourceBuffers: true,
             bufferPruningInterval: 10,
             bufferToKeep: 20,
+            minBufferToKeep: 0,
             jumpGaps: true,
             jumpLargeGaps: true,
             smallGapLimit: 1.5,

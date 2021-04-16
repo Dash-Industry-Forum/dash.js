@@ -12,6 +12,7 @@
         "flushBufferAtTrackSwitch": false,
         "bufferPruningInterval": 10,
         "bufferToKeep": 20,
+        "minBufferToKeep": 0,
         "jumpGaps": true,
         "smallGapLimit": 1.5,
         "stableBufferTime": -1,

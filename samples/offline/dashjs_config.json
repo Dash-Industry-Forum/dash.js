@@ -11,6 +11,7 @@
         "fastSwitchEnabled": false,
         "bufferPruningInterval": 10,
         "bufferToKeep": 20,
+        "minBufferToKeep": 0,
         "jumpGaps": false,
         "smallGapLimit": 0.8,
         "stableBufferTime": -1,

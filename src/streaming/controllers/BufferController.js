@@ -630,7 +630,7 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        let startRangeToKeep = Math.max(0, currentTime - settings.get().streaming.bufferToKeep);
+        let startRangeToKeep = Math.max(0, currentTime - Math.max(settings.get().streaming.minBufferToKeep, settings.get().streaming.bufferToKeep));
 
         const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
