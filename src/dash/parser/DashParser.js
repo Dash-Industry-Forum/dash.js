@@ -50,6 +50,7 @@ const arrayNodes = [
     DashConstants.AUDIO_CHANNEL_CONFIGURATION,
     DashConstants.CONTENT_COMPONENT,
     DashConstants.ESSENTIAL_PROPERTY,
+    DashConstants.LABEL,
     DashConstants.S,
     DashConstants.SEGMENT_URL,
     DashConstants.EVENT,

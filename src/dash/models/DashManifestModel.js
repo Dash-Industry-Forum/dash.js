@@ -90,7 +90,7 @@ function DashManifestModel() {
 
         mimeTypeRegEx = (type !== Constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
 
-        if (adaptation.Representation && adaptation.Representation.length && adaptation.Representation.length > 0) {
+        if (adaptation.Representation && adaptation.Representation.length > 0) {
             let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
             if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
                 return type === Constants.IMAGE;
@@ -197,7 +197,7 @@ function DashManifestModel() {
     }
 
     function processAdaptation(realAdaptation) {
-        if (realAdaptation && Array.isArray(realAdaptation.Representation)) {
+        if (realAdaptation && realAdaptation.Representation) {
             realAdaptation.Representation.sort(getRepresentationSortFunction());
         }
 
@@ -310,7 +310,7 @@ function DashManifestModel() {
     }
 
     function getLabelsForAdaptation(adaptation) {
-        if (!adaptation || !Array.isArray(adaptation.Label)) {
+        if (!adaptation || !adaptation.Label) {
             return [];
         }
 
@@ -387,12 +387,12 @@ function DashManifestModel() {
     }
 
     function getRepresentationCount(adaptation) {
-        return adaptation && Array.isArray(adaptation.Representation) ? adaptation.Representation.length : 0;
+        return adaptation && adaptation.Representation ? adaptation.Representation.length : 0;
     }
 
     function getBitrateListForAdaptation(realAdaptation) {
         const processedRealAdaptation = processAdaptation(realAdaptation);
-        const realRepresentations = processedRealAdaptation && Array.isArray(processedRealAdaptation.Representation) ? processedRealAdaptation.Representation : [];
+        const realRepresentations = processedRealAdaptation && processedRealAdaptation.Representation ? processedRealAdaptation.Representation : [];
 
         return realRepresentations.map((realRepresentation) => {
             return {

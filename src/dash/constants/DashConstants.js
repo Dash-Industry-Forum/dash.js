@@ -91,6 +91,7 @@ class DashConstants {
         this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
         this.CONTENT_PROTECTION = 'ContentProtection';
         this.ESSENTIAL_PROPERTY = 'EssentialProperty';
+        this.LABEL = 'Label';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
         this.ACCESSIBILITY = 'Accessibility';
