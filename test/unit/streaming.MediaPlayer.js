@@ -723,7 +723,7 @@ describe('MediaPlayer', function () {
 
         it('should configure MinBufferToKeep', function () {
             let MinBufferToKeep = player.getSettings().streaming.minBufferToKeep;
-            expect(MinBufferToKeep).to.equal(0);
+            expect(MinBufferToKeep).to.equal(20);
 
             player.updateSettings({'streaming': {'minBufferToKeep': 50}});
 
