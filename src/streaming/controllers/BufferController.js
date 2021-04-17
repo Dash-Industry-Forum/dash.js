@@ -46,6 +46,7 @@ import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 const BUFFERING_COMPLETED_THRESHOLD = 0.1;
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
+const CURRENT_TIME_REQUEST_START_CLEAR_THRESHOLD = 0.5;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
@@ -640,7 +641,7 @@ function BufferController(config) {
 
         // Ensure we keep full range of current fragment
         if (currentTimeRequest) {
-            startRangeToKeep = Math.min(currentTimeRequest.startTime, startRangeToKeep);
+            startRangeToKeep = Math.min(currentTimeRequest.startTime - CURRENT_TIME_REQUEST_START_CLEAR_THRESHOLD, startRangeToKeep);
         } else if (currentTime === 0 && playbackController.getIsDynamic()) {
             // Don't prune before the live stream starts, it messes with low latency
             return [];
