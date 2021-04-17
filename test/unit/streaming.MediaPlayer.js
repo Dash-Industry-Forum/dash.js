@@ -721,16 +721,6 @@ describe('MediaPlayer', function () {
             expect(BufferToKeep).to.equal(50);
         });
 
-        it('should configure MinBufferToKeep', function () {
-            let MinBufferToKeep = player.getSettings().streaming.minBufferToKeep;
-            expect(MinBufferToKeep).to.equal(20);
-
-            player.updateSettings({'streaming': {'minBufferToKeep': 50}});
-
-            MinBufferToKeep = player.getSettings().streaming.minBufferToKeep;
-            expect(MinBufferToKeep).to.equal(50);
-        });
-
         it('should configure BufferPruningInterval', function () {
             let BufferPruningInterval = player.getSettings().streaming.bufferPruningInterval;
             expect(BufferPruningInterval).to.equal(10);
