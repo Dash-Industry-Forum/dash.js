@@ -35,18 +35,17 @@ var config = {
     password: argv.password,
     host: argv.host,
     port: argv.port,
-    localRoot: path.join(__dirname, '..'),
-    remoteRoot: '/dummy',
-    include: [],
-    // include: [
-    //     'contrib/**',
-    //     'dist/**',
-    //     'test/functional/tests.html',
-    //     'test/functional/testsCommon.js',
-    //     'test/functional/config/**',
-    //     'test/functional/tests/**',
-    //     'samples/**'
-    // ],
+    localRoot: __dirname,
+    remoteRoot: '/',
+     include: [
+        'contrib/**',
+        'dist/**',
+        'test/functional/tests.html',
+        'test/functional/testsCommon.js',
+        'test/functional/config/**',
+        'test/functional/tests/**',
+        'samples/**'
+    ],
     // delete ALL existing files at destination before uploading, if true
     deleteRemote: false,
     // Passive mode is forced (EPSV command is not sent)
