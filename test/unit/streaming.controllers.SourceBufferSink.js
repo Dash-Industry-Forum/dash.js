@@ -1,6 +1,4 @@
 import SourceBufferSink from '../../src/streaming/SourceBufferSink';
-import Events from '../../src/core/events/Events';
-import EventBus from '../../src/core/EventBus';
 import FactoryMaker from '../../src/core/FactoryMaker.js';
 import Errors from '../../src/core/errors/Errors';
 
@@ -12,7 +10,6 @@ import MediaSourceMock from './mocks/MediaSourceMock';
 const expect = require('chai').expect;
 const context = {};
 
-const eventBus = EventBus(context).getInstance();
 
 describe('SourceBufferSink', function () {
 

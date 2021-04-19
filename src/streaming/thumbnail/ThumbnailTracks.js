@@ -95,9 +95,6 @@ function ThumbnailTracks(config) {
 
         // initialize controllers
         dashHandler.initialize(adapter ? adapter.getIsDynamic() : false);
-
-        // parse representation and create tracks
-        addTracks();
     }
 
     function addTracks() {
@@ -117,10 +114,10 @@ function ThumbnailTracks(config) {
             voReps.forEach((rep) => {
                 if ((rep.segmentInfoType === DashConstants.SEGMENT_TEMPLATE && rep.segmentDuration > 0 && rep.media) ||
                     rep.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
-                    createTrack(rep);
+                    _createTrack(rep);
                 }
                 if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
-                    createTrack(rep, true);
+                    _createTrack(rep, true);
                 }
             });
         }
@@ -132,7 +129,7 @@ function ThumbnailTracks(config) {
         }
     }
 
-    function createTrack(representation, useSegmentBase) {
+    function _createTrack(representation, useSegmentBase) {
         const track = new ThumbnailTrackInfo();
         track.id = representation.id;
         track.bitrate = representation.bandwidth;
@@ -312,6 +309,7 @@ function ThumbnailTracks(config) {
 
     instance = {
         getTracks,
+        addTracks,
         reset,
         setTrackByIndex,
         getCurrentTrack,

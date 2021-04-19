@@ -60,6 +60,10 @@ function ThumbnailController(config) {
         });
     }
 
+    function initialize() {
+        thumbnailTracks.addTracks();
+    }
+
     function getStreamId() {
         return streamInfo.id;
     }
@@ -149,6 +153,7 @@ function ThumbnailController(config) {
 
     instance = {
         getStreamId,
+        initialize,
         provide,
         setTrackByIndex,
         getCurrentTrackIndex,

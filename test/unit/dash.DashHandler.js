@@ -1,7 +1,6 @@
 import DashHandler from '../../src/dash/DashHandler';
 import Constants from '../../src/streaming/constants/Constants';
 import DashConstants from '../../src/dash/constants/DashConstants';
-import Settings from '../../src/core/Settings';
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 import Debug from '../../src/core/Debug';
@@ -10,7 +9,6 @@ import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 
 import ObjectsHelper from './helpers/ObjectsHelper';
 import VoHelper from './helpers/VOHelper';
-import MediaPlayerModelMock from './mocks/MediaPlayerModelMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 
 const expect = require('chai').expect;

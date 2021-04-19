@@ -21,7 +21,6 @@ describe('FragmentModel', function () {
     const initRequest = voHelper.getInitRequest();
     const mediaRequest = voHelper.getMediaRequest();
     const completeInitRequest = voHelper.getCompleteRequest(HTTPRequest.INIT_SEGMENT_TYPE);
-    const completeMediaRequest = voHelper.getCompleteRequest(HTTPRequest.MEDIA_SEGMENT_TYPE);
     const context = {};
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();

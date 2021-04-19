@@ -361,6 +361,7 @@ function Stream(config) {
                 dashMetrics: config.dashMetrics,
                 segmentBaseController: config.segmentBaseController
             });
+            thumbnailController.initialize();
             return;
         }
 

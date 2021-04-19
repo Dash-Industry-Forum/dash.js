@@ -68,6 +68,7 @@ class ObjectsHelper {
             },
             setExpectedLiveEdge: () => {
             },
+            calcWallTimeForSegment: () => 0,
             setRange: (range) => {
                 start = range.start;
                 end = range.end;

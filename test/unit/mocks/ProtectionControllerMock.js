@@ -1,6 +1,6 @@
 class ProtectionControllerMock {
 
-    setMediaElement(){
+    setMediaElement() {
     }
 
     setProtectionData() {

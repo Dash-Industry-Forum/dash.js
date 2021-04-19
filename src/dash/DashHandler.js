@@ -31,6 +31,7 @@
 import FragmentRequest from '../streaming/vo/FragmentRequest';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 import FactoryMaker from '../core/FactoryMaker';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import {
     replaceIDForTemplate,
     replaceTokenForTemplate,
@@ -43,7 +44,6 @@ function DashHandler(config) {
     config = config || {};
 
     const eventBus = config.eventBus;
-    const events = config.events;
     const debug = config.debug;
     const urlUtils = config.urlUtils;
     const type = config.type;
@@ -65,7 +65,7 @@ function DashHandler(config) {
         logger = debug.getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(events.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
+        eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
     }
 
     function initialize(isDynamic) {
@@ -106,7 +106,7 @@ function DashHandler(config) {
 
     function reset() {
         resetInitialSettings();
-        eventBus.off(events.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
+        eventBus.off(MediaPlayerEvents.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
     }
 
     function setRequestUrl(request, destination, representation) {

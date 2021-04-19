@@ -1,6 +1,5 @@
 import Stream from '../../src/streaming/Stream';
 import Events from '../../src/core/events/Events';
-import MediaPlayerEvents from '../../src/streaming/MediaPlayerEvents';
 import ProtectionEvents from '../../src/streaming/protection/ProtectionEvents';
 import EventBus from '../../src/core/EventBus';
 import DashJSError from '../../src/streaming/vo/DashJSError';
