@@ -104,6 +104,7 @@ function Capabilities() {
      * @private
      */
     function _canUseMediaCapabilitiesApi(config, type) {
+
         return navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
     }
 
@@ -162,7 +163,7 @@ function Capabilities() {
             configuration[type].width = config.width;
             configuration[type].height = config.height;
             configuration[type].bitrate = parseInt(config.bitrate);
-            configuration[type].framerate = parseInt(config.framerate);
+            configuration[type].framerate = parseFloat(config.framerate);
 
             navigator.mediaCapabilities.decodingInfo(configuration)
                 .then((result) => {

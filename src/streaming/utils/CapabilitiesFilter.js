@@ -129,17 +129,7 @@ function CapabilitiesFilter() {
 
             as.Representation_asArray.forEach((rep, i) => {
                 const codec = adapter.getCodec(as, i, false);
-                const width = rep.width || null;
-                const height = rep.height || null;
-                const framerate = rep.frameRate || null;
-                const bitrate = rep.bandwidth || null;
-                const config = {
-                    codec,
-                    width,
-                    height,
-                    framerate,
-                    bitrate
-                };
+                const config = _createConfiguration(type,rep, codec);
 
                 configurations.push(config);
                 promises.push(capabilities.supportsCodec(config, type));
@@ -159,6 +149,44 @@ function CapabilitiesFilter() {
                     resolve();
                 });
         });
+    }
+
+    function _createConfiguration(type, rep, codec) {
+        switch (type) {
+            case Constants.VIDEO:
+                return _createVideoConfiguration(rep, codec);
+            case Constants.AUDIO:
+                return _createAudioConfiguration(rep, codec);
+            default:
+                return null;
+
+        }
+    }
+
+    function _createVideoConfiguration(rep, codec) {
+        const width = rep.width || null;
+        const height = rep.height || null;
+        const framerate = rep.frameRate || null;
+        const bitrate = rep.bandwidth || null;
+
+        return {
+            codec,
+            width,
+            height,
+            framerate,
+            bitrate
+        };
+    }
+
+    function _createAudioConfiguration(rep, codec) {
+        const samplerate = rep.audioSamplingRate || null;
+        const bitrate = rep.bandwidth || null;
+
+        return {
+            codec,
+            bitrate,
+            samplerate
+        };
     }
 
     function _filterUnsupportedEssentialProperties(manifest) {
