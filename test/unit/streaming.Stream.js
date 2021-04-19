@@ -17,7 +17,6 @@ import StreamMock from './mocks/StreamMock';
 import ManifestUpdaterMock from './mocks/ManifestUpdaterMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import CapabilitiesMock from './mocks/CapabilitiesMock';
-import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock';
 import MediaControllerMock from './mocks/MediaControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
 import TextControllerMock from './mocks/TextControllerMock';
@@ -27,7 +26,6 @@ import ProtectionControllerMock from './mocks/ProtectionControllerMock';
 import ObjectsHelper from './helpers/ObjectsHelper';
 
 const expect = require('chai').expect;
-const sinon = require('sinon');
 
 const context = {};
 const eventBus = EventBus(context).getInstance();
@@ -44,7 +42,6 @@ describe('Stream', function () {
     const manifestUpdaterMock = new ManifestUpdaterMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const capabilitiesMock = new CapabilitiesMock();
-    const capabilitiesFilterMock = new CapabilitiesFilterMock();
     const mediaControllerMock = new MediaControllerMock();
     const dashMetricsMock = new DashMetricsMock();
     const textControllerMock = new TextControllerMock();
@@ -71,7 +68,6 @@ describe('Stream', function () {
                 manifestUpdater: manifestUpdaterMock,
                 playbackController: playbackControllerMock,
                 capabilities: capabilitiesMock,
-                capabilitiesFilter: capabilitiesFilterMock,
                 mediaController: mediaControllerMock,
                 timelineConverter: timelineConverter,
                 dashMetrics: dashMetricsMock,

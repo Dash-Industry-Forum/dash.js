@@ -16,6 +16,8 @@ import ProtectionControllerMock from './mocks/ProtectionControllerMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import URIFragmentModelMock from './mocks/URIFragmentModelMock';
+import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock';
+import TextControllerMock from './mocks/TextControllerMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -41,6 +43,8 @@ const videoModelMock = new VideoModelMock();
 const playbackControllerMock = new PlaybackControllerMock();
 const baseUrlControllerMock = new BaseURLControllerMock();
 const uriFragmentModelMock = new URIFragmentModelMock();
+const capabilitiesFilterMock = new CapabilitiesFilterMock();
+const textControllerMock = new TextControllerMock();
 
 Events.extend(ProtectionEvents);
 
@@ -57,13 +61,13 @@ describe('StreamController', function () {
         it('should return undefined if getStreamById is called without parameters', () => {
             const stream = streamController.getStreamById();
 
-            expect(stream).to.be.undefined; // jshint ignore:line
+            expect(stream).to.be.null; // jshint ignore:line
         });
 
-        it('should return undefined if getStreamById is called but no stream has been composed', () => {
+        it('should return null if getStreamById is called but no stream has been composed', () => {
             const stream = streamController.getStreamById('idx');
 
-            expect(stream).to.be.undefined; // jshint ignore:line
+            expect(stream).to.be.null; // jshint ignore:line
         });
 
         it('should return null if getActiveStreamInfo is called without parameters, activeStream is undefined', () => {
@@ -129,6 +133,8 @@ describe('StreamController', function () {
                 videoModel: videoModelMock,
                 playbackController: playbackControllerMock,
                 baseURLController: baseUrlControllerMock,
+                capabilitiesFilter: capabilitiesFilterMock,
+                textController: textControllerMock,
                 settings: settings
             });
 

@@ -541,7 +541,7 @@ function Stream(config) {
             fragmentController = null;
         }
 
-        if (streamInfo) {
+        if (abrController && streamInfo) {
             abrController.clearDataForStream(streamInfo.id);
         }
 
