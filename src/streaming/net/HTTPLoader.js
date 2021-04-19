@@ -39,6 +39,7 @@ import Debug from '../../core/Debug';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
+import Constants from '../constants/Constants';
 
 /**
  * @module HTTPLoader
@@ -159,6 +160,10 @@ function HTTPLoader(cfg) {
                         internalLoad(config, remainingAttempts);
                     }, mediaPlayerModel.getRetryIntervalsForType(request.type));
                 } else {
+                    if (request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                        return;
+                    }
+
                     errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
                         request: request,
                         response: httpRequest.response
@@ -250,9 +255,18 @@ function HTTPLoader(cfg) {
             });
         }
 
+        let headers = null;
         let modifiedUrl = requestModifier.modifyRequestURL(request.url);
-        const additionalQueryParameter = _getAdditionalQueryParameter(request);
-        modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                const additionalQueryParameter = _getAdditionalQueryParameter(request);
+                modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
+            }
+            else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                headers = cmcdModel.getHeaderParameters(request);
+            }
+        }
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
 
@@ -269,7 +283,8 @@ function HTTPLoader(cfg) {
             onabort: onabort,
             ontimeout: ontimeout,
             loader: loader,
-            timeout: requestTimeout
+            timeout: requestTimeout,
+            headers: headers
         };
 
         // Adds the ability to delay single fragment loading time to control buffer.
@@ -355,6 +370,11 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
 
         requests.forEach(x => {
+            // MSS patch: ignore FragmentInfo requests
+            if (x.request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+                return;
+            }
+
             // abort will trigger onloadend which we don't want
             // when deliberately aborting inflight requests -
             // set them to undefined so they are not called

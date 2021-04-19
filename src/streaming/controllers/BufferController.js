@@ -288,7 +288,10 @@ function BufferController(config) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 // Notify Schedulecontroller to stop scheduling until buffer has been pruned
-                triggerEvent(Events.QUOTA_EXCEEDED, {criticalBufferLevel: criticalBufferLevel});
+                triggerEvent(Events.QUOTA_EXCEEDED, {
+                    criticalBufferLevel: criticalBufferLevel,
+                    quotaExceededTime: e.chunk.start
+                });
                 clearBuffers(getClearRanges());
             }
             return;
@@ -375,6 +378,7 @@ function BufferController(config) {
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
     function onPlaybackSeeking(e) {
+        if (!buffer) return;
         seekTarget = e.seekTime;
         if (isBufferingCompleted) {
             seekClearedBufferingCompleted = true;
@@ -396,6 +400,7 @@ function BufferController(config) {
 
     // Prune full buffer but what is around current time position
     function pruneAllSafely() {
+        if (!buffer) return;
         buffer.waitForUpdateEnd(() => {
             const ranges = getAllRangesWithSafetyFactor();
             if (!ranges || ranges.length === 0) {
@@ -407,6 +412,7 @@ function BufferController(config) {
 
     // Get all buffer ranges but a range around current time position
     function getAllRangesWithSafetyFactor() {
+        if (!buffer) return;
         const clearRanges = [];
         const ranges = buffer.getAllBufferRanges();
         if (!ranges || ranges.length === 0) {

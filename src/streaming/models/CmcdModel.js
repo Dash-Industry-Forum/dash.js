@@ -163,6 +163,45 @@ function CmcdModel() {
         }
     }
 
+    function _copyParameters(data, parameterNames) {
+        const copiedData = {};
+        for (let name of parameterNames) {
+            if (data[name]) {
+                copiedData[name] = data[name];
+            }
+        }
+        return copiedData;
+    }
+
+    function getHeaderParameters(request) {
+        try {
+            if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+                const cmcdData = _getCmcdData(request);
+                const cmcdObjectHeader = _copyParameters(cmcdData, ['br', 'd', 'ot', 'tb']);
+                const cmcdRequestHeader = _copyParameters(cmcdData, ['bl', 'dl', 'mtp', 'nor', 'nrr', 'su']);
+                const cmcdStatusHeader = _copyParameters(cmcdData, ['bs', 'rtp']);
+                const cmcdSessionHeader = _copyParameters(cmcdData, ['cid', 'pr', 'sf', 'sid', 'st', 'v']);
+                const headers = {
+                    'CMCD-Object': _buildFinalString(cmcdObjectHeader),
+                    'CMCD-Request': _buildFinalString(cmcdRequestHeader),
+                    'CMCD-Status': _buildFinalString(cmcdStatusHeader),
+                    'CMCD-Session': _buildFinalString(cmcdSessionHeader)
+                };
+
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
+                    url: request.url,
+                    mediaType: request.mediaType,
+                    cmcdData
+                });
+                return headers;
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     function _getCmcdData(request) {
         try {
             let cmcdData = null;
@@ -537,6 +576,7 @@ function CmcdModel() {
 
     instance = {
         getQueryParameter,
+        getHeaderParameters,
         setConfig,
         reset,
         initialize
