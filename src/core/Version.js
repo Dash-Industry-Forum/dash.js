@@ -1,4 +1,4 @@
-const VERSION = '4.0.0';
+const VERSION = '__VERSION__';
 export function getVersionString() {
     return VERSION;
 }

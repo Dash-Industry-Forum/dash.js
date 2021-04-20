@@ -6,7 +6,7 @@ const precommitTemplate = `#!/usr/bin/env node
 
 var exec = require('child_process').exec;
 
-exec('node ${path.join('node_modules', 'grunt', 'bin', 'grunt').replace(/\\/g, '\\\\').replace(/'/g, '\\\'')} lint', {
+exec('npm run lint', {
        cwd: '${__dirname.toString().replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'
      }, function (err, stdout, stderr) {
 

@@ -165,31 +165,26 @@ When it is all done, it should look similar to this:
 
 1. Install Core Dependencies
     * [install nodejs](http://nodejs.org/)
-    * [install grunt](http://gruntjs.com/getting-started)
-        * ```npm install -g grunt-cli```
 2. Checkout project repository (default branch: development)
     * ```git clone https://github.com/Dash-Industry-Forum/dash.js.git```
 3. Install dependencies
     * ```npm install```
 4. Build, watch file changes and launch samples page, which has links that point to reference player and to other examples (basic examples, captioning, ads, live, etc).
-    * ```grunt dev```
+    * ```npm run start```
 
 
-### Other Grunt Tasks to Build / Run Tests on Commandline.
+### Other Tasks to Build / Run Tests on Commandline.
 
-1. Individual tasks:
-    * Quickest build
-        * ```grunt debug```
-    * Lint
-        * ```grunt lint```
-    * Run unit tests
-        * ```grunt test```
-    * Build distribution files (minification included)
-        * ```grunt dist```
-    * Build distribution files, lint, run unit tests and generate documentation
-        * ```grunt release```
-2. GruntFile.js default task (equivalent to ```grunt dist && grunt test```)
-    * ```grunt```
+* Build distribution files (minification included)
+    * ```npm run build```
+* Build and watch distribution files 
+    * ```npm run dev```
+* Run linter on source files (linter is also applied when building files)
+    * ```npm run lint```
+* Run unit tests
+    * ```npm run test```
+* Generate API jsdoc
+    * ```npm run doc```
 
 ### License
 dash.js is released under [BSD license](https://github.com/Dash-Industry-Forum/dash.js/blob/development/LICENSE.md)
