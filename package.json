@@ -7,10 +7,10 @@
   "main": "dist/dash.all.debug.js",
   "types": "index.d.ts",
   "scripts": {
-    "dev": "webpack --config build/webpack.dev.js --mode development --watch --progress",
+    "dev": "tsc && webpack --config build/webpack.dev.js --mode development --watch --progress",
     "start": "webpack serve --config build/webpack.dev.js",
     "lint": "eslint src/**/*.js test/unit/mocks/*.js test/unit/*.js",
-    "build": "rimraf dist && webpack --config build/webpack.prod.js",
+    "build": "tsc && rimraf dist && webpack --config build/webpack.prod.js",
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha --require mochahook -- test/",
     "debug": "iron-mocha --require mochahook",
