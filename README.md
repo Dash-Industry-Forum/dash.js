@@ -185,6 +185,9 @@ When it is all done, it should look similar to this:
     * ```npm run test```
 * Generate API jsdoc
     * ```npm run doc```
+    
+### Troubleshooting
+* In case the build process is failing make sure to use an up-to-date node.js version. The build process was successfully tested with node.js version 14.16.1.
 
 ### License
 dash.js is released under [BSD license](https://github.com/Dash-Industry-Forum/dash.js/blob/development/LICENSE.md)
