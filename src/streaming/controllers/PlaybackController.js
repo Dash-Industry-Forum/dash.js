@@ -235,9 +235,9 @@ function PlaybackController() {
 
         if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
-        } else if (settings.get().streaming.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
-            delay = adjustedFragmentDuration * settings.get().streaming.liveDelayFragmentCount;
-        } else if (settings.get().streaming.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
+        } else if (settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
+            delay = adjustedFragmentDuration * settings.get().streaming.delay.liveDelayFragmentCount;
+        } else if (settings.get().streaming.delay.useSuggestedPresentationDelay === true && suggestedPresentationDelay !== null && !isNaN(suggestedPresentationDelay) && suggestedPresentationDelay > 0) {
             delay = suggestedPresentationDelay;
         } else if (!isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;

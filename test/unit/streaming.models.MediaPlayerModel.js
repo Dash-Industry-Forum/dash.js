@@ -131,7 +131,7 @@ describe('MediaPlayerModel', function () {
     });
 
     it('should configure StableBufferTime', function () {
-        const s = { streaming: { stableBufferTime: 50 } };
+        const s = { streaming: { buffer: { stableBufferTime: 50 } } };
         settings.update(s);
 
         let StableBufferTime = mediaPlayerModel.getStableBufferTime();
@@ -143,7 +143,13 @@ describe('MediaPlayerModel', function () {
         let liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
         expect(liveCatchupLatencyThreshold).to.be.NaN; // jshint ignore:line
 
-        settings.update({ streaming: { lowLatencyEnabled: true, liveDelay: 3, liveCatchup: { minDrift: 3 } } });
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: true,
+                delay: { liveDelay: 3 },
+                liveCatchup: { minDrift: 3 }
+            }
+        });
 
         liveCatchupLatencyThreshold = mediaPlayerModel.getLiveCatchupLatencyThreshold();
         expect(liveCatchupLatencyThreshold).to.equal(24);

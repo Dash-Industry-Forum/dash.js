@@ -360,13 +360,15 @@ function BufferController(config) {
             // recalculate buffer lengths according to criticalBufferLevel
             const bufferToKeep = Math.max(0.2 * criticalBufferLevel, 1);
             const bufferAhead = criticalBufferLevel - bufferToKeep;
-            const bufferTimeAtTopQuality = Math.min(settings.get().streaming.bufferTimeAtTopQuality, bufferAhead * 0.9);
-            const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
+            const bufferTimeAtTopQuality = Math.min(settings.get().streaming.buffer.bufferTimeAtTopQuality, bufferAhead * 0.9);
+            const bufferTimeAtTopQualityLongForm = Math.min(settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm, bufferAhead * 0.9);
             const s = {
                 streaming: {
-                    bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
-                    bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
-                    bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
+                    buffer: {
+                        bufferToKeep: parseFloat(bufferToKeep.toFixed(5)),
+                        bufferTimeAtTopQuality: parseFloat(bufferTimeAtTopQuality.toFixed(5)),
+                        bufferTimeAtTopQualityLongForm: parseFloat(bufferTimeAtTopQualityLongForm.toFixed(5))
+                    }
                 }
             };
             settings.update(s);
@@ -486,7 +488,7 @@ function BufferController(config) {
     }
 
     function _getRangeBehindForPruning(targetTime, ranges) {
-        const bufferToKeepBehind = settings.get().streaming.bufferToKeep;
+        const bufferToKeepBehind = settings.get().streaming.buffer.bufferToKeep;
         const startOfBuffer = ranges.start(0);
 
         // if we do a seek ahead of the current play position we do need to prune behind the new play position
@@ -518,7 +520,7 @@ function BufferController(config) {
     function _getRangeAheadForPruning(targetTime, ranges) {
         // if we do a seek behind the current play position we do need to prune ahead of the new play position
         const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
-        const bufferToKeepAhead = settings.get().streaming.bufferTimeAtTopQuality;
+        const bufferToKeepAhead = settings.get().streaming.buffer.bufferTimeAtTopQuality;
         const aheadDiff = endOfBuffer - targetTime;
 
         if (aheadDiff > bufferToKeepAhead) {
@@ -614,8 +616,8 @@ function BufferController(config) {
             length;
 
         // Consider gap/discontinuity limit as tolerance
-        if (settings.get().streaming.jumpGaps) {
-            tolerance = settings.get().streaming.smallGapLimit;
+        if (settings.get().streaming.gaps.jumpGaps) {
+            tolerance = settings.get().streaming.gaps.smallGapLimit;
         }
 
         range = getRangeAt(time, tolerance);
@@ -631,7 +633,7 @@ function BufferController(config) {
 
     function _updateBufferLevel() {
         if (playbackController) {
-            const tolerance = settings.get().streaming.jumpGaps && !isNaN(settings.get().streaming.smallGapLimit) ? settings.get().streaming.smallGapLimit : NaN;
+            const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
             bufferLevel = getBufferLength(playbackController.getTime() || 0, tolerance);
             triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
@@ -655,7 +657,7 @@ function BufferController(config) {
         // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
-        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
+        if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
             notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
             if (isBufferingCompleted || bufferLevel >= streamInfo.manifestInfo.minBufferTime) {
@@ -697,7 +699,7 @@ function BufferController(config) {
         }
 
         const currentTime = playbackController.getTime();
-        let startRangeToKeep = Math.max(0, currentTime - settings.get().streaming.bufferToKeep);
+        let startRangeToKeep = Math.max(0, currentTime - settings.get().streaming.buffer.bufferToKeep);
 
         const currentTimeRequest = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -875,7 +877,7 @@ function BufferController(config) {
     function _onWallclockTimeUpdated() {
         wallclockTicked++;
         const secondsElapsed = (wallclockTicked * (settings.get().streaming.wallclockTimeUpdateInterval / 1000));
-        if ((secondsElapsed >= settings.get().streaming.bufferPruningInterval)) {
+        if ((secondsElapsed >= settings.get().streaming.buffer.bufferPruningInterval)) {
             wallclockTicked = 0;
             pruneBuffer();
         }

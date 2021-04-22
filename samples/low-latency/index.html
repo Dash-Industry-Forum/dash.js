@@ -34,7 +34,9 @@
 
             player.updateSettings({
                 streaming: {
-                    liveDelay: targetLatency,
+                    delay: {
+                        liveDelay: targetLatency
+                    },
                     liveCatchup: {
                         minDrift: minDrift,
                         playbackRate: catchupPlaybackRate,

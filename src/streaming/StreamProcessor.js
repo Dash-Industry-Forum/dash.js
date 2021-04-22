@@ -494,7 +494,7 @@ function StreamProcessor(config) {
         scheduleController.setCurrentRepresentation(representationInfo);
 
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
-        if (settings.get().streaming.fastSwitchEnabled) {
+        if (settings.get().streaming.buffer.fastSwitchEnabled) {
             const time = playbackController.getTime();
             let safeBufferLevel = 1.5;
             const request = fragmentModel.getRequests({
@@ -818,7 +818,7 @@ function StreamProcessor(config) {
 
     function prepareTrackSwitch() {
         logger.debug(`Preparing track switch for type ${type}`);
-        const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.stallThreshold);
+        const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.buffer.stallThreshold);
 
         // when buffering is completed and we are not supposed to replace anything do nothing
         if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
@@ -873,7 +873,7 @@ function StreamProcessor(config) {
     function _bufferClearedForReplacementTrackSwitch() {
         const targetTime = playbackController.getTime();
 
-        if (settings.get().streaming.flushBufferAtTrackSwitch) {
+        if (settings.get().streaming.buffer.flushBufferAtTrackSwitch) {
             // For some devices (like chromecast) it is necessary to seek the video element to reset the internal decoding buffer,
             // otherwise audio track switch will be effective only once after previous buffered track is consumed
             playbackController.seek(targetTime + 0.001, false, true);

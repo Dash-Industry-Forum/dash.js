@@ -181,7 +181,7 @@ function SourceBufferSink(config) {
     function updateAppendWindow(sInfo) {
         return new Promise((resolve) => {
 
-            if (!buffer || !settings.get().streaming.useAppendWindow) {
+            if (!buffer || !settings.get().streaming.buffer.useAppendWindow) {
                 resolve();
                 return;
             }

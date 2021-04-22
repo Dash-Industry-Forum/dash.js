@@ -620,34 +620,41 @@ function Settings() {
         streaming: {
             metricsMaxListDepth: 1000,
             abandonLoadTimeout: 10000,
-            liveDelayFragmentCount: NaN,
-            liveDelay: NaN,
-            scheduleWhilePaused: true,
-            fastSwitchEnabled: true,
-            flushBufferAtTrackSwitch: false,
             calcSegmentAvailabilityRangeFromTimeline: false,
-            reuseExistingSourceBuffers: true,
-            bufferPruningInterval: 10,
-            bufferToKeep: 20,
-            jumpGaps: true,
-            jumpLargeGaps: true,
-            smallGapLimit: 1.5,
-            initialBufferLevel: NaN,
-            stableBufferTime: 12,
-            bufferTimeAtTopQuality: 30,
-            bufferTimeAtTopQualityLongForm: 60,
-            longFormContentDurationThreshold: 600,
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
-            keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
-            useSuggestedPresentationDelay: true,
-            useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
-            stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
             cacheInitSegments: true,
             eventControllerRefreshDelay: 100,
+            delay: {
+                liveDelayFragmentCount: NaN,
+                liveDelay: NaN,
+                useSuggestedPresentationDelay: true,
+            },
+            protection: {
+                keepProtectionMediaKeys: false
+            },
+            buffer: {
+                fastSwitchEnabled: true,
+                flushBufferAtTrackSwitch: false,
+                reuseExistingSourceBuffers: true,
+                bufferPruningInterval: 10,
+                bufferToKeep: 20,
+                bufferTimeAtTopQuality: 30,
+                bufferTimeAtTopQualityLongForm: 60,
+                initialBufferLevel: NaN,
+                stableBufferTime: 12,
+                longFormContentDurationThreshold: 600,
+                stallThreshold: 0.5,
+                useAppendWindow: true
+            },
+            gaps: {
+                jumpGaps: true,
+                jumpLargeGaps: true,
+                smallGapLimit: 1.5,
+            },
             utcSynchronization: {
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,
@@ -663,7 +670,8 @@ function Settings() {
             },
             scheduling: {
                 defaultTimeout: 300,
-                lowLatencyTimeout: 100
+                lowLatencyTimeout: 100,
+                scheduleWhilePaused: true
             },
             text: {
                 defaultEnabled: true

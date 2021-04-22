@@ -1763,7 +1763,7 @@ function MediaPlayer() {
      * @example
      * player.updateSettings({
      *      streaming: {
-     *          liveDelayFragmentCount: 8
+     *          lowLatencyEnabled: false,
      *          abr: {
      *              maxBitrate: { audio: 100, video: 1000 }
      *          }
@@ -1893,7 +1893,7 @@ function MediaPlayer() {
         abrController.reset();
         mediaController.reset();
         if (protectionController) {
-            if (settings.get().streaming.keepProtectionMediaKeys) {
+            if (settings.get().streaming.protection.keepProtectionMediaKeys) {
                 protectionController.stop();
             } else {
                 protectionController.reset();

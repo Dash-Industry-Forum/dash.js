@@ -282,7 +282,7 @@ function ScheduleController(config) {
     }
 
     function _onPlaybackStarted() {
-        if (!settings.get().streaming.scheduleWhilePaused) {
+        if (!settings.get().streaming.scheduling.scheduleWhilePaused) {
             startScheduleTimer();
         }
     }

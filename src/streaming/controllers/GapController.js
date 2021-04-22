@@ -185,7 +185,7 @@ function GapController() {
             return trackSwitchByMediaType[key];
         });
 
-        return !trackSwitchInProgress && settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && !playbackController.isSeeking() && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
+        return !trackSwitchInProgress && settings.get().streaming.gaps.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && !playbackController.isSeeking() && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
             !streamController.getHasMediaOrInitialisationError();
     }
 
@@ -239,8 +239,8 @@ function GapController() {
     }
 
     function jumpGap(currentTime, playbackStalled = false) {
-        const smallGapLimit = settings.get().streaming.smallGapLimit;
-        const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
+        const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
+        const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
         const ranges = videoModel.getBufferRange();
         let nextRangeIndex;
         let seekToPosition = NaN;

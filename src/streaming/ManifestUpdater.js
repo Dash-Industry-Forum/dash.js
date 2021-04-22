@@ -252,7 +252,7 @@ function ManifestUpdater() {
     }
 
     function onPlaybackPaused(/*e*/) {
-        isPaused = !settings.get().streaming.scheduleWhilePaused;
+        isPaused = !settings.get().streaming.scheduling.scheduleWhilePaused;
 
         if (isPaused) {
             stopManifestRefreshTimer();

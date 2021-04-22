@@ -273,8 +273,12 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
                     'logLevel': dashjs.Debug.LOG_LEVEL_INFO
                 },
                 'streaming': {
-                    'fastSwitchEnabled': $scope.fastSwitchSelected,
-                    'jumpGaps': true,
+                    'buffer': {
+                        'fastSwitchEnabled': $scope.fastSwitchSelected
+                    },
+                    'gaps:': {
+                        'jumpGaps': true,
+                    },
                     'abr': {
                         'autoSwitchBitrate': {
                             'video': $scope.videoAutoSwitchSelected
@@ -349,10 +353,10 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
 
     // get buffer default value
     var currentConfig = $scope.player.getSettings();
-    $scope.defaultLiveDelay = currentConfig.streaming.liveDelay;
-    $scope.defaultStableBufferDelay = currentConfig.streaming.stableBufferTime;
-    $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.bufferTimeAtTopQuality;
-    $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.bufferTimeAtTopQualityLongForm;
+    $scope.defaultLiveDelay = currentConfig.streaming.delay.liveDelay;
+    $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.stableBufferTime;
+    $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.buffer.bufferTimeAtTopQuality;
+    $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
     $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
 
     var initVideoTrackSwitchMode = currentConfig.streaming.trackSwitchMode.video;
@@ -496,7 +500,9 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.toggleFastSwitch = function () {
         $scope.player.updateSettings({
             'streaming': {
-                'fastSwitchEnabled': $scope.fastSwitchSelected
+                'buffer': {
+                    'fastSwitchEnabled': $scope.fastSwitchSelected
+                },
             }
         });
     };
@@ -516,7 +522,9 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.toggleScheduleWhilePaused = function () {
         $scope.player.updateSettings({
             'streaming': {
-                'scheduleWhilePaused': $scope.scheduleWhilePausedSelected
+                'scheduling': {
+                    'scheduleWhilePaused': $scope.scheduleWhilePausedSelected
+                }
             }
         });
     };
@@ -537,7 +545,9 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
     $scope.toggleJumpGaps = function () {
         $scope.player.updateSettings({
             'streaming': {
-                'jumpGaps': $scope.jumpGapsSelected
+                'gaps': {
+                    'jumpGaps': $scope.jumpGapsSelected
+                }
             }
         });
     };
@@ -589,12 +599,16 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         }
 
         var config = {
-            'streaming': {
-                'liveDelay': $scope.defaultLiveDelay,
-                'stableBufferTime': $scope.defaultStableBufferDelay,
-                'bufferTimeAtTopQuality': $scope.defaultBufferTimeAtTopQuality,
-                'bufferTimeAtTopQualityLongForm': $scope.defaultBufferTimeAtTopQualityLongForm,
-                'lowLatencyEnabled': $scope.lowLatencyModeSelected
+            streaming: {
+                delay: {
+                    liveDelay: $scope.defaultLiveDelay
+                },
+                buffer: {
+                    stableBufferTime: $scope.defaultStableBufferDelay,
+                    bufferTimeAtTopQuality: $scope.defaultBufferTimeAtTopQuality,
+                    bufferTimeAtTopQualityLongForm: $scope.defaultBufferTimeAtTopQualityLongForm,
+                },
+                lowLatencyEnabled: $scope.lowLatencyModeSelected
             }
         };
 
@@ -602,19 +616,19 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
             var selectedConfig = $scope.selectedItem.bufferConfig;
 
             if (selectedConfig.liveDelay) {
-                config.streaming.liveDelay = selectedConfig.liveDelay;
+                config.streaming.delay.liveDelay = selectedConfig.liveDelay;
             }
 
             if (selectedConfig.stableBufferTime) {
-                config.streaming.stableBufferTime = selectedConfig.stableBufferTime;
+                config.streaming.buffer.stableBufferTime = selectedConfig.stableBufferTime;
             }
 
             if (selectedConfig.bufferTimeAtTopQuality) {
-                config.streaming.bufferTimeAtTopQuality = selectedConfig.bufferTimeAtTopQuality;
+                config.streaming.buffer.bufferTimeAtTopQuality = selectedConfig.bufferTimeAtTopQuality;
             }
 
             if (selectedConfig.bufferTimeAtTopQualityLongForm) {
-                config.streaming.bufferTimeAtTopQualityLongForm = selectedConfig.bufferTimeAtTopQualityLongForm;
+                config.streaming.buffer.bufferTimeAtTopQualityLongForm = selectedConfig.bufferTimeAtTopQualityLongForm;
             }
 
             if (selectedConfig.lowLatencyMode !== undefined) {
@@ -990,7 +1004,8 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         if (vars && vars.hasOwnProperty('stream')) {
             try {
                 item = JSON.parse(atob(vars.stream));
-            } catch (e) { }
+            } catch (e) {
+            }
         }
 
 
