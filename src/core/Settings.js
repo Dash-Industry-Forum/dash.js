@@ -618,7 +618,7 @@ function Settings() {
             dispatchEvent: false
         },
         streaming: {
-            metricsMaxListDepth: 1000,
+            metricsMaxListDepth: 500,
             abandonLoadTimeout: 10000,
             calcSegmentAvailabilityRangeFromTimeline: false,
             wallclockTimeUpdateInterval: 100,
