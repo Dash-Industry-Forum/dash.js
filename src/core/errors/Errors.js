@@ -112,6 +112,9 @@ class Errors extends ErrorsBase {
         this.REMOVE_ERROR_MESSAGE = 'buffer is not defined';
         this.DATA_UPDATE_FAILED_ERROR_MESSAGE = 'Data update failed';
 
+        this.CAPTIONS_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'caption parsing failed for ';
+        this.CAPTIONS_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading captions: ';
+
         this.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE = 'mediasource is not supported';
         this.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE = 'mediakeys is not supported';
         this.TIMED_TEXT_ERROR_MESSAGE_PARSE = 'parsing error :';

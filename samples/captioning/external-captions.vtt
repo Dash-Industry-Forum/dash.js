@@ -1,0 +1,10 @@
+WEBVTT
+
+00:00:00.500 --> 00:00:04.000
+These are example captions in the VTT format
+
+00:00:04.500 --> 00:00:08.300
+They are not listed in the manifest file
+
+00:00:010.000 --> 00:00:14.000
+This is the last caption. Enjoy!

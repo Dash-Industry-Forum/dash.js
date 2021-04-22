@@ -343,6 +343,7 @@ declare namespace dashjs {
         setQualityFor(type: MediaType, value: number): void;
         updatePortalSize(): void;
         enableText(enable: boolean): void;
+        addTextTrack(url: string, mediaInfo: MediaInfo): void;
         setTextTrack(idx: number): void;
         getTextDefaultLanguage(): string | undefined;
         setTextDefaultLanguage(lang: string): void;
