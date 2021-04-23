@@ -991,7 +991,7 @@ function StreamController() {
             startTime = streamInfo.start;
             // If start time in URI, take max value between period start and time from URI (if in period range)
             const startTimeFromUri = _getStartTimeFromUriParameters(false);
-            if (!isNaN(startTimeFromUri) && startTimeFromUri < (streamInfo.start + streamInfo.duration)) {
+            if (!isNaN(startTimeFromUri)) {
                 logger.info('Start time from URI parameters: ' + startTimeFromUri);
                 startTime = Math.max(startTime, startTimeFromUri);
             }
