@@ -381,18 +381,6 @@ class MediaPlayerEvents extends EventsBase {
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
 
         /**
-         * A gap occured in the timeline which requires a seek to the next period
-         * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
-         */
-        this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
-
-        /**
-         * A gap occured in the timeline which requires an internal seek
-         * @event MediaPlayerEvents#GAP_CAUSED_INTERNAL_SEEK
-         */
-        this.GAP_CAUSED_INTERNAL_SEEK = 'gapCausedInternalSeek';
-
-        /**
          * Dash events are triggered at their respective start points on the timeline.
          * @event MediaPlayerEvents#EVENT_MODE_ON_START
          */
@@ -409,6 +397,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
          */
         this.CONFORMANCE_VIOLATION = 'conformanceViolation';
+
+        /**
+         * Event that is dispatched whenever the player is attempting to switch the quality
+         * @event MediaPlayerEvents#REPRESENTATION_CHANGED
+         */
+        this.SETTING_PLAYBACK_QUALITY = 'settingPlaybackQuality'
     }
 }
 

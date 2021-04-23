@@ -75,6 +75,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.contributors = data.items;
     });
 
+
+    /* ======= Chart related stuff ======= */
     $scope.chartOptions = {
         legend: {
             labelBoxBorderColor: '#ffffff',
@@ -126,13 +128,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         },
         yaxes: []
     };
-
     $scope.chartEnabled = true;
     $scope.maxPointsToChart = 30;
     $scope.maxChartableItems = 5;
     $scope.chartCount = 0;
     $scope.chartData = [];
-
     $scope.chartState = {
         audio: {
             buffer: { data: [], selected: false, color: '#65080c', label: 'Audio Buffer Level' },
@@ -158,6 +158,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
     };
 
+    /* ======= General ======= */
     $scope.abrEnabled = true;
     $scope.toggleCCBubble = false;
     $scope.debugEnabled = false;
@@ -336,11 +337,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
 
     $scope.player.initialize($scope.video, null, $scope.autoPlaySelected);
+    $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
 
-    // Add HTML-rendered TTML subtitles except for Firefox < v49 (issue #1164)
-    if (doesTimeMarchesOn()) {
-        $scope.player.attachTTMLRenderingDiv($('#video-caption')[0]);
-    }
 
     var currentConfig = $scope.player.getSettings();
 
@@ -369,24 +367,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.isDynamic = e.data.type === 'dynamic';
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
+    $scope.player.on(dashjs.MediaPlayer.events.SETTING_PLAYBACK_QUALITY, function (e) { /* jshint ignore:line */
         var dashAdapter = $scope.player.getDashAdapter();
         var maxIndex = dashAdapter.getMaxIndexForBufferType(e.mediaType, e.streamInfo.index);
+        var bitrate = Math.round(e.bitrateInfo.bitrate / 1000);
 
         $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
         $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
+        $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
+    }, $scope);
+
+    $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) { /* jshint ignore:line */
+        $scope.currentStreamInfo = e.toStreamInfo;
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
         $scope[e.mediaType + 'Index'] = e.newQuality + 1;
         $scope.plotPoint('index', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
-    }, $scope);
-
-    $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) { /* jshint ignore:line */
-        $scope.streamInfo = e.toStreamInfo;
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function (e) { /* jshint ignore:line */
@@ -988,9 +988,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         var dashMetrics = $scope.player.getDashMetrics();
         var dashAdapter = $scope.player.getDashAdapter();
 
-        if (dashMetrics && $scope.streamInfo) {
-            var period = dashAdapter.getPeriodById($scope.streamInfo.id);
-            var periodIdx = period ? period.index : $scope.streamInfo.index;
+        if (dashMetrics && $scope.currentStreamInfo) {
+            var period = dashAdapter.getPeriodById($scope.currentStreamInfo.id);
+            var periodIdx = period ? period.index : $scope.currentStreamInfo.index;
 
             var maxIndex = dashAdapter.getMaxIndexForBufferType(type, periodIdx);
             var repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
@@ -1007,7 +1007,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
             $scope[type + 'BufferLength'] = bufferLevel;
             $scope[type + 'MaxIndex'] = maxIndex;
-            $scope[type + 'Bitrate'] = bitrate;
             $scope[type + 'DroppedFrames'] = droppedFPS;
             $scope[type + 'LiveLatency'] = liveLatency;
 
@@ -1059,23 +1058,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     // Init
     //
     ////////////////////////////////////////
-
-    function doesTimeMarchesOn() {
-        var version;
-        var REQUIRED_VERSION = 49.0;
-
-        if (typeof navigator !== 'undefined') {
-            if (!navigator.userAgent.match(/Firefox/)) {
-                return true;
-            }
-
-            version = parseFloat(navigator.userAgent.match(/rv:([0-9.]+)/)[1]);
-
-            if (!isNaN(version) && version >= REQUIRED_VERSION) {
-                return true;
-            }
-        }
-    }
 
     function setLatencyAttributes() {
         // get buffer default value

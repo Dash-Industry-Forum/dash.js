@@ -415,6 +415,15 @@ function AbrController() {
         checkInteger(newQuality);
 
         const topQualityIdx = getTopQualityIndexFor(type, streamId);
+        const bitrateInfo = _getBitrateForQuality(type, streamId, newQuality);
+
+        eventBus.trigger(Events.SETTING_PLAYBACK_QUALITY, {
+            newQuality,
+            streamInfo,
+            mediaType: type,
+            bitrateInfo
+        })
+
         if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {
             changeQuality(type, oldQuality, newQuality, topQualityIdx, reason, streamId);
         }
@@ -423,10 +432,9 @@ function AbrController() {
     function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason, streamId) {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-                logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
-            }
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+            logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+
             setQualityFor(type, newQuality, streamId);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
@@ -441,6 +449,18 @@ function AbrController() {
             if (!isNaN(bitrate)) {
                 domStorage.setSavedBitrateSettings(type, bitrate);
             }
+        }
+    }
+
+    function _getBitrateForQuality(type, streamId, quality) {
+        try {
+            const streamInfo = streamController.getStreamById(streamId).getStreamInfo();
+            const mediaInfo = adapter.getMediaInfoForType(streamInfo, type)
+            const bitrateList = getBitrateList(mediaInfo);
+
+            return bitrateList[quality];
+        } catch (e) {
+            return 0;
         }
     }
 
