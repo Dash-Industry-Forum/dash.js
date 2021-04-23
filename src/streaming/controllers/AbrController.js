@@ -43,8 +43,8 @@ import SwitchRequestHistory from '../rules/SwitchRequestHistory';
 import DroppedFramesHistory from '../rules/DroppedFramesHistory';
 import ThroughputHistory from '../rules/ThroughputHistory';
 import Debug from '../../core/Debug';
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
-import { checkInteger } from '../utils/SupervisorTools';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest';
+import {checkInteger} from '../utils/SupervisorTools';
 
 const DEFAULT_VIDEO_BITRATE = 1000;
 const DEFAULT_AUDIO_BITRATE = 100;
@@ -87,33 +87,15 @@ function AbrController() {
         resetInitialSettings();
     }
 
-    function registerStreamType(type, streamProcessor) {
-        switchHistoryDict[type] = switchHistoryDict[type] || SwitchRequestHistory(context).create();
-        streamProcessorDict[type] = streamProcessor;
-        abandonmentStateDict[type] = abandonmentStateDict[type] || {};
-        abandonmentStateDict[type].state = MetricsConstants.ALLOW_LOAD;
-        isUsingBufferOccupancyABRDict[type] = false;
-        isUsingL2AABRDict[type] = false;
-        isUsingLoLPBRDict[type] = false;
-        eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
-        if (type === Constants.VIDEO) {
-            eventBus.on(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, instance);
-            droppedFramesHistory = droppedFramesHistory || DroppedFramesHistory(context).create();
-            setElementSize();
-        }
-        eventBus.on(Events.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.on(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, instance);
-
-        throughputHistory = throughputHistory || ThroughputHistory(context).create({
+    /**
+     * Initialize everything that is not Stream specific. We only have one instance of the ABR Controller for all periods.
+     */
+    function initialize() {
+        droppedFramesHistory = DroppedFramesHistory(context).create();
+        throughputHistory = ThroughputHistory(context).create({
             settings: settings
         });
-    }
 
-    function unRegisterStreamType(type) {
-        delete streamProcessorDict[type];
-    }
-
-    function createAbrRulesCollection() {
         abrRulesCollection = ABRRulesCollection(context).create({
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
@@ -121,6 +103,65 @@ function AbrController() {
         });
 
         abrRulesCollection.initialize();
+
+        eventBus.on(Events.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
+        eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
+        eventBus.on(Events.METRIC_ADDED, _onMetricAdded, instance);
+    }
+
+    /**
+     * Whenever a StreamProcessor is created it is added to the list of streamProcessorDict
+     * In addition, the corresponding objects for this object and its stream id are created
+     * @param {object} type
+     * @param {object} streamProcessor
+     */
+    function registerStreamType(type, streamProcessor) {
+        const streamId = streamProcessor.getStreamInfo().id;
+
+        if (!streamProcessorDict[streamId]) {
+            streamProcessorDict[streamId] = {};
+        }
+
+        if (!switchHistoryDict[streamId]) {
+            switchHistoryDict[streamId] = {};
+        }
+
+        if (!abandonmentStateDict[streamId]) {
+            abandonmentStateDict[streamId] = {};
+        }
+
+        switchHistoryDict[streamId][type] = SwitchRequestHistory(context).create();
+        streamProcessorDict[streamId][type] = streamProcessor;
+
+        abandonmentStateDict[streamId][type] = {};
+        abandonmentStateDict[streamId][type].state = MetricsConstants.ALLOW_LOAD;
+
+        isUsingBufferOccupancyABRDict[type] = isUsingBufferOccupancyABRDict[type] || false;
+        isUsingL2AABRDict[type] = isUsingL2AABRDict[type] || false;
+        isUsingLoLPBRDict[type] = isUsingLoLPBRDict[type] || false;
+
+        if (type === Constants.VIDEO) {
+            setElementSize();
+        }
+    }
+
+    function unRegisterStreamType(streamId, type) {
+        try {
+            if (streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+                delete streamProcessorDict[streamId][type];
+            }
+
+            if (switchHistoryDict[streamId] && switchHistoryDict[streamId][type]) {
+                delete switchHistoryDict[streamId][type];
+            }
+
+            if (abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type]) {
+                delete abandonmentStateDict[streamId][type];
+            }
+
+        } catch (e) {
+
+        }
     }
 
     function resetInitialSettings() {
@@ -132,9 +173,14 @@ function AbrController() {
         isUsingBufferOccupancyABRDict = {};
         isUsingL2AABRDict = {};
         isUsingLoLPBRDict = {};
+
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
         }
+        if (droppedFramesHistory) {
+            droppedFramesHistory.reset();
+        }
+
         playbackIndex = undefined;
         droppedFramesHistory = undefined;
         throughputHistory = undefined;
@@ -147,9 +193,8 @@ function AbrController() {
         resetInitialSettings();
 
         eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, instance);
-        eventBus.off(Events.QUALITY_CHANGE_RENDERED, onQualityChangeRendered, instance);
-        eventBus.off(Events.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.off(Events.PERIOD_SWITCH_COMPLETED, createAbrRulesCollection, instance);
+        eventBus.off(Events.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
+        eventBus.off(Events.METRIC_ADDED, _onMetricAdded, instance);
 
         if (abrRulesCollection) {
             abrRulesCollection.reset();
@@ -188,16 +233,16 @@ function AbrController() {
         }
     }
 
-    function onQualityChangeRendered(e) {
+    function _onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
             if (playbackIndex !== undefined) {
-                droppedFramesHistory.push(playbackIndex, videoModel.getPlaybackQuality());
+                droppedFramesHistory.push(e.streamId, playbackIndex, videoModel.getPlaybackQuality());
             }
             playbackIndex = e.newQuality;
         }
     }
 
-    function onMetricAdded(e) {
+    function _onMetricAdded(e) {
         if (e.metric === MetricsConstants.HTTP_REQUEST && e.value && e.value.type === HTTPRequest.MEDIA_SEGMENT_TYPE && (e.mediaType === Constants.AUDIO || e.mediaType === Constants.VIDEO)) {
             throughputHistory.push(e.mediaType, e.value, settings.get().streaming.abr.useDeadTimeLatency);
         }
@@ -207,33 +252,40 @@ function AbrController() {
         }
     }
 
-    function getTopQualityIndexFor(type, id) {
+    /**
+     * Returns the highest possible index taking limitations like maxBitrate and portal size into account.
+     * @param {string} type
+     * @param {string} streamId
+     * @return {number}
+     */
+    function getTopQualityIndexFor(type, streamId) {
         let idx;
-        topQualities[id] = topQualities[id] || {};
+        topQualities[streamId] = topQualities[streamId] || {};
 
-        if (!topQualities[id].hasOwnProperty(type)) {
-            topQualities[id][type] = 0;
+        if (!topQualities[streamId].hasOwnProperty(type)) {
+            topQualities[streamId][type] = 0;
         }
 
-        idx = checkMaxBitrate(topQualities[id][type], type);
-        idx = checkMaxRepresentationRatio(idx, type, topQualities[id][type]);
-        idx = checkPortalSize(idx, type);
+        idx = checkMaxBitrate(topQualities[streamId][type], type, streamId);
+        idx = checkMaxRepresentationRatio(idx, type, topQualities[streamId][type]);
+        idx = checkPortalSize(idx, type, streamId);
         return idx;
     }
 
     /**
      * Gets top BitrateInfo for the player
      * @param {string} type - 'video' or 'audio' are the type options.
+     * @param {string} streamId - Id of the stream
      * @returns {BitrateInfo | null}
      */
-    function getTopBitrateInfoFor(type) {
-        if (type && streamProcessorDict && streamProcessorDict[type]) {
-            const streamInfo = streamProcessorDict[type].getStreamInfo();
-            if (streamInfo && streamInfo.id) {
-                const idx = getTopQualityIndexFor(type, streamInfo.id);
-                const bitrates = getBitrateList(streamProcessorDict[type].getMediaInfo());
-                return bitrates[idx] ? bitrates[idx] : null;
-            }
+    function getTopBitrateInfoFor(type, streamId = null) {
+        if (!streamId) {
+            streamId = streamController.getActiveStreamInfo().id;
+        }
+        if (type && streamProcessorDict && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+            const idx = getTopQualityIndexFor(type, streamId);
+            const bitrates = getBitrateList(streamProcessorDict[streamId][type].getMediaInfo());
+            return bitrates[idx] ? bitrates[idx] : null;
         }
         return null;
     }
@@ -245,9 +297,11 @@ function AbrController() {
      */
     function getInitialBitrateFor(type) {
         checkConfig();
+
         if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
             return NaN;
         }
+
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
         let configBitrate = settings.get().streaming.abr.initialBitrate[type];
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
@@ -279,23 +333,23 @@ function AbrController() {
         return settings.get().streaming.abr.minBitrate[type];
     }
 
-    function getMaxAllowedIndexFor(type) {
+    function getMaxAllowedIndexFor(type, streamId) {
         const maxBitrate = getMaxAllowedBitrateFor(type);
         if (maxBitrate > -1) {
-            return getQualityForBitrate(streamProcessorDict[type].getMediaInfo(), maxBitrate);
+            return getQualityForBitrate(streamProcessorDict[streamId][type].getMediaInfo(), maxBitrate, streamId);
         } else {
             return undefined;
         }
     }
 
-    function getMinAllowedIndexFor(type) {
+    function getMinAllowedIndexFor(type, streamId) {
         const minBitrate = getMinAllowedBitrateFor(type);
 
         if (minBitrate > -1) {
-            const mediaInfo = streamProcessorDict[type].getMediaInfo();
+            const mediaInfo = streamProcessorDict[streamId][type].getMediaInfo();
             const bitrateList = getBitrateList(mediaInfo);
             // This returns the quality index <= for the given bitrate
-            let minIdx = getQualityForBitrate(mediaInfo, minBitrate);
+            let minIdx = getQualityForBitrate(mediaInfo, minBitrate, streamId);
             if (bitrateList[minIdx] && minIdx < bitrateList.length - 1 && bitrateList[minIdx].bitrate < minBitrate * 1000) {
                 minIdx++; // Go to the next bitrate
             }
@@ -305,16 +359,14 @@ function AbrController() {
         }
     }
 
-    function checkPlaybackQuality(type) {
-        if (type && streamProcessorDict && streamProcessorDict[type]) {
-            const streamInfo = streamProcessorDict[type].getStreamInfo();
-            const streamId = streamInfo ? streamInfo.id : null;
-            const oldQuality = getQualityFor(type);
+    function checkPlaybackQuality(type, streamId) {
+        if (type && streamProcessorDict && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+            const oldQuality = getQualityFor(type, streamId);
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
-                streamProcessor: streamProcessorDict[type],
+                streamProcessor: streamProcessorDict[streamId][type],
                 currentValue: oldQuality,
-                switchHistory: switchHistoryDict[type],
+                switchHistory: switchHistoryDict[streamId][type],
                 droppedFramesHistory: droppedFramesHistory,
                 useBufferOccupancyABR: useBufferOccupancyABR(type),
                 useL2AABR: useL2AABR(type),
@@ -325,14 +377,16 @@ function AbrController() {
             if (droppedFramesHistory) {
                 const playbackQuality = videoModel.getPlaybackQuality();
                 if (playbackQuality) {
-                    droppedFramesHistory.push(playbackIndex, playbackQuality);
+                    droppedFramesHistory.push(streamId, playbackIndex, playbackQuality);
                 }
             }
+
             if (!!settings.get().streaming.abr.autoSwitchBitrate[type]) {
-                const minIdx = getMinAllowedIndexFor(type);
+                const minIdx = getMinAllowedIndexFor(type, streamId);
                 const topQualityIdx = getTopQualityIndexFor(type, streamId);
                 const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
                 let newQuality = switchRequest.quality;
+
                 if (minIdx !== undefined && ((newQuality > SwitchRequest.NO_CHANGE) ? newQuality : oldQuality) < minIdx) {
                     newQuality = minIdx;
                 }
@@ -340,11 +394,11 @@ function AbrController() {
                     newQuality = topQualityIdx;
                 }
 
-                switchHistoryDict[type].push({ oldValue: oldQuality, newValue: newQuality });
+                switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
 
                 if (newQuality > SwitchRequest.NO_CHANGE && newQuality != oldQuality) {
-                    if (abandonmentStateDict[type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality) {
-                        changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason);
+                    if (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality) {
+                        changeQuality(type, oldQuality, newQuality, topQualityIdx, switchRequest.reason, streamId);
                     }
                 } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
                     const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
@@ -354,32 +408,40 @@ function AbrController() {
         }
     }
 
-    function setPlaybackQuality(type, streamInfo, newQuality, reason) {
-        const id = streamInfo.id;
-        const oldQuality = getQualityFor(type);
+    function setPlaybackQuality(type, streamInfo, newQuality, reason = null) {
+        const streamId = streamInfo.id;
+        const oldQuality = getQualityFor(type, streamId);
 
         checkInteger(newQuality);
 
-        const topQualityIdx = getTopQualityIndexFor(type, id);
+        const topQualityIdx = getTopQualityIndexFor(type, streamId);
+        const bitrateInfo = _getBitrateForQuality(type, streamId, newQuality);
+
+        eventBus.trigger(Events.SETTING_PLAYBACK_QUALITY, {
+            newQuality,
+            streamInfo,
+            mediaType: type,
+            bitrateInfo
+        })
+
         if (newQuality !== oldQuality && newQuality >= 0 && newQuality <= topQualityIdx) {
-            changeQuality(type, oldQuality, newQuality, topQualityIdx, reason);
+            changeQuality(type, oldQuality, newQuality, topQualityIdx, reason, streamId);
         }
     }
 
-    function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason) {
-        if (type && streamProcessorDict[type]) {
-            const streamInfo = streamProcessorDict[type].getStreamInfo();
-            const id = streamInfo ? streamInfo.id : null;
-            if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-                logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
-            }
-            setQualityFor(type, id, newQuality);
+    function changeQuality(type, oldQuality, newQuality, topQualityIdx, reason, streamId) {
+        if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+            const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+            logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + topQualityIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+
+            setQualityFor(type, newQuality, streamId);
             eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
                 {
-                    oldQuality: oldQuality,
-                    newQuality: newQuality,
-                    reason: reason
+                    oldQuality,
+                    newQuality,
+                    reason,
+                    streamInfo
                 },
                 { streamId: streamInfo.id, mediaType: type }
             );
@@ -390,23 +452,36 @@ function AbrController() {
         }
     }
 
-    function setAbandonmentStateFor(type, state) {
-        abandonmentStateDict[type].state = state;
+    function _getBitrateForQuality(type, streamId, quality) {
+        try {
+            const streamInfo = streamController.getStreamById(streamId).getStreamInfo();
+            const mediaInfo = adapter.getMediaInfoForType(streamInfo, type)
+            const bitrateList = getBitrateList(mediaInfo);
+
+            return bitrateList[quality];
+        } catch (e) {
+            return 0;
+        }
     }
 
-    function getAbandonmentStateFor(type) {
-        return abandonmentStateDict[type] ? abandonmentStateDict[type].state : null;
+    function setAbandonmentStateFor(streamId, type, state) {
+        abandonmentStateDict[streamId][type].state = state;
+    }
+
+    function getAbandonmentStateFor(streamId, type) {
+        return abandonmentStateDict[streamId] && abandonmentStateDict[streamId][type] ? abandonmentStateDict[streamId][type].state : null;
     }
 
     /**
      * @param {MediaInfo} mediaInfo
      * @param {number} bitrate A bitrate value, kbps
-     * @param {number} latency Expected latency of connection, ms
+     * @param {String} streamId Period ID
+     * @param {number|null} latency Expected latency of connection, ms
      * @returns {number} A quality index <= for the given bitrate
      * @memberof AbrController#
      */
-    function getQualityForBitrate(mediaInfo, bitrate, latency) {
-        const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[mediaInfo.type].getRepresentationInfo() : null;
+    function getQualityForBitrate(mediaInfo, bitrate, streamId, latency = null) {
+        const voRepresentation = mediaInfo && mediaInfo.type ? streamProcessorDict[streamId][mediaInfo.type].getRepresentationInfo() : null;
 
         if (settings.get().streaming.abr.useDeadTimeLatency && latency && voRepresentation && voRepresentation.fragmentDuration) {
             latency = latency / 1000;
@@ -526,15 +601,16 @@ function AbrController() {
         const streamId = mediaInfo.streamInfo.id;
         const max = mediaInfo.representationCount - 1;
 
-        setTopQualityIndex(type, streamId, max);
+        topQualities[streamId] = topQualities[streamId] || {};
+        topQualities[streamId][type] = max;
 
         return max;
     }
 
     function isPlayingAtTopQuality(streamInfo) {
         const streamId = streamInfo ? streamInfo.id : null;
-        const audioQuality = getQualityFor(Constants.AUDIO);
-        const videoQuality = getQualityFor(Constants.VIDEO);
+        const audioQuality = getQualityFor(Constants.AUDIO, streamId);
+        const videoQuality = getQualityFor(Constants.VIDEO, streamId);
 
         const isAtTop = (audioQuality === getTopQualityIndexFor(Constants.AUDIO, streamId)) &&
             (videoQuality === getTopQualityIndexFor(Constants.VIDEO, streamId));
@@ -542,49 +618,49 @@ function AbrController() {
         return isAtTop;
     }
 
-    function getQualityFor(type) {
-        if (type && streamProcessorDict[type]) {
-            const streamInfo = streamProcessorDict[type].getStreamInfo();
-            const id = streamInfo ? streamInfo.id : null;
-            let quality;
-
-            if (id) {
-                qualityDict[id] = qualityDict[id] || {};
-
-                if (!qualityDict[id].hasOwnProperty(type)) {
-                    qualityDict[id][type] = QUALITY_DEFAULT;
-                }
-
-                quality = qualityDict[id][type];
-                return quality;
+    function getQualityFor(type, streamId = null) {
+        try {
+            if (!streamId) {
+                streamId = streamController.getActiveStreamInfo().id;
             }
+            if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
+                let quality;
+
+                if (streamId) {
+                    qualityDict[streamId] = qualityDict[streamId] || {};
+
+                    if (!qualityDict[streamId].hasOwnProperty(type)) {
+                        qualityDict[streamId][type] = QUALITY_DEFAULT;
+                    }
+
+                    quality = qualityDict[streamId][type];
+                    return quality;
+                }
+            }
+            return QUALITY_DEFAULT;
+        } catch (e) {
+            return QUALITY_DEFAULT;
         }
-        return QUALITY_DEFAULT;
     }
 
-    function setQualityFor(type, id, value) {
-        qualityDict[id] = qualityDict[id] || {};
-        qualityDict[id][type] = value;
+    function setQualityFor(type, value, streamId) {
+        qualityDict[streamId] = qualityDict[streamId] || {};
+        qualityDict[streamId][type] = value;
     }
 
-    function setTopQualityIndex(type, id, value) {
-        topQualities[id] = topQualities[id] || {};
-        topQualities[id][type] = value;
-    }
-
-    function checkMaxBitrate(idx, type) {
+    function checkMaxBitrate(idx, type, streamId) {
         let newIdx = idx;
 
-        if (!streamProcessorDict[type]) {
+        if (!streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
             return newIdx;
         }
 
-        const minIdx = getMinAllowedIndexFor(type);
+        const minIdx = getMinAllowedIndexFor(type, streamId);
         if (minIdx !== undefined) {
             newIdx = Math.max(idx, minIdx);
         }
 
-        const maxIdx = getMaxAllowedIndexFor(type);
+        const maxIdx = getMaxAllowedIndexFor(type, streamId);
         if (maxIdx !== undefined) {
             newIdx = Math.min(newIdx, maxIdx);
         }
@@ -613,8 +689,8 @@ function AbrController() {
         }
     }
 
-    function checkPortalSize(idx, type) {
-        if (type !== Constants.VIDEO || !settings.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[type]) {
+    function checkPortalSize(idx, type, streamId) {
+        if (type !== Constants.VIDEO || !settings.get().streaming.abr.limitBitrateByPortal || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
             return idx;
         }
 
@@ -646,8 +722,10 @@ function AbrController() {
 
     function onFragmentLoadProgress(e) {
         const type = e.request.mediaType;
+        const streamId = e.streamId;
+
         if (!!settings.get().streaming.abr.autoSwitchBitrate[type]) {
-            const streamProcessor = streamProcessorDict[type];
+            const streamProcessor = streamProcessorDict[streamId][type];
             if (!streamProcessor) return; // There may be a fragment load in progress when we switch periods and recreated some controllers.
 
             const rulesContext = RulesContext(context).create({
@@ -659,7 +737,7 @@ function AbrController() {
                 useLoLPABR: useLoLPABR(type),
                 videoModel
             });
-            const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
+            const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext, streamId);
 
             if (switchRequest.quality > SwitchRequest.NO_CHANGE) {
                 const fragmentModel = streamProcessor.getFragmentModel();
@@ -670,10 +748,10 @@ function AbrController() {
                 if (request) {
                     //TODO Check if we should abort or if better to finish download. check bytesLoaded/Total
                     fragmentModel.abortRequests();
-                    setAbandonmentStateFor(type, MetricsConstants.ABANDON_LOAD);
-                    switchHistoryDict[type].reset();
-                    switchHistoryDict[type].push({
-                        oldValue: getQualityFor(type),
+                    setAbandonmentStateFor(streamId, type, MetricsConstants.ABANDON_LOAD);
+                    switchHistoryDict[streamId][type].reset();
+                    switchHistoryDict[streamId][type].push({
+                        oldValue: getQualityFor(type, streamId),
                         newValue: switchRequest.quality,
                         confidence: 1,
                         reason: switchRequest.reason
@@ -683,7 +761,7 @@ function AbrController() {
                     clearTimeout(abandonmentTimeout);
                     abandonmentTimeout = setTimeout(
                         () => {
-                            setAbandonmentStateFor(type, MetricsConstants.ALLOW_LOAD);
+                            setAbandonmentStateFor(streamId, type, MetricsConstants.ALLOW_LOAD);
                             abandonmentTimeout = null;
                         },
                         settings.get().streaming.abandonLoadTimeout
@@ -693,28 +771,45 @@ function AbrController() {
         }
     }
 
+    function clearDataForStream(streamId) {
+        if (droppedFramesHistory) {
+            droppedFramesHistory.clearForStream(streamId);
+        }
+        if (streamProcessorDict[streamId]) {
+            delete streamProcessorDict[streamId];
+        }
+        if (switchHistoryDict[streamId]) {
+            delete switchHistoryDict[streamId];
+        }
+
+        if (abandonmentStateDict[streamId]) {
+            delete abandonmentStateDict[streamId];
+        }
+    }
+
     instance = {
-        isPlayingAtTopQuality: isPlayingAtTopQuality,
-        updateTopQualityIndex: updateTopQualityIndex,
-        getThroughputHistory: getThroughputHistory,
-        getBitrateList: getBitrateList,
-        getQualityForBitrate: getQualityForBitrate,
-        getTopBitrateInfoFor: getTopBitrateInfoFor,
-        getMaxAllowedIndexFor: getMaxAllowedIndexFor,
-        getMinAllowedIndexFor: getMinAllowedIndexFor,
-        getInitialBitrateFor: getInitialBitrateFor,
-        getQualityFor: getQualityFor,
-        getAbandonmentStateFor: getAbandonmentStateFor,
-        setPlaybackQuality: setPlaybackQuality,
-        checkPlaybackQuality: checkPlaybackQuality,
-        getTopQualityIndexFor: getTopQualityIndexFor,
-        setElementSize: setElementSize,
-        setWindowResizeEventCalled: setWindowResizeEventCalled,
-        createAbrRulesCollection: createAbrRulesCollection,
-        registerStreamType: registerStreamType,
-        unRegisterStreamType: unRegisterStreamType,
-        setConfig: setConfig,
-        reset: reset
+        initialize,
+        isPlayingAtTopQuality,
+        updateTopQualityIndex,
+        clearDataForStream,
+        getThroughputHistory,
+        getBitrateList,
+        getQualityForBitrate,
+        getTopBitrateInfoFor,
+        getMaxAllowedIndexFor,
+        getMinAllowedIndexFor,
+        getInitialBitrateFor,
+        getQualityFor,
+        getAbandonmentStateFor,
+        setPlaybackQuality,
+        checkPlaybackQuality,
+        getTopQualityIndexFor,
+        setElementSize,
+        setWindowResizeEventCalled,
+        registerStreamType,
+        unRegisterStreamType,
+        setConfig,
+        reset
     };
 
     setup();

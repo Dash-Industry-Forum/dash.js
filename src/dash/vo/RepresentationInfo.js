@@ -36,7 +36,6 @@ class RepresentationInfo {
     constructor() {
         this.id = null;
         this.quality = null;
-        this.DVRWindow = null;
         this.fragmentDuration = null;
         this.mediaInfo = null;
         this.MSETimeOffset = null;

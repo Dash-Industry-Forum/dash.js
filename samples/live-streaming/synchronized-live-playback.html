@@ -15,7 +15,9 @@ Debug files are not compressed or obfuscated making the file size much larger co
             var MPD_2S_SEGMENTS = "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd";
             var settings = {
                 streaming: {
-                    liveDelay: 10, 
+                    delay: {
+                        liveDelay: 10
+                    },
                     liveCatchup: {
                         enabled: true
                     }

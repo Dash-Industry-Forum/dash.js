@@ -75,6 +75,8 @@ function AbandonRequestsRule(config) {
 
         const mediaInfo = rulesContext.getMediaInfo();
         const mediaType = rulesContext.getMediaType();
+        const streamInfo = rulesContext.getStreamInfo();
+        const streamId = streamInfo ? streamInfo.id : null;
         const req = rulesContext.getCurrentRequest();
 
         if (!isNaN(req.index)) {
@@ -121,10 +123,10 @@ function AbandonRequestsRule(config) {
                     const abrController = rulesContext.getAbrController();
                     const bytesRemaining = fragmentInfo.bytesTotal - fragmentInfo.bytesLoaded;
                     const bitrateList = abrController.getBitrateList(mediaInfo);
-                    const quality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor);
-                    const minQuality = abrController.getMinAllowedIndexFor(mediaType);
+                    const quality = abrController.getQualityForBitrate(mediaInfo, fragmentInfo.measuredBandwidthInKbps * settings.get().streaming.abr.bandwidthSafetyFactor, streamId);
+                    const minQuality = abrController.getMinAllowedIndexFor(mediaType, streamId);
                     const newQuality = (minQuality !== undefined) ? Math.max(minQuality, quality) : quality;
-                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType)].bitrate;
+                    const estimateOtherBytesTotal = fragmentInfo.bytesTotal * bitrateList[newQuality].bitrate / bitrateList[abrController.getQualityFor(mediaType, streamId)].bitrate;
 
                     if (bytesRemaining > estimateOtherBytesTotal) {
                         switchRequest.quality = newQuality;

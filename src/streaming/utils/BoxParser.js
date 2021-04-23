@@ -298,12 +298,12 @@ function BoxParser(/*config*/) {
     }
 
     instance = {
-        parse: parse,
-        findLastTopIsoBoxCompleted: findLastTopIsoBoxCompleted,
-        getMediaTimescaleFromMoov: getMediaTimescaleFromMoov,
-        getSamplesInfo: getSamplesInfo,
-        findInitRange: findInitRange,
-        parsePayload: parsePayload
+        parse,
+        findLastTopIsoBoxCompleted,
+        getMediaTimescaleFromMoov,
+        getSamplesInfo,
+        findInitRange,
+        parsePayload
     };
 
     setup();

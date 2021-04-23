@@ -10,6 +10,10 @@ class URIFragmentModelMock {
     setURIFragmentData(uri) {
         this.uriFragmentData = uri;
     }
+
+    reset() {
+        this.uriFragmentData = null;
+    }
 }
 
 export default URIFragmentModelMock;

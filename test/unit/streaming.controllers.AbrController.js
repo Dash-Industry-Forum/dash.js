@@ -42,6 +42,7 @@ describe('AbrController', function () {
             settings: settings,
             streamController: streamControllerMock
         });
+        abrCtrl.initialize();
         abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
     });
 
@@ -51,7 +52,7 @@ describe('AbrController', function () {
     });
 
     it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
-        const state = abrCtrl.getAbandonmentStateFor(Constants.AUDIO);
+        const state = abrCtrl.getAbandonmentStateFor('1', Constants.AUDIO);
         expect(state).to.be.null;    // jshint ignore:line
     });
 
@@ -80,7 +81,7 @@ describe('AbrController', function () {
 
         abrCtrl.updateTopQualityIndex(dummyMediaInfo);
         abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality);
-        newQuality = abrCtrl.getQualityFor(Constants.VIDEO);
+        newQuality = abrCtrl.getQualityFor(Constants.VIDEO, dummyMediaInfo.streamInfo.id);
         expect(newQuality).to.be.equal(testQuality);
     });
 
@@ -145,93 +146,96 @@ describe('AbrController', function () {
 
     it('should return the appropriate max allowed index for the max allowed bitrate set', function () {
         // Max allowed bitrate in kbps, bandwidth is in bps
-        const s = { streaming: { abr: { maxBitrate: {}}}};
+
+        const s = {streaming: {abr: {maxBitrate: {}}}};
+        const streamId = streamProcessor.getStreamInfo().id;
         s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
         settings.update(s);
 
-        let maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        let maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(0);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(1);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(2);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(0);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(1);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(2);
 
         s.streaming.abr.maxBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1;
         settings.update(s);
 
-        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO);
+        maxAllowedIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, streamId);
         expect(maxAllowedIndex).to.be.equal(0);
     });
 
     it('should return the appropriate min allowed index for the min allowed bitrate set', function () {
         // Min allowed bitrate in kbps, bandwidth is in bps
-        const s = { streaming: { abr: { minBitrate: {}}}};
+        const s = {streaming: {abr: {minBitrate: {}}}};
+        const streamId = streamProcessor.getStreamInfo().id;
         s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
         settings.update(s);
 
-        let minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        let minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(0);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(1);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(2);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) + 1;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(1);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[1].bandwidth / 1000) + 1;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(2);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[2].bandwidth / 1000) + 1;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(2);
 
         s.streaming.abr.minBitrate[Constants.VIDEO] = (streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000) - 1;
         settings.update(s);
 
-        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO);
+        minAllowedIndex = abrCtrl.getMinAllowedIndexFor(Constants.VIDEO, streamId);
         expect(minAllowedIndex).to.be.equal(0);
     });
 
@@ -255,7 +259,7 @@ describe('AbrController', function () {
         expect(bitrateInfo.bitrate).to.be.equal(3000000);
         expect(bitrateInfo.qualityIndex).to.be.equal(2);
 
-        const s = { streaming: { abr: { limitBitrateByPortal: true }}};
+        const s = {streaming: {abr: {limitBitrateByPortal: true}}};
         settings.update(s);
 
         bitrateInfo = abrCtrl.getTopBitrateInfoFor(Constants.VIDEO);
@@ -266,7 +270,7 @@ describe('AbrController', function () {
 
     it('should return the appropriate top quality index when calling getTopQualityIndexFor', function () {
         videoModelMock.setClientWidth(899);
-        const s = { streaming: { abr: { limitBitrateByPortal: true }}};
+        const s = {streaming: {abr: {limitBitrateByPortal: true}}};
         settings.update(s);
         abrCtrl.updateTopQualityIndex({type: Constants.VIDEO, streamInfo: {id: 'test'}, representationCount: 5});
         let topQualityIndex = abrCtrl.getTopQualityIndexFor(Constants.VIDEO, 'test');

@@ -11,21 +11,22 @@
 
     <script>
         var player;
+
         function init() {
             var video,
-                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
-            video = document.querySelector("video");
+            video = document.querySelector('video');
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
 
             applySettings()
 
-            player.on(dashjs.MediaPlayer.events["PLAYBACK_ENDED"], function() {
+            player.on(dashjs.MediaPlayer.events['PLAYBACK_ENDED'], function () {
                 clearInterval(eventPoller);
             });
 
-            var eventPoller = setInterval(function() {
+            var eventPoller = setInterval(function () {
                 var streamInfo = player.getActiveStream().getStreamInfo();
                 var dashMetrics = player.getDashMetrics();
                 var dashAdapter = player.getDashAdapter();
@@ -35,8 +36,8 @@
                     var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
                     var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
                     var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
-                    document.getElementById('currentBufferLevel').innerText = bufferLevel + " secs";
-                    document.getElementById('reportedBitrate').innerText = bitrate + " Kbps";
+                    document.getElementById('currentBufferLevel').innerText = bufferLevel + ' secs';
+                    document.getElementById('reportedBitrate').innerText = bitrate + ' Kbps';
                 }
             }, 1000);
         }
@@ -52,8 +53,10 @@
 
             player.updateSettings({
                 'streaming': {
-                    'stableBufferTime': stableBuffer,
-                    'bufferTimeAtTopQualityLongForm': bufferAtTopQuality,
+                    'buffer': {
+                        'bufferTimeAtTopQualityLongForm': bufferAtTopQuality,
+                        'stableBufferTime': stableBuffer
+                    },
                     'abr': {
                         'minBitrate': {
                             'video': minBitrate
@@ -80,6 +83,7 @@
         fieldset {
             width: 70%;
         }
+
         fieldset > div {
             margin-top: 20px;
         }
@@ -94,22 +98,30 @@
 <body>
 <div id="container">
     <div class="video-container">
-        <video  data-dashjs-player autoplay controls="true">
+        <video data-dashjs-player autoplay controls="true">
         </video>
     </div>
     <fieldset>
         <legend>Configuration parameters</legend>
         <div>
-            Max stable buffer (seconds): <input type="number" id="stableBuffer" value="20"> (Current Buffer: <span id="currentBufferLevel")>0</span> seconds)
-            <div class="description">The time that the internal buffer target will be set to post startup/seeks (NOT top quality).</div>
+            Max stable buffer (seconds): <input type="number" id="stableBuffer" value="20"> (Current Buffer: <span
+            id="currentBufferLevel" )>0</span> seconds)
+            <div class="description">The time that the internal buffer target will be set to post startup/seeks (NOT top
+                quality).
+            </div>
         </div>
         <div>
             Buffer lenght at top quality (seconds): <input type="number" id="topQualityBuffer" value="20">
-            <div class="description">The time that the internal buffer target will be set to once playing the top quality.</div>
+            <div class="description">The time that the internal buffer target will be set to once playing the top
+                quality.
+            </div>
         </div>
         <div>
-            Max selectable bitrate (Kbps): <input type="number" id="maxBitrate" value="5000"> (Downloading bitrate: <span id="reportedBitrate")>0</span>)
-            <div class="description">The maximum bitrate selectable by the ABR algorithms will choose. Use -1 for no limit.</div>
+            Max selectable bitrate (Kbps): <input type="number" id="maxBitrate" value="5000"> (Downloading bitrate:
+            <span id="reportedBitrate" )>0</span>)
+            <div class="description">The maximum bitrate selectable by the ABR algorithms will choose. Use -1 for no
+                limit.
+            </div>
         </div>
         <div>
             Min selectable bitrate (Kbps): <input type="number" id="minBitrate" value="-1">
@@ -117,7 +129,8 @@
         </div>
         <div>
             Limit Bitrate By Portal Size: <input type="checkbox" id="limitByPortal">
-            <div class="description">If true, the size of the video portal will limit the max chosen video resolution.</div>
+            <div class="description">If true, the size of the video portal will limit the max chosen video resolution.
+            </div>
         </div>
         <div>
             <button onclick="applySettings()">Apply changes</button>
@@ -125,7 +138,7 @@
     </fieldset>
 </div>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener('DOMContentLoaded', function () {
         init();
     });
 </script>

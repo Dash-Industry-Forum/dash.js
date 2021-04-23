@@ -51,7 +51,7 @@
 
         function setTextDefaultEnabled() {
             var checkbox = document.getElementById("textDefaultEnabled");
-            player.setTextDefaultEnabled(checkbox.checked);
+            player.updateSettings({streaming: {text: {defaultEnabled: checkbox.checked}}});
         }
 
         function setLang() {

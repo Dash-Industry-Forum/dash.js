@@ -83,6 +83,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          stallThreshold: 0.5,
  *          filterUnsupportedEssentialProperties: true,
  *          eventControllerRefreshDelay: 100,
+ *          cacheInitSegments: true,
  *          utcSynchronization: {
  *              backgroundAttempts: 2,
  *              timeBetweenSyncAttempts: 30,
@@ -310,7 +311,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Known issues:
  * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter or stall in playback.
  * @property {boolean} [flushBufferAtTrackSwitch=false]
- * When enabled, after a track switch and in case buffer is being replaced (see MediaPlayer.setTrackSwitchModeFor(Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE)), the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
+ * When enabled, after a track switch and in case buffer is being replaced, the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
  *
  * This can be required on some devices like GoogleCast devices to make track switching functional.
  *
@@ -368,6 +369,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * @property {boolean} [cacheInitSegments=true]
+ * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {number} [eventControllerRefreshDelay=100]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
@@ -615,34 +618,43 @@ function Settings() {
             dispatchEvent: false
         },
         streaming: {
-            metricsMaxListDepth: 1000,
+            metricsMaxListDepth: 500,
             abandonLoadTimeout: 10000,
-            liveDelayFragmentCount: NaN,
-            liveDelay: null,
-            scheduleWhilePaused: true,
-            fastSwitchEnabled: false,
-            flushBufferAtTrackSwitch: false,
             calcSegmentAvailabilityRangeFromTimeline: false,
-            reuseExistingSourceBuffers: true,
-            bufferPruningInterval: 10,
-            bufferToKeep: 20,
-            jumpGaps: true,
-            jumpLargeGaps: true,
-            smallGapLimit: 1.5,
-            stableBufferTime: 12,
-            bufferTimeAtTopQuality: 30,
-            bufferTimeAtTopQualityLongForm: 60,
-            longFormContentDurationThreshold: 600,
-            wallclockTimeUpdateInterval: 50,
+            wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
-            keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
-            useSuggestedPresentationDelay: true,
-            useAppendWindow: true,
             manifestUpdateRetryInterval: 100,
-            stallThreshold: 0.5,
             filterUnsupportedEssentialProperties: true,
+            cacheInitSegments: true,
             eventControllerRefreshDelay: 100,
+            delay: {
+                liveDelayFragmentCount: NaN,
+                liveDelay: NaN,
+                useSuggestedPresentationDelay: true,
+            },
+            protection: {
+                keepProtectionMediaKeys: false
+            },
+            buffer: {
+                fastSwitchEnabled: true,
+                flushBufferAtTrackSwitch: false,
+                reuseExistingSourceBuffers: true,
+                bufferPruningInterval: 10,
+                bufferToKeep: 20,
+                bufferTimeAtTopQuality: 30,
+                bufferTimeAtTopQualityLongForm: 60,
+                initialBufferLevel: NaN,
+                stableBufferTime: 12,
+                longFormContentDurationThreshold: 600,
+                stallThreshold: 0.5,
+                useAppendWindow: true
+            },
+            gaps: {
+                jumpGaps: true,
+                jumpLargeGaps: true,
+                smallGapLimit: 1.5,
+            },
             utcSynchronization: {
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,
@@ -655,6 +667,14 @@ function Settings() {
                     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
                     value: 'http://time.akamai.com/?iso&ms'
                 }
+            },
+            scheduling: {
+                defaultTimeout: 300,
+                lowLatencyTimeout: 100,
+                scheduleWhilePaused: true
+            },
+            text: {
+                defaultEnabled: true
             },
             liveCatchup: {
                 minDrift: 0.02,

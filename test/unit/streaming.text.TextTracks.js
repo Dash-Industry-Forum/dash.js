@@ -1,8 +1,7 @@
 import TextTracks from '../../src/streaming/text/TextTracks';
-import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus';
 import Events from '../../src/core/events/Events';
-
+import VoHelper from './helpers/VOHelper';
 import VideoModelMock from './mocks/VideoModelMock';
 
 const SUBTITLE_DATA = 'subtitle lign 1';
@@ -13,7 +12,9 @@ const eventBus = EventBus(context).getInstance();
 
 describe('TextTracks', function () {
 
+    const voHelper = new VoHelper();
     let videoModelMock = new VideoModelMock();
+    const streamInfo = voHelper.getDummyStreamInfo();
     let textTracks;
 
     beforeEach(function () {
@@ -55,9 +56,9 @@ describe('TextTracks', function () {
     });
 
     beforeEach(function () {
-        textTracks = TextTracks(context).getInstance();
-        textTracks.setConfig({
-            videoModel: videoModelMock
+        textTracks = TextTracks(context).create({
+            videoModel: videoModelMock,
+            streamInfo
         });
         textTracks.initialize();
     });
@@ -72,14 +73,6 @@ describe('TextTracks', function () {
             const trackId = textTracks.getTrackIdxForId(0);
 
             expect(trackId).to.equal(-1); // jshint ignore:line
-        });
-    });
-
-    describe('Method setDisplayCConTop', function () {
-        it('should throw an error if setDisplayCConTop is called with a wrong parameter type', function () {
-            expect(textTracks.setDisplayCConTop.bind(textTracks, 1)).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textTracks.setDisplayCConTop.bind(textTracks, 'cc')).to.throw(Constants.BAD_ARGUMENT_ERROR);
-            expect(textTracks.setDisplayCConTop.bind(textTracks)).to.throw(Constants.BAD_ARGUMENT_ERROR);
         });
     });
 
@@ -98,6 +91,7 @@ describe('TextTracks', function () {
                 defaultTrack: true,
                 isTTML: true}, 1);
 
+            textTracks.createTracks();
             const currrentTrackIdx = textTracks.getCurrentTrackIdx();
             expect(currrentTrackIdx).to.equal(0); // jshint ignore:line
             expect(spyTrackAdded).to.have.been.called();
@@ -117,6 +111,7 @@ describe('TextTracks', function () {
                 defaultTrack: true,
                 isTTML: true}, 1);
 
+            textTracks.createTracks();
             let track = videoModelMock.getTextTrack('subtitles', 'eng');
 
             textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);

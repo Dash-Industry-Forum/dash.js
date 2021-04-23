@@ -88,37 +88,37 @@ function SegmentBaseController(config) {
     }
 
     function initialize() {
-        eventBus.on(events.SEGMENTBASE_INIT_REQUEST_NEEDED, onInitSegmentBaseNeeded, instance);
-        eventBus.on(events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, onSegmentsListSegmentBaseNeeded, instance);
-
         segmentBaseLoader.initialize();
         webmSegmentBaseLoader.initialize();
     }
 
-    function onInitSegmentBaseNeeded(e) {
-        if (isWebM(e.mimeType)) {
-            webmSegmentBaseLoader.loadInitialization(e.streamId, e.mediaType, e.representation);
+    function getSegmentBaseInitSegment(data) {
+        if (isWebM(data.representation.mimeType)) {
+            return webmSegmentBaseLoader.loadInitialization(data.representation, data.mediaType);
         } else {
-            segmentBaseLoader.loadInitialization(e.streamId, e.mediaType, e.representation);
+            return segmentBaseLoader.loadInitialization(data.representation, data.mediaType);
         }
     }
 
-    function onSegmentsListSegmentBaseNeeded(e) {
+    function getSegmentList(e) {
         if (isWebM(e.mimeType)) {
-            webmSegmentBaseLoader.loadSegments(e.streamId, e.mediaType, e.representation, e.representation ? e.representation.indexRange : null, e.callback);
+            return webmSegmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null);
         } else {
-            segmentBaseLoader.loadSegments(e.streamId, e.mediaType, e.representation, e.representation ? e.representation.indexRange : null, e.callback);
+            return segmentBaseLoader.loadSegments(e.representation, e.mediaType, e.representation ? e.representation.indexRange : null);
         }
     }
 
     function reset() {
-        eventBus.off(events.SEGMENTBASE_INIT_REQUEST_NEEDED, onInitSegmentBaseNeeded, instance);
-        eventBus.off(events.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED, onSegmentsListSegmentBaseNeeded, instance);
+        segmentBaseLoader.reset();
+        webmSegmentBaseLoader.reset();
     }
 
+
     instance = {
-        initialize: initialize,
-        reset: reset
+        initialize,
+        getSegmentBaseInitSegment,
+        getSegmentList,
+        reset
     };
 
     setup();

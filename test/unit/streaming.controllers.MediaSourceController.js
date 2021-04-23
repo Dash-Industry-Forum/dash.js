@@ -21,17 +21,21 @@ describe('MediaSourceController', function () {
         }
 
         if (typeof MediaSource === 'undefined') {
-            global.MediaSource = function () {};
+            global.MediaSource = function () {
+                return {};
+            };
         }
 
         if (typeof WebKitMediaSource === 'undefined') {
-            global.WebKitMediaSource = function () {};
+            global.WebKitMediaSource = function () {
+                return {};
+            };
         }
     });
 
     afterEach(function () {
         delete global.window;
-        delete global.MediaSourc;
+        delete global.MediaSource;
         delete global.WebKitMediaSource;
     });
 
@@ -40,41 +44,28 @@ describe('MediaSourceController', function () {
     });
 
     afterEach(function () {
-        // mediaSourceController.reset();
         mediaSourceController = null;
     });
 
     describe('Method createMediaSource', function () {
+
         it('should return null if MediaSource is undefined', function () {
             expect(mediaSourceController.createMediaSource()).to.not.exist; // jshint ignore:line
-        });
-
-        it('should return null if MediaSource API is MediaSource', function () {
-
-            window.MediaSource = 'MediaSource';
-            expect(mediaSourceController.createMediaSource()).to.be.instanceOf(MediaSource);
-        });
-
-        it('should return null if MediaSource API is WebkitMediaSource', function () {
-
-            window.WebKitMediaSource = 'WebKitMediaSource';
-            expect(mediaSourceController.createMediaSource()).to.be.instanceOf(WebKitMediaSource);
         });
 
     });
 
     describe('Source management', function () {
-        it('should attach source to video model', function () {
 
+        it('should attach source to video model', function () {
             let videoModel = new VideoModelMock();
             expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
 
-            mediaSourceController.attachMediaSource('source', videoModel);
-            expect(videoModel.getSource()).to.equal('source');
+            mediaSourceController.attachMediaSource(videoModel);
+            expect(videoModel.getSource()).to.not.be.null; // jshint ignore:line
         });
 
         it('should detach source from video model', function () {
-
             let videoModel = new VideoModelMock();
             expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
             videoModel.setSource('source');
@@ -84,42 +75,65 @@ describe('MediaSourceController', function () {
             expect(videoModel.getSource()).to.not.exist; // jshint ignore:line
         });
 
+        it('should not update source duration if not in readyState open', function () {
+            window.MediaSource = 'MediaSource';
+            let source = mediaSourceController.createMediaSource();
+
+            source.readyState = 'closed';
+            source.sourceBuffers = [];
+
+            mediaSourceController.setDuration(8);
+            expect(source.duration).to.be.undefined; // jshint ignore:line
+        });
+
         it('should update source duration', function () {
+            window.MediaSource = 'MediaSource';
+            let source = mediaSourceController.createMediaSource();
 
-            let source = {
-                readyState: 'open',
-                sourceBuffers: [],
-                duration: NaN
+            source.readyState = 'open';
+            source.sourceBuffers = [];
+
+            mediaSourceController.setDuration(8);
+            expect(source.duration).to.equal(8);
+        });
+
+        it('should not update source seekable range if not in readystate open', function () {
+            let source = mediaSourceController.createMediaSource();
+
+            source.readyState = 'closed';
+            source.start = 0;
+            source.end = 0;
+
+            source.clearLiveSeekableRange = function () {
+                this.start = 0;
+                this.end = 0;
             };
-            mediaSourceController.setDuration(source, 'duration');
-            expect(source.duration).to.equal('duration');
+            source.setLiveSeekableRange = function (start, end) {
+                this.start = start;
+                this.end = end;
+            };
 
+            mediaSourceController.setSeekable(1, 2);
+            expect(source.start).to.equal(0);
+            expect(source.end).to.equal(0);
         });
 
         it('should update source seekable range', function () {
+            let source = mediaSourceController.createMediaSource();
 
-            class FakeSource {
-                constructor() {
-                    this.clearLiveSeekableRange();
-                    this.readyState = 'open';
-                }
+            source.readyState = 'open';
+            source.clearLiveSeekableRange = function () {
+                this.start = 0;
+                this.end = 0;
+            };
+            source.setLiveSeekableRange = function (start, end) {
+                this.start = start;
+                this.end = end;
+            };
 
-                clearLiveSeekableRange() {
-                    this.start = 0;
-                    this.end = 0;
-                }
-
-                setLiveSeekableRange(start, end) {
-                    this.start = start;
-                    this.end = end;
-                }
-            }
-
-            let source = new FakeSource();
-            mediaSourceController.setSeekable(source, 1, 2);
+            mediaSourceController.setSeekable(1, 2);
             expect(source.start).to.equal(1);
             expect(source.end).to.equal(2);
-
         });
     });
 

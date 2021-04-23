@@ -251,6 +251,7 @@ function ProtectionModel_01b(config) {
                     message.keyPairs[i].key, message.keyPairs[i].keyID, sessionID);
             }
         }
+        eventBus.trigger(events.KEY_SESSION_UPDATED);
     }
 
     function closeKeySession(sessionToken) {
