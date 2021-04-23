@@ -154,9 +154,6 @@ module.exports = {
         player.setInitialMediaSettingsFor(type, value);
     },
 
-    setTextDefaultEnabled: function(bool){
-        player.setTextDefaultEnabled(bool);
-    },
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
     }

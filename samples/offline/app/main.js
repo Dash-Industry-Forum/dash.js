@@ -663,7 +663,7 @@ app.controller('DashController', function ($scope, $timeout, $q, sources, contri
         if ($scope.initialSettings.text) {
             $scope.player.setTextDefaultLanguage($scope.initialSettings.text);
         }
-        $scope.player.setTextDefaultEnabled($scope.initialSettings.textEnabled);
+        $scope.player.updateSettings({ streaming: { text: { defaultEnabled: $scope.initialSettings.textEnabled } } });
         $scope.player.enableForcedTextStreaming($scope.initialSettings.forceTextStreaming);
         $scope.controlbar.enable();
     };
