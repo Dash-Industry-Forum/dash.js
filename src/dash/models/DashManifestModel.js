@@ -459,6 +459,9 @@ function DashManifestModel() {
                 if (realRepresentation.hasOwnProperty(DashConstants.CODECS)) {
                     voRepresentation.codecs = realRepresentation.codecs;
                 }
+                if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE)) {
+                    voRepresentation.mimeType = realRepresentation[DashConstants.MIME_TYPE];
+                }
                 if (realRepresentation.hasOwnProperty(DashConstants.CODEC_PRIVATE_DATA)) {
                     voRepresentation.codecPrivateData = realRepresentation.codecPrivateData;
                 }
@@ -1113,7 +1116,7 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    function getSupplementalPropperties(adaptation) {
+    function getSupplementalProperties(adaptation) {
         const supplementalProperties = {};
 
         if (adaptation && adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
@@ -1139,53 +1142,53 @@ function DashManifestModel() {
     }
 
     instance = {
-        getIsTypeOf: getIsTypeOf,
-        getIsTextTrack: getIsTextTrack,
-        getLanguageForAdaptation: getLanguageForAdaptation,
-        getViewpointForAdaptation: getViewpointForAdaptation,
-        getRolesForAdaptation: getRolesForAdaptation,
-        getAccessibilityForAdaptation: getAccessibilityForAdaptation,
-        getAudioChannelConfigurationForAdaptation: getAudioChannelConfigurationForAdaptation,
-        getAudioChannelConfigurationForRepresentation: getAudioChannelConfigurationForRepresentation,
-        getAdaptationForIndex: getAdaptationForIndex,
-        getIndexForAdaptation: getIndexForAdaptation,
-        getAdaptationForId: getAdaptationForId,
-        getAdaptationsForType: getAdaptationsForType,
+        getIsTypeOf,
+        getIsTextTrack,
+        getLanguageForAdaptation,
+        getViewpointForAdaptation,
+        getRolesForAdaptation,
+        getAccessibilityForAdaptation,
+        getAudioChannelConfigurationForAdaptation,
+        getAudioChannelConfigurationForRepresentation,
+        getAdaptationForIndex,
+        getIndexForAdaptation,
+        getAdaptationForId,
+        getAdaptationsForType,
         getRealPeriods,
         getRealPeriodForIndex,
-        getCodec: getCodec,
-        getMimeType: getMimeType,
-        getKID: getKID,
-        getLabelsForAdaptation: getLabelsForAdaptation,
-        getContentProtectionData: getContentProtectionData,
-        getIsDynamic: getIsDynamic,
-        getId: getId,
-        hasProfile: hasProfile,
-        getDuration: getDuration,
-        getBandwidth: getBandwidth,
-        getManifestUpdatePeriod: getManifestUpdatePeriod,
-        getPublishTime: getPublishTime,
-        getRepresentationCount: getRepresentationCount,
-        getBitrateListForAdaptation: getBitrateListForAdaptation,
-        getRepresentationFor: getRepresentationFor,
-        getRepresentationsForAdaptation: getRepresentationsForAdaptation,
-        getAdaptationsForPeriod: getAdaptationsForPeriod,
-        getRegularPeriods: getRegularPeriods,
-        getMpd: getMpd,
-        getEventsForPeriod: getEventsForPeriod,
+        getCodec,
+        getMimeType,
+        getKID,
+        getLabelsForAdaptation,
+        getContentProtectionData,
+        getIsDynamic,
+        getId,
+        hasProfile,
+        getDuration,
+        getBandwidth,
+        getManifestUpdatePeriod,
+        getPublishTime,
+        getRepresentationCount,
+        getBitrateListForAdaptation,
+        getRepresentationFor,
+        getRepresentationsForAdaptation,
+        getAdaptationsForPeriod,
+        getRegularPeriods,
+        getMpd,
+        getEventsForPeriod,
         getEssentialPropertiesForRepresentation,
-        getEventStreamForAdaptationSet: getEventStreamForAdaptationSet,
-        getEventStreamForRepresentation: getEventStreamForRepresentation,
-        getUTCTimingSources: getUTCTimingSources,
-        getBaseURLsFromElement: getBaseURLsFromElement,
-        getRepresentationSortFunction: getRepresentationSortFunction,
-        getLocation: getLocation,
-        getPatchLocation: getPatchLocation,
-        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
-        getAvailabilityStartTime: getAvailabilityStartTime,
-        getServiceDescriptions: getServiceDescriptions,
-        getSupplementalPropperties: getSupplementalPropperties,
-        setConfig: setConfig
+        getEventStreamForAdaptationSet,
+        getEventStreamForRepresentation,
+        getUTCTimingSources,
+        getBaseURLsFromElement,
+        getRepresentationSortFunction,
+        getLocation,
+        getPatchLocation,
+        getSuggestedPresentationDelay,
+        getAvailabilityStartTime,
+        getServiceDescriptions,
+        getSupplementalProperties,
+        setConfig
     };
 
     setup();

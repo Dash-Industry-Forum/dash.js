@@ -25,7 +25,9 @@
                 },
                 'streaming': {
                     'scheduleWhilePaused': false,   /* stops the player from loading segments while paused */
-                    'fastSwitchEnabled': true       /* enables buffer replacement when switching bitrates for faster switching */
+                    'buffer': {
+                        'fastSwitchEnabled': true   /* enables buffer replacement when switching bitrates for faster switching */
+                    }
                 }
             });
             player.setAutoPlay(false); /* remove this line if you want the player to start automatically on load */

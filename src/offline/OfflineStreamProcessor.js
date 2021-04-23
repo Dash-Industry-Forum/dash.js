@@ -131,7 +131,7 @@ function OfflineStreamProcessor(config) {
             events: events
         });
 
-        eventBus.on(events.STREAM_COMPLETED, onStreamCompleted, instance);
+        eventBus.on(events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, instance);
         eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 
@@ -174,7 +174,7 @@ function OfflineStreamProcessor(config) {
         }
     }
 
-    function onStreamCompleted(e) {
+    function onStreamRequestingCompleted(e) {
         if (e.fragmentModel !== fragmentModel) {
             return;
         }
@@ -343,7 +343,7 @@ function OfflineStreamProcessor(config) {
         resetInitialSettings();
         indexHandler.reset();
 
-        eventBus.off(events.STREAM_COMPLETED, onStreamCompleted, instance);
+        eventBus.off(events.STREAM_REQUESTING_COMPLETED, onStreamRequestingCompleted, instance);
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, onFragmentLoadingCompleted, instance);
     }
 

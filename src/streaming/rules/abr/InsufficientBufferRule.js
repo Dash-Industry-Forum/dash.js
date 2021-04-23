@@ -39,7 +39,7 @@ import MetricsConstants from '../../constants/MetricsConstants';
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
+    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.7;
     const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
@@ -87,6 +87,8 @@ function InsufficientBufferRule(config) {
         const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
+        const streamInfo = rulesContext.getStreamInfo();
+        const streamId = streamInfo ? streamInfo.id : null;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
         if (shouldIgnore(mediaType) || !fragmentDuration) {
@@ -107,7 +109,7 @@ function InsufficientBufferRule(config) {
             const latency = throughputHistory.getAverageLatency(mediaType);
             const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
 
-            switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, latency);
+            switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
             switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
         }
 

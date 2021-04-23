@@ -285,6 +285,13 @@ class Constants {
         this.ARRAY_BUFFER = 'ArrayBuffer';
         this.DVB_REPORTING_URL = 'dvb:reportingUrl';
         this.DVB_PROBABILITY = 'dvb:probability';
+        this.VIDEO_ELEMENT_READY_STATES = {
+            HAVE_NOTHING: 0,
+            HAVE_METADATA: 1,
+            HAVE_CURRENT_DATA: 2,
+            HAVE_FUTURE_DATA: 3,
+            HAVE_ENOUGH_DATA: 4
+        };
     }
 
     constructor() {

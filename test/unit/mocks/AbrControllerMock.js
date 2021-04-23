@@ -119,6 +119,8 @@ function AbrControllerMock () {
 
 
     this.getMinAllowedIndexFor = function () {};
+
+    this.clearDataForStream = function () {};
 }
 
 export default AbrControllerMock;

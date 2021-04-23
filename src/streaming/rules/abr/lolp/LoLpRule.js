@@ -72,7 +72,7 @@ function LoLPRule(config) {
             let mediaType = rulesContext.getMediaInfo().type;
             let abrController = rulesContext.getAbrController();
             const streamInfo = rulesContext.getStreamInfo();
-            let currentQuality = abrController.getQualityFor(mediaType, streamInfo);
+            let currentQuality = abrController.getQualityFor(mediaType, streamInfo.id);
             const mediaInfo = rulesContext.getMediaInfo();
             const bufferStateVO = dashMetrics.getCurrentBufferState(mediaType);
             const scheduleController = rulesContext.getScheduleController();
@@ -98,7 +98,7 @@ function LoLPRule(config) {
                 return switchRequest;
             }
 
-            if (abrController.getAbandonmentStateFor(mediaType) === MetricsConstants.ABANDON_LOAD) {
+            if (abrController.getAbandonmentStateFor(streamInfo.id, mediaType) === MetricsConstants.ABANDON_LOAD) {
                 return switchRequest;
             }
 

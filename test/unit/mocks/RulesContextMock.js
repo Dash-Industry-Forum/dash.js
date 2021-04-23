@@ -52,7 +52,9 @@ function RulesContextMock () {
     };
 
     this.getStreamInfo = function () {
-
+        return {
+            id: 1
+        };
     };
 }
 

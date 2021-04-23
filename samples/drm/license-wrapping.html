@@ -21,7 +21,7 @@
                 player,
                 url = "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd";
 
-            var filterLicensRequest = function (request) {
+            var filterLicenseRequest = function (request) {
                 console.log('LICENSE REQUEST', request);
                 /* Here you can modify/overwrite the licens request (url, headers, data...) */
                 request.headers = {
@@ -39,7 +39,7 @@
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
 
-            player.registerLicenseRequestFilter(filterLicensRequest);
+            player.registerLicenseRequestFilter(filterLicenseRequest);
             player.registerLicenseResponseFilter(filterLicenseResponse);            
 
             player.initialize(video, url, true);

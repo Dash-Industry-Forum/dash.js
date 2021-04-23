@@ -70,6 +70,12 @@ class MediaPlayerEvents extends EventsBase {
         this.BUFFER_LEVEL_STATE_CHANGED = 'bufferStateChanged';
 
         /**
+         * Triggered when the buffer level of a media type has been updated
+         * @event MediaPlayerEvents#BUFFER_LEVEL_UPDATED
+         */
+        this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+
+        /**
          * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
          * @event MediaPlayerEvents#DYNAMIC_TO_STATIC
          */
@@ -147,10 +153,10 @@ class MediaPlayerEvents extends EventsBase {
         this.PERIOD_SWITCH_COMPLETED = 'periodSwitchCompleted';
 
         /**
-         * Triggered when a new period starts.
-         * @event MediaPlayerEvents#PERIOD_SWITCH_STARTED
+         * Triggered when a new stream (period) starts.
+         * @event MediaPlayerEvents#STREAM_SWITCH_STARTED
          */
-        this.PERIOD_SWITCH_STARTED = 'periodSwitchStarted';
+        this.STREAM_SWITCH_STARTED = 'streamSwitchStarted';
 
         /**
          * Triggered when an ABR up /down switch is initiated; either by user in manual mode or auto mode via ABR rules.
@@ -189,7 +195,19 @@ class MediaPlayerEvents extends EventsBase {
         this.STREAM_UPDATED = 'streamUpdated';
 
         /**
-         * Triggered when a stream (period) is updated
+         * Triggered when a stream (period) is activated
+         * @event MediaPlayerEvents#STREAM_ACTIVATED
+         */
+        this.STREAM_ACTIVATED = 'streamActivated';
+
+        /**
+         * Triggered when a stream (period) is deactivated
+         * @event MediaPlayerEvents#STREAM_DEACTIVATED
+         */
+        this.STREAM_DEACTIVATED = 'streamDeactivated';
+
+        /**
+         * Triggered when a stream (period) is activated
          * @event MediaPlayerEvents#STREAM_INITIALIZED
          */
         this.STREAM_INITIALIZED = 'streamInitialized';
@@ -245,6 +263,12 @@ class MediaPlayerEvents extends EventsBase {
         this.CAN_PLAY = 'canPlay';
 
         /**
+         * This corresponds to the CAN_PLAY_THROUGH readyState.
+         * @event MediaPlayerEvents#CAN_PLAY_THROUGH
+         */
+        this.CAN_PLAY_THROUGH = 'canPlayThrough';
+
+        /**
          * Sent when playback completes.
          * @event MediaPlayerEvents#PLAYBACK_ENDED
          */
@@ -269,6 +293,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
          */
         this.PLAYBACK_METADATA_LOADED = 'playbackMetaDataLoaded';
+
+        /**
+         * The media's metadata has finished loading; all attributes now
+         * contain as much useful information as they're going to.
+         * @event MediaPlayerEvents#PLAYBACK_METADATA_LOADED
+         */
+        this.PLAYBACK_LOADED_DATA = 'playbackLoadedData';
 
         /**
          * Sent when playback is paused.
@@ -350,18 +381,6 @@ class MediaPlayerEvents extends EventsBase {
         this.MANIFEST_VALIDITY_CHANGED = 'manifestValidityChanged';
 
         /**
-         * A gap occured in the timeline which requires a seek to the next period
-         * @event MediaPlayerEvents#GAP_CAUSED_SEEK_TO_PERIOD_END
-         */
-        this.GAP_CAUSED_SEEK_TO_PERIOD_END = 'gapCausedSeekToPeriodEnd';
-
-        /**
-         * A gap occured in the timeline which requires an internal seek
-         * @event MediaPlayerEvents#GAP_CAUSED_INTERNAL_SEEK
-         */
-        this.GAP_CAUSED_INTERNAL_SEEK = 'gapCausedInternalSeek';
-
-        /**
          * Dash events are triggered at their respective start points on the timeline.
          * @event MediaPlayerEvents#EVENT_MODE_ON_START
          */
@@ -378,6 +397,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
          */
         this.CONFORMANCE_VIOLATION = 'conformanceViolation';
+
+        /**
+         * Event that is dispatched whenever the player is attempting to switch the quality
+         * @event MediaPlayerEvents#REPRESENTATION_CHANGED
+         */
+        this.SETTING_PLAYBACK_QUALITY = 'settingPlaybackQuality'
     }
 }
 

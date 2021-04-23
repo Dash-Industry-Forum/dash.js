@@ -101,8 +101,12 @@ class PlaybackControllerMock {
         return this.liveStartTime;
     }
 
-    computeLiveDelay() {
-        return 16;
+    computeAndSetLiveDelay() {
+        return 15;
+    }
+
+    getLiveDelay() {
+        return 15;
     }
 
     reset() {
@@ -115,6 +119,11 @@ class PlaybackControllerMock {
     getStreamStartTime() {
         return 0;
     }
+
+    getAvailabilityStartTime() {
+        return 0;
+    }
+
 }
 
 export default PlaybackControllerMock;

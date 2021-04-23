@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../../streaming/constants/Constants';
 
-import { replaceTokenForTemplate, getIndexBasedSegment } from './SegmentsUtils';
+import {replaceTokenForTemplate, getIndexBasedSegment} from './SegmentsUtils';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
@@ -53,8 +53,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].
-            AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
 
         index = Math.max(index, 0);
 
@@ -69,12 +68,11 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         const duration = representation.segmentDuration;
-        const availabilityWindow = representation.segmentAvailabilityRange;
+
         if (isNaN(duration)) {
             representation.availableSegmentsNumber = 1;
-        }
-        else {
-            representation.availableSegmentsNumber = Math.ceil((availabilityWindow.end - availabilityWindow.start) / duration);
+        } else {
+            representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
         }
 
         return seg;
@@ -93,15 +91,15 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
+        let periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
         const index = Math.floor(periodTime / duration);
 
         return getSegmentByIndex(representation, index);
     }
 
     instance = {
-        getSegmentByIndex: getSegmentByIndex,
-        getSegmentByTime: getSegmentByTime
+        getSegmentByIndex,
+        getSegmentByTime
     };
 
     return instance;

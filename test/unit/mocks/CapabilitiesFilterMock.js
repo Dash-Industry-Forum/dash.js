@@ -1,7 +1,7 @@
 class CapabilitiesFilterMock {
 
-    filterUnsupportedFeaturesOfPeriod() {
-
+    filterUnsupportedFeatures() {
+        return Promise.resolve();
     }
 }
 

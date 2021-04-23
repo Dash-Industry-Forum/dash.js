@@ -22,7 +22,9 @@
                     logLevel: dashjs.Debug.LOG_LEVEL_WARNING
                 },
                 streaming: {
-                    stallThreshold: 0.05,
+                    buffer: {
+                        stallThreshold: 0.05,
+                    },
                     lowLatencyEnabled: true,
                     abr: {
                         useDefaultABRRules: true,
@@ -46,7 +48,9 @@
 
             player.updateSettings({
                 streaming: {
-                    liveDelay: targetLatency,
+                    delay: {
+                        liveDelay: targetLatency
+                    },
                     liveCatchup: {
                         minDrift: minDrift,
                         playbackRate: catchupPlaybackRate

@@ -84,18 +84,6 @@ class MediaControllerMock {
         return this.switchMode[type];
     }
 
-    /**
-     * @param {string} mode
-     * @memberof MediaController#
-     */
-    setSelectionModeForInitialTrack(mode) {
-        this.selectionMode = mode;
-    }
-
-    getSelectionModeForInitialTrack() {
-        return this.selectionMode;
-    }
-
     isMultiTrackSupportedByType(type) {
         return (type === 'audio' || type === 'video' || type === 'text' || type === 'fragmentedText');
     }
