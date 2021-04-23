@@ -820,8 +820,9 @@ function StreamProcessor(config) {
         logger.debug(`Preparing track switch for type ${type}`);
         const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.buffer.stallThreshold);
 
-        // when buffering is completed and we are not supposed to replace anything do nothing
+        // when buffering is completed and we are not supposed to replace anything do nothing. Still we need to trigger preloading again
         if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
+            eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
             return;
         }
 
