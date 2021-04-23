@@ -47,7 +47,6 @@ exports.register = function (stream) {
                     //Load needed elements into doc for Captions to function
                     let ttml =  await command.findById('ttml-rendering-div');
                     await command.execute(player.attachTTMLRenderingDiv, [ttml]);
-                    await command.execute(player.setTextDefaultEnabled, [true]);
 
                     // set initial track
                     utils.log(NAME, 'set initial text track: ' + stream.textTracks[textType][i].lang);
