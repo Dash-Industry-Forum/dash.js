@@ -82,6 +82,7 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         shouldUseExplicitTimeForRequest,
+        manifestUpdateInProgress,
         dashHandler,
         segmentsController,
         bufferingTime;
@@ -103,6 +104,8 @@ function StreamProcessor(config) {
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.on(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
+        eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
+        eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack) {
@@ -199,6 +202,7 @@ function StreamProcessor(config) {
         mediaInfo = null;
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
+        manifestUpdateInProgress = false;
     }
 
     function reset(errored, keepBuffers) {
@@ -242,6 +246,8 @@ function StreamProcessor(config) {
         eventBus.off(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.off(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
+        eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
+        eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
 
         resetInitialSettings();
         type = null;
@@ -349,6 +355,11 @@ function StreamProcessor(config) {
         // Event propagation may have been stopped (see MssHandler)
         if (!e.sender) return;
 
+        if (manifestUpdateInProgress) {
+            _noValidRequest();
+            return;
+        }
+
         if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
@@ -370,6 +381,12 @@ function StreamProcessor(config) {
      * @private
      */
     function _onMediaFragmentNeeded() {
+
+        if (manifestUpdateInProgress) {
+            _noValidRequest();
+            return;
+        }
+
         let request = null;
 
         const representation = representationController.getCurrentRepresentation();
@@ -445,6 +462,19 @@ function StreamProcessor(config) {
     function _noValidRequest() {
         logger.debug(`No valid request found for ${type}`);
         scheduleController.startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+    }
+
+    /**
+     * A new manifest has been loaded, updating is still in progress. Wait for the update to be finished before fetching new segments.
+     * Otherwise we end up in inconsistencies like wrong base urls especially if periods have been removed.
+     * @private
+     */
+    function _onManifestUpdated() {
+        manifestUpdateInProgress = true;
+    }
+
+    function _onStreamsComposed() {
+        manifestUpdateInProgress = false;
     }
 
     function _onDataUpdateCompleted(e) {
