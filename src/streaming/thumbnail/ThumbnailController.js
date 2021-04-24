@@ -62,6 +62,11 @@ function ThumbnailController(config) {
 
     function initialize() {
         thumbnailTracks.addTracks();
+        const tracks = thumbnailTracks.getTracks();
+
+        if (tracks && tracks.length > 0) {
+            setTrackByIndex(0);
+        }
     }
 
     function getStreamId() {
