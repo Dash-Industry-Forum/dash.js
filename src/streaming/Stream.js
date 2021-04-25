@@ -824,7 +824,6 @@ function Stream(config) {
 
         isUpdating = false;
         _checkIfInitializationCompleted();
-
     }
 
     function isMediaCodecCompatible(newStream, previousStream = null) {

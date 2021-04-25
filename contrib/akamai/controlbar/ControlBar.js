@@ -840,7 +840,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                             }
                             break;
                         case 'image-bitrate-list':
-                            player.setQualityFor(self.mediaType, self.index);
+                            player.setQualityFor(item.mediaType, item.index);
                             break;
                         case 'caption-list':
                             self.player.setTextTrack(item.index - 1);

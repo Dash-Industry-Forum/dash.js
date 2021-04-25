@@ -309,18 +309,6 @@ describe('StreamController', function () {
                     eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
                 });
 
-                it('should start static stream at period start if #t is beyond period end', function (done) {
-                    doneFn = done;
-
-                    let uriStartTime = staticStreamInfo.duration + 100;
-                    uriFragmentModelMock.setURIFragmentData({ t: uriStartTime.toString() });
-
-                    expectedStartTime = staticStreamInfo.start;
-
-                    getStreamsInfoStub.returns([staticStreamInfo]);
-                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
-                });
-
                 it('should start static stream at period start if #t=posix: notation is used', function (done) {
                     doneFn = done;
 
