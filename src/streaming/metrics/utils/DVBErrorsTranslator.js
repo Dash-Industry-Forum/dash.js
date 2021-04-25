@@ -167,11 +167,9 @@ function DVBErrorsTranslator(config) {
     }
 
     instance = {
-        initialise: initialise,
-        reset:      reset
+        initialise,
+        reset
     };
-
-    initialise();
 
     return instance;
 }

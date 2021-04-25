@@ -227,8 +227,7 @@ function DashAdapter() {
             idx,
             i,
             j,
-            ln,
-            periodId;
+            ln;
 
         if (manifest) {
             checkConfig();
@@ -243,9 +242,6 @@ function DashAdapter() {
         }
 
         const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
-        if (selectedVoPeriod) {
-            periodId = selectedVoPeriod.id;
-        }
         const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo ? streamInfo.index : null, type !== constants.EMBEDDED_TEXT ? type : constants.VIDEO);
 
         if (!adaptationsForType || adaptationsForType.length === 0) return mediaArr;

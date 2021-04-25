@@ -121,7 +121,6 @@ function MssParser(config) {
         let segmentTemplate;
         let qualityLevels,
             representation,
-            segments,
             i,
             index;
 
@@ -192,8 +191,6 @@ function MssParser(config) {
 
         // Set SegmentTemplate
         adaptationSet.SegmentTemplate = segmentTemplate;
-
-        segments = segmentTemplate.SegmentTimeline.S_asArray;
 
         return adaptationSet;
     }
@@ -485,11 +482,11 @@ function MssParser(config) {
         // Parse PlayReady header
 
         // Length - 32 bits (LE format)
-        length = (prHeader[i + 3] << 24) + (prHeader[i + 2] << 16) + (prHeader[i + 1] << 8) + prHeader[i];
+        length = (prHeader[i + 3] << 24) + (prHeader[i + 2] << 16) + (prHeader[i + 1] << 8) + prHeader[i]; // eslint-disable-line
         i += 4;
 
         // Record count - 16 bits (LE format)
-        recordCount = (prHeader[i + 1] << 8) + prHeader[i];
+        recordCount = (prHeader[i + 1] << 8) + prHeader[i]; // eslint-disable-line
         i += 2;
 
         // Parse records

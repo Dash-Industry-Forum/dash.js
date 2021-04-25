@@ -47,8 +47,6 @@ function SegmentBaseLoader() {
         settings,
         mediaPlayerModel,
         urlLoader,
-        events,
-        eventBus,
         errors,
         constants,
         dashConstants,
@@ -96,14 +94,6 @@ function SegmentBaseLoader() {
 
         if (config.boxParser) {
             boxParser = config.boxParser;
-        }
-
-        if (config.events) {
-            events = config.events;
-        }
-
-        if (config.eventBus) {
-            eventBus = config.eventBus;
         }
 
         if (config.debug) {

@@ -53,7 +53,7 @@ function MetricsReporting() {
             metricsConstants: config.metricsConstants,
             events: config.events
         });
-
+        dvbErrorsTranslator.initialise();
         return MetricsCollectionController(context).create(config);
     }
 

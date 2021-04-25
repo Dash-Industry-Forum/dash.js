@@ -51,8 +51,6 @@ function GapController() {
         playbackController,
         streamController,
         videoModel,
-        timelineConverter,
-        adapter,
         jumpTimeoutHandler,
         trackSwitchByMediaType,
         logger;
@@ -96,12 +94,6 @@ function GapController() {
         }
         if (config.videoModel) {
             videoModel = config.videoModel;
-        }
-        if (config.timelineConverter) {
-            timelineConverter = config.timelineConverter;
-        }
-        if (config.adapter) {
-            adapter = config.adapter;
         }
     }
 

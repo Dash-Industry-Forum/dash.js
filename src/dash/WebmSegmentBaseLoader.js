@@ -19,8 +19,6 @@ function WebmSegmentBaseLoader() {
         mediaPlayerModel,
         urlLoader,
         settings,
-        eventBus,
-        events,
         errors,
         baseURLController;
 
@@ -110,8 +108,6 @@ function WebmSegmentBaseLoader() {
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
         settings = config.settings;
-        events = config.events;
-        eventBus = config.eventBus;
         errors = config.errors;
         logger = config.debug.getLogger(instance);
         requestModifier = config.requestModifier;
