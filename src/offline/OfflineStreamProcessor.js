@@ -34,7 +34,7 @@ import FragmentModel from '../streaming/models/FragmentModel';
 import FragmentLoader from '../streaming/FragmentLoader';
 import URLUtils from '../streaming/utils/URLUtils';
 import RequestModifier from '../streaming/utils/RequestModifier';
-
+import SegmentsController from '../dash/controllers/SegmentsController';
 
 function OfflineStreamProcessor(config) {
 
@@ -72,11 +72,21 @@ function OfflineStreamProcessor(config) {
         updating,
         downloadedSegments,
         isInitialized,
+        segmentsController,
         isStopped;
 
     function setup() {
         resetInitialSettings();
         logger = debug.getLogger(instance);
+
+        segmentsController = SegmentsController(context).create({
+            events,
+            eventBus,
+            streamInfo,
+            timelineConverter,
+            dashConstants,
+            type
+        });
 
         indexHandler = DashHandler(context).create({
             streamInfo: streamInfo,
@@ -94,6 +104,7 @@ function OfflineStreamProcessor(config) {
             requestModifier: RequestModifier(context).getInstance(),
             dashConstants: dashConstants,
             constants: constants,
+            segmentsController,
             urlUtils: URLUtils(context).getInstance()
         });
 
@@ -107,7 +118,8 @@ function OfflineStreamProcessor(config) {
             dashConstants: dashConstants,
             events: events,
             eventBus: eventBus,
-            errors: errors
+            errors: errors,
+            segmentsController
         });
 
         fragmentModel = FragmentModel(context).create({
