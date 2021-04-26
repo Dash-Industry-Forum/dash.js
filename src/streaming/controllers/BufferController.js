@@ -922,18 +922,23 @@ function BufferController(config) {
     }
 
     function getTotalBufferedTime() {
-        const ranges = sourceBufferSink.getAllBufferRanges();
-        let totalBufferedTime = 0;
-        let ln,
-            i;
+        try {
+            const ranges = sourceBufferSink.getAllBufferRanges();
+            let totalBufferedTime = 0;
+            let ln,
+                i;
 
-        if (!ranges) return totalBufferedTime;
+            if (!ranges) return totalBufferedTime;
 
-        for (i = 0, ln = ranges.length; i < ln; i++) {
-            totalBufferedTime += ranges.end(i) - ranges.start(i);
+            for (i = 0, ln = ranges.length; i < ln; i++) {
+                totalBufferedTime += ranges.end(i) - ranges.start(i);
+            }
+
+            return totalBufferedTime;
         }
-
-        return totalBufferedTime;
+        catch(e) {
+            return 0;
+        }
     }
 
     /**
