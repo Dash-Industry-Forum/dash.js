@@ -112,11 +112,6 @@ function MediaController() {
         }
 
         mediaTracks.push(track);
-
-        let initSettings = getInitialSettings(mediaType);
-        if (initSettings && (matchSettings(initSettings, track)) && !getCurrentTrackFor(mediaType, track.streamInfo.id)) {
-            setTrack(track);
-        }
     }
 
     /**
