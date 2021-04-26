@@ -17,7 +17,7 @@
   "rules": {
     "no-caller": 2,
     "no-undef": 2,
-    "no-unused-vars": 0,
+    "no-unused-vars": 2,
     "no-use-before-define": 0,
     "strict": 0,
     "no-loop-func": 0

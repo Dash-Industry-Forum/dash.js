@@ -15,13 +15,11 @@ describe('TimelineConverter', function () {
     const timelineConverter = TimelineConverter(context).getInstance();
     const settings = Settings(context).getInstance();
     let representation;
-    let timelineRepresentation;
 
     timelineConverter.initialize();
 
     beforeEach(() => {
         representation = voHelper.getDummyRepresentation(testType);
-        timelineRepresentation = voHelper.getDummyTimelineRepresentation(testType);
     });
 
     it('should calculate presentation time from media time', function () {

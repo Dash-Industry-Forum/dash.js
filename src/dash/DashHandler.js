@@ -49,7 +49,6 @@ function DashHandler(config) {
     const type = config.type;
     const streamInfo = config.streamInfo;
     const segmentsController = config.segmentsController;
-
     const timelineConverter = config.timelineConverter;
     const baseURLController = config.baseURLController;
 

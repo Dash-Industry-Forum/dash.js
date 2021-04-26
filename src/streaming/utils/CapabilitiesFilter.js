@@ -7,8 +7,6 @@ function CapabilitiesFilter() {
     let instance,
         adapter,
         capabilities,
-        manifestModel,
-        errHandler,
         settings,
         logger,
         customCapabilitiesFilters;
@@ -33,14 +31,6 @@ function CapabilitiesFilter() {
 
         if (config.settings) {
             settings = config.settings;
-        }
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-
-        if (config.errHandler) {
-            errHandler = config.errHandler;
         }
 
     }

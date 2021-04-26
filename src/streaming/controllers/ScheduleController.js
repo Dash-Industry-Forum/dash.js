@@ -64,7 +64,6 @@ function ScheduleController(config) {
         lastInitializedQuality,
         switchTrack,
         initSegmentRequired,
-        mediaRequest,
         checkPlaybackQuality;
 
     function setup() {
@@ -322,7 +321,6 @@ function ScheduleController(config) {
         };
         topQualityIndex = NaN;
         switchTrack = false;
-        mediaRequest = null;
         initSegmentRequired = false;
     }
 

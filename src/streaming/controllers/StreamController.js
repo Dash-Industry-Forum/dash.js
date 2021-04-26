@@ -100,8 +100,6 @@ function StreamController() {
         supportsChangeType,
         settings,
         firstLicenseIsFetched,
-        preBufferingCheckInProgress,
-        dataForStreamSwitchAfterSeek,
         waitForPlaybackStartTimeout;
 
     function setup() {
@@ -1366,10 +1364,8 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;
-        preBufferingCheckInProgress = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
-        dataForStreamSwitchAfterSeek = null;
         waitForPlaybackStartTimeout = null;
     }
 
