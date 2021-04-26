@@ -54,7 +54,6 @@ function LearningAbrController() {
         bitrateNormalizationFactor,
         latencyNormalizationFactor,
         minBitrate,
-        minBitrateNeuron,
         weights,
         sortedCenters,
         weightSelectionMode;
@@ -83,7 +82,6 @@ function LearningAbrController() {
         bitrateNormalizationFactor = 1;
         latencyNormalizationFactor = 100;
         minBitrate = 0;
-        minBitrateNeuron = null;
         weights = null;
         sortedCenters = null;
         weightSelectionMode = WEIGHT_SELECTION_MODES.DYNAMIC;
@@ -274,7 +272,6 @@ function LearningAbrController() {
         let minDistance = null;
         let minIndex = null;
         let winnerNeuron = null;
-        let winnerWeights = null;
 
         for (let i = 0; i < somElements.length; i++) {
             let somNeuron = somElements[i];
@@ -304,7 +301,6 @@ function LearningAbrController() {
                 minDistance = distance;
                 minIndex = somNeuron.qualityIndex;
                 winnerNeuron = somNeuron;
-                winnerWeights = distanceWeights;
             }
         }
 
@@ -417,9 +413,6 @@ function LearningAbrController() {
                     }
                 };
                 somBitrateNeurons.push(neuron);
-                if (neuron.bitrate === minBitrate) {
-                    minBitrateNeuron = neuron;
-                }
             }
 
             sortedCenters = _getInitialKmeansPlusPlusCenters(somBitrateNeurons);

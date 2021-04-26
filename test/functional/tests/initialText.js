@@ -62,7 +62,7 @@ exports.register = function (stream) {
 
                     // Check if initial track is correct
                     const newTrack = await command.execute(player.getCurrentTrackFor, [textType]);
-                    utils.log(NAME, 'current audio track: ' + newTrack.lang);
+                    utils.log(NAME, 'current text track: ' + newTrack.lang);
                     assert.deepEqual(newTrack.lang, stream.textTracks[textType][i].lang);
                     assert.deepEqual(newTrack.index, stream.textTracks[textType][i].index);
 

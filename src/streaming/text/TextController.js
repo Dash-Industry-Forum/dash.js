@@ -209,6 +209,8 @@ function TextController(config) {
                 defaultSettings = {
                     lang: mediaInfo.lang,
                     role: mediaInfo.roles[0],
+                    index: mediaInfo.index,
+                    codec: mediaInfo.codec,
                     accessibility: mediaInfo.accessibility[0]
                 };
             }

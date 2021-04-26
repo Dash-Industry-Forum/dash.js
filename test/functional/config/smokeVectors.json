@@ -24,12 +24,12 @@
                     "description": "Clear Segment List"
                 },
                 {
-                    "url": "https://dash.akamaized.net/dash264/TestCases/4b/qualcomm/2/TearsOfSteel_onDem5secSegSubTitles.mpd",
-                    "name": "Fragmented text, TTML",
-                    "description": "Fragmented text, TTML"
+                    "url": "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
+                    "name": "TTML Segmented Subtitles VoD",
+                    "description": "TTML Segmented Subtitles VoD"
                 },                
                 {
-                    "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
+                    "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv5/manifest.mpd",
                     "name": "Multi Audio",
                     "description": "Multi Audio"
                 },

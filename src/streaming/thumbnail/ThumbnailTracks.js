@@ -125,7 +125,6 @@ function ThumbnailTracks(config) {
         if (tracks.length > 0) {
             // Sort bitrates and select the lowest bitrate rendition
             tracks.sort((a, b) => a.bitrate - b.bitrate);
-            currentTrackIndex = tracks.length - 1;
         }
     }
 

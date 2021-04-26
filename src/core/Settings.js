@@ -50,121 +50,219 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * // Full settings object
  * settings = {
- *      debug: {
- *          logLevel: Debug.LOG_LEVEL_WARNING,
- *          dispatchEvent: false
- *      },
- *      streaming: {
- *          metricsMaxListDepth: 1000,
- *          abandonLoadTimeout: 10000,
- *          liveDelayFragmentCount: NaN,
- *          liveDelay: null,
- *          scheduleWhilePaused: true,
- *          fastSwitchEnabled: false,
- *          flushBufferAtTrackSwitch: false,
- *          calcSegmentAvailabilityRangeFromTimeline: false,
- *          reuseExistingSourceBuffers: true,
- *          bufferPruningInterval: 10,
- *          bufferToKeep: 20,
- *          jumpGaps: true,
- *          jumpLargeGaps: true,
- *          smallGapLimit: 1.5,
- *          stableBufferTime: 12,
- *          bufferTimeAtTopQuality: 30,
- *          bufferTimeAtTopQualityLongForm: 60,
- *          longFormContentDurationThreshold: 600,
- *          wallclockTimeUpdateInterval: 50,
- *          lowLatencyEnabled: false,
- *          keepProtectionMediaKeys: false,
- *          useManifestDateHeaderTimeSource: true,
- *          useSuggestedPresentationDelay: true,
- *          useAppendWindow: true,
- *          manifestUpdateRetryInterval: 100,
- *          stallThreshold: 0.5,
- *          filterUnsupportedEssentialProperties: true,
- *          eventControllerRefreshDelay: 100,
- *          cacheInitSegments: true,
- *          utcSynchronization: {
- *              backgroundAttempts: 2,
- *              timeBetweenSyncAttempts: 30,
- *              maximumTimeBetweenSyncAttempts: 600,
- *              minimumTimeBetweenSyncAttempts: 2,
- *              timeBetweenSyncAttemptsAdjustmentFactor: 2,
- *              maximumAllowedDrift: 100,
- *              enableBackgroundSyncAfterSegmentDownloadError: true,
- *              defaultTimingSource: {
- *                   scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
- *                   value: 'http://time.akamai.com/?iso&ms'
- *               }
- *          },
- *          liveCatchup: {
- *              minDrift: 0.02,
- *              maxDrift: 0,
- *              playbackRate: 0.5,
- *              latencyThreshold: NaN,
- *              playbackBufferMin: NaN,
- *              enabled: false,
- *              mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
- *           },
- *          lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
- *          lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
- *          cacheLoadThresholds: { video: 50, audio: 5 },
- *          trackSwitchMode: {
- *              audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
- *              video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
- *          },
- *          selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
- *          fragmentRequestTimeout: 0,
- *          retryIntervals: {
- *              MPD: 500,
- *              XLinkExpansion: 500,
- *              InitializationSegment: 1000,
- *              IndexSegment: 1000,
- *              MediaSegment: 1000,
- *              BitstreamSwitchingSegment: 1000,
- *              FragmentInfoSegment: 1000,
- *              other: 1000,
- *              lowLatencyReductionFactor: 10
- *          },
- *          retryAttempts: {
- *              MPD: 3,
- *              XLinkExpansion: 1,
- *              InitializationSegment: 3,
- *              IndexSegment: 3,
- *              MediaSegment: 3,
- *              BitstreamSwitchingSegment: 3,
- *              FragmentInfoSegment: 3,
- *              other: 3,
- *              lowLatencyMultiplyFactor: 5
- *          },
- *          abr: {
- *              movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
- *              ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
- *              bandwidthSafetyFactor: 0.9,
- *              useDefaultABRRules: true,
- *              useDeadTimeLatency: true,
- *              limitBitrateByPortal: false,
- *              usePixelRatioInLimitBitrateByPortal: false,
- *              maxBitrate: { audio: -1, video: -1 },
- *              minBitrate: { audio: -1, video: -1 },
- *              maxRepresentationRatio: { audio: 1, video: 1 },
- *              initialBitrate: { audio: -1, video: -1 },
- *              initialRepresentationRatio: { audio: -1, video: -1 },
- *              autoSwitchBitrate: { audio: true, video: true },
- *              fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
- *          },
- *          cmcd: {
- *              enabled: false,
- *              sid: null,
- *              cid: null,
- *              rtp: null,
- *              rtpSafetyFactor: 5,
- *              mode: Constants.CMCD_MODE_QUERY
- *          }
+ *  debug: {
+ *            logLevel: Debug.LOG_LEVEL_WARNING,
+ *            dispatchEvent: false
+ *        },
+ *        streaming: {
+ *            metricsMaxListDepth: 500,
+ *            abandonLoadTimeout: 10000,
+ *            calcSegmentAvailabilityRangeFromTimeline: false,
+ *            wallclockTimeUpdateInterval: 100,
+ *            lowLatencyEnabled: false,
+ *            useManifestDateHeaderTimeSource: true,
+ *            manifestUpdateRetryInterval: 100,
+ *            filterUnsupportedEssentialProperties: true,
+ *            cacheInitSegments: true,
+ *            eventControllerRefreshDelay: 100,
+ *            delay: {
+ *                liveDelayFragmentCount: NaN,
+ *                liveDelay: NaN,
+ *                useSuggestedPresentationDelay: true,
+ *            },
+ *            protection: {
+ *                keepProtectionMediaKeys: false
+ *            },
+ *            buffer: {
+ *                fastSwitchEnabled: true,
+ *                flushBufferAtTrackSwitch: false,
+ *                reuseExistingSourceBuffers: true,
+ *                bufferPruningInterval: 10,
+ *                bufferToKeep: 20,
+ *                bufferTimeAtTopQuality: 30,
+ *                bufferTimeAtTopQualityLongForm: 60,
+ *                initialBufferLevel: NaN,
+ *                stableBufferTime: 12,
+ *                longFormContentDurationThreshold: 600,
+ *                stallThreshold: 0.5,
+ *                useAppendWindow: true
+ *            },
+ *            gaps: {
+ *                jumpGaps: true,
+ *                jumpLargeGaps: true,
+ *                smallGapLimit: 1.5,
+ *            },
+ *            utcSynchronization: {
+ *                backgroundAttempts: 2,
+ *                timeBetweenSyncAttempts: 30,
+ *                maximumTimeBetweenSyncAttempts: 600,
+ *                minimumTimeBetweenSyncAttempts: 2,
+ *                timeBetweenSyncAttemptsAdjustmentFactor: 2,
+ *                maximumAllowedDrift: 100,
+ *                enableBackgroundSyncAfterSegmentDownloadError: true,
+ *                defaultTimingSource: {
+ *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
+ *                    value: 'http://time.akamai.com/?iso&ms'
+ *                }
+ *            },
+ *            scheduling: {
+ *                defaultTimeout: 300,
+ *                lowLatencyTimeout: 100,
+ *                scheduleWhilePaused: true
+ *            },
+ *            text: {
+ *                defaultEnabled: true
+ *            },
+ *            liveCatchup: {
+ *                minDrift: 0.02,
+ *                maxDrift: 0,
+ *                playbackRate: 0.5,
+ *                latencyThreshold: 60,
+ *                playbackBufferMin: 0.5,
+ *                enabled: false,
+ *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
+ *            },
+ *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
+ *            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
+ *            cacheLoadThresholds: { video: 50, audio: 5 },
+ *            trackSwitchMode: {
+ *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
+ *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
+ *            },
+ *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+ *            fragmentRequestTimeout: 0,
+ *            retryIntervals: {
+ *                [HTTPRequest.MPD_TYPE]: 500,
+ *                [HTTPRequest.XLINK_EXPANSION_TYPE]: 500,
+ *                [HTTPRequest.MEDIA_SEGMENT_TYPE]: 1000,
+ *                [HTTPRequest.INIT_SEGMENT_TYPE]: 1000,
+ *                [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
+ *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
+ *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
+ *                [HTTPRequest.OTHER_TYPE]: 1000,
+ *                lowLatencyReductionFactor: 10
+ *            },
+ *            retryAttempts: {
+ *                [HTTPRequest.MPD_TYPE]: 3,
+ *                [HTTPRequest.XLINK_EXPANSION_TYPE]: 1,
+ *                [HTTPRequest.MEDIA_SEGMENT_TYPE]: 3,
+ *                [HTTPRequest.INIT_SEGMENT_TYPE]: 3,
+ *                [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
+ *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
+ *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
+ *                [HTTPRequest.OTHER_TYPE]: 3,
+ *                lowLatencyMultiplyFactor: 5
+ *            },
+ *            abr: {
+ *                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
+ *                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+ *                bandwidthSafetyFactor: 0.9,
+ *                useDefaultABRRules: true,
+ *                useDeadTimeLatency: true,
+ *                limitBitrateByPortal: false,
+ *                usePixelRatioInLimitBitrateByPortal: false,
+ *                maxBitrate: { audio: -1, video: -1 },
+ *                minBitrate: { audio: -1, video: -1 },
+ *                maxRepresentationRatio: { audio: 1, video: 1 },
+ *                initialBitrate: { audio: -1, video: -1 },
+ *                initialRepresentationRatio: { audio: -1, video: -1 },
+ *                autoSwitchBitrate: { audio: true, video: true },
+ *                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
+ *            },
+ *            cmcd: {
+ *                enabled: false,
+ *                sid: null,
+ *                cid: null,
+ *                rtp: null,
+ *                rtpSafetyFactor: 5,
+ *                mode: Constants.CMCD_MODE_QUERY
+ *            }
  *      }
  * }
  */
 
+/**
+ * @typedef {Object} LiveDelay
+ * @property {number} [liveDelayFragmentCount=NaN]
+ * Changing this value will lower or increase live stream latency.
+ *
+ * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
+ *
+ * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
+ * @property {number} [liveDelay]
+ * Equivalent in seconds of setLiveDelayFragmentCount.
+ *
+ * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
+ *
+ * This value should be less than the manifest duration by a couple of segment durations to avoid playback issues.
+ *
+ * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
+ * @property {boolean} [useSuggestedPresentationDelay=true]
+ * Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
+ */
+
+/**
+ * @typedef {Object} Buffer
+ * @property {boolean} [fastSwitchEnabled=false]
+ * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
+ *
+ * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
+ *
+ * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
+ * higher quality media for as long as possible.
+ *
+ * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather just append at the end.
+ * 1. When the buffer level is less than one fragment duration.
+ * 2. The client is in an Abandonment State due to recent fragment abandonment event.
+ *
+ * Known issues:
+ * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter or stall in playback.
+ * @property {boolean} [flushBufferAtTrackSwitch=false]
+ * When enabled, after a track switch and in case buffer is being replaced, the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
+ *
+ * This can be required on some devices like GoogleCast devices to make track switching functional.
+ *
+ * Otherwise track switching will be effective only once after previous buffered track is fully consumed.
+ * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false]
+ * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
+ * @property {boolean} [reuseExistingSourceBuffers=true]
+ * Enable reuse of existing MediaSource Sourcebuffers during period transition.
+ * @property {number} [bufferPruningInterval=10]
+ * The interval of pruning buffer in seconds.
+ * @property {number} [bufferToKeep=20]
+ * This value influences the buffer pruning logic.
+ *
+ * Allows you to modify the buffer that is kept in source buffer in seconds.
+ * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
+ * @property {number} [bufferTimeAtTopQuality=30]
+ * The time that the internal buffer target will be set to once playing the top quality.
+ *
+ * If there are multiple bitrates in your adaptation, and the media is playing at the highest bitrate, then we try to build a larger buffer at the top quality to increase stability and to maintain media quality.
+ * @property {number} [bufferTimeAtTopQualityLongForm=60]
+ * The time that the internal buffer target will be set to once playing the top quality for long form content.
+ * @property {number} [longFormContentDurationThreshold=600]
+ * The threshold which defines if the media is considered long form content.
+ *
+ * This will directly affect the buffer targets when playing back at the top quality.
+ * @property {number} [initialBufferLevel=NaN]
+ * Initial buffer level before playback starts
+ * @property {number} [stableBufferTime=12]
+ * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
+ *
+ * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
+ * @property {number} [stallThreshold=0.5]
+ * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * @property {boolean} [useAppendWindow=true]
+ * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
+ */
+
+/**
+ * @typedef {Object} module:Settings~AudioVideoSettings
+ * @property {number|boolean|string} [audio]
+ * Configuration for audio media type of tracks.
+ * @property {number|boolean|string} [video]
+ * Configuration for video media type of tracks.
+ */
 
 /**
  * @typedef {Object} DebugSettings
@@ -197,6 +295,168 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Enable to trigger a Events.LOG event whenever log output is generated.
  *
  * Note this will be dispatched regardless of log level.
+ */
+
+/**
+ * @typedef {Object} CachingInfoSettings
+ * @property {boolean} [enable]
+ * Enable or disable the caching feature.
+ * @property {number} [ttl]
+ * Time to live.
+ *
+ * A value defined in milliseconds representing how log to cache the settings for.
+ */
+
+/**
+ * @typedef {Object} Gaps
+ * @property {boolean} [jumpGaps=true]
+ * Sets whether player should jump small gaps (discontinuities) in the buffer.
+ * @property {boolean} [jumpLargeGaps=true]
+ * Sets whether player should jump large gaps (discontinuities) in the buffer.
+ * @property {number} [smallGapLimit=1.8]
+ * Time in seconds for a gap to be considered small.
+ */
+
+/**
+ * @typedef {Object} UtcSynchronizationSettings
+ * @property {number} [backgroundAttempts=2]
+ * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
+ *
+ * The background requests are async and done in parallel to the start of the playback.
+ *
+ * This value is also used to perform a resync after 404 errors on segments.
+ * @property {number} [timeBetweenSyncAttempts=30]
+ * The time in seconds between two consecutive sync attempts.
+ *
+ * Note: This value is used as an initial starting value. The internal value of the TimeSyncController is adjusted during playback based on the drift between two consecutive synchronization attempts.
+ *
+ * Note: A sync is only performed after an MPD update. In case the @minimumUpdatePeriod is larger than this value the sync will be delayed until the next MPD update.
+ * @property {number} [maximumTimeBetweenSyncAttempts=600]
+ * The maximum time in seconds between two consecutive sync attempts.
+ *
+ * @property {number} [minimumTimeBetweenSyncAttempts=2]
+ * The minimum time in seconds between two consecutive sync attempts.
+ *
+ * @property {number} [timeBetweenSyncAttemptsAdjustmentFactor=2]
+ * The factor used to multiply or divide the timeBetweenSyncAttempts parameter after a sync. The maximumAllowedDrift defines whether this value is used as a factor or a dividend.
+ *
+ * @property {number} [maximumAllowedDrift=100]
+ * The maximum allowed drift specified in milliseconds between two consecutive synchronization attempts.
+ *
+ * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
+ * Enables or disables the background sync after the player ran into a segment download error.
+ *
+ * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
+ * The default timing source to be used. The timing sources in the MPD take precedence over this one.
+ */
+
+/**
+ * @typedef {Object} Scheduling
+ * @property {number} [defaultTimeout=300]
+ * Default timeout between two consecutive segment scheduling attempts
+ * @property {number} [lowLatencyTimeout]
+ * Default timeout between two consecutive low-latency segment scheduling attempts
+ * @property {boolean} [scheduleWhilePaused=true]
+ * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
+ */
+
+/**
+ * @typedef {Object} Text
+ * @property {number} [defaultEnabled=true]
+ * Enable/disable subtitle rendering by default.
+ */
+
+/**
+ * @typedef {Object} LiveCatchupSettings
+ * @property {number} [minDrift=0.02]
+ * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism.
+ *
+ * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases playback rate until target latency is reached.
+ *
+ * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [maxDrift=0]
+ * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
+ *
+ * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
+ *
+ * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
+ *
+ * If 0, then seeking operations won't be used for fixing latency deviations.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [playbackRate=0.5]
+ * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
+ *
+ * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
+ *
+ * Valid values for catch up rate are in range 0-0.5 (0-50%).
+ *
+ * Set it to 0 to turn off live catch up feature.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [latencyThreshold=NaN]
+ * Use this parameter to set the maximum threshold for which live catch up is applied.
+ *
+ * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
+ *
+ * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
+ *
+ * If no value is specified this will be twice the maximum live delay.
+ *
+ * The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
+ * maximumLiveDelay = targetDelay + liveCatchupMinDrift.
+ *
+ * @property {number} [playbackBufferMin=NaN]
+ * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
+ *
+ *
+ * @property {boolean} [enabled=false]
+ * Use this parameter to enable the catchup mode for non low-latency streams.
+ *
+ * @property {string} [mode="liveCatchupModeDefault"]
+ * Use this parameter to switch between different catchup modes.
+ *
+ * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
+ *
+ * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
+ */
+
+/**
+ * @typedef {Object} RequestTypeSettings
+ * @property {number} [MPD]
+ * Manifest type of requests.
+ * @property {number} [XLinkExpansion]
+ * XLink expansion type of requests.
+ * @property {number} [InitializationSegment]
+ * Request to retrieve an initialization segment.
+ * @property {number} [IndexSegment]
+ * Request to retrieve an index segment (SegmentBase).
+ * @property {number} [MediaSegment]
+ * Request to retrieve a media segment (video/audio/image/text chunk).
+ * @property {number} [BitstreamSwitchingSegment]
+ * Bitrate stream switching type of request.
+ * @property {number} [FragmentInfoSegment]
+ * Request to retrieve a FragmentInfo segment (specific to Smooth Streaming live streams).
+ * @property {number} [other]
+ * Other type of request.
+ * @property {number} [lowLatencyReductionFactor]
+ * For low latency mode, values of type of request are divided by lowLatencyReductionFactor.
+ *
+ * Note: It's not type of request.
+ * @property {number} [lowLatencyMultiplyFactor]
+ * For low latency mode, values of type of request are multiplied by lowLatencyMultiplyFactor.
+ *
+ * Note: It's not type of request.
+ */
+
+/**
+ * @typedef {Object} Protection
+ * @property {boolean} [keepProtectionMediaKeys=false]
+ * Set the value for the ProtectionController and MediaKeys life cycle.
+ *
+ * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
  */
 
 /**
@@ -273,107 +533,66 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
+ * @typedef {Object} module:Settings~CmcdSettings
+ * @property {boolean} [enable=false]
+ * Enable or disable the CMCD reporting.
+ * @property {string} [sid]
+ * GUID identifying the current playback session.
+ *
+ * Should be in UUID format.
+ *
+ * If not specified a UUID will be automatically generated.
+ * @property {string} [cid]
+ * A unique string to identify the current content.
+ *
+ * If not specified it will be a hash of the MPD url.
+ * @property {number} [rtp]
+ * The requested maximum throughput that the client considers sufficient for delivery of the asset.
+ *
+ * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
+ * @property {number} [rtpSafetyFactor]
+ * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
+ *
+ * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
+ * @property {number} [mode]
+ * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
+ *
+ * If not specified this value defaults to 'query'.
+ */
+
+/**
  * @typedef {Object} StreamingSettings
- * @property {number} [metricsMaxListDepth=1000]
+ * @property {number} [metricsMaxListDepth=300]
  * Maximum list depth of metrics.
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
- * @property {number} [liveDelayFragmentCount=NaN]
- * Changing this value will lower or increase live stream latency.
- *
- * The detected segment duration will be multiplied by this value to define a time in seconds to delay a live stream from the live edge.
- *
- * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
- * @property {number} [liveDelay]
- * Equivalent in seconds of setLiveDelayFragmentCount.
- *
- * Lowering this value will lower latency but may decrease the player's ability to build a stable buffer.
- *
- * This value should be less than the manifest duration by a couple of segment durations to avoid playback issues.
- *
- * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
- * @property {boolean} [scheduleWhilePaused=true]
- * Set to true if you would like dash.js to keep downloading fragments in the background when the video element is paused.
- * @property {boolean} [fastSwitchEnabled=false]
- * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
- *
- * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
- *
- * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
- * higher quality media for as long as possible.
- *
- * If enabled, it should be noted there are a few cases when the client will not replace inside buffer range but rather just append at the end.
- * 1. When the buffer level is less than one fragment duration.
- * 2. The client is in an Abandonment State due to recent fragment abandonment event.
- *
- * Known issues:
- * 1. In IE11 with auto switching off, if a user switches to a quality they can not download in time the fragment may be appended in the same range as the playhead or even in the past, in IE11 it may cause a stutter or stall in playback.
- * @property {boolean} [flushBufferAtTrackSwitch=false]
- * When enabled, after a track switch and in case buffer is being replaced, the video element is flushed (seek at current playback time) once a segment of the new track is appended in buffer in order to force video decoder to play new track.
- *
- * This can be required on some devices like GoogleCast devices to make track switching functional.
- *
- * Otherwise track switching will be effective only once after previous buffered track is fully consumed.
  * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false]
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
- * @property {boolean} [reuseExistingSourceBuffers=true]
- * Enable reuse of existing MediaSource Sourcebuffers during period transition.
- * @property {number} [bufferPruningInterval=10]
- * The interval of pruning buffer in seconds.
- * @property {number} [bufferToKeep=20]
- * This value influences the buffer pruning logic.
- *
- * Allows you to modify the buffer that is kept in source buffer in seconds.
- * 0|-----------bufferToPrune-----------|-----bufferToKeep-----|currentTime|
- * @property {boolean} [jumpGaps=true]
- * Sets whether player should jump small gaps (discontinuities) in the buffer.
- * @property {boolean} [jumpLargeGaps=true]
- * Sets whether player should jump large gaps (discontinuities) in the buffer.
- * @property {number} [smallGapLimit=1.8]
- * Time in seconds for a gap to be considered small.
- * @property {number} [stableBufferTime=12]
- * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
- *
- * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
- * @property {number} [bufferTimeAtTopQuality=30]
- * The time that the internal buffer target will be set to once playing the top quality.
- *
- * If there are multiple bitrates in your adaptation, and the media is playing at the highest bitrate, then we try to build a larger buffer at the top quality to increase stability and to maintain media quality.
- * @property {number} [bufferTimeAtTopQualityLongForm=60]
- * The time that the internal buffer target will be set to once playing the top quality for long form content.
- * @property {number} [longFormContentDurationThreshold=600]
- * The threshold which defines if the media is considered long form content.
- *
- * This will directly affect the buffer targets when playing back at the top quality.
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {boolean} [lowLatencyEnabled=false]
  * Enable or disable low latency mode.
- * @property {boolean} [keepProtectionMediaKeys=false]
- * Set the value for the ProtectionController and MediaKeys life cycle.
- *
- * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
  * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
- * @property {boolean} [useSuggestedPresentationDelay=true]
- * Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
- * @property {boolean} [useAppendWindow=true]
- * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
- * @property {number} [stallThreshold=0.5]
- * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [filterUnsupportedEssentialProperties=true]
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {boolean} [cacheInitSegments=true]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {number} [eventControllerRefreshDelay=100]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {module:Settings~LiveDelay} delay Live Delay settings
+ * @property {module:Settings~Protection} protection DRM related settings
+ * @property {module:Settings~Buffer}  buffer Buffer related settings
+ * @property {module:Settings~Gaps}  gaps Gap related settings
  * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
+ * @property {module:Settings~Scheduling} scheduling Settings related to segment scheduling
+ * @property {module:Settings~Text} text Settings related to Subtitles and captions
  * @property {module:Settings~LiveCatchupSettings} liveCatchup  Settings related to live catchup.
  * @property {module:Settings~CachingInfoSettings} [lastBitrateCachingInfo={enabled: true, ttl: 360000}]
  * Set to false if you would like to disable the last known bit rate from being stored during playback and used to set the initial bit rate for subsequent playback within the expiration window.
@@ -381,12 +600,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The default expiration is one hour, defined in milliseconds.
  *
  * If expired, the default initial bit rate (closest to 1000 kbps) will be used for that session and a new bit rate will be stored during that session.
- * @property {module:Settings~CachingInfoSettings} [lastMediaSettingsCachingInfo={enabled: true, ttl: 360000}]
- * Set to false if you would like to disable the last known lang for audio (or camera angle for video) from being stored during playback and used to set the initial settings for subsequent playback within the expiration window.
- *
- * The default expiration is one hour, defined in milliseconds.
- *
- * If expired, the default settings will be used for that session and a new settings will be stored during that session.
  * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
  * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
@@ -436,169 +649,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Settings related to Common Media Client Data reporting.
  */
 
-/**
- * @typedef {Object} CachingInfoSettings
- * @property {boolean} [enable]
- * Enable or disable the caching feature.
- * @property {number} [ttl]
- * Time to live.
- *
- * A value defined in milliseconds representing how log to cache the settings for.
- */
 
-/**
- * @typedef {Object} module:Settings~AudioVideoSettings
- * @property {number|boolean|string} [audio]
- * Configuration for audio media type of tracks.
- * @property {number|boolean|string} [video]
- * Configuration for video media type of tracks.
- */
-
-/**
- * @typedef {Object} RequestTypeSettings
- * @property {number} [MPD]
- * Manifest type of requests.
- * @property {number} [XLinkExpansion]
- * XLink expansion type of requests.
- * @property {number} [InitializationSegment]
- * Request to retrieve an initialization segment.
- * @property {number} [IndexSegment]
- * Request to retrieve an index segment (SegmentBase).
- * @property {number} [MediaSegment]
- * Request to retrieve a media segment (video/audio/image/text chunk).
- * @property {number} [BitstreamSwitchingSegment]
- * Bitrate stream switching type of request.
- * @property {number} [FragmentInfoSegment]
- * Request to retrieve a FragmentInfo segment (specific to Smooth Streaming live streams).
- * @property {number} [other]
- * Other type of request.
- * @property {number} [lowLatencyReductionFactor]
- * For low latency mode, values of type of request are divided by lowLatencyReductionFactor.
- *
- * Note: It's not type of request.
- * @property {number} [lowLatencyMultiplyFactor]
- * For low latency mode, values of type of request are multiplied by lowLatencyMultiplyFactor.
- *
- * Note: It's not type of request.
- */
-
-/**
- * @typedef {Object} module:Settings~CmcdSettings
- * @property {boolean} [enable=false]
- * Enable or disable the CMCD reporting.
- * @property {string} [sid]
- * GUID identifying the current playback session.
- *
- * Should be in UUID format.
- *
- * If not specified a UUID will be automatically generated.
- * @property {string} [cid]
- * A unique string to identify the current content.
- *
- * If not specified it will be a hash of the MPD url.
- * @property {number} [rtp]
- * The requested maximum throughput that the client considers sufficient for delivery of the asset.
- *
- * If not specified this value will be dynamically calculated in the CMCDModel based on the current buffer level.
- * @property {number} [rtpSafetyFactor]
- * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
- *
- * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
- * @property {number} [mode]
- * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
- *
- * If not specified this value defaults to 'query'.
- */
-
-/**
- * @typedef {Object} module:Settings~UtcSynchronizationSettings
- * @property {number} [backgroundAttempts=2]
- * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
- *
- * The background requests are async and done in parallel to the start of the playback.
- *
- * This value is also used to perform a resync after 404 errors on segments.
- * @property {number} [timeBetweenSyncAttempts=30]
- * The time in seconds between two consecutive sync attempts.
- *
- * Note: This value is used as an initial starting value. The internal value of the TimeSyncController is adjusted during playback based on the drift between two consecutive synchronization attempts.
- *
- * Note: A sync is only performed after an MPD update. In case the @minimumUpdatePeriod is larger than this value the sync will be delayed until the next MPD update.
- * @property {number} [maximumTimeBetweenSyncAttempts=600]
- * The maximum time in seconds between two consecutive sync attempts.
- *
- * @property {number} [minimumTimeBetweenSyncAttempts=2]
- * The minimum time in seconds between two consecutive sync attempts.
- *
- * @property {number} [timeBetweenSyncAttemptsAdjustmentFactor=2]
- * The factor used to multiply or divide the timeBetweenSyncAttempts parameter after a sync. The maximumAllowedDrift defines whether this value is used as a factor or a dividend.
- *
- * @property {number} [maximumAllowedDrift=100]
- * The maximum allowed drift specified in milliseconds between two consecutive synchronization attempts.
- *
- * @property {boolean} [enableBackgroundSyncAfterSegmentDownloadError=true]
- * Enables or disables the background sync after the player ran into a segment download error.
- *
- * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
- * The default timing source to be used. The timing sources in the MPD take precedence over this one.
- */
-
-/**
- * @typedef {Object} module:Settings~LiveCatchupSettings
- * @property {number} [minDrift=0.02]
- * Use this method to set the minimum latency deviation allowed before activating catch-up mechanism.
- *
- * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js increases/decreases playback rate until target latency is reached.
- *
- * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [maxDrift=0]
- * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
- *
- * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
- *
- * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
- *
- * If 0, then seeking operations won't be used for fixing latency deviations.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [playbackRate=0.5]
- * Use this parameter to set the maximum catch up rate, as a percentage, for low latency live streams.
- *
- * In low latency mode, when measured latency is higher/lower than the target one, dash.js increases/decreases playback rate respectively up to (+/-) the percentage defined with this method until target is reached.
- *
- * Valid values for catch up rate are in range 0-0.5 (0-50%).
- *
- * Set it to 0 to turn off live catch up feature.
- *
- * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [latencyThreshold=NaN]
- * Use this parameter to set the maximum threshold for which live catch up is applied.
- *
- * For instance, if this value is set to 8 seconds, then live catchup is only applied if the current live latency is equal or below 8 seconds.
- *
- * The reason behind this parameter is to avoid an increase of the playback rate if the user seeks within the DVR window.
- *
- * If no value is specified this will be twice the maximum live delay.
- *
- * The maximum live delay is either specified in the manifest as part of a ServiceDescriptor or calculated the following:
- * maximumLiveDelay = targetDelay + liveCatchupMinDrift.
- *
- * @property {number} [playbackBufferMin=NaN]
- * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
- *
- *
- * @property {boolean} [enabled=false]
- * Use this parameter to enable the catchup mode for non low-latency streams.
- *
- * @property {string} [mode="liveCatchupModeDefault"]
- * Use this parameter to switch between different catchup modes.
- *
- * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
- *
- * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
- */
 
 
 /**
@@ -618,7 +669,7 @@ function Settings() {
             dispatchEvent: false
         },
         streaming: {
-            metricsMaxListDepth: 500,
+            metricsMaxListDepth: 300,
             abandonLoadTimeout: 10000,
             calcSegmentAvailabilityRangeFromTimeline: false,
             wallclockTimeUpdateInterval: 100,

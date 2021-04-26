@@ -44,10 +44,7 @@ function TimelineConverter() {
 
     let instance,
         dashManifestModel,
-        clientServerTimeShift,
-        isClientServerTimeSyncCompleted,
-        availabilityWindowAnchorOffset,
-        expectedLiveEdge;
+        clientServerTimeShift;
 
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
@@ -322,15 +319,11 @@ function TimelineConverter() {
     function _onUpdateTimeSyncOffset(e) {
         if (e.offset !== undefined) {
             setClientTimeOffset(e.offset / 1000);
-            isClientServerTimeSyncCompleted = true;
         }
     }
 
     function resetInitialSettings() {
         clientServerTimeShift = 0;
-        availabilityWindowAnchorOffset = 0;
-        isClientServerTimeSyncCompleted = false;
-        expectedLiveEdge = NaN;
     }
 
     function reset() {
