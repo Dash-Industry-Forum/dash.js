@@ -64,6 +64,7 @@ function BufferController(config) {
     const streamInfo = config.streamInfo;
     const type = config.type;
     const settings = config.settings;
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
         logger,
@@ -658,15 +659,15 @@ function BufferController(config) {
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
         if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
-            notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
+            _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= streamInfo.manifestInfo.minBufferTime) {
-                notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
+            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+                _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
             }
         }
     }
 
-    function notifyBufferStateChanged(state) {
+    function _notifyBufferStateChanged(state) {
         if (bufferState === state ||
             (state === MetricsConstants.BUFFER_EMPTY && playbackController.getTime() === 0) || // Don't trigger BUFFER_EMPTY if it's initial loading
             (type === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
