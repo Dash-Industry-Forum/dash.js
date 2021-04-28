@@ -98,8 +98,8 @@ function ThroughputRule(config) {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex,
-        reset: reset
+        getMaxIndex,
+        reset
     };
 
     setup();

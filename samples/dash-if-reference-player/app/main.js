@@ -203,8 +203,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.audioBitrate = 0;
     $scope.audioIndex = 0;
-    $scope.audioPendingIndex = '';
-    $scope.audioPendingMaxIndex = '';
+    $scope.audioPendingIndex = 0;
+    $scope.audioPendingMaxIndex = 0;
     $scope.audioMaxIndex = 0;
     $scope.audioBufferLength = 0;
     $scope.audioDroppedFrames = 0;
@@ -367,17 +367,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.isDynamic = e.data.type === 'dynamic';
     }, $scope);
 
-    $scope.player.on(dashjs.MediaPlayer.events.SETTING_PLAYBACK_QUALITY, function (e) { /* jshint ignore:line */
-        var dashAdapter = $scope.player.getDashAdapter();
-        var maxIndex = dashAdapter.getMaxIndexForBufferType(e.mediaType, e.streamInfo.index);
-        var bitrate = Math.round(e.bitrateInfo.bitrate / 1000);
 
-        $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
-        $scope[e.mediaType + 'PendingMaxIndex'] = maxIndex;
+    $scope.player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, function (e) {
+        var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
+
+        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.index + 1;
+        $scope[e.mediaType + 'PendingMaxIndex'] = e.numberOfRepresentations;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
     }, $scope);
+
 
     $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) { /* jshint ignore:line */
         $scope.currentStreamInfo = e.toStreamInfo;

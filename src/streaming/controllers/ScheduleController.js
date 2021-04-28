@@ -29,12 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import Constants from '../constants/Constants';
-import BufferLevelRule from '../rules/scheduling/BufferLevelRule';
 import FragmentModel from '../models/FragmentModel';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import MetricsConstants from '../constants/MetricsConstants';
+import MediaPlayerEvents from '../MediaPlayerEvents';
 
 function ScheduleController(config) {
 
@@ -58,7 +59,6 @@ function ScheduleController(config) {
         timeToLoadDelay,
         scheduleTimeout,
         hasVideoTrack,
-        bufferLevelRule,
         lastFragmentRequest,
         topQualityIndex,
         lastInitializedQuality,
@@ -75,20 +75,11 @@ function ScheduleController(config) {
     function initialize(_hasVideoTrack) {
         hasVideoTrack = _hasVideoTrack;
 
-        bufferLevelRule = BufferLevelRule(context).create({
-            abrController: abrController,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            textController: textController,
-            settings: settings
-        });
-
-
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
-        eventBus.on(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        eventBus.on(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
         eventBus.on(Events.URL_RESOLUTION_FAILED, _onURLResolutionFailed, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
     }
 
     function getType() {
@@ -120,7 +111,7 @@ function ScheduleController(config) {
 
     function hasTopQualityChanged() {
         const streamId = streamInfo.id;
-        const newTopQualityIndex = abrController.getTopQualityIndexFor(type, streamId);
+        const newTopQualityIndex = abrController.getMaxAllowedIndexFor(type, streamId);
 
         if (isNaN(topQualityIndex) || topQualityIndex != newTopQualityIndex) {
             logger.info('Top quality ' + type + ' index has changed from ' + topQualityIndex + ' to ' + newTopQualityIndex);
@@ -210,9 +201,110 @@ function ScheduleController(config) {
      */
     function _shouldScheduleNextRequest() {
         try {
-            return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || bufferLevelRule.execute(type, currentRepresentationInfo, hasVideoTrack));
+            return currentRepresentationInfo && (isNaN(lastInitializedQuality) || switchTrack || hasTopQualityChanged() || _shouldBuffer());
         } catch (e) {
             return false;
+        }
+    }
+
+    /**
+     * Check if the current buffer level is below our buffer target.
+     * @return {boolean}
+     * @private
+     */
+    function _shouldBuffer() {
+        if (!type || !currentRepresentationInfo) {
+            return true;
+        }
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        return bufferLevel < getBufferTarget();
+    }
+
+    /**
+     * Determine the buffer target depending on the type and whether we have audio and video AdaptationSets available
+     * @return {number}
+     */
+    function getBufferTarget() {
+        let bufferTarget = NaN;
+
+        if (!type || !currentRepresentationInfo) {
+            return bufferTarget;
+        }
+
+        if (type === Constants.FRAGMENTED_TEXT) {
+            bufferTarget = _getBufferTargetForFragmentedText();
+        } else if (type === Constants.AUDIO && hasVideoTrack) {
+            bufferTarget = _getBufferTargetForAudio();
+        } else {
+            bufferTarget = _getGenericBufferTarget();
+        }
+
+        return bufferTarget;
+    }
+
+    /**
+     * Returns the buffer target for fragmented text tracks
+     * @return {number}
+     * @private
+     */
+    function _getBufferTargetForFragmentedText() {
+        try {
+            if (textController.isTextEnabled()) {
+                if (isNaN(currentRepresentationInfo.fragmentDuration)) { //fragmentDuration of currentRepresentationInfo is not defined,
+                    // call metrics function to have data in the latest scheduling info...
+                    // if no metric, returns 0. In this case, rule will return false.
+                    const schedulingInfo = dashMetrics.getCurrentSchedulingInfo(MetricsConstants.SCHEDULING_INFO);
+                    return schedulingInfo ? schedulingInfo.duration : 0;
+                } else {
+                    return currentRepresentationInfo.fragmentDuration;
+                }
+            } else { // text is disabled, rule will return false
+                return 0;
+            }
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Returns the buffer target for audio tracks in case we have a video track available as well
+     * @return {number}
+     * @private
+     */
+    function _getBufferTargetForAudio() {
+        try {
+            const videoBufferLevel = dashMetrics.getCurrentBufferLevel(Constants.VIDEO);
+            // For multiperiod we need to consider that audio and video segments might have different durations.
+            // This can lead to scenarios in which we completely buffered the video segments and the video buffer level for the current period is not changing anymore. However we might still need a small audio segment to finish buffering audio as well.
+            // If we set the buffer time of audio equal to the video buffer time scheduling for the remaining audio segment will only be triggered when audio fragmentDuration > videoBufferLevel. That will delay preloading of the upcoming period.
+            // Should find a better solution than just adding 1
+            if (isNaN(currentRepresentationInfo.fragmentDuration)) {
+                return videoBufferLevel + 1;
+            } else {
+                return Math.max(videoBufferLevel + 1, currentRepresentationInfo.fragmentDuration);
+            }
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Determines the generic buffer target, for instance for video tracks
+     * @return {number}
+     * @private
+     */
+    function _getGenericBufferTarget() {
+        try {
+            const streamInfo = currentRepresentationInfo.mediaInfo.streamInfo;
+            if (abrController.isPlayingAtTopQuality(streamInfo)) {
+                const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
+                 return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
+            } else {
+                 return mediaPlayerModel.getStableBufferTime();
+            }
+        }
+        catch(e) {
+            return mediaPlayerModel.getStableBufferTime();
         }
     }
 
@@ -298,10 +390,6 @@ function ScheduleController(config) {
         return timeToLoadDelay;
     }
 
-    function getBufferTarget() {
-        return bufferLevelRule.getBufferTarget(type, currentRepresentationInfo, hasVideoTrack);
-    }
-
     function setCheckPlaybackQuality(value) {
         checkPlaybackQuality = value;
     }
@@ -326,10 +414,10 @@ function ScheduleController(config) {
 
     function reset() {
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
-        eventBus.off(Events.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        eventBus.off(Events.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
-        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
         eventBus.off(Events.URL_RESOLUTION_FAILED, _onURLResolutionFailed, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
 
         clearScheduleTimer();
         _completeQualityChange(false);

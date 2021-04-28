@@ -64,6 +64,7 @@ function BufferController(config) {
     const streamInfo = config.streamInfo;
     const type = config.type;
     const settings = config.settings;
+    const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
         logger,
@@ -107,7 +108,6 @@ function BufferController(config) {
         eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
 
-        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
@@ -375,12 +375,10 @@ function BufferController(config) {
         }
     }
 
-    function _onQualityChanged(e) {
-        if (requiredQuality === e.newQuality || isBufferingCompleted) return;
+    function prepareForQualityChange(newQuality, representationInfo) {
+        requiredQuality = newQuality;
 
-        const representationInfo = _getRepresentationInfo(e.newQuality);
-        requiredQuality = e.newQuality;
-        updateBufferTimestampOffset(representationInfo);
+        return updateBufferTimestampOffset(representationInfo);
     }
 
     //**********************************************************************
@@ -658,15 +656,15 @@ function BufferController(config) {
         // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
         // buffer reach 0 seconds
         if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
-            notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
+            _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= streamInfo.manifestInfo.minBufferTime) {
-                notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
+            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+                _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
             }
         }
     }
 
-    function notifyBufferStateChanged(state) {
+    function _notifyBufferStateChanged(state) {
         if (bufferState === state ||
             (state === MetricsConstants.BUFFER_EMPTY && playbackController.getTime() === 0) || // Don't trigger BUFFER_EMPTY if it's initial loading
             (type === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
@@ -1025,7 +1023,6 @@ function BufferController(config) {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.off(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
 
-        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
@@ -1053,6 +1050,7 @@ function BufferController(config) {
         getIsPruningInProgress,
         reset,
         prepareForPlaybackSeek,
+        prepareForQualityChange,
         prepareForReplacementTrackSwitch,
         prepareForNonReplacementTrackSwitch,
         updateAppendWindow,

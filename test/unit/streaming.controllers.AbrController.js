@@ -99,6 +99,16 @@ describe('AbrController', function () {
         expect(abrCtrl.setPlaybackQuality.bind(abrCtrl, Constants.VIDEO, dummyMediaInfo.streamInfo, testQuality)).to.throw(Constants.BAD_ARGUMENT_ERROR + ' : argument is not an integer');
     });
 
+    it('should ignore an attempt to set a quality value if no streamInfo is provided', function () {
+        const targetQuality = 2;
+        const oldQuality = abrCtrl.getQualityFor(Constants.VIDEO);
+        let newQuality;
+
+        abrCtrl.setPlaybackQuality(Constants.VIDEO, null, targetQuality);
+        newQuality = abrCtrl.getQualityFor(Constants.VIDEO);
+        expect(newQuality).to.be.equal(oldQuality);
+    });
+
     it('should ignore an attempt to set a negative quality value', function () {
         const negativeQuality = -1;
         const oldQuality = abrCtrl.getQualityFor(Constants.VIDEO);
@@ -145,8 +155,14 @@ describe('AbrController', function () {
     });
 
     it('should return the appropriate max allowed index for the max allowed bitrate set', function () {
-        // Max allowed bitrate in kbps, bandwidth is in bps
+        const mediaInfo = streamProcessor.getMediaInfo();
 
+        mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+        mediaInfo.representationCount = 3;
+        mediaInfo.type = Constants.VIDEO;
+        abrCtrl.updateTopQualityIndex(mediaInfo);
+
+        // Max allowed bitrate in kbps, bandwidth is in bps
         const s = {streaming: {abr: {maxBitrate: {}}}};
         const streamId = streamProcessor.getStreamInfo().id;
         s.streaming.abr.maxBitrate[Constants.VIDEO] = streamProcessor.getMediaInfo().bitrateList[0].bandwidth / 1000;
@@ -268,12 +284,12 @@ describe('AbrController', function () {
         expect(bitrateInfo.qualityIndex).to.be.equal(1);
     });
 
-    it('should return the appropriate top quality index when calling getTopQualityIndexFor', function () {
+    it('should return the appropriate top quality index when calling getMaxAllowedIndexFor', function () {
         videoModelMock.setClientWidth(899);
         const s = {streaming: {abr: {limitBitrateByPortal: true}}};
         settings.update(s);
         abrCtrl.updateTopQualityIndex({type: Constants.VIDEO, streamInfo: {id: 'test'}, representationCount: 5});
-        let topQualityIndex = abrCtrl.getTopQualityIndexFor(Constants.VIDEO, 'test');
+        let topQualityIndex = abrCtrl.getMaxAllowedIndexFor(Constants.VIDEO, 'test');
         expect(topQualityIndex).to.be.equal(4);
     });
 });

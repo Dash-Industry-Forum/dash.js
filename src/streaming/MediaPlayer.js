@@ -821,7 +821,7 @@ function MediaPlayer() {
     */
     /**
      * Gets the top quality BitrateInfo checking portal limit and max allowed.
-     * It calls getTopQualityIndexFor internally
+     * It calls getMaxAllowedIndexFor internally
      *
      * @param {MediaType} type - 'video' or 'audio'
      * @memberof module:MediaPlayer
