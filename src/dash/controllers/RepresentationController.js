@@ -30,6 +30,7 @@
  */
 import Constants from '../../streaming/constants/Constants';
 import FactoryMaker from '../../core/FactoryMaker';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils';
 
 function RepresentationController(config) {
@@ -56,8 +57,8 @@ function RepresentationController(config) {
     function setup() {
         resetInitialSettings();
 
-        eventBus.on(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.on(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
     function getStreamId() {
@@ -93,8 +94,8 @@ function RepresentationController(config) {
     }
 
     function reset() {
-        eventBus.off(events.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
-        eventBus.off(events.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
     }
@@ -208,6 +209,12 @@ function RepresentationController(config) {
         if (currentRepresentation) {
             dashMetrics.addRepresentationSwitch(currentRepresentation.adaptation.type, now, currentVideoTimeMs, currentRepresentation.id);
         }
+
+        eventBus.trigger(MediaPlayerEvents.REPRESENTATION_SWITCH, {
+            mediaType: type,
+            currentRepresentation,
+            numberOfRepresentations: voAvailableRepresentations.length
+        })
     }
 
     function getRepresentationForQuality(quality) {

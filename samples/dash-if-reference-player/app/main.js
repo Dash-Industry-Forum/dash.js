@@ -368,11 +368,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }, $scope);
 
 
-    $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
-        var bitrate = Math.round(e.bitrateInfo.bitrate / 1000);
+    $scope.player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, function (e) {
+        var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
 
-        $scope[e.mediaType + 'PendingIndex'] = e.newQuality + 1;
-        $scope[e.mediaType + 'PendingMaxIndex'] = e.maxIdx + 1;
+        $scope[e.mediaType + 'PendingIndex'] = e.currentRepresentation.index + 1;
+        $scope[e.mediaType + 'PendingMaxIndex'] = e.numberOfRepresentations;
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();

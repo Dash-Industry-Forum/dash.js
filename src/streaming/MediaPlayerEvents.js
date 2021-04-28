@@ -397,6 +397,12 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
          */
         this.CONFORMANCE_VIOLATION = 'conformanceViolation';
+
+        /**
+         * Event that is dispatched whenever the player switches to a different representation
+         * @event MediaPlayerEvents#REPRESENTATION_SWITCH
+         */
+        this.REPRESENTATION_SWITCH = 'representationSwitch';
     }
 }
 
