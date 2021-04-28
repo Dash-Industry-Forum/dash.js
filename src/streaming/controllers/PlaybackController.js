@@ -154,6 +154,10 @@ function PlaybackController() {
         return streamInfo && videoModel ? videoModel.isSeeking() : null;
     }
 
+    function isStalled() {
+        return streamInfo && videoModel ? videoModel.isStalled() : null;
+    }
+
     function seek(time, stickToBuffered, internal) {
         if (!streamInfo || !videoModel) return;
 
@@ -353,7 +357,7 @@ function PlaybackController() {
             // http://w3c.github.io/html/single-page.html#offsets-into-the-media-resource
             // Checking also duration of the DVR makes sense. We detected temporary situations in which currentTime
             // is bad reported by the browser which causes playback to jump to start (315360000 = 1 year)
-            actualTime = Math.max(DVRWindow.end - liveDelay, DVRWindow.start);
+            actualTime = DVRWindow.start;
         } else {
             actualTime = currentTime;
         }
@@ -392,7 +396,7 @@ function PlaybackController() {
         const currentTime = getNormalizedTime();
         const actualTime = getActualPresentationTime(currentTime, mediaType);
         const timeChanged = (!isNaN(actualTime) && actualTime !== currentTime);
-        if (timeChanged && !isSeeking()) {
+        if (timeChanged && !isSeeking() && isStalled()) {
             logger.debug(`UpdateCurrentTime: Seek to actual time: ${actualTime} from currentTime: ${currentTime}`);
             seek(actualTime);
         }
