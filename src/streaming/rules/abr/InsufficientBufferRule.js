@@ -35,6 +35,7 @@ import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
 import Constants from '../../constants/Constants';
 import MetricsConstants from '../../constants/MetricsConstants';
+import MediaPlayerEvents from '../../MediaPlayerEvents';
 
 function InsufficientBufferRule(config) {
 
@@ -54,7 +55,7 @@ function InsufficientBufferRule(config) {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onEndFragment, instance);
     }
 
@@ -140,7 +141,7 @@ function InsufficientBufferRule(config) {
 
     function reset() {
         resetInitialSettings();
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onEndFragment, instance);
     }
 

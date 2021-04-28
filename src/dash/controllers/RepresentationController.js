@@ -267,7 +267,7 @@ function RepresentationController(config) {
         }
 
         if (isAllRepresentationsUpdated()) {
-            abrController.setPlaybackQuality(getType(), streamInfo, getQualityForRepresentation(currentVoRepresentation));
+            abrController.setPlaybackQuality(type, streamInfo, getQualityForRepresentation(currentVoRepresentation));
             const dvrInfo = dashMetrics.getCurrentDVRInfo();
             if (dvrInfo) {
                 dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });

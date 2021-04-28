@@ -43,7 +43,6 @@ class CoreEvents extends EventsBase {
         this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
-        this.BYTES_APPENDED_IN_SINK = 'bytesAppendedInSink';
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -53,9 +52,7 @@ class CoreEvents extends EventsBase {
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-        this.INTERNAL_BUFFER_UPDATED = 'internalBufferUpdated';
         this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
-        this.LIVE_EDGE_SEARCH_COMPLETED = 'liveEdgeSearchCompleted';
         this.LOADING_COMPLETED = 'loadingCompleted';
         this.LOADING_PROGRESS = 'loadingProgress';
         this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
@@ -64,7 +61,6 @@ class CoreEvents extends EventsBase {
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
         this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
-        this.SEGMENTS_LOADED = 'segmentsLoaded';
         this.SERVICE_LOCATION_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
         this.SERVICE_LOCATION_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
         this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
@@ -81,7 +77,6 @@ class CoreEvents extends EventsBase {
         this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
         this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
         this.XLINK_READY = 'xlinkReady';
-        this.SEGMENTBASE_SEGMENTSLIST_REQUEST_NEEDED = 'segmentBaseSegmentsListRequestNeeded';
         this.SEEK_TARGET = 'seekTarget';
     }
 }

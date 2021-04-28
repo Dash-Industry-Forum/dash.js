@@ -521,31 +521,37 @@ function StreamProcessor(config) {
      */
     function _onQualityChanged(e) {
         const representationInfo = getRepresentationInfo(e.newQuality);
+
         scheduleController.setCurrentRepresentation(representationInfo);
+        bufferController.prepareForQualityChange()
+            .then(() => {
+                // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
+                if (settings.get().streaming.buffer.fastSwitchEnabled) {
+                    const time = playbackController.getTime();
+                    let safeBufferLevel = 1.5;
+                    const request = fragmentModel.getRequests({
+                        state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+                        time: time + safeBufferLevel,
+                        threshold: 0
+                    })[0];
 
-        // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
-        if (settings.get().streaming.buffer.fastSwitchEnabled) {
-            const time = playbackController.getTime();
-            let safeBufferLevel = 1.5;
-            const request = fragmentModel.getRequests({
-                state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                time: time + safeBufferLevel,
-                threshold: 0
-            })[0];
+                    if (request && !adapter.getIsTextTrack(mimeType)) {
+                        const bufferLevel = bufferController.getBufferLevel();
+                        const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
-            if (request && !adapter.getIsTextTrack(mimeType)) {
-                const bufferLevel = bufferController.getBufferLevel();
-                const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
-
-                if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
-                    setExplicitBufferingTime(time + safeBufferLevel);
-                    scheduleController.setCheckPlaybackQuality(false);
+                        if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
+                            setExplicitBufferingTime(time + safeBufferLevel);
+                            scheduleController.setCheckPlaybackQuality(false);
+                        }
+                    }
                 }
-            }
-        }
 
-        dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
-        dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
+                dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
+                dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
+            })
+            .catch((e) => {
+                logger.error(e);
+            })
     }
 
     /**
@@ -674,7 +680,7 @@ function StreamProcessor(config) {
 
         if (representationController) {
             const realAdaptation = representationController.getData();
-            const maxQuality = abrController.getTopQualityIndexFor(type, streamInfo.id);
+            const maxQuality = abrController.getMaxAllowedIndexFor(type, streamInfo.id);
             const minIdx = abrController.getMinAllowedIndexFor(type, streamInfo.id);
 
             let quality,
@@ -683,7 +689,7 @@ function StreamProcessor(config) {
 
             if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
-                bitrate = averageThroughput || abrController.getInitialBitrateFor(type);
+                bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
                 quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
             } else {
                 quality = abrController.getQualityFor(type, streamInfo.id);
