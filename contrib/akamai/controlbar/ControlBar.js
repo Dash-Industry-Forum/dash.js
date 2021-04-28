@@ -385,11 +385,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             var liveDelay = self.player.duration() - value;
             if (liveDelay < liveThresholdSecs) {
                 durationDisplay.classList.add('live');
-                timeDisplay.textContent = '';
             } else {
                 durationDisplay.classList.remove('live');
-                timeDisplay.textContent = '- ' + self.player.convertToTimeCode(liveDelay);
             }
+            timeDisplay.textContent = '- ' + self.player.convertToTimeCode(liveDelay);
         } else if (!isNaN(value)) {
             timeDisplay.textContent = displayUTCTimeCodes ? self.player.formatUTC(value) : self.player.convertToTimeCode(value);
         }
