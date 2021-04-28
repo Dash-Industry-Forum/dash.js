@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../../core/FactoryMaker';
-import Debug from '../../../core/Debug';
 import SwitchRequest from '../SwitchRequest';
 import Constants from '../../constants/Constants';
 import MetricsConstants from '../../constants/MetricsConstants';
@@ -40,11 +39,9 @@ function ThroughputRule(config) {
     const context = this.context;
     const dashMetrics = config.dashMetrics;
 
-    let instance,
-        logger;
+    let instance;
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     function checkConfig() {
@@ -85,7 +82,6 @@ function ThroughputRule(config) {
             if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
                 switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, throughput, streamId, latency);
                 scheduleController.setTimeToLoadDelay(0);
-                logger.debug('[' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
                 switchRequest.reason = {throughput: throughput, latency: latency};
             }
         }
