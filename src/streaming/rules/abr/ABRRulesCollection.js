@@ -131,7 +131,7 @@ function ABRRulesCollection(config) {
         });
     }
 
-    function getActiveRules(srArray) {
+    function _getRulesWithChange(srArray) {
         return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
     }
 
@@ -190,7 +190,7 @@ function ABRRulesCollection(config) {
 
     function getMaxQuality(rulesContext) {
         const switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
-        const activeRules = getActiveRules(switchRequestArray);
+        const activeRules = _getRulesWithChange(switchRequestArray);
         const maxQuality = getMinSwitchRequest(activeRules);
 
         return maxQuality || SwitchRequest(context).create();
@@ -198,7 +198,7 @@ function ABRRulesCollection(config) {
 
     function shouldAbandonFragment(rulesContext, streamId) {
         const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
-        const activeRules = getActiveRules(abandonRequestArray);
+        const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
 
         return shouldAbandon || SwitchRequest(context).create();

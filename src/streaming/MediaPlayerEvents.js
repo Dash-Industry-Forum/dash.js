@@ -397,12 +397,6 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#CONFORMANCE_VIOLATION
          */
         this.CONFORMANCE_VIOLATION = 'conformanceViolation';
-
-        /**
-         * Event that is dispatched whenever the player is attempting to switch the quality
-         * @event MediaPlayerEvents#REPRESENTATION_CHANGED
-         */
-        this.SETTING_PLAYBACK_QUALITY = 'settingPlaybackQuality'
     }
 }
 
