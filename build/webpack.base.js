@@ -1,3 +1,4 @@
+const webpack = require('webpack');
 const path = require('path');
 const pkg = require('../package.json');
 
@@ -35,6 +36,8 @@ const config = {
         ]
     },
     plugins: [
+        new webpack.ProvidePlugin({
+            Promise: 'es6-promise-promise',
         })
     ]
 }
