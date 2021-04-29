@@ -167,7 +167,6 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
 
         const refTime = timelineConverter.getAvailabilityWindowAnchorTime();
         return segment.availabilityStartTime.getTime() <= refTime && segment.availabilityEndTime.getTime() >= refTime;
-
     }
 
     return true;
