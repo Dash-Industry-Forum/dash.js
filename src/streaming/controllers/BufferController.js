@@ -64,7 +64,6 @@ function BufferController(config) {
     const streamInfo = config.streamInfo;
     const type = config.type;
     const settings = config.settings;
-    const mediaPlayerModel = config.mediaPlayerModel;
 
     let instance,
         logger,
@@ -658,7 +657,7 @@ function BufferController(config) {
         if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= mediaPlayerModel.getStableBufferTime()) {
+            if (isBufferingCompleted || bufferLevel >= settings.get().streaming.buffer.stallThreshold) {
                 _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
             }
         }
