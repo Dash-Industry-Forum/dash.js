@@ -44,6 +44,7 @@ function TimelineConverter() {
 
     let instance,
         dashManifestModel,
+        timelineAnchorAvailabilityOffset, // In case we calculate the TSBD using _calcTimeShiftBufferWindowForDynamicTimelineManifest we use the segments as anchor times. We apply this offset when calculating if a segment is available or not.
         clientServerTimeShift;
 
     function setup() {
@@ -136,7 +137,7 @@ function TimelineConverter() {
     }
 
     function getAvailabilityWindowAnchorTime() {
-        return Date.now() - clientServerTimeShift * 1000;
+        return Date.now() - ((timelineAnchorAvailabilityOffset + clientServerTimeShift) * 1000);
     }
 
     /**
@@ -161,7 +162,7 @@ function TimelineConverter() {
 
     function _calcTimeshiftBufferForStaticManifest(streams) {
         // Static Range Finder. We iterate over all periods and return the total duration
-        const range = {start: NaN, end: NaN};
+        const range = { start: NaN, end: NaN };
         let duration = 0;
         let start = NaN;
         streams.forEach((stream) => {
@@ -180,7 +181,7 @@ function TimelineConverter() {
     }
 
     function _calcTimeShiftBufferWindowForDynamicManifest(streams) {
-        const range = {start: NaN, end: NaN};
+        const range = { start: NaN, end: NaN };
 
         if (!streams || streams.length === 0) {
             return range;
@@ -202,7 +203,7 @@ function TimelineConverter() {
     }
 
     function _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams) {
-        const range = {start: NaN, end: NaN};
+        const range = { start: NaN, end: NaN };
         const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
@@ -215,7 +216,7 @@ function TimelineConverter() {
             const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
             const voRepresentations = adapter.getVoRepresentations(mediaInfo);
             const voRepresentation = voRepresentations[0];
-            let periodRange = {start: NaN, end: NaN};
+            let periodRange = { start: NaN, end: NaN };
 
             if (voRepresentation) {
                 if (voRepresentation.segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
@@ -236,7 +237,7 @@ function TimelineConverter() {
         });
 
 
-        range.end = range.end > now ? now : range.end;
+        range.end = Math.min(now, range.end);
         const adjustedEndTime = _adjustTimeBasedOnPeriodRanges(streams, range.end, true);
 
         // if range is NaN all periods are in the future. we should return range.start > range.end in this case
@@ -244,6 +245,8 @@ function TimelineConverter() {
 
         range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) && !isNaN(range.end) ? Math.max(range.end - voPeriod.mpd.timeShiftBufferDepth, range.start) : range.start;
         range.start = _adjustTimeBasedOnPeriodRanges(streams, range.start);
+
+        timelineAnchorAvailabilityOffset = now - range.end;
 
         return range;
     }
@@ -288,7 +291,7 @@ function TimelineConverter() {
         const timeline = representation.SegmentTemplate.SegmentTimeline;
         const timescale = representation.SegmentTemplate.timescale;
         const segments = timeline.S_asArray;
-        const range = {start: 0, end: 0};
+        const range = { start: 0, end: 0 };
         let d = 0;
         let segment,
             repeat,
@@ -324,6 +327,7 @@ function TimelineConverter() {
 
     function resetInitialSettings() {
         clientServerTimeShift = 0;
+        timelineAnchorAvailabilityOffset = 0;
     }
 
     function reset() {
@@ -335,6 +339,7 @@ function TimelineConverter() {
         initialize,
         getClientTimeOffset,
         setClientTimeOffset,
+        getAvailabilityWindowAnchorTime,
         calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
         calcPresentationTimeFromWallTime,
@@ -343,7 +348,6 @@ function TimelineConverter() {
         calcMediaTimeFromPresentationTime,
         calcWallTimeForSegment,
         calcTimeShiftBufferWindow,
-        getAvailabilityWindowAnchorTime,
         reset
     };
 

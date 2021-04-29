@@ -644,6 +644,7 @@ function MssParser(config) {
             manifest.refreshManifestOnSwitchTrack = true; // Refresh manifest when switching tracks
             manifest.doNotUpdateDVRWindowOnBufferUpdated = true; // DVRWindow is update by MssFragmentMoofPocessor based on tfrf boxes
             manifest.ignorePostponeTimePeriod = true; // Never update manifest
+            manifest.availabilityStartTime = new Date(null); // Returns 1970
         }
 
         // Map period node to manifest root node
