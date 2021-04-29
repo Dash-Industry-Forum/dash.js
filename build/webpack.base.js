@@ -1,5 +1,4 @@
 const path = require('path');
-const ESLintPlugin = require('eslint-webpack-plugin');
 const pkg = require('../package.json');
 
 const out_dir = '../dist';
@@ -36,12 +35,6 @@ const config = {
         ]
     },
     plugins: [
-        new ESLintPlugin({
-            files: [
-                'src/**/*.js',
-                'test/unit/mocks/*.js',
-                'test/unit/*.js'
-            ]
         })
     ]
 }
