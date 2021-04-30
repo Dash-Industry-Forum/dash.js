@@ -7,23 +7,25 @@
                 "title": "Auto load single video src",
                 "description": "The simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element. The \"auto-load\" refers to the fact that this page calls the Dash.createAll() method onLoad in order to automatically convert all video elements of class 'dashjs-player' in to a functioning DASH player.",
                 "href": "getting-started/auto-load-single-video-src.html",
-                "width": "25rem"
+                "image": "lib/img/bbb-1.jpg"
             },
             {
                 "title": "Auto load single video",
                 "description": "The mpd source is specified within the child Source element of the video element. Note that the Source@type attribute must be set to \"application/dash+xml\" in order for it to be automatically used.",
-                "href": "getting-started/auto-load-single-video.html"
+                "href": "getting-started/auto-load-single-video.html",
+                "image": "lib/img/bbb-2.jpg"
             },
             {
                 "title": "Auto load multi video",
                 "description": "This example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source.",
                 "href": "getting-started/auto-load-multi-video.html",
-                "width": "25rem"
+                "image": "lib/img/bbb-3.jpg"
             },
             {
                 "title": "Manual load single video",
                 "description": "A sample showing how to load a single video",
-                "href": "getting-started/manual-load-single-video.html"
+                "href": "getting-started/manual-load-single-video.html",
+                "image": "lib/img/bbb-1.jpg"
             },
             {
                 "title": "Manual load with custom settings",
@@ -132,7 +134,7 @@
         ]
     },
     {
-        "section": "Subtitles & Captions",
+        "section": "Subtitles and Captions",
         "samples": [
             {
                 "title": "Caption VTT",

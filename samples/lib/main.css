@@ -10,3 +10,12 @@
 .margin-top-row {
     margin-top: 10px;
 }
+
+.bi-info-square {
+    color: #007bff
+}
+
+.btn-success {
+    background-color: #007bff;
+    border-color: #007bff;
+}

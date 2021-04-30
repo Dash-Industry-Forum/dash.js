@@ -95,13 +95,14 @@
         <div class="row">
             <div class="col-md-8">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Live delay comparison using setLiveDelayFragmentCount</h3>
+                    <h3><i class="bi bi-info-square"></i> Live delay comparison using setLiveDelayFragmentCount</h3>
                     <p> This sample illustrates the combined effects of segment duration and the "<b>setLiveDelayFragmentCount</b>"
                         MediaPlayer method on the latency of live stream playback.</p>
                     <p>
                         The upper layer of videos are all playing a live stream with 2s segment duration. The lower
                         layer use 6s segment duration. For each stream, the playback position
-                        behind live is varied between 0, 2 and 4 segments. Note that the default value for dash.js is 4
+                        behind live is varied between 0, 2 and 4 segments. </p>
+                    <p>Note that the default value for dash.js is 4
                         segments, which is a trade off between stability and latency.
                         Lowest latency is achieved with shorter segments and with a lower liveDelayFragmentCount. Higher
                         stability/robustness is achieved with a higher liveDelayFragmentCount.</p>

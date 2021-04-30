@@ -8,6 +8,7 @@
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
     <link href="../lib/main.css" rel="stylesheet">
 
     <script class="code">
@@ -100,6 +101,10 @@
         #delayInFragments, #delayInSeconds {
             width: 50px;
         }
+        .clock {
+            color: #000;
+            font-size: 60pt
+        }
     </style>
 </head>
 <body>
@@ -113,8 +118,8 @@
         </header>
         <div class="row">
             <div class="col-md-7">
-                <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Live delay comparison custom manifest</h3>
+                <div class="p-5 bg-light border rounded-3">
+                    <h3> <i class="bi bi-info-square"></i>  Live delay comparison custom manifest</h3>
                     <p>This sample allows you to explore the two MediaPlayer APIS which control live delay - <b>setLiveDelay</b>
                         and
                         <b>setLiveDelayFragmentCount.</b></p>
@@ -132,7 +137,7 @@
                 </div>
             </div>
             <div class="col-md-5">
-                <div class="h-100 p-5 border rounded-3">
+                <div class="p-5 border rounded-3">
                     <h4>Settings</h4>
                     <div>
                         <div class="form-check">
@@ -167,31 +172,35 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
         <div class="row" style="margin-top: 10px">
-            <div class="col-md-4">
-                <div class="h-100 p-5  border rounded-3">
-                    <h4>Debug information</h4>
-                    <div>
-                        <div><b>Playhead seconds behind live:</b> <span id="videoDelay"></span></div>
-                        <div><b>Video Buffer: </b> <span id="videoBuffer"></span></div>
-                        <div><b>Wall clock time:</b> <span id="min"> </span><span id="sec"></span></div>
-                        
-                    </div>
-                </div>
-            </div>
             <div class="col-md-8">
-                <video controls="true"></video>
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1">Manifest URL</span>
                     <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
                            value="https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd" aria-label="Username"
                            aria-describedby="basic-addon1">
+                    <button type="button" id="loadButton" class="btn btn-success" onclick="load(this)">Load stream
+                    </button>
                 </div>
-                <button type="button" id="loadButton" class="btn btn-success" onclick="load(this)">Load stream
-                </button>
+                <video controls="true"></video>
+
+            </div>
+            <div class="col-md-4">
+                <div class=" p-5 border rounded-3">
+                    <h3>Wall Clock reference time</h3>
+                    <div class="clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
+                </div>
+                <div class="p-5 border rounded-3" style="margin-top: 10px">
+                    <h4>Debug information</h4>
+                    <div>
+                        <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span id="videoDelay"></span></div>
+                        <div><i class="bi bi-arrow-right-square"></i> Video Buffer:  <span id="videoBuffer"></span></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="row">
