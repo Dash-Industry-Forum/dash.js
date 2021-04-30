@@ -15,12 +15,6 @@
                 "href": "getting-started/auto-load-single-video.html"
             },
             {
-                "title": "Auto load single video with reference",
-                "description": "While the Dash.CreateAll() method is handy for automated instantiation within a page, the Dash.create() method takes three optional parameters to give you more control. This example illustrates calling Dash.create() in four different ways. The first simply specifies a target video element with a child source element. The second specifies a target video element with a src attribute. The third specifies the video element and a dynamically generated source object. The fourth specifies the video element, a source object and a custom DashContext object.",
-                "href": "getting-started/auto-load-single-video-with-reference.html",
-                "width": "30rem"
-            },
-            {
                 "title": "Auto load multi video",
                 "description": "This example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source.",
                 "href": "getting-started/auto-load-multi-video.html",
@@ -40,7 +34,7 @@
             {
                 "title": "Using the Control Bar",
                 "description": "This example shows how to add and configure the Akamai control bar with dash.js player.",
-                "href": "control/controlbar.html",
+                "href": "getting-started/controlbar.html",
                 "width": "25rem"
             },
             {
@@ -51,7 +45,7 @@
             {
                 "title": "Log levels",
                 "description": "This examples shows how to configure dash.js logging levels.",
-                "href": "control/logging.html",
+                "href": "getting-started/logging.html",
                 "width": "30rem"
             }
         ]

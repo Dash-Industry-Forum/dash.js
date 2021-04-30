@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Manual-player instantiation example</title>
+    <title>Log Levels example</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -21,11 +21,17 @@
         function init() {
             var video,
                 player,
-                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
-            video = document.querySelector('video');
+            video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, false);
+            player.initialize(video, url, true);
+            /* Can be LOG_LEVEL_NONE, LOG_LEVEL_FATAL, LOG_LEVEL_ERROR, LOG_LEVEL_WARNING, LOG_LEVEL_INFO or LOG_LEVEL_DEBUG */
+            player.updateSettings({
+                'debug': {
+                    'logLevel': dashjs.Debug.LOG_LEVEL_INFO
+                }
+            });
         }
     </script>
 </head>
@@ -41,8 +47,8 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Manual load single video</h3>
-                    <p>A sample showing how to load a single video. Autoplay is set to false.</p>
+                    <h3>Log levels</h3>
+                    <p>This examples shows how to configure dash.js logging levels.</p>
                 </div>
             </div>
             <div class="col-md-8">
