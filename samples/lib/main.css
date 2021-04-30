@@ -6,3 +6,7 @@
     border-left-width: .25rem;
     border-radius: .25rem;
 }
+
+.margin-top-row {
+    margin-top: 10px;
+}
