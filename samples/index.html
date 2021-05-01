@@ -41,17 +41,17 @@
         <div class="container">
             <header class="pb-3 mb-4 border-bottom">
                 <img class=""
-                     src="https://cloud.githubusercontent.com/assets/2762250/7824984/985c3e76-03bc-11e5-807b-1402bde4fe56.png"
+                     src="./lib/img/dashjs-logo.png"
                      width="200">
-
-                <h4>Samples</h4>
             </header>
 
-            <p class="lead">Dash.js is a framework which enables the creation of many different MSE/EME
-                players. This page provides a starting point to examine all the various samples available. Many
-                samples ship with this code base, others are hosted elsewhere.</p>
+            <h2>Samples</h2>
 
-            <p class="lead">A reference player encapsulating the major functionality of dash.js is available <a
+            <p class="lead">dash.js is a reference client implementation by the DASH-Industry-Forum (DASH-IF) for the playback of MPEG-DASH via JavaScript
+                and compliant
+                MSE/EME platforms. This page provides a starting point to examine the various samples available.</p>
+
+            <p class="lead">A reference UI encapsulating the main functionality of dash.js is available <a
                 target="_blank" href="dash-if-reference-player/index.html"> here </a>.
             </p>
 
@@ -83,7 +83,7 @@
 <hr>
 <footer class="text-muted py-5">
     <div class="container">
-        © DASH-IF
+        Copyright DASH Industry Forum 2012-2021
     </div>
 </footer>
 
@@ -93,11 +93,11 @@
 
 <div style="display: none">
     <div class="col" id="card-sample">
-        <div class="card shadow-sm">
+        <div class="card h-100 shadow-sm">
             <img class="card-img-top" src="">
             <div class="card-body">
-                <h5 class="card-title"></h5>
-                <p class="card-text"></p>
+                <h5 class="card-title" style="min-height: 50px"></h5>
+                <p class="card-text" style="min-height: 100px"></p>
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="btn-group">
                         <button type="button" class="btn btn-outline-secondary">
@@ -105,7 +105,7 @@
                                target="_blank">View</a>
                         </button>
                     </div>
-                    <small class="text-muted">Basic</small>
+                    <span> </span>
                 </div>
             </div>
         </div>
@@ -146,7 +146,7 @@
         $('#tab-list').append($tab);
 
         var $tabContainer = $('    <div class="tab-pane fade show" id="home" role="tabpanel" aria-labelledby="home-tab"></div>');
-        var $tabContainerRow = $('<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3"></div>');
+        var $tabContainerRow = $('<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-2"></div>');
 
         $tabContainer.attr('id', nameToId(section.section));
         $tabContainer.attr('aria-labelledby', nameToId(section.section) + '-tab');
@@ -162,10 +162,22 @@
         section.samples.forEach(function (sample) {
             var $card = $('#card-sample').clone(true);
             $card.attr('id', '');
-            $card.find('img').attr('src',sample.image);
-            $card.find('h5').text(sample.title);
+            var image = sample.image ? sample.image : './lib/img/dashjs-logo-png.png';
+            $card.find('img').attr('src', image);
+            $card.find('h5').html('<a href="' + sample.href + '" target="_blank">' + sample.title + '</a>');
             $card.find('p').html(sample.description);
             $card.find('a').attr('href', sample.href);
+            $card.find('small').text(section.section);
+            
+            var labels = '';
+            
+            if(sample.labels && sample.labels.length > 0) {
+                sample.labels.forEach(function (label) {
+                    labels += '<span class="badge bg-secondary me-1">' + label + '</span>';
+                })
+            }
+            
+            $card.find('span').append(labels);
 
             $tabContainerRow.append($card);
         });

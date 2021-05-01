@@ -5,50 +5,58 @@
         "samples": [
             {
                 "title": "Auto load single video src",
-                "description": "The simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element. The \"auto-load\" refers to the fact that this page calls the Dash.createAll() method onLoad in order to automatically convert all video elements of class 'dashjs-player' in to a functioning DASH player.",
+                "description": "The simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element.",
                 "href": "getting-started/auto-load-single-video-src.html",
-                "image": "lib/img/bbb-1.jpg"
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Auto load single video",
-                "description": "The mpd source is specified within the child Source element of the video element. Note that the Source@type attribute must be set to \"application/dash+xml\" in order for it to be automatically used.",
+                "description": "The mpd source is specified within the child Source element of the video element.",
                 "href": "getting-started/auto-load-single-video.html",
                 "image": "lib/img/bbb-2.jpg"
             },
             {
                 "title": "Auto load multi video",
-                "description": "This example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source.",
+                "description": "This example shows how to auto-embed multiple instances of dash.js players in a page.",
                 "href": "getting-started/auto-load-multi-video.html",
-                "image": "lib/img/bbb-3.jpg"
+                "image": "lib/img/sintel-2.jpg"
             },
             {
                 "title": "Manual load single video",
                 "description": "A sample showing how to load a single video",
                 "href": "getting-started/manual-load-single-video.html",
-                "image": "lib/img/bbb-1.jpg"
+                "image": "lib/img/bbb-3.jpg"
             },
             {
                 "title": "Manual load with custom settings",
                 "description": "A sample showing how to load a video using custom settings",
                 "href": "getting-started/manual-load-with-custom-settings.html",
-                "width": "30rem"
+                "width": "30rem",
+                "image": "lib/img/bbb-1.jpg"
             },
             {
                 "title": "Using the Control Bar",
                 "description": "This example shows how to add and configure the Akamai control bar with dash.js player.",
                 "href": "getting-started/controlbar.html",
-                "width": "25rem"
+                "width": "25rem",
+                "image": "lib/img/bbb-2.jpg"
             },
             {
                 "title": "Listening to events",
                 "description": "Example showing how to listen to events raised by dash.js.",
-                "href": "getting-started/listening-to-events.html"
+                "href": "getting-started/listening-to-events.html",
+                "image": "lib/img/bbc-1.jpg"
             },
             {
                 "title": "Log levels",
                 "description": "This examples shows how to configure dash.js logging levels.",
                 "href": "getting-started/logging.html",
-                "width": "30rem"
+                "image": "lib/img/bbb-4.jpg"
             }
         ]
     },
