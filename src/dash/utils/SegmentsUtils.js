@@ -166,7 +166,7 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
         // SAET = SAST + TSBD + seg@duration
 
         const refTime = timelineConverter.getAvailabilityWindowAnchorTime();
-        return segment.availabilityStartTime.getTime() <= refTime && segment.availabilityEndTime.getTime() >= refTime;
+        return segment.availabilityStartTime.getTime() <= refTime && (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
     }
 
     return true;
