@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Controlbar sample</title>
+    <title>CEA 608/708 Embedded Captions Sample</title>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
     <link href="../lib/main.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
 
     <style>
         video {
@@ -19,20 +20,29 @@
         .dash-video-player {
             position: relative; /* This position relative is needed to position the menus */
             margin: 0 auto;
-            line-height: 1;
+            line-height: 1.0;
         }
     </style>
 
     <script class="code">
-        function init() {
-            var url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
-            var videoElement = document.querySelector('.videoContainer video');
-            var player = dashjs.MediaPlayer().create();
+        var CAPTION_URL = "https://livesim.dashif.org/dash/vod/testpic_2s/cea608.mpd",
+            video,
+            player;
 
-            player.initialize(videoElement, url, true);
-            var controlbar = new ControlBar(player);
+        function init() {
+            var url = CAPTION_URL,
+                TTMLRenderingDiv;
+
+            video = document.querySelector('video');
+            TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
+
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, url, true);
+            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
+            controlbar = new ControlBar(player);
             controlbar.initialize();
         }
+
     </script>
 </head>
 <body>
@@ -47,14 +57,15 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Using the Control Bar</h3>
-                    <p>This example shows how to add and configure the control bar with the dash.js player</p>
+                    <h3>CEA 608/708 Embedded Captions Sample</h3>
+                    <p>This example shows how content with embedded CEA 608/708 captions can be played back by the dash.js player.</p>
                 </div>
             </div>
             <div class="col-md-8">
                 <div class="dash-video-player code">
                     <div class="videoContainer" id="videoContainer">
                         <video preload="auto" autoplay></video>
+                        <div id="ttml-rendering-div"></div>
                         <div id="videoController" class="video-controller unselectable">
                             <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
                                 <span id="iconPlayPause" class="icon-play"></span>
