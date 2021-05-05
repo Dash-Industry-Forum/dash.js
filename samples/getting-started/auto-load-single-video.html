@@ -1,13 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Auto-player instantiation example, single videoElement</title>
+    <meta charset="utf-8">
+    <title>Auto load single video</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <style>
         video {
@@ -15,13 +16,44 @@
             height: 360px;
         }
     </style>
-    </head>
-    <body>
-        <div class="code">
-            <video autoplay preload="none" controls="true">
-                <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" type="application/dash+xml"/>
-            </video>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Auto load single video</h3>
+                    <p>The mpd source is specified within the child Source element of the video element. Note that the
+                        Source@type attribute must be set to "application/dash+xml" in order for it to be automatically
+                        used.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="code">
+                    <video autoplay preload="none" controls="true">
+                        <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+                                type="application/dash+xml"/>
+                    </video>
+                </div>
+            </div>
         </div>
-        <script src="../highlighter.js"></script>
-    </body>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+<script src="../highlighter.js"></script>
+</body>
 </html>
