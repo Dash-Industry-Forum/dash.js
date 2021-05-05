@@ -1402,7 +1402,6 @@ function StreamController() {
         }
         videoModel = null;
         if (protectionController) {
-            protectionController.setMediaElement(null);
             protectionController = null;
             protectionData = null;
             if (manifestModel.getValue()) {
