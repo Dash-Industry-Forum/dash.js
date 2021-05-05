@@ -1,13 +1,14 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Auto-player instantiation example, single videoElement, using src attribute</title>
+    <meta charset="utf-8">
+    <title>Auto load single video src</title>
+
     <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <style>
         video {
@@ -15,11 +16,46 @@
             height: 360px;
         }
     </style>
-    </head>
-    <body>
-        <div class="code">
-            <video data-dashjs-player autoplay src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"></video>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Auto load single video src</h3>
+                    <p>The simplest means of using a dash.js player in a web page. The mpd src is specified within the
+                        @src attribute of the video element. The "auto-load" refers to the fact that this page calls the
+                        Dash.createAll() method onLoad in order to automatically convert all video elements of class
+                        'dashjs-player' in to a functioning DASH player.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="code">
+                    <div class="code">
+                        <video data-dashjs-player autoplay
+                               src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls="true"></video>
+                    </div>
+                </div>
+            </div>
         </div>
-        <script src="../highlighter.js"></script>
-    </body>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+<script src="../highlighter.js"></script>
+</body>
 </html>

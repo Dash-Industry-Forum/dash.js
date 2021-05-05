@@ -5,54 +5,95 @@
         "samples": [
             {
                 "title": "Auto load single video src",
-                "description": "The simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element. The \"auto-load\" refers to the fact that this page calls the Dash.createAll() method onLoad in order to automatically convert all video elements of class 'dashjs-player' in to a functioning DASH player.",
+                "description": "The simplest means of using a dash.js player in a web page. The mpd src is specified within the @src attribute of the video element.",
                 "href": "getting-started/auto-load-single-video-src.html",
-                "width": "25rem"
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Auto load single video",
-                "description": "The mpd source is specified within the child Source element of the video element. Note that the Source@type attribute must be set to \"application/dash+xml\" in order for it to be automatically used.",
-                "href": "getting-started/auto-load-single-video.html"
-            },
-            {
-                "title": "Auto load single video with reference",
-                "description": "While the Dash.CreateAll() method is handy for automated instantiation within a page, the Dash.create() method takes three optional parameters to give you more control. This example illustrates calling Dash.create() in four different ways. The first simply specifies a target video element with a child source element. The second specifies a target video element with a src attribute. The third specifies the video element and a dynamically generated source object. The fourth specifies the video element, a source object and a custom DashContext object.",
-                "href": "getting-started/auto-load-single-video-with-reference.html",
-                "width": "30rem"
+                "description": "The mpd source is specified within the child Source element of the video element.",
+                "href": "getting-started/auto-load-single-video.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Auto load multi video",
-                "description": "This example shows how to auto-embed multiple instances of dash.js players in a page. To make it more difficult, one of the available video elements specifies a non-DASH source.",
+                "description": "This example shows how to auto-embed multiple instances of dash.js players in a page.",
                 "href": "getting-started/auto-load-multi-video.html",
-                "width": "25rem"
+                "image": "lib/img/sintel-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Manual load single video",
-                "description": "A sample showing how to load a single video",
-                "href": "getting-started/manual-load-single-video.html"
+                "description": "A sample showing how to load a single video.",
+                "href": "getting-started/manual-load-single-video.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Manual load with custom settings",
-                "description": "A sample showing how to load a video using custom settings",
+                "description": "A sample showing how to load a video using custom settings.",
                 "href": "getting-started/manual-load-with-custom-settings.html",
-                "width": "30rem"
+                "width": "30rem",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Using the Control Bar",
                 "description": "This example shows how to add and configure the Akamai control bar with dash.js player.",
-                "href": "control/controlbar.html",
-                "width": "25rem"
+                "href": "getting-started/controlbar.html",
+                "width": "25rem",
+                "image": "lib/img/bbb-4.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "Controlbar"
+                ]
             },
             {
                 "title": "Listening to events",
                 "description": "Example showing how to listen to events raised by dash.js.",
-                "href": "getting-started/listening-to-events.html"
+                "href": "getting-started/listening-to-events.html",
+                "image": "lib/img/bbc-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "Events"
+                ]
             },
             {
                 "title": "Log levels",
                 "description": "This examples shows how to configure dash.js logging levels.",
-                "href": "control/logging.html",
-                "width": "30rem"
+                "href": "getting-started/logging.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -62,22 +103,46 @@
             {
                 "title": "Live delay comparison custom manifest",
                 "description": "Example showing how to use the two MediaPlayer APIS which control live delay: setLiveDelay and setLiveDelayFragmentCount.",
-                "href": "live-streaming/live-delay-comparison-custom-manifest.html"
+                "href": "live-streaming/live-delay-comparison-custom-manifest.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Live delay comparison using fragment count",
                 "description": "Example showing the combined effects of segment duration and the setLiveDelayFragmentCount MediaPlayer method on the latency of live stream playback",
-                "href": "live-streaming/live-delay-comparison-using-fragmentCount.html"
+                "href": "live-streaming/live-delay-comparison-using-fragmentCount.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Live delay comparison using setLiveDelay",
                 "description": "Example showing the combined effects of segment duration and the setLiveDelay MediaPlayer method on the latency of live stream playback.",
-                "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html"
+                "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Synchronized live playback with the catchup mode",
                 "description": "Example showing a synchronized live playback of two videos using the live playback catchup mode.",
-                "href": "live-streaming/synchronized-live-playback.html"
+                "href": "live-streaming/synchronized-live-playback.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -87,17 +152,38 @@
             {
                 "title": "Low latency",
                 "description": "Example showing how to use dash.js to play low latency streams.",
-                "href": "low-latency/index.html"
+                "href": "low-latency/index.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Low latency with L2ALL",
                 "description": "Example showing how to use dash.js to play low latency streams using the L2ALL ABR algorithm.",
-                "href": "low-latency/l2all_index.html"
+                "href": "low-latency/l2all_index.html",
+                "image": "lib/img/akamai-ll-1.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Low latency with LoL+",
                 "description": "Example showing how to use dash.js to play low latency streams using the LoL+ ABR algorithm.",
-                "href": "low-latency/lolp_index.html"
+                "href": "low-latency/lolp_index.html",
+                "image": "lib/img/akamai-ll-2.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -107,22 +193,68 @@
             {
                 "title": "Widevine",
                 "description": "This example shows how to use dash.js to play streams with Widevine DRM protection.",
-                "href": "drm/widevine.html"
+                "href": "drm/widevine.html",
+                "image": "lib/img/tos-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "PlayReady",
                 "description": "This example shows how to use dash.js to play streams with PlayReady DRM protection (Windows 10 Microsoft Chromium Edge only).",
-                "href": "drm/playready.html"
+                "href": "drm/playready.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "ClearKey",
-                "description": "This example shows how to use dash.js to play streams with ClearKey DRM protection.",
-                "href": "drm/clearkey.html"
+                "description": "This example shows how to use dash.js to play streams with ClearKey protection.",
+                "href": "drm/clearkey.html",
+                "image": "lib/img/tos-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Clearkey",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "License wrapping",
                 "description": "This example shows how to use dash.js to filter and wrap license requests and responses",
-                "href": "drm/license-wrapping.html"
+                "href": "drm/license-wrapping.html",
+                "image": "lib/img/tos-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Keysystem priority",
+                "description": "This example shows how to specify a DRM system priority in case the underlying platform supports multiple DRM systems.",
+                "href": "drm/system-priority.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Widevine",
+                    "Playready",
+                    "Video",
+                    "Audio"
+                ]
             }
 
         ]
@@ -133,27 +265,67 @@
             {
                 "title": "Play streams with two periods",
                 "description": "Example showing how dash.js handles streams with two periods.",
-                "href": "multiperiod/index.html"
+                "href": "multiperiod/index.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Multiperiod",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
     {
-        "section": "Subtitles & Captions",
+        "section": "Subtitles and Captions",
         "samples": [
             {
                 "title": "Caption VTT",
                 "description": "This example shows how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark.",
-                "href": "captioning/caption_vtt.html"
+                "href": "captioning/caption_vtt.html",
+                "image": "lib/img/sintel-1.jpg",
+                "labels": [
+                    "VoD",
+                    "External caption",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "CEA 608/708",
+                "description": "This example shows how content with embedded CEA 608/708 captions can be played back by the dash.js player.",
+                "href": "captioning/cea608.html",
+                "image": "lib/img/sintel-2.jpg",
+                "labels": [
+                    "VoD",
+                    "CEA608",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Multi Track Captions",
                 "description": "Example showing content with multiple timed text tracks.",
-                "href": "captioning/multi-track-captions.html"
+                "href": "captioning/multi-track-captions.html",
+                "image": "lib/img/sintel-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Fragmented text",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
-                "href": "captioning/ttml-ebutt-sample.html"
+                "href": "captioning/ttml-ebutt-sample.html",
+                "image": "lib/img/sintel-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Fragmented text",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -163,7 +335,15 @@
             {
                 "title": "Multiple audio tracks",
                 "description": "This example shows how content with multiple audio tracks can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
-                "href": "multi-audio/multi-audio.html"
+                "href": "multi-audio/multi-audio.html",
+                "image": "lib/img/tos-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Multi Audio",
+                    "Fragmented Text",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -173,17 +353,14 @@
             {
                 "title": "Thumbnails",
                 "description": "Example showing how to use streams with thumbnails representations.",
-                "href": "thumbnails/thumbnails.html"
-            }
-        ]
-    },
-    {
-        "section": "Preload",
-        "samples": [
-            {
-                "title": "Preload video",
-                "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and starts downloading the content before the player is attached to a video element.",
-                "href": "getting-started/pre-load-video.html"
+                "href": "thumbnails/thumbnails.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Thumbnails",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -193,7 +370,11 @@
             {
                 "title": "Only audio stream",
                 "description": "This example shows how to play audio-only streams in dash.js.",
-                "href": "audio-only/index.html"
+                "href": "audio-only/index.html",
+                "labels": [
+                    "VoD",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -203,42 +384,80 @@
             {
                 "title": "Monitoring the stream",
                 "description": "This example shows how to monitor metrics of the streams played by dash.js.",
-                "href": "advanced/monitoring.html"
-            },
-            {
-                "title": "Dash.js settings",
-                "description": "This example shows how to deal with dash.js settings.",
-                "href": "advanced/settings.html"
+                "href": "advanced/monitoring.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Listening to SCTE-EMSG Events",
                 "description": "Example showing how to listen to SCTE EMSG events raised by dash.js.",
-                "href": "advanced/listening-to-SCTE-EMSG-events.html"
+                "href": "advanced/listening-to-SCTE-EMSG-events.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Events",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Autoplay Browser policy",
                 "description": "This sample shows how to deal with autoplay browsers policy. It uses an event listener to detect when auto playback is interrupted by the browser and how to recover from this situation muting audio.",
-                "href": "advanced/auto-play-browser-policy.html"
+                "href": "advanced/auto-play-browser-policy.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Custom ABR Rules",
                 "description": "Example showing how to create and define custom ABR rules in dash.js.",
-                "href": "advanced/abr/index.html"
+                "href": "advanced/abr/index.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Extending Dash.js",
                 "description": "This sample shows how to use dash.js extend mechanism to add custom HTTP headers and modify URL's of the requests done by the player.",
-                "href": "advanced/extend.html"
+                "href": "advanced/extend.html",
+                "image": "lib/img/bbb-4.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "CMCD Reporting",
                 "description": "This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5005).",
-                "href": "advanced/cmcd.html"
+                "href": "advanced/cmcd.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             },
             {
                 "title": "Custom Capabilities Filters",
                 "description": "This sample shows how to filter representations.",
-                "href": "advanced/custom-capabilities-filters.html"
+                "href": "advanced/custom-capabilities-filters.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -248,7 +467,14 @@
             {
                 "title": "Offline mode",
                 "description": "Example showing how store and read back streams without network connection to Dash",
-                "href": "offline/index.html"
+                "href": "offline/index.html",
+                "labels": [
+                    "VoD",
+                    "Live",
+                    "Offline",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -258,7 +484,13 @@
             {
                 "title": "Microsoft Smooth Streaming",
                 "description": "Example showing how to use dash.js to play Microsoft Smooth Streaming streams.",
-                "href": "smooth-streaming/mss.html"
+                "href": "smooth-streaming/mss.html",
+                "image": "lib/img/mss-1.jpg",
+                "labels": [
+                    "MSS",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     }

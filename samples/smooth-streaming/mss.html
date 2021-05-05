@@ -1,56 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8" />
+    <meta charset="utf-8">
     <title>Smooth Streaming example, single videoElement</title>
 
-    <script class="code" src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+    <script src="../../dist/dash.all.debug.js"></script>
 
     <!-- add mss package which is required to play Smooth Streaming streams -->
     <script class="code" src="../../dist/dash.mss.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <style>
         video {
             width: 640px;
             height: 360px;
         }
-
-        .inputForm div {
-            margin-bottom: 10px;
-        }
-
-        label {
-            width: 135px;
-            display: inline-block;
-        }
-
-        input[type="text"] {
-            width: 500px;
-        }
     </style>
-</head>
-
-<body>
-    <div class="inputForm">
-        <div>
-            <label>Stream Url: </label>
-            <input class="code" type="text" id="streamUrl" value="http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest">
-        </div>
-        <div>
-            <label>License Server Url: </label>
-            <input type="text" id="licenseServerUrl" value="">
-        </div>
-        <div>
-            <input type="button" value="Load" onclick="loadStream()">
-        </div>
-    </div>
-    <div>
-        <video controls="true"></video>
-    </div>
 
     <script class="code">
         function loadStream() {
@@ -75,14 +43,65 @@
                 player;
 
             player = dashjs.MediaPlayer().create();
-            video = document.querySelector("video");
+            video = document.querySelector('video');
             player.initialize(); /* initialize the MediaPlayer instance */
             player.attachView(video); /* tell the player which videoElement it should use */
             player.setProtectionData(protData); /* set protection data (sets license server when required) */
             player.attachSource(streamUrl); /* provide the manifest source */
         }
     </script>
-    <script src="../highlighter.js"></script>
-</body>
+</head>
+<body>
 
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Smooth Streaming example</h3>
+                    <p>Example showing how to use dash.js to play Microsoft Smooth Streaming streams.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">Manifest URL</span>
+                    <input type="text" id="streamUrl" class="form-control" placeholder="MPD URL"
+                           value="http://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest"
+                           aria-describedby="basic-addon1">
+                </div>
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon2">License Server Url:</span>
+                    <input type="text" id="licenseServerUrl" class="form-control" placeholder="License Server URL"
+                           aria-describedby="basic-addon2">
+                </div>
+                <button type="button" id="loadButton" class="btn btn-success" onclick="loadStream(this)">Load stream
+                </button>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <video controls="true"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script src="../highlighter.js"></script>
+</body>
 </html>
