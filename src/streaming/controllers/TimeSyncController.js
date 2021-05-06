@@ -86,7 +86,7 @@ function TimeSyncController() {
             baseURLController = config.baseURLController;
         }
 
-        if(config.errHandler) {
+        if (config.errHandler) {
             errHandler = config.errHandler;
         }
 
@@ -143,8 +143,9 @@ function TimeSyncController() {
     /**
      * Sync against a timing source. T
      * @param {array} tSources
+     * @param {boolean} isDynamic
      */
-    function attemptSync(tSources) {
+    function attemptSync(tSources, isDynamic) {
 
         timingSources = tSources;
 
@@ -154,7 +155,7 @@ function TimeSyncController() {
         }
 
         // No synchronization required we can signal the completion immediately
-        if (!_shouldPerformSynchronization()) {
+        if (!_shouldPerformSynchronization(isDynamic)) {
             eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
             return;
         }
@@ -280,11 +281,15 @@ function TimeSyncController() {
 
     /**
      * Checks if a synchronization is required
+     * @param {boolean} isDynamic
      * @return {boolean}
      * @private
      */
-    function _shouldPerformSynchronization() {
+    function _shouldPerformSynchronization(isDynamic) {
         try {
+            if (!isDynamic) {
+                return false;
+            }
             const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
 
             if (!timeOfLastSync || !timeBetweenSyncAttempts || isNaN(timeBetweenSyncAttempts)) {

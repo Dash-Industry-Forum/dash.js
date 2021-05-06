@@ -1145,7 +1145,7 @@ function StreamController() {
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     baseURLController.initialize(manifest);
-                    timeSyncController.attemptSync(allUTCTimingSources);
+                    timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
                 });
         } else {
             hasInitialisationError = true;

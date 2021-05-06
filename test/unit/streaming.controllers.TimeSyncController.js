@@ -60,7 +60,7 @@ describe('TimeSyncController', function () {
         eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, onCompleted, this);
         settings.update({ streaming: { useManifestDateHeaderTimeSource: false } });
         timeSyncController.initialize();
-        timeSyncController.attemptSync([]);
+        timeSyncController.attemptSync([], true);
     });
 
 
@@ -78,7 +78,7 @@ describe('TimeSyncController', function () {
         timeSyncController.attemptSync([{
             schemeIdUri: 'urn:mpeg:dash:utc:http-xsdate:2014',
             value: 'https://time.akamai.com/?iso'
-        }]);
+        }], true);
 
         // simulate a response
         self.requests[0].respond(200, {
@@ -102,7 +102,7 @@ describe('TimeSyncController', function () {
         timeSyncController.attemptSync([{
             schemeIdUri: 'urn:mpeg:dash:utc:http-xsdate:2014',
             value: 'https://time.akamai.com/?iso'
-        }]);
+        }], true);
 
         // simulate a response
         self.requests[0].respond(200, {
