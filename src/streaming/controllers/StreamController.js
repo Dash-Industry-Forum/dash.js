@@ -141,6 +141,7 @@ function StreamController() {
         timeSyncController.setConfig({
             dashMetrics,
             baseURLController,
+            errHandler,
             settings
         });
         timeSyncController.initialize();

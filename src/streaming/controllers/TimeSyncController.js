@@ -66,6 +66,7 @@ function TimeSyncController() {
         lastOffset,
         lastTimingSource,
         internalTimeBetweenSyncAttempts,
+        errHandler,
         baseURLController;
 
     function setup() {
@@ -83,6 +84,10 @@ function TimeSyncController() {
 
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
+        }
+
+        if(config.errHandler) {
+            errHandler = config.errHandler;
         }
 
         if (config.settings) {
@@ -537,12 +542,12 @@ function TimeSyncController() {
 
         if (failed) {
             lastTimingSource = null;
+            errHandler.error(new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE));
         }
 
         // Notify other classes
         eventBus.trigger(Events.UPDATE_TIME_SYNC_OFFSET, {
             offset: offset,
-            error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null
         });
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
     }
