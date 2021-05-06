@@ -480,7 +480,7 @@ function StreamProcessor(config) {
     function _onDataUpdateCompleted(e) {
         if (!e.error) {
             // Update representation if no error
-            scheduleController.setCurrentRepresentation(adapter.convertDataToRepresentationInfo(e.currentRepresentation));
+            scheduleController.setCurrentRepresentation(adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation));
             if (!bufferController.getIsBufferingCompleted()) {
                 bufferController.updateBufferTimestampOffset(e.currentRepresentation);
             }
@@ -752,7 +752,7 @@ function StreamProcessor(config) {
             voRepresentation = representationController ? representationController.getCurrentRepresentation() : null;
         }
 
-        return adapter.convertDataToRepresentationInfo(voRepresentation);
+        return adapter.convertRepresentationToRepresentationInfo(voRepresentation);
     }
 
     function isBufferingCompleted() {

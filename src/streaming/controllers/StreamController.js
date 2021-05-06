@@ -1089,7 +1089,7 @@ function StreamController() {
                         return acc;
                     }, [])
                     .reduce((acc, voRepresentation) => {
-                        const representation = adapter.convertDataToRepresentationInfo(voRepresentation);
+                        const representation = adapter.convertRepresentationToRepresentationInfo(voRepresentation);
 
                         if (representation && representation.fragmentDuration && !isNaN(representation.fragmentDuration)) {
                             acc.push(representation.fragmentDuration);

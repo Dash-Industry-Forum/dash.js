@@ -41,6 +41,7 @@ import PatchManifestModel from './models/PatchManifestModel';
 
 /**
  * @module DashAdapter
+ * @description The DashAdapter module can be accessed using the MediaPlayer API getDashAdapter()
  */
 
 function DashAdapter() {
@@ -64,10 +65,6 @@ function DashAdapter() {
 
     // #region PUBLIC FUNCTIONS
     // --------------------------------------------------
-    function getVoPeriods() {
-        return voPeriods;
-    }
-
     function setConfig(config) {
         if (!config) return;
 
@@ -116,7 +113,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns a MediaInfo object for a given media type.
+     * Returns a MediaInfo object for a given media type and the corresponding streamInfo.
      * @param {object} streamInfo
      * @param {MediaType }type
      * @returns {null|MediaInfo} mediaInfo
@@ -154,7 +151,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the AdaptationSet for a given period and a given mediaType.
+     * Returns the AdaptationSet for a given period index and a given mediaType.
      * @param {number} periodIndex
      * @param {MediaType} type
      * @param {object} streamInfo
@@ -210,7 +207,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the mediaInfo for a given mediaType
+     * Returns all the mediaInfos for a given mediaType and the corresponding streamInfo.
      * @param {object} streamInfo
      * @param {MediaType} type
      * @param {object} externalManifest Set to null or undefined if no external manifest is to be used
@@ -301,6 +298,7 @@ function DashAdapter() {
     }
 
     /**
+     * Update the internal voPeriods array with the information from the new manifest
      * @param {object} newManifest
      * @returns {*}
      * @memberOf module:DashAdapter
@@ -316,6 +314,7 @@ function DashAdapter() {
     }
 
     /**
+     * Returns an array of streamInfo objects
      * @param {object} externalManifest
      * @param {number} maxStreamsInfo
      * @returns {Array} streams
@@ -346,7 +345,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Returns the AdaptationSet as saved in the DashManifestModel
      * @param {object} streamInfo
      * @param {object} mediaInfo
      * @returns {object} realAdaptation
@@ -382,7 +381,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the period by index
+     * Returns the period as defined in the DashManifestModel for a given index
      * @param {number} index
      * @return {object}
      */
@@ -407,7 +406,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Returns the event for the given parameters.
      * @param {object} eventBox
      * @param {object} eventStreams
      * @param {number} mediaStartTime
@@ -464,7 +463,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or RepresentationInfo
      * @param {object} info
      * @param {object} voRepresentation
      * @returns {Array}
@@ -491,7 +490,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Sets the current active mediaInfo for a given streamId and a given mediaType
      * @param {number} streamId
      * @param {MediaType} type
      * @param {object} mediaInfo
@@ -506,7 +505,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Check if the given type is a text track
      * @param {String} type
      * @returns {boolean}
      * @memberOf module:DashAdapter
@@ -686,7 +685,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Returns the base urls for a given element
      * @param {object} node
      * @returns {Array}
      * @memberOf module:DashAdapter
@@ -698,7 +697,7 @@ function DashAdapter() {
     }
 
     /**
-     *
+     * Returns the function to sort the Representations
      * @returns {*}
      * @memberOf module:DashAdapter
      * @instance
@@ -722,7 +721,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the bandwidth for a given representation id
+     * Returns the bandwidth for a given representation id and the corresponding period index
      * @param {number} representationId
      * @param {number} periodIdx
      * @returns {number} bandwidth
@@ -754,7 +753,6 @@ function DashAdapter() {
 
     /**
      * This method returns the current max index based on what is defined in the MPD.
-     *
      * @param {string} bufferType - String 'audio' or 'video',
      * @param {number} periodIdx - Make sure this is the period index not id
      * @return {number}
@@ -787,6 +785,12 @@ function DashAdapter() {
         return null;
     }
 
+    /**
+     * Checks if the given AdaptationSet is from the given media type
+     * @param {object} adaptation
+     * @param {string} type
+     * @return {boolean}
+     */
     function getIsTypeOf(adaptation, type) {
         return dashManifestModel.getIsTypeOf(adaptation, type);
     }
@@ -1128,47 +1132,45 @@ function DashAdapter() {
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
-        getBandwidthForRepresentation: getBandwidthForRepresentation,
-        getIndexForRepresentation: getIndexForRepresentation,
-        getMaxIndexForBufferType: getMaxIndexForBufferType,
-        convertDataToRepresentationInfo: convertRepresentationToRepresentationInfo,
-        getDataForMedia: getAdaptationForMediaInfo,
-        getStreamsInfo: getStreamsInfo,
-        getMediaInfoForType: getMediaInfoForType,
-        getAllMediaInfoForType: getAllMediaInfoForType,
-        getAdaptationForType: getAdaptationForType,
-        getRealAdaptation: getRealAdaptation,
+        getBandwidthForRepresentation,
+        getIndexForRepresentation,
+        getMaxIndexForBufferType,
+        convertRepresentationToRepresentationInfo,
+        getStreamsInfo,
+        getMediaInfoForType,
+        getAllMediaInfoForType,
+        getAdaptationForType,
+        getRealAdaptation,
         getRealPeriodByIndex,
         getEssentialPropertiesForRepresentation,
-        getVoRepresentations: getVoRepresentations,
-        getEventsFor: getEventsFor,
-        getEvent: getEvent,
+        getVoRepresentations,
+        getEventsFor,
+        getEvent,
         getMpd,
-        setConfig: setConfig,
-        updatePeriods: updatePeriods,
-        getIsTextTrack: getIsTextTrack,
-        getUTCTimingSources: getUTCTimingSources,
-        getSuggestedPresentationDelay: getSuggestedPresentationDelay,
-        getAvailabilityStartTime: getAvailabilityStartTime,
+        setConfig,
+        updatePeriods,
+        getIsTextTrack,
+        getUTCTimingSources,
+        getSuggestedPresentationDelay,
+        getAvailabilityStartTime,
         getIsTypeOf,
-        getIsDynamic: getIsDynamic,
-        getDuration: getDuration,
-        getRegularPeriods: getRegularPeriods,
-        getLocation: getLocation,
-        getPatchLocation: getPatchLocation,
-        getManifestUpdatePeriod: getManifestUpdatePeriod,
+        getIsDynamic,
+        getDuration,
+        getRegularPeriods,
+        getLocation,
+        getPatchLocation,
+        getManifestUpdatePeriod,
         getPublishTime,
-        getIsDVB: getIsDVB,
-        getIsPatch: getIsPatch,
-        getBaseURLsFromElement: getBaseURLsFromElement,
-        getRepresentationSortFunction: getRepresentationSortFunction,
-        getCodec: getCodec,
-        getVoPeriods: getVoPeriods,
+        getIsDVB,
+        getIsPatch,
+        getBaseURLsFromElement,
+        getRepresentationSortFunction,
+        getCodec,
         getPeriodById,
-        setCurrentMediaInfo: setCurrentMediaInfo,
-        isPatchValid: isPatchValid,
-        applyPatchToManifest: applyPatchToManifest,
-        reset: reset
+        setCurrentMediaInfo,
+        isPatchValid,
+        applyPatchToManifest,
+        reset
     };
 
     setup();
