@@ -330,7 +330,7 @@ function SourceBufferSink(config) {
                         from: start,
                         to: end,
                         unintended: false,
-                        error: new DashJSError(err.code, err.message)
+                        error: new DashJSError(Errors.REMOVE_ERROR_CODE, Errors.REMOVE_ERROR_MESSAGE)
                     });
                     if (range.reject) {
                         range.reject(err);

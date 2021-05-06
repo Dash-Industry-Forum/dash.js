@@ -403,7 +403,7 @@ function PlaybackController() {
     }
 
     function onDataUpdateCompleted(e) {
-        const representationInfo = adapter.convertDataToRepresentationInfo(e.currentRepresentation);
+        const representationInfo = adapter.convertRepresentationToRepresentationInfo(e.currentRepresentation);
         const info = representationInfo ? representationInfo.mediaInfo.streamInfo : null;
 
         if (info === null || streamInfo.id !== info.id) return;

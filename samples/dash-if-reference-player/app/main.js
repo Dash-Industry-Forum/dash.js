@@ -301,8 +301,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     case dashjs.MediaPlayer.errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.SEGMENTS_UPDATE_FAILED_ERROR_CODE:
-                    case dashjs.MediaPlayer.errors.SEGMENTS_UNAVAILABLE_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.SEGMENT_BASE_LOADER_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.TIME_SYNC_FAILED_ERROR_CODE:
                     case dashjs.MediaPlayer.errors.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE:

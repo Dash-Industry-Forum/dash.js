@@ -115,7 +115,6 @@ class MediaPlayerEvents extends EventsBase {
          */
         this.LOG = 'log';
 
-        //TODO refactor with internal event
         /**
          * Triggered when the manifest load is complete
          * @event MediaPlayerEvents#MANIFEST_LOADED
@@ -175,12 +174,6 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
          */
         this.TRACK_CHANGE_RENDERED = 'trackChangeRendered';
-
-        /**
-         * Triggered when the source is setup and ready.
-         * @event MediaPlayerEvents#SOURCE_INITIALIZED
-         */
-        this.SOURCE_INITIALIZED = 'sourceInitialized';
 
         /**
          * Triggered when a stream (period) is being loaded

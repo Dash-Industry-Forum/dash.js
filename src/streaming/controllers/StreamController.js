@@ -141,6 +141,7 @@ function StreamController() {
         timeSyncController.setConfig({
             dashMetrics,
             baseURLController,
+            errHandler,
             settings
         });
         timeSyncController.initialize();
@@ -1089,7 +1090,7 @@ function StreamController() {
                         return acc;
                     }, [])
                     .reduce((acc, voRepresentation) => {
-                        const representation = adapter.convertDataToRepresentationInfo(voRepresentation);
+                        const representation = adapter.convertRepresentationToRepresentationInfo(voRepresentation);
 
                         if (representation && representation.fragmentDuration && !isNaN(representation.fragmentDuration)) {
                             acc.push(representation.fragmentDuration);
@@ -1144,7 +1145,7 @@ function StreamController() {
             capabilitiesFilter.filterUnsupportedFeatures(manifest)
                 .then(() => {
                     baseURLController.initialize(manifest);
-                    timeSyncController.attemptSync(allUTCTimingSources);
+                    timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
                 });
         } else {
             hasInitialisationError = true;

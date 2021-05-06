@@ -582,8 +582,6 @@ declare namespace dashjs {
         MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE: 10;
         MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE: 11;
         XLINK_LOADER_LOADING_FAILURE_ERROR_CODE: 12;
-        SEGMENTS_UPDATE_FAILED_ERROR_CODE: 13;
-        SEGMENTS_UNAVAILABLE_ERROR_CODE: 14;
         SEGMENT_BASE_LOADER_ERROR_CODE: 15;
         TIME_SYNC_FAILED_ERROR_CODE: 16;
         FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE: 17;
@@ -764,8 +762,6 @@ declare namespace dashjs {
             code: MediaPlayerErrors['MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE'] |
                 MediaPlayerErrors['MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE'] |
                 MediaPlayerErrors['XLINK_LOADER_LOADING_FAILURE_ERROR_CODE'] |
-                MediaPlayerErrors['SEGMENTS_UPDATE_FAILED_ERROR_CODE'] |
-                MediaPlayerErrors['SEGMENTS_UNAVAILABLE_ERROR_CODE'] |
                 MediaPlayerErrors['SEGMENT_BASE_LOADER_ERROR_CODE'] |
                 MediaPlayerErrors['TIME_SYNC_FAILED_ERROR_CODE'] |
                 MediaPlayerErrors['FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE'] |
