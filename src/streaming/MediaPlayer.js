@@ -79,13 +79,10 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import TextController from './text/TextController';
 
-/* jscs:disable */
 /**
  * The media types
  * @typedef {("video" | "audio" | "text" | "fragmentedText" | "embeddedText" | "image")} MediaType
  */
-
-/* jscs:enable */
 
 /**
  * @module MediaPlayer
