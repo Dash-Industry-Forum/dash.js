@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 const Entities = require('html-entities').XmlEntities;
 const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
