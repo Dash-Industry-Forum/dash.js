@@ -42,6 +42,7 @@ import {
 
 /**
  * @module DashMetrics
+ * @description The DashMetrics module can be accessed using the MediaPlayer API getDashMetrics()
  * @param {object} config
  */
 
@@ -69,6 +70,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the latest Representation switch for a given media type
      * @param {MediaType} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -94,24 +96,26 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {MediaType} type
+     * Returns the current buffer state for a given media type
+     * @param {MediaType} mediaType
      * @returns {number}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentBufferState(type) {
-        const metrics = metricsModel.getMetricsFor(type, true);
+    function getCurrentBufferState(mediaType) {
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         return getCurrent(metrics, MetricsConstants.BUFFER_STATE);
     }
 
     /**
-     * @param {MediaType} type
+     * Returns the current buffer level for a given media type
+     * @param {MediaType} mediaType
      * @returns {number}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getCurrentBufferLevel(type) {
-        const metrics = metricsModel.getMetricsFor(type, true);
+    function getCurrentBufferLevel(mediaType) {
+        const metrics = metricsModel.getMetricsFor(mediaType, true);
         const metric = getCurrent(metrics, MetricsConstants.BUFFER_LEVEL);
 
         if (metric) {
@@ -155,6 +159,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the latest HTTP request for a given media type
      * @param {MediaType} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -189,6 +194,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns all HTTP requests for a given media type
      * @param {MediaType} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -216,6 +222,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the latest metrics for a given metric list and specific metric name
      * @param {MetricsList} metrics
      * @param {string} metricName
      * @returns {*}
@@ -231,10 +238,10 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the number of dropped frames
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
-     * @ignore
      */
     function getCurrentDroppedFrames() {
         const metrics = metricsModel.getMetricsFor(Constants.VIDEO, true);
@@ -252,6 +259,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the current scheduling info for a given media type
      * @param {MediaType} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -283,6 +291,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the current manifest update information
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
@@ -369,6 +378,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the current DVR window
      * @param {MediaType} mediaType
      * @returns {*}
      * @memberof module:DashMetrics
@@ -394,6 +404,7 @@ function DashMetrics(config) {
     }
 
     /**
+     * Returns the value for a specific request headers used in the latest MPD request
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
@@ -420,15 +431,16 @@ function DashMetrics(config) {
     }
 
     /**
-     * @param {string} type
+     * Returns the value for a specific request headers used in the latest fragment request
+     * @param {MediaType} mediaType
      * @param {string} id
      * @returns {*}
      * @memberof module:DashMetrics
      * @instance
      */
-    function getLatestFragmentRequestHeaderValueByID(type, id) {
+    function getLatestFragmentRequestHeaderValueByID(mediaType, id) {
         let headers = {};
-        let httpRequest = getCurrentHttpRequest(type, true);
+        let httpRequest = getCurrentHttpRequest(mediaType, true);
         if (httpRequest) {
             headers = Utils.parseHttpHeaders(httpRequest._responseHeaders);
         }
@@ -447,6 +459,12 @@ function DashMetrics(config) {
         }
     }
 
+    /**
+     * Create a new playlist metric
+     * @param {number} mediaStartTime
+     * @param {string} startReason
+     * @ignore
+     */
     function createPlaylistMetrics(mediaStartTime, startReason) {
         playListMetrics = new PlayList();
 
@@ -455,6 +473,13 @@ function DashMetrics(config) {
         playListMetrics.starttype = startReason;
     }
 
+    /**
+     * Create a playlist trace metric
+     * @param {number} representationId
+     * @param {number} mediaStartTime
+     * @param {number} speed
+     * @ignore
+     */
     function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
         if (playListTraceMetricsClosed === true ) {
             playListTraceMetricsClosed = false;
@@ -467,6 +492,11 @@ function DashMetrics(config) {
         }
     }
 
+    /**
+     * Update existing playlist trace metric
+     * @param {object} traceToUpdate
+     * @ignore
+     */
     function updatePlayListTraceMetrics(traceToUpdate) {
         if (playListTraceMetrics) {
             for (let field in playListTraceMetrics) {
@@ -475,6 +505,12 @@ function DashMetrics(config) {
         }
     }
 
+    /**
+     * Push a new playlist trace metric
+     * @param endTime
+     * @param reason
+     * @ignore
+     */
     function pushPlayListTraceMetrics(endTime, reason) {
         if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics && playListTraceMetrics.start) {
             const startTime = playListTraceMetrics.start;
@@ -497,36 +533,36 @@ function DashMetrics(config) {
     }
 
     instance = {
-        getCurrentRepresentationSwitch: getCurrentRepresentationSwitch,
-        getCurrentBufferState: getCurrentBufferState,
-        getCurrentBufferLevel: getCurrentBufferLevel,
-        getCurrentHttpRequest: getCurrentHttpRequest,
-        getHttpRequests: getHttpRequests,
-        getCurrentDroppedFrames: getCurrentDroppedFrames,
-        getCurrentSchedulingInfo: getCurrentSchedulingInfo,
-        getCurrentDVRInfo: getCurrentDVRInfo,
-        getCurrentManifestUpdate: getCurrentManifestUpdate,
-        getLatestFragmentRequestHeaderValueByID: getLatestFragmentRequestHeaderValueByID,
-        getLatestMPDRequestHeaderValueByID: getLatestMPDRequestHeaderValueByID,
-        addRepresentationSwitch: addRepresentationSwitch,
-        addDVRInfo: addDVRInfo,
-        updateManifestUpdateInfo: updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo: addManifestUpdateStreamInfo,
-        addManifestUpdateRepresentationInfo: addManifestUpdateRepresentationInfo,
-        addManifestUpdate: addManifestUpdate,
-        addHttpRequest: addHttpRequest,
-        addSchedulingInfo: addSchedulingInfo,
-        addRequestsQueue: addRequestsQueue,
-        addBufferLevel: addBufferLevel,
-        addBufferState: addBufferState,
-        addDroppedFrames: addDroppedFrames,
-        addPlayList: addPlayList,
-        addDVBErrors: addDVBErrors,
-        createPlaylistMetrics: createPlaylistMetrics,
-        createPlaylistTraceMetrics: createPlaylistTraceMetrics,
-        updatePlayListTraceMetrics: updatePlayListTraceMetrics,
-        pushPlayListTraceMetrics: pushPlayListTraceMetrics,
-        clearAllCurrentMetrics: clearAllCurrentMetrics
+        getCurrentRepresentationSwitch,
+        getCurrentBufferState,
+        getCurrentBufferLevel,
+        getCurrentHttpRequest,
+        getHttpRequests,
+        getCurrentDroppedFrames,
+        getCurrentSchedulingInfo,
+        getCurrentDVRInfo,
+        getCurrentManifestUpdate,
+        getLatestFragmentRequestHeaderValueByID,
+        getLatestMPDRequestHeaderValueByID,
+        addRepresentationSwitch,
+        addDVRInfo,
+        updateManifestUpdateInfo,
+        addManifestUpdateStreamInfo,
+        addManifestUpdateRepresentationInfo,
+        addManifestUpdate,
+        addHttpRequest,
+        addSchedulingInfo,
+        addRequestsQueue,
+        addBufferLevel,
+        addBufferState,
+        addDroppedFrames,
+        addPlayList,
+        addDVBErrors,
+        createPlaylistMetrics,
+        createPlaylistTraceMetrics,
+        updatePlayListTraceMetrics,
+        pushPlayListTraceMetrics,
+        clearAllCurrentMetrics
     };
 
     setup();

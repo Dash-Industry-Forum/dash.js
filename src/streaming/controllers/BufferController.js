@@ -153,7 +153,7 @@ function BufferController(config) {
      * @private
      */
     function _getRepresentationInfo(quality) {
-        return adapter.convertDataToRepresentationInfo(representationController.getRepresentationForQuality(quality));
+        return adapter.convertRepresentationToRepresentationInfo(representationController.getRepresentationForQuality(quality));
     }
 
     /**

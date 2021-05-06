@@ -143,6 +143,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Live stream with availabilityTimeOffset",
+                "description": "Example showing how dash.js handles live streams with an availabilityTimeOffset(ATO)",
+                "href": "live-streaming/availability-time-offset.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -263,12 +274,24 @@
         "section": "Multi Period",
         "samples": [
             {
-                "title": "Play streams with two periods",
+                "title": "VoD Multiperiod",
                 "description": "Example showing how dash.js handles streams with two periods.",
-                "href": "multiperiod/index.html",
+                "href": "multiperiod/vod.html",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
                     "VoD",
+                    "Multiperiod",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Live Multiperiod",
+                "description": "Example showing how dash.js handles live streams with multiple periods.",
+                "href": "multiperiod/live.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
                     "Multiperiod",
                     "Video",
                     "Audio"

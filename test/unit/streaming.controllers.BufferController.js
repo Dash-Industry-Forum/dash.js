@@ -309,7 +309,7 @@ describe('BufferController', function () {
                     done(e);
                 });
 
-            adapterStub = sinon.stub(adapterMock, 'convertDataToRepresentationInfo');
+            adapterStub = sinon.stub(adapterMock, 'convertRepresentationToRepresentationInfo');
         });
 
         afterEach(function () {

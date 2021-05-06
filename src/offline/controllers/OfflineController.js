@@ -41,7 +41,7 @@ import OfflineRecord from '../vo/OfflineDownloadVo';
 /**
  * @module OfflineController
  * @param {Object} config - dependencies
- * @description Provides access to offline stream recording and playback functionality.
+ * @description Provides access to offline stream recording and playback functionality. This module can be accessed using the MediaPlayer API getOfflineController()
  */
 function OfflineController(config) {
 

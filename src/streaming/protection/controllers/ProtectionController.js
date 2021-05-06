@@ -36,7 +36,7 @@ import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
 import LicenseRequest from '../vo/LicenseRequest';
 import LicenseResponse from '../vo/LicenseResponse';
-import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import Utils from '../../../core/Utils';
 import Constants from '../../constants/Constants';
 
@@ -58,6 +58,7 @@ const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
  * @todo ProtectionController does almost all of its tasks automatically after init() is
  * called.  Applications might want more control over this process and want to go through
  * each step manually (key system selection, session creation, session maintenance).
+ * This module can be accessed using the MediaPlayer API getProtectionController()
  * @param {Object} config
  */
 
@@ -935,15 +936,15 @@ function ProtectionController(config) {
         }
     }
 
-    function setLicenseRequestFilters (filters) {
+    function setLicenseRequestFilters(filters) {
         licenseRequestFilters = filters;
     }
 
-    function setLicenseResponseFilters (filters) {
+    function setLicenseResponseFilters(filters) {
         licenseResponseFilters = filters;
     }
 
-    function applyFilters (filters, param) {
+    function applyFilters(filters, param) {
         if (!filters) return Promise.resolve();
         return filters.reduce((prev, next) => {
             return prev.then(() => {
