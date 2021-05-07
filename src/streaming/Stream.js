@@ -789,8 +789,6 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-        logger.info('Manifest updated... updating data system wide.');
-
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 

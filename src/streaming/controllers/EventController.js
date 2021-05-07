@@ -152,7 +152,6 @@ function EventController() {
                     }
                 }
             }
-            logger.debug(`Added ${values.length} inline events`);
         } catch (e) {
             throw e;
         }

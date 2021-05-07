@@ -1116,6 +1116,7 @@ function StreamController() {
      */
     function _onManifestUpdated(e) {
         if (!e.error) {
+            logger.info('Manifest updated... updating data system wide.');
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
