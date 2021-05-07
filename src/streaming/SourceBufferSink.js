@@ -355,6 +355,7 @@ function SourceBufferSink(config) {
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);
                 }
+                delete nextChunk.data.bytes;
                 nextChunk.promise.resolve({ chunk: nextChunk.data });
             };
 
@@ -377,6 +378,7 @@ function SourceBufferSink(config) {
                 } else {
                     isAppendingInProgress = false;
                 }
+                delete nextChunk.data.bytes;
                 nextChunk.promise.reject({ chunk: nextChunk.data, error: new DashJSError(err.code, err.message) });
             }
         }
