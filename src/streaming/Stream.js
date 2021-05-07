@@ -812,8 +812,8 @@ function Stream(config) {
                 for (let i = 0; i < allMediaForType.length; i++) {
                     streamProcessor.addMediaInfo(allMediaForType[i]);
                     if (allMediaForType[i].id === currentMediaInfoId) {
-                        streamProcessor.selectMediaInfo(allMediaForType[i])
                         abrController.updateTopQualityIndex(allMediaForType[i]);
+                        streamProcessor.selectMediaInfo(allMediaForType[i])
                     }
                 }
             }
