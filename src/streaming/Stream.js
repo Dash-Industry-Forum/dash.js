@@ -800,12 +800,19 @@ function Stream(config) {
 
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
+            const currentMediaInfo = streamProcessor.getMediaInfo();
+            const currentMediaInfoId = currentMediaInfo ? currentMediaInfo.id : null;
             streamProcessor.updateStreamInfo(streamInfo);
-            let mediaInfo = adapter.getMediaInfoForType(streamInfo, streamProcessor.getType());
+            let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
             // Check if AdaptationSet has not been removed in MPD update
-            if (mediaInfo) {
-                abrController.updateTopQualityIndex(mediaInfo);
-                streamProcessor.addMediaInfo(mediaInfo, true);
+            if (allMediaForType) {
+                for (let i = 0; i < allMediaForType.length; i++) {
+                    streamProcessor.addMediaInfo(allMediaForType[i]);
+                    if (allMediaForType[i].id === currentMediaInfoId) {
+                        abrController.updateTopQualityIndex(allMediaForType[i]);
+                        streamProcessor.selectMediaInfo(allMediaForType[i])
+                    }
+                }
             }
         }
 
