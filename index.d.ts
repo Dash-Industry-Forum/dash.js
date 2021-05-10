@@ -464,7 +464,7 @@ declare namespace dashjs {
 
         getQualityFor(type: MediaType): number;
 
-        setQualityFor(type: MediaType, value: number): void;
+        setQualityFor(type: MediaType, value: number, replace?: boolean): void;
 
         updatePortalSize(): void;
 
