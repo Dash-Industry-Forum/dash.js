@@ -414,6 +414,25 @@ function BufferController(config) {
         });
     }
 
+    function prepareForReplacementQualitySwitch() {
+        return new Promise((resolve, reject) => {
+            sourceBufferSink.abort()
+                .then(() => {
+                    return updateAppendWindow();
+                })
+                .then(() => {
+                    return pruneAllSafely();
+                })
+                .then(() => {
+                    setIsBufferingCompleted(false);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
     function prepareForNonReplacementTrackSwitch(codec) {
         return new Promise((resolve, reject) => {
             updateAppendWindow()
@@ -1052,6 +1071,7 @@ function BufferController(config) {
         prepareForQualityChange,
         prepareForReplacementTrackSwitch,
         prepareForNonReplacementTrackSwitch,
+        prepareForReplacementQualitySwitch,
         updateAppendWindow,
         getAllRangesWithSafetyFactor,
         getContinuousBufferTimeForTargetTime,

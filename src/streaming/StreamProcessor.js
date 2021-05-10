@@ -525,8 +525,11 @@ function StreamProcessor(config) {
         scheduleController.setCurrentRepresentation(representationInfo);
         bufferController.prepareForQualityChange()
             .then(() => {
-                // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
+                if (e.reason && e.reason.replace) {
+                    prepareQualitySwitch();
+                }
                 if (settings.get().streaming.buffer.fastSwitchEnabled) {
+                    // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
                     const time = playbackController.getTime();
                     let safeBufferLevel = 1.5;
                     const request = fragmentModel.getRequests({
@@ -908,6 +911,36 @@ function StreamProcessor(config) {
                     _bufferClearedForNonReplacementTrackSwitch();
                 });
         }
+    }
+
+    function prepareQualitySwitch() {
+        logger.debug(`Preparing quality switch for type ${type}`);
+
+        // We stop the schedule controller
+        scheduleController.clearScheduleTimer();
+
+        // Inform other classes like the GapController that we are replacing existing stuff
+        eventBus.trigger(Events.TRACK_REPLACEMENT_STARTED, {
+            mediaType: type,
+            streamId: streamInfo.id
+        }, { mediaType: type, streamId: streamInfo.id });
+
+        // Abort the current request it will be removed from the buffer anyways
+        fragmentModel.abortRequests();
+
+        // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
+        bufferController.prepareForReplacementQualitySwitch()
+            .then(() => {
+                // Timestamp offset couldve been changed by preloading period
+                const representationInfo = getRepresentationInfo();
+                return bufferController.updateBufferTimestampOffset(representationInfo);
+            })
+            .then(() => {
+                _bufferClearedForReplacementTrackSwitch();
+            })
+            .catch(() => {
+                _bufferClearedForReplacementTrackSwitch();
+            });
     }
 
     /**
