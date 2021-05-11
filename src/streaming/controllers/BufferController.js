@@ -32,7 +32,6 @@ import Constants from '../constants/Constants';
 import MetricsConstants from '../constants/MetricsConstants';
 import FragmentModel from '../models/FragmentModel';
 import SourceBufferSink from '../SourceBufferSink';
-import AbrController from './AbrController';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
@@ -67,7 +66,6 @@ function BufferController(config) {
 
     let instance,
         logger,
-        requiredQuality,
         isBufferingCompleted,
         bufferLevel,
         criticalBufferLevel,
@@ -99,8 +97,6 @@ function BufferController(config) {
      */
     function initialize(mediaSource) {
         setMediaSource(mediaSource);
-
-        requiredQuality = abrController.getQualityFor(type, streamInfo.id);
 
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
@@ -169,8 +165,9 @@ function BufferController(config) {
                 return;
             }
 
+            const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
             sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
-            _initializeSink(mediaInfo, oldBufferSinks)
+            _initializeSink(mediaInfo, oldBufferSinks, requiredQuality)
                 .then(() => {
                     return updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
                 })
@@ -185,7 +182,7 @@ function BufferController(config) {
         });
     }
 
-    function _initializeSink(mediaInfo, oldBufferSinks) {
+    function _initializeSink(mediaInfo, oldBufferSinks, requiredQuality) {
         const selectedRepresentation = _getRepresentationInfo(requiredQuality);
 
         if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
@@ -374,12 +371,6 @@ function BufferController(config) {
         }
     }
 
-    function prepareForQualityChange(newQuality, representationInfo) {
-        requiredQuality = newQuality;
-
-        return updateBufferTimestampOffset(representationInfo);
-    }
-
     //**********************************************************************
     // START Buffer Level, State & Sufficiency Handling.
     //**********************************************************************
@@ -400,6 +391,25 @@ function BufferController(config) {
                 })
                 .then(() => {
                     return sourceBufferSink.changeType(codec);
+                })
+                .then(() => {
+                    return pruneAllSafely();
+                })
+                .then(() => {
+                    setIsBufferingCompleted(false);
+                    resolve();
+                })
+                .catch((e) => {
+                    reject(e);
+                });
+        });
+    }
+
+    function prepareForReplacementQualitySwitch() {
+        return new Promise((resolve, reject) => {
+            sourceBufferSink.abort()
+                .then(() => {
+                    return updateAppendWindow();
                 })
                 .then(() => {
                     return pruneAllSafely();
@@ -989,7 +999,6 @@ function BufferController(config) {
     function resetInitialSettings(errored, keepBuffers) {
         criticalBufferLevel = Number.POSITIVE_INFINITY;
         bufferState = undefined;
-        requiredQuality = AbrController.QUALITY_DEFAULT;
         maximumIndex = Number.POSITIVE_INFINITY;
         maxAppendedIndex = 0;
         appendedBytesInfo = null;
@@ -1049,9 +1058,9 @@ function BufferController(config) {
         getIsPruningInProgress,
         reset,
         prepareForPlaybackSeek,
-        prepareForQualityChange,
         prepareForReplacementTrackSwitch,
         prepareForNonReplacementTrackSwitch,
+        prepareForReplacementQualitySwitch,
         updateAppendWindow,
         getAllRangesWithSafetyFactor,
         getContinuousBufferTimeForTargetTime,

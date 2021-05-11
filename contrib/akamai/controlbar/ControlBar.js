@@ -53,6 +53,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var videoControllerVisibleTimeout = 0;
     var liveThresholdSecs = 12;
     var textTrackList = {};
+    var forceQuality = false;
     var video,
         videoContainer,
         videoController,
@@ -845,7 +846,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                             if (item.index > 0) {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
                                 self.player.updateSettings(cfg);
-                                self.player.setQualityFor(item.mediaType, item.index - 1);
+                                self.player.setQualityFor(item.mediaType, item.index - 1, forceQuality);
                             } else {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
                                 self.player.updateSettings(cfg);
@@ -1013,6 +1014,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
         enable: function () {
             videoController.classList.remove('disable');
+        },
+
+        forceQualitySwitch: function (value) {
+            forceQuality = value;
         },
 
         resetSelectionMenus: function () {
