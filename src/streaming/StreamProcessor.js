@@ -98,7 +98,6 @@ function StreamProcessor(config) {
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
@@ -240,7 +239,6 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.off(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
@@ -519,7 +517,7 @@ function StreamProcessor(config) {
      * @param {object} e
      * @private
      */
-    function _onQualityChanged(e) {
+    function prepareQualityChange(e) {
         logger.debug(`Preparing quality switch for type ${type}`);
         const newQuality = e.newQuality;
 
@@ -528,6 +526,7 @@ function StreamProcessor(config) {
 
         const representationInfo = getRepresentationInfo(newQuality);
         scheduleController.setCurrentRepresentation(representationInfo);
+        representationController.prepareQualityChange(newQuality);
 
         // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
         // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
@@ -1064,6 +1063,7 @@ function StreamProcessor(config) {
         selectMediaInfo,
         addMediaInfo,
         prepareTrackSwitch,
+        prepareQualityChange,
         getMediaInfoArr,
         getMediaInfo,
         getMediaSource,

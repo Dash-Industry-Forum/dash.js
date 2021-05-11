@@ -57,7 +57,6 @@ function RepresentationController(config) {
     function setup() {
         resetInitialSettings();
 
-        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
     }
 
@@ -94,7 +93,6 @@ function RepresentationController(config) {
     }
 
     function reset() {
-        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChanged, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
 
         resetInitialSettings();
@@ -289,8 +287,8 @@ function RepresentationController(config) {
         }
     }
 
-    function onQualityChanged(e) {
-        currentVoRepresentation = getRepresentationForQuality(e.newQuality);
+    function prepareQualityChange(newQuality) {
+        currentVoRepresentation = getRepresentationForQuality(newQuality);
         addRepresentationSwitch();
     }
 
@@ -312,7 +310,8 @@ function RepresentationController(config) {
         updateData,
         getCurrentRepresentation,
         getRepresentationForQuality,
-        reset: reset
+        prepareQualityChange,
+        reset
     };
 
     setup();
