@@ -44,6 +44,7 @@ class CoreEvents extends EventsBase {
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
+        this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
         this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
         this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
         this.DATA_UPDATE_COMPLETED = 'dataUpdateCompleted';
@@ -70,7 +71,6 @@ class CoreEvents extends EventsBase {
         this.STREAM_REQUESTING_COMPLETED = 'streamRequestingCompleted';
         this.TEXT_TRACKS_QUEUE_INITIALIZED = 'textTracksQueueInitialized';
         this.TIME_SYNCHRONIZATION_COMPLETED = 'timeSynchronizationComplete';
-        this.TRACK_REPLACEMENT_STARTED = 'trackReplacementStarted';
         this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
         this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
         this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';

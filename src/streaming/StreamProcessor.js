@@ -98,7 +98,6 @@ function StreamProcessor(config) {
         eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
@@ -240,7 +239,6 @@ function StreamProcessor(config) {
         eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
         eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.off(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
@@ -519,39 +517,94 @@ function StreamProcessor(config) {
      * @param {object} e
      * @private
      */
-    function _onQualityChanged(e) {
-        const representationInfo = getRepresentationInfo(e.newQuality);
+    function prepareQualityChange(e) {
+        logger.debug(`Preparing quality switch for type ${type}`);
+        const newQuality = e.newQuality;
 
+        // Stop scheduling until we are done with preparing the quality switch
+        scheduleController.clearScheduleTimer();
+
+        const representationInfo = getRepresentationInfo(newQuality);
         scheduleController.setCurrentRepresentation(representationInfo);
-        bufferController.prepareForQualityChange()
+        representationController.prepareQualityChange(newQuality);
+
+        // Abort the current request to avoid inconsistencies. A quality switch can also be triggered manually by the application.
+        // If we update the buffer values now, or initialize a request to the new init segment, the currently downloading media segment might "work" with wrong values.
+        // Everything that is already in the buffer queue is ok and will be handled by the corresponding function below depending on the switch mode.
+        fragmentModel.abortRequests();
+
+        // In any case we need to update the MSE.timeOffset
+        bufferController.updateBufferTimestampOffset(representationInfo)
             .then(() => {
-                // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
-                if (settings.get().streaming.buffer.fastSwitchEnabled) {
-                    const time = playbackController.getTime();
-                    let safeBufferLevel = 1.5;
-                    const request = fragmentModel.getRequests({
-                        state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-                        time: time + safeBufferLevel,
-                        threshold: 0
-                    })[0];
 
-                    if (request && !adapter.getIsTextTrack(mimeType)) {
-                        const bufferLevel = bufferController.getBufferLevel();
-                        const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
+                // If the switch should occur immediately we need to replace existing stuff in the buffer
+                if (e.reason && e.reason.replace) {
+                    _prepareReplacementQualitySwitch();
+                }
 
-                        if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
-                            setExplicitBufferingTime(time + safeBufferLevel);
-                            scheduleController.setCheckPlaybackQuality(false);
-                        }
-                    }
+                // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
+                else if (settings.get().streaming.buffer.fastSwitchEnabled) {
+                    _prepareForFastQualitySwitch(representationInfo);
+                }
+
+                // Default quality switch. We append the new quality to the already buffered stuff
+                else {
+                    _prepareForDefaultQualitySwitch();
                 }
 
                 dashMetrics.pushPlayListTraceMetrics(new Date(), PlayListTrace.REPRESENTATION_SWITCH_STOP_REASON);
                 dashMetrics.createPlaylistTraceMetrics(representationInfo.id, playbackController.getTime() * 1000, playbackController.getPlaybackRate());
             })
-            .catch((e) => {
-                logger.error(e);
+    }
+
+    function _prepareReplacementQualitySwitch() {
+
+        // Inform other classes like the GapController that we are replacing existing stuff
+        eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
+            mediaType: type,
+            streamId: streamInfo.id
+        }, { mediaType: type, streamId: streamInfo.id });
+
+        // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
+        bufferController.prepareForReplacementQualitySwitch()
+            .then(() => {
+                _bufferClearedForReplacement();
             })
+            .catch(() => {
+                _bufferClearedForReplacement();
+            });
+    }
+
+    function _prepareForFastQualitySwitch(representationInfo) {
+        // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
+        const time = playbackController.getTime();
+        let safeBufferLevel = 1.5;
+        const request = fragmentModel.getRequests({
+            state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
+            time: time + safeBufferLevel,
+            threshold: 0
+        })[0];
+
+        if (request && !adapter.getIsTextTrack(mimeType)) {
+            const bufferLevel = bufferController.getBufferLevel();
+            const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
+
+            if (request.quality < representationInfo.quality && bufferLevel >= safeBufferLevel && abandonmentState !== MetricsConstants.ABANDON_LOAD) {
+                const targetTime = time + safeBufferLevel;
+                setExplicitBufferingTime(targetTime);
+                scheduleController.setCheckPlaybackQuality(false);
+                scheduleController.startScheduleTimer();
+            } else {
+                _prepareForDefaultQualitySwitch();
+            }
+        } else {
+            scheduleController.startScheduleTimer();
+        }
+    }
+
+    function _prepareForDefaultQualitySwitch() {
+        // We might have aborted the current request. We need to set an explicit buffer time based on what we already have in the buffer.
+        _bufferClearedForNonReplacement()
     }
 
     /**
@@ -876,7 +929,7 @@ function StreamProcessor(config) {
         // when we are supposed to replace it does not matter if buffering is already completed
         if (shouldReplace) {
             // Inform other classes like the GapController that we are replacing existing stuff
-            eventBus.trigger(Events.TRACK_REPLACEMENT_STARTED, {
+            eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
                 mediaType: type,
                 streamId: streamInfo.id
             }, { mediaType: type, streamId: streamInfo.id });
@@ -892,20 +945,20 @@ function StreamProcessor(config) {
                     return bufferController.updateBufferTimestampOffset(representationInfo);
                 })
                 .then(() => {
-                    _bufferClearedForReplacementTrackSwitch();
+                    _bufferClearedForReplacement();
                 })
                 .catch(() => {
-                    _bufferClearedForReplacementTrackSwitch();
+                    _bufferClearedForReplacement();
                 });
         } else {
             // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
             bufferController.prepareForNonReplacementTrackSwitch(mediaInfo.codec)
                 .then(() => {
-                    _bufferClearedForNonReplacementTrackSwitch();
+                    _bufferClearedForNonReplacement();
                 })
                 .catch
                 (() => {
-                    _bufferClearedForNonReplacementTrackSwitch();
+                    _bufferClearedForNonReplacement();
                 });
         }
     }
@@ -914,7 +967,7 @@ function StreamProcessor(config) {
      * For an instant track switch we need to adjust the buffering time after the buffer has been pruned.
      * @private
      */
-    function _bufferClearedForReplacementTrackSwitch() {
+    function _bufferClearedForReplacement() {
         const targetTime = playbackController.getTime();
 
         if (settings.get().streaming.buffer.flushBufferAtTrackSwitch) {
@@ -928,7 +981,7 @@ function StreamProcessor(config) {
         scheduleController.startScheduleTimer();
     }
 
-    function _bufferClearedForNonReplacementTrackSwitch() {
+    function _bufferClearedForNonReplacement() {
         const time = playbackController.getTime();
         const targetTime = bufferController.getContinuousBufferTimeForTargetTime(time);
 
@@ -1010,6 +1063,7 @@ function StreamProcessor(config) {
         selectMediaInfo,
         addMediaInfo,
         prepareTrackSwitch,
+        prepareQualityChange,
         getMediaInfoArr,
         getMediaInfo,
         getMediaSource,

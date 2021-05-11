@@ -657,6 +657,14 @@ function Stream(config) {
         }
     }
 
+    function prepareQualityChange(e) {
+        const processor = _getProcessorByType(e.mediaType);
+
+        if (processor) {
+            processor.prepareQualityChange(e);
+        }
+    }
+
     function addInlineEvents() {
         if (eventController) {
             const events = adapter.getEventsFor(streamInfo);
@@ -753,14 +761,22 @@ function Stream(config) {
     }
 
     function getProcessorForMediaInfo(mediaInfo) {
-        if (!mediaInfo) {
+        if (!mediaInfo || !mediaInfo.type) {
+            return null;
+        }
+
+        return _getProcessorByType(mediaInfo.type);
+    }
+
+    function _getProcessorByType(type) {
+        if (!type) {
             return null;
         }
 
         let processors = getProcessors();
 
         return processors.filter(function (processor) {
-            return (processor.getType() === mediaInfo.type);
+            return (processor.getType() === type);
         })[0];
     }
 
@@ -955,7 +971,8 @@ function Stream(config) {
         getHasFinishedBuffering,
         setPreloaded,
         startScheduleControllers,
-        prepareTrackChange
+        prepareTrackChange,
+        prepareQualityChange
     };
 
     setup();
