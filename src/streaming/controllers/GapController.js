@@ -101,7 +101,7 @@ function GapController() {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.on(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
-        eventBus.on(Events.TRACK_REPLACEMENT_STARTED, _onTrackReplacementStarted, instance);
+        eventBus.on(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
         eventBus.on(Events.TRACK_CHANGE_RENDERED, _onTrackChangeRendered, instance);
     }
 
@@ -109,7 +109,7 @@ function GapController() {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
         eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
-        eventBus.off(Events.TRACK_REPLACEMENT_STARTED, _onTrackReplacementStarted, instance);
+        eventBus.off(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onTrackChangeRendered, instance);
     }
 
@@ -126,7 +126,7 @@ function GapController() {
      * @param {object} e
      * @private
      */
-    function _onTrackReplacementStarted(e) {
+    function _onBufferReplacementStarted(e) {
         try {
             if (e.streamId !== streamController.getActiveStreamInfo().id || !e.mediaType) {
                 return;
