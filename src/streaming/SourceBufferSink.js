@@ -33,6 +33,7 @@ import DashJSError from './vo/DashJSError';
 import FactoryMaker from '../core/FactoryMaker';
 import Errors from '../core/errors/Errors';
 import Settings from '../core/Settings';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -355,7 +356,10 @@ function SourceBufferSink(config) {
                 if (appendQueue.length > 0) {
                     appendNextInQueue.call(this);
                 }
-                delete nextChunk.data.bytes;
+                // Init segments are cached. In any other case we dont need the chunk bytes anymore and can free the memory
+                if (nextChunk && nextChunk.data && nextChunk.data.segmentType && nextChunk.data.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
+                    delete nextChunk.data.bytes;
+                }
                 nextChunk.promise.resolve({ chunk: nextChunk.data });
             };
 
@@ -378,6 +382,7 @@ function SourceBufferSink(config) {
                 } else {
                     isAppendingInProgress = false;
                 }
+
                 delete nextChunk.data.bytes;
                 nextChunk.promise.reject({ chunk: nextChunk.data, error: new DashJSError(err.code, err.message) });
             }
