@@ -227,6 +227,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
     $scope.videoAutoSwitchSelected = true;
+    $scope.forceQualitySwitchSelected = false;
     $scope.videoQualities = [];
     $scope.ABRStrategy = 'abrDynamic';
 
@@ -535,6 +536,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
         });
+    };
+
+    $scope.toggleForceQualitySwitch = function () {
+        $scope.controlbar.forceQualitySwitch($scope.forceQualitySwitchSelected);
     };
 
     $scope.toggleScheduleWhilePaused = function () {

@@ -169,6 +169,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
         eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
@@ -189,6 +190,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
+        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
         eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
@@ -698,6 +700,22 @@ function StreamController() {
         if (e && e.mediaType) {
             dashMetrics.addBufferLevel(e.mediaType, new Date(), e.bufferLevel * 1000);
         }
+    }
+
+    /**
+     * When the quality is changed in the currently active stream and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
+     * Otherwise preloading can go on.
+     * @param e
+     * @private
+     */
+    function _onQualityChanged(e) {
+        if (e.streamInfo.id === activeStream.getId() && e.reason && e.reason.replace) {
+            _deactivateAllPreloadingStreams();
+        }
+
+        const stream = getStreamById(e.streamInfo.id);
+
+        stream.prepareQualityChange(e);
     }
 
     /**

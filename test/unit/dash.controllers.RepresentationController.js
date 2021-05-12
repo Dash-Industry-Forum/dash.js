@@ -124,22 +124,22 @@ describe('RepresentationController', function () {
                 expect(representationController.getRepresentationForQuality(150)).to.equal(null);
             });
 
+            it('should update current representation when preparing a quality change', function () {
+                let currentRepresentation = representationController.getCurrentRepresentation();
+                expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
+
+                representationController.prepareQualityChange(1);
+
+                currentRepresentation = representationController.getCurrentRepresentation();
+                expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
+            });
+
             it('when a MANIFEST_VALIDITY_CHANGED event occurs, should update current representation', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
                 expect(currentRepresentation.adaptation.period.duration).to.equal(100); // jshint ignore:line
                 eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: {}, newDuration: 150 });
 
                 expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
-            });
-
-            it('when a QUALITY_CHANGE_REQUESTED event occurs, should update current representation', function () {
-                let currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
-
-                eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: testType, streamInfo: streamProcessor.getStreamInfo(), oldQuality: 0, newQuality: 1});
-
-                currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
             });
 
         });
