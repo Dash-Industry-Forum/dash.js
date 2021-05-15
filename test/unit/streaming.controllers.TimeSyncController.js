@@ -44,7 +44,7 @@ describe('TimeSyncController', function () {
         }
 
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onCompleted, this);
-        settings.update({ streaming: { useManifestDateHeaderTimeSource: false } });
+        settings.update({ streaming: { utcSynchronization: {useManifestDateHeaderTimeSource: false }} });
         timeSyncController.initialize();
         timeSyncController.attemptSync([]);
     });
@@ -58,7 +58,7 @@ describe('TimeSyncController', function () {
         }
 
         eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, onCompleted, this);
-        settings.update({ streaming: { useManifestDateHeaderTimeSource: false } });
+        settings.update({ streaming: { utcSynchronization: {useManifestDateHeaderTimeSource: false }} });
         timeSyncController.initialize();
         timeSyncController.attemptSync([], true);
     });
