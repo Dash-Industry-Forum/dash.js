@@ -45,7 +45,6 @@ import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
-    const adapter = config.adapter;
     const manifestModel = config.manifestModel;
     const mediaController = config.mediaController;
     const videoModel = config.videoModel;
@@ -111,16 +110,15 @@ function TextSourceBuffer(config) {
 
     /**
      * There might be media infos of different types. For instance text and fragmentedText.
+     * @param {string} type
      * @param {array} mInfos
-     * @param {string} mimeType
      * @param {object} fModel
      */
-    function addMediaInfos(mInfos, mimeType, fModel) {
-        const isFragmented = mimeType && !adapter.getIsTextTrack(mimeType);
+    function addMediaInfos(type, mInfos, fModel) {
 
         mediaInfos = mediaInfos.concat(mInfos);
 
-        if (isFragmented) {
+        if (type === Constants.FRAGMENTED_TEXT) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
             fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
@@ -134,7 +132,7 @@ function TextSourceBuffer(config) {
         }
 
         for (let i = 0; i < mInfos.length; i++) {
-            _createTextTrackFromMediaInfo(mInfos[i]);
+            _createTextTrackFromMediaInfo(type, mInfos[i]);
         }
 
     }
@@ -144,7 +142,7 @@ function TextSourceBuffer(config) {
      * @param {object} mediaInfo
      * @private
      */
-    function _createTextTrackFromMediaInfo(mediaInfo) {
+    function _createTextTrackFromMediaInfo(type, mediaInfo) {
         const textTrackInfo = new TextTrackInfo();
         const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
 
@@ -154,7 +152,7 @@ function TextSourceBuffer(config) {
         textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
         textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = !adapter.getIsTextTrack(mediaInfo.mimeType);
+        textTrackInfo.isFragmented = type === Constants.FRAGMENTED_TEXT;
         textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;
         textTrackInfo.kind = _getKind(mediaInfo, trackKindMap);
         textTrackInfo.roles = mediaInfo.roles;
@@ -263,12 +261,12 @@ function TextSourceBuffer(config) {
             return;
         }
 
-        if (mediaType === Constants.FRAGMENTED_TEXT) {
+        if (mediaInfo.codec.indexOf('application/mp4') !== -1) {
             _appendFragmentedText(bytes, chunk, codecType);
-        } else if (mediaType === Constants.TEXT) {
-            _appendText(bytes, chunk, codecType);
         } else if (mediaType === Constants.VIDEO) {
             _appendEmbeddedText(bytes, chunk);
+        } else {
+            _appendText(bytes, chunk, codecType);
         }
     }
 
@@ -394,6 +392,7 @@ function TextSourceBuffer(config) {
         try {
             result = getParser(codecType).parse(ccContent, 0);
             textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
+            instance.buffered.add(chunk.start, chunk.end);
         } catch (e) {
             errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
         }

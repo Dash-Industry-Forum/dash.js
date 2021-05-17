@@ -341,7 +341,7 @@ function Stream(config) {
         }
 
         if (type === Constants.EMBEDDED_TEXT) {
-            textController.addMediaInfosToBuffer(streamInfo, allMediaForType);
+            textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType);
         }
 
         if (type === Constants.EMBEDDED_TEXT || mediaController.getTracksFor(type, streamInfo.id).length === 0) {
@@ -443,7 +443,7 @@ function Stream(config) {
         }
 
         if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
-            textController.addMediaInfosToBuffer(streamInfo, allMediaForType, mimeType, fragmentModel);
+            textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType, fragmentModel);
         }
 
         if (initialMediaInfo) {

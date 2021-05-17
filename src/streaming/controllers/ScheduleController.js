@@ -359,7 +359,7 @@ function ScheduleController(config) {
         logger.debug(`Appended bytes for ${e.mediaType}`);
 
         // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
-        if (isNaN(e.index)) {
+        if (isNaN(e.index) || isNaN(lastInitializedQuality)) {
             lastInitializedQuality = e.quality;
             logger.info('[' + type + '] ' + 'lastInitializedRepresentationInfo changed to ' + e.quality);
         }

@@ -130,13 +130,13 @@ function TextController(config) {
      * @param {string|null} mimeType
      * @param {object} fragmentModel
      */
-    function addMediaInfosToBuffer(streamInfo, mInfos, mimeType = null, fragmentModel = null) {
+    function addMediaInfosToBuffer(streamInfo, type, mInfos, fragmentModel = null) {
         const streamId = streamInfo.id;
 
         if (!textSourceBuffers[streamId]) {
             return;
         }
-        textSourceBuffers[streamId].addMediaInfos(mInfos, mimeType, fragmentModel);
+        textSourceBuffers[streamId].addMediaInfos(type, mInfos, fragmentModel);
     }
 
     function getTextSourceBuffer(streamInfo) {

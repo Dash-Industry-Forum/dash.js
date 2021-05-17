@@ -506,14 +506,14 @@ function DashAdapter() {
 
     /**
      * Check if the given type is a text track
-     * @param {String} type
+     * @param {object} adaptation
      * @returns {boolean}
      * @memberOf module:DashAdapter
      * @instance
      * @ignore
      */
-    function getIsTextTrack(type) {
-        return dashManifestModel.getIsTextTrack(type);
+    function getIsTextTrack(adaptation) {
+        return dashManifestModel.getIsText(adaptation);
     }
 
     /**
@@ -1013,7 +1013,7 @@ function DashAdapter() {
             });
         }
 
-        mediaInfo.isText = dashManifestModel.getIsTextTrack(mediaInfo.mimeType);
+        mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
 
         return mediaInfo;

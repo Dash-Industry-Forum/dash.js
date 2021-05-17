@@ -196,6 +196,10 @@ function StreamProcessor(config) {
         return type;
     }
 
+    function getIsTextTrack() {
+        return adapter.getIsTextTrack(representationController.getData());
+    }
+
     function resetInitialSettings() {
         mediaInfoArr = [];
         mediaInfo = null;
@@ -358,10 +362,17 @@ function StreamProcessor(config) {
             return;
         }
 
-        if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
+        if (getIsTextTrack() && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
+                const rep = representationController.getCurrentRepresentation();
+                console.log(rep);
+                // Dummy init segment (fragmented tracks without initialization segment)
+                if (rep.range === 0) {
+                    _onMediaFragmentNeeded();
+                    return;
+                }
                 // Init segment not in cache, send new request
                 const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
                 if (request) {
@@ -585,7 +596,7 @@ function StreamProcessor(config) {
             threshold: 0
         })[0];
 
-        if (request && !adapter.getIsTextTrack(mimeType)) {
+        if (request && !getIsTextTrack()) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
@@ -640,7 +651,7 @@ function StreamProcessor(config) {
     function _onFragmentLoadingCompleted(e) {
         logger.info('OnFragmentLoadingCompleted for stream id ' + streamInfo.id + ' and media type ' + type + ' - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
 
-        if (adapter.getIsTextTrack(mimeType)) {
+        if (getIsTextTrack()) {
             scheduleController.startScheduleTimer(0);
         }
 
