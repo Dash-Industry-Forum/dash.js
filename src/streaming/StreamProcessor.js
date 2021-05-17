@@ -367,14 +367,13 @@ function StreamProcessor(config) {
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
                 const rep = representationController.getCurrentRepresentation();
-                console.log(rep);
                 // Dummy init segment (fragmented tracks without initialization segment)
                 if (rep.range === 0) {
                     _onMediaFragmentNeeded();
                     return;
                 }
                 // Init segment not in cache, send new request
-                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
+                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
                 } else {
