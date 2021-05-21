@@ -82,6 +82,7 @@ function StreamProcessor(config) {
         scheduleController,
         representationController,
         shouldUseExplicitTimeForRequest,
+        qualityChangeInProgress,
         manifestUpdateInProgress,
         dashHandler,
         segmentsController,
@@ -202,6 +203,7 @@ function StreamProcessor(config) {
         bufferingTime = 0;
         shouldUseExplicitTimeForRequest = false;
         manifestUpdateInProgress = false;
+        qualityChangeInProgress = false;
     }
 
     function reset(errored, keepBuffers) {
@@ -521,6 +523,8 @@ function StreamProcessor(config) {
         logger.debug(`Preparing quality switch for type ${type}`);
         const newQuality = e.newQuality;
 
+        qualityChangeInProgress = true;
+
         // Stop scheduling until we are done with preparing the quality switch
         scheduleController.clearScheduleTimer();
 
@@ -569,9 +573,11 @@ function StreamProcessor(config) {
         bufferController.prepareForReplacementQualitySwitch()
             .then(() => {
                 _bufferClearedForReplacement();
+                qualityChangeInProgress = false;
             })
             .catch(() => {
                 _bufferClearedForReplacement();
+                qualityChangeInProgress = false;
             });
     }
 
@@ -600,11 +606,13 @@ function StreamProcessor(config) {
         } else {
             scheduleController.startScheduleTimer();
         }
+        qualityChangeInProgress = false;
     }
 
     function _prepareForDefaultQualitySwitch() {
         // We might have aborted the current request. We need to set an explicit buffer time based on what we already have in the buffer.
         _bufferClearedForNonReplacement()
+        qualityChangeInProgress = false;
     }
 
     /**
@@ -614,8 +622,8 @@ function StreamProcessor(config) {
     function _onFragmentLoadingAbandoned(e) {
         logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has been aborted');
 
-        // we only need to handle this if we are not seeking or switching the tracks
-        if (!playbackController.isSeeking() && !scheduleController.getSwitchStrack()) {
+        // we only need to handle this if we are not seeking, not switching the tracks and not switching the quality
+        if (!playbackController.isSeeking() && !scheduleController.getSwitchStrack() && !qualityChangeInProgress) {
             logger.info('onFragmentLoadingAbandoned request: ' + e.request.url + ' has to be downloaded again, origin is not seeking process or switch track call');
 
             // in case of an init segment we force the download of an init segment
