@@ -538,7 +538,7 @@ function StreamProcessor(config) {
             .then(() => {
 
                 // If the switch should occur immediately we need to replace existing stuff in the buffer
-                if (e.reason && e.reason.replace) {
+                if (e.reason && e.reason.forceReplace) {
                     _prepareReplacementQualitySwitch();
                 }
 

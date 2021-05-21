@@ -267,7 +267,7 @@ function AbrController() {
         const type = e.request.mediaType;
         const streamId = e.streamId;
 
-        if (!type || !streamId || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
+        if (!type || !streamId || !streamProcessorDict[streamId] || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
             return;
         }
 

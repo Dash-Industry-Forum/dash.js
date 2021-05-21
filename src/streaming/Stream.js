@@ -744,7 +744,6 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        console.debug(`onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED for stream id ${streamInfo.id}`);
         hasFinishedBuffering = true;
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
     }
