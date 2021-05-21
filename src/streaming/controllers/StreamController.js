@@ -709,7 +709,7 @@ function StreamController() {
      * @private
      */
     function _onQualityChanged(e) {
-        if (e.streamInfo.id === activeStream.getId() && e.reason && e.reason.replace) {
+        if (e.streamInfo.id === activeStream.getId() && e.reason && e.reason.forceReplace) {
             _deactivateAllPreloadingStreams();
         }
 
