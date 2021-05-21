@@ -138,7 +138,7 @@ angular.module('DashCastReceiverApp.services', [])
         let allTracks = [];
         if (player && initialized) {
           let audioTracks = player.getTracksFor('audio');
-          let textTracks = player.getTracksFor('fragmentedText');
+          let textTracks = player.getTracksFor('text');
           audioTracks.forEach(function (track) {
               allTracks.push(_convertTrack(track, cast.receiver.media.TrackType.AUDIO));
           });
@@ -156,7 +156,7 @@ angular.module('DashCastReceiverApp.services', [])
           if (currentAudioTrack) {
             trackIds.push(currentAudioTrack.index);
           }
-          let currentTextTrack = player.getCurrentTrackFor('fragmentedText');
+          let currentTextTrack = player.getCurrentTrackFor('text');
           if (currentTextTrack) {
             trackIds.push(currentTextTrack.index);
           }
@@ -192,7 +192,7 @@ angular.module('DashCastReceiverApp.services', [])
               if (audioTrack) {
                 player.setCurrentTrack(audioTrack);
               } else {
-                let textTracks = player.getTracksFor('fragmentedText');
+                let textTracks = player.getTracksFor('text');
                 textTrack = textTracks.find(function (track) { return track.index === activeTrackIds[i]; });
                 if (textTrack) {
                   player.enableText(true);

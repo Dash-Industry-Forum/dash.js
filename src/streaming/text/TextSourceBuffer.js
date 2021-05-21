@@ -118,11 +118,11 @@ function TextSourceBuffer(config) {
 
         mediaInfos = mediaInfos.concat(mInfos);
 
-        if (type === Constants.FRAGMENTED_TEXT) {
+        if (type === Constants.TEXT && mediaInfos[0].isFragmented) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
-            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
+            fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id);
+            const currFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamInfo.id);
             for (let i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
                     setCurrentFragmentedTrackIdx(i);
@@ -146,17 +146,17 @@ function TextSourceBuffer(config) {
         const textTrackInfo = new TextTrackInfo();
         const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
 
-        textTrackInfo.lang = mediaInfo.lang;
+        for (var key in mediaInfo) {
+            textTrackInfo[key] = mediaInfo[key];
+        }
+
         textTrackInfo.labels = mediaInfo.labels;
         textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
-        textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
-        textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = type === Constants.FRAGMENTED_TEXT;
+        textTrackInfo.isFragmented = mediaInfo.isFragmented;
         textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;
+        textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.kind = _getKind(mediaInfo, trackKindMap);
-        textTrackInfo.roles = mediaInfo.roles;
-        textTrackInfo.accessibility = mediaInfo.accessibility;
 
         textTracks.addTextTrack(textTrackInfo);
     }
@@ -392,7 +392,9 @@ function TextSourceBuffer(config) {
         try {
             result = getParser(codecType).parse(ccContent, 0);
             textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
-            instance.buffered.add(chunk.start, chunk.end);
+            if (instance.buffered) {
+                instance.buffered.add(chunk.start, chunk.end);
+            }
         } catch (e) {
             errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
         }

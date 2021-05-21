@@ -65,7 +65,7 @@ function DashManifestModel() {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function getIsType(adaptation, type) {
+    function getIsTypeOf(adaptation, type) {
         if (!adaptation) {
             throw new Error('adaptation is not defined');
         }
@@ -91,7 +91,7 @@ function DashManifestModel() {
             }
         }
 
-        const mimeTypeRegEx = (type === Constants.TEXT) || (type === Constants.FRAGMENTED_TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
+        const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
 
         // Check codecs
         if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
@@ -118,16 +118,6 @@ function DashManifestModel() {
         }
 
         return false;
-    }
-
-    function getIsTypeOf(adaptation, type) {
-        let isType = getIsType(adaptation, type);
-        // Check if fragmented or not for text tracks
-        if (isType && (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT)) {
-            const isFragmented = getIsFragmented(adaptation);
-            isType = (type === Constants.FRAGMENTED_TEXT) ? isFragmented : !isFragmented;
-        }
-        return isType;
     }
 
     function getIsFragmented(adaptation) {
@@ -160,10 +150,6 @@ function DashManifestModel() {
 
     function getIsText(adaptation) {
         return getIsTypeOf(adaptation, Constants.TEXT);
-    }
-
-    function getIsFragmentedText(adaptation) {
-        return getIsTypeOf(adaptation, Constants.FRAGMENTED_TEXT);
     }
 
     function getIsMuxed(adaptation) {
@@ -537,7 +523,7 @@ function DashManifestModel() {
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
                         }
-                    } else if (getIsText(processedRealAdaptation) || getIsFragmentedText(processedRealAdaptation)) {
+                    } else if (getIsText(processedRealAdaptation) && !getIsFragmented(processedRealAdaptation)) {
                         voRepresentation.range = 0;
                     }
 
@@ -626,12 +612,12 @@ function DashManifestModel() {
                     voAdaptationSet.type = Constants.AUDIO;
                 } else if (getIsVideo(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.VIDEO;
-                } else if (getIsFragmentedText(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
+                } else if (getIsText(realAdaptationSet)) {
+                    voAdaptationSet.type = Constants.TEXT;
                 } else if (getIsImage(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.IMAGE;
                 } else {
-                    voAdaptationSet.type = Constants.TEXT;
+                    logger.warn('Unknown Adaptation stream type');
                 }
                 voAdaptations.push(voAdaptationSet);
             }

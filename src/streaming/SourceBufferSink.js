@@ -33,6 +33,7 @@ import DashJSError from './vo/DashJSError';
 import FactoryMaker from '../core/FactoryMaker';
 import Errors from '../core/errors/Errors';
 import Settings from '../core/Settings';
+import constants from './constants/Constants';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -131,7 +132,7 @@ function SourceBufferSink(config) {
 
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.isText) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1)) {
+            if ((mediaInfo.type == constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1)) {
                 return _initializeForText(streamInfo);
             }
             return Promise.reject(e);

@@ -542,7 +542,7 @@ function AbrController() {
     function getInitialBitrateFor(type, streamId) {
         checkConfig();
 
-        if (type === Constants.TEXT || type === Constants.FRAGMENTED_TEXT) {
+        if (type === Constants.TEXT) {
             return NaN;
         }
 

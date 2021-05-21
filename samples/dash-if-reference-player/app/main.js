@@ -294,6 +294,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     reqConfig.send();
 
     $scope.player.on(dashjs.MediaPlayer.events.ERROR, function (e) { /* jshint ignore:line */
+        console.log(e);
         if (!e.event) {
             $scope.$apply(function () {
                 $scope.error = e.error.message;
@@ -746,12 +747,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
         if ($scope.initialSettings.text) {
             if ($scope.initialSettings.textRole) {
-                $scope.player.setInitialMediaSettingsFor('fragmentedText', {
+                $scope.player.setInitialMediaSettingsFor('text', {
                     role: $scope.initialSettings.textRole,
                     lang: $scope.initialSettings.text
                 });
             } else {
-                $scope.player.setInitialMediaSettingsFor('fragmentedText', {
+                $scope.player.setInitialMediaSettingsFor('text', {
                     lang: $scope.initialSettings.text
                 });
             }

@@ -253,7 +253,7 @@ function CmcdModel() {
         let ot;
         if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
         if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
-        if (request.mediaType === Constants.FRAGMENTED_TEXT) {
+        if (request.mediaType === Constants.TEXT) {
             if (request.mediaInfo.mimeType === 'application/mp4') {
                 ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
             } else {

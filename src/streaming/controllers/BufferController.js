@@ -555,7 +555,7 @@ function BufferController(config) {
     }
 
     function _onPlaybackProgression() {
-        if (!replacingBuffer || (type === Constants.FRAGMENTED_TEXT && textController.isTextEnabled())) {
+        if (!replacingBuffer || (type === Constants.TEXT && textController.isTextEnabled())) {
             _updateBufferLevel();
         }
     }
@@ -676,7 +676,7 @@ function BufferController(config) {
     function _notifyBufferStateChanged(state) {
         if (bufferState === state ||
             (state === MetricsConstants.BUFFER_EMPTY && playbackController.getTime() === 0) || // Don't trigger BUFFER_EMPTY if it's initial loading
-            (type === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
+            (type === Constants.TEXT && !textController.isTextEnabled())) {
             return;
         }
 
@@ -689,7 +689,7 @@ function BufferController(config) {
 
     /* prune buffer on our own in background to avoid browsers pruning buffer silently */
     function pruneBuffer() {
-        if (!sourceBufferSink || type === Constants.FRAGMENTED_TEXT) {
+        if (!sourceBufferSink || type === Constants.TEXT) {
             return;
         }
 

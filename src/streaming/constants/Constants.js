@@ -67,20 +67,6 @@ class Constants {
         this.TEXT = 'text';
 
         /**
-         *  @constant {string} FRAGMENTED_TEXT Fragmented text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.FRAGMENTED_TEXT = 'fragmentedText';
-
-        /**
-         *  @constant {string} EMBEDDED_TEXT Embedded text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.EMBEDDED_TEXT = 'embeddedText';
-
-        /**
          *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
          *  @memberof Constants#
          *  @static

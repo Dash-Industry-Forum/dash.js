@@ -188,7 +188,7 @@ function ScheduleController(config) {
      */
     function _shouldClearScheduleTimer() {
         try {
-            return (((type === Constants.FRAGMENTED_TEXT || type === Constants.TEXT) && !textController.isTextEnabled()));
+            return (((type === Constants.TEXT) && !textController.isTextEnabled()));
         } catch (e) {
             return false;
         }
@@ -231,7 +231,7 @@ function ScheduleController(config) {
             return bufferTarget;
         }
 
-        if (type === Constants.FRAGMENTED_TEXT) {
+        if (type === Constants.TEXT) {
             bufferTarget = _getBufferTargetForFragmentedText();
         } else if (type === Constants.AUDIO && hasVideoTrack) {
             bufferTarget = _getBufferTargetForAudio();

@@ -1321,17 +1321,14 @@ declare namespace dashjs {
         executedRequests: any[];
     }
 
-    export class TextTrackInfo {
+    export class TextTrackInfo extends MediaInfo {
         captionData: CaptionData[] | null;
         label: string | null;
-        lang: string | null;
-        index: number;
-        isTTML: boolean;
         defaultTrack: boolean;
         kind: string;
-        roles: string[] | null;
         isFragmented: boolean;
         isEmbedded: boolean;
+        isTTML: boolean;
     }
 
     export interface CaptionData {

@@ -38,7 +38,7 @@
             player.initialize(videoElement);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
             player.on('currentTrackChanged', function(e) {
-                if (e.newMediaInfo.type === 'fragmentedText') {
+                if (e.newMediaInfo.type === 'text') {
                     setTimeout(showDomStorage, 0);
                 }
             });
@@ -49,7 +49,7 @@
         }
 
         function showDomStorage() {
-            document.getElementById("domStorage").innerHTML = localStorage.getItem('dashjs_fragmentedText_settings');
+            document.getElementById("domStorage").innerHTML = localStorage.getItem('dashjs_text_settings');
         }
 
         function play() {
@@ -75,7 +75,7 @@
                     lang = values[0];
                     role = values[1];
                 }
-                player.setInitialMediaSettingsFor('fragmentedText', {
+                player.setInitialMediaSettingsFor('text', {
                     lang: lang,
                     role: role
                 });
@@ -92,7 +92,7 @@
         }
 
         function clearDomStorage() {
-            localStorage.removeItem('dashjs_fragmentedText_settings');
+            localStorage.removeItem('dashjs_text_settings');
             showDomStorage();
         }
 

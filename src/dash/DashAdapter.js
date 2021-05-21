@@ -206,18 +206,7 @@ function DashAdapter() {
         return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
-    /**
-     * Returns all the mediaInfos for a given mediaType and the corresponding streamInfo.
-     * @param {object} streamInfo
-     * @param {MediaType} type
-     * @param {object} externalManifest Set to null or undefined if no external manifest is to be used
-     * @returns {Array} mediaArr
-     * @memberOf module:DashAdapter
-     * @instance
-     */
-    function getAllMediaInfoForType(streamInfo, type, externalManifest) {
-        let voLocalPeriods = voPeriods;
-        let manifest = externalManifest;
+    function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
         let mediaArr = [];
         let data,
             media,
@@ -226,31 +215,18 @@ function DashAdapter() {
             j,
             ln;
 
-        if (manifest) {
-            checkConfig();
-
-            voLocalPeriods = getRegularPeriods(manifest);
-        } else {
-            if (voPeriods.length > 0) {
-                manifest = voPeriods[0].mpd.manifest;
-            } else {
-                return mediaArr;
-            }
+        if (!adaptations || adaptations.length === 0) {
+            return [];
         }
 
-        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
-        const adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo ? streamInfo.index : null, type !== constants.EMBEDDED_TEXT ? type : constants.VIDEO);
+        const voAdaptations = dashManifestModel.getAdaptationsForPeriod(period);
 
-        if (!adaptationsForType || adaptationsForType.length === 0) return mediaArr;
-
-        const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
-
-        for (i = 0, ln = adaptationsForType.length; i < ln; i++) {
-            data = adaptationsForType[i];
+        for (i = 0, ln = adaptations.length; i < ln; i++) {
+            data = adaptations[i];
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(voAdaptations[idx]);
 
-            if (type === constants.EMBEDDED_TEXT) {
+            if (embeddedText) {
                 let accessibilityLength = media.accessibility.length;
                 for (j = 0; j < accessibilityLength; j++) {
                     if (!media) {
@@ -292,6 +268,46 @@ function DashAdapter() {
             } else if (media) {
                 mediaArr.push(media);
             }
+        }
+
+        return mediaArr;
+    }
+
+    /**
+     * Returns all the mediaInfos for a given mediaType and the corresponding streamInfo.
+     * @param {object} streamInfo
+     * @param {MediaType} type
+     * @param {object} externalManifest Set to null or undefined if no external manifest is to be used
+     * @returns {Array} mediaArr
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getAllMediaInfoForType(streamInfo, type, externalManifest) {
+        let voLocalPeriods = voPeriods;
+        let manifest = externalManifest;
+        let mediaArr = [];
+
+        if (manifest) {
+            checkConfig();
+
+            voLocalPeriods = getRegularPeriods(manifest);
+        } else {
+            if (voPeriods.length > 0) {
+                manifest = voPeriods[0].mpd.manifest;
+            } else {
+                return mediaArr;
+            }
+        }
+
+        const selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voLocalPeriods);
+        let adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo ? streamInfo.index : null, type);
+
+        mediaArr = _getAllMediaInfo(manifest, selectedVoPeriod, streamInfo, adaptationsForType, type);
+
+        // Search for embedded text in video track
+        if (type === constants.TEXT) {
+            adaptationsForType = dashManifestModel.getAdaptationsForType(manifest, streamInfo ? streamInfo.index : null, constants.VIDEO);
+            mediaArr = mediaArr.concat(_getAllMediaInfo(manifest, selectedVoPeriod, streamInfo, adaptationsForType, type, true));
         }
 
         return mediaArr;
@@ -1016,15 +1032,16 @@ function DashAdapter() {
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
 
+        mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
+
         return mediaInfo;
     }
 
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
         mediaInfo.id = channel; // CC1, CC2, CC3, or CC4
         mediaInfo.index = 100 + parseInt(channel.substring(2, 3));
-        mediaInfo.type = constants.EMBEDDED_TEXT;
+        mediaInfo.type = constants.TEXT;
         mediaInfo.codec = 'cea-608-in-SEI';
-        mediaInfo.isText = true;
         mediaInfo.isEmbedded = true;
         mediaInfo.lang = lang;
         mediaInfo.roles = ['caption'];
