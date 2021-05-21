@@ -769,7 +769,7 @@ function Settings() {
             },
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
-                ABRStrategy: Constants.ABR_STRATEGY_THROUGHPUT,
+                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
