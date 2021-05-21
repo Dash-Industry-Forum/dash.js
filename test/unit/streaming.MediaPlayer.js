@@ -1039,8 +1039,8 @@ describe('MediaPlayer', function () {
                 initialSettings = player.getInitialMediaSettingsFor('audio');
                 expect(initialSettings).to.equal('settings');
 
-                player.setInitialMediaSettingsFor('fragmentedText', { lang: 'en', role: 'caption' });
-                initialSettings = player.getInitialMediaSettingsFor('fragmentedText');
+                player.setInitialMediaSettingsFor('text', { lang: 'en', role: 'caption' });
+                initialSettings = player.getInitialMediaSettingsFor('text');
                 expect(initialSettings).to.exist; // jshint ignore:line
                 expect(initialSettings.lang).to.equal('en');
                 expect(initialSettings.role).to.equal('caption');

@@ -31,7 +31,7 @@ exports.register = function (stream) {
     suite(utils.testName(NAME, stream), (suite) => {
 
         before(async ({ remote }) => {
-            if (!stream.available || stream.textTracks['text'].length < 1 && stream.textTracks['fragmentedText'].length < 1) suite.skip();
+            if (!stream.available || stream.textTracks.length < 1) suite.skip();
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
 
@@ -47,27 +47,24 @@ exports.register = function (stream) {
             // Set test timeout
             test.timeout = SWITCH_TIMEOUT * 1000;
 
-            // Select for MediaType "text" and "fragmented"
-            for(let textType in stream.textTracks){
-                // Select each track and check if new selected track is correct
-                for(let i = 0; i < stream.textTracks[textType].length; i++){
-                    // Select text track
-                    utils.log(NAME, 'switch '+ textType+' track: ' + stream.textTracks[textType][i].lang);
-                    await command.execute(player.setCurrentTrack,[stream.textTracks[textType][i]]);
+            // Select each track and check if new selected track is correct
+            for(let i = 0; i < stream.textTracks.length; i++) {
+                // Select text track
+                utils.log(NAME, 'switch text track: ' + stream.textTracks[i].lang);
+                await command.execute(player.setCurrentTrack, [stream.textTracks[i]]);
 
-                    //Wait
-                    await command.sleep(SWITCH_WAIT*1000);
+                //Wait
+                await command.sleep(SWITCH_WAIT*1000);
 
-                    // Check if new current track is correct
-                    var newTrack = await command.execute(player.getCurrentTrackFor, [textType]);
-                    utils.log(NAME, 'current text track: ' + newTrack.lang);
-                    assert.deepEqual(newTrack.lang, stream.textTracks[textType][i].lang);
-                    assert.deepEqual(newTrack.index, stream.textTracks[textType][i].index);
+                // Check if new current track is correct
+                var newTrack = await command.execute(player.getCurrentTrackFor, );
+                utils.log(NAME, 'current text track: ' + newTrack.lang);
+                assert.deepEqual(newTrack.lang, stream.textTracks[i].lang);
+                assert.deepEqual(newTrack.index, stream.textTracks[i].index);
 
-                    utils.log(NAME, 'Check if playing');
-                    const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
-                    assert.isTrue(progressing);
-                }
+                utils.log(NAME, 'Check if playing');
+                const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                assert.isTrue(progressing);
             }
         });
     });

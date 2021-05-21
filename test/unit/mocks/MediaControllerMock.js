@@ -85,7 +85,7 @@ class MediaControllerMock {
     }
 
     isMultiTrackSupportedByType(type) {
-        return (type === 'audio' || type === 'video' || type === 'text' || type === 'fragmentedText');
+        return (type === 'audio' || type === 'video' || type === 'text');
     }
 
     isTracksEqual(currentTrack, mediaInfoForType) {

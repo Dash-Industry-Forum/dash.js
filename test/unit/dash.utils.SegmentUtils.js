@@ -10,7 +10,7 @@ import {
 const expect = require('chai').expect;
 
 describe('SegmentUtils', function () {
-    // const testType = 'fragmentedText';
+    // const testType = 'text';
     // const voHelper = new VoHelper();
     // t objectsHelper = new ObjectsHelper();
     // const timelineConverter = objectsHelper.getDummyTimelineConverter();

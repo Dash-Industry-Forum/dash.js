@@ -64,6 +64,7 @@ describe('TextController', function () {
             roles: ['main'],
             id: 'track1',
             mimeType: 'codecs="stpp',
+            isFragmented: true,
             isEmbedded: false
         };
         const mediaInfo2 = {
@@ -73,6 +74,7 @@ describe('TextController', function () {
             roles: ['alternate'],
             id: 'track2',
             mimeType: 'codecs="stpp',
+            isFragmented: true,
             isEmbedded: false
         };
 
