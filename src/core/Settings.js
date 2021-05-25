@@ -691,9 +691,7 @@ function Settings() {
                 fallbackToSegmentTimeline: true
             },
             metrics: {
-                maxListDepth: 100,
-                minDroppedFramesInterval: 200,
-                minBufferLevelInterval: 50
+                maxListDepth: 100
             },
             delay: {
                 liveDelayFragmentCount: NaN,
