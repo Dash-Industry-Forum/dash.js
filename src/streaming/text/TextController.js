@@ -299,16 +299,15 @@ function TextController(config) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
                     mediaController.setTrack(mediaInfo);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
+                }  else if (oldTrackIdx === -1) {
+                    //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
+                    //no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
+                    // For that reason we reactivate the StreamProcessor and the ScheduleController
+                    eventBus.trigger(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
+                        streamId,
+                        mediaType: Constants.FRAGMENTED_TEXT
+                    });
                 }
-            } else if (oldTrackIdx === -1) {
-                //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
-                //no CURRENT_TRACK_CHANGED event will be triggered because the mediaInfo in the StreamProcessor is equal to the one we are selecting
-                // For that reason we reactivate the StreamProcessor and the ScheduleController
-                eventBus.trigger(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, {}, {
-                    streamId,
-                    mediaType: Constants.FRAGMENTED_TEXT
-                });
-
             }
         }
     }
