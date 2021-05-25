@@ -79,7 +79,7 @@ function MediaSourceController() {
             logger.info('Set MediaSource duration:' + value);
             mediaSource.duration = value;
         } else {
-            setTimeout(setDuration.bind(null, mediaSource, value), 50);
+            setTimeout(setDuration.bind(null, value), 50);
         }
     }
 
