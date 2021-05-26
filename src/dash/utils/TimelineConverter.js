@@ -205,7 +205,7 @@ function TimelineConverter() {
         // If that is not the case we stick to the DVR window defined by SegmentTimeline
         if (settings.get().streaming.timeShiftBuffer.fallbackToSegmentTimeline) {
             const timelineRefRange = _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
-            if (timelineRefRange.end < range.start || timelineRefRange.start > range.end) {
+            if (timelineRefRange.end < range.start) {
                 eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
                     level: ConformanceViolationConstants.LEVELS.WARNING,
                     event: ConformanceViolationConstants.EVENTS.INVALID_DVR_WINDOW
