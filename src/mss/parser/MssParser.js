@@ -740,7 +740,9 @@ function MssParser(config) {
                         'bufferTimeAtTopQuality': settings.get().streaming.buffer.bufferTimeAtTopQuality,
                         'bufferTimeAtTopQualityLongForm': settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm
                     },
-                    'calcSegmentAvailabilityRangeFromTimeline': settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline,
+                    'timeShiftBuffer': {
+                        calcFromSegmentTimeline: settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline
+                    },
                     'delay': {
                         'liveDelay': settings.get().streaming.delay.liveDelay
                     }
@@ -754,7 +756,9 @@ function MssParser(config) {
                         'bufferTimeAtTopQuality': bufferTime,
                         'bufferTimeAtTopQualityLongForm': bufferTime
                     },
-                    'calcSegmentAvailabilityRangeFromTimeline': true,
+                    'timeShiftBuffer': {
+                        calcFromSegmentTimeline: true
+                    },
                     'delay': {
                         'liveDelay': liveDelay
                     }
