@@ -309,7 +309,7 @@ function TimeSyncController() {
      */
     function _onComplete(offset = NaN) {
         let failed = isNaN(offset);
-        if (failed && settings.get().streaming.useManifestDateHeaderTimeSource) {
+        if (failed && settings.get().streaming.utcSynchronization.useManifestDateHeaderTimeSource) {
             //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
             _checkForDateHeader();
         } else {
