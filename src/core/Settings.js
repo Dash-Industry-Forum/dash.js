@@ -55,16 +55,20 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            dispatchEvent: false
  *        },
  *        streaming: {
- *            metricsMaxListDepth: 500,
  *            abandonLoadTimeout: 10000,
- *            calcSegmentAvailabilityRangeFromTimeline: false,
  *            wallclockTimeUpdateInterval: 100,
  *            lowLatencyEnabled: false,
- *            useManifestDateHeaderTimeSource: true,
  *            manifestUpdateRetryInterval: 100,
  *            filterUnsupportedEssentialProperties: true,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
+ *            timeShiftBuffer: {
+ *                calcFromSegmentTimeline: false,
+ *                fallbackToSegmentTimeline: true
+ *            },
+ *            metrics: {
+ *              maxListDepth: 100
+ *            },
  *            delay: {
  *                liveDelayFragmentCount: NaN,
  *                liveDelay: NaN,
@@ -93,6 +97,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                smallGapLimit: 1.5,
  *            },
  *            utcSynchronization: {
+ *                useManifestDateHeaderTimeSource: true,
  *                backgroundAttempts: 2,
  *                timeBetweenSyncAttempts: 30,
  *                maximumTimeBetweenSyncAttempts: 600,
@@ -182,6 +187,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
+ * @typedef {Object} TimeShiftBuffer
+ * @property {boolean} [calcFromSegmentTimeline=false]
+ * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
+ *  * @property {boolean} [fallbackToSegmentTimeline=true]
+ * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated based on the entries in \<SegmentTimeline\>.
+ */
+
+/**
  * @typedef {Object} LiveDelay
  * @property {number} [liveDelayFragmentCount=NaN]
  * Changing this value will lower or increase live stream latency.
@@ -223,8 +236,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This can be required on some devices like GoogleCast devices to make track switching functional.
  *
  * Otherwise track switching will be effective only once after previous buffered track is fully consumed.
- * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false]
- * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
  * @property {boolean} [reuseExistingSourceBuffers=true]
  * Enable reuse of existing MediaSource Sourcebuffers during period transition.
  * @property {number} [bufferPruningInterval=10]
@@ -319,6 +330,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} UtcSynchronizationSettings
+ *
+ * @property {boolean} [useManifestDateHeaderTimeSource=true]
+ * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
+ *
  * @property {number} [backgroundAttempts=2]
  * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
  *
@@ -562,20 +577,16 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} StreamingSettings
- * @property {number} [metricsMaxListDepth=300]
+ * @property {number} [metricsMaxListDepth=100]
  * Maximum list depth of metrics.
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
  * This will only take effect after an abandoned fragment event occurs.
- * @property {boolean} [calcSegmentAvailabilityRangeFromTimeline=false]
- * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {boolean} [lowLatencyEnabled=false]
  * Enable or disable low latency mode.
- * @property {boolean} [useManifestDateHeaderTimeSource=true]
- * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
  * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {number} [manifestUpdateRetryInterval=100]
@@ -587,6 +598,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [eventControllerRefreshDelay=100]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
  * @property {module:Settings~LiveDelay} delay Live Delay settings
+ * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
  * @property {module:Settings~Protection} protection DRM related settings
  * @property {module:Settings~Buffer}  buffer Buffer related settings
  * @property {module:Settings~Gaps}  gaps Gap related settings
@@ -650,8 +662,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 
-
-
 /**
  * @class
  * @ignore
@@ -669,16 +679,20 @@ function Settings() {
             dispatchEvent: false
         },
         streaming: {
-            metricsMaxListDepth: 300,
             abandonLoadTimeout: 10000,
-            calcSegmentAvailabilityRangeFromTimeline: false,
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
-            useManifestDateHeaderTimeSource: true,
             manifestUpdateRetryInterval: 100,
             filterUnsupportedEssentialProperties: true,
             cacheInitSegments: true,
-            eventControllerRefreshDelay: 100,
+            eventControllerRefreshDelay: 150,
+            timeShiftBuffer: {
+                calcFromSegmentTimeline: false,
+                fallbackToSegmentTimeline: false
+            },
+            metrics: {
+                maxListDepth: 100
+            },
             delay: {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
@@ -698,7 +712,7 @@ function Settings() {
                 initialBufferLevel: NaN,
                 stableBufferTime: 12,
                 longFormContentDurationThreshold: 600,
-                stallThreshold: 0.5,
+                stallThreshold: 0.1,
                 useAppendWindow: true
             },
             gaps: {
@@ -707,6 +721,7 @@ function Settings() {
                 smallGapLimit: 1.5,
             },
             utcSynchronization: {
+                useManifestDateHeaderTimeSource: true,
                 backgroundAttempts: 2,
                 timeBetweenSyncAttempts: 30,
                 maximumTimeBetweenSyncAttempts: 600,
@@ -720,7 +735,7 @@ function Settings() {
                 }
             },
             scheduling: {
-                defaultTimeout: 300,
+                defaultTimeout: 500,
                 lowLatencyTimeout: 100,
                 scheduleWhilePaused: true
             },

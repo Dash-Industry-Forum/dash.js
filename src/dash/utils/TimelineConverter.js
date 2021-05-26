@@ -35,6 +35,8 @@ import DashConstants from '../constants/DashConstants';
 import DashManifestModel from '../models/DashManifestModel';
 import Settings from '../../core/Settings';
 import Constants from '../../streaming/constants/Constants';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
+import ConformanceViolationConstants from '../../streaming/constants/ConformanceViolationConstants';
 
 function TimelineConverter() {
 
@@ -153,7 +155,7 @@ function TimelineConverter() {
         }
 
         // Specific use case of SegmentTimeline
-        if (settings.get().streaming.calcSegmentAvailabilityRangeFromTimeline) {
+        if (settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline) {
             return _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
         }
 
@@ -197,6 +199,19 @@ function TimelineConverter() {
 
         if (!isNaN(timeShiftBufferDepth) && range.end < now - timeShiftBufferDepth) {
             range.end = NaN;
+        }
+
+        // If we have SegmentTimeline as a reference we can verify that the calculated DVR window is at least partially included in the DVR window exposed by the timeline.
+        // If that is not the case we stick to the DVR window defined by SegmentTimeline
+        if (settings.get().streaming.timeShiftBuffer.fallbackToSegmentTimeline) {
+            const timelineRefRange = _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
+            if (timelineRefRange.end < range.start) {
+                eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
+                    level: ConformanceViolationConstants.LEVELS.WARNING,
+                    event: ConformanceViolationConstants.EVENTS.INVALID_DVR_WINDOW
+                });
+                return timelineRefRange;
+            }
         }
 
         return range;

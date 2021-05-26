@@ -110,7 +110,7 @@ function MetricsModel(config) {
         let metrics = getMetricsFor(type);
         if (metrics !== null) {
             metrics[list].push(value);
-            if (metrics[list].length > settings.get().streaming.metricsMaxListDepth) {
+            if (metrics[list].length > settings.get().streaming.metrics.maxListDepth) {
                 metrics[list].shift();
             }
         }

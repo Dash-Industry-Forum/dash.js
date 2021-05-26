@@ -554,8 +554,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleCalcSegmentAvailabilityRangeFromTimeline = function () {
         $scope.player.updateSettings({
-            'streaming': {
-                'calcSegmentAvailabilityRangeFromTimeline': $scope.calcSegmentAvailabilityRangeFromTimelineSelected
+            streaming: {
+                timeShiftBuffer: {
+                    calcFromSegmentTimeline: $scope.calcSegmentAvailabilityRangeFromTimelineSelected
+                }
             }
         });
     };

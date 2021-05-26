@@ -43,6 +43,10 @@ export default {
         NON_COMPLIANT_SMPTE_IMAGE_ATTRIBUTE: {
             key: 'NON_COMPLIANT_SMPTE_IMAGE_ATTRIBUTE',
             message: 'SMPTE 2052-1:2013 defines the attribute name as "imageType" and does not define "imagetype"'
+        },
+        INVALID_DVR_WINDOW: {
+            key: 'INVALID_DVR_WINDOW',
+            message: 'No valid segment found when applying a specification compliant DVR window calculation. Using SegmentTimeline entries as a fallback.'
         }
     }
 };
