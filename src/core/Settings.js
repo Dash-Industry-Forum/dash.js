@@ -688,7 +688,7 @@ function Settings() {
             eventControllerRefreshDelay: 150,
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
-                fallbackToSegmentTimeline: false
+                fallbackToSegmentTimeline: true
             },
             metrics: {
                 maxListDepth: 100

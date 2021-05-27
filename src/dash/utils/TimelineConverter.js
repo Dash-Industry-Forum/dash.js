@@ -146,7 +146,7 @@ function TimelineConverter() {
      * Calculates the timeshiftbuffer range. This range might overlap multiple periods and is not limited to period boundaries. However, we make sure that the range is potentially covered by period.
      * @param {Array} streams
      * @param {boolean} isDynamic
-     * @return {{start: number, end: number}}
+     * @return {}
      */
     function calcTimeShiftBufferWindow(streams, isDynamic) {
         // Static manifests. The availability window is equal to the DVR window
@@ -156,7 +156,10 @@ function TimelineConverter() {
 
         // Specific use case of SegmentTimeline
         if (settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline) {
-            return _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
+            const data = _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
+            _adjustTimelineAnchorAvailabilityOffset(data.now, data.range);
+
+            return data.range;
         }
 
         return _calcTimeShiftBufferWindowForDynamicManifest(streams);
@@ -204,13 +207,14 @@ function TimelineConverter() {
         // If we have SegmentTimeline as a reference we can verify that the calculated DVR window is at least partially included in the DVR window exposed by the timeline.
         // If that is not the case we stick to the DVR window defined by SegmentTimeline
         if (settings.get().streaming.timeShiftBuffer.fallbackToSegmentTimeline) {
-            const timelineRefRange = _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
-            if (timelineRefRange.end < range.start) {
+            const timelineRefData = _calcTimeShiftBufferWindowForDynamicTimelineManifest(streams);
+            if (timelineRefData.range.end < range.start) {
                 eventBus.trigger(MediaPlayerEvents.CONFORMANCE_VIOLATION, {
                     level: ConformanceViolationConstants.LEVELS.WARNING,
                     event: ConformanceViolationConstants.EVENTS.INVALID_DVR_WINDOW
                 });
-                return timelineRefRange;
+                _adjustTimelineAnchorAvailabilityOffset(timelineRefData.now, timelineRefData.range);
+                return timelineRefData.range;
             }
         }
 
@@ -223,7 +227,7 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
 
         if (!streams || streams.length === 0) {
-            return range;
+            return { range, now };
         }
 
         streams.forEach((stream) => {
@@ -261,9 +265,11 @@ function TimelineConverter() {
         range.start = voPeriod && voPeriod.mpd && voPeriod.mpd.timeShiftBufferDepth && !isNaN(voPeriod.mpd.timeShiftBufferDepth) && !isNaN(range.end) ? Math.max(range.end - voPeriod.mpd.timeShiftBufferDepth, range.start) : range.start;
         range.start = _adjustTimeBasedOnPeriodRanges(streams, range.start);
 
-        timelineAnchorAvailabilityOffset = now - range.end;
+        return { range, now };
+    }
 
-        return range;
+    function _adjustTimelineAnchorAvailabilityOffset(now, range) {
+        timelineAnchorAvailabilityOffset = now - range.end;
     }
 
     function _adjustTimeBasedOnPeriodRanges(streams, time, isEndOfDvrWindow = false) {
