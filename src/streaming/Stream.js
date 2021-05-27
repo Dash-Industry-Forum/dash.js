@@ -821,6 +821,8 @@ function Stream(config) {
             let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
             // Check if AdaptationSet has not been removed in MPD update
             if (allMediaForType) {
+                // Remove the current mediaInfo objects before adding the updated ones
+                streamProcessor.clearMediaInfoArray();
                 for (let j = 0; j < allMediaForType.length; j++) {
                     const mInfo = allMediaForType[j];
                     streamProcessor.addMediaInfo(allMediaForType[j]);
