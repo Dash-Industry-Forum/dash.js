@@ -89,7 +89,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                stableBufferTime: 12,
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.5,
- *                useAppendWindow: true
+ *                useAppendWindow: true,
+ *                setStallState: false
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -261,10 +262,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The time that the internal buffer target will be set to post startup/seeks (NOT top quality).
  *
  * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
- * @property {number} [stallThreshold=0.5]
+ * @property {number} [stallThreshold=0.3]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
+ * @property {boolean} [setStallState=false]
+ * Specifies if we fire manual waiting events once the stall threshold is reached
  */
 
 /**
@@ -688,7 +691,7 @@ function Settings() {
             eventControllerRefreshDelay: 150,
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
-                fallbackToSegmentTimeline: false
+                fallbackToSegmentTimeline: true
             },
             metrics: {
                 maxListDepth: 100
@@ -712,8 +715,9 @@ function Settings() {
                 initialBufferLevel: NaN,
                 stableBufferTime: 12,
                 longFormContentDurationThreshold: 600,
-                stallThreshold: 0.1,
-                useAppendWindow: true
+                stallThreshold: 0.3,
+                useAppendWindow: true,
+                setStallState: false
             },
             gaps: {
                 jumpGaps: true,

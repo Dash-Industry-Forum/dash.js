@@ -174,6 +174,7 @@ declare namespace dashjs {
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
+                setStallState?:boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,

@@ -767,18 +767,14 @@ function StreamProcessor(config) {
         }
     }
 
-    function addMediaInfo(newMediaInfo, selectNewMediaInfo) {
+    function addMediaInfo(newMediaInfo) {
         if (mediaInfoArr.indexOf(newMediaInfo) === -1) {
             mediaInfoArr.push(newMediaInfo);
         }
-
-        if (selectNewMediaInfo) {
-            selectMediaInfo(newMediaInfo);
-        }
     }
 
-    function getMediaInfoArr() {
-        return mediaInfoArr;
+    function clearMediaInfoArray() {
+        mediaInfoArr = [];
     }
 
     function getMediaInfo() {
@@ -1068,10 +1064,10 @@ function StreamProcessor(config) {
         updateStreamInfo,
         getStreamInfo,
         selectMediaInfo,
+        clearMediaInfoArray,
         addMediaInfo,
         prepareTrackSwitch,
         prepareQualityChange,
-        getMediaInfoArr,
         getMediaInfo,
         getMediaSource,
         setMediaSource,
