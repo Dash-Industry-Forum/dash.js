@@ -881,7 +881,9 @@ function PlaybackController() {
                     logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
                     settings.update({
                         streaming: {
-                            liveDelay: llsd.latency.target / 1000,
+                            delay: {
+                                liveDelay: llsd.latency.target / 1000,
+                            },
                             liveCatchup: {
                                 minDrift: (llsd.latency.target + 500) / 1000,
                                 maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined
