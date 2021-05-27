@@ -166,8 +166,8 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
-        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+        eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
@@ -187,8 +187,8 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
-        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
@@ -791,7 +791,7 @@ function StreamController() {
         if (!activeStream || !activeStream.getHasFinishedBuffering()) {
             return;
         }
-        const upcomingStreams = getNextStreams(activeStream);
+        const upcomingStreams = _getNextStreams(activeStream);
         let i = 0;
 
         while (i < upcomingStreams.length) {
@@ -941,7 +941,7 @@ function StreamController() {
      * @param {object} stream
      * @return {array}
      */
-    function getNextStreams(stream = null) {
+    function _getNextStreams(stream = null) {
         try {
             const refStream = stream ? stream : activeStream ? activeStream : null;
 
@@ -1134,6 +1134,7 @@ function StreamController() {
      */
     function _onManifestUpdated(e) {
         if (!e.error) {
+            logger.info('Manifest updated... updating data system wide.');
             //Since streams are not composed yet , need to manually look up useCalculatedLiveEdgeTime to detect if stream
             //is SegmentTimeline to avoid using time source
             const manifest = e.manifest;
@@ -1297,7 +1298,7 @@ function StreamController() {
         manifestUpdater.setManifest(manifest);
     }
 
-    function onManifestValidityChanged(e) {
+    function _onManifestValidityChanged(e) {
         if (!isNaN(e.newDuration)) {
             _setMediaDuration(e.newDuration);
         }
@@ -1433,7 +1434,7 @@ function StreamController() {
         resetInitialSettings();
     }
 
-    function onMetricAdded(e) {
+    function _onMetricAdded(e) {
         if (e.metric === MetricsConstants.DVR_INFO) {
             //Match media type? How can DVR window be different for media types?
             //Should we normalize and union the two?

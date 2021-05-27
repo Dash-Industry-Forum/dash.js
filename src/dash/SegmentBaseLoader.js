@@ -294,8 +294,10 @@ function SegmentBaseLoader() {
     }
 
     function reset() {
-        urlLoader.abort();
-        urlLoader = null;
+        if (urlLoader) {
+            urlLoader.abort();
+            urlLoader = null;
+        }
         errHandler = null;
         boxParser = null;
         requestModifier = null;
