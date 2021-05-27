@@ -842,7 +842,9 @@ function PlaybackController() {
                 }
             }
         } else {
-            videoModel.setStallState(e.mediaType, e.state === MetricsConstants.BUFFER_EMPTY);
+            if (settings.get().streaming.buffer.setStallState) {
+                videoModel.setStallState(e.mediaType, e.state === MetricsConstants.BUFFER_EMPTY);
+            }
         }
     }
 
