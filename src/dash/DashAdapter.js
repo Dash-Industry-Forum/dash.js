@@ -197,13 +197,14 @@ function DashAdapter() {
         }
 
         const sameId = mInfoOne.id === mInfoTwo.id;
+        const sameCodec = mInfoOne.codec === mInfoTwo.codec;
         const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
         const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
         const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
         const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
 
-        return (sameId && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
     /**
@@ -1170,6 +1171,7 @@ function DashAdapter() {
         setCurrentMediaInfo,
         isPatchValid,
         applyPatchToManifest,
+        areMediaInfosEqual,
         reset
     };
 
