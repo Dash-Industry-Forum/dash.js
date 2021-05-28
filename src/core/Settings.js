@@ -802,6 +802,12 @@ function Settings() {
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+                additionalAbrRules: {
+                    insufficientBufferRule: true,
+                    switchHistoryRule: true,
+                    droppedFramesRule: true,
+                    abandonRequestsRule: true
+                },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
