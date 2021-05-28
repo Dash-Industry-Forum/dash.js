@@ -33,7 +33,7 @@ describe('CapabilitiesFilter', function () {
         describe('filter codecs', function () {
 
             beforeEach(function () {
-                settings.update({ streaming: { filterUnsupportedEssentialProperties: false } });
+                settings.update({ streaming: { capabilities: { filterUnsupportedEssentialProperties: false } } });
             });
 
             it('should not filter AdaptationSets and Representations', function (done) {
@@ -147,11 +147,11 @@ describe('CapabilitiesFilter', function () {
         describe('filter EssentialProperty values', function () {
 
             beforeEach(function () {
-                settings.update({ streaming: { filterUnsupportedEssentialProperties: true } });
+                settings.update({ streaming: { capabilities: { filterUnsupportedEssentialProperties: true }} });
             });
 
             it('should not filter AdaptationSets and Representations if filterUnsupportedEssentialProperties is disabled', function (done) {
-                settings.update({ streaming: { filterUnsupportedEssentialProperties: false } });
+                settings.update({ streaming: { capabilities: {filterUnsupportedEssentialProperties: false }} });
                 const manifest = {
                     Period_asArray: [{
                         AdaptationSet_asArray: [{
@@ -337,24 +337,25 @@ describe('CapabilitiesFilter', function () {
             it('should use provided custom filters', function (done) {
                 const manifest = {
                     Period_asArray: [{
-                    AdaptationSet_asArray: [{
-                        mimeType: 'video/mp4',
-                        Representation_asArray: [
-                            {
-                                mimeType: 'video/mp4',
-                                height: 1080
-                            },
-                            {
-                                mimeType: 'video/mp4',
-                                height: 720
-                            },
-                            {
-                                mimeType: 'video/mp4',
-                                height: 480
-                            }
-                        ]
+                        AdaptationSet_asArray: [{
+                            mimeType: 'video/mp4',
+                            Representation_asArray: [
+                                {
+                                    mimeType: 'video/mp4',
+                                    height: 1080
+                                },
+                                {
+                                    mimeType: 'video/mp4',
+                                    height: 720
+                                },
+                                {
+                                    mimeType: 'video/mp4',
+                                    height: 480
+                                }
+                            ]
+                        }]
                     }]
-                }]};
+                };
 
                 capabilitiesFilter.setCustomCapabilitiesFilters([function (representation) {
                     return representation.height <= 720;

@@ -146,9 +146,12 @@ declare namespace dashjs {
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
             manifestUpdateRetryInterval?: number,
-            filterUnsupportedEssentialProperties?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
+            capabilities?: {
+                filterUnsupportedEssentialProperties?: boolean,
+                useMediaCapabilitiesApi?: boolean
+            },
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
                 fallbackToSegmentTimeline?: boolean

@@ -59,9 +59,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            wallclockTimeUpdateInterval: 100,
  *            lowLatencyEnabled: false,
  *            manifestUpdateRetryInterval: 100,
- *            filterUnsupportedEssentialProperties: true,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
+ *            capabilities: {
+ *               filterUnsupportedEssentialProperties: true,
+ *               useMediaCapabilitiesApi: false
+ *            },
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
  *                fallbackToSegmentTimeline: true
@@ -478,6 +481,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
+ * @typedef {Object} Capabilities
+ * @property {boolean} [filterUnsupportedEssentialProperties=true]
+ * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
+ * @property {boolean} [useMediaCapabilitiesApi=false]
+ * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ */
+
+/**
  * @typedef {Object} AbrSettings
  * @property {string} [movingAverageMethod="slidingWindow"]
  * Sets the moving average method used for smoothing throughput estimates.
@@ -594,8 +605,6 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
- * @property {boolean} [filterUnsupportedEssentialProperties=true]
- * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {boolean} [cacheInitSegments=true]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {number} [eventControllerRefreshDelay=100]
@@ -603,6 +612,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
  * @property {module:Settings~Protection} protection DRM related settings
+ * @property {module:Settings~Capabilities} capabilities Capability related settings
  * @property {module:Settings~Buffer}  buffer Buffer related settings
  * @property {module:Settings~Gaps}  gaps Gap related settings
  * @property {module:Settings~UtcSynchronizationSettings} utcSynchronization Settings related to UTC clock synchronization
@@ -686,9 +696,12 @@ function Settings() {
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
             manifestUpdateRetryInterval: 100,
-            filterUnsupportedEssentialProperties: true,
             cacheInitSegments: true,
             eventControllerRefreshDelay: 150,
+            capabilities: {
+                filterUnsupportedEssentialProperties: true,
+                useMediaCapabilitiesApi: false
+            },
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
                 fallbackToSegmentTimeline: true
