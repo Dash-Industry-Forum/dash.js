@@ -252,6 +252,9 @@ function MediaPlayer() {
     function initialize(view, source, AutoPlay) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
+            capabilities.setConfig({
+                settings
+            })
         }
 
         errHandler = ErrorHandler(context).getInstance();

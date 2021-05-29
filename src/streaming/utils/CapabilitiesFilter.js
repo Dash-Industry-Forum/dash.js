@@ -44,7 +44,7 @@ function CapabilitiesFilter() {
 
             Promise.all(promises)
                 .then(() => {
-                    if (settings.get().streaming.filterUnsupportedEssentialProperties) {
+                    if (settings.get().streaming.capabilities.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
                     }
                     _applyCustomFilters(manifest);

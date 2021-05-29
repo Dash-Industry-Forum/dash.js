@@ -53,10 +53,21 @@ export function supportsMediaSource() {
 function Capabilities() {
 
     let instance,
+        settings,
         encryptedMediaSupported;
 
     function setup() {
         encryptedMediaSupported = false;
+    }
+
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     /**
@@ -105,7 +116,7 @@ function Capabilities() {
      */
     function _canUseMediaCapabilitiesApi(config, type) {
 
-        return navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
+        return settings.get().streaming.capabilities.useMediaCapabilitiesApi && navigator.mediaCapabilities && navigator.mediaCapabilities.decodingInfo && ((config.codec && type === Constants.AUDIO) || (type === Constants.VIDEO && config.codec && config.width && config.height && config.bitrate && config.framerate));
     }
 
     /**
@@ -211,6 +222,7 @@ function Capabilities() {
     }
 
     instance = {
+        setConfig,
         supportsMediaSource,
         supportsEncryptedMedia,
         supportsCodec,
