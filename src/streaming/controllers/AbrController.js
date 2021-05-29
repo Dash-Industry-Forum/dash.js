@@ -556,7 +556,7 @@ function AbrController() {
                 const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
-                    configBitrate = representation[repIdx].bandwidth;
+                    configBitrate = representation[repIdx].bandwidth / 1000;
                 } else {
                     configBitrate = 0;
                 }
