@@ -259,6 +259,44 @@
         ]
     },
     {
+        "section": "Buffer",
+        "samples": [
+            {
+                "title": "Buffer target",
+                "description": "Example showing how to define the buffer targets in dash.js",
+                "href": "buffer/buffer-target.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Buffer cleanup",
+                "description": "Example showing how to define the parameters for buffer cleanup/pruning in dash.js",
+                "href": "buffer/buffer-cleanup.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Initial buffer target",
+                "description": "Example showing how to define the initial buffer target at playback start in dash.js.",
+                "href": "buffer/initial-buffer.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
+    },
+    {
         "section": "DRM",
         "samples": [
             {
