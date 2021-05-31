@@ -182,46 +182,23 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.drmLicenseURL = '';
     $scope.drmRequestHeader = '';
 
-
-    //Default DRM-Headers
-    $scope.defaultRequestHeaderPlayready = 
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4Iiw'
-    + 'ibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1I'
-    + 'iwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJ'
-    + 'lbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY'
-    + '3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnl'
-    + 'wdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0Z'
-    + 'WRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9'
-    + 'rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tle'
-    + 'SI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5Ijo'
-    + 'iL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6d'
-    + 'TZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to'
-
-    $scope.defaultRequestHeaderWidevine =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4Iiw'
-    + 'ibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZ'
-    + 'XhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09'
-    + 'qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU'
-
-    //Default DRM KID and KEY.
-    $scope.defaultKidClearkey = 'nrQFDeRLSAKTLifXUIPiZg'
-
-    $scope.defaultKeyClearkey = 'FmY0xnWCPCNaSpRG-tUuTQ'
-
+    
+    $scope.protectionData = {};
+    $scope.prioritiesEnabled = false;
 
     $scope.drmPlayready = {
         isActive: false,
         drmKeySystem: 'com.microsoft.playready',
         licenseServerUrl: 'https://drm-playready-licensing.axtest.net/AcquireLicense',
-        httpRequestHeader: $scope.defaultRequestHeaderPlayready,
+        httpRequestHeader: '',
         priority: 1
     }
 
     $scope.drmWidevine = {
         isActive: false,
-        drmKeySystem: 'com.widevine.alphay',
+        drmKeySystem: 'com.widevine.alpha',
         licenseServerUrl: 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
-        httpRequestHeader: $scope.defaultRequestHeaderWidevine,
+        httpRequestHeader: '',
         priority: 0
     }
 
@@ -230,8 +207,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'org.w3.clearkey',
         licenseServerUrl: '',
         httpRequestHeader: '',
-        kid: $scope.defaultKidClearkey,
-        key: $scope.defaultKeyClearkey,
+        kid: '',
+        key: '',
         inputMode: false,
         priority: 2
       }
@@ -694,16 +671,24 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.doLoad = function () {
         $scope.initSession();
 
+        $scope.setDrm();
+
         var protData = {};
         if ($scope.selectedItem.hasOwnProperty('protData')) {
             protData = $scope.selectedItem.protData;
-        } else if ($scope.drmLicenseURL !== '' && $scope.drmKeySystem !== '') {
+        }
+        else if ($scope.protectionData !== {}) {
+            protData = $scope.protectionData;
+        }
+        else if ($scope.drmLicenseURL !== '' && $scope.drmKeySystem !== '') {
             protData[$scope.drmKeySystem] = {
                 serverURL: $scope.drmLicenseURL
             };
         } else {
             protData = null;
         }
+        console.log($scope.selectedItem)
+        console.log(protData)
 
         // Check if persistent license session ID is stored for current stream
         var sessionId = $scope.persistentSessionId[$scope.selectedItem.url];
@@ -892,12 +877,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.drmKeySystem = item;
     };
 
+    $scope.doLog = function (){
+        console.log($scope.drmPlayready.priority);
+    }
+
     /** Handle form input */
     $scope.setDrm = function (){
-        console.log(this.drmPlayready, this.drmWidevine, this.drmClearkey);
+        console.log($scope.drmPlayready, $scope.drmWidevine, $scope.drmClearkey);
 
-        let drmInputs = [this.drmPlayready, this.drmWidevine, this.drmClearkey];
-        let protectionData = [];
+        let drmInputs = [$scope.drmPlayready, $scope.drmWidevine, $scope.drmClearkey];
+        let protectionData = {};
 
         for(let input of drmInputs){
             if(input.isActive){
@@ -906,24 +895,22 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                if(input.hasOwnProperty('inputMode') && input.inputMode === false){
                   // Check if priority is enabled
                   if(this.prioritiesEnabled){
-                    protectionData.push({
-                      [input.drmKeySystem]: {
+                    protectionData[input.drmKeySystem] = {
                         "clearkeys": {
                           [input.kid]: input.key
                         },
-                        "priority": input.priority
+                        "priority": parseInt(input.priority)
                       }    
-                    });
-                  }
+                    }
+                  
                   else{
-                    protectionData.push({
-                      [input.drmKeySystem]: {
+                    protectionData[input.drmKeySystem] = {
                         "clearkeys": {
                           [input.kid]: input.key
                         }
                       }
-                    })
-                  }
+                    }
+                
                   
                 }
       
@@ -931,21 +918,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                   // Validate URL. If the provided information is not a valid url, the DRM is skipped.
                   if(this.isValidURL(input.licenseServerUrl)){
                     if(this.prioritiesEnabled){
-                      protectionData.push({
-                        [input.drmKeySystem]: {
+                      protectionData[input.drmKeySystem] = {
                           "serverURL": input.licenseServerUrl,
-                          "httpRequestHeaders": input.httpRequestHeader,
-                          "priority": input.priority
-                        }    
-                      }); 
+                          "httpRequestHeaders": {
+                              'X-AxDRM-Message': ''
+                          },
+                          "priority": parseInt(input.priority)
+                        }     
                     }
                     else
-                    protectionData.push({
-                      [input.drmKeySystem]: {
+                    protectionData[input.drmKeySystem] = {
                         "serverURL": input.licenseServerUrl,
-                        "httpRequestHeaders": input.httpRequestHeader
-                      }    
-                    }); 
+                        "httpRequestHeaders": {
+                            'X-AxDRM-Message': input.httpRequestHeader
+                        }
+                      }     
                   }
                   else {
                     console.log(input.licenseServerUrl, "is not a valid url!")
@@ -954,10 +941,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
         }
-        console.log(protectionData);
+        
+        $scope.protectionData = protectionData;
         $scope.player.setProtectionData(protectionData);
-        //$scope.player.doLoad();
-        console.log($scope.player.getProtectionController());
     }
 
     $scope.isValidURL = function (str) {

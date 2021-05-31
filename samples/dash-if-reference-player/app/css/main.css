@@ -4,7 +4,7 @@ body {
     overflow-x: hidden;
 }
 
-label input {
+label input select {
     display: inline;
 }
 
@@ -95,14 +95,16 @@ a:hover {
 }
 
 .options-item-body input,
-.options-item-body label {
+.options-item-body label,
+.options-item-body select {
     cursor: pointer;
     clear: both;
     float: left;
     margin-bottom: 2px !important;
 }
 
-.options-item-body input {
+.options-item-body input,
+.options-item-body select {
     margin-right: 5px;
 }
 
