@@ -324,7 +324,49 @@
         <div class="options-item">
             <div class="options-item-title">DRM Options</div>
             <div class="options-item-body">
-                <div class="dropdown" data-toggle="tooltip" data-placement="left"
+            <form>
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="">
+                    <input type="checkbox" ng-model="drmPlayreadyChecked" ng-change="drmPlayready.isActive = drmPlayreadyChecked">
+                    Playready
+                </label>
+
+                <div id="drmPlayreadyLicenseForm" ng-show="drmPlayreadyChecked === true">
+                    <label class="options-label">License URL:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
+                    <label class="options-label">HTTP Request Header:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.httpRequestHeader">
+                </div>
+
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="">
+                    <input type="checkbox" ng-model="drmWidevineChecked" ng-change="drmWidevine.isActive = drmWidevineChecked">
+                    Widevine
+                </label>
+
+                <div id="drmWidevineLicenseForm" ng-show="drmWidevineChecked === true">
+                    <label class="options-label">License URL:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
+                    <label class="options-label">HTTP Request Header:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.httpRequestHeader">
+                </div>
+
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="">
+                    <input type="checkbox" ng-model="drmClearkeyChecked" ng-change="drmClearkey.isActive = drmClearkeyChecked">
+                    Clearkey
+                </label>
+
+                <div id="drmClearkeyLicenseForm" ng-show="drmClearkeyChecked === true">
+                    <label class="options-label">Kid:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
+                    <label class="options-label">Key:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.key">
+                </div>
+
+                <input type="submit" class="btn btn-primary" ng-click="setDrm()" value="Submit"\>
+            </form>
+                <!-- <div class="dropdown" data-toggle="tooltip" data-placement="left"
                      title="Please select a DRM Key System">
                     <button class="btn btn-primary dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">DRM
                         KeySystem
@@ -338,8 +380,10 @@
                 <div id="drmLicenseForm" ng-show="drmKeySystem">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmLicenseURL">
-                </div>
-            </div>
+                    <label class="options-label">HTTP Request Header:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmRequestHeader">
+                </div>-->
+            </div> 
         </div>
         <div class="options-item">
             <div class="options-item-title">Initial Settings</div>

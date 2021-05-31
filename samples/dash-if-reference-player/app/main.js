@@ -177,9 +177,65 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
     $scope.updateMetricsInterval = 1000;
-    $scope.drmKeySystems = ['com.widevine.alpha', 'com.microsoft.playready'];
+    $scope.drmKeySystems = ['com.widevine.alpha', 'com.microsoft.playready', 'org.w3.clearkey'];
     $scope.drmKeySystem = '';
     $scope.drmLicenseURL = '';
+    $scope.drmRequestHeader = '';
+
+
+    //Default DRM-Headers
+    $scope.defaultRequestHeaderPlayready = 
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4Iiw'
+    + 'ibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1I'
+    + 'iwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJ'
+    + 'lbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY'
+    + '3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnl'
+    + 'wdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0Z'
+    + 'WRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9'
+    + 'rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tle'
+    + 'SI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5Ijo'
+    + 'iL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6d'
+    + 'TZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to'
+
+    $scope.defaultRequestHeaderWidevine =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4Iiw'
+    + 'ibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZ'
+    + 'XhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09'
+    + 'qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU'
+
+    //Default DRM KID and KEY.
+    $scope.defaultKidClearkey = 'nrQFDeRLSAKTLifXUIPiZg'
+
+    $scope.defaultKeyClearkey = 'FmY0xnWCPCNaSpRG-tUuTQ'
+
+
+    $scope.drmPlayready = {
+        isActive: false,
+        drmKeySystem: 'com.microsoft.playready',
+        licenseServerUrl: 'https://drm-playready-licensing.axtest.net/AcquireLicense',
+        httpRequestHeader: $scope.defaultRequestHeaderPlayready,
+        priority: 1
+    }
+
+    $scope.drmWidevine = {
+        isActive: false,
+        drmKeySystem: 'com.widevine.alphay',
+        licenseServerUrl: 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
+        httpRequestHeader: $scope.defaultRequestHeaderWidevine,
+        priority: 0
+    }
+
+    $scope.drmClearkey = {
+        isActive: false,
+        drmKeySystem: 'org.w3.clearkey',
+        licenseServerUrl: '',
+        httpRequestHeader: '',
+        kid: $scope.defaultKidClearkey,
+        key: $scope.defaultKeyClearkey,
+        inputMode: false,
+        priority: 2
+      }
+    
 
     $scope.isDynamic = false;
 
@@ -835,6 +891,80 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.setDrmKeySystem = function (item) {
         $scope.drmKeySystem = item;
     };
+
+    /** Handle form input */
+    $scope.setDrm = function (){
+        console.log(this.drmPlayready, this.drmWidevine, this.drmClearkey);
+
+        let drmInputs = [this.drmPlayready, this.drmWidevine, this.drmClearkey];
+        let protectionData = [];
+
+        for(let input of drmInputs){
+            if(input.isActive){
+
+                // Check if the provided DRM is Clearkey and whether KID=KEY or LicenseServer + Header is selected; Default is KID=KEY
+               if(input.hasOwnProperty('inputMode') && input.inputMode === false){
+                  // Check if priority is enabled
+                  if(this.prioritiesEnabled){
+                    protectionData.push({
+                      [input.drmKeySystem]: {
+                        "clearkeys": {
+                          [input.kid]: input.key
+                        },
+                        "priority": input.priority
+                      }    
+                    });
+                  }
+                  else{
+                    protectionData.push({
+                      [input.drmKeySystem]: {
+                        "clearkeys": {
+                          [input.kid]: input.key
+                        }
+                      }
+                    })
+                  }
+                  
+                }
+      
+                else{
+                  // Validate URL. If the provided information is not a valid url, the DRM is skipped.
+                  if(this.isValidURL(input.licenseServerUrl)){
+                    if(this.prioritiesEnabled){
+                      protectionData.push({
+                        [input.drmKeySystem]: {
+                          "serverURL": input.licenseServerUrl,
+                          "httpRequestHeaders": input.httpRequestHeader,
+                          "priority": input.priority
+                        }    
+                      }); 
+                    }
+                    else
+                    protectionData.push({
+                      [input.drmKeySystem]: {
+                        "serverURL": input.licenseServerUrl,
+                        "httpRequestHeaders": input.httpRequestHeader
+                      }    
+                    }); 
+                  }
+                  else {
+                    console.log(input.licenseServerUrl, "is not a valid url!")
+                  }
+      
+                }
+            }
+        }
+        console.log(protectionData);
+        $scope.player.setProtectionData(protectionData);
+        //$scope.player.doLoad();
+        console.log($scope.player.getProtectionController());
+    }
+
+    $scope.isValidURL = function (str) {
+        let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+        return (res !== null)
+      };
+    
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
