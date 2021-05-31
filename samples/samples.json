@@ -199,6 +199,33 @@
         ]
     },
     {
+        "section": "ABR",
+        "samples": [
+            {
+                "title": "Changing the default ABR algorithm",
+                "description": "This example shows how configure the ABR algorithms in dash.js",
+                "href": "abr/abr.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Custom ABR Rules",
+                "description": "Example showing how to create and define custom ABR rules in dash.js.",
+                "href": "abr/custom-abr-rules.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
+    },
+    {
         "section": "DRM",
         "samples": [
             {
@@ -267,7 +294,6 @@
                     "Audio"
                 ]
             }
-
         ]
     },
     {
@@ -432,17 +458,6 @@
                 "description": "This sample shows how to deal with autoplay browsers policy. It uses an event listener to detect when auto playback is interrupted by the browser and how to recover from this situation muting audio.",
                 "href": "advanced/auto-play-browser-policy.html",
                 "image": "lib/img/bbb-2.jpg",
-                "labels": [
-                    "VoD",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Custom ABR Rules",
-                "description": "Example showing how to create and define custom ABR rules in dash.js.",
-                "href": "advanced/abr/index.html",
-                "image": "lib/img/bbb-3.jpg",
                 "labels": [
                     "VoD",
                     "Video",

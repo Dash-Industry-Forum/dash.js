@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Custom ABR Rules</title>
+    <title>Configuration of ABR Rules</title>
 
-    <script src="../../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
-    <link href="../../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../../lib/main.css" rel="stylesheet">
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <style>
         video {
@@ -27,19 +27,23 @@
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
-
-            /* don't use dash.js default rules */
+            
             player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'useDefaultABRRules': false
+                streaming: {
+                    abr: {
+                        useDefaultABRRules: true,
+                        ABRStrategy: 'abrThroughput',
+                        additionalAbrRules: {
+                            insufficientBufferRule: true,
+                            switchHistoryRule: false,
+                            droppedFramesRule: false,
+                            abandonRequestsRule: false
+                        }
+                        
                     }
                 }
             });
-
-            /* add my custom quality switch rule. Look at LowestBitrateRule.js to know more */
-            /* about the structure of a custom rule */
-            player.addABRCustomRule('qualitySwitchRules', 'LowestBitrateRule', LowestBitrateRule);
+            
 
             player.initialize(video, url, true);
         }
@@ -51,14 +55,14 @@
     <div class="container py-4">
         <header class="pb-3 mb-4 border-bottom">
             <img class=""
-                 src="../../lib/img/dashjs-logo.png"
+                 src="../lib/img/dashjs-logo.png"
                  width="200">
         </header>
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Custom ABR Rules</h3>
-                    <p>Example showing how to create and define custom ABR rules in dash.js.</p>
+                    <h3>Configuration of ABR Rules</h3>
+                    <p>Example showing how to define the target ABR rules in dash.js. In this demo we enable the throughput based ABR decision logic. In addition, the InsufficientBufferRule is enabled.</p>
                 </div>
             </div>
             <div class="col-md-8">
@@ -82,6 +86,6 @@
         init();
     });
 </script>
-<script src="../../highlighter.js"></script>
+<script src="../highlighter.js"></script>
 </body>
 </html>
