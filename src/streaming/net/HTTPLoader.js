@@ -111,11 +111,12 @@ function HTTPLoader(cfg) {
             request.firstByteDate = request.firstByteDate || requestStartTime;
 
             if (!request.checkExistenceOnly) {
-                dashMetrics.addHttpRequest(request, httpRequest.response ? httpRequest.response.responseURL : null,
-                    httpRequest.response ? httpRequest.response.status : null,
-                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                        httpRequest.response ? httpRequest.response.responseHeaders : [],
-                    success ? traces : null);
+                const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
+                const responseStatus = httpRequest.response ? httpRequest.response.status : null;
+                const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                    httpRequest.response ? httpRequest.response.responseHeaders : [];
+
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
@@ -262,8 +263,7 @@ function HTTPLoader(cfg) {
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);
                 modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
-            }
-            else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 headers = cmcdModel.getHeaderParameters(request);
             }
         }
