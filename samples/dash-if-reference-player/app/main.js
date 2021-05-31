@@ -631,10 +631,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
-    $scope.selectVideoQuality = function (quality) {
-        $scope.player.setQualityFor('video', quality);
-    };
-
     $scope.doLoad = function () {
         $scope.initSession();
 

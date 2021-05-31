@@ -165,6 +165,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            abr: {
  *                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
  *                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+ *                additionalAbrRules: {
+ *                   insufficientBufferRule: false,
+ *                   switchHistoryRule: true,
+ *                   droppedFramesRule: true,
+ *                   abandonRequestsRule: false
+ *                },
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
@@ -512,6 +518,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
  * @property {string} [ABRStrategy="abrDynamic"]
  * Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
+ * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
+ * @property {object} [additionalAbrRules={insufficientBufferRule: false,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: false}]
+ * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
  *
@@ -803,10 +812,10 @@ function Settings() {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 additionalAbrRules: {
-                    insufficientBufferRule: true,
+                    insufficientBufferRule: false,
                     switchHistoryRule: true,
                     droppedFramesRule: true,
-                    abandonRequestsRule: true
+                    abandonRequestsRule: false
                 },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,

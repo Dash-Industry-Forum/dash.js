@@ -261,6 +261,12 @@ declare namespace dashjs {
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
                 ABRStrategy?: 'abrDynamic' | 'abrBola' | 'abrL2A' | 'abrLoLP' | 'abrThroughput';
+                additionalAbrRules?: {
+                    insufficientBufferRule?: boolean,
+                    switchHistoryRule?: boolean,
+                    droppedFramesRule?: boolean,
+                    abandonRequestsRule?: boolean
+                },
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
                 useDeadTimeLatency?: boolean;
