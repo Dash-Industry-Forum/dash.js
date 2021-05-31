@@ -265,6 +265,26 @@
                                    ng-click="changeABRStrategy('abrThroughput')">
                             ABR Strategy: Throughput
                         </label>
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable InsufficientBufferRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="insufficientBufferRule" ng-model="additionalAbrRules.insufficientBufferRule">
+                            InsufficientBufferRule
+                        </label>
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable InsufficientBufferRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="switchHistoryRule" ng-model="additionalAbrRules.switchHistoryRule">
+                            SwitchHistoryRule
+                        </label>
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable InsufficientBufferRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="droppedFramesRule" ng-model="additionalAbrRules.droppedFramesRule">
+                            DroppedFramesRule
+                        </label>
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable/Disable InsufficientBufferRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="abandonRequestsRule" ng-model="additionalAbrRules.abandonRequestsRule">
+                            AbandonRequestsRule
+                        </label>
                     </div>
                 </div>
 

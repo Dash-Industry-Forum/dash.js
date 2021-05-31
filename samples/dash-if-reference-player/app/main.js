@@ -174,6 +174,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         textEnabled: true,
         forceTextStreaming: false
     };
+    $scope.additionalAbrRules = {};
     $scope.mediaSettingsCacheEnabled = true;
     $scope.metricsTimer = null;
     $scope.updateMetricsInterval = 1000;
@@ -264,7 +265,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             let config = JSON.parse(reqConfig.responseText);
             if ($scope.player) {
                 $scope.player.updateSettings(config);
-                setLatencyAttributes();
             }
         } else {
             // Set default initial configuration
@@ -285,8 +285,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             };
             $scope.player.updateSettings(initialConfig);
-            setLatencyAttributes();
         }
+        setLatencyAttributes();
+        setAbrRules();
     };
 
     reqConfig.open('GET', 'dashjs_config.json', true);
@@ -540,6 +541,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.toggleForceQualitySwitch = function () {
         $scope.controlbar.forceQualitySwitch($scope.forceQualitySwitchSelected);
+    };
+
+    $scope.toggleBufferRule = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                abr: {
+                    additionalAbrRules: {
+                        insufficientBufferRule: $scope.additionalAbrRules.insufficientBufferRule,
+                        switchHistoryRule: $scope.additionalAbrRules.switchHistoryRule,
+                        droppedFramesRule: $scope.additionalAbrRules.droppedFramesRule,
+                        abandonRequestsRule: $scope.additionalAbrRules.abandonRequestsRule,
+                    }
+                }
+            }
+        });
     };
 
     $scope.toggleScheduleWhilePaused = function () {
@@ -1069,6 +1085,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
         $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
+    }
+
+    function setAbrRules() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.additionalAbrRules.insufficientBufferRule = currentConfig.streaming.abr.additionalAbrRules.insufficientBufferRule;
+        $scope.additionalAbrRules.switchHistoryRule = currentConfig.streaming.abr.additionalAbrRules.switchHistoryRule;
+        $scope.additionalAbrRules.droppedFramesRule = currentConfig.streaming.abr.additionalAbrRules.droppedFramesRule;
+        $scope.additionalAbrRules.abandonRequestsRule = currentConfig.streaming.abr.additionalAbrRules.abandonRequestsRule;
     }
 
 
