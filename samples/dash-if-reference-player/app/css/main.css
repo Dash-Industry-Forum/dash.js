@@ -590,3 +590,20 @@ Conformance warnings
     margin-bottom: 15px;
     padding: 12px;
 }
+
+/********************************************************
+BS Information
+*********************************************************/
+
+.bs-callout {
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid #eee;
+    border-left-width: 5px;
+    border-radius: 3px;
+    background: #FFFFFF;
+}
+
+.bs-callout-information {
+    border-left-color: #136bfb ;
+}

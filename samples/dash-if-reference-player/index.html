@@ -92,7 +92,6 @@
             </iframe>
         </div>
     </div>
-
     <div class="row">
         <div class="input-group">
             <div id="desktop-streams" class="input-group-btn">
@@ -267,22 +266,26 @@
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable InsufficientBufferRule">
-                            <input type="checkbox" ng-change="toggleBufferRule()" id="insufficientBufferRule" ng-model="additionalAbrRules.insufficientBufferRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="insufficientBufferRule"
+                                   ng-model="additionalAbrRules.insufficientBufferRule">
                             InsufficientBufferRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable SwitchHistoryRule">
-                            <input type="checkbox" ng-change="toggleBufferRule()" id="switchHistoryRule" ng-model="additionalAbrRules.switchHistoryRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="switchHistoryRule"
+                                   ng-model="additionalAbrRules.switchHistoryRule">
                             SwitchHistoryRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable DroppedFramesRule">
-                            <input type="checkbox" ng-change="toggleBufferRule()" id="droppedFramesRule" ng-model="additionalAbrRules.droppedFramesRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="droppedFramesRule"
+                                   ng-model="additionalAbrRules.droppedFramesRule">
                             DroppedFramesRule
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                                title="Enable/Disable AbandonRequestsRule">
-                            <input type="checkbox" ng-change="toggleBufferRule()" id="abandonRequestsRule" ng-model="additionalAbrRules.abandonRequestsRule">
+                            <input type="checkbox" ng-change="toggleBufferRule()" id="abandonRequestsRule"
+                                   ng-model="additionalAbrRules.abandonRequestsRule">
                             AbandonRequestsRule
                         </label>
                     </div>
@@ -478,7 +481,8 @@
                 <label class="options-label" title="Specifies the CMCD data transition mode">Transition Mode:</label>
                 <label data-toggle="tooltip" data-placement="right"
                        title="Send the CMCD metrics via query parameter">
-                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off" name="cmcd-mode"
+                    <input type="radio" id="cmcd-query" value="query" checked="checked" autocomplete="off"
+                           name="cmcd-mode"
                            ng-click="setCmcdMode()">
                     Query
                 </label>
@@ -550,6 +554,11 @@
 
         <!-- STATS TAB CONTENT -->
         <div class="col-md-3 tabs-section">
+            <div class="bs-callout bs-callout-information" id="callout-dropdown-positioning">
+                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                Additional samples can be found in the <a
+                href="../index.html" target="_blank">Sample Section</a>.
+            </div>
             <div>
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="active">
