@@ -202,26 +202,16 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
-        let event;
 
         if (type === null || !element || element.seeking || stalledStreams.indexOf(type) !== -1) {
             return;
         }
 
         stalledStreams.push(type);
-        if (element && stalledStreams.length === 1) {
-            // Halt playback until nothing is stalled.
-            event = document.createEvent('Event');
-            event.initEvent('waiting', true, false);
-            previousPlaybackRate = element.playbackRate;
-            setPlaybackRate(0);
-            element.dispatchEvent(event);
-        }
     }
 
     function removeStalledStream(type) {
         let index = stalledStreams.indexOf(type);
-        let event;
 
         if (type === null) {
             return;
@@ -229,15 +219,7 @@ function VideoModel() {
         if (index !== -1) {
             stalledStreams.splice(index, 1);
         }
-        // If nothing is stalled resume playback.
-        if (element && isStalled() === false && element.playbackRate === 0) {
-            setPlaybackRate(previousPlaybackRate || 1);
-            if (!element.paused) {
-                event = document.createEvent('Event');
-                event.initEvent('playing', true, false);
-                element.dispatchEvent(event);
-            }
-        }
+
     }
 
     function stallStream(type, isStalled) {

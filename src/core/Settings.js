@@ -730,7 +730,7 @@ function Settings() {
                 longFormContentDurationThreshold: 600,
                 stallThreshold: 0.3,
                 useAppendWindow: true,
-                setStallState: false
+                setStallState: true
             },
             gaps: {
                 jumpGaps: true,
