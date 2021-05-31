@@ -222,6 +222,39 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Disable ABR",
+                "description": "Example showing how to disable the ABR switching in dash.js.",
+                "href": "abr/disable-abr.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Initial bitrate",
+                "description": "Example showing how to set the initial bitrate in dash.js.",
+                "href": "abr/initial-bitrate.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Max/min bitrate",
+                "description": "Example showing how to set the maximum and minimum bitrate in dash.js.",
+                "href": "abr/max-min-bitrate.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

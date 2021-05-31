@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Configuration of ABR Rules</title>
+    <title>Initial bitrate</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -25,23 +25,16 @@
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
-            
+
             player.updateSettings({
                 streaming: {
                     abr: {
-                        useDefaultABRRules: true,
-                        ABRStrategy: 'abrThroughput',
-                        additionalAbrRules: {
-                            insufficientBufferRule: true,
-                            switchHistoryRule: false,
-                            droppedFramesRule: false,
-                            abandonRequestsRule: false
-                        }
-                        
+                        initialBitrate: { audio: -1, video: 800 },
+                        autoSwitchBitrate: { audio: true, video: false }
                     }
                 }
             });
-            
+
 
             player.initialize(video, url, true);
         }
@@ -59,8 +52,8 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Configuration of ABR Rules</h3>
-                    <p>Example showing how to define the target ABR rules in dash.js. In this demo we enable the throughput based ABR decision logic. In addition, the InsufficientBufferRule is enabled.</p>
+                    <h3>Initial bitrate</h3>
+                    <p>Example showing how to set the initial bitrate in dash.js. For visibility reasons the ABR switching is disabled as well.</p>
                 </div>
             </div>
             <div class="col-md-8">
