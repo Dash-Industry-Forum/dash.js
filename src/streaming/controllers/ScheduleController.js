@@ -134,11 +134,15 @@ function ScheduleController(config) {
             }
 
             if (_shouldScheduleNextRequest()) {
+                let qualityChange = false;
                 if (checkPlaybackQuality) {
-                    // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation
-                    abrController.checkPlaybackQuality(type, streamInfo.id);
+                    // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
+                    // The StreamProcessor will also start the schedule timer again once the quality switch has beeen prepared. Consequently, we only call _getNextFragment if the quality is not changed.
+                    qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
                 }
-                _getNextFragment();
+                if (!qualityChange) {
+                    _getNextFragment();
+                }
 
             } else {
                 startScheduleTimer(settings.get().streaming.lowLatencyEnabled ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
@@ -298,12 +302,11 @@ function ScheduleController(config) {
             const streamInfo = currentRepresentationInfo.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(streamInfo)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
-                 return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
+                return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
             } else {
-                 return mediaPlayerModel.getStableBufferTime();
+                return mediaPlayerModel.getStableBufferTime();
             }
-        }
-        catch(e) {
+        } catch (e) {
             return mediaPlayerModel.getStableBufferTime();
         }
     }
@@ -356,7 +359,7 @@ function ScheduleController(config) {
     }
 
     function _onBytesAppended(e) {
-        logger.debug(`Appended bytes for ${e.mediaType}`);
+        logger.debug(`Appended bytes for ${e.mediaType} and stream id ${streamInfo.id}`);
 
         // we save the last initialized quality. That way we make sure that the media fragments we are about to append match the init segment
         if (isNaN(e.index)) {
