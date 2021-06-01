@@ -334,8 +334,34 @@
                 <div id="drmPlayreadyLicenseForm" ng-show="drmPlayreadyChecked === true">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
-                    <label class="options-label">HTTP Request Header:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.httpRequestHeader">
+                    <label class="options-label">X-AxDRM-Message:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.xAxDrmMessage"> 
+
+                    <!-- Open Header Dialogue Window -->
+                    <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('playready')">
+                                Add Request-Headers</button>
+
+                    <!-- Header Dialogue Window Content -->
+                    <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" ng-click="closeDialogue('playready')">&times;</button>
+                            <button class="btn btn-primary" ng-click="addRequestHeader('playready')">Add additional Header</button>
+
+                            <section ng-repeat="header in playreadyRequestHeaders track by $index" ng-value="{{$index}}">
+
+                                <label class="options-label">Request Header Key: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="header.key" name="playreadyKey_{{header.id}}">
+                                <label class="options-label">Request Header Value: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="header.value" name="playreadyValue_{{header.id}}">
+                                <button class="btn btn-danger" ng-click="removeRequestHeader('playready', $index)">Remove Header</button>
+
+                            </section>   
+                            
+                        </div>
+                    </div>
+
                     <div ng-show="prioritiesEnabled">
                         <label class="options-label">Priority</label>
                         <select name="playreadyPriority" ng-model="drmPlayready.priority" ng-init="drmPlayready.priority='1'">
@@ -355,8 +381,34 @@
                 <div id="drmWidevineLicenseForm" ng-show="drmWidevineChecked === true">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
-                    <label class="options-label">HTTP Request Header:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.httpRequestHeader">
+                    <label class="options-label">X-AxDRM-Message:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.xAxDrmMessage">
+
+                    <!-- Open Header Dialogue Window -->
+                    <button id="widevineRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('widevine')">
+                        Add Request-Headers</button>
+
+                    <!-- Header Dialogue Window Content -->
+                    <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" ng-click="closeDialogue('widevine')">&times;</button>
+                            <button class="btn btn-primary" ng-click="addRequestHeader('widevine')">Add additional Header</button>
+
+                            <section ng-repeat="header in widevineRequestHeaders track by $index" ng-value="{{$index}}">
+
+                                <label class="options-label">Request Header Key: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="header.key" name="widevineKey_{{header.id}}">
+                                <label class="options-label">Request Header Value: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="header.value" name="widevineValue_{{header.id}}">
+                                <button class="btn btn-danger" ng-click="removeRequestHeader('widevine', $index)">Remove Header</button>
+
+                            </section>   
+                            
+                        </div>
+                    </div>
+                    
                     <div ng-show="prioritiesEnabled">
                         <label class="options-label">Priority</label>
                         <select name="widevinePriority" ng-model="drmWidevine.priority" ng-init="drmWidevine.priority='0'">
@@ -374,10 +426,44 @@
                 </label>
 
                 <div id="drmClearkeyLicenseForm" ng-show="drmClearkeyChecked === true">
-                    <label class="options-label">Kid:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
-                    <label class="options-label">Key:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.key">
+                    <div id="drmClearkeyKidKeyMode" ng-show="drmClearkey.inputMode === false">
+                        <label class="options-label">Kid:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
+                        <label class="options-label">Key:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.key">
+                    </div>
+                    <div id="drmClearkeyLicenseserverMode" ng-show="drmClearkey.inputMode === true">
+                        <label class="options-label">License URL:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.licenseServerUrl">
+                        <label class="options-label">X-AxDRM-Message:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.xAxDrmMessage">
+                    </div>
+
+                    <!-- Open Header Dialogue Window -->
+                    <button id="clearkeyRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('clearkey')">
+                        Add Request-Headers</button>
+
+                    <!-- Header Dialogue Window Content -->
+                    <div id="clearkeyRequestHeaderDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" ng-click="closeDialogue('clearkey')">&times;</button>
+                            <button class="btn btn-primary" ng-click="addRequestHeader('clearkey')">Add additional Header</button>
+
+                            <section ng-repeat="header in clearkeyRequestHeaders track by $index" ng-value="{{$index}}">
+                                
+
+                                <label class="options-label">Request Header Key: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="header.key" name="clearkeyKey_{{header.id}}">
+                                <label class="options-label">Request Header Value: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="header.value" name="clearkeyValue_{{header.id}}">
+                                <button class="btn btn-danger" ng-click="removeRequestHeader('playready', $index)">Remove Header</button>
+                            </section>   
+                            
+                        </div>
+                    </div>
+
                     <div ng-show="prioritiesEnabled">
                         <label class="options-label">Priority</label>
                         <select name="clearkeyPriority" ng-model="drmClearkey.priority" ng-init="drmClearkey.priority='2'">
@@ -396,6 +482,23 @@
                     <input type="checkbox" ng-model="prioritiesEnabled">
                     DRM Priorisation
                 </label>
+                </div>
+            </div>
+            <div class="sub-options-item">
+                <div class="sub-options-item-title">Clearkey Options</div>
+                <div class="sub-options-item-body">
+                    <label data-toggle="tooltip" data-placement="right"
+                            title="Use KID=Key to specify Clearkey DRM.">
+                        <input type="radio" id="kidKey" autocomplete="off" name="inputMode" checked="checked"
+                                ng-click="toggleInputMode()">
+                        KID=KEY
+                    </label>
+                    <label data-toggle="tooltip" data-placement="right"
+                            title="Use Licenseserver-URL to specify Clearkey DRM">
+                        <input type="radio" id="licenseServer" autocomplete="off" name="inputMode"
+                                ng-click="toggleInputMode()">
+                        License Server
+                    </label>
                 </div>
             </div>
                 <!-- <div class="dropdown" data-toggle="tooltip" data-placement="left"

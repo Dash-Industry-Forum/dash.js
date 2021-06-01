@@ -592,3 +592,44 @@ Conformance warnings
     margin-bottom: 15px;
     padding: 12px;
 }
+
+/********************************************************
+DRM Header Dialogue
+*********************************************************/
+
+.requestHeaderDialogue {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    text-align: center;
+    background-color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.requestHeaderDialogueContent {
+    display: inline-block;
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.close {
+    color: rgb(255, 0, 0);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
