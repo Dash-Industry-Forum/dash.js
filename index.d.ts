@@ -141,16 +141,24 @@ declare namespace dashjs {
             dispatchEvent?: boolean;
         };
         streaming?: {
-            metricsMaxListDepth?: number,
             abandonLoadTimeout?: number,
             calcSegmentAvailabilityRangeFromTimeline?: boolean,
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
-            useManifestDateHeaderTimeSource?: boolean,
             manifestUpdateRetryInterval?: number,
-            filterUnsupportedEssentialProperties?: boolean,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
+            capabilities?: {
+                filterUnsupportedEssentialProperties?: boolean,
+                useMediaCapabilitiesApi?: boolean
+            },
+            timeShiftBuffer?: {
+                calcFromSegmentTimeline?: boolean
+                fallbackToSegmentTimeline?: boolean
+            },
+            metrics?: {
+                metricsMaxListDepth?: number
+            },
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
@@ -169,6 +177,7 @@ declare namespace dashjs {
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
+                setStallState?:boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
@@ -179,6 +188,7 @@ declare namespace dashjs {
                 smallGapLimit?: number,
             },
             utcSynchronization?: {
+                useManifestDateHeaderTimeSource?: boolean,
                 backgroundAttempts?: number,
                 timeBetweenSyncAttempts?: number,
                 maximumTimeBetweenSyncAttempts?: number,

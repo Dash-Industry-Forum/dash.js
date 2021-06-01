@@ -481,6 +481,7 @@ function Stream(config) {
         const errored = false;
         for (let i = 0; i < ln; i++) {
             let fragmentModel = streamProcessors[i].getFragmentModel();
+            fragmentModel.abortRequests();
             fragmentModel.resetInitialSettings();
             streamProcessors[i].reset(errored, keepBuffers);
         }
@@ -737,7 +738,6 @@ function Stream(config) {
         }
 
         logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
-        console.debug(`onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED for stream id ${streamInfo.id}`);
         hasFinishedBuffering = true;
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
     }
@@ -799,8 +799,6 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-        logger.info('Manifest updated... updating data system wide.');
-
         isUpdating = true;
         streamInfo = updatedStreamInfo;
 
@@ -813,16 +811,18 @@ function Stream(config) {
         for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
             let streamProcessor = streamProcessors[i];
             const currentMediaInfo = streamProcessor.getMediaInfo();
-            const currentMediaInfoId = currentMediaInfo ? currentMediaInfo.id : null;
             streamProcessor.updateStreamInfo(streamInfo);
             let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
             // Check if AdaptationSet has not been removed in MPD update
             if (allMediaForType) {
-                for (let i = 0; i < allMediaForType.length; i++) {
-                    streamProcessor.addMediaInfo(allMediaForType[i]);
-                    if (allMediaForType[i].id === currentMediaInfoId) {
-                        abrController.updateTopQualityIndex(allMediaForType[i]);
-                        streamProcessor.selectMediaInfo(allMediaForType[i])
+                // Remove the current mediaInfo objects before adding the updated ones
+                streamProcessor.clearMediaInfoArray();
+                for (let j = 0; j < allMediaForType.length; j++) {
+                    const mInfo = allMediaForType[j];
+                    streamProcessor.addMediaInfo(allMediaForType[j]);
+                    if (adapter.areMediaInfosEqual(currentMediaInfo, mInfo)) {
+                        abrController.updateTopQualityIndex(mInfo);
+                        streamProcessor.selectMediaInfo(mInfo)
                     }
                 }
             }

@@ -252,6 +252,9 @@ function MediaPlayer() {
     function initialize(view, source, AutoPlay) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
+            capabilities.setConfig({
+                settings
+            })
         }
 
         errHandler = ErrorHandler(context).getInstance();
@@ -868,14 +871,14 @@ function MediaPlayer() {
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
      * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
-     * @param {boolean} replace - true if segments have to be replaced by segments of the new quality
+     * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @see {@link module:MediaPlayer#setAutoSwitchQualityFor setAutoSwitchQualityFor()}
      * @see {@link module:MediaPlayer#getQualityFor getQualityFor()}
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function setQualityFor(type, value, replace = false) {
+    function setQualityFor(type, value, forceReplace = false) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
@@ -889,7 +892,7 @@ function MediaPlayer() {
                 thumbnailController.setTrackByIndex(value);
             }
         }
-        abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value, { replace: replace });
+        abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), value, { forceReplace });
     }
 
     /**

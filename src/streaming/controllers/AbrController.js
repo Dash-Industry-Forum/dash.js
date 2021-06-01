@@ -267,7 +267,7 @@ function AbrController() {
         const type = e.request.mediaType;
         const streamId = e.streamId;
 
-        if (!type || !streamId || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
+        if (!type || !streamId || !streamProcessorDict[streamId] || !settings.get().streaming.abr.autoSwitchBitrate[type]) {
             return;
         }
 
@@ -556,7 +556,7 @@ function AbrController() {
                 const representation = adapter.getAdaptationForType(streamInfo.index, type, streamInfo).Representation;
                 if (Array.isArray(representation)) {
                     const repIdx = Math.max(Math.round(representation.length * configRatio) - 1, 0);
-                    configBitrate = representation[repIdx].bandwidth;
+                    configBitrate = representation[repIdx].bandwidth / 1000;
                 } else {
                     configBitrate = 0;
                 }
@@ -710,7 +710,7 @@ function AbrController() {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-            logger.info('[' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
+            logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
 
             qualityDict[streamId] = qualityDict[streamId] || {};
             qualityDict[streamId][type] = newQuality;

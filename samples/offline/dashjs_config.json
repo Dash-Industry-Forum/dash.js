@@ -20,7 +20,6 @@
         "wallclockTimeUpdateInterval": 50,
         "lowLatencyEnabled": false,
         "keepProtectionMediaKeys": false,
-        "useManifestDateHeaderTimeSource": true,
         "segmentOverlapToleranceTime": 0.2,
         "useSuggestedPresentationDelay": false,
         "manifestUpdateRetryInterval": 100,

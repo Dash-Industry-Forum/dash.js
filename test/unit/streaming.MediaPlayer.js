@@ -708,12 +708,12 @@ describe('MediaPlayer', function () {
         });
 
         it('should configure useManifestDateHeaderTimeSource', function () {
-            let useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
+            let useManifestDateHeaderTimeSource = player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.true; // jshint ignore:line
 
-            player.updateSettings({ 'streaming': { 'useManifestDateHeaderTimeSource': false } });
+            player.updateSettings({ 'streaming': { utcSynchronization: { 'useManifestDateHeaderTimeSource': false } } });
 
-            useManifestDateHeaderTimeSource = player.getSettings().streaming.useManifestDateHeaderTimeSource;
+            useManifestDateHeaderTimeSource = player.getSettings().streaming.utcSynchronization.useManifestDateHeaderTimeSource;
             expect(useManifestDateHeaderTimeSource).to.be.false; // jshint ignore:line
         });
 
