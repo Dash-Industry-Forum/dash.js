@@ -59,6 +59,7 @@ function OfflineController(config) {
     const playbackController = config.playbackController;
     const dashMetrics = config.dashMetrics;
     const timelineConverter = config.timelineConverter;
+    const segmentBaseController = config.segmentBaseController;
     const adapter = config.adapter;
     const manifestUpdater = config.manifestUpdater;
     const baseURLController = config.baseURLController;
@@ -121,6 +122,7 @@ function OfflineController(config) {
                 dashMetrics: dashMetrics,
                 timelineConverter: timelineConverter,
                 errHandler: errHandler,
+                segmentBaseController: segmentBaseController,
                 offlineStoreController: offlineStoreController,
                 debug: debug,
                 constants: constants,
