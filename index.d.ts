@@ -487,14 +487,6 @@ declare namespace dashjs {
 
         setTextTrack(idx: number): void;
 
-        getTextDefaultLanguage(): string | undefined;
-
-        setTextDefaultLanguage(lang: string): void;
-
-        getTextDefaultEnabled(): boolean | undefined;
-
-        setTextDefaultEnabled(enable: boolean): void;
-
         provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
 
         getBitrateInfoListFor(type: MediaType): BitrateInfo[];
@@ -546,8 +538,6 @@ declare namespace dashjs {
         unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
 
         getOfflineController(): OfflineController;
-
-        enableManifestDateHeaderTimeSource(value: boolean): void;
 
         displayCaptionsOnTop(value: boolean): void;
 
