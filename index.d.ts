@@ -142,7 +142,6 @@ declare namespace dashjs {
         };
         streaming?: {
             abandonLoadTimeout?: number,
-            calcSegmentAvailabilityRangeFromTimeline?: boolean,
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
             manifestUpdateRetryInterval?: number,
@@ -157,12 +156,15 @@ declare namespace dashjs {
                 fallbackToSegmentTimeline?: boolean
             },
             metrics?: {
-                metricsMaxListDepth?: number
+                maxListDepth?: number
             },
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
                 useSuggestedPresentationDelay?: boolean
+            },
+            protection?: {
+                keepProtectionMediaKeys?: boolean,
             },
             buffer?: {
                 fastSwitchEnabled?: boolean,
@@ -179,9 +181,6 @@ declare namespace dashjs {
                 useAppendWindow?: boolean,
                 setStallState?:boolean
             },
-            protection?: {
-                keepProtectionMediaKeys?: boolean,
-            }
             gaps?: {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
