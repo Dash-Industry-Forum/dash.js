@@ -599,9 +599,13 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
- * @typedef {Object} StreamingSettings
+ * @typedef {Object} Metrics
  * @property {number} [metricsMaxListDepth=100]
- * Maximum list depth of metrics.
+ * Maximum number of metrics that are persisted per type.
+ */
+
+/**
+ * @typedef {Object} StreamingSettings
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
@@ -618,6 +622,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {number} [eventControllerRefreshDelay=100]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
  * @property {module:Settings~Protection} protection DRM related settings
@@ -777,9 +782,18 @@ function Settings() {
                 enabled: false,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
-            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
-            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
-            cacheLoadThresholds: { video: 50, audio: 5 },
+            lastBitrateCachingInfo: {
+                enabled: true,
+                ttl: 360000
+            },
+            lastMediaSettingsCachingInfo: {
+                enabled: true,
+                ttl: 360000
+            },
+            cacheLoadThresholds: {
+                video: 50,
+                audio: 5
+            },
             trackSwitchMode: {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
@@ -822,12 +836,30 @@ function Settings() {
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
-                maxBitrate: { audio: -1, video: -1 },
-                minBitrate: { audio: -1, video: -1 },
-                maxRepresentationRatio: { audio: 1, video: 1 },
-                initialBitrate: { audio: -1, video: -1 },
-                initialRepresentationRatio: { audio: -1, video: -1 },
-                autoSwitchBitrate: { audio: true, video: true },
+                maxBitrate: {
+                    audio: -1,
+                    video: -1
+                },
+                minBitrate: {
+                    audio: -1,
+                    video: -1
+                },
+                maxRepresentationRatio: {
+                    audio: 1,
+                    video: 1
+                },
+                initialBitrate: {
+                    audio: -1,
+                    video: -1
+                },
+                initialRepresentationRatio: {
+                    audio: -1,
+                    video: -1
+                },
+                autoSwitchBitrate: {
+                    audio: true,
+                    video: true
+                },
                 fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
             },
             cmcd: {
