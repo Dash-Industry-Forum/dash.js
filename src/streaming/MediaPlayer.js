@@ -2147,6 +2147,7 @@ function MediaPlayer() {
                 errHandler: errHandler,
                 dashMetrics: dashMetrics,
                 timelineConverter: timelineConverter,
+                segmentBaseController: segmentBaseController,
                 schemeLoaderFactory: schemeLoaderFactory,
                 eventBus: eventBus,
                 events: Events,
