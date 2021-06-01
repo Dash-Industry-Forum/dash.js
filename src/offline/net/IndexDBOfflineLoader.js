@@ -62,9 +62,7 @@ function IndexDBOfflineLoader(config) {
                     config.request.mediaType === constants.VIDEO ||
                     config.request.mediaType === constants.TEXT ||
                     config.request.mediaType === constants.MUXED ||
-                    config.request.mediaType === constants.IMAGE ||
-                    config.request.mediaType === constants.FRAGMENTED_TEXT ||
-                    config.request.mediaType === constants.EMBEDDED_TEXT
+                    config.request.mediaType === constants.IMAGE
                 ) {
                     let suffix = config.request.type === 'InitializationSegment' ? 'init' : config.request.index;
                     let key = config.request.representationId + '_' + suffix;
