@@ -696,7 +696,7 @@ function Settings() {
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
             manifestUpdateRetryInterval: 100,
-            cacheInitSegments: true,
+            cacheInitSegments: false,
             eventControllerRefreshDelay: 150,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
@@ -748,7 +748,7 @@ function Settings() {
                 enableBackgroundSyncAfterSegmentDownloadError: true,
                 defaultTimingSource: {
                     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
-                    value: 'http://time.akamai.com/?iso&ms'
+                    value: 'https://time.akamai.com/?iso&ms'
                 }
             },
             scheduling: {
