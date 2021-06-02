@@ -696,7 +696,7 @@ function Settings() {
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
             manifestUpdateRetryInterval: 100,
-            cacheInitSegments: true,
+            cacheInitSegments: false,
             eventControllerRefreshDelay: 150,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
