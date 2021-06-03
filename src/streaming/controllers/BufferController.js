@@ -942,8 +942,7 @@ function BufferController(config) {
             }
 
             return totalBufferedTime;
-        }
-        catch(e) {
+        } catch (e) {
             return 0;
         }
     }

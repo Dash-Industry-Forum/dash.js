@@ -369,8 +369,8 @@ function StreamProcessor(config) {
                 if (request) {
                     fragmentModel.executeRequest(request);
                 } else {
-                    _noValidRequest();
                     scheduleController.setInitSegmentRequired(true);
+                    _noValidRequest();
                 }
             }
         }
@@ -652,6 +652,7 @@ function StreamProcessor(config) {
         }
 
         if (e.error && e.request.serviceLocation) {
+            logger.info(`Fragment loading completed with an error`);
             setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2));
             scheduleController.startScheduleTimer(0);
         }

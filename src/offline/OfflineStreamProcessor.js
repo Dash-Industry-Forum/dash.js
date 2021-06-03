@@ -85,6 +85,7 @@ function OfflineStreamProcessor(config) {
             streamInfo,
             timelineConverter,
             dashConstants,
+            segmentBaseController: config.segmentBaseController,
             type
         });
 
@@ -104,7 +105,7 @@ function OfflineStreamProcessor(config) {
             requestModifier: RequestModifier(context).getInstance(),
             dashConstants: dashConstants,
             constants: constants,
-            segmentsController,
+            segmentsController: segmentsController,
             urlUtils: URLUtils(context).getInstance()
         });
 
@@ -119,7 +120,7 @@ function OfflineStreamProcessor(config) {
             events: events,
             eventBus: eventBus,
             errors: errors,
-            segmentsController
+            segmentsController: segmentsController
         });
 
         fragmentModel = FragmentModel(context).create({
