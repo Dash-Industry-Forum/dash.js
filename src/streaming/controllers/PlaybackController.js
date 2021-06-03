@@ -303,6 +303,7 @@ function PlaybackController() {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
             eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
             eventBus.off(Events.STREAM_INITIALIZING, onStreamInitializing, this);
+            stopPlaybackCatchUp();
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
