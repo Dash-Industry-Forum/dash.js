@@ -76,6 +76,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                liveDelayFragmentCount: NaN,
  *                liveDelay: NaN,
  *                useSuggestedPresentationDelay: true,
+ *                applyServiceDescription: true
  *            },
  *            protection: {
  *                keepProtectionMediaKeys: false
@@ -222,6 +223,8 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
  * @property {boolean} [useSuggestedPresentationDelay=true]
  * Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
+ * @property {boolean} [applyServiceDescription=true]
+ * Set to true if dash.js should use latency targets defined in ServiceDescription elements
  */
 
 /**
@@ -727,6 +730,7 @@ function Settings() {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
                 useSuggestedPresentationDelay: true,
+                applyServiceDescription: true
             },
             protection: {
                 keepProtectionMediaKeys: false

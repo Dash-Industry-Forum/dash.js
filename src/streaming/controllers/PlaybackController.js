@@ -853,7 +853,9 @@ function PlaybackController() {
     }
 
     function onStreamInitializing(e) {
-        _applyServiceDescription(e.streamInfo, e.mediaInfo);
+        if (settings.get().streaming.delay.applyServiceDescription) {
+            _applyServiceDescription(e.streamInfo, e.mediaInfo);
+        }
     }
 
     function _applyServiceDescription(streamInfo, mediaInfo) {
@@ -872,12 +874,12 @@ function PlaybackController() {
             if (llsd) {
                 if (mediaInfo && mediaInfo.supplementalProperties &&
                     mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
-                        logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
-                        settings.update({
-                            streaming: {
-                                lowLatencyEnabled: true
-                            }
-                        });
+                    logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
+                    settings.update({
+                        streaming: {
+                            lowLatencyEnabled: true
+                        }
+                    });
                 }
                 if (llsd.latency && llsd.latency.target > 0) {
                     logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);

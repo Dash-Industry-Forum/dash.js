@@ -161,7 +161,8 @@ declare namespace dashjs {
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean
+                useSuggestedPresentationDelay?: boolean,
+                applyServiceDescription?: boolean
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
