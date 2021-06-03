@@ -369,8 +369,8 @@ function StreamProcessor(config) {
                 if (request) {
                     fragmentModel.executeRequest(request);
                 } else {
-                    _noValidRequest();
                     scheduleController.setInitSegmentRequired(true);
+                    _noValidRequest();
                 }
             }
         }
