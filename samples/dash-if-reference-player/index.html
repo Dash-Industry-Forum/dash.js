@@ -327,11 +327,11 @@
             <form>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="">
-                    <input type="checkbox" ng-model="drmPlayreadyChecked" ng-change="drmPlayready.isActive = drmPlayreadyChecked">
+                    <input type="checkbox" ng-model="drmPlayready.isActive">
                     Playready
                 </label>
 
-                <div id="drmPlayreadyLicenseForm" ng-show="drmPlayreadyChecked === true">
+                <div id="drmPlayreadyLicenseForm" ng-show="drmPlayready.isActive">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
                     <label class="options-label">X-AxDRM-Message:</label>
@@ -374,11 +374,11 @@
 
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="">
-                    <input type="checkbox" ng-model="drmWidevineChecked" ng-change="drmWidevine.isActive = drmWidevineChecked">
+                    <input type="checkbox" ng-model="drmWidevine.isActive">
                     Widevine
                 </label>
 
-                <div id="drmWidevineLicenseForm" ng-show="drmWidevineChecked === true">
+                <div id="drmWidevineLicenseForm" ng-show="drmWidevine.isActive">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
                     <label class="options-label">X-AxDRM-Message:</label>
@@ -421,11 +421,11 @@
 
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="">
-                    <input type="checkbox" ng-model="drmClearkeyChecked" ng-change="drmClearkey.isActive = drmClearkeyChecked">
+                    <input type="checkbox" ng-model="drmClearkey.isActive">
                     Clearkey
                 </label>
 
-                <div id="drmClearkeyLicenseForm" ng-show="drmClearkeyChecked === true">
+                <div id="drmClearkeyLicenseForm" ng-show="drmClearkey.isActive">
                     <div id="drmClearkeyKidKeyMode" ng-show="drmClearkey.inputMode === false">
                         <label class="options-label">Kid:</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
