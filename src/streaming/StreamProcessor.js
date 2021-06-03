@@ -719,8 +719,9 @@ function StreamProcessor(config) {
     function updateStreamInfo(newStreamInfo) {
         streamInfo = newStreamInfo;
         if (!isBufferingCompleted()) {
-            bufferController.updateAppendWindow();
+            return bufferController.updateAppendWindow();
         }
+        return Promise.resolve();
     }
 
     function getStreamInfo() {
@@ -910,61 +911,68 @@ function StreamProcessor(config) {
     }
 
     function prepareTrackSwitch() {
-        logger.debug(`Preparing track switch for type ${type}`);
-        const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.buffer.stallThreshold);
+        return new Promise((resolve) => {
+            logger.debug(`Preparing track switch for type ${type}`);
+            const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.buffer.stallThreshold);
 
-        // when buffering is completed and we are not supposed to replace anything do nothing.
-        // Still we need to trigger preloading again and call change type in case user seeks back before transitioning to next period
-        if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
-            bufferController.prepareForNonReplacementTrackSwitch(mediaInfo.codec)
-                .then(() => {
-                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
-                })
-                .catch(() => {
-                    eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
-                })
-            return;
-        }
+            // when buffering is completed and we are not supposed to replace anything do nothing.
+            // Still we need to trigger preloading again and call change type in case user seeks back before transitioning to next period
+            if (bufferController.getIsBufferingCompleted() && !shouldReplace) {
+                bufferController.prepareForNonReplacementTrackSwitch(mediaInfo.codec)
+                    .then(() => {
+                        eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
+                    })
+                    .catch(() => {
+                        eventBus.trigger(Events.BUFFERING_COMPLETED, {}, { streamId: streamInfo.id, mediaType: type })
+                    })
+                resolve();
+                return;
+            }
 
-        // We stop the schedule controller and signal a track switch. That way we request a new init segment next
-        scheduleController.clearScheduleTimer();
-        scheduleController.setSwitchTrack(true);
+            // We stop the schedule controller and signal a track switch. That way we request a new init segment next
+            scheduleController.clearScheduleTimer();
+            scheduleController.setSwitchTrack(true);
 
-        // when we are supposed to replace it does not matter if buffering is already completed
-        if (shouldReplace) {
-            // Inform other classes like the GapController that we are replacing existing stuff
-            eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
-                mediaType: type,
-                streamId: streamInfo.id
-            }, { mediaType: type, streamId: streamInfo.id });
+            // when we are supposed to replace it does not matter if buffering is already completed
+            if (shouldReplace) {
+                // Inform other classes like the GapController that we are replacing existing stuff
+                eventBus.trigger(Events.BUFFER_REPLACEMENT_STARTED, {
+                    mediaType: type,
+                    streamId: streamInfo.id
+                }, { mediaType: type, streamId: streamInfo.id });
 
-            // Abort the current request it will be removed from the buffer anyways
-            fragmentModel.abortRequests();
+                // Abort the current request it will be removed from the buffer anyways
+                fragmentModel.abortRequests();
 
-            // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
-            bufferController.prepareForReplacementTrackSwitch(mediaInfo.codec)
-                .then(() => {
-                    // Timestamp offset couldve been changed by preloading period
-                    const representationInfo = getRepresentationInfo();
-                    return bufferController.updateBufferTimestampOffset(representationInfo);
-                })
-                .then(() => {
-                    _bufferClearedForReplacement();
-                })
-                .catch(() => {
-                    _bufferClearedForReplacement();
-                });
-        } else {
-            // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
-            bufferController.prepareForNonReplacementTrackSwitch(mediaInfo.codec)
-                .then(() => {
-                    _bufferClearedForNonReplacement();
-                })
-                .catch
-                (() => {
-                    _bufferClearedForNonReplacement();
-                });
-        }
+                // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
+                bufferController.prepareForReplacementTrackSwitch(mediaInfo.codec)
+                    .then(() => {
+                        // Timestamp offset couldve been changed by preloading period
+                        const representationInfo = getRepresentationInfo();
+                        return bufferController.updateBufferTimestampOffset(representationInfo);
+                    })
+                    .then(() => {
+                        _bufferClearedForReplacement();
+                        resolve();
+                    })
+                    .catch(() => {
+                        _bufferClearedForReplacement();
+                        resolve();
+                    });
+            } else {
+                // We do not replace anything that is already in the buffer. Still we need to prepare the buffer for the track switch
+                bufferController.prepareForNonReplacementTrackSwitch(mediaInfo.codec)
+                    .then(() => {
+                        _bufferClearedForNonReplacement();
+                        resolve();
+                    })
+                    .catch(() => {
+                        _bufferClearedForNonReplacement();
+                        resolve();
+                    });
+            }
+        })
+
     }
 
     /**
