@@ -34,8 +34,7 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 
 const GAP_HANDLER_INTERVAL = 100;
-const THRESHOLD_TO_STALLS = 30;
-const GAP_THRESHOLD = 0.1;
+const THRESHOLD_TO_STALLS = 10;
 const GAP_JUMP_WAITING_TIME_OFFSET = 0.1;
 
 function GapController() {
@@ -192,7 +191,7 @@ function GapController() {
 
             while (isNaN(nextRangeIndex) && j < ranges.length) {
                 const rangeEnd = j > 0 ? ranges.end(j - 1) : 0;
-                if (currentTime < ranges.start(j) && rangeEnd - currentTime < GAP_THRESHOLD) {
+                if (currentTime < ranges.start(j) && rangeEnd - currentTime < settings.get().streaming.gaps.threshold) {
                     nextRangeIndex = j;
                 }
                 j += 1;
@@ -273,7 +272,7 @@ function GapController() {
 
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
-                    logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
+                    logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd - (timeToWait / 1000)}`);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }
