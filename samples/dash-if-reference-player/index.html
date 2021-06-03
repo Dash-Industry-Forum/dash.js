@@ -351,10 +351,29 @@
             </div>
         </div>
         <div class="options-item">
-            <div class="options-item-title">Initial Settings</div>
+            <div class="options-item-title">Live delay</div>
             <div class="options-item-body">
                 <label class="options-label">Initial Live delay:</label>
                 <input type="text" class="form-control" placeholder="value seconds" ng-model="initialLiveDelay">
+                <label class="options-label">Initial LiveDelayFragmentCount:</label>
+                <input type="text" class="form-control" placeholder="value number" ng-model="liveDelayFragmentCount">
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Use latency targets defined in ServiceDescription elements">
+                    <input type="checkbox" id="applyServiceDescription" ng-model="applyServiceDescription"
+                           ng-change="toggleApplyServiceDescription()" ng-checked="applyServiceDescription">
+                    Apply ServiceDescription
+                </label>                
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest">
+                    <input type="checkbox" id="useSuggestedPresentationDelay" ng-model="useSuggestedPresentationDelay"
+                           ng-change="toggleUseSuggestedPresentationDelay()" ng-checked="useSuggestedPresentationDelay">
+                    Apply SuggestedPresentationDelay
+                </label>
+            </div>
+        </div>
+        <div class="options-item">
+            <div class="options-item-title">Initial Settings</div>
+            <div class="options-item-body">
                 <label class="options-label">Initial bitrate Video:</label>
                 <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate">
                 <label class="options-label">Minimum bitrate Video:</label>

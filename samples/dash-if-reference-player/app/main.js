@@ -227,6 +227,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.localStorageSelected = true;
     $scope.jumpGapsSelected = true;
     $scope.fastSwitchSelected = true;
+    $scope.applyServiceDescription = true;
+    $scope.useSuggestedPresentationDelay = true;
     $scope.videoAutoSwitchSelected = true;
     $scope.forceQualitySwitchSelected = false;
     $scope.videoQualities = [];
@@ -527,6 +529,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.toggleApplyServiceDescription = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                delay: {
+                    applyServiceDescription: $scope.applyServiceDescription
+                }
+            }
+        });
+    };
+
+    $scope.toggleUseSuggestedPresentationDelay = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                delay: {
+                    useSuggestedPresentationDelay: $scope.useSuggestedPresentationDelay
+                }
+            }
+        });
+    };
+
     $scope.toggleVideoAutoSwitch = function () {
         $scope.player.updateSettings({
             'streaming': {
@@ -711,6 +733,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             if (selectedConfig.lowLatencyMode !== undefined) {
                 config.streaming.lowLatencyEnabled = selectedConfig.lowLatencyMode;
             }
+        }
+
+        const liveDelayFragmentCount = parseInt($scope.liveDelayFragmentCount);
+        if (!isNaN(liveDelayFragmentCount)) {
+            config.streaming.delay.liveDelayFragmentCount = liveDelayFragmentCount;
         }
 
         const initialLiveDelay = parseFloat($scope.initialLiveDelay);

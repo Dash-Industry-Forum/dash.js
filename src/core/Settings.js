@@ -222,7 +222,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
  * @property {boolean} [useSuggestedPresentationDelay=true]
- * Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
+ * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use latency targets defined in ServiceDescription elements
  */
