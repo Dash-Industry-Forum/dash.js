@@ -186,6 +186,7 @@ declare namespace dashjs {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
+                threshold?:number
             },
             utcSynchronization?: {
                 useManifestDateHeaderTimeSource?: boolean,

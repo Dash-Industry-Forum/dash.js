@@ -100,6 +100,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                jumpGaps: true,
  *                jumpLargeGaps: true,
  *                smallGapLimit: 1.5,
+ *                threshold: 0.3
  *            },
  *            utcSynchronization: {
  *                useManifestDateHeaderTimeSource: true,
@@ -341,6 +342,10 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Sets whether player should jump large gaps (discontinuities) in the buffer.
  * @property {number} [smallGapLimit=1.8]
  * Time in seconds for a gap to be considered small.
+ * @property {number} [threshold=0.3]
+ * Threshold at which the gap handling is executed. If currentRangeEnd - currentTime < threshold the gap jump will be triggered.
+ * For live stream the jump might be delayed to keep a consistent live edge.
+ * Note that the amount of buffer at which platforms automatically stall might differ.
  */
 
 /**
@@ -754,6 +759,7 @@ function Settings() {
                 jumpGaps: true,
                 jumpLargeGaps: true,
                 smallGapLimit: 1.5,
+                threshold: 0.3
             },
             utcSynchronization: {
                 useManifestDateHeaderTimeSource: true,

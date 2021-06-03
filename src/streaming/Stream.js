@@ -806,47 +806,59 @@ function Stream(config) {
     }
 
     function updateData(updatedStreamInfo) {
-        isUpdating = true;
-        streamInfo = updatedStreamInfo;
+        return new Promise((resolve) => {
+            isUpdating = true;
+            streamInfo = updatedStreamInfo;
 
-        eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
+            if (eventController) {
+                addInlineEvents();
+            }
 
-        if (eventController) {
-            addInlineEvents();
-        }
-
-        for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
-            let streamProcessor = streamProcessors[i];
-            const currentMediaInfo = streamProcessor.getMediaInfo();
-            streamProcessor.updateStreamInfo(streamInfo);
-            let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
-            // Check if AdaptationSet has not been removed in MPD update
-            if (allMediaForType) {
-                // Remove the current mediaInfo objects before adding the updated ones
-                streamProcessor.clearMediaInfoArray();
-                for (let j = 0; j < allMediaForType.length; j++) {
-                    const mInfo = allMediaForType[j];
-                    streamProcessor.addMediaInfo(allMediaForType[j]);
-                    if (adapter.areMediaInfosEqual(currentMediaInfo, mInfo)) {
-                        abrController.updateTopQualityIndex(mInfo);
-                        streamProcessor.selectMediaInfo(mInfo)
+            let promises = [];
+            for (let i = 0, ln = streamProcessors.length; i < ln; i++) {
+                let streamProcessor = streamProcessors[i];
+                const currentMediaInfo = streamProcessor.getMediaInfo();
+                promises.push(streamProcessor.updateStreamInfo(streamInfo));
+                let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, streamProcessor.getType());
+                // Check if AdaptationSet has not been removed in MPD update
+                if (allMediaForType) {
+                    // Remove the current mediaInfo objects before adding the updated ones
+                    streamProcessor.clearMediaInfoArray();
+                    for (let j = 0; j < allMediaForType.length; j++) {
+                        const mInfo = allMediaForType[j];
+                        streamProcessor.addMediaInfo(allMediaForType[j]);
+                        if (adapter.areMediaInfosEqual(currentMediaInfo, mInfo)) {
+                            abrController.updateTopQualityIndex(mInfo);
+                            promises.push(streamProcessor.selectMediaInfo(mInfo))
+                        }
                     }
                 }
             }
-        }
 
-        if (trackChangedEvent) {
-            let mediaInfo = trackChangedEvent.newMediaInfo;
-            if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
-                let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-                if (!processor) return;
-                processor.prepareTrackSwitch();
-                trackChangedEvent = undefined;
-            }
-        }
+            Promise.all(promises)
+                .then(() => {
+                    promises = [];
 
-        isUpdating = false;
-        _checkIfInitializationCompleted();
+                    if (trackChangedEvent) {
+                        let mediaInfo = trackChangedEvent.newMediaInfo;
+                        if (mediaInfo.type !== Constants.FRAGMENTED_TEXT) {
+                            let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                            if (!processor) return;
+                            promises.push(processor.prepareTrackSwitch());
+                            trackChangedEvent = undefined;
+                        }
+                    }
+
+                    return Promise.all(promises)
+                })
+                .then(() => {
+                    isUpdating = false;
+                    _checkIfInitializationCompleted();
+                    eventBus.trigger(Events.STREAM_UPDATED, { streamInfo: streamInfo });
+                    resolve();
+                })
+
+        })
     }
 
     function isMediaCodecCompatible(newStream, previousStream = null) {
