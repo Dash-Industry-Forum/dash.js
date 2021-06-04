@@ -76,6 +76,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                liveDelayFragmentCount: NaN,
  *                liveDelay: NaN,
  *                useSuggestedPresentationDelay: true,
+ *                applyServiceDescription: true
  *            },
  *            protection: {
  *                keepProtectionMediaKeys: false
@@ -166,6 +167,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            abr: {
  *                movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
  *                ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+ *                additionalAbrRules: {
+ *                   insufficientBufferRule: false,
+ *                   switchHistoryRule: true,
+ *                   droppedFramesRule: true,
+ *                   abandonRequestsRule: false
+ *                },
  *                bandwidthSafetyFactor: 0.9,
  *                useDefaultABRRules: true,
  *                useDeadTimeLatency: true,
@@ -216,7 +223,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * If set, this parameter will take precedence over setLiveDelayFragmentCount and manifest info.
  * @property {boolean} [useSuggestedPresentationDelay=true]
- * Set to true if you would like to override the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
+ * Set to true if you would like to overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest.
+ * @property {boolean} [applyServiceDescription=true]
+ * Set to true if dash.js should use latency targets defined in ServiceDescription elements
  */
 
 /**
@@ -517,6 +526,9 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * This allows a fast reaction to a bandwidth drop and prevents oscillations on bandwidth spikes.
  * @property {string} [ABRStrategy="abrDynamic"]
  * Returns the current ABR strategy being used: "abrDynamic", "abrBola" or "abrThroughput".
+ * @property {object} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
+ * @property {object} [additionalAbrRules={insufficientBufferRule: false,switchHistoryRule: true,droppedFramesRule: true,abandonRequestsRule: false}]
+ * Enable/Disable additional ABR rules in case ABRStrategy is set to "abrDynamic", "abrBola" or "abrThroughput".
  * @property {number} [bandwidthSafetyFactor=0.9]
  * Standard ABR throughput rules multiply the throughput by this value.
  *
@@ -595,9 +607,13 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  */
 
 /**
- * @typedef {Object} StreamingSettings
+ * @typedef {Object} Metrics
  * @property {number} [metricsMaxListDepth=100]
- * Maximum list depth of metrics.
+ * Maximum number of metrics that are persisted per type.
+ */
+
+/**
+ * @typedef {Object} StreamingSettings
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
  *
@@ -614,6 +630,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
  * @property {number} [eventControllerRefreshDelay=100]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
  * @property {module:Settings~Protection} protection DRM related settings
@@ -718,6 +735,7 @@ function Settings() {
                 liveDelayFragmentCount: NaN,
                 liveDelay: NaN,
                 useSuggestedPresentationDelay: true,
+                applyServiceDescription: true
             },
             protection: {
                 keepProtectionMediaKeys: false
@@ -774,9 +792,18 @@ function Settings() {
                 enabled: false,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
-            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
-            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
-            cacheLoadThresholds: { video: 50, audio: 5 },
+            lastBitrateCachingInfo: {
+                enabled: true,
+                ttl: 360000
+            },
+            lastMediaSettingsCachingInfo: {
+                enabled: true,
+                ttl: 360000
+            },
+            cacheLoadThresholds: {
+                video: 50,
+                audio: 5
+            },
             trackSwitchMode: {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
@@ -808,17 +835,41 @@ function Settings() {
             abr: {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
+                additionalAbrRules: {
+                    insufficientBufferRule: false,
+                    switchHistoryRule: true,
+                    droppedFramesRule: true,
+                    abandonRequestsRule: false
+                },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
-                maxBitrate: { audio: -1, video: -1 },
-                minBitrate: { audio: -1, video: -1 },
-                maxRepresentationRatio: { audio: 1, video: 1 },
-                initialBitrate: { audio: -1, video: -1 },
-                initialRepresentationRatio: { audio: -1, video: -1 },
-                autoSwitchBitrate: { audio: true, video: true },
+                maxBitrate: {
+                    audio: -1,
+                    video: -1
+                },
+                minBitrate: {
+                    audio: -1,
+                    video: -1
+                },
+                maxRepresentationRatio: {
+                    audio: 1,
+                    video: 1
+                },
+                initialBitrate: {
+                    audio: -1,
+                    video: -1
+                },
+                initialRepresentationRatio: {
+                    audio: -1,
+                    video: -1
+                },
+                autoSwitchBitrate: {
+                    audio: true,
+                    video: true
+                },
                 fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
             },
             cmcd: {

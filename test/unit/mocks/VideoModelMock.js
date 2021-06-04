@@ -187,6 +187,10 @@ class VideoModelMock {
     isStalled() {
         return false;
     }
+
+    setPlaybackRate() {
+
+    }
 }
 
 export default VideoModelMock;

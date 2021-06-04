@@ -338,7 +338,7 @@ function StreamController() {
         if (adapter.getIsDynamic() && streams.length) {
             const manifestInfo = streamsInfo[0].manifestInfo;
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
         }
 
         // Figure out the correct start time and the correct start period
@@ -696,7 +696,7 @@ function StreamController() {
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
 
-            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || initialBufferLevel > playbackController.getLiveDelay()) {
+            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
                 initialPlayback = false;
                 createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
