@@ -338,7 +338,7 @@ function StreamController() {
         if (adapter.getIsDynamic() && streams.length) {
             const manifestInfo = streamsInfo[0].manifestInfo;
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
         }
 
         // Figure out the correct start time and the correct start period
