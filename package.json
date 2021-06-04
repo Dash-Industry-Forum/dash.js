@@ -28,6 +28,7 @@
     "babel-preset-env": "^1.7.0",
     "chai": "^3.4.1",
     "chai-spies": "^1.0.0",
+    "es6-promise": "^4.2.8",
     "eslint": "^7.23.0",
     "eslint-webpack-plugin": "^2.5.3",
     "ftp-deploy": "^2.4.1",
