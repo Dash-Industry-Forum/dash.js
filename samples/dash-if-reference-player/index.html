@@ -334,8 +334,8 @@
                 <div id="drmPlayreadyLicenseForm" ng-show="drmPlayready.isActive">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
-                    <label class="options-label">X-AxDRM-Message:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.xAxDrmMessage"> 
+                    <!-- <label class="options-label">X-AxDRM-Message:</label>
+                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.xAxDrmMessage">  -->
 
                     <!-- Open Header Dialogue Window -->
                     <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('playready')">
@@ -345,7 +345,7 @@
                     <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
                         <div class="requestHeaderDialogueContent">
                             <button class="close" ng-click="closeDialogue('playready')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addRequestHeader('playready')">Add additional Header</button>
+                            <button class="btn btn-primary" ng-click="addPopupInput('playready')">Add additional Header</button>
 
                             <section ng-repeat="header in playreadyRequestHeaders track by $index" ng-value="{{$index}}">
 
@@ -355,7 +355,7 @@
                                 <label class="options-label">Request Header Value: </label>
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="header.value" name="playreadyValue_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removeRequestHeader('playready', $index)">Remove Header</button>
+                                <button class="btn btn-danger" ng-click="removePopupInput('playready', $index)">Remove Header</button>
 
                             </section>   
                             
@@ -381,8 +381,6 @@
                 <div id="drmWidevineLicenseForm" ng-show="drmWidevine.isActive">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
-                    <label class="options-label">X-AxDRM-Message:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.xAxDrmMessage">
 
                     <!-- Open Header Dialogue Window -->
                     <button id="widevineRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('widevine')">
@@ -392,7 +390,7 @@
                     <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
                         <div class="requestHeaderDialogueContent">
                             <button class="close" ng-click="closeDialogue('widevine')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addRequestHeader('widevine')">Add additional Header</button>
+                            <button class="btn btn-primary" ng-click="addPopupInput('widevine')">Add additional Header</button>
 
                             <section ng-repeat="header in widevineRequestHeaders track by $index" ng-value="{{$index}}">
 
@@ -402,7 +400,7 @@
                                 <label class="options-label">Request Header Value: </label>
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="header.value" name="widevineValue_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removeRequestHeader('widevine', $index)">Remove Header</button>
+                                <button class="btn btn-danger" ng-click="removePopupInput('widevine', $index)">Remove Header</button>
 
                             </section>   
                             
@@ -435,8 +433,31 @@
                     <div id="drmClearkeyLicenseserverMode" ng-show="drmClearkey.inputMode === true">
                         <label class="options-label">License URL:</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.licenseServerUrl">
-                        <label class="options-label">X-AxDRM-Message:</label>
-                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.xAxDrmMessage">
+                    </div>
+
+                    <!-- Open KID=KEY Dialogue Window -->
+                    <button id="additionalClearkeysDialogueBtn" class="btn btn-primary" ng-click="openDialogue('additionalClearkeys')">
+                        Add additional clearkeys</button>
+
+                    <!-- KID=KEY Dialogue Window Content -->
+                    <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">
+                        <div class="requestHeaderDialogueContent">
+                            <button class="close" ng-click="closeDialogue('additionalClearkeys')">&times;</button>
+                            <button class="btn btn-primary" ng-click="addPopupInput('additionalClearkeys')">Add KID=KEY pair</button>
+
+                            <section ng-repeat="clearkey in additionalClearkeyPairs track by $index" ng-value="{{$index}}">
+                                
+
+                                <label class="options-label">clearkeys KID: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="clearkey.kid" name="clearkeyKID_{{header.id}}">
+                                <label class="options-label">clearkeys KEY: </label>
+                                <input type="text" class="form-control" placeholder="" 
+                                        ng-model="clearkey.key" name="clearkeyKEY_{{header.id}}">
+                                <button class="btn btn-danger" ng-click="removePopupInput('additionalClearkeys', $index)">Remove KID=KEY pair</button>
+                            </section>   
+                            
+                        </div>
                     </div>
 
                     <!-- Open Header Dialogue Window -->
@@ -447,7 +468,7 @@
                     <div id="clearkeyRequestHeaderDialogue" class="requestHeaderDialogue">
                         <div class="requestHeaderDialogueContent">
                             <button class="close" ng-click="closeDialogue('clearkey')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addRequestHeader('clearkey')">Add additional Header</button>
+                            <button class="btn btn-primary" ng-click="addPopupInput('clearkey')">Add additional Header</button>
 
                             <section ng-repeat="header in clearkeyRequestHeaders track by $index" ng-value="{{$index}}">
                                 
@@ -458,7 +479,7 @@
                                 <label class="options-label">Request Header Value: </label>
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="header.value" name="clearkeyValue_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removeRequestHeader('playready', $index)">Remove Header</button>
+                                <button class="btn btn-danger" ng-click="removePopupInput('clearkey', $index)">Remove Header</button>
                             </section>   
                             
                         </div>

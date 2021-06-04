@@ -191,7 +191,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.microsoft.playready',
         licenseServerUrl: 'https://drm-playready-licensing.axtest.net/AcquireLicense',
         httpRequestHeaders: {},
-        xAxDrmMessage: '',
         priority: 1
     }
 
@@ -200,7 +199,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.widevine.alpha',
         licenseServerUrl: 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
         httpRequestHeaders: {},
-        xAxDrmMessage: '',
         priority: 0
     }
 
@@ -209,7 +207,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'org.w3.clearkey',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        xAxDrmMessage: '',
+        kid: '',
+        key: '',
         clearkeys: {},
         inputMode: false,
         priority: 2
@@ -220,6 +219,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.widevineRequestHeaders = [];
 
     $scope.clearkeyRequestHeaders = [];
+
+    $scope.additionalClearkeyPairs = [];
+
 
     $scope.isDynamic = false;
 
@@ -680,16 +682,23 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         
         // $scope.handleRequestHeaders();
         // $scope.setDrm();
+        // $scope.handleClearkeys();
 
         var protData = {};
+        // Execute if the loaded video already has preset DRM data
         if ($scope.selectedItem.hasOwnProperty('protData')) {
             protData = $scope.selectedItem.protData;
+
+            // Handle preset protection data to be reflected in the UI and work with setDrm()
             $scope.handleProtectionData(protData);
             $scope.handleRequestHeaders();
+            $scope.handleClearkeys();
+            // Set DRM options
             $scope.setDrm();
             protData = $scope.protectionData;
             console.log($scope.protectionData);
         }
+        // Execute if setDrm() has been called with manually entered values
         else if ($scope.protectionData !== {}) {
             protData = $scope.protectionData;
         }
@@ -928,8 +937,10 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                                 key !== 'drmKeySystem' &&
                                 key !== 'licenseServerUrl' &&
                                 key !== 'httpRequestHeaders' &&
-                                key !== 'xAxDrmMessage' &&
-                                key !== 'priority'){
+                                key !== 'priority' &&
+                                key !== 'kid' &&
+                                key !== 'key' &&
+                                key !== 'inputMode'){
                                     protectionData[input.drmKeySystem][key] = input[key];
                                 }
                         }
@@ -968,7 +979,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             key !== 'drmKeySystem' &&
                             key !== 'licenseServerUrl' &&
                             key !== 'httpRequestHeaders' &&
-                            key !== 'xAxDrmMessage' &&
                             key !== 'priority'){
                                 protectionData[input.drmKeySystem][key] = input[key];
                             }
@@ -992,7 +1002,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.player.setProtectionData(protectionData);
     }
 
-    $scope.addRequestHeader = function (keySystem) {
+    $scope.addPopupInput = function (keySystem) {
 
         switch(keySystem){
             case 'playready':
@@ -1016,10 +1026,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     value: ''
                 })
                 break;
+            case 'additionalClearkeys':
+                $scope.additionalClearkeyPairs.push({
+                    id: $scope.additionalClearkeyPairs.length + 1,
+                    kid: '',
+                    key: ''
+                })
         }
     }
 
-    $scope.removeRequestHeader = function (keySystem, index){
+    $scope.removePopupInput = function (keySystem, index){
         switch(keySystem){
             case 'playready':
                 $scope.playreadyRequestHeaders.splice(index, 1);
@@ -1029,6 +1045,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 break;
             case 'clearkey':
                 $scope.clearkeyRequestHeaders.splice(index, 1);
+                break;
+            case 'additionalClearkeys':
+                $scope.additionalClearkeyPairs.splice(index, 1);
                 break;
         }
         
@@ -1040,16 +1059,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.drmWidevine.httpRequestHeaders = {};
         $scope.drmClearkey.httpRequestHeaders = {};
 
-        if($scope.drmPlayready.xAxDrmMessage !== ''){
-            $scope.drmPlayready.httpRequestHeaders['X-AxDRM-Message'] = $scope.drmPlayready.xAxDrmMessage;
-        }
-        if($scope.drmWidevine.xAxDrmMessage !== ''){
-            $scope.drmWidevine.httpRequestHeaders['X-AxDRM-Message'] = $scope.drmWidevine.xAxDrmMessage;
-        }
-        if($scope.drmClearkey.xAxDrmMessage !== ''){
-            $scope.drmClearkey.httpRequestHeaders['X-AxDRM-Message'] = $scope.drmClearkey.xAxDrmMessage;
-        }
-
         // fill headers with current inputs
         for(let header of $scope.playreadyRequestHeaders){
             $scope.drmPlayready.httpRequestHeaders[header.key] = header.value;
@@ -1060,7 +1069,25 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         for(let header of $scope.clearkeyRequestHeaders){
             $scope.drmClearkey.httpRequestHeaders[header.key] = header.value;
         }
-        console.log($scope.drmPlayready)
+    }
+
+    /** Handle multiple clearkeys */
+    $scope.handleClearkeys = function (){
+        // Initialize with empty
+        $scope.drmClearkey.clearkeys = {}
+
+        // Set default KID=KEY pair
+        if($scope.drmClearkey.kid !== '' && $scope.drmClearkey.key !== ''){
+            $scope.drmClearkey.clearkeys[$scope.drmClearkey.kid] = $scope.drmClearkey.key;
+        }
+        // fill drmClearkey objects "clearkeys" property
+        for(let clearkey of $scope.additionalClearkeyPairs){
+            $scope.drmClearkey.clearkeys[clearkey.kid] = clearkey.key;
+        }
+        // if clearkey property is empty, alert
+        if($scope.additionalClearkeyPairs === {}){
+            alert('You must specify at least one KID=KEY pair!');
+        }
     }
 
     /** Handle inherent protection data passed by selectedItem */
@@ -1074,15 +1101,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     // Fill the drmPlayready object with data to be used by setDRM() later.
                     $scope.drmPlayready.licenseServerUrl = protectionData[data]['serverURL'];
                     for(let header in protectionData[data]['httpRequestHeaders']){
-                        if(header !== 'X-AxDRM-Message'){
                             $scope.playreadyRequestHeaders.push({
                                 id: $scope.playreadyRequestHeaders.length + 1,
                                 key: header,
-                                value: protectionData[data][header]
+                                value: protectionData[data]['httpRequestHeaders'][header]
                             });
-                        }
                     }
-                    $scope.drmPlayready.xAxDrmMessage = protectionData[data]['httpRequestHeaders']['X-AxDRM-Message'];
                     // Add any additional parameters
                     for(let parameter in protectionData[data]){
                         if(parameter !== 'serverURL' &&
@@ -1093,18 +1117,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     break;
 
                 case 'com.widevine.alpha':
+                    // Set DRM to active
                     $scope.drmWidevine.isActive = true;
+                    // Fill the drmWidevine object with data to be used by setDRM() later
                     $scope.drmWidevine.licenseServerUrl = protectionData[data]['serverURL'];
                     for(let header in protectionData[data]['httpRequestHeaders']){
-                        if(header !== 'X-AxDRM-Message'){
-                            $scope.widevineRequestHeaders.push({
-                                id: $scope.widevineRequestHeaders.length + 1,
-                                key: header,
-                                value: protectionData[data][header]
-                            });
-                        }
+                        $scope.widevineRequestHeaders.push({
+                            id: $scope.widevineRequestHeaders.length + 1,
+                            key: header,
+                            value: protectionData[data]['httpRequestHeaders'][header]
+                        });
                     }
-                    $scope.drmWidevine.xAxDrmMessage = protectionData[data]['httpRequestHeaders']['X-AxDRM-Message'];
+                    // Add any additional parameters
                     for(let parameter in protectionData[data]){
                         if(parameter !== 'serverURL' &&
                             parameter !== 'httpRequestHeaders'){
@@ -1114,28 +1138,42 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     break;
 
                 case 'org.w3.clearkey':
+                    // Set DRM to active
                     $scope.drmClearkey.isActive = true;
                     // Handle clearkey data if specified using a license server
                     if(protectionData[data]['serverURL'] !== undefined){
                         $scope.drmClearkey.licenseServerUrl = protectionData[data]['serverURL'];
                         for(let header in protectionData[data]['httpRequestHeaders']){
-                            if(header !== 'X-AxDRM-Message'){
-                                $scope.clearkeyRequestHeaders.push({
-                                    id: $scope.clearkeyRequestHeaders.length + 1,
-                                    key: header,
-                                    value: protectionData[data][header]
-                                });
+                            $scope.clearkeyRequestHeaders.push({
+                                id: $scope.clearkeyRequestHeaders.length + 1,
+                                key: header,
+                                value: protectionData[data]['httpRequestHeaders'][header]
+                            });
+                        }
+                    }
+                    // Handle clearkey data if specified using KID=KEY.
+                    else {
+                        let first = true;
+                        if(protectionData[data]['clearkeys'] !== {}){
+                            for(let kid in protectionData[data]['clearkeys']){
+                                // For the first KID=Key pair, set drmClearkey properties so that it shows in the main text boxes
+                                if(first === true){
+                                    $scope.drmClearkey.kid = kid;
+                                    $scope.drmClearkey.key = protectionData[data]['clearkeys'][kid];
+                                    delete protectionData[data]['clearkeys'][kid];
+                                    first = false;
+                                }
+                                else if(protectionData[data]['clearkeys'] !== {}) {
+                                    $scope.additionalClearkeyPairs.push({
+                                        id: $scope.additionalClearkeyPairs.length + 1,
+                                        kid: kid,
+                                        key: protectionData[data]['clearkeys'][kid]
+                                    });
+                                }
                             }
                         }
-                        $scope.drmClearkey.xAxDrmMessage = protectionData[data]['httpRequestHeaders']['X-AxDRM-Message'];
                     }
-                    // Handle clearkey dataif specified using KID=KEY.
-                    else {
-                        for(let key in protectionData[data]['clearkeys']){
-                            $scope.drmClearkey.clearkeys[key] = protectionData[data]['clearkeys'][key];
-                        }
-                    }
-
+                    // Add any additional parameters
                     for(let parameter in protectionData[data]){
                         if(parameter !== 'serverURL' &&
                             parameter !== 'httpRequestHeaders' &&
@@ -1179,6 +1217,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             case 'clearkey':
                 document.getElementById('clearkeyRequestHeaderDialogue').style.display = 'block';
                 break;
+            case 'additionalClearkeys':
+                document.getElementById('additionalClearkeysDialogue').style.display = 'block';
+                break;
         }
     }
 
@@ -1193,13 +1234,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             case 'clearkey':
                 document.getElementById('clearkeyRequestHeaderDialogue').style.display = 'none';
                 break;
+            case 'additionalClearkeys':
+                document.getElementById('additionalClearkeysDialogue').style.display = 'none';
         }
     }
 
     window.onclick = function(event){
         if(event.target == document.getElementById('playreadyRequestHeaderDialogue') ||
            event.target == document.getElementById('widevineRequestHeaderDialogue')  ||
-           event.target == document.getElementById('clearkeyRequestHeaderDialogue')  ){
+           event.target == document.getElementById('clearkeyRequestHeaderDialogue')  ||
+           event.target == document.getElementById('additionalClearkeysDialogue')    ){
                event.target.style.display = 'none';
         }
     }
