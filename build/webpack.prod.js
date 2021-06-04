@@ -1,4 +1,3 @@
-const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.base.js').config;
 
@@ -16,7 +15,7 @@ const configDev = merge(common, {
     entry: entries,
     output: {
         filename: '[name].debug.js'
-    },
+    }
 });
 
 const configProd = merge(common, {
@@ -25,11 +24,6 @@ const configProd = merge(common, {
     output: {
         filename: '[name].min.js'
     },
-    plugins: [
-        new webpack.ProvidePlugin({
-            Promise: ['es6-promise', 'Promise']
-        })
-    ],
     performance: { hints: false }
 });
 
