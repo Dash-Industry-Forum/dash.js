@@ -48,7 +48,6 @@ function NotFragmentedTextBufferController(config) {
     const errHandler = config.errHandler;
     const streamInfo = config.streamInfo;
     const type = config.type;
-    const settings = config.settings;
 
     let instance,
         isBufferingCompleted,
