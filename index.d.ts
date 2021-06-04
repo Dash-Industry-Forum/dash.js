@@ -142,7 +142,6 @@ declare namespace dashjs {
         };
         streaming?: {
             abandonLoadTimeout?: number,
-            calcSegmentAvailabilityRangeFromTimeline?: boolean,
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
             manifestUpdateRetryInterval?: number,
@@ -157,12 +156,16 @@ declare namespace dashjs {
                 fallbackToSegmentTimeline?: boolean
             },
             metrics?: {
-                metricsMaxListDepth?: number
+                maxListDepth?: number
             },
             delay?: {
                 liveDelayFragmentCount?: number,
                 liveDelay?: number,
-                useSuggestedPresentationDelay?: boolean
+                useSuggestedPresentationDelay?: boolean,
+                applyServiceDescription?: boolean
+            },
+            protection?: {
+                keepProtectionMediaKeys?: boolean,
             },
             buffer?: {
                 fastSwitchEnabled?: boolean,
@@ -179,9 +182,6 @@ declare namespace dashjs {
                 useAppendWindow?: boolean,
                 setStallState?:boolean
             },
-            protection?: {
-                keepProtectionMediaKeys?: boolean,
-            }
             gaps?: {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
@@ -262,6 +262,12 @@ declare namespace dashjs {
             abr?: {
                 movingAverageMethod?: 'slidingWindow' | 'ewma';
                 ABRStrategy?: 'abrDynamic' | 'abrBola' | 'abrL2A' | 'abrLoLP' | 'abrThroughput';
+                additionalAbrRules?: {
+                    insufficientBufferRule?: boolean,
+                    switchHistoryRule?: boolean,
+                    droppedFramesRule?: boolean,
+                    abandonRequestsRule?: boolean
+                },
                 bandwidthSafetyFactor?: number;
                 useDefaultABRRules?: boolean;
                 useDeadTimeLatency?: boolean;
@@ -483,14 +489,6 @@ declare namespace dashjs {
 
         setTextTrack(idx: number): void;
 
-        getTextDefaultLanguage(): string | undefined;
-
-        setTextDefaultLanguage(lang: string): void;
-
-        getTextDefaultEnabled(): boolean | undefined;
-
-        setTextDefaultEnabled(enable: boolean): void;
-
         provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
 
         getBitrateInfoListFor(type: MediaType): BitrateInfo[];
@@ -542,8 +540,6 @@ declare namespace dashjs {
         unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
 
         getOfflineController(): OfflineController;
-
-        enableManifestDateHeaderTimeSource(value: boolean): void;
 
         displayCaptionsOnTop(value: boolean): void;
 
