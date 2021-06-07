@@ -1,4 +1,5 @@
 const { merge } = require('webpack-merge');
+const ESLintPlugin = require('eslint-webpack-plugin');
 const common = require('./webpack.base.js').config;
 
 const entries = {
@@ -24,7 +25,16 @@ const configProd = merge(common, {
     output: {
         filename: '[name].min.js'
     },
-    performance: { hints: false }
+    performance: { hints: false },
+    plugins: [
+        new ESLintPlugin({
+            files: [
+                'src/**/*.js',
+                'test/unit/mocks/*.js',
+                'test/unit/*.js'
+            ]
+        })
+    ]
 });
 
 module.exports = [configDev, configProd];
