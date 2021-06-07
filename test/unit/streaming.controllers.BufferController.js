@@ -75,6 +75,8 @@ describe('BufferController', function () {
 
         bufferController.reset();
         bufferController = null;
+
+        settings.reset();
     });
 
     describe('Method initialize', function () {
@@ -221,6 +223,8 @@ describe('BufferController', function () {
             const event = {
                 chunk: chunk
             };
+
+            settings.update({ streaming: { cacheInitSegments: true } });
 
             initCache.reset();
             let cache = initCache.extract(chunk.streamId, chunk.representationId);

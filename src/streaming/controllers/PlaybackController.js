@@ -34,6 +34,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import Debug from '../../core/Debug';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 
 const LIVE_UPDATE_PLAYBACK_TIME_INTERVAL_MS = 500;
 
@@ -103,11 +104,11 @@ function PlaybackController() {
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
         eventBus.on(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
-        eventBus.on(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-        eventBus.on(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-        eventBus.on(Events.PLAYBACK_ENDED, onPlaybackEnded, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
-        eventBus.on(Events.STREAM_INITIALIZING, onStreamInitializing, this);
+        eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -221,12 +222,11 @@ function PlaybackController() {
     /**
      * Computes the desirable delay for the live edge to avoid a risk of getting 404 when playing at the bleeding edge
      * @param {number} fragmentDuration - seconds?
-     * @param {number} dvrWindowSize - seconds?
-     * @param {number} minBufferTime - seconds?
+     * @param {object} manifestInfo
      * @returns {number} object
      * @memberof PlaybackController#
      */
-    function computeAndSetLiveDelay(fragmentDuration, dvrWindowSize, minBufferTime) {
+    function computeAndSetLiveDelay(fragmentDuration, manifestInfo) {
         let delay,
             ret,
             startTime;
@@ -237,6 +237,12 @@ function PlaybackController() {
 
         let suggestedPresentationDelay = adapter.getSuggestedPresentationDelay();
 
+
+        // Apply live delay from ServiceDescription
+        if (settings.get().streaming.delay.applyServiceDescription && isNaN(settings.get().streaming.delay.liveDelay) && isNaN(settings.get().streaming.delay.liveDelayFragmentCount)) {
+            _applyLiveDelayFromServiceDescription(manifestInfo);
+        }
+
         if (mediaPlayerModel.getLiveDelay()) {
             delay = mediaPlayerModel.getLiveDelay(); // If set by user, this value takes precedence
         } else if (settings.get().streaming.delay.liveDelayFragmentCount !== null && !isNaN(settings.get().streaming.delay.liveDelayFragmentCount) && !isNaN(adjustedFragmentDuration)) {
@@ -246,7 +252,7 @@ function PlaybackController() {
         } else if (!isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
         } else {
-            delay = !isNaN(minBufferTime) ? minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
+            delay = manifestInfo && !isNaN(manifestInfo.minBufferTime) ? manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR : streamInfo.manifestInfo.minBufferTime * MIN_BUFFER_TIME_FACTOR;
         }
 
         startTime = adapter.getAvailabilityStartTime();
@@ -255,17 +261,44 @@ function PlaybackController() {
             availabilityStartTime = startTime;
         }
 
-        if (dvrWindowSize > 0) {
+        if (manifestInfo && manifestInfo.dvrWindowSize > 0) {
             // cap target latency to:
             // - dvrWindowSize / 2 for short playlists
             // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
-            const targetDelayCapping = Math.max(dvrWindowSize - END_OF_PLAYLIST_PADDING, dvrWindowSize / 2);
+            const targetDelayCapping = Math.max(manifestInfo.dvrWindowSize - END_OF_PLAYLIST_PADDING, manifestInfo.dvrWindowSize / 2);
             ret = Math.min(delay, targetDelayCapping);
         } else {
             ret = delay;
         }
         liveDelay = ret;
         return ret;
+    }
+
+    function _applyLiveDelayFromServiceDescription(manifestInfo) {
+        if (!manifestInfo || !manifestInfo.serviceDescriptions) {
+            return;
+        }
+
+        let llsd = null;
+
+        for (let i = 0; i < manifestInfo.serviceDescriptions.length; i++) {
+            const sd = manifestInfo.serviceDescriptions[i];
+            if (sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME) {
+                llsd = sd;
+                break;
+            }
+        }
+
+        if (llsd && llsd.latency && llsd.latency.target > 0) {
+            logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
+            settings.update({
+                streaming: {
+                    delay: {
+                        liveDelay: llsd.latency.target / 1000,
+                    }
+                }
+            });
+        }
     }
 
     function getAvailabilityStartTime() {
@@ -297,12 +330,13 @@ function PlaybackController() {
         seekTarget = NaN;
         if (videoModel) {
             eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, this);
-            eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
             eventBus.off(Events.LOADING_PROGRESS, onFragmentLoadProgress, this);
-            eventBus.off(Events.PLAYBACK_PROGRESS, onPlaybackProgression, this);
-            eventBus.off(Events.PLAYBACK_TIME_UPDATED, onPlaybackProgression, this);
-            eventBus.off(Events.PLAYBACK_ENDED, onPlaybackEnded, this);
-            eventBus.off(Events.STREAM_INITIALIZING, onStreamInitializing, this);
+            eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, onBufferLevelStateChanged, this);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
+            eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this);
+            eventBus.off(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
+            stopPlaybackCatchUp();
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
@@ -518,7 +552,7 @@ function PlaybackController() {
     }
 
     // Handle DASH PLAYBACK_ENDED event
-    function onPlaybackEnded(e) {
+    function _onPlaybackEnded(e) {
         if (wallclockTimeIntervalId && e.isLast) {
             // PLAYBACK_ENDED was triggered elsewhere, react.
             logger.info('onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
@@ -552,7 +586,7 @@ function PlaybackController() {
 
     }
 
-    function onPlaybackProgression() {
+    function _onPlaybackProgression() {
         if (
             isDynamic &&
             _isCatchupEnabled() &&
@@ -852,8 +886,10 @@ function PlaybackController() {
         eventBus.trigger(Events.PLAYBACK_STALLED, { e: e });
     }
 
-    function onStreamInitializing(e) {
-        _applyServiceDescription(e.streamInfo, e.mediaInfo);
+    function _onStreamInitializing(e) {
+        if (settings.get().streaming.delay.applyServiceDescription) {
+            _applyServiceDescription(e.streamInfo, e.mediaInfo);
+        }
     }
 
     function _applyServiceDescription(streamInfo, mediaInfo) {
@@ -872,20 +908,17 @@ function PlaybackController() {
             if (llsd) {
                 if (mediaInfo && mediaInfo.supplementalProperties &&
                     mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
-                        logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
-                        settings.update({
-                            streaming: {
-                                lowLatencyEnabled: true
-                            }
-                        });
-                }
-                if (llsd.latency && llsd.latency.target > 0) {
-                    logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
+                    logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
                     settings.update({
                         streaming: {
-                            delay: {
-                                liveDelay: llsd.latency.target / 1000,
-                            },
+                            lowLatencyEnabled: true
+                        }
+                    });
+                }
+                if (llsd.latency && llsd.latency.target > 0) {
+                    logger.debug('Apply LL properties for live catchup coming from service description.');
+                    settings.update({
+                        streaming: {
                             liveCatchup: {
                                 minDrift: (llsd.latency.target + 500) / 1000,
                                 maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined

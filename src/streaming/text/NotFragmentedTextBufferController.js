@@ -48,7 +48,6 @@ function NotFragmentedTextBufferController(config) {
     const errHandler = config.errHandler;
     const streamInfo = config.streamInfo;
     const type = config.type;
-    const settings = config.settings;
 
     let instance,
         isBufferingCompleted,
@@ -157,9 +156,8 @@ function NotFragmentedTextBufferController(config) {
     function _onInitFragmentLoaded(e) {
         if (!e.chunk.bytes || isBufferingCompleted) return;
 
-        if (settings.get().streaming.cacheInitSegments) {
-            initCache.save(e.chunk);
-        }
+        initCache.save(e.chunk);
+
         sourceBufferSink.append(e.chunk);
 
         setIsBufferingCompleted(true);
