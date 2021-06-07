@@ -58,6 +58,7 @@ function OfflineStream(config) {
     const dashMetrics = config.dashMetrics;
     const baseURLController = config.baseURLController;
     const timelineConverter = config.timelineConverter;
+    const segmentBaseController = config.segmentBaseController;
     const offlineStoreController = config.offlineStoreController;
     const manifestId = config.id;
     const startedCb = config.callbacks && config.callbacks.started;
@@ -196,6 +197,7 @@ function OfflineStream(config) {
             baseURLController: baseURLController,
             timelineConverter: timelineConverter,
             offlineStoreController: offlineStoreController,
+            segmentBaseController: segmentBaseController,
             callbacks: {
                 completed: onStreamCompleted,
                 progression: onStreamProgression

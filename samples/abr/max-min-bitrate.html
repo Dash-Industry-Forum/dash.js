@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Custom ABR Rules</title>
+    <title>Max/min bitrate</title>
 
-    <script src="../../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
-    <link href="../../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../../lib/main.css" rel="stylesheet">
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <style>
         video {
@@ -16,8 +16,6 @@
             height: 360px;
         }
     </style>
-
-    <script src="LowestBitrateRule.js" class="code"></script>
 
     <script class="code">
         function init() {
@@ -28,18 +26,15 @@
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
 
-            /* don't use dash.js default rules */
             player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'useDefaultABRRules': false
+                streaming: {
+                    abr: {
+                        maxBitrate: { audio: -1, video: 8000 },
+                        minBitrate: { audio: -1, video: 2000 },
                     }
                 }
             });
 
-            /* add my custom quality switch rule. Look at LowestBitrateRule.js to know more */
-            /* about the structure of a custom rule */
-            player.addABRCustomRule('qualitySwitchRules', 'LowestBitrateRule', LowestBitrateRule);
 
             player.initialize(video, url, true);
         }
@@ -51,14 +46,14 @@
     <div class="container py-4">
         <header class="pb-3 mb-4 border-bottom">
             <img class=""
-                 src="../../lib/img/dashjs-logo.png"
+                 src="../lib/img/dashjs-logo.png"
                  width="200">
         </header>
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Custom ABR Rules</h3>
-                    <p>Example showing how to create and define custom ABR rules in dash.js.</p>
+                    <h3>Max/min bitrate</h3>
+                    <p>Example showing how to set the maximum and minimum bitrate in dash.js.</p>
                 </div>
             </div>
             <div class="col-md-8">
@@ -82,6 +77,6 @@
         init();
     });
 </script>
-<script src="../../highlighter.js"></script>
+<script src="../highlighter.js"></script>
 </body>
 </html>
