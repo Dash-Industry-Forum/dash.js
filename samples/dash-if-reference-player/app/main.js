@@ -189,7 +189,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.drmPlayready = {
         isActive: false,
         drmKeySystem: 'com.microsoft.playready',
-        licenseServerUrl: 'https://drm-playready-licensing.axtest.net/AcquireLicense',
+        licenseServerUrl: '',
         httpRequestHeaders: {},
         priority: 1
     }
@@ -197,7 +197,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.drmWidevine = {
         isActive: false,
         drmKeySystem: 'com.widevine.alpha',
-        licenseServerUrl: 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
+        licenseServerUrl: '',
         httpRequestHeaders: {},
         priority: 0
     }
