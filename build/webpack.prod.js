@@ -15,7 +15,7 @@ const configDev = merge(common, {
     entry: entries,
     output: {
         filename: '[name].debug.js'
-    },
+    }
 });
 
 const configProd = merge(common, {

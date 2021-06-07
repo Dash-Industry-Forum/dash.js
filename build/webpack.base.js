@@ -29,7 +29,7 @@ const config = {
                 use: [
                     {
                         loader: `babel-loader`,
-                        options: { presets: ['@babel/env'] }
+                        options: {presets: ['@babel/env']}
                     }
                 ]
             }
@@ -46,4 +46,4 @@ const config = {
     ]
 }
 
-module.exports = { config };
+module.exports = {config};
