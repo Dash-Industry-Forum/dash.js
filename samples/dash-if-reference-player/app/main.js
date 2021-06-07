@@ -679,10 +679,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.doLoad = function () {
         $scope.initSession();
-        
-        // $scope.handleRequestHeaders();
-        // $scope.setDrm();
-        // $scope.handleClearkeys();
 
         var protData = {};
         // Execute if the loaded video already has preset DRM data
@@ -691,15 +687,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
             // Handle preset protection data to be reflected in the UI and work with setDrm()
             $scope.handleProtectionData(protData);
-            $scope.handleRequestHeaders();
-            $scope.handleClearkeys();
+
             // Set DRM options
             $scope.setDrm();
             protData = $scope.protectionData;
-            console.log($scope.protectionData);
         }
         // Execute if setDrm() has been called with manually entered values
         else if ($scope.protectionData !== {}) {
+            $scope.setDrm();
             protData = $scope.protectionData;
         }
         else if ($scope.drmLicenseURL !== '' && $scope.drmKeySystem !== '') {
@@ -906,6 +901,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         let drmInputs = [$scope.drmPlayready, $scope.drmWidevine, $scope.drmClearkey];
         let protectionData = {};
+
+        $scope.handleRequestHeaders();
+        $scope.handleClearkeys();
 
         for(let input of drmInputs){
             if(input.isActive){
