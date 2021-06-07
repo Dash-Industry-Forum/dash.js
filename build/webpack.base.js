@@ -1,7 +1,6 @@
 const path = require('path');
 const ESLintPlugin = require('eslint-webpack-plugin');
 const pkg = require('../package.json');
-const webpack = require('webpack');
 
 const out_dir = '../dist';
 
