@@ -43,9 +43,6 @@ const config = {
                 'test/unit/mocks/*.js',
                 'test/unit/*.js'
             ]
-        }),
-        new webpack.ProvidePlugin({
-            Promise: ['es6-promise', 'Promise']
         })
     ]
 }
