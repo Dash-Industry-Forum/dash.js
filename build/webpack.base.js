@@ -1,5 +1,4 @@
 const path = require('path');
-const ESLintPlugin = require('eslint-webpack-plugin');
 const pkg = require('../package.json');
 
 const out_dir = '../dist';
@@ -29,21 +28,12 @@ const config = {
                 use: [
                     {
                         loader: `babel-loader`,
-                        options: { presets: ['@babel/env'] }
+                        options: {presets: ['@babel/env']}
                     }
                 ]
             }
         ]
-    },
-    plugins: [
-        new ESLintPlugin({
-            files: [
-                'src/**/*.js',
-                'test/unit/mocks/*.js',
-                'test/unit/*.js'
-            ]
-        })
-    ]
+    }
 }
 
-module.exports = { config };
+module.exports = {config};
