@@ -118,7 +118,7 @@ function TextSourceBuffer(config) {
 
         mediaInfos = mediaInfos.concat(mInfos);
 
-        if (type === Constants.TEXT && mediaInfos[0].isFragmented) {
+        if (type === Constants.TEXT && mediaInfos[0].isFragmented && !mediaInfos[0].isEmbedded) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
             fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id);

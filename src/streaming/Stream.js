@@ -339,6 +339,15 @@ function Stream(config) {
             }
         }
 
+        if (type === Constants.TEXT && !!mediaInfo.isEmbedded) {
+            textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType);
+            return;
+        }
+
+        if (mediaController.getTracksFor(type, streamInfo.id).length === 0) {
+            return;
+        }
+
         if (type === Constants.IMAGE) {
             thumbnailController = ThumbnailController(context).create({
                 streamInfo: streamInfo,
