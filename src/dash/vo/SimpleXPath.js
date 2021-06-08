@@ -117,8 +117,8 @@ class SimpleXPath {
                     let attr = component.attribute;
                     leaf = children.filter((elm) => elm[attr.name] == attr.value)[0] || null;
                 } else {
-                    // default case, select first
-                    leaf = children[0] || null;
+                    // default case, select element itself or first element if as array
+                    leaf = Array.isArray(children) ? children[0] : children;
                 }
             }
 
