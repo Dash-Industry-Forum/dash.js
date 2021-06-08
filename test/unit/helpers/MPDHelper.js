@@ -196,7 +196,7 @@ class MpdHelper {
 
     addSegmentTimelineToAdaptation(adaptation) {
         let objSegmentTemplate = {};
-        let reps = adaptation.Representation_asArray;
+        let reps = adaptation.Representation;
         let ln = reps.length;
         let i = 0;
         let r;
@@ -208,16 +208,16 @@ class MpdHelper {
         objSegmentTemplate.presentationTimeOffset = 0;
         objSegmentTemplate.startNumber = 0;
         objSegmentTemplate.timescale = 90000;
-        const S_asArray = [{
+        const S = [{
             t: 0,
             d: 180000,
             r: 29
         }];
-        objSegmentTemplate.SegmentTimeline_asArray= {S_asArray};
-        objSegmentTemplate.SegmentTimeline = {S_asArray};
+        objSegmentTemplate.SegmentTimeline= {S};
+        objSegmentTemplate.SegmentTimeline = {S};
 
         adaptation.SegmentTemplate = objSegmentTemplate;
-        adaptation.SegmentTemplate_asArray = objSegmentTemplate;
+        adaptation.SegmentTemplate = objSegmentTemplate;
 
         for (i; i < ln; i++) {
             r = reps[i];

@@ -178,18 +178,18 @@ function CapabilitiesFilter() {
 
     function _filterUnsupportedEssentialProperties(manifest) {
 
-        if (!manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
             return;
         }
 
-        manifest.Period_asArray.forEach((period) => {
-            period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
+        manifest.Period.forEach((period) => {
+            period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
-                if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                if (!as.Representation || as.Representation.length === 0) {
                     return true;
                 }
 
-                as.Representation_asArray = as.Representation_asArray.filter((rep) => {
+                as.Representation = as.Representation.filter((rep) => {
                     const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
 
                     if (essentialProperties && essentialProperties.length > 0) {
@@ -206,29 +206,29 @@ function CapabilitiesFilter() {
                     return true;
                 });
 
-                return as.Representation_asArray && as.Representation_asArray.length > 0;
+                return as.Representation && as.Representation.length > 0;
             });
         });
 
     }
 
     function _applyCustomFilters(manifest) {
-        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period_asArray || manifest.Period_asArray.length === 0) {
+        if (!customCapabilitiesFilters || customCapabilitiesFilters.length === 0 || !manifest || !manifest.Period || manifest.Period.length === 0) {
             return;
         }
 
-        manifest.Period_asArray.forEach((period) => {
-            period.AdaptationSet_asArray = period.AdaptationSet_asArray.filter((as) => {
+        manifest.Period.forEach((period) => {
+            period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
-                if (!as.Representation_asArray || as.Representation_asArray.length === 0) {
+                if (!as.Representation || as.Representation.length === 0) {
                     return true;
                 }
 
-                as.Representation_asArray = as.Representation_asArray.filter((representation) => {
+                as.Representation = as.Representation.filter((representation) => {
                     return !customCapabilitiesFilters.some(customFilter => !customFilter(representation));
                 });
 
-                return as.Representation_asArray && as.Representation_asArray.length > 0;
+                return as.Representation && as.Representation.length > 0;
             });
         });
     }
