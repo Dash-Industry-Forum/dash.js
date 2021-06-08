@@ -223,6 +223,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.additionalClearkeyPairs = [];
 
+    $scope.protData = {};
+
 
     $scope.isDynamic = false;
 
@@ -695,6 +697,13 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
+        $scope.protData = {};
+        // Execute if the loaded video already has preset DRM data
+        if ($scope.selectedItem.hasOwnProperty('protData')) {
+            $scope.protData = $scope.selectedItem.protData;
+            // Handle preset protection data to be reflected in the UI and work with setDrm()
+            $scope.handleProtectionData($scope.protData);
+        }
     };
 
     $scope.toggleOptionsGutter = function (bool) {
@@ -714,41 +723,36 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.doLoad = function () {
         $scope.initSession();
 
-        var protData = {};
         // Execute if the loaded video already has preset DRM data
         if ($scope.selectedItem.hasOwnProperty('protData')) {
-            protData = $scope.selectedItem.protData;
-
-            // Handle preset protection data to be reflected in the UI and work with setDrm()
-            $scope.handleProtectionData(protData);
 
             // Set DRM options
             $scope.setDrm();
-            protData = $scope.protectionData;
+            $scope.protData = $scope.protectionData;
         }
         // Execute if setDrm() has been called with manually entered values
         else if ($scope.protectionData !== {}) {
             $scope.setDrm();
-            protData = $scope.protectionData;
+            $scope.protData = $scope.protectionData;
         }
         else if ($scope.drmLicenseURL !== '' && $scope.drmKeySystem !== '') {
-            protData[$scope.drmKeySystem] = {
+            $scope.protData[$scope.drmKeySystem] = {
                 serverURL: $scope.drmLicenseURL
             };
         } else {
-            protData = null;
+            $scope.protData = null;
         }
 
         // Check if persistent license session ID is stored for current stream
         var sessionId = $scope.persistentSessionId[$scope.selectedItem.url];
         if (sessionId) {
-            if (!protData) {
-                protData = {};
+            if (!$scope.protData) {
+                $scope.protData = {};
             }
-            if (!protData[$scope.selectedKeySystem]) {
-                protData[$scope.selectedKeySystem] = {};
+            if (!$scope.protData[$scope.selectedKeySystem]) {
+                $scope.protData[$scope.selectedKeySystem] = {};
             }
-            protData[$scope.selectedKeySystem].sessionId = sessionId;
+            $scope.protData[$scope.selectedKeySystem].sessionId = sessionId;
         }
 
         var config = {
@@ -826,9 +830,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.controlbar.reset();
         $scope.conformanceViolations = [];
         if ($scope.isCasting) {
-            loadCastMedia($scope.selectedItem.url, protData);
+            loadCastMedia($scope.selectedItem.url, $scope.protData);
         } else {
-            $scope.player.setProtectionData(protData);
+            $scope.player.setProtectionData($scope.protData);
             $scope.player.attachSource($scope.selectedItem.url);
         }
         if ($scope.initialSettings.audio) {
