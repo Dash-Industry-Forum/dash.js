@@ -779,7 +779,7 @@ function StreamController() {
      */
     function _onStreamBufferingCompleted(e) {
         logger.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
-        const isLast = getActiveStreamInfo().isLast;
+        const isLast = e.streamInfo.isLast;
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
