@@ -698,6 +698,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.setStream = function (item) {
         $scope.selectedItem = JSON.parse(JSON.stringify(item));
         $scope.protData = {};
+        //Reset previous data
+        $scope.clearDRM();
         // Execute if the loaded video already has preset DRM data
         if ($scope.selectedItem.hasOwnProperty('protData')) {
             $scope.protData = $scope.selectedItem.protData;
@@ -705,6 +707,22 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.handleProtectionData($scope.protData);
         }
     };
+
+    $scope.clearDRM = function(){
+        //Reset previous data
+        let drmList = [$scope.drmPlayready, $scope.drmWidevine, $scope.drmClearkey];
+        for(let drm of drmList){
+            drm.isActive = false;
+            drm.licenseServerUrl = '';
+            drm.kid = '';
+            drm.key = '';
+        }
+        $scope.playreadyRequestHeaders = [];
+        $scope.widevineRequestHeaders = [];
+        $scope.clearkeyRequestHeaders = [];
+        $scope.clearkeys = [];
+        $scope.additionalClearkeyPairs = [];
+    }
 
     $scope.toggleOptionsGutter = function (bool) {
         $scope.optionsGutter = bool;

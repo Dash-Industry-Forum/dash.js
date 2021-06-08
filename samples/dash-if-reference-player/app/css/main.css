@@ -620,6 +620,10 @@ DRM Header Dialogue
     width: 80%; /* Could be more or less, depending on screen size */
 }
 
+.dialogue-btn{
+    margin-bottom: 2px;
+}
+
 .modal-hr {
     border: none;
     height: 1px;
