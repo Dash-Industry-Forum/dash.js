@@ -39,6 +39,7 @@ class MediaInfo {
         this.type = null;
         this.streamInfo = null;
         this.representationCount = 0;
+        this.labels = null;
         this.lang = null;
         this.viewpoint = null;
         this.accessibility = null;

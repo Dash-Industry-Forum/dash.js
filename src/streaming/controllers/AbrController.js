@@ -577,55 +577,57 @@ function AbrController() {
      * @param {string} streamId
      */
     function checkPlaybackQuality(type, streamId) {
-        if (!type || !streamProcessorDict || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
-            return;
-        }
-
-        if (droppedFramesHistory) {
-            const playbackQuality = videoModel.getPlaybackQuality();
-            if (playbackQuality) {
-                droppedFramesHistory.push(streamId, playbackIndex, playbackQuality);
+        try {
+            if (!type || !streamProcessorDict || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
+                return false;
             }
-        }
 
-        // ABR is turned off, do nothing
-        if (!settings.get().streaming.abr.autoSwitchBitrate[type]) {
-            return;
-        }
+            if (droppedFramesHistory) {
+                const playbackQuality = videoModel.getPlaybackQuality();
+                if (playbackQuality) {
+                    droppedFramesHistory.push(streamId, playbackIndex, playbackQuality);
+                }
+            }
 
-        const oldQuality = getQualityFor(type, streamId);
-        const rulesContext = RulesContext(context).create({
-            abrController: instance,
-            switchHistory: switchHistoryDict[streamId][type],
-            droppedFramesHistory: droppedFramesHistory,
-            streamProcessor: streamProcessorDict[streamId][type],
-            currentValue: oldQuality,
-            useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
-            useL2AABR: isUsingL2AAbrDict[type],
-            useLoLPABR: isUsingLoLPAbrDict[type],
-            videoModel
-        });
-        const minIdx = getMinAllowedIndexFor(type, streamId);
-        const maxIdx = getMaxAllowedIndexFor(type, streamId);
-        const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
-        let newQuality = switchRequest.quality;
+            // ABR is turned off, do nothing
+            if (!settings.get().streaming.abr.autoSwitchBitrate[type]) {
+                return false;
+            }
 
-        if (minIdx !== undefined && ((newQuality > SwitchRequest.NO_CHANGE) ? newQuality : oldQuality) < minIdx) {
-            newQuality = minIdx;
-        }
-        if (newQuality > maxIdx) {
-            newQuality = maxIdx;
-        }
+            const oldQuality = getQualityFor(type, streamId);
+            const rulesContext = RulesContext(context).create({
+                abrController: instance,
+                switchHistory: switchHistoryDict[streamId][type],
+                droppedFramesHistory: droppedFramesHistory,
+                streamProcessor: streamProcessorDict[streamId][type],
+                currentValue: oldQuality,
+                useBufferOccupancyABR: isUsingBufferOccupancyAbrDict[type],
+                useL2AABR: isUsingL2AAbrDict[type],
+                useLoLPABR: isUsingLoLPAbrDict[type],
+                videoModel
+            });
+            const minIdx = getMinAllowedIndexFor(type, streamId);
+            const maxIdx = getMaxAllowedIndexFor(type, streamId);
+            const switchRequest = abrRulesCollection.getMaxQuality(rulesContext);
+            let newQuality = switchRequest.quality;
 
-        switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
+            if (minIdx !== undefined && ((newQuality > SwitchRequest.NO_CHANGE) ? newQuality : oldQuality) < minIdx) {
+                newQuality = minIdx;
+            }
+            if (newQuality > maxIdx) {
+                newQuality = maxIdx;
+            }
 
-        if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality) {
-            if (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality) {
+            switchHistoryDict[streamId][type].push({ oldValue: oldQuality, newValue: newQuality });
+
+            if (newQuality > SwitchRequest.NO_CHANGE && newQuality !== oldQuality && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newQuality > oldQuality)) {
                 _changeQuality(type, oldQuality, newQuality, maxIdx, switchRequest.reason, streamId);
+                return true;
             }
-        } else if (settings.get().debug.logLevel === Debug.LOG_LEVEL_DEBUG) {
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(type, true);
-            logger.debug('[' + type + '] stay on ' + oldQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ')');
+
+            return false;
+        } catch (e) {
+            return false;
         }
 
     }

@@ -243,16 +243,23 @@ function StreamController() {
                 _filterOutdatedStreams(streamsInfo);
             }
 
+            const promises = [];
             for (let i = 0, ln = streamsInfo.length; i < ln; i++) {
                 const streamInfo = streamsInfo[i];
-                _initializeOrUpdateStream(streamInfo);
+                promises.push(_initializeOrUpdateStream(streamInfo));
+                dashMetrics.addManifestUpdateStreamInfo(streamInfo);
             }
 
-            if (!activeStream) {
-                _initializeForFirstStream(streamsInfo);
-            }
-
-            eventBus.trigger(Events.STREAMS_COMPOSED);
+            Promise.all(promises)
+                .then(() => {
+                    if (!activeStream) {
+                        _initializeForFirstStream(streamsInfo);
+                    }
+                    eventBus.trigger(Events.STREAMS_COMPOSED);
+                })
+                .catch((e) => {
+                    throw e;
+                })
 
         } catch (e) {
             errHandler.error(new DashJSError(Errors.MANIFEST_ERROR_ID_NOSTREAMS_CODE, e.message + 'nostreamscomposed', manifestModel.getValue()));
@@ -267,40 +274,39 @@ function StreamController() {
      * @private
      */
     function _initializeOrUpdateStream(streamInfo) {
-        let stream = getStreamById(streamInfo.id);
+            let stream = getStreamById(streamInfo.id);
 
-        // If the Stream object does not exist we probably loaded the manifest the first time or it was
-        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-        if (!stream) {
-            stream = Stream(context).create({
-                manifestModel,
-                mediaPlayerModel,
-                dashMetrics,
-                manifestUpdater,
-                adapter,
-                timelineConverter,
-                capabilities,
-                capabilitiesFilter,
-                errHandler,
-                baseURLController,
-                segmentBaseController,
-                textController,
-                abrController,
-                playbackController,
-                eventController,
-                mediaController,
-                protectionController,
-                videoModel,
-                streamInfo,
-                settings
-            });
-            streams.push(stream);
-            stream.initialize();
-        } else {
-            stream.updateData(streamInfo);
-        }
-
-        dashMetrics.addManifestUpdateStreamInfo(streamInfo);
+            // If the Stream object does not exist we probably loaded the manifest the first time or it was
+            // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+            if (!stream) {
+                stream = Stream(context).create({
+                    manifestModel,
+                    mediaPlayerModel,
+                    dashMetrics,
+                    manifestUpdater,
+                    adapter,
+                    timelineConverter,
+                    capabilities,
+                    capabilitiesFilter,
+                    errHandler,
+                    baseURLController,
+                    segmentBaseController,
+                    textController,
+                    abrController,
+                    playbackController,
+                    eventController,
+                    mediaController,
+                    protectionController,
+                    videoModel,
+                    streamInfo,
+                    settings
+                });
+                streams.push(stream);
+                stream.initialize();
+                return Promise.resolve();
+            } else {
+                return stream.updateData(streamInfo);
+            }
     }
 
     /**
@@ -332,7 +338,7 @@ function StreamController() {
         if (adapter.getIsDynamic() && streams.length) {
             const manifestInfo = streamsInfo[0].manifestInfo;
             const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
-            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo.DVRWindowSize, manifestInfo.minBufferTime);
+            playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
         }
 
         // Figure out the correct start time and the correct start period
@@ -690,7 +696,7 @@ function StreamController() {
         if (initialPlayback && autoPlay) {
             const initialBufferLevel = mediaPlayerModel.getInitialBufferLevel();
 
-            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || initialBufferLevel > playbackController.getLiveDelay()) {
+            if (isNaN(initialBufferLevel) || initialBufferLevel <= playbackController.getBufferLevel() || (adapter.getIsDynamic() && initialBufferLevel > playbackController.getLiveDelay())) {
                 initialPlayback = false;
                 createPlaylistMetrics(PlayList.INITIAL_PLAYOUT_START_REASON);
                 playbackController.play();
@@ -773,7 +779,7 @@ function StreamController() {
      */
     function _onStreamBufferingCompleted(e) {
         logger.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
-        const isLast = getActiveStreamInfo().isLast;
+        const isLast = e.streamInfo.isLast;
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
@@ -886,7 +892,7 @@ function StreamController() {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = getNextStream();
             if (nextStream) {
-                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}`);
+                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}. Switching from ${activeStream.getStreamInfo().id} to ${nextStream.getStreamInfo().id}`);
                 _switchStream(nextStream, activeStream, NaN);
             } else {
                 logger.debug('StreamController no next stream found');
@@ -1385,6 +1391,7 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         firstLicenseIsFetched = false;
+        supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
     }

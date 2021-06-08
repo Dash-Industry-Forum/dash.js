@@ -96,25 +96,36 @@ function ABRRulesCollection(config) {
                         dashMetrics: dashMetrics
                     })
                 );
-                qualitySwitchRules.push(
-                    InsufficientBufferRule(context).create({
-                        dashMetrics: dashMetrics
-                    })
-                );
-                qualitySwitchRules.push(
-                    SwitchHistoryRule(context).create()
-                );
-                qualitySwitchRules.push(
-                    DroppedFramesRule(context).create()
-                );
 
-                abandonFragmentRules.push(
-                    AbandonRequestsRule(context).create({
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel,
-                        settings: settings
-                    })
-                );
+                if (settings.get().streaming.abr.additionalAbrRules.insufficientBufferRule) {
+                    qualitySwitchRules.push(
+                        InsufficientBufferRule(context).create({
+                            dashMetrics: dashMetrics
+                        })
+                    );
+                }
+
+                if (settings.get().streaming.abr.additionalAbrRules.switchHistoryRule) {
+                    qualitySwitchRules.push(
+                        SwitchHistoryRule(context).create()
+                    );
+                }
+
+                if (settings.get().streaming.abr.additionalAbrRules.droppedFramesRule) {
+                    qualitySwitchRules.push(
+                        DroppedFramesRule(context).create()
+                    );
+                }
+
+                if (settings.get().streaming.abr.additionalAbrRules.abandonRequestsRule) {
+                    abandonFragmentRules.push(
+                        AbandonRequestsRule(context).create({
+                            dashMetrics: dashMetrics,
+                            mediaPlayerModel: mediaPlayerModel,
+                            settings: settings
+                        })
+                    );
+                }
             }
         }
 
