@@ -1034,6 +1034,7 @@ function DashAdapter() {
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalProperties(realAdaptation);
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
+        mediaInfo.isEmbedded = false;
 
         return mediaInfo;
     }
