@@ -126,6 +126,7 @@ class VideoModelMock {
 
     setCurrentTime(time) {
         this.time = time;
+        this.fireEvent('seeking', {});
     }
 
     getTime() {
@@ -185,6 +186,10 @@ class VideoModelMock {
 
     isStalled() {
         return false;
+    }
+
+    setPlaybackRate() {
+
     }
 }
 

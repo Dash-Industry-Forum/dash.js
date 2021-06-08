@@ -36,8 +36,9 @@ import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
 import LicenseRequest from '../vo/LicenseRequest';
 import LicenseResponse from '../vo/LicenseResponse';
-import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import Utils from '../../../core/Utils';
+import Constants from '../../constants/Constants';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -57,6 +58,7 @@ const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
  * @todo ProtectionController does almost all of its tasks automatically after init() is
  * called.  Applications might want more control over this process and want to go through
  * each step manually (key system selection, session creation, session maintenance).
+ * This module can be accessed using the MediaPlayer API getProtectionController()
  * @param {Object} config
  */
 
@@ -72,6 +74,7 @@ function ProtectionController(config) {
     const constants = config.constants;
     let needkeyRetries = [];
     const cmcdModel = config.cmcdModel;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -789,13 +792,18 @@ function ProtectionController(config) {
     function doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
 
-        const cmcdParams = cmcdModel.getQueryParameter({
-            url: request.url,
-            type: HTTPRequest.LICENSE
-        });
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                const cmcdParams = cmcdModel.getQueryParameter({
+                    url: request.url,
+                    type: HTTPRequest.LICENSE
+                });
 
-        if (cmcdParams) {
-            request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                if (cmcdParams) {
+                    request.url = Utils.addAditionalQueryParameterToUrl(request.url, [cmcdParams]);
+                }
+            }
         }
 
         xhr.open(request.method, request.url, true);
@@ -806,6 +814,25 @@ function ProtectionController(config) {
         }
         for (const key in request.headers) {
             xhr.setRequestHeader(key, request.headers[key]);
+        }
+
+        if (settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled) {
+            const cmcdMode = settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                const cmcdHeaders = cmcdModel.getHeaderParameters({
+                    url: request.url,
+                    type: HTTPRequest.LICENSE
+                });
+
+                if (cmcdHeaders) {
+                    for (const header in cmcdHeaders) {
+                        let value = cmcdHeaders[header];
+                        if (value) {
+                            xhr.setRequestHeader(header, value);
+                        }
+                    }
+                }
+            }
         }
 
         const retryRequest = function () {
@@ -909,15 +936,15 @@ function ProtectionController(config) {
         }
     }
 
-    function setLicenseRequestFilters (filters) {
+    function setLicenseRequestFilters(filters) {
         licenseRequestFilters = filters;
     }
 
-    function setLicenseResponseFilters (filters) {
+    function setLicenseResponseFilters(filters) {
         licenseResponseFilters = filters;
     }
 
-    function applyFilters (filters, param) {
+    function applyFilters(filters, param) {
         if (!filters) return Promise.resolve();
         return filters.reduce((prev, next) => {
             return prev.then(() => {
@@ -927,24 +954,24 @@ function ProtectionController(config) {
     }
 
     instance = {
-        initializeForMedia: initializeForMedia,
-        clearMediaInfoArrayByStreamId: clearMediaInfoArrayByStreamId,
-        createKeySession: createKeySession,
-        loadKeySession: loadKeySession,
-        removeKeySession: removeKeySession,
-        closeKeySession: closeKeySession,
-        setServerCertificate: setServerCertificate,
-        setMediaElement: setMediaElement,
-        setSessionType: setSessionType,
-        setRobustnessLevel: setRobustnessLevel,
-        setProtectionData: setProtectionData,
-        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
-        getKeySystems: getKeySystems,
-        setKeySystems: setKeySystems,
-        setLicenseRequestFilters: setLicenseRequestFilters,
-        setLicenseResponseFilters: setLicenseResponseFilters,
-        stop: stop,
-        reset: reset
+        initializeForMedia,
+        clearMediaInfoArrayByStreamId,
+        createKeySession,
+        loadKeySession,
+        removeKeySession,
+        closeKeySession,
+        setServerCertificate,
+        setMediaElement,
+        setSessionType,
+        setRobustnessLevel,
+        setProtectionData,
+        getSupportedKeySystemsFromContentProtection,
+        getKeySystems,
+        setKeySystems,
+        setLicenseRequestFilters,
+        setLicenseResponseFilters,
+        stop,
+        reset
     };
 
     setup();

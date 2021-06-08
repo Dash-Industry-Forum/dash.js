@@ -42,7 +42,7 @@ describe('TemplateSegmentsGetter', () => {
     describe('availableSegmentsNumber calculation', () => {
         it('should set availableSegmentsNumber as 1 if duration is not defined', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = undefined;
 
             templateSegmentsGetter.getSegmentByIndex(representation, 0);
@@ -51,7 +51,7 @@ describe('TemplateSegmentsGetter', () => {
 
         it('should calculate representation segment range correctly', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
             templateSegmentsGetter.getSegmentByIndex(representation, 0);
@@ -62,7 +62,7 @@ describe('TemplateSegmentsGetter', () => {
     describe('getSegmentByIndex', () => {
         it('should return segment given an index', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 1;
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 0);
@@ -83,7 +83,7 @@ describe('TemplateSegmentsGetter', () => {
 
         it('should return null if segment is out of range', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 1 + 100 / 5);
@@ -94,7 +94,7 @@ describe('TemplateSegmentsGetter', () => {
     describe('getSegmentByTime', () => {
         it('should return null if segment duration is not defined', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = undefined;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 0);
@@ -103,7 +103,7 @@ describe('TemplateSegmentsGetter', () => {
 
         it('should return segment by time', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 0);
@@ -129,7 +129,7 @@ describe('TemplateSegmentsGetter', () => {
 
         it('should return null if segment is out of range', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.segmentAvailabilityRange = {start: 0, end: 100};
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 110);

@@ -224,6 +224,10 @@ function ManifestLoader(config) {
     function reset() {
         eventBus.off(Events.XLINK_READY, onXlinkReady, instance);
 
+        if (mssHandler) {
+            mssHandler.reset();
+        }
+
         if (xlinkController) {
             xlinkController.reset();
             xlinkController = null;
@@ -232,10 +236,6 @@ function ManifestLoader(config) {
         if (urlLoader) {
             urlLoader.abort();
             urlLoader = null;
-        }
-
-        if (mssHandler) {
-            mssHandler.reset();
         }
     }
 

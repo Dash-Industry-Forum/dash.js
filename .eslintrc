@@ -1,0 +1,25 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "mocha": true,
+    "node": true
+  },
+  "globals": {
+      "dashjs": true,
+      "WebKitMediaSource": true,
+      "MediaSource": true,
+      "WebKitMediaKeys": true,
+      "MSMediaKeys": true,
+      "MediaKeys": true
+  },
+  "parser": "babel-eslint",
+  "rules": {
+    "no-caller": 2,
+    "no-undef": 2,
+    "no-unused-vars": 2,
+    "no-use-before-define": 0,
+    "strict": 0,
+    "no-loop-func": 0
+  }
+}

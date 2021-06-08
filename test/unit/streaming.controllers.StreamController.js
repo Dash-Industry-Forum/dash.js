@@ -15,15 +15,19 @@ import DashMetricsMock from './mocks/DashMetricsMock';
 import ProtectionControllerMock from './mocks/ProtectionControllerMock';
 import VideoModelMock from './mocks/VideoModelMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
+import URIFragmentModelMock from './mocks/URIFragmentModelMock';
+import CapabilitiesFilterMock from './mocks/CapabilitiesFilterMock';
+import TextControllerMock from './mocks/TextControllerMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
+const sinon = require('sinon');
 
 chai.use(spies);
 const expect = chai.expect;
 
 const context = {};
-const streamController = StreamController(context).getInstance();
+let streamController = StreamController(context).getInstance();
 const eventBus = EventBus(context).getInstance();
 let settings = Settings(context).getInstance();
 
@@ -38,6 +42,9 @@ const protectionControllerMock = new ProtectionControllerMock();
 const videoModelMock = new VideoModelMock();
 const playbackControllerMock = new PlaybackControllerMock();
 const baseUrlControllerMock = new BaseURLControllerMock();
+const uriFragmentModelMock = new URIFragmentModelMock();
+const capabilitiesFilterMock = new CapabilitiesFilterMock();
+const textControllerMock = new TextControllerMock();
 
 Events.extend(ProtectionEvents);
 
@@ -54,13 +61,13 @@ describe('StreamController', function () {
         it('should return undefined if getStreamById is called without parameters', () => {
             const stream = streamController.getStreamById();
 
-            expect(stream).to.be.undefined; // jshint ignore:line
+            expect(stream).to.be.null; // jshint ignore:line
         });
 
-        it('should return undefined if getStreamById is called but no stream has been composed', () => {
+        it('should return null if getStreamById is called but no stream has been composed', () => {
             const stream = streamController.getStreamById('idx');
 
-            expect(stream).to.be.undefined; // jshint ignore:line
+            expect(stream).to.be.null; // jshint ignore:line
         });
 
         it('should return null if getActiveStreamInfo is called without parameters, activeStream is undefined', () => {
@@ -78,7 +85,7 @@ describe('StreamController', function () {
         });
 
         it('should throw an exception when attempting to call load while setConfig has not been called properly - empty manifestLoader object', function () {
-            streamController.setConfig({manifestLoader: {}});
+            streamController.setConfig({ manifestLoader: {} });
             expect(streamController.load.bind(streamController)).to.throw(Constants.MISSING_CONFIG_ERROR);
         });
 
@@ -115,17 +122,21 @@ describe('StreamController', function () {
     describe('Well initialized', () => {
 
         beforeEach(function () {
-            streamController.setConfig({adapter: adapterMock,
-                                        manifestLoader: manifestLoaderMock,
-                                        timelineConverter: timelineConverterMock,
-                                        manifestModel: manifestModelMock,
-                                        errHandler: errHandlerMock,
-                                        dashMetrics: dashMetricsMock,
-                                        protectionController: protectionControllerMock,
-                                        videoModel: videoModelMock,
-                                        playbackController: playbackControllerMock,
-                                        baseURLController: baseUrlControllerMock,
-                                        settings: settings});
+            streamController.setConfig({
+                adapter: adapterMock,
+                manifestLoader: manifestLoaderMock,
+                timelineConverter: timelineConverterMock,
+                manifestModel: manifestModelMock,
+                errHandler: errHandlerMock,
+                dashMetrics: dashMetricsMock,
+                protectionController: protectionControllerMock,
+                videoModel: videoModelMock,
+                playbackController: playbackControllerMock,
+                baseURLController: baseUrlControllerMock,
+                capabilitiesFilter: capabilitiesFilterMock,
+                textController: textControllerMock,
+                settings: settings
+            });
 
             streamController.initialize(false);
         });
@@ -134,7 +145,7 @@ describe('StreamController', function () {
             it('should trigger MANIFEST_UPDATED event when loadWithManifest is called', function () {
                 let spy = chai.spy();
                 eventBus.on(Events.MANIFEST_UPDATED, spy);
-                streamController.loadWithManifest({loadedTime: new Date()});
+                streamController.loadWithManifest({ loadedTime: new Date() });
                 expect(spy).to.have.been.called.exactly(1);
                 eventBus.off(Events.MANIFEST_UPDATED, spy);
             });
@@ -148,46 +159,42 @@ describe('StreamController', function () {
         describe('error management', () => {
 
             it('should throw an exception when attempting to composeStreams while no manifest has been parsed', function () {
-                let spy = chai.spy();
-                eventBus.on(Events.PROTECTION_CREATED, spy);
-
                 eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
-                expect(spy).to.have.been.called.exactly(1);
                 expect(errHandlerMock.errorValue).to.include('There are no streams');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_ABORTED', function () {
-                eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 1}});
+                eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 1 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_ABORTED');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_NETWORK', function () {
-                eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 2}});
+                eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 2 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_NETWORK');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_DECODE', function () {
-                eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 3}});
+                eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 3 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_DECODE');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_SRC_NOT_SUPPORTED', function () {
-                eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 4}});
+                eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 4 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_SRC_NOT_SUPPORTED');
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_ENCRYPTED', function () {
-                eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 5}});
+                eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 5 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_ENCRYPTED');
             });
 
             it('should return the correct error when a playback error occurs : UNKNOWN', function () {
-                eventBus.trigger(Events.PLAYBACK_ERROR, {error: {code: 6}});
+                eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 6 } });
 
                 expect(errHandlerMock.errorValue).to.include('UNKNOWN');
             });
@@ -196,8 +203,232 @@ describe('StreamController', function () {
                 let spy = chai.spy();
                 eventBus.on(Events.STREAM_TEARDOWN_COMPLETE, spy);
 
-                eventBus.trigger(Events.MANIFEST_UPDATED, {error: {}});
+                eventBus.trigger(Events.MANIFEST_UPDATED, { error: {} });
                 expect(spy).to.have.been.called.exactly(1);
+            });
+        });
+
+        describe('start time', function () {
+
+            let expectedStartTime;
+            let doneFn;
+            let getStreamsInfoStub;
+            let getIsDynamicStub;
+
+            let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600, id: '1' };
+            let dynamicStreamInfo = {
+                manifestInfo: { isDynamic: true, DVRWindowSize: 30, minBufferTime: 4 },
+                start: 10,
+                duration: Infinity,
+                id: '1'
+            };
+            let dvrWindowRange = { start: 70, end: 100 };
+            let liveStartTime = 85;
+
+            let onInitialStreamSwitch = function (e) {
+                try {
+                    eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                    expect(e.startTime).to.equal(expectedStartTime);
+                    doneFn();
+                } catch (e) {
+                    doneFn(e);
+                }
+            };
+
+            beforeEach(function () {
+                videoModelMock.time = -1;
+                dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
+                streamController.setConfig({
+                    adapter: adapterMock,
+                    manifestLoader: manifestLoaderMock,
+                    timelineConverter: timelineConverterMock,
+                    manifestModel: manifestModelMock,
+                    errHandler: errHandlerMock,
+                    dashMetrics: dashMetricsMock,
+                    protectionController: protectionControllerMock,
+                    videoModel: videoModelMock,
+                    playbackController: playbackControllerMock,
+                    baseURLController: baseUrlControllerMock,
+                    settings: settings,
+                    uriFragmentModel: uriFragmentModelMock
+                });
+
+                streamController.initialize(false);
+                getStreamsInfoStub = sinon.stub(adapterMock, 'getStreamsInfo');
+                getIsDynamicStub = sinon.stub(adapterMock, 'getIsDynamic');
+                eventBus.on(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch, this);
+            });
+
+            afterEach(function () {
+                streamController.reset();
+                getStreamsInfoStub.restore();
+                getIsDynamicStub.restore();
+                getStreamsInfoStub = null;
+                getIsDynamicStub = null;
+                eventBus.off(Events.INITIAL_STREAM_SWITCH, onInitialStreamSwitch);
+                uriFragmentModelMock.reset();
+            });
+
+            describe('static streams', function () {
+
+                beforeEach(function () {
+                    getIsDynamicStub.returns(false);
+                });
+
+
+                it('should start static stream at period start', function (done) {
+                    doneFn = done;
+
+                    expectedStartTime = staticStreamInfo.start;
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start static stream at #t', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = 10;
+                    uriFragmentModelMock.setURIFragmentData({ t: uriStartTime.toString() });
+
+                    expectedStartTime = staticStreamInfo.start + uriStartTime;
+
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start static stream at period start if #t is before period start', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = -20;
+                    uriFragmentModelMock.setURIFragmentData({ t: uriStartTime.toString() });
+
+                    expectedStartTime = staticStreamInfo.start;
+
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start static stream at period start if #t=posix: notation is used', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = 10;
+                    uriFragmentModelMock.setURIFragmentData({ t: 'posix:' + uriStartTime.toString() });
+
+                    expectedStartTime = staticStreamInfo.start;
+
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start static stream at period start if #t= is not a valid', function (done) {
+                    doneFn = done;
+
+                    uriFragmentModelMock.setURIFragmentData({ t: 'abcd' });
+
+                    expectedStartTime = staticStreamInfo.start;
+
+                    getStreamsInfoStub.returns([staticStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+            });
+
+            describe('dynamic streams', function () {
+
+                beforeEach(function () {
+                    getIsDynamicStub.returns(true);
+                });
+
+                it('should start dynamic stream at live start time', function (done) {
+                    doneFn = done;
+
+                    expectedStartTime = liveStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at #t', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = 70;
+                    uriFragmentModelMock.setURIFragmentData({ t: uriStartTime.toString() });
+
+                    expectedStartTime = dynamicStreamInfo.start + uriStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at live start time if #t is before DVR window range', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = -10;
+                    uriFragmentModelMock.setURIFragmentData({ t: uriStartTime.toString() });
+
+                    expectedStartTime = dvrWindowRange.start;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at live start time if #t is not valid', function (done) {
+                    doneFn = done;
+
+                    uriFragmentModelMock.setURIFragmentData({ t: 'abcd' });
+
+                    expectedStartTime = liveStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at #t=posix', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = dvrWindowRange.start + 10;
+                    uriFragmentModelMock.setURIFragmentData({ t: 'posix:' + uriStartTime.toString() });
+
+                    expectedStartTime = uriStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at DVR window start if #t=posix is before DVR window range', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = 0;
+                    uriFragmentModelMock.setURIFragmentData({ t: 'posix:' + uriStartTime.toString() });
+
+                    expectedStartTime = dvrWindowRange.start;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at live start time if #t=posix is beyond DVR window range', function (done) {
+                    doneFn = done;
+
+                    let uriStartTime = dvrWindowRange + 10;
+                    uriFragmentModelMock.setURIFragmentData({ t: 'posix:' + uriStartTime.toString() });
+
+                    expectedStartTime = liveStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
+
+                it('should start dynamic stream at live start time if #t=posix is not valid', function (done) {
+                    doneFn = done;
+
+                    uriFragmentModelMock.setURIFragmentData({ t: 'posix:abcd' });
+
+                    expectedStartTime = liveStartTime;
+
+                    getStreamsInfoStub.returns([dynamicStreamInfo]);
+                    eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
+                });
             });
         });
     });

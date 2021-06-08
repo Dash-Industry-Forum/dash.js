@@ -14,6 +14,11 @@ const context = {};
 
 const eventBus = EventBus(context).getInstance();
 
+const SESSION_HEADER_NAME = 'CMCD-Session';
+const STATUS_HEADER_NAME = 'CMCD-Status';
+const OBJECT_HEADER_NAME = 'CMCD-Object';
+const REQUEST_HEADER_NAME = 'CMCD-Request';
+
 describe('CmcdModel', function () {
     let cmcdModel;
 
@@ -22,11 +27,11 @@ describe('CmcdModel', function () {
     let playbackControllerMock = new PlaybackControllerMock();
 
     let settings = Settings(context).getInstance();
-    settings.update({streaming: {cmcd: {enabled: true}}});
 
     beforeEach(function () {
         cmcdModel = CmcdModel(context).getInstance();
         cmcdModel.initialize();
+        settings.update({streaming: {cmcd: {enabled: true, cid: null}}});
     });
 
     afterEach(function () {
@@ -42,6 +47,329 @@ describe('CmcdModel', function () {
                 dashMetrics: dashMetricsMock,
                 playbackController: playbackControllerMock
             });
+        });
+
+        it('getHeaderParameters() returns correct metrics for MPD', function () {
+            const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
+            const MEDIA_TYPE = 'video';
+            const MANIFEST_OBJECT_TYPE = 'm';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers).to.have.property(SESSION_HEADER_NAME);
+            expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(OBJECT_HEADER_NAME);
+            expect(typeof headers[OBJECT_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(REQUEST_HEADER_NAME);
+            expect(typeof headers[REQUEST_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(STATUS_HEADER_NAME);
+            expect(typeof headers[STATUS_HEADER_NAME]).to.equal('string');
+
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.not.have.property('cid');
+
+            metrics = parseQuery(headers[OBJECT_HEADER_NAME]);
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
+        });
+
+        it('getHeaderParameters() returns correct metrics for init segments', function () {
+            const REQUEST_TYPE = HTTPRequest.INIT_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const MANIFEST_OBJECT_TYPE = 'i';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers).to.have.property(SESSION_HEADER_NAME);
+            expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(OBJECT_HEADER_NAME);
+            expect(typeof headers[OBJECT_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(REQUEST_HEADER_NAME);
+            expect(typeof headers[REQUEST_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(STATUS_HEADER_NAME);
+            expect(typeof headers[STATUS_HEADER_NAME]).to.equal('string');
+
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.not.have.property('cid');
+
+            metrics = parseQuery(headers[OBJECT_HEADER_NAME]);
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
+
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.have.property('su');
+            expect(metrics.su).to.equal(true);
+        });
+
+        it('getHeaderParameters() returns correct metrics for media segments', function () {
+            dashMetricsMock.setCurrentBufferLevel(15.34511);
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const BITRATE = 10000;
+            const DURATION = 987.213;
+            const TOP_BITRATE = 20000;
+            const MEASURED_THROUGHPUT = 8327641;
+            const BUFFER_LEVEL = parseInt(dashMetricsMock.getCurrentBufferLevel() * 10) * 100;
+            const VIDEO_OBJECT_TYPE = 'v';
+            const NEXT_OBJECT_URL = '/next_object';
+            const NEXT_OBJECT_RANGE = '100-500';
+
+            abrControllerMock.setTopBitrateInfo({bitrate: TOP_BITRATE});
+            abrControllerMock.setThroughputHistory({
+                getSafeAverageThroughput: function () {
+                    return MEASURED_THROUGHPUT;
+                }
+            });
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE,
+                quality: 0,
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
+                duration: DURATION
+            };
+
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers).to.have.property(SESSION_HEADER_NAME);
+            expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(OBJECT_HEADER_NAME);
+            expect(typeof headers[OBJECT_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(REQUEST_HEADER_NAME);
+            expect(typeof headers[REQUEST_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(STATUS_HEADER_NAME);
+            expect(typeof headers[STATUS_HEADER_NAME]).to.equal('string');
+
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.not.have.property('cid');
+
+            metrics = parseQuery(headers[OBJECT_HEADER_NAME]);
+            expect(metrics).to.have.property('br');
+            expect(metrics.br).to.equal(parseInt(BITRATE / 1000));
+            expect(metrics).to.have.property('d');
+            expect(metrics.d).to.equal(parseInt(DURATION * 1000));
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(VIDEO_OBJECT_TYPE);
+            expect(metrics).to.have.property('tb');
+            expect(metrics.tb).to.equal(parseInt(TOP_BITRATE / 1000));
+
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.have.property('bl');
+            expect(metrics.bl).to.equal(BUFFER_LEVEL);
+            expect(metrics).to.have.property('dl');
+            expect(metrics.dl).to.equal(BUFFER_LEVEL);
+            expect(metrics).to.have.property('mtp');
+            expect(metrics.mtp).to.equal(parseInt(MEASURED_THROUGHPUT / 100) * 100);
+            expect(metrics).to.have.property('nor');
+            expect(metrics.nor).to.equal(NEXT_OBJECT_URL);
+
+            metrics = parseQuery(headers[STATUS_HEADER_NAME]);
+            expect(metrics).to.have.property('rtp');
+            expect(typeof metrics.rtp).to.equal('number');
+            expect(metrics.rtp % 100).to.equal(0);
+
+            request.url = 'http://test.url/next_object';
+            headers = cmcdModel.getHeaderParameters(request);
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.have.property('nrr');
+            expect(metrics.nrr).to.equal(NEXT_OBJECT_RANGE);
+        });
+
+        it('getHeaderParameters() returns correct metrics for other type', function () {
+            const REQUEST_TYPE = HTTPRequest.OTHER_TYPE;
+            const MEDIA_TYPE = 'video';
+            const MANIFEST_OBJECT_TYPE = 'o';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers).to.have.property(SESSION_HEADER_NAME);
+            expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(OBJECT_HEADER_NAME);
+            expect(typeof headers[OBJECT_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(REQUEST_HEADER_NAME);
+            expect(typeof headers[REQUEST_HEADER_NAME]).to.equal('string');
+            expect(headers).to.have.property(STATUS_HEADER_NAME);
+            expect(typeof headers[STATUS_HEADER_NAME]).to.equal('string');
+
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.not.have.property('cid');
+            metrics = parseQuery(headers[OBJECT_HEADER_NAME]);
+            expect(metrics).to.have.property('ot');
+            expect(metrics.ot).to.equal(MANIFEST_OBJECT_TYPE);
+        });
+
+        it('getHeaderParameters() recognizes playback rate change through events', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const BITRATE = 10000;
+            const DURATION = 987.213;
+            const CHANGED_PLAYBACK_RATE = 2.4;
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE,
+                quality: 0,
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
+                duration: DURATION
+            };
+            let headers = cmcdModel.getHeaderParameters(request);
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.not.have.property('pr');
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, {playbackRate: CHANGED_PLAYBACK_RATE});
+
+            headers = cmcdModel.getHeaderParameters(request);
+            metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('pr');
+            expect(metrics.pr).to.equal(CHANGED_PLAYBACK_RATE);
+        });
+
+        it('getHeaderParameters() recognizes playback seek through events', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const BITRATE = 10000;
+            const DURATION = 987.213;
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE,
+                quality: 0,
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
+                duration: DURATION
+            };
+            cmcdModel.getHeaderParameters(request); // first initial request will set startup to true
+            let headers = cmcdModel.getHeaderParameters(request);
+            let metrics = parseQuery(headers[STATUS_HEADER_NAME]);
+            expect(metrics).to.not.have.property('bs');
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.not.have.property('su');
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
+
+            headers = cmcdModel.getHeaderParameters(request);
+            metrics = parseQuery(headers[STATUS_HEADER_NAME]);
+            expect(metrics).to.have.property('bs');
+            expect(metrics.bs).to.equal(true);
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.have.property('su');
+            expect(metrics.su).to.equal(true);
+        });
+
+        it('getHeaderParameters() recognizes buffer starvation through events', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const BITRATE = 10000;
+            const DURATION = 987.213;
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE,
+                quality: 0,
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
+                duration: DURATION
+            };
+            cmcdModel.getHeaderParameters(request); // first initial request will set startup to true
+            let headers = cmcdModel.getHeaderParameters(request);
+            let metrics = parseQuery(headers[STATUS_HEADER_NAME]);
+            expect(metrics).to.not.have.property('bs');
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.not.have.property('su');
+
+            eventBus.trigger(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, {
+                state: MediaPlayerEvents.BUFFER_EMPTY,
+                mediaType: request.mediaType
+            });
+
+            headers = cmcdModel.getHeaderParameters(request);
+            metrics = parseQuery(headers[STATUS_HEADER_NAME]);
+            expect(metrics).to.have.property('bs');
+            expect(metrics.bs).to.equal(true);
+            metrics = parseQuery(headers[REQUEST_HEADER_NAME]);
+            expect(metrics).to.have.property('su');
+            expect(metrics.su).to.equal(true);
+        });
+
+        it('getHeaderParameters() recognizes manifest load through events', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+            const BITRATE = 10000;
+            const DURATION = 987.213;
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE,
+                quality: 0,
+                mediaInfo: {bitrateList: [{bandwidth: BITRATE}]},
+                duration: DURATION
+            };
+            let headers = cmcdModel.getHeaderParameters(request);
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.not.have.property('st');
+            expect(metrics).to.not.have.property('sf');
+
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, {protocol: 'MSS', data: {type: DashConstants.DYNAMIC}});
+
+            headers = cmcdModel.getHeaderParameters(request);
+            metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('st');
+            expect(metrics.st).to.equal('l');
+            expect(metrics).to.have.property('sf');
+            expect(metrics.sf).to.equal('s');
+        });
+
+        it('getHeaderParameters() returns CID in metrics if expicitly set', function () {
+            const REQUEST_TYPE = HTTPRequest.MPD_TYPE;
+            const MEDIA_TYPE = 'video';
+            const CID = 'content_id';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            settings.update({streaming: {cmcd: {enabled: true, cid: CID}}});
+
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers).to.have.property(SESSION_HEADER_NAME);
+            expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
+
+            let metrics = parseQuery(headers[SESSION_HEADER_NAME]);
+            expect(metrics).to.have.property('cid');
+            expect(metrics.cid).to.equal(CID);
+        });
+
+        it('getHeaderParameters() returns correct RTP value if set to static ', function () {
+            const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+            const MEDIA_TYPE = 'video';
+
+            let request = {
+                type: REQUEST_TYPE,
+                mediaType: MEDIA_TYPE
+            };
+
+            settings.update({streaming: {cmcd: {enabled: true, rtp: 10000}}});
+
+            let headers = cmcdModel.getHeaderParameters(request);
+            expect(headers).to.have.property(STATUS_HEADER_NAME);
+            expect(typeof headers[STATUS_HEADER_NAME]).to.equal('string');
+
+            let metrics = parseQuery(headers[STATUS_HEADER_NAME]);
+            expect(metrics).to.have.property('rtp');
+            expect(metrics.rtp).to.equal(10000);
         });
 
         it('getQueryParameter() returns correct metrics for MPD', function () {

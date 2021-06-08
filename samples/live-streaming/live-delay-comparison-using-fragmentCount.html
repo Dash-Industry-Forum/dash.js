@@ -1,139 +1,213 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8"/>
-        <title>Live delay comparison using setLiveDelayFragmentCount</title>
+<head>
+    <meta charset="utf-8">
+    <title>Live delay comparison using setLiveDelayFragmentCount</title>
 
-        <script src="../../dist/dash.all.debug.js"></script>
-        <!--dash.all.min.js should be used in production over dash.all.debug.js
-Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-        <!--<script src="../../dist/dash.all.min.js"></script>-->
+    <script src="../../dist/dash.all.debug.js"></script>
 
-        <script class="code">
-            function init()
-            {
-                var player1,player2,player3,player4,player5,player6, video;
-                var MPD_2S_SEGMENTS = "https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd";
-                var MPD_6S_SEGMENTS = "https://livesim.dashif.org/livesim/testpic_6s/Manifest.mpd";
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link href="../lib/main.css" rel="stylesheet">
 
-
-                video = document.querySelector("#video1");
-                player1 = dashjs.MediaPlayer().create();
-                player1.initialize(video,MPD_2S_SEGMENTS ,true);
-                player1.updateSettings({'streaming': { 'liveDelayFragmentCount': 0 }});
-
-                video = document.querySelector("#video2");
-                player2 = dashjs.MediaPlayer().create();
-                player2.initialize(video,MPD_2S_SEGMENTS ,true);
-                player2.updateSettings({'streaming': { 'liveDelayFragmentCount': 2 }});
-
-                video = document.querySelector("#video3");
-                player3 = dashjs.MediaPlayer().create();
-                player3.initialize(video,MPD_2S_SEGMENTS ,true);
-                player3.updateSettings({'streaming': { 'liveDelayFragmentCount': 4 }});
-
-                video = document.querySelector("#video4");
-                player4 = dashjs.MediaPlayer().create();
-                player4.initialize(video,MPD_6S_SEGMENTS ,true);
-                player4.updateSettings({'streaming': { 'liveDelayFragmentCount': 0 }});
-
-                video = document.querySelector("#video5");
-                player5 = dashjs.MediaPlayer().create();
-                player5.initialize(video,MPD_6S_SEGMENTS ,true);
-                player5.updateSettings({'streaming': { 'liveDelayFragmentCount': 2 }});
-
-                video = document.querySelector("#video6");
-                player6 = dashjs.MediaPlayer().create();
-                player6.initialize(video,MPD_6S_SEGMENTS ,true);
-                player6.updateSettings({'streaming': { 'liveDelayFragmentCount': 4 }});
+    <script class="code">
+        function init() {
+            var player1, player2, player3, player4, player5, player6, video;
+            var MPD_2S_SEGMENTS = 'https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd';
+            var MPD_6S_SEGMENTS = 'https://livesim.dashif.org/livesim/testpic_6s/Manifest.mpd';
 
 
-                setInterval( function() {
-                    var d = new Date();
-                    var seconds = d.getSeconds();
-                    document.querySelector("#sec").innerHTML = ( seconds < 10 ? "0" : "" ) + seconds;
-                    var minutes = d.getMinutes();
-                    document.querySelector("#min").innerHTML = ( minutes < 10 ? "0" : "" ) + minutes;
-                    for (var i=1;i < 7;i++)
-                    {
-                        var p = eval("player"+i);
-                        document.querySelector("#video" + i + "delay").innerHTML = Math.round((d.getTime()/1000) - Number(p.timeAsUTC()));
-                        document.querySelector("#video" + i + "buffer").innerHTML = p.getBufferLength()+ "s";
-                    }
+            video = document.querySelector('#video1');
+            player1 = dashjs.MediaPlayer().create();
+            player1.initialize(video, MPD_2S_SEGMENTS, true);
+            player1.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 0 } } });
+
+            video = document.querySelector('#video2');
+            player2 = dashjs.MediaPlayer().create();
+            player2.initialize(video, MPD_2S_SEGMENTS, true);
+            player2.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 2 } } });
+
+            video = document.querySelector('#video3');
+            player3 = dashjs.MediaPlayer().create();
+            player3.initialize(video, MPD_2S_SEGMENTS, true);
+            player3.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 4 } } });
+
+            video = document.querySelector('#video4');
+            player4 = dashjs.MediaPlayer().create();
+            player4.initialize(video, MPD_6S_SEGMENTS, true);
+            player4.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 0 } } });
+
+            video = document.querySelector('#video5');
+            player5 = dashjs.MediaPlayer().create();
+            player5.initialize(video, MPD_6S_SEGMENTS, true);
+            player5.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 2 } } });
+
+            video = document.querySelector('#video6');
+            player6 = dashjs.MediaPlayer().create();
+            player6.initialize(video, MPD_6S_SEGMENTS, true);
+            player6.updateSettings({ 'streaming': { 'delay': { 'liveDelayFragmentCount': 4 } } });
 
 
-                },1000);
+            setInterval(function () {
+                var d = new Date();
+                var seconds = d.getSeconds();
+                document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
+                var minutes = d.getMinutes();
+                document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
+                for (var i = 1; i < 7; i++) {
+                    var p = eval('player' + i);
+                    document.querySelector('#video' + i + 'delay').innerHTML = Math.round((d.getTime() / 1000) - Number(p.timeAsUTC()));
+                    document.querySelector('#video' + i + 'buffer').innerHTML = p.getBufferLength() + 's';
+                }
 
-            }
-        </script>
-        <style>
 
-            table {
-                border-spacing: 10px;
-            }
-            video {
-                width: 320px;
-                height: 180px;
-            }
-            .clock { border:1px solid #333; color:#000; font-size: 60pt}
-        </style>
-    </head>
+            }, 1000);
 
-    <body>
-    This sample illustrates the combined effects of segment duration and the "<strong>setLiveDelayFragmentCount</strong>" MediaPlayer method on the latency of live stream playback.
-        The upper layer of videos are all playing a live stream with 2s segment duration. The lower layer use 6s segment duration. For each stream, the playback position
-        behind live is varied between 0, 2 and 4 segments. Note that the default value for dash.js is 4 segments, which is a trade off between stability and latency.
-        Lowest latency is achieved with shorter segments and with a lower liveDelayFragmentCount. Higher stability/robustness is achieved with a higher liveDelayFragmentCount.
-        <table class="code">
-            <tr><td>
-                2s segment, 0 segments behind live<br/>
-                <video id="video1" controls="true">
-                </video><br/>
-                Seconds behind live: <span id="video1delay"></span><br/>
-                Buffer length: <span id="video1buffer"></span>
-                </td><td>
-                2s segment, 2 segments behind live<br/>
-                <video id="video2" controls="true">
-                </video><br/>
-                Seconds behind live: <span id="video2delay"></span><br/>
-                Buffer length: <span id="video2buffer"></span>
-                </td><td>
-                2s segment, 4 segments behind live (default)<br/>
-                <video id="video3" controls="true">
-                </video><br/>
-                Seconds behind live: <span id="video3delay"></span><br/>
-                Buffer length: <span id="video3buffer"></span>
-                </td>
-                <td>Wall clock time
+        }
+    </script>
+    <style>
+
+        table {
+            border-spacing: 10px;
+        }
+
+        video {
+            width: 256px;
+            height: 144px;
+        }
+
+        .clock {
+            color: #000;
+            font-size: 60pt
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3><i class="bi bi-info-square"></i> Live delay comparison using setLiveDelayFragmentCount</h3>
+                    <p> This sample illustrates the combined effects of segment duration and the "<b>setLiveDelayFragmentCount</b>"
+                        MediaPlayer method on the latency of live stream playback.</p>
+                    <p>
+                        The upper layer of videos are all playing a live stream with 2s segment duration. The lower
+                        layer use 6s segment duration. For each stream, the playback position
+                        behind live is varied between 0, 2 and 4 segments. </p>
+                    <p>Note that the default value for dash.js is 4
+                        segments, which is a trade off between stability and latency.
+                        Lowest latency is achieved with shorter segments and with a lower liveDelayFragmentCount. Higher
+                        stability/robustness is achieved with a higher liveDelayFragmentCount.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="h-100 p-5 border rounded-3">
+                    <h3>Wall Clock reference time</h3>
                     <div class="clock">
-                        <span id="min"> </span>:<span id="sec"></span>
+                        <span id="min"> </span><span id="sec"></span>
                     </div>
-                </td></tr>
-            <tr><td>
-                6s segment, 0 segments behind live<br/>
-                <video id="video4" controls="true">
-                </video><br/>
-                Seconds behind live: <span id="video4delay"></span><br/>
-                Buffer length: <span id="video4buffer"></span>
-                </td><td>
-                6s segment, 2 segments behind live<br/>
-                <video id="video5" controls="true">
-                </video><br/>
-                Seconds behind live: <span id="video5delay"></span><br/>
-                Buffer length: <span id="video5buffer"></span>
-                </td><td>
-                6s segment, 4 segments behind live (default)<br/>
-                <video id="video6" controls="true">
-                </video><br/>
-                Seconds behind live: <span id="video6delay"></span><br/>
-                Buffer length: <span id="video6buffer"></span>
-                </td></tr>
-        </table>
-        <script class="code">
-            document.addEventListener("DOMContentLoaded", function () {
-                init();
-            });
-        </script>
-    </body>
+                </div>
+            </div>
+            <div class="row margin-top-row">
+                <div class="col-md-4">
+                    <div class="h-100 p-5 border rounded-3">
+                        <h5> 2s segment, 0 segments behind live</h5>
+                        <div class="code">
+                            <video id="video1" controls="true" muted></video>
+                            <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                                id="video1delay"></span></div>
+                            <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
+                                id="video1buffer"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="h-100 p-5 border rounded-3">
+                        <h5> 2s segment, 2 segments behind live</h5>
+                        <div class="code">
+                            <video id="video2" controls="true" muted></video>
+                            <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                                id="video2delay"></span></div>
+                            <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
+                                id="video2buffer"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="h-100 p-5 border rounded-3"><h5> 2s segment, 4 segments behind live</h5><span
+                        class="badge bg-info text-dark">Default</span>
+                        <div class="code">
+                            <video id="video3" controls="true" muted></video>
+                            <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                                id="video3delay"></span><br/></div>
+                            <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
+                                id="video3buffer"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row margin-top-row">
+                <div class="col-md-4">
+                    <div class="h-100 p-5 border rounded-3">
+                        <h5> 6s segment, 0 segments behind live</h5>
+                        <div class="code">
+                            <video id="video4" controls="true" muted></video>
+                            <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                                id="video4delay"></span></div>
+                            <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
+                                id="video4buffer"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="h-100 p-5 border rounded-3">
+                        <h5> 6s segment, 2 segments behind live</h5>
+                        <div class="code">
+                            <video id="video5" controls="true" muted></video>
+                            <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                                id="video5delay"></span></div>
+                            <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
+                                id="video5buffer"></span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="h-100 p-5 border rounded-3"><h5> 6s segment, 4 segments behind live</h5><span
+                        class="badge bg-info text-dark">Default</span>
+                        <div class="code">
+                            <video id="video6" controls="true" muted></video>
+                            <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                                id="video6delay"></span></div>
+                            <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
+                                id="video6buffer"></span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="code-output"></div>
+                </div>
+            </div>
+            <footer class="pt-3 mt-4 text-muted border-top">
+                &copy; DASH-IF
+            </footer>
+        </div>
+    </div>
+</main>
+<script class="code">
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
 </html>
-

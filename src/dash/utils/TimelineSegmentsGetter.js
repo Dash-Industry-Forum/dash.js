@@ -32,18 +32,18 @@
 import FactoryMaker from '../../core/FactoryMaker';
 import Constants from '../../streaming/constants/Constants';
 
-import { getTimeBasedSegment } from './SegmentsUtils';
+import {getTimeBasedSegment} from './SegmentsUtils';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
     config = config || {};
     const timelineConverter = config.timelineConverter;
+    const dashMetrics = config.dashMetrics;
 
     let instance;
 
     function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcMediaTimeFromPresentationTime') ||
-            !timelineConverter.hasOwnProperty('calcSegmentAvailabilityRange')) {
+        if (!timelineConverter) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
     }
@@ -52,7 +52,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
             AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
-                AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
         const list = base.SegmentURL;
 
@@ -96,12 +96,24 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 if (nextFrag && nextFrag.hasOwnProperty('t')) {
                     repeatEndTime = nextFrag.t / fTimescale;
                 } else {
-                    const availabilityEnd = representation.segmentAvailabilityRange ? representation.segmentAvailabilityRange.end : (timelineConverter.calcSegmentAvailabilityRange(representation, isDynamic).end);
-                    repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
-                    representation.segmentDuration = frag.d / fTimescale;
+                    try {
+                        let availabilityEnd = 0;
+                        if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
+                            // use end of the Period
+                            availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+                        } else {
+                            // use DVR window
+                            const dvrWindow = dashMetrics.getCurrentDVRInfo();
+                            availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
+                        }
+                        repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
+                        representation.segmentDuration = frag.d / fTimescale;
+                    } catch (e) {
+                        repeatEndTime = 0;
+                    }
                 }
 
-                repeat = Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1;
+                repeat = Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {

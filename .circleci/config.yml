@@ -49,7 +49,9 @@ commands:
         steps:
             - run:
                 name: Build and run unit tests
-                command: npm run build
+                command: |
+                    npm run build
+                    npm run test
 
 jobs:
     build-and-unit-test:
@@ -62,8 +64,7 @@ jobs:
                 name: Deploy
                 command: |
                     if [ "${CIRCLE_BRANCH}" = "development" ] && [ -n "$DEPLOY_HOST" ] && [ -n "$DEPLOY_USER" ] && [ -n "$DEPLOY_PASSWORD" ]; then
-                        sudo npm install -g grunt-cli
-                        grunt deploy --git-commit=$CIRCLE_SHA1 --ftp-host=$DEPLOY_HOST --ftp-user=$DEPLOY_USER --ftp-pass=$DEPLOY_PASSWORD
+                        node deploy.js --host=$DEPLOY_HOST --user=$DEPLOY_USER --password=$DEPLOY_PASSWORD
                     else
                         echo "Not on development branch or deploy not configured. Dry run only, nothing will be deployed."
                     fi

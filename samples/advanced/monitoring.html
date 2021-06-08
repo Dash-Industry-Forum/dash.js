@@ -1,13 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
     <title>Monitoring stream example</title>
-
+    <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+
+    <style>
+        video {
+            width: 100%;
+        }
+
+        .dash-video-player {
+            position: relative; /* This position relative is needed to position the menus */
+            margin: 0 auto;
+            line-height: 1.0;
+        }
+    </style>
 
     <script class="code">
         function init() {
@@ -58,52 +73,66 @@
 
         }
     </script>
-
-    <style>
-        video {
-            width: 640px;
-            height: 360px;
-        }
-
-        #container {
-            display: inline-block;
-        }
-
-        #container > div {
-            display: inline-block;
-            float: left;
-            margin-right: 10px;
-        }
-
-    </style>
 </head>
 <body>
-<div id="container">
-    <div class="video-container">
-        <video data-dashjs-player autoplay controls="true">
-        </video>
-    </div>
-    <div>
-        <strong>Reported bitrate:</strong>
-        <span id="reportedBitrate"></span>
-        <br/>
-        <strong>Buffer level:</strong>
-        <span id="bufferLevel"></span>
-        <div id="chrome-only">
-            <strong>Calculated bitrate:</strong>
-            <span id="calculatedBitrate"></span>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Monitoring stream example</h3>
+                    <p>This example shows how to monitor metrics of the streams played by dash.js.</p>
+                </div>
+            </div>
         </div>
-        <strong>Framerate:</strong>
-        <span id="framerate"></span>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <div class="dash-video-player code">
+                    <div class="videoContainer" id="videoContainer">
+                        <video preload="auto" controls="true"></video>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-5 border rounded-3">
+                    <h4>Metrics</h4>
+                    <div>
+                        <strong>Reported bitrate:</strong>
+                        <span id="reportedBitrate"></span>
+                        <br/>
+                        <strong>Buffer level:</strong>
+                        <span id="bufferLevel"></span>
+                        <div id="chrome-only">
+                            <strong>Calculated bitrate:</strong>
+                            <span id="calculatedBitrate"></span>
+                        </div>
+                        <strong>Framerate:</strong>
+                        <span id="framerate"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
     </div>
-</div>
+</main>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener('DOMContentLoaded', function () {
         init();
     });
 </script>
 <script src="../highlighter.js"></script>
 </body>
 </html>
-
-

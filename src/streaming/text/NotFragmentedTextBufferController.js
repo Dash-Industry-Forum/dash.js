@@ -28,35 +28,32 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
 import InitCache from '../utils/InitCache';
 import SourceBufferSink from '../SourceBufferSink';
-import TextController from '../../streaming/text/TextController';
 import DashJSError from '../../streaming/vo/DashJSError';
 import Errors from '../../core/errors/Errors';
 
 const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
+
 function NotFragmentedTextBufferController(config) {
 
     config = config || {};
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const textController = TextController(context).getInstance();
 
+    const textController = config.textController;
     const errHandler = config.errHandler;
     const streamInfo = config.streamInfo;
     const type = config.type;
-    const mimeType = config.mimeType;
-    const fragmentModel = config.fragmentModel;
 
     let instance,
         isBufferingCompleted,
         initialized,
         mediaSource,
-        buffer,
+        sourceBufferSink,
         initCache;
 
     function setup() {
@@ -64,8 +61,9 @@ function NotFragmentedTextBufferController(config) {
         mediaSource = null;
         isBufferingCompleted = false;
 
-        eventBus.on(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, instance);
+        initCache = InitCache(context).getInstance();
+
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
     }
 
     function getBufferControllerType() {
@@ -74,32 +72,26 @@ function NotFragmentedTextBufferController(config) {
 
     function initialize(source) {
         setMediaSource(source);
-        initCache = InitCache(context).getInstance();
     }
 
-    function createBuffer(mediaInfoArr) {
-        const mediaInfo = mediaInfoArr[0];
-        try {
-            buffer = SourceBufferSink(context).create(mediaSource, mediaInfo);
-            if (!initialized) {
-                const textBuffer = buffer.getBuffer();
-                if (textBuffer.hasOwnProperty(Constants.INITIALIZE)) {
-                    textBuffer.initialize(mimeType, streamInfo, mediaInfoArr, fragmentModel);
+    function createBufferSink(mediaInfo) {
+        return new Promise((resolve, reject) => {
+            try {
+                sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
+                sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo);
+                if (!initialized) {
+                    if (sourceBufferSink.getBuffer() && typeof sourceBufferSink.getBuffer().initialize === 'function') {
+                        sourceBufferSink.getBuffer().initialize();
+                    }
+                    initialized = true;
                 }
-                initialized = true;
-            }
-            return buffer;
-        } catch (e) {
-            if (mediaInfo && ((mediaInfo.isText) || (mediaInfo.codec.indexOf('codecs="stpp') !== -1) || (mediaInfo.codec.indexOf('codecs="wvtt') !== -1))) {
-                try {
-                    buffer = textController.getTextSourceBuffer();
-                } catch (e) {
-                    errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type + ' : ' + e.message));
-                }
-            } else {
+                resolve(sourceBufferSink);
+            } catch (e) {
                 errHandler.error(new DashJSError(Errors.MEDIASOURCE_TYPE_UNSUPPORTED_CODE, Errors.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE + type));
+                reject(e);
             }
-        }
+        });
+
     }
 
     function getStreamId() {
@@ -111,7 +103,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function getBuffer() {
-        return buffer;
+        return sourceBufferSink;
     }
 
     function setMediaSource(value) {
@@ -126,9 +118,6 @@ function NotFragmentedTextBufferController(config) {
         return false;
     }
 
-    function dischargePreBuffer() {
-    }
-
     function getBufferLevel() {
         return 0;
     }
@@ -137,78 +126,114 @@ function NotFragmentedTextBufferController(config) {
         return isBufferingCompleted;
     }
 
-    function reset(errored) {
-        eventBus.off(Events.DATA_UPDATE_COMPLETED, onDataUpdateCompleted, instance);
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, onInitFragmentLoaded, instance);
-
-        if (!errored && buffer) {
-            buffer.abort();
-            buffer.reset();
-            buffer = null;
-        }
-    }
-
-    function onDataUpdateCompleted(e) {
-        if (initCache.extract(streamInfo.id, e.currentRepresentation.id) !== null) {
+    function setIsBufferingCompleted(value) {
+        if (isBufferingCompleted === value) {
             return;
         }
 
-        // Representation has changed, clear buffer
-        isBufferingCompleted = false;
+        isBufferingCompleted = value;
 
-        // // Text data file is contained in initialization segment
-        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-            { representationId: e.currentRepresentation.id, sender: instance },
-            { streamId: streamInfo.id, mediaType: type }
-        );
+        if (isBufferingCompleted) {
+            triggerEvent(Events.BUFFERING_COMPLETED);
+        }
     }
 
-    function appendInitSegment(representationId) {
+    function reset(errored) {
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
+
+        if (!errored && sourceBufferSink) {
+            sourceBufferSink.abort();
+            sourceBufferSink.reset();
+            sourceBufferSink = null;
+        }
+    }
+
+    function appendInitSegmentFromCache(representationId) {
         // If text data file already in cache then no need to append it again
         return initCache.extract(streamInfo.id, representationId) !== null;
     }
 
-    function onInitFragmentLoaded(e) {
-        if (!e.chunk.bytes) return;
+    function _onInitFragmentLoaded(e) {
+        if (!e.chunk.bytes || isBufferingCompleted) return;
 
         initCache.save(e.chunk);
-        buffer.append(e.chunk);
 
-        isBufferingCompleted = true;
+        sourceBufferSink.append(e.chunk);
 
-        eventBus.trigger(Events.STREAM_COMPLETED,
-            { request: e.request },
-            { streamId: streamInfo.id, mediaType: type }
-        );
+        setIsBufferingCompleted(true);
     }
 
     function getRangeAt() {
         return null;
     }
 
-    function updateTimestampOffset(MSETimeOffset) {
-        if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
-            buffer.timestampOffset = MSETimeOffset;
-        }
+    function getAllRangesWithSafetyFactor() {
+        return [];
+    }
+
+    function getContinuousBufferTimeForTargetTime() {
+        return Number.POSITIVE_INFINITY;
+    }
+
+    function clearBuffers() {
+        return Promise.resolve();
+    }
+
+    function updateBufferTimestampOffset() {
+        return Promise.resolve();
+    }
+
+    function prepareForPlaybackSeek() {
+        return Promise.resolve();
+    }
+
+    function prepareForReplacementTrackSwitch() {
+        isBufferingCompleted = false;
+        return Promise.resolve();
+    }
+
+    function updateAppendWindow() {
+        return Promise.resolve();
+    }
+
+    function setSeekTarget() {
+
+    }
+
+    function pruneAllSafely() {
+        return Promise.resolve();
+    }
+
+    function triggerEvent(eventType, data) {
+        let payload = data || {};
+        eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
     }
 
     instance = {
-        getBufferControllerType: getBufferControllerType,
-        initialize: initialize,
-        createBuffer: createBuffer,
-        getStreamId: getStreamId,
-        getType: getType,
-        getBuffer: getBuffer,
-        getBufferLevel: getBufferLevel,
-        setMediaSource: setMediaSource,
-        getMediaSource: getMediaSource,
-        getIsBufferingCompleted: getIsBufferingCompleted,
-        getIsPruningInProgress: getIsPruningInProgress,
-        dischargePreBuffer: dischargePreBuffer,
-        appendInitSegment: appendInitSegment,
-        getRangeAt: getRangeAt,
-        reset: reset,
-        updateTimestampOffset: updateTimestampOffset
+        initialize,
+        getStreamId,
+        getType,
+        getBufferControllerType,
+        createBufferSink,
+        getBuffer,
+        getBufferLevel,
+        getRangeAt,
+        getAllRangesWithSafetyFactor,
+        getContinuousBufferTimeForTargetTime,
+        setMediaSource,
+        getMediaSource,
+        appendInitSegmentFromCache,
+        getIsBufferingCompleted,
+        setIsBufferingCompleted,
+        getIsPruningInProgress,
+        reset,
+        clearBuffers,
+        prepareForPlaybackSeek,
+        prepareForReplacementTrackSwitch,
+        setSeekTarget,
+        updateAppendWindow,
+        pruneAllSafely,
+        updateBufferTimestampOffset
     };
 
     setup();

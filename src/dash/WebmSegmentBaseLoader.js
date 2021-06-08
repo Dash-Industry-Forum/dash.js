@@ -19,8 +19,6 @@ function WebmSegmentBaseLoader() {
         mediaPlayerModel,
         urlLoader,
         settings,
-        eventBus,
-        events,
         errors,
         baseURLController;
 
@@ -110,8 +108,6 @@ function WebmSegmentBaseLoader() {
         mediaPlayerModel = config.mediaPlayerModel;
         errHandler = config.errHandler;
         settings = config.settings;
-        events = config.events;
-        eventBus = config.eventBus;
         errors = config.errors;
         logger = config.debug.getLogger(instance);
         requestModifier = config.requestModifier;
@@ -128,14 +124,14 @@ function WebmSegmentBaseLoader() {
         ebmlParser.consumeTagAndSize(WebM.Segment.Cues);
 
         while (ebmlParser.moreData() &&
-            ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint, true)) {
+        ebmlParser.consumeTagAndSize(WebM.Segment.Cues.CuePoint, true)) {
             cue = {};
 
             cue.CueTime = ebmlParser.parseTag(WebM.Segment.Cues.CuePoint.CueTime);
 
             cue.CueTracks = [];
             while (ebmlParser.moreData() &&
-                ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
+            ebmlParser.consumeTag(WebM.Segment.Cues.CuePoint.CueTrackPositions, true)) {
                 const cueTrackPositionSize = ebmlParser.getMatroskaCodedNum();
                 const startPos = ebmlParser.getPos();
                 cueTrack = {};
@@ -250,11 +246,11 @@ function WebmSegmentBaseLoader() {
 
         // skip over any top level elements to get to the segment info
         while (ebmlParser.moreData() &&
-            !ebmlParser.consumeTagAndSize(WebM.Segment.Info, true)) {
+        !ebmlParser.consumeTagAndSize(WebM.Segment.Info, true)) {
             if (!(ebmlParser.skipOverElement(WebM.Segment.SeekHead, true) ||
-                    ebmlParser.skipOverElement(WebM.Segment.Tracks, true) ||
-                    ebmlParser.skipOverElement(WebM.Segment.Cues, true) ||
-                    ebmlParser.skipOverElement(WebM.Void, true))) {
+                ebmlParser.skipOverElement(WebM.Segment.Tracks, true) ||
+                ebmlParser.skipOverElement(WebM.Segment.Cues, true) ||
+                ebmlParser.skipOverElement(WebM.Void, true))) {
                 throw new Error('no valid top level element found');
             }
         }
@@ -277,7 +273,7 @@ function WebmSegmentBaseLoader() {
         // once we have what we need from segment info, we jump right to the
         // cues
 
-        request = getFragmentRequest(info);
+        request = _getFragmentRequest(info);
 
         const onload = function (response) {
             segments = parseSegments(response, segmentStart, segmentEnd, duration);
@@ -298,113 +294,100 @@ function WebmSegmentBaseLoader() {
         logger.debug('Perform cues load: ' + info.url + ' bytes=' + info.range.start + '-' + info.range.end);
     }
 
-    function checkConfig() {
-        if (!baseURLController || !baseURLController.hasOwnProperty('resolve')) {
-            throw new Error('setConfig function has to be called previously');
-        }
-    }
+    function loadInitialization(representation, mediaType) {
+        return new Promise((resolve) => {
+            let request = null;
+            let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
+            let initRange = representation ? representation.range.split('-') : null;
+            let info = {
+                range: {
+                    start: initRange ? parseFloat(initRange[0]) : null,
+                    end: initRange ? parseFloat(initRange[1]) : null
+                },
+                request: request,
+                url: baseUrl ? baseUrl.url : undefined,
+                init: true,
+                mediaType: mediaType
+            };
 
-    function loadInitialization(streamId, mediaType, representation, loadingInfo) {
-        checkConfig();
-        let request = null;
-        let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
-        let initRange = representation ? representation.range.split('-') : null;
-        let info = loadingInfo || {
-            range: {
-                start: initRange ? parseFloat(initRange[0]) : null,
-                end: initRange ? parseFloat(initRange[1]) : null
-            },
-            request: request,
-            url: baseUrl ? baseUrl.url : undefined,
-            init: true,
-            mediaType: mediaType
-        };
+            logger.info('Start loading initialization.');
 
-        logger.info('Start loading initialization.');
+            request = _getFragmentRequest(info);
 
-        request = getFragmentRequest(info);
+            const onload = function () {
+                // note that we don't explicitly set rep.initialization as this
+                // will be computed when all BaseURLs are resolved later
+                resolve(representation);
+            };
 
-        const onload = function () {
-            // note that we don't explicitly set rep.initialization as this
-            // will be computed when all BaseURLs are resolved later
-            eventBus.trigger(events.INITIALIZATION_LOADED,
-                { representation: representation },
-                { streamId: streamId, mediaType: mediaType }
-            );
-        };
+            const onloadend = function () {
+                resolve(representation);
+            };
 
-        const onloadend = function () {
-            eventBus.trigger(events.INITIALIZATION_LOADED,
-                { representation: representation },
-                { streamId: streamId, mediaType: mediaType }
-            );
-        };
-
-        urlLoader.load({
-            request: request,
-            success: onload,
-            error: onloadend
-        });
-
-        logger.debug('Perform init load: ' + info.url);
-    }
-
-    function loadSegments(streamId, mediaType, representation, theRange, callback) {
-        checkConfig();
-        let request = null;
-        let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
-        let media = baseUrl ? baseUrl.url : undefined;
-        let bytesToLoad = 8192;
-        let info = {
-            bytesLoaded: 0,
-            bytesToLoad: bytesToLoad,
-            range: {
-                start: 0,
-                end: bytesToLoad
-            },
-            request: request,
-            url: media,
-            init: false,
-            mediaType: mediaType
-        };
-
-        callback = !callback ? onLoaded : callback;
-        request = getFragmentRequest(info);
-
-        // first load the header, but preserve the manifest range so we can
-        // load the cues after parsing the header
-        // NOTE: we expect segment info to appear in the first 8192 bytes
-        logger.debug('Parsing ebml header');
-
-        const onload = function (response) {
-            parseEbmlHeader(response, media, theRange, function (segments) {
-                callback(streamId, mediaType, segments, representation);
+            urlLoader.load({
+                request: request,
+                success: onload,
+                error: onloadend
             });
-        };
 
-        const onloadend = function () {
-            callback(streamId, mediaType, null, representation);
-        };
-
-        urlLoader.load({
-            request: request,
-            success: onload,
-            error: onloadend
+            logger.debug('Perform init load: ' + info.url);
         });
     }
 
-    function onLoaded(streamId, mediaType, segments, representation) {
-        eventBus.trigger(events.SEGMENTS_LOADED,
-            {
-                segments: segments,
-                representation: representation,
-                error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
-            },
-            { streamId: streamId, mediaType: mediaType }
-        );
+    function loadSegments(representation, mediaType, theRange) {
+        return new Promise((resolve) => {
+            let request = null;
+            let baseUrl = representation ? baseURLController.resolve(representation.path) : null;
+            let media = baseUrl ? baseUrl.url : undefined;
+            let bytesToLoad = 8192;
+            let info = {
+                bytesLoaded: 0,
+                bytesToLoad: bytesToLoad,
+                range: {
+                    start: 0,
+                    end: bytesToLoad
+                },
+                request: request,
+                url: media,
+                init: false,
+                mediaType: mediaType
+            };
+
+            request = _getFragmentRequest(info);
+
+            // first load the header, but preserve the manifest range so we can
+            // load the cues after parsing the header
+            // NOTE: we expect segment info to appear in the first 8192 bytes
+            logger.debug('Parsing ebml header');
+
+            const onload = function (response) {
+                parseEbmlHeader(response, media, theRange, function (segments) {
+                    resolve({
+                        segments: segments,
+                        representation: representation,
+                        error: segments ? undefined : new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                    });
+                });
+            };
+
+            const onloadend = function () {
+                resolve({
+                    representation: representation,
+                    error: new DashJSError(errors.SEGMENT_BASE_LOADER_ERROR_CODE, errors.SEGMENT_BASE_LOADER_ERROR_MESSAGE)
+                });
+            };
+
+            urlLoader.load({
+                request: request,
+                success: onload,
+                error: onloadend
+            });
+        });
+
     }
 
-    function getFragmentRequest(info) {
+
+    function _getFragmentRequest(info) {
         const request = new FragmentRequest();
         request.setInfo(info);
         return request;
@@ -416,11 +399,11 @@ function WebmSegmentBaseLoader() {
     }
 
     instance = {
-        setConfig: setConfig,
-        initialize: initialize,
-        loadInitialization: loadInitialization,
-        loadSegments: loadSegments,
-        reset: reset
+        setConfig,
+        initialize,
+        loadInitialization,
+        loadSegments,
+        reset
     };
 
     setup();

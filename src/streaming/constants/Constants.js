@@ -255,6 +255,21 @@ class Constants {
          */
         this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
 
+        /**
+         *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_QUERY = 'query';
+
+        /**
+         *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+         *  @memberof Constants#
+         *  @static
+         */
+        this.CMCD_MODE_HEADER = 'header';
+
+
         this.LOCATION = 'Location';
         this.INITIALIZE = 'initialize';
         this.TEXT_SHOWING = 'showing';
@@ -270,6 +285,13 @@ class Constants {
         this.ARRAY_BUFFER = 'ArrayBuffer';
         this.DVB_REPORTING_URL = 'dvb:reportingUrl';
         this.DVB_PROBABILITY = 'dvb:probability';
+        this.VIDEO_ELEMENT_READY_STATES = {
+            HAVE_NOTHING: 0,
+            HAVE_METADATA: 1,
+            HAVE_CURRENT_DATA: 2,
+            HAVE_FUTURE_DATA: 3,
+            HAVE_ENOUGH_DATA: 4
+        };
     }
 
     constructor() {

@@ -114,13 +114,23 @@ function MediaPlayerModel() {
         }
     }
 
-    function getStableBufferTime() {
-        if (settings.get().streaming.lowLatencyEnabled) {
-            return getLiveDelay() * 0.6;
+    function getInitialBufferLevel() {
+        const initialBufferLevel = settings.get().streaming.buffer.initialBufferLevel;
+
+        if (isNaN(initialBufferLevel) || initialBufferLevel < 0) {
+            return 0;
         }
 
-        const stableBufferTime = settings.get().streaming.stableBufferTime;
-        return stableBufferTime > -1 ? stableBufferTime : settings.get().streaming.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        return Math.min(getStableBufferTime(), initialBufferLevel);
+    }
+
+    function getStableBufferTime() {
+        if (settings.get().streaming.lowLatencyEnabled) {
+            return getLiveDelay();
+        }
+
+        const stableBufferTime = settings.get().streaming.buffer.stableBufferTime;
+        return stableBufferTime > -1 ? stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     function getRetryAttemptsForType(type) {
@@ -137,9 +147,9 @@ function MediaPlayerModel() {
 
     function getLiveDelay() {
         if (settings.get().streaming.lowLatencyEnabled) {
-            return settings.get().streaming.liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
+            return settings.get().streaming.delay.liveDelay || DEFAULT_LOW_LATENCY_LIVE_DELAY;
         }
-        return settings.get().streaming.liveDelay;
+        return settings.get().streaming.delay.liveDelay;
     }
 
     function getLiveCatchupLatencyThreshold() {
@@ -227,6 +237,7 @@ function MediaPlayerModel() {
         addABRCustomRule,
         removeABRCustomRule,
         getStableBufferTime,
+        getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
         getLiveDelay,

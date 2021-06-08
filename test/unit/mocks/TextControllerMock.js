@@ -5,19 +5,33 @@ class TextControllerMock {
         this.textEnabled = false;
         this.buffers = [];
     }
+
     getTextSourceBuffer() {
         return new TextSourceBufferMock();
     }
+
     isTextEnabled() {
         return this.textEnabled;
     }
+
     enableText(state) {
         this.textEnabled = state;
     }
+
     getTextDefaultEnabled() {
         return true;
     }
-    addEmbeddedTrack() {}
+
+    addEmbeddedTrack() {
+    }
+
+    deactivateStream() {
+
+    }
+
+    initializeForStream() {
+
+    }
 }
 
 export default TextControllerMock;

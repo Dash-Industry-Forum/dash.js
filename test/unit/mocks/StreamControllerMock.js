@@ -6,7 +6,7 @@ class StreamControllerMock {
     }
 
     setup() {
-        this.streamId = 'streamId';
+        this.streamId = 'DUMMY_STREAM-01';
         this.activeStream = new StreamMock();
     }
 
@@ -47,7 +47,7 @@ class StreamControllerMock {
 
     getActiveStreamInfo() {
         return {
-            id: 'streamId'
+            id: 'DUMMY_STREAM-01'
         };
     }
 
@@ -88,6 +88,11 @@ class StreamControllerMock {
     getActiveStream() {
         return this.activeStream;
     }
+
+    hasVideoTrack() {
+        return true;
+    }
+
 }
 
 export default StreamControllerMock;
