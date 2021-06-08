@@ -620,6 +620,13 @@ DRM Header Dialogue
     width: 80%; /* Could be more or less, depending on screen size */
 }
 
+.modal-hr {
+    border: none;
+    height: 1px;
+    color: #333;
+    background-color: #333;
+}
+
 .close {
     color: rgb(255, 0, 0);
     float: right;

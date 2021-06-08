@@ -343,8 +343,6 @@
                 <div id="drmPlayreadyLicenseForm" ng-show="drmPlayready.isActive">
                     <label class="options-label">License URL:</label>
                     <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
-                    <!-- <label class="options-label">X-AxDRM-Message:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.xAxDrmMessage">  -->
 
                     <!-- Open Header Dialogue Window -->
                     <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('playready')">
@@ -365,7 +363,7 @@
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="header.value" name="playreadyValue_{{header.id}}">
                                 <button class="btn btn-danger" ng-click="removePopupInput('playready', $index)">Remove Header</button>
-
+                                <hr class="modal-hr">
                             </section>   
                             
                         </div>
@@ -410,7 +408,7 @@
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="header.value" name="widevineValue_{{header.id}}">
                                 <button class="btn btn-danger" ng-click="removePopupInput('widevine', $index)">Remove Header</button>
-
+                                <hr class="modal-hr">
                             </section>   
                             
                         </div>
@@ -464,6 +462,7 @@
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="clearkey.key" name="clearkeyKEY_{{header.id}}">
                                 <button class="btn btn-danger" ng-click="removePopupInput('additionalClearkeys', $index)">Remove KID=KEY pair</button>
+                                <hr class="modal-hr">
                             </section>   
                             
                         </div>
@@ -489,6 +488,7 @@
                                 <input type="text" class="form-control" placeholder="" 
                                         ng-model="header.value" name="clearkeyValue_{{header.id}}">
                                 <button class="btn btn-danger" ng-click="removePopupInput('clearkey', $index)">Remove Header</button>
+                                <hr class="modal-hr">
                             </section>   
                             
                         </div>
@@ -531,21 +531,6 @@
                     </label>
                 </div>
             </div>
-                <!-- <div class="dropdown" data-toggle="tooltip" data-placement="left"
-                     title="Please select a DRM Key System">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">DRM
-                        KeySystem
-                        <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
-                        <li ng-repeat="item in drmKeySystems"><a ng-click="setDrmKeySystem(item)">{{item}}</a></li>
-                    </ul>
-                </div>
-                <p><label class="options-label">{{drmKeySystem}}</label></p>
-                <div id="drmLicenseForm" ng-show="drmKeySystem">
-                    <label class="options-label">License URL:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmLicenseURL">
-                </div>-->
             </div> 
         </div>
         <div class="options-item">
