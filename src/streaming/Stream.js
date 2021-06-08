@@ -310,7 +310,8 @@ function Stream(config) {
      * @private
      */
     function _initializeMediaForType(type, mediaSource) {
-        const allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+        let allMediaForType = adapter.getAllMediaInfoForType(streamInfo, type);
+        let embeddedMediaInfos = [];
 
         let mediaInfo = null;
         let initialMediaInfo;
@@ -333,18 +334,22 @@ function Stream(config) {
 
             if (type === Constants.TEXT && !!mediaInfo.isEmbedded) {
                 textController.addEmbeddedTrack(streamInfo, mediaInfo);
+                embeddedMediaInfos.push(mediaInfo);
             }
             if (_isMediaSupported(mediaInfo)) {
                 mediaController.addTrack(mediaInfo);
             }
         }
 
-        if (type === Constants.TEXT && !!mediaInfo.isEmbedded) {
-            textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType);
-            return;
+        if (embeddedMediaInfos.length > 0) {
+            textController.addMediaInfosToBuffer(streamInfo, type, embeddedMediaInfos);
         }
 
-        if (mediaController.getTracksFor(type, streamInfo.id).length === 0) {
+        // Filter out embedded text track before creating StreamProcessor
+        allMediaForType = allMediaForType.filter(mediaInfo => {
+            return !mediaInfo.isEmbedded;
+        });
+        if (allMediaForType.length === 0) {
             return;
         }
 
