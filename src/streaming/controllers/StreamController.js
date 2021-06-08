@@ -450,7 +450,7 @@ function StreamController() {
         activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime)
             .then((sinks) => {
                 // check if change type is supported by the browser
-                if (sinks && !supportsChangeType) {
+                if (sinks) {
                     const keys = Object.keys(sinks);
                     if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
                         supportsChangeType = true;
