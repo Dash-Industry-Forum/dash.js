@@ -450,7 +450,7 @@ function StreamController() {
         activeStream.activate(mediaSource, keepBuffers ? bufferSinks : undefined, seekTime)
             .then((sinks) => {
                 // check if change type is supported by the browser
-                if (sinks && !supportsChangeType) {
+                if (sinks) {
                     const keys = Object.keys(sinks);
                     if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
                         supportsChangeType = true;
@@ -779,7 +779,7 @@ function StreamController() {
      */
     function _onStreamBufferingCompleted(e) {
         logger.debug(`Stream with id ${e.streamInfo.id} finished buffering`);
-        const isLast = getActiveStreamInfo().isLast;
+        const isLast = e.streamInfo.isLast;
         if (mediaSource && isLast) {
             logger.info('[onStreamBufferingCompleted] calls signalEndOfStream of mediaSourceController.');
             mediaSourceController.signalEndOfStream(mediaSource);
