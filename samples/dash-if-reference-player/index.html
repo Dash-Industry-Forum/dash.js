@@ -333,205 +333,280 @@
         <div class="options-item">
             <div class="options-item-title">DRM Options</div>
             <div class="options-item-body">
-            <form>
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="">
-                    <input type="checkbox" ng-model="drmPlayready.isActive">
-                    Playready
-                </label>
-
-                <div id="drmPlayreadyLicenseForm" ng-show="drmPlayready.isActive">
-                    <label class="options-label">License URL:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
-
-                    <!-- Open Header Dialogue Window -->
-                    <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('playready')">
-                                Add Request-Headers</button>
-
-                    <!-- Header Dialogue Window Content -->
-                    <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
-                        <div class="requestHeaderDialogueContent">
-                            <button class="close" ng-click="closeDialogue('playready')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addPopupInput('playready')">Add additional Header</button>
-
-                            <section ng-repeat="header in playreadyRequestHeaders track by $index" ng-value="{{$index}}">
-
-                                <label class="options-label">Request Header Key: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="header.key" name="playreadyKey_{{header.id}}">
-                                <label class="options-label">Request Header Value: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="header.value" name="playreadyValue_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removePopupInput('playready', $index)">Remove Header</button>
-                                <hr class="modal-hr">
-                            </section>   
-                            
-                        </div>
-                    </div>
-
-                    <div ng-show="prioritiesEnabled">
-                        <label class="options-label">Priority</label>
-                        <select name="playreadyPriority" ng-model="drmPlayready.priority" ng-init="drmPlayready.priority='1'">
-                            <option value=0>0</option>
-                            <option value=1>1</option>
-                            <option value=2>2</option>
-                        </select>
-                    </div>         
-                </div>
-
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="">
-                    <input type="checkbox" ng-model="drmWidevine.isActive">
-                    Widevine
-                </label>
-
-                <div id="drmWidevineLicenseForm" ng-show="drmWidevine.isActive">
-                    <label class="options-label">License URL:</label>
-                    <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
-
-                    <!-- Open Header Dialogue Window -->
-                    <button id="widevineRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('widevine')">
-                        Add Request-Headers</button>
-
-                    <!-- Header Dialogue Window Content -->
-                    <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
-                        <div class="requestHeaderDialogueContent">
-                            <button class="close" ng-click="closeDialogue('widevine')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addPopupInput('widevine')">Add additional Header</button>
-
-                            <section ng-repeat="header in widevineRequestHeaders track by $index" ng-value="{{$index}}">
-
-                                <label class="options-label">Request Header Key: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="header.key" name="widevineKey_{{header.id}}">
-                                <label class="options-label">Request Header Value: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="header.value" name="widevineValue_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removePopupInput('widevine', $index)">Remove Header</button>
-                                <hr class="modal-hr">
-                            </section>   
-                            
-                        </div>
-                    </div>
-                    
-                    <div ng-show="prioritiesEnabled">
-                        <label class="options-label">Priority</label>
-                        <select name="widevinePriority" ng-model="drmWidevine.priority" ng-init="drmWidevine.priority='0'">
-                            <option value=0>0</option>
-                            <option value=1>1</option>
-                            <option value=2>2</option>
-                        </select>
-                    </div>
-                </div>
-
-                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="">
-                    <input type="checkbox" ng-model="drmClearkey.isActive">
-                    Clearkey
-                </label>
-
-                <div id="drmClearkeyLicenseForm" ng-show="drmClearkey.isActive">
-                    <div id="drmClearkeyKidKeyMode" ng-show="drmClearkey.inputMode === false">
-                        <label class="options-label">Kid:</label>
-                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
-                        <label class="options-label">Key:</label>
-                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.key">
-                    </div>
-                    <div id="drmClearkeyLicenseserverMode" ng-show="drmClearkey.inputMode === true">
-                        <label class="options-label">License URL:</label>
-                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.licenseServerUrl">
-                    </div>
-
-                    <!-- Open KID=KEY Dialogue Window -->
-                    <button id="additionalClearkeysDialogueBtn" class="btn btn-primary dialogue-btn" ng-click="openDialogue('additionalClearkeys')">
-                        Add additional clearkeys</button>
-
-                    <!-- KID=KEY Dialogue Window Content -->
-                    <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">
-                        <div class="requestHeaderDialogueContent">
-                            <button class="close" ng-click="closeDialogue('additionalClearkeys')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addPopupInput('additionalClearkeys')">Add KID=KEY pair</button>
-
-                            <section ng-repeat="clearkey in additionalClearkeyPairs track by $index" ng-value="{{$index}}">
-                                
-
-                                <label class="options-label">clearkeys KID: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="clearkey.kid" name="clearkeyKID_{{header.id}}">
-                                <label class="options-label">clearkeys KEY: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="clearkey.key" name="clearkeyKEY_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removePopupInput('additionalClearkeys', $index)">Remove KID=KEY pair</button>
-                                <hr class="modal-hr">
-                            </section>   
-                            
-                        </div>
-                    </div>
-
-                    <!-- Open Header Dialogue Window -->
-                    <button id="clearkeyRequestHeaderDialogueBtn" class="btn btn-primary" ng-click="openDialogue('clearkey')">
-                        Add Request-Headers</button>
-
-                    <!-- Header Dialogue Window Content -->
-                    <div id="clearkeyRequestHeaderDialogue" class="requestHeaderDialogue">
-                        <div class="requestHeaderDialogueContent">
-                            <button class="close" ng-click="closeDialogue('clearkey')">&times;</button>
-                            <button class="btn btn-primary" ng-click="addPopupInput('clearkey')">Add additional Header</button>
-
-                            <section ng-repeat="header in clearkeyRequestHeaders track by $index" ng-value="{{$index}}">
-                                
-
-                                <label class="options-label">Request Header Key: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="header.key" name="clearkeyKey_{{header.id}}">
-                                <label class="options-label">Request Header Value: </label>
-                                <input type="text" class="form-control" placeholder="" 
-                                        ng-model="header.value" name="clearkeyValue_{{header.id}}">
-                                <button class="btn btn-danger" ng-click="removePopupInput('clearkey', $index)">Remove Header</button>
-                                <hr class="modal-hr">
-                            </section>   
-                            
-                        </div>
-                    </div>
-
-                    <div ng-show="prioritiesEnabled">
-                        <label class="options-label">Priority</label>
-                        <select name="clearkeyPriority" ng-model="drmClearkey.priority" ng-init="drmClearkey.priority='2'">
-                            <option value=0>0</option>
-                            <option value=1>1</option>
-                            <option value=2>2</option>
-                        </select>
-                    </div>
-                </div>
-            </form>
-            <div class="sub-options-item">
-                <div class="sub-options-item-title">Priorities</div>
-                <div class="sub-options-item-body">
+                <form>
                     <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                       title="Enable DRM-Priorisation">
-                    <input type="checkbox" ng-model="prioritiesEnabled">
-                    DRM Priorisation
-                </label>
+                           title="">
+                        <input type="checkbox" ng-model="drmPlayready.isActive">
+                        Playready
+                    </label>
+
+                    <div id="drmPlayreadyLicenseForm" ng-show="drmPlayready.isActive">
+                        <label class="options-label">License URL:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.licenseServerUrl">
+
+                        <!-- Open Header Dialogue Window -->
+                        <button id="playreadyRequestHeaderDialogueBtn" class="btn btn-primary"
+                                ng-click="openDialogue('playready')">
+                            Add Request-Headers
+                        </button>
+
+                        <!-- Header Dialogue Window Content -->
+                        <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('playready')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('playready')">Add additional
+                                    Header
+                                </button>
+
+                                <div ng-repeat="header in playreadyRequestHeaders track by $index"
+                                     ng-value="{{$index}}">
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Key: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.key" name="playreadyKey_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Value: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.value" name="playreadyValue_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('playready', $index)">
+                                                Remove Header
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div ng-show="prioritiesEnabled">
+                            <label class="options-label">Priority</label>
+                            <select name="playreadyPriority" ng-model="drmPlayready.priority"
+                                    ng-init="drmPlayready.priority='1'">
+                                <option value=0>0</option>
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                        <input type="checkbox" ng-model="drmWidevine.isActive">
+                        Widevine
+                    </label>
+
+                    <div id="drmWidevineLicenseForm" ng-show="drmWidevine.isActive">
+                        <label class="options-label">License URL:</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.licenseServerUrl">
+
+                        <!-- Open Header Dialogue Window -->
+                        <button id="widevineRequestHeaderDialogueBtn" class="btn btn-primary"
+                                ng-click="openDialogue('widevine')">
+                            Add Request-Headers
+                        </button>
+
+                        <!-- Header Dialogue Window Content -->
+                        <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('widevine')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('widevine')">Add additional
+                                    Header
+                                </button>
+
+                                <div ng-repeat="header in widevineRequestHeaders track by $index"
+                                     ng-value="{{$index}}">
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Key: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.key" name="widevineKey_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Value: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.value" name="widevineValue_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('widevine', $index)">
+                                                Remove Header
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div ng-show="prioritiesEnabled">
+                            <label class="options-label">Priority</label>
+                            <select name="widevinePriority" ng-model="drmWidevine.priority"
+                                    ng-init="drmWidevine.priority='0'">
+                                <option value=0>0</option>
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                        <input type="checkbox" ng-model="drmClearkey.isActive">
+                        Clearkey
+                    </label>
+
+                    <div id="drmClearkeyLicenseForm" ng-show="drmClearkey.isActive">
+                        <div id="drmClearkeyKidKeyMode" ng-show="drmClearkey.inputMode === false">
+                            <label class="options-label">Kid:</label>
+                            <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.kid">
+                            <label class="options-label">Key:</label>
+                            <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.key">
+                        </div>
+                        <div id="drmClearkeyLicenseserverMode" ng-show="drmClearkey.inputMode === true">
+                            <label class="options-label">License URL:</label>
+                            <input type="text" class="form-control" placeholder=""
+                                   ng-model="drmClearkey.licenseServerUrl">
+                        </div>
+
+                        <!-- Open KID=KEY Dialogue Window -->
+                        <button id="additionalClearkeysDialogueBtn" class="btn btn-primary dialogue-btn"
+                                ng-click="openDialogue('additionalClearkeys')">
+                            Add additional clearkeys
+                        </button>
+
+                        <!-- KID=KEY Dialogue Window Content -->
+                        <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('additionalClearkeys')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('additionalClearkeys')">Add
+                                    KID=KEY pair
+                                </button>
+
+                                <div ng-repeat="clearkey in additionalClearkeyPairs track by $index"
+                                     ng-value="{{$index}}">
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">KID: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="clearkey.kid" name="clearkeyKID_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">KEY: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="clearkey.key" name="clearkeyKEY_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('additionalClearkeys', $index)">Remove
+                                                KID=KEY
+                                                pair
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Open Header Dialogue Window -->
+                        <button id="clearkeyRequestHeaderDialogueBtn" class="btn btn-primary"
+                                ng-click="openDialogue('clearkey')">
+                            Add Request-Headers
+                        </button>
+
+                        <!-- Header Dialogue Window Content -->
+                        <div id="clearkeyRequestHeaderDialogue" class="requestHeaderDialogue">
+                            <div class="requestHeaderDialogueContent">
+                                <button class="close" ng-click="closeDialogue('clearkey')">&times;</button>
+                                <button class="btn btn-primary" ng-click="addPopupInput('clearkey')">Add additional
+                                    Header
+                                </button>
+
+                                <div ng-repeat="header in clearkeyRequestHeaders track by $index"
+                                     ng-value="{{$index}}">
+
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Key: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.key" name="clearkeyKey_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-6 col-lg-offset-3">
+                                            <label class="options-label">Request Header Value: </label>
+                                            <input type="text" class="form-control" placeholder=""
+                                                   ng-model="header.value" name="clearkeyValue_{{header.id}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4 col-lg-2 col-lg-offset-3">
+                                            <button class="btn btn-danger"
+                                                    ng-click="removePopupInput('clearkey', $index)">
+                                                Remove Header
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div ng-show="prioritiesEnabled">
+                            <label class="options-label">Priority</label>
+                            <select name="clearkeyPriority" ng-model="drmClearkey.priority"
+                                    ng-init="drmClearkey.priority='2'">
+                                <option value=0>0</option>
+                                <option value=1>1</option>
+                                <option value=2>2</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Priorities</div>
+                    <div class="sub-options-item-body">
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                               title="Enable DRM-Priorisation">
+                            <input type="checkbox" ng-model="prioritiesEnabled">
+                            DRM Priorisation
+                        </label>
+                    </div>
+                </div>
+                <div class="sub-options-item">
+                    <div class="sub-options-item-title">Clearkey Options</div>
+                    <div class="sub-options-item-body">
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Use KID=Key to specify Clearkey DRM.">
+                            <input type="radio" id="kidKey" autocomplete="off" name="inputMode" checked="checked"
+                                   ng-click="toggleInputMode()">
+                            KID=KEY
+                        </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                               title="Use Licenseserver-URL to specify Clearkey DRM">
+                            <input type="radio" id="licenseServer" autocomplete="off" name="inputMode"
+                                   ng-click="toggleInputMode()">
+                            License Server
+                        </label>
+                    </div>
                 </div>
             </div>
-            <div class="sub-options-item">
-                <div class="sub-options-item-title">Clearkey Options</div>
-                <div class="sub-options-item-body">
-                    <label data-toggle="tooltip" data-placement="right"
-                            title="Use KID=Key to specify Clearkey DRM.">
-                        <input type="radio" id="kidKey" autocomplete="off" name="inputMode" checked="checked"
-                                ng-click="toggleInputMode()">
-                        KID=KEY
-                    </label>
-                    <label data-toggle="tooltip" data-placement="right"
-                            title="Use Licenseserver-URL to specify Clearkey DRM">
-                        <input type="radio" id="licenseServer" autocomplete="off" name="inputMode"
-                                ng-click="toggleInputMode()">
-                        License Server
-                    </label>
-                </div>
-            </div>
-            </div> 
         </div>
         <div class="options-item">
             <div class="options-item-title">Live delay</div>
@@ -545,7 +620,7 @@
                     <input type="checkbox" id="applyServiceDescription" ng-model="applyServiceDescription"
                            ng-change="toggleApplyServiceDescription()" ng-checked="applyServiceDescription">
                     Apply ServiceDescription
-                </label>                
+                </label>
                 <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
                        title="Overwrite the default live delay and honor the SuggestedPresentationDelay attribute in by the manifest">
                     <input type="checkbox" id="useSuggestedPresentationDelay" ng-model="useSuggestedPresentationDelay"
