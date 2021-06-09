@@ -81,6 +81,10 @@ function HTTPLoader(cfg) {
         cmcdModel = CmcdModel(context).getInstance();
         lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
 
+        lowLatencyThroughputModel.setConfig({
+            dashMetrics
+        });
+
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
             [HTTPRequest.XLINK_EXPANSION_TYPE]: errors.DOWNLOAD_ERROR_ID_XLINK_CODE,

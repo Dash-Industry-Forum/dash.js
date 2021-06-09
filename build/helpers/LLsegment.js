@@ -6,7 +6,15 @@ const segmentInfo = fs.readFileSync(path.join(__dirname, 'data', 'chunk', 'chunk
 
 function sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDistances) {
 
-    for (let index = 0; index < param.chunkCount; index++) {
+    let chunksInBurst = 0;
+    if (param.chunksAvailableAtReqTime) {
+        chunksInBurst = param.chunksAvailableAtReqTime;
+        param.chunksAvailableAtReqTime = 0;
+    } else {
+        chunksInBurst = param.chunkCount;
+    }
+
+    for (let index = 0; index < chunksInBurst; index++) {
         let mdatFound = false;
         let chunkSize = 0;
         while (!mdatFound) {
@@ -19,7 +27,7 @@ function sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDist
     }
     if (!segmentInfoData.length) {
         if (chunkDistances && chunkDistances.length) {
-            console.log('all sent with average chunk (burst) distance', chunkDistances.reduce((prev, curr) => prev + curr, 0) / chunkDistances.length)
+            // console.log('all sent with average chunk (burst) distance', chunkDistances.reduce((prev, curr) => prev + curr, 0) / chunkDistances.length)
         }
         return res.end();
     }
@@ -32,19 +40,22 @@ function sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDist
         chunkDistances.push(chunkDistance)
         processingDuration = chunkDistance - interval;
     }
-    setTimeout((previousTs) => {
-        sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDistances);
-    }, interval - processingDuration, Date.now()); // minus processing duration on producer side
+    if (interval - processingDuration > 0) {
+        setTimeout((previousTs) => {
+            sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDistances);
+        }, interval - processingDuration, Date.now()); // minus processing duration on producer side
+    }
 }
 
-function streamWithPattern(res, interval, chunkCount) {
+function streamWithPattern(res, interval, chunkCount, chunksAvailableAtReqTime) {
     const segmentInfoData = JSON.parse(segmentInfo);
 
     res.statusCode = 200;
 
     const param = {
         chunkCount,
-        pos: 0
+        pos: 0,
+        chunksAvailableAtReqTime
     }
 
     sendChunks(res, segmentInfoData, param, interval, Date.now(), []);
@@ -53,17 +64,35 @@ function streamWithPattern(res, interval, chunkCount) {
 
 module.exports = function (req, res) {
     switch (req.url) {
+        case '/ll/pattern0':
+            streamWithPattern(res, 0, 0, 60);
+            break;
         case '/ll/pattern1':
-            streamWithPattern(res, 33, 1);
+            streamWithPattern(res, 33, 1, 0);
             break;
         case '/ll/pattern2':
-            streamWithPattern(res, 133, 4);
+            streamWithPattern(res, 133, 4, 0);
             break;
         case '/ll/pattern3':
-            streamWithPattern(res, 333, 10);
+            streamWithPattern(res, 333, 10, 0);
             break;
         case '/ll/pattern4':
-            streamWithPattern(res, 1000, 30);
+            streamWithPattern(res, 1000, 30, 0);
+            break;
+        case '/ll/pattern5':
+            streamWithPattern(res, 33, 1, 30);
+            break;
+        case '/ll/pattern6':
+            streamWithPattern(res, 133, 4, 30);
+            break;
+        case '/ll/pattern7':
+            streamWithPattern(res, 333, 10, 30);
+            break;
+        case '/ll/pattern8':
+            streamWithPattern(res, 1000, 30, 30);
+            break;
+        case '/ll/pattern11':
+            streamWithPattern(res, 0, 40, 0);
             break;
         default:
             console.log('unknown', req.url);

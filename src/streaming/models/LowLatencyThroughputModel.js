@@ -33,11 +33,21 @@ import FactoryMaker from '../../core/FactoryMaker';
 function LowLatencyThroughputModel() {
 
     const LLTM_MAX_MEASUREMENTS = 10;
+    // factor (<1) is used to reduce the real needed download time when at very bleeding live edge
+    const LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR = 0.7;
+
+    let dashMetrics;
 
     let instance;
     let measurements = {};
 
-    let mcount = 0
+    /**
+     *
+     * @param {*} config
+     */
+    function setConfig(config) {
+        dashMetrics = config.dashMetrics;
+    }
 
     /**
      *
@@ -45,119 +55,92 @@ function LowLatencyThroughputModel() {
      * @returns
      */
     function getEstimatedDownloadDurationMS(request) {
-        if (mcount === 10) {
-            ['video', 'audio'].forEach(mediaType => {
-                console.log(`${mediaType}-index(-chunk)?;ast;reqt;diffLast;bytes`);
-                for (let mx = 0; mx < measurements[mediaType].length; mx++) {
-                    const seg = measurements[mediaType][mx];
-
-                    const index = seg.index;
-                    const ast = seg.ast;
-                    const reqt = new Date(seg.requestTime);
-                    const diffLast = reqt.getTime() - ast.getTime();
-
-                    console.log(`${mediaType}-${index};${ast.toISOString()};${reqt.toISOString()};${diffLast}`);
-
-                    for (let cx = 0; cx < seg.measurement.length; cx++) {
-                        //const chunk = seg.measurement[cx];
-                        //console.log(`${mediaType}-${index}-${cx};-;-;${chunk.dur};${chunk.bytes}`);
-                    }
-                }
-
-            });
-        }
-
         const lastMeasurement = measurements[request.mediaType].slice(-1).pop();
 
-        if (request.mediaType === 'video') mcount++;
+        // fetch duration was longer than segment duration? 
+        if (lastMeasurement.segDurationMS < lastMeasurement.fetchDownloadDurationMS) {
+            console.log(1);
 
-        const chunksDurationMS = lastMeasurement.chunksDurationMS;
-
-        // approx download duration longer than segment duration? Report this to result in ABR down switching
-        // 20% tolerance
-        if (request.duration * 1200 < request.fetchDownloadDurationMS) {
-            console.log('slow', request.fetchDownloadDurationMS)
-            return request.fetchDownloadDurationMS;
+            return lastMeasurement.fetchDownloadDurationMS;
         }
 
-        // otherwise download was possible on time
-        return (lastMeasurement.bytes * 8) / lastMeasurement.bitrate;
+        // we have requested a fully available segment -> most accurate throughput calculation
+        // this usually happens at startup
+        // ... and if requests are delayed artificially
+        if (lastMeasurement.ast <= lastMeasurement.requestTime - lastMeasurement.segDurationMS) {
+            console.log(2);
 
-
-        const beforeLastMeasurement = measurements[request.mediaType].slice(-2, -1).pop();
-
-
-        const reqDelay = new Date(lastMeasurement.requestTime).getTime() - new Date(lastMeasurement.ast).getTime();
-
-        const reqInterval = new Date(beforeLastMeasurement.requestTime).getTime() - new Date(lastMeasurement.requestTime).getTime();
-
-        if (request.mediaType === 'video') {
-            console.log(`ReqT-AST: ${reqDelay} ms ${8 * lastMeasurement.bytes * 1000 / chunksDurationMS}, req-interval: ${reqInterval}`)
+            return lastMeasurement.fetchDownloadDurationMS;
         }
 
-        // last download took at least same as segment length?
-        // So report this measured fetch time, since this indicates that network throughput went down
-        // Note: the next download is usually faster as the data accumulates at source
-        if (lastMeasurement.segDuration * 1000 <= chunksDurationMS) {
-            console.log('last download took at least same as segment length! So report this measured fetch time')
-            return chunksDurationMS;
+        // get all chunks that have been downloaded before fetch reached bleeding live edge
+        // the remaining chunks loaded at production rate we will approximated
+        const chunkAvailabePeriod = lastMeasurement.requestTime - lastMeasurement.ast;
+        let chunkBytesBBLE = 0; // BBLE -> Before bleeding live edge
+        let chunkDownloadtimeMSBBLE = 0;
+        let chunkCount = 0;
+        for (let index = 0; index < lastMeasurement.measurement.length; index++) {
+            const chunk = lastMeasurement.measurement[index];
+            if (chunkAvailabePeriod < chunkDownloadtimeMSBBLE + chunk.dur) {
+                break;
+            }
+            chunkDownloadtimeMSBBLE += chunk.dur;
+            chunkBytesBBLE += chunk.bytes;
+            chunkCount++;
+        }
+        // there have to be some chunks available (20% of max count)
+        // otherwise we are at bleeding live edge and the few chunks are insufficient to estimate correctly
+        if (chunkBytesBBLE && chunkDownloadtimeMSBBLE && chunkCount > lastMeasurement.measurement.length * 0.2) {
+            const downloadThroughput = chunkBytesBBLE / chunkDownloadtimeMSBBLE; // bytes per millesecond
+            const estimatedDownloadtimeMS = lastMeasurement.bytes / downloadThroughput;
+            // if real download was shorter then report this incl. semi optimistical estimate factor
+            if (lastMeasurement.fetchDownloadDurationMS < estimatedDownloadtimeMS) {
+                console.log(3);
+
+                return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
+            }
+            console.log(4);
+
+            return estimatedDownloadtimeMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
 
-        if (reqDelay < 100) {
-            return chunksDurationMS / 2;
+        lastMeasurement.bufferLevelBLE = dashMetrics.getCurrentBufferLevel(lastMeasurement.mediaType);
+
+        // when we are to tight at live edge and it's stable then
+        // we start to optimistically estimate download time
+        // in such a way that a switch to next rep will be possible
+        const lastThree = measurements[request.mediaType].slice(-3);
+        if (lastThree.length < 3 || lastThree.some(m => !m.bufferLevelBLE || m.bufferLevelBLE < 0.8)) {
+            // semi optimistical estimate factor
+            return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
-
-        return chunksDurationMS;
-
-
-        const time = lastMeasurement.bytes * 8 / lastMeasurement.bitrate;
-        console.log(time, request.mediaType, 'chunks dur', lastMeasurement.chunksDuration);
-        return lastMeasurement.chunksDuration;
-
-        const lastTen = measurements[request.mediaType].slice(-10);
-        let lastTenAveDuration = lastTen.reduce((prev, curr) => prev + curr.fetchDownloadDurationMS, 0) / (1000 * lastTen.length);
-        lastTenAveDuration = lastTenAveDuration + lastTenAveDuration * 0.10;
-        if (request.mediaType === 'video') {
-            console.log('dl time', lastTenAveDuration);
+        // optimistical estimate: assume download was fast enough for next higher rendition 
+        let nextHigherBitrate = lastMeasurement.bitrate;
+        lastMeasurement.bitrateList.some(b => {
+            if (b.bandwidth > lastMeasurement.bitrate) {
+                nextHigherBitrate = b.bandwidth;
+                return true;
+            }
+        });
+        // already highest bitrate?
+        if (nextHigherBitrate === lastMeasurement.bitrate) {
+            return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
-        return lastTenAveDuration;
-        //const lastTenBytes = lastTen.reduce((prev, curr) => prev + curr.fetchDownloadDurationMS, 0) / (1000 * lastTen.bytes);
-
-
-
-
-        // are we far away from live edge? So report the average of up to last three measured fetch durations
-        // reasons: a) on startup when we fetch already existing segments, b) after bandwidth drop when the previous download took longer
-        if (lastMeasurement.segDuration > chunksDurationMS * 2) {
-            const uptoLastFive = measurements[request.mediaType].slice(-5);
-            const aveFetchDurationLastFiveSegments = uptoLastFive.reduce((prev, curr) => prev + curr.fetchDownloadDurationMS, 0) / (1000 * uptoLastFive.length);
-            console.log(' we are far away from live edge! So report measured fetch time ')
-            return aveFetchDurationLastFiveSegments;
-        }
-
-        // last download took at least same as segment length? So report this measured fetch time
-        if (lastMeasurement.segDuration <= chunksDurationMS) {
-
-            console.log('last download took at least same as segment length! So report this measured fetch time')
-            return chunksDurationMS;
-        }
-
-        // was last fetch artificially delayed? So estimate download time, to allow switch to higher bitrate
-        if (lastMeasurement.throughputCapacityDelay) {
-
-        }
-
-        // in other cases it is safe to continue with current bitrate
-        return lastMeasurement.chunksDuration;
+        return LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR * lastMeasurement.bytes * 8 * 1000 / nextHigherBitrate;
     }
 
     /**
-     * Get calculated value for next artificial delay to allow accumulate some chunks and allow better line throughput measurement
+     * Get calculated value to artificially and safely delay the next request to allow to accumulate some chunks
+     * This allows better line throughput measurement
      * @param {*} request
      * @returns
      */
     function getThroughputCapacityDelay(request) {
-        return request ? 0 : 0;
+        // TODO: this concept is under construction
+        if (request) {
+            return 0;
+        }
+        return 0;
     }
 
     /**
@@ -166,35 +149,36 @@ function LowLatencyThroughputModel() {
      * @param {*} fetchDownloadDurationMS
      * @param {*} measurement
      * @param {*} requestTime
-     * @param {*} throughputCapacityDelay
+     * @param {*} throughputCapacityDelayMS
      */
-    function addMeasurement(request, fetchDownloadDurationMS, measurement, requestTime, throughputCapacityDelay, responseHeaders) {
+    function addMeasurement(request, fetchDownloadDurationMS, measurement, requestTime, throughputCapacityDelayMS) {
         if (request && request.mediaType && !measurements[request.mediaType]) {
             measurements[request.mediaType] = [];
         }
-        if (throughputCapacityDelay >= 0) {
-            const bitrateEntry = { bandwidth: 300000 };  //request.mediaInfo.bitrateList.find(item => item.id === request.representationId);
-            measurements[request.mediaType].push({
-                index: request.index,
-                requestTime,
-                ast: request.availabilityStartTime,
-                segDuration: request.duration,
-                chunksDurationMS: measurement.reduce((prev, curr) => prev + curr.dur, 0),
-                bytes: measurement.reduce((prev, curr) => prev + curr.bytes, 0),
-                bitrate: bitrateEntry && bitrateEntry.bandwidth,
-                measurement,//: measurement.sort((a, b) => b.kbps - a.kbps),
-                fetchDownloadDurationMS,
-                throughputCapacityDelay,
-                responseHeaders
-            });
-            // maintain only a maximum amount of most recent measurements
-            if (measurements[request.mediaType].length > LLTM_MAX_MEASUREMENTS) {
-                measurements[request.mediaType].shift();
-            }
+        const bitrateEntry = request.mediaInfo.bitrateList.find(item => item.id === request.representationId);
+        measurements[request.mediaType].push({
+            index: request.index,
+            repId: request.representationId,
+            mediaType: request.mediaType,
+            requestTime,
+            ast: request.availabilityStartTime.getTime(),
+            segDurationMS: request.duration * 1000,
+            chunksDurationMS: measurement.reduce((prev, curr) => prev + curr.dur, 0),
+            bytes: measurement.reduce((prev, curr) => prev + curr.bytes, 0),
+            bitrate: bitrateEntry && bitrateEntry.bandwidth,
+            bitrateList: request.mediaInfo.bitrateList,
+            measurement,
+            fetchDownloadDurationMS,
+            throughputCapacityDelayMS
+        });
+        // maintain only a maximum amount of most recent measurements
+        if (measurements[request.mediaType].length > LLTM_MAX_MEASUREMENTS) {
+            measurements[request.mediaType].shift();
         }
     }
 
     instance = {
+        setConfig,
         addMeasurement,
         getThroughputCapacityDelay,
         getEstimatedDownloadDurationMS
