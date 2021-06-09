@@ -59,8 +59,6 @@ function LowLatencyThroughputModel() {
 
         // fetch duration was longer than segment duration? 
         if (lastMeasurement.segDurationMS < lastMeasurement.fetchDownloadDurationMS) {
-            console.log(1);
-
             return lastMeasurement.fetchDownloadDurationMS;
         }
 
@@ -68,8 +66,6 @@ function LowLatencyThroughputModel() {
         // this usually happens at startup
         // ... and if requests are delayed artificially
         if (lastMeasurement.ast <= lastMeasurement.requestTime - lastMeasurement.segDurationMS) {
-            console.log(2);
-
             return lastMeasurement.fetchDownloadDurationMS;
         }
 
@@ -95,11 +91,8 @@ function LowLatencyThroughputModel() {
             const estimatedDownloadtimeMS = lastMeasurement.bytes / downloadThroughput;
             // if real download was shorter then report this incl. semi optimistical estimate factor
             if (lastMeasurement.fetchDownloadDurationMS < estimatedDownloadtimeMS) {
-                console.log(3);
-
                 return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
             }
-            console.log(4);
 
             return estimatedDownloadtimeMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
