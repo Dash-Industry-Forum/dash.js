@@ -191,6 +191,13 @@ function tXml(S, options) {
             tagName: parseName()
         };
 
+        // Support tag namespace
+        let p = node.tagName.indexOf(':');
+        if (p !== -1) {
+            node.__prefix = node.tagName.substr(0, p);
+            node.tagName = node.tagName.substr(p + 1);
+        }
+
         // parsing attributes
         while (S.charCodeAt(pos) !== closeBracketCC && S[pos]) {
             var c = S.charCodeAt(pos);
