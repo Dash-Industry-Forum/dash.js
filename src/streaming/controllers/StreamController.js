@@ -256,6 +256,8 @@ function StreamController() {
                         _initializeForFirstStream(streamsInfo);
                     }
                     eventBus.trigger(Events.STREAMS_COMPOSED);
+                    // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
+                    _checkIfPrebufferingCanStart();
                 })
                 .catch((e) => {
                     throw e;
