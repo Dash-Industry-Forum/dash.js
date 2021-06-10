@@ -132,7 +132,7 @@ function TextSourceBuffer(config) {
         }
 
         for (let i = 0; i < mInfos.length; i++) {
-            _createTextTrackFromMediaInfo(type, mInfos[i]);
+            _createTextTrackFromMediaInfo(mInfos[i]);
         }
 
     }
@@ -142,11 +142,11 @@ function TextSourceBuffer(config) {
      * @param {object} mediaInfo
      * @private
      */
-    function _createTextTrackFromMediaInfo(type, mediaInfo) {
+    function _createTextTrackFromMediaInfo(mediaInfo) {
         const textTrackInfo = new TextTrackInfo();
         const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
 
-        for (var key in mediaInfo) {
+        for (let key in mediaInfo) {
             textTrackInfo[key] = mediaInfo[key];
         }
 

@@ -130,7 +130,7 @@ function DashManifestModel() {
             return true;
         }
         if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
-            var representation = adaptation.Representation_asArray[0];
+            const representation = adaptation.Representation_asArray[0];
             if (representation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
                 representation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
                 representation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
