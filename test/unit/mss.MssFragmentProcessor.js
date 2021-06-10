@@ -80,7 +80,7 @@ describe('MssFragmentProcessor', function () {
                     id: 'audio_0',
                     mimeType: 'audio/mp4',
                     width: NaN,
-                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
+                    adaptation: {period: {mpd: {manifest: {Period: [{AdaptationSet: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
                     };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
                     name: 'Unsupported codec',
@@ -101,7 +101,7 @@ describe('MssFragmentProcessor', function () {
                     id: 'audio_0',
                     mimeType: 'audio/mp4',
                     width: NaN,
-                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
+                    adaptation: {period: {mpd: {manifest: {Period: [{AdaptationSet: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'audio'}
                     };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw({
                     name: 'Unsupported codec',
@@ -122,7 +122,7 @@ describe('MssFragmentProcessor', function () {
                     id: 'video_0',
                     mimeType: 'video/mp4',
                     width: NaN,
-                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'video'}
+                    adaptation: {period: {mpd: {manifest: {Period: [{AdaptationSet: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'video'}
                     };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.throw({
                     name: 'Unsupported codec',
@@ -143,7 +143,7 @@ describe('MssFragmentProcessor', function () {
                     id: 'video_0',
                     mimeType: 'video/mp4',
                     width: NaN,
-                    adaptation: {period: {mpd: {manifest: {Period_asArray: [{AdaptationSet_asArray: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'video'}
+                    adaptation: {period: {mpd: {manifest: {Period: [{AdaptationSet: [{SegmentTemplate: {timescale: 0}}]}]}}, index: 0}, index: 0, type: 'video'}
                     };
         expect(mssFragmentProcessor.generateMoov.bind(mssFragmentProcessor, rep)).to.not.throw({
                     name: 'Unsupported codec',

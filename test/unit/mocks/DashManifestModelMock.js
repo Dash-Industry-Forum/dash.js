@@ -10,7 +10,7 @@ function DashManifestModelMock () {
         if (type === 'video') {
             adaptationsArray = [{ id: 0, mimeType: 'video' }, { id: 1, mimeType: 'video' }];
         } else {
-            adaptationsArray = [{ id: undefined, mimeType: 'audio', lang: 'eng', Role_asArray: [{ value: 'main' }] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role_asArray: [{ value: 'main' }]}];
+            adaptationsArray = [{ id: undefined, mimeType: 'audio', lang: 'eng', Role: [{ value: 'main' }] }, { id: undefined, mimeType: 'audio', lang: 'deu', Role: [{ value: 'main' }]}];
         }
 
         return adaptationsArray;
@@ -51,7 +51,7 @@ function DashManifestModelMock () {
 
     this.getRegularPeriods = function (mpd) {
         const voPeriods = [];
-        if (mpd && mpd.manifest && mpd.manifest.Period_asArray) {
+        if (mpd && mpd.manifest && mpd.manifest.Period) {
             voPeriods.push({mpd: mpd});
         }
 
@@ -62,7 +62,7 @@ function DashManifestModelMock () {
         let voAdaptations = [];
 
         if (voPeriod) {
-            voAdaptations.push(voPeriod.mpd.manifest.Period_asArray[0]);
+            voAdaptations.push(voPeriod.mpd.manifest.Period[0]);
         }
 
         return voAdaptations;

@@ -43,6 +43,7 @@ class DashConstants {
         this.SEGMENT_LIST = 'SegmentList';
         this.SEGMENT_URL = 'SegmentURL';
         this.SEGMENT_TIMELINE = 'SegmentTimeline';
+        this.S = 'S';
         this.SEGMENT_PROFILES = 'segmentProfiles';
         this.ADAPTATION_SET = 'AdaptationSet';
         this.REPRESENTATION = 'Representation';
@@ -54,8 +55,10 @@ class DashConstants {
         this.PERIOD = 'Period';
         this.ASSET_IDENTIFIER = 'AssetIdentifier';
         this.EVENT_STREAM = 'EventStream';
+        this.EVENT = 'Event';
         this.ID = 'id';
         this.PROFILES = 'profiles';
+        this.LOCATION = 'Location';
         this.SERVICE_LOCATION = 'serviceLocation';
         this.RANGE = 'range';
         this.INDEX = 'index';
@@ -88,6 +91,7 @@ class DashConstants {
         this.AUDIO_CHANNEL_CONFIGURATION = 'AudioChannelConfiguration';
         this.CONTENT_PROTECTION = 'ContentProtection';
         this.ESSENTIAL_PROPERTY = 'EssentialProperty';
+        this.LABEL = 'Label';
         this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
         this.INBAND_EVENT_STREAM = 'InbandEventStream';
         this.ACCESSIBILITY = 'Accessibility';
@@ -97,10 +101,9 @@ class DashConstants {
         this.SUBSET = 'Subset';
         this.LANG = 'lang';
         this.VIEWPOINT = 'Viewpoint';
-        this.ROLE_ASARRAY = 'Role_asArray';
-        this.ACCESSIBILITY_ASARRAY = 'Accessibility_asArray';
-        this.AUDIOCHANNELCONFIGURATION_ASARRAY = 'AudioChannelConfiguration_asArray';
-        this.CONTENTPROTECTION_ASARRAY = 'ContentProtection_asArray';
+        this.ROLE = 'Role';
+        this.ACCESSIBILITY = 'Accessibility';
+        this.CONTENTPROTECTION = 'ContentProtection';
         this.MAIN = 'main';
         this.DYNAMIC = 'dynamic';
         this.STATIC = 'static';
@@ -135,6 +138,9 @@ class DashConstants {
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';
         this.ORIGINAL_MPD_ID = 'mpdId';
+        this.REPLACE = 'replace';
+        this.ADD = 'add';
+        this.REMOVE = 'remove';
     }
 
     constructor () {

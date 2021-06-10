@@ -923,11 +923,11 @@ function Stream(config) {
         }
 
         const sameMimeType = newAdaptation && currentAdaptation && newAdaptation.mimeType === currentAdaptation.mimeType;
-        const oldCodecs = currentAdaptation.Representation_asArray.map((representation) => {
+        const oldCodecs = currentAdaptation.Representation.map((representation) => {
             return representation.codecs;
         });
 
-        const newCodecs = newAdaptation.Representation_asArray.map((representation) => {
+        const newCodecs = newAdaptation.Representation.map((representation) => {
             return representation.codecs;
         });
 

@@ -21,9 +21,9 @@ const sampleAdaptation = {
         index: 0,
         mpd: {
             manifest: {
-                Period_asArray: [{
-                    AdaptationSet_asArray: [{
-                        Representation_asArray: [{
+                Period: [{
+                    AdaptationSet: [{
+                        Representation: [{
                             SegmentTemplate: {}
                         }]
                     }]

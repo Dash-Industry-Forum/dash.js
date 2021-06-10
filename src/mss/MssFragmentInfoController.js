@@ -96,8 +96,8 @@ function MssFragmentInfoController(config) {
         // Get last segment from SegmentTimeline
         const representation = getCurrentRepresentation();
         const manifest = representation.adaptation.period.mpd.manifest;
-        const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
-        const segments = adaptation.SegmentTemplate.SegmentTimeline.S_asArray;
+        const adaptation = manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index];
+        const segments = adaptation.SegmentTemplate.SegmentTimeline.S;
         const segment = segments[segments.length - 1];
 
         // logger.debug('Last fragment time: ' + (segment.t / adaptation.SegmentTemplate.timescale));

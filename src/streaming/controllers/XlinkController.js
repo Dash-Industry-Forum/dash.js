@@ -32,7 +32,6 @@ import XlinkLoader from '../XlinkLoader';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import FactoryMaker from '../../core/FactoryMaker';
-import X2JS from '../../../externals/xml2json';
 import URLUtils from '../utils/URLUtils';
 import DashConstants from '../../dash/constants/DashConstants';
 
@@ -48,10 +47,8 @@ function XlinkController(config) {
     const urlUtils = URLUtils(context).getInstance();
 
     let instance,
-        matchers,
-        iron,
+        parser,
         manifest,
-        converter,
         xlinkLoader;
 
     function setup() {
@@ -66,15 +63,9 @@ function XlinkController(config) {
         });
     }
 
-    function setMatchers(value) {
+    function setParser(value) {
         if (value) {
-            matchers = value;
-        }
-    }
-
-    function setIron(value) {
-        if (value) {
-            iron = value;
+            parser = value;
         }
     }
 
@@ -85,21 +76,10 @@ function XlinkController(config) {
     function resolveManifestOnLoad(mpd) {
         let elements;
         // First resolve all periods, so unnecessary requests inside onLoad Periods with Default content are avoided
-        converter = new X2JS({
-            escapeMode:         false,
-            attributePrefix:    '',
-            arrayAccessForm:    'property',
-            emptyNodeForm:      'object',
-            stripWhitespaces:   false,
-            enableToStringFunc: false,
-            ignoreRoot:         true,
-            matchers:           matchers
-        });
-
         manifest = mpd;
 
-        if (manifest.Period_asArray) {
-            elements = getElementsToResolve(manifest.Period_asArray, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
+        if (manifest.Period) {
+            elements = getElementsToResolve(manifest.Period, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
             resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
         } else {
             eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
@@ -156,7 +136,7 @@ function XlinkController(config) {
                 index = element.resolvedContent.indexOf('?>') + 2; //find the closing position of the xml declaration, if it exists.
             }
             mergedContent = element.resolvedContent.substr(0,index) + openingTag + element.resolvedContent.substr(index) + closingTag;
-            element.resolvedContent = converter.xml_str2json(mergedContent);
+            element.resolvedContent = parser.parseXml(mergedContent).response;
         }
         if (isResolvingFinished(resolveObject)) {
             onXlinkAllElementsLoaded(resolveObject);
@@ -177,13 +157,13 @@ function XlinkController(config) {
             switch (resolveObject.type) {
                 // Start resolving the other elements. We can do Adaptation Set and EventStream in parallel
                 case DashConstants.PERIOD:
-                    for (i = 0; i < manifest[DashConstants.PERIOD + '_asArray'].length; i++) {
-                        obj = manifest[DashConstants.PERIOD + '_asArray'][i];
-                        if (obj.hasOwnProperty(DashConstants.ADAPTATION_SET + '_asArray')) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ADAPTATION_SET + '_asArray'], obj, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD));
+                    for (i = 0; i < manifest[DashConstants.PERIOD].length; i++) {
+                        obj = manifest[DashConstants.PERIOD][i];
+                        if (obj.hasOwnProperty(DashConstants.ADAPTATION_SET)) {
+                            elements = elements.concat(getElementsToResolve(obj[DashConstants.ADAPTATION_SET], obj, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD));
                         }
-                        if (obj.hasOwnProperty(DashConstants.EVENT_STREAM + '_asArray')) {
-                            elements = elements.concat(getElementsToResolve(obj[DashConstants.EVENT_STREAM + '_asArray'], obj, DashConstants.EVENT_STREAM, RESOLVE_TYPE_ONLOAD));
+                        if (obj.hasOwnProperty(DashConstants.EVENT_STREAM)) {
+                            elements = elements.concat(getElementsToResolve(obj[DashConstants.EVENT_STREAM], obj, DashConstants.EVENT_STREAM, RESOLVE_TYPE_ONLOAD));
                         }
                     }
                     resolve(elements, DashConstants.ADAPTATION_SET, RESOLVE_TYPE_ONLOAD);
@@ -231,7 +211,7 @@ function XlinkController(config) {
         // Start merging back from the end because of index shifting. Note that the elements with the same parent have to be ordered by index ascending
         for (i = resolveObject.elements.length - 1; i >= 0; i --) {
             element = resolveObject.elements[i];
-            type = element.type + '_asArray';
+            type = element.type;
 
             // Element couldn't be resolved or is TODO Inappropriate target: Remove all Xlink attributes
             if (!element.resolvedContent || isInappropriateTarget()) {
@@ -255,7 +235,7 @@ function XlinkController(config) {
             resolvedElements = [];
         }
         if (resolveObject.elements.length > 0) {
-            iron.run(manifest);
+            parser.getIron().run(manifest);
         }
     }
 
@@ -292,8 +272,7 @@ function XlinkController(config) {
 
     instance = {
         resolveManifestOnLoad: resolveManifestOnLoad,
-        setMatchers: setMatchers,
-        setIron: setIron,
+        setParser: setParser,
         reset: reset
     };
 

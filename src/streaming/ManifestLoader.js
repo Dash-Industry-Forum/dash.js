@@ -163,9 +163,8 @@ function ManifestLoader(config) {
                     return;
                 }
 
-                // init xlinkcontroller with matchers and iron object from created parser
-                xlinkController.setMatchers(parser.getMatchers());
-                xlinkController.setIron(parser.getIron());
+                // init xlinkcontroller with created parser
+                xlinkController.setParser(parser);
 
                 try {
                     manifest = parser.parse(data);
@@ -191,7 +190,7 @@ function ManifestLoader(config) {
                     // In the following, we only use the first Location entry even if many are available
                     // Compare with ManifestUpdater/DashManifestModel
                     if (manifest.hasOwnProperty(Constants.LOCATION)) {
-                        baseUri = urlUtils.parseBaseUrl(manifest.Location_asArray[0]);
+                        baseUri = urlUtils.parseBaseUrl(manifest.Location[0]);
                         logger.debug('BaseURI set by Location to: ' + baseUri);
                     }
 

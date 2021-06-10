@@ -106,7 +106,7 @@ class SimpleXPath {
 
             // stop one early if this is the last element and an attribute
             if (level !== this.path.length - 1 || !name.startsWith('@')) {
-                let children = parent[name + '_asArray'] || [];
+                let children = parent[name] || [];
                 if (children.length === 0 && parent[name]) {
                     children.push(parent[name]);
                 }
@@ -117,8 +117,8 @@ class SimpleXPath {
                     let attr = component.attribute;
                     leaf = children.filter((elm) => elm[attr.name] == attr.value)[0] || null;
                 } else {
-                    // default case, select first
-                    leaf = children[0] || null;
+                    // default case, select element itself or first element if as array
+                    leaf = Array.isArray(children) ? children[0] : children;
                 }
             }
 

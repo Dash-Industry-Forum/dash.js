@@ -96,7 +96,7 @@ function DashAdapter() {
     function convertRepresentationToRepresentationInfo(voRepresentation) {
         if (voRepresentation) {
             let representationInfo = new RepresentationInfo();
-            const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
+            const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period[voRepresentation.adaptation.period.index].AdaptationSet[voRepresentation.adaptation.index];
             const realRepresentation = dashManifestModel.getRepresentationFor(voRepresentation.index, realAdaptation);
 
             representationInfo.id = voRepresentation.id;
@@ -859,7 +859,7 @@ function DashAdapter() {
                 }
 
                 // determine the relative insert position prior to possible removal
-                let relativePosition = (target[name + '_asArray'] || []).indexOf(leaf);
+                let relativePosition = (target[name] || []).indexOf(leaf);
                 let insertBefore = (operation.position === 'prepend' || operation.position === 'before');
 
                 // perform removal operation first, we have already capture the appropriate relative position
@@ -867,20 +867,17 @@ function DashAdapter() {
                     // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd operations
 
                     // purge the directly named entity
-                    delete target[name];
-
-                    // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
-                    if (relativePosition != -1) {
-                        let targetArray = target[name + '_asArray'];
+                    if (typeof target[name] === Object) {
+                        delete target[name];
+                    } else if (relativePosition != -1) {
+                        // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
+                        let targetArray = target[name];
                         targetArray.splice(relativePosition, 1);
-                        if (targetArray.length > 1) {
+                        if (targetArray.length > 0) {
                             target[name] = targetArray;
-                        } else if (targetArray.length == 1) {
-                            // xml parsing semantics, singular asArray must be non-array in the unsuffixed key
-                            target[name] = targetArray[0];
                         } else {
                             // all nodes of this type deleted, remove entry
-                            delete target[name + '_asArray'];
+                            delete target[name];
                         }
                     }
                 }
@@ -894,7 +891,7 @@ function DashAdapter() {
                     Object.keys(operation.value).forEach((insert) => {
                         let insertNodes = operation.value[insert];
 
-                        let updatedNodes = target[insert + '_asArray'] || [];
+                        let updatedNodes = target[insert] || [];
                         if (updatedNodes.length === 0 && target[insert]) {
                             updatedNodes.push(target[insert]);
                         }
@@ -920,8 +917,7 @@ function DashAdapter() {
                         }
 
                         // now we properly reset the element keys on the target to match parsing semantics
-                        target[insert + '_asArray'] = updatedNodes;
-                        target[insert] = updatedNodes.length == 1 ? updatedNodes[0] : updatedNodes;
+                        target[insert] = updatedNodes;
                     });
                 }
             });
@@ -965,7 +961,7 @@ function DashAdapter() {
         }
 
         let mediaInfo = new MediaInfo();
-        const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
+        const realAdaptation = adaptation.period.mpd.manifest.Period[adaptation.period.index].AdaptationSet[adaptation.index];
         let viewpoint;
 
         mediaInfo.id = adaptation.id;
@@ -995,8 +991,8 @@ function DashAdapter() {
             return audioChannelConfiguration.value;
         });
 
-        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]).map(function (audioChannelConfiguration) {
+        if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]).map(function (audioChannelConfiguration) {
                 return audioChannelConfiguration.value;
             });
         }
@@ -1044,7 +1040,7 @@ function DashAdapter() {
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
-        streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isLast = period.mpd.manifest.Period.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
 
         return streamInfo;
     }
@@ -1072,7 +1068,7 @@ function DashAdapter() {
     }
 
     function getPeriod(periodIdx) {
-        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodIdx] : null;
+        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period[periodIdx] : null;
     }
 
     function findRepresentationIndex(period, representationId) {
@@ -1090,10 +1086,10 @@ function DashAdapter() {
             representationArrayIndex;
 
         if (period) {
-            adaptationSetArray = period.AdaptationSet_asArray;
+            adaptationSetArray = period.AdaptationSet;
             for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
                 adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                representationArray = adaptationSet.Representation_asArray;
+                representationArray = adaptationSet.Representation;
                 for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
                     representation = representationArray[representationArrayIndex];
                     if (representationId === representation.id) {
@@ -1118,10 +1114,10 @@ function DashAdapter() {
 
         if (!period || !bufferType) return -1;
 
-        adaptationSetArray = period.AdaptationSet_asArray;
+        adaptationSetArray = period.AdaptationSet;
         for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
             adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation_asArray;
+            representationArray = adaptationSet.Representation;
             if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
                 return representationArray.length;
             }

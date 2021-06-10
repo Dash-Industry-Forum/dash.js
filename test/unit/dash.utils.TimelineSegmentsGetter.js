@@ -20,15 +20,8 @@ const segmentTemplate = {
     'timescale': 90000,
     'initialization': 'test-$RepresentationID$.dash',
     'SegmentTimeline': {
-        'S': segments,
-        'S_asArray': segments
+        'S': segments
     },
-    'SegmentTimeline_asArray': [
-        {
-            'S': segments,
-            'S_asArray': segments
-        }
-    ],
     'media': 'test-$RepresentationID$-$Time$.dash'
 };
 
@@ -37,7 +30,7 @@ function createRepresentationMock() {
     const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
     representation.timescale = 90000;
     representation.SegmentTemplate = segmentTemplate;
-    representation.adaptation.period.mpd.manifest.Period_asArray[0].AdaptationSet_asArray[0].Representation_asArray[0] = representation;
+    representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
     representation.adaptation.period.mpd.maxSegmentDuration = 5;
     representation.adaptation.period.duration = 101.1;
     representation.presentationTimeOffset = 0;

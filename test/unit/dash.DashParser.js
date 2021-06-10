@@ -29,11 +29,11 @@ describe('DashParser', function () {
     });
 
     it('should throw an error when parse is called without data and config object has been set properly', function () {
-        expect(dashParser.parse.bind('')).to.be.throw('parsing the manifest failed');
+        expect(dashParser.parse.bind('')).to.be.throw('failed to parse the manifest');
     });
 
     it('should throw an error when parse is called with invalid data', function () {
         let manifest = fs.readFileSync(__dirname + '/data/dash/manifest_error.xml', 'utf8');
-        expect(dashParser.parse.bind(manifest)).to.be.throw('parsing the manifest failed');
+        expect(dashParser.parse.bind(manifest)).to.be.throw('failed to parse the manifest');
     });
 });
