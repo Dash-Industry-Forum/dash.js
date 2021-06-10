@@ -240,7 +240,7 @@ function PlaybackController() {
 
         // Apply live delay from ServiceDescription
         if (settings.get().streaming.delay.applyServiceDescription && isNaN(settings.get().streaming.delay.liveDelay) && isNaN(settings.get().streaming.delay.liveDelayFragmentCount)) {
-            _applyLiveDelayFromServiceDescription(manifestInfo);
+            _applyServiceDescription(manifestInfo);
         }
 
         if (mediaPlayerModel.getLiveDelay()) {
@@ -274,7 +274,7 @@ function PlaybackController() {
         return ret;
     }
 
-    function _applyLiveDelayFromServiceDescription(manifestInfo) {
+    function _applyServiceDescription(manifestInfo) {
         if (!manifestInfo || !manifestInfo.serviceDescriptions) {
             return;
         }
@@ -289,15 +289,31 @@ function PlaybackController() {
             }
         }
 
-        if (llsd && llsd.latency && llsd.latency.target > 0) {
-            logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
-            settings.update({
-                streaming: {
-                    delay: {
-                        liveDelay: llsd.latency.target / 1000,
+        if (llsd) {
+            if (llsd.latency && llsd.latency.target > 0) {
+                logger.debug('Apply LL properties coming from service description. Target Latency (ms):', llsd.latency.target);
+                settings.update({
+                    streaming: {
+                        delay: {
+                            liveDelay: llsd.latency.target / 1000,
+                        },
+                        liveCatchup: {
+                            minDrift: (llsd.latency.target + 500) / 1000,
+                            maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target + 500) / 1000 : undefined
+                        }
                     }
-                }
-            });
+                });
+            }
+            if (llsd.playbackRate && llsd.playbackRate.max > 1.0) {
+                logger.debug('Apply LL properties coming from service description. Max PlaybackRate:', llsd.playbackRate.max);
+                settings.update({
+                    streaming: {
+                        liveCatchup: {
+                            playbackRate: llsd.playbackRate.max - 1.0
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -892,56 +908,18 @@ function PlaybackController() {
     }
 
     function _onStreamInitializing(e) {
-        if (settings.get().streaming.delay.applyServiceDescription) {
-            _applyServiceDescription(e.streamInfo, e.mediaInfo);
-        }
+        _checkEnableLowLatency(e.mediaInfo);
     }
 
-    function _applyServiceDescription(streamInfo, mediaInfo) {
-        if (streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.serviceDescriptions) {
-            // is there a service description for low latency defined?
-            let llsd;
-
-            for (let i = 0; i < streamInfo.manifestInfo.serviceDescriptions.length; i++) {
-                const sd = streamInfo.manifestInfo.serviceDescriptions[i];
-                if (sd.schemeIdUri === Constants.SERVICE_DESCRIPTION_LL_SCHEME) {
-                    llsd = sd;
-                    break;
+    function _checkEnableLowLatency(mediaInfo) {
+        if (mediaInfo && mediaInfo.supplementalProperties &&
+            mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
+            logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
+            settings.update({
+                streaming: {
+                    lowLatencyEnabled: true
                 }
-            }
-
-            if (llsd) {
-                if (mediaInfo && mediaInfo.supplementalProperties &&
-                    mediaInfo.supplementalProperties[Constants.SUPPLEMENTAL_PROPERTY_LL_SCHEME] === 'true') {
-                    logger.debug('Low Latency critical SupplementalProperty set: Enabling low Latency');
-                    settings.update({
-                        streaming: {
-                            lowLatencyEnabled: true
-                        }
-                    });
-                }
-                if (llsd.latency && llsd.latency.target > 0) {
-                    logger.debug('Apply LL properties for live catchup coming from service description.');
-                    settings.update({
-                        streaming: {
-                            liveCatchup: {
-                                minDrift: (llsd.latency.target + 500) / 1000,
-                                maxDrift: llsd.latency.max > llsd.latency.target ? (llsd.latency.max - llsd.latency.target) / 1000 : undefined
-                            }
-                        }
-                    });
-                }
-                if (llsd.playbackRate && llsd.playbackRate.max > 1.0) {
-                    logger.debug('Apply LL properties coming from service description. Max PlaybackRate:', llsd.playbackRate.max);
-                    settings.update({
-                        streaming: {
-                            liveCatchup: {
-                                playbackRate: llsd.playbackRate.max - 1.0
-                            }
-                        }
-                    });
-                }
-            }
+            });
         }
     }
 
