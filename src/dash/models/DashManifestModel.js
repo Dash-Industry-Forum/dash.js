@@ -523,7 +523,9 @@ function DashManifestModel() {
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
                         }
-                    } else if (getIsText(processedRealAdaptation) && getIsFragmented(processedRealAdaptation)) {
+                    } else if (getIsText(processedRealAdaptation) &&
+                               getIsFragmented(processedRealAdaptation) &&
+                               processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
                         voRepresentation.range = 0;
                     }
 
