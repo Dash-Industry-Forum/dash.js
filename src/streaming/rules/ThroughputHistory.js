@@ -254,11 +254,11 @@ function ThroughputHistory(config) {
     }
 
     const instance = {
-        push: push,
-        getAverageThroughput: getAverageThroughput,
-        getSafeAverageThroughput: getSafeAverageThroughput,
-        getAverageLatency: getAverageLatency,
-        reset: reset
+        push,
+        getAverageThroughput,
+        getSafeAverageThroughput,
+        getAverageLatency,
+        reset
     };
 
     setup();

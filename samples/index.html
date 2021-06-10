@@ -4,8 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Hugo 0.82.0">
+    <meta name="author" content="Daniel Silhavy">
     <title>Samples players for dash.js</title>
 
     <!-- Bootstrap core CSS -->
@@ -167,7 +166,7 @@
         section.samples.forEach(function (sample) {
             var $card = $('#card-sample').clone(true);
             $card.attr('id', '');
-            var image = sample.image ? sample.image : './lib/img/dashjs-logo-png.png';
+            var image = sample.image ? sample.image : './lib/img/dashjs-logo-border.png';
             $card.find('img').attr('src', image);
             $card.find('h5').html('<a href="' + sample.href + '" target="_blank">' + sample.title + '</a>');
             $card.find('p').html(sample.description);

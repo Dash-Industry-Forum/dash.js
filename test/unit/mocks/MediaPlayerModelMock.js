@@ -31,7 +31,8 @@
 import {
     HTTPRequest
 }
-from '../../../src/streaming/vo/metrics/HTTPRequest';
+    from '../../../src/streaming/vo/metrics/HTTPRequest';
+
 
 const DEFAULT_UTC_TIMING_SOURCE = {
     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
@@ -101,8 +102,12 @@ class MediaPlayerModelMock {
         return DEFAULT_XHR_WITH_CREDENTIALS;
     }
 
-    constructor() {
+    constructor(data) {
         this.setup();
+
+        if (data && data.settings) {
+            this.settings = data.settings;
+        }
     }
 
     setup() {
@@ -116,11 +121,23 @@ class MediaPlayerModelMock {
         this.customABRRule = [];
 
         this.retryAttempts = {
-            [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_ATTEMPTS, [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_ATTEMPTS, [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS, [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_ATTEMPTS
+            [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_ATTEMPTS,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_ATTEMPTS,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_ATTEMPTS,
+            [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_ATTEMPTS
         };
 
         this.retryIntervals = {
-            [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_INTERVAL, [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_INTERVAL, [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL, [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_INTERVAL
+            [HTTPRequest.MPD_TYPE]: MANIFEST_RETRY_INTERVAL,
+            [HTTPRequest.XLINK_EXPANSION_TYPE]: XLINK_RETRY_INTERVAL,
+            [HTTPRequest.MEDIA_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.INIT_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.INDEX_SEGMENT_TYPE]: FRAGMENT_RETRY_INTERVAL,
+            [HTTPRequest.OTHER_TYPE]: FRAGMENT_RETRY_INTERVAL
         };
     }
 
@@ -190,7 +207,7 @@ class MediaPlayerModelMock {
     }
 
     getLiveDelay() {
-        return this.liveDelay;
+        return this.liveDelay ? this.liveDelay : this.settings.get().streaming.delay.liveDelay;
     }
 
     setUTCTimingSources(value) {

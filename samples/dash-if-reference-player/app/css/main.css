@@ -4,7 +4,7 @@ body {
     overflow-x: hidden;
 }
 
-label input {
+label input select {
     display: inline;
 }
 
@@ -95,14 +95,16 @@ a:hover {
 }
 
 .options-item-body input,
-.options-item-body label {
+.options-item-body label,
+.options-item-body select {
     cursor: pointer;
     clear: both;
     float: left;
     margin-bottom: 2px !important;
 }
 
-.options-item-body input {
+.options-item-body input,
+.options-item-body select {
     margin-right: 5px;
 }
 
@@ -589,4 +591,73 @@ Conformance warnings
     margin-top: 15px;
     margin-bottom: 15px;
     padding: 12px;
+}
+
+/********************************************************
+DRM Header Dialogue
+*********************************************************/
+
+.requestHeaderDialogue {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 100px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    text-align: center;
+    background-color: rgb(255, 255, 255);
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+.requestHeaderDialogueContent {
+    display: inline-block;
+    background-color: #fefefe;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+.dialogue-btn{
+    margin-bottom: 2px;
+}
+
+.modal-hr {
+    border: none;
+    height: 1px;
+    color: #333;
+    background-color: #333;
+}
+
+.close {
+    color: rgb(255, 0, 0);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/********************************************************
+BS Information
+*********************************************************/
+
+.bs-callout {
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid #eee;
+    border-left-width: 5px;
+    border-radius: 3px;
+    background: #FFFFFF;
+}
+
+.bs-callout-information {
+    border-left-color: #136bfb ;
 }

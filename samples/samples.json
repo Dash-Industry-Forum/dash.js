@@ -199,6 +199,104 @@
         ]
     },
     {
+        "section": "ABR",
+        "samples": [
+            {
+                "title": "Changing the default ABR algorithm",
+                "description": "This example shows how configure the ABR algorithms in dash.js",
+                "href": "abr/abr.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Custom ABR Rules",
+                "description": "Example showing how to create and define custom ABR rules in dash.js.",
+                "href": "abr/custom-abr-rules.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Disable ABR",
+                "description": "Example showing how to disable the ABR switching in dash.js.",
+                "href": "abr/disable-abr.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Initial bitrate",
+                "description": "Example showing how to set the initial bitrate in dash.js.",
+                "href": "abr/initial-bitrate.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Max/min bitrate",
+                "description": "Example showing how to set the maximum and minimum bitrate in dash.js.",
+                "href": "abr/max-min-bitrate.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
+    },
+    {
+        "section": "Buffer",
+        "samples": [
+            {
+                "title": "Buffer target",
+                "description": "Example showing how to define the buffer targets in dash.js",
+                "href": "buffer/buffer-target.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Buffer cleanup",
+                "description": "Example showing how to define the parameters for buffer cleanup/pruning in dash.js",
+                "href": "buffer/buffer-cleanup.html",
+                "image": "lib/img/bbb-2.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Initial buffer target",
+                "description": "Example showing how to define the initial buffer target at playback start in dash.js.",
+                "href": "buffer/initial-buffer.html",
+                "image": "lib/img/bbb-3.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
+    },
+    {
         "section": "DRM",
         "samples": [
             {
@@ -267,7 +365,6 @@
                     "Audio"
                 ]
             }
-
         ]
     },
     {
@@ -342,7 +439,7 @@
                 "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html",
-                "image": "lib/img/sintel-1.jpg",
+                "image": "lib/img/elephant-1.jpg",
                 "labels": [
                     "VoD",
                     "Fragmented text",
@@ -432,17 +529,6 @@
                 "description": "This sample shows how to deal with autoplay browsers policy. It uses an event listener to detect when auto playback is interrupted by the browser and how to recover from this situation muting audio.",
                 "href": "advanced/auto-play-browser-policy.html",
                 "image": "lib/img/bbb-2.jpg",
-                "labels": [
-                    "VoD",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
-                "title": "Custom ABR Rules",
-                "description": "Example showing how to create and define custom ABR rules in dash.js.",
-                "href": "advanced/abr/index.html",
-                "image": "lib/img/bbb-3.jpg",
                 "labels": [
                     "VoD",
                     "Video",
