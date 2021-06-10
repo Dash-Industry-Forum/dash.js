@@ -858,8 +858,13 @@ function PlaybackController() {
             const minDelay = 1.2 * e.request.duration;
             if (minDelay > mediaPlayerModel.getLiveDelay()) {
                 logger.warn('Browser does not support fetch API with StreamReader. Increasing live delay to be 20% higher than segment duration:', minDelay.toFixed(2));
-                const s = { streaming: { liveDelay: minDelay } };
-                settings.update(s);
+                settings.update({
+                    streaming: {
+                        delay: {
+                            liveDelay: minDelay,
+                        }
+                    }
+                });
             }
         }
     }
