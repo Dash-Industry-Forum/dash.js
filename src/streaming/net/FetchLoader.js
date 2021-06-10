@@ -153,11 +153,17 @@ function FetchLoader(cfg) {
                         // If there is pending data, call progress so network metrics
                         // are correctly generated
                         // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
+                        let calculatedThroughput=null;
+                        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                            calculatedThroughput=calculateThroughputByChunkData(startTimeData, endTimeData);
+                        }
+
                         httpRequest.progress({
                             loaded: bytesReceived,
                             total: isNaN(totalBytes) ? bytesReceived : totalBytes,
                             lengthComputable: true,
-                            time: calculateDownloadedTime(calculationMode, startTimeData, endTimeData, downloadedData, bytesReceived),
+                            time: calculateDownloadedTime(downloadedData, bytesReceived),
+                            throughput: calculatedThroughput,
                             stream: true
                         });
 
@@ -195,7 +201,7 @@ function FetchLoader(cfg) {
                         const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
 
                         // Store the end time of each chunk download  with its size in array EndTimeData
-                        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                        if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && !lastChunkWasFinished) {
                             lastChunkWasFinished = true;
                             endTimeData.push({
                                 ts: performance.now(), /* jshint ignore:line */
@@ -285,43 +291,7 @@ function FetchLoader(cfg) {
         }
     }
 
-    // Compute the download time of a segment
-    function calculateDownloadedTime(calculationMode, startTimeData, endTimeData, downloadedData, bytesReceived) {
-        switch (calculationMode) {
-            case Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING:
-                return _calculateDownloadedTimeByMoofParsing(startTimeData, endTimeData);
-            case Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA:
-                return _calculateDownloadedTimeByBytesReceived(downloadedData, bytesReceived);
-            default:
-                return _calculateDownloadedTimeByBytesReceived(downloadedData, bytesReceived);
-        }
-    }
-
-    function _calculateDownloadedTimeByMoofParsing(startTimeData, endTimeData) {
-        try {
-            let datum, datumE;
-            // Filter the first and last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-            datum = startTimeData.filter((data, i) => i > 0 && i < startTimeData.length - 1);
-            datumE = endTimeData.filter((dataE, i) => i > 0 && i < endTimeData.length - 1);
-            // Compute the download time of a segment based on the filtered data [last chunk end time - first chunk beginning time]
-            let segDownloadTime = 0;
-            if (datum.length > 1) {
-                for (let i = 0; i < datum.length; i++) {
-                    if (datum[i] && datumE[i]) {
-                        let chunkDownladTime = datumE[i].ts - datum[i].ts;
-                        segDownloadTime += chunkDownladTime;
-                    }
-                }
-
-                return segDownloadTime;
-            }
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _calculateDownloadedTimeByBytesReceived(downloadedData, bytesReceived) {
+    function calculateDownloadedTime(downloadedData, bytesReceived) {
         try {
             downloadedData = downloadedData.filter(data => data.bytes > ((bytesReceived / 4) / downloadedData.length));
             if (downloadedData.length > 1) {
@@ -337,6 +307,51 @@ function FetchLoader(cfg) {
                 });
                 return time;
             }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function calculateThroughputByChunkData(startTimeData, endTimeData) {
+        try {
+            let datum, datumE;
+            // Filter the last chunks in a segment in both arrays [StartTimeData and EndTimeData]
+            datum = startTimeData.filter((data, i) => i < startTimeData.length - 1);
+            datumE = endTimeData.filter((dataE, i) => i < endTimeData.length - 1);
+            let chunkThroughputs = [];
+            // Compute the average throughput of the filtered chunk data
+            if (datum.length > 1) {
+                let shortDurationBytesReceived = 0;
+                let shortDurationStartTime = 0;
+                for (let i = 0; i < datum.length; i++) {
+                    if (datum[i] && datumE[i]) {
+                        let chunkDownloadTime = datumE[i].ts - datum[i].ts;
+                        if (chunkDownloadTime > 1) {
+                            chunkThroughputs.push((8 * datumE[i].bytes) / chunkDownloadTime);
+                        } else {
+                            if (shortDurationStartTime === 0) {
+                                shortDurationStartTime = datum[i].ts;
+                            }
+                            let cumulatedChunkDownloadTime = datumE[i].ts - shortDurationStartTime;
+                            if (cumulatedChunkDownloadTime > 1) {
+                                chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
+                                shortDurationBytesReceived = 0;
+                                shortDurationStartTime = 0;
+                            } else {
+                                // continue cumulating short duration data
+                                shortDurationBytesReceived += datumE[i].bytes;
+                            }
+                        }
+                    }
+                }
+
+                if (chunkThroughputs.length > 0) {
+                    const sumOfChunkThroughputs = chunkThroughputs.reduce((a, b) => a + b, 0);
+                    return sumOfChunkThroughputs / chunkThroughputs.length;
+                }
+            }
+
             return null;
         } catch (e) {
             return null;
