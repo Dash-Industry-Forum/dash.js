@@ -1,6 +1,6 @@
 function DashManifestModelMock () {
 
-    this.getIsTextTrack = function () {
+    this.getIsText = function () {
         return false;
     };
 

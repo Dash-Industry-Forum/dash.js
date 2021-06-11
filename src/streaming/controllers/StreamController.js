@@ -1089,14 +1089,14 @@ function StreamController() {
             // For single period manifests we can iterate over all AS and use the maximum segment length
             if (streamInfos && streamInfos.length === 1) {
                 const streamInfo = streamInfos[0];
-                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
+                const mediaTypes = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
 
 
                 const fragmentDurations = mediaTypes
                     .reduce((acc, mediaType) => {
                         const mediaInfo = adapter.getMediaInfoForType(streamInfo, mediaType);
 
-                        if (mediaInfo) {
+                        if (mediaInfo && mediaInfo.isFragmented !== false) {
                             acc.push(mediaInfo);
                         }
 

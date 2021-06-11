@@ -98,7 +98,7 @@ function RepresentationController(config) {
         resetInitialSettings();
     }
 
-    function updateData(newRealAdaptation, availableRepresentations, type, quality) {
+    function updateData(newRealAdaptation, availableRepresentations, type, isFragmented, quality) {
         checkConfig();
 
         updating = true;
@@ -108,7 +108,7 @@ function RepresentationController(config) {
         currentVoRepresentation = getRepresentationForQuality(quality);
         realAdaptation = newRealAdaptation;
 
-        if (type !== Constants.VIDEO && type !== Constants.AUDIO && type !== Constants.FRAGMENTED_TEXT) {
+        if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
             endDataUpdate();
             return Promise.resolve();
         }

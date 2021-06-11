@@ -80,10 +80,10 @@ describe('SourceBufferSink', function () {
                 });
         });
 
-        it('should create and return a text buffer if codec is of type text', function (done) {
+        it('should create and return a text buffer if of type text and not fragmented', function (done) {
             let mediaInfo = {
-                codec: 'text',
-                isText: true
+                type: 'text',
+                isFragmented: false
             };
 
             sink.initializeForFirstUse(streamInfo, mediaInfo)

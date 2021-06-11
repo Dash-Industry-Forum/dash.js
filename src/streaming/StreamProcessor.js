@@ -108,7 +108,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
     }
 
-    function initialize(mediaSource, hasVideoTrack) {
+    function initialize(mediaSource, hasVideoTrack, isFragmented) {
 
         segmentsController = SegmentsController(context).create({
             events: Events,
@@ -162,7 +162,7 @@ function StreamProcessor(config) {
             segmentsController
         });
 
-        bufferController = _createBufferControllerForType(type);
+        bufferController = _createBufferControllerForType(type, isFragmented);
         if (bufferController) {
             bufferController.initialize(mediaSource);
         }
@@ -195,6 +195,10 @@ function StreamProcessor(config) {
 
     function getType() {
         return type;
+    }
+
+    function getIsTextTrack() {
+        return adapter.getIsTextTrack(representationController.getData());
     }
 
     function resetInitialSettings() {
@@ -360,12 +364,18 @@ function StreamProcessor(config) {
             return;
         }
 
-        if (adapter.getIsTextTrack(mimeType) && !textController.isTextEnabled()) return;
+        if (getIsTextTrack() && !textController.isTextEnabled()) return;
 
         if (bufferController && e.representationId) {
             if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
+                const rep = representationController.getCurrentRepresentation();
+                // Dummy init segment (fragmented tracks without initialization segment)
+                if (rep.range === 0) {
+                    _onMediaFragmentNeeded();
+                    return;
+                }
                 // Init segment not in cache, send new request
-                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), representationController.getCurrentRepresentation()) : null;
+                const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
                 } else {
@@ -435,7 +445,7 @@ function StreamProcessor(config) {
         const representationInfo = getRepresentationInfo();
         let request;
 
-        if (isNaN(bufferingTime) || (getType() === Constants.FRAGMENTED_TEXT && !textController.isTextEnabled())) {
+        if (isNaN(bufferingTime) || (getType() === Constants.TEXT && !textController.isTextEnabled())) {
             return null;
         }
 
@@ -590,7 +600,7 @@ function StreamProcessor(config) {
             threshold: 0
         })[0];
 
-        if (request && !adapter.getIsTextTrack(mimeType)) {
+        if (request && !getIsTextTrack()) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
@@ -647,7 +657,7 @@ function StreamProcessor(config) {
     function _onFragmentLoadingCompleted(e) {
         logger.info('OnFragmentLoadingCompleted for stream id ' + streamInfo.id + ' and media type ' + type + ' - Url:', e.request ? e.request.url : 'undefined', e.request.range ? ', Range:' + e.request.range : '');
 
-        if (adapter.getIsTextTrack(mimeType)) {
+        if (getIsTextTrack()) {
             scheduleController.startScheduleTimer(0);
         }
 
@@ -749,7 +759,7 @@ function StreamProcessor(config) {
                 averageThroughput;
             let bitrate = null;
 
-            if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.FRAGMENTED_TEXT) {
+            if ((realAdaptation === null || (realAdaptation.id !== newRealAdaptation.id)) && type !== Constants.TEXT) {
                 averageThroughput = abrController.getThroughputHistory().getAverageThroughput(type);
                 bitrate = averageThroughput || abrController.getInitialBitrateFor(type, streamInfo.id);
                 quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamInfo.id);
@@ -763,7 +773,7 @@ function StreamProcessor(config) {
             if (quality > maxQuality) {
                 quality = maxQuality;
             }
-            return representationController.updateData(newRealAdaptation, voRepresentations, type, quality);
+            return representationController.updateData(newRealAdaptation, voRepresentations, type, mediaInfo.isFragmented, quality);
         } else {
             return Promise.resolve();
         }
@@ -913,7 +923,7 @@ function StreamProcessor(config) {
     function prepareTrackSwitch() {
         return new Promise((resolve) => {
             logger.debug(`Preparing track switch for type ${type}`);
-            const shouldReplace = type === Constants.FRAGMENTED_TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.buffer.stallThreshold);
+            const shouldReplace = type === Constants.TEXT || (settings.get().streaming.trackSwitchMode[type] === Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE && playbackController.getTimeToStreamEnd(streamInfo) > settings.get().streaming.buffer.stallThreshold);
 
             // when buffering is completed and we are not supposed to replace anything do nothing.
             // Still we need to trigger preloading again and call change type in case user seeks back before transitioning to next period
@@ -1002,7 +1012,7 @@ function StreamProcessor(config) {
     }
 
 
-    function _createBufferControllerForType(type) {
+    function _createBufferControllerForType(type, isFragmented) {
         let controller = null;
 
         if (!type) {
@@ -1010,7 +1020,7 @@ function StreamProcessor(config) {
             return null;
         }
 
-        if (type === Constants.TEXT) {
+        if (type === Constants.TEXT && !isFragmented) {
             controller = NotFragmentedTextBufferController(context).create({
                 streamInfo,
                 type,

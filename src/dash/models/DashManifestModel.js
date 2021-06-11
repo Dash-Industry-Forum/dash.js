@@ -66,16 +66,6 @@ function DashManifestModel() {
     }
 
     function getIsTypeOf(adaptation, type) {
-
-        let i,
-            len,
-            representation,
-            col,
-            mimeTypeRegEx,
-            codecs;
-        let result = false;
-        let found = false;
-
         if (!adaptation) {
             throw new Error('adaptation is not defined');
         }
@@ -84,57 +74,70 @@ function DashManifestModel() {
             throw new Error('type is not defined');
         }
 
-        if (adaptation.hasOwnProperty('ContentComponent_asArray')) {
-            col = adaptation.ContentComponent_asArray;
-        }
-
-        mimeTypeRegEx = (type !== Constants.TEXT) ? new RegExp(type) : new RegExp('(vtt|ttml)');
-
-        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length && adaptation.Representation_asArray.length > 0) {
-            let essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
+        // Check for thumbnail images
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
+            const essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation_asArray[0]);
             if (essentialProperties && essentialProperties.length > 0 && THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
-                return type === Constants.IMAGE;
-            }
-            if (adaptation.Representation_asArray[0].hasOwnProperty(DashConstants.CODECS)) {
-                // Just check the start of the codecs string
-                codecs = adaptation.Representation_asArray[0].codecs;
-                if (codecs.search(Constants.STPP) === 0 || codecs.search(Constants.WVTT) === 0) {
-                    return type === Constants.FRAGMENTED_TEXT;
-                }
+                return (type === Constants.IMAGE);
             }
         }
 
-        if (col) {
-            if (col.length > 1) {
+        // Check ContentComponent.contentType
+        if (adaptation.ContentComponent_asArray && adaptation.ContentComponent_asArray.length > 0) {
+            if (adaptation.ContentComponent_asArray.length > 1) {
                 return (type === Constants.MUXED);
-            } else if (col[0] && col[0].contentType === type) {
-                result = true;
-                found = true;
+            } else if (adaptation.ContentComponent_asArray[0].contentType === type) {
+                return true;
             }
         }
 
+        const mimeTypeRegEx = (type === Constants.TEXT) ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
+
+        // Check codecs
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length) {
+            const codecs = adaptation.Representation_asArray[0].codecs;
+            if (mimeTypeRegEx.test(codecs)) {
+                return true;
+            }
+        }
+
+        // Check Adaptation's mimeType
         if (adaptation.hasOwnProperty(DashConstants.MIME_TYPE)) {
-            result = mimeTypeRegEx.test(adaptation.mimeType);
-            found = true;
+            return mimeTypeRegEx.test(adaptation.mimeType);
         }
 
-        // couldn't find on adaptationset, so check a representation
-        if (!found) {
-            i = 0;
-            len = adaptation.Representation_asArray && adaptation.Representation_asArray.length ? adaptation.Representation_asArray.length : 0;
-            while (!found && i < len) {
+        // Check Representation's mimeType
+        if (adaptation.Representation_asArray) {
+            let representation;
+            for (let i = 0; i < adaptation.Representation_asArray.length; i++) {
                 representation = adaptation.Representation_asArray[i];
-
                 if (representation.hasOwnProperty(DashConstants.MIME_TYPE)) {
-                    result = mimeTypeRegEx.test(representation.mimeType);
-                    found = true;
+                    return mimeTypeRegEx.test(representation.mimeType);
                 }
-
-                i++;
             }
         }
 
-        return result;
+        return false;
+    }
+
+    function getIsFragmented(adaptation) {
+        if (!adaptation) {
+            throw new Error('adaptation is not defined');
+        }
+        if (adaptation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+            return true;
+        }
+        if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
+            const representation = adaptation.Representation_asArray[0];
+            if (representation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function getIsAudio(adaptation) {
@@ -145,8 +148,8 @@ function DashManifestModel() {
         return getIsTypeOf(adaptation, Constants.VIDEO);
     }
 
-    function getIsFragmentedText(adaptation) {
-        return getIsTypeOf(adaptation, Constants.FRAGMENTED_TEXT);
+    function getIsText(adaptation) {
+        return getIsTypeOf(adaptation, Constants.TEXT);
     }
 
     function getIsMuxed(adaptation) {
@@ -155,10 +158,6 @@ function DashManifestModel() {
 
     function getIsImage(adaptation) {
         return getIsTypeOf(adaptation, Constants.IMAGE);
-    }
-
-    function getIsTextTrack(type) {
-        return (type === 'text/vtt' || type === 'application/ttml+xml');
     }
 
     function getLanguageForAdaptation(adaptation) {
@@ -524,7 +523,9 @@ function DashManifestModel() {
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
                         }
-                    } else if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE) && getIsTextTrack(realRepresentation.mimeType)) {
+                    } else if (getIsText(processedRealAdaptation) &&
+                               getIsFragmented(processedRealAdaptation) &&
+                               processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
                         voRepresentation.range = 0;
                     }
 
@@ -613,12 +614,12 @@ function DashManifestModel() {
                     voAdaptationSet.type = Constants.AUDIO;
                 } else if (getIsVideo(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.VIDEO;
-                } else if (getIsFragmentedText(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.FRAGMENTED_TEXT;
+                } else if (getIsText(realAdaptationSet)) {
+                    voAdaptationSet.type = Constants.TEXT;
                 } else if (getIsImage(realAdaptationSet)) {
                     voAdaptationSet.type = Constants.IMAGE;
                 } else {
-                    voAdaptationSet.type = Constants.TEXT;
+                    logger.warn('Unknown Adaptation stream type');
                 }
                 voAdaptations.push(voAdaptationSet);
             }
@@ -1143,7 +1144,8 @@ function DashManifestModel() {
 
     instance = {
         getIsTypeOf,
-        getIsTextTrack,
+        getIsText,
+        getIsFragmented,
         getLanguageForAdaptation,
         getViewpointForAdaptation,
         getRolesForAdaptation,
