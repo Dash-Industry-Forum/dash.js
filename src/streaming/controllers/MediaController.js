@@ -229,7 +229,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function saveTextSettingsDisabled() {
-        domStorage.setSavedMediaSettings(Constants.FRAGMENTED_TEXT, null);
+        domStorage.setSavedMediaSettings(Constants.TEXT, null);
     }
 
     /**
@@ -238,8 +238,7 @@ function MediaController() {
      * @memberof MediaController#
      */
     function _isMultiTrackSupportedByType(type) {
-        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT ||
-            type === Constants.FRAGMENTED_TEXT || type === Constants.IMAGE);
+        return (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.IMAGE);
     }
 
     /**
@@ -325,7 +324,7 @@ function MediaController() {
         initialSettings = {
             audio: null,
             video: null,
-            fragmentedText: null
+            text: null
         };
     }
 
@@ -394,7 +393,7 @@ function MediaController() {
     }
 
     function selectInitialTrack(type, tracks) {
-        if (type === Constants.FRAGMENTED_TEXT) return tracks[0];
+        if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr = [];
@@ -445,11 +444,6 @@ function MediaController() {
                 current: null
             },
             text: {
-                list: [],
-                storeLastSettings: true,
-                current: null
-            },
-            fragmentedText: {
                 list: [],
                 storeLastSettings: true,
                 current: null

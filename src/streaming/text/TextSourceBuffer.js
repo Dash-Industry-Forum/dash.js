@@ -45,7 +45,6 @@ import Errors from '../../core/errors/Errors';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
-    const adapter = config.adapter;
     const manifestModel = config.manifestModel;
     const mediaController = config.mediaController;
     const videoModel = config.videoModel;
@@ -111,20 +110,19 @@ function TextSourceBuffer(config) {
 
     /**
      * There might be media infos of different types. For instance text and fragmentedText.
+     * @param {string} type
      * @param {array} mInfos
-     * @param {string} mimeType
      * @param {object} fModel
      */
-    function addMediaInfos(mInfos, mimeType, fModel) {
-        const isFragmented = mimeType && !adapter.getIsTextTrack(mimeType);
+    function addMediaInfos(type, mInfos, fModel) {
 
         mediaInfos = mediaInfos.concat(mInfos);
 
-        if (isFragmented) {
+        if (type === Constants.TEXT && mInfos[0].isFragmented && !mInfos[0].isEmbedded) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
-            const currFragTrack = mediaController.getCurrentTrackFor(Constants.FRAGMENTED_TEXT, streamInfo.id);
+            fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id);
+            const currFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamInfo.id);
             for (let i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
                     setCurrentFragmentedTrackIdx(i);
@@ -148,17 +146,17 @@ function TextSourceBuffer(config) {
         const textTrackInfo = new TextTrackInfo();
         const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
 
-        textTrackInfo.lang = mediaInfo.lang;
+        for (let key in mediaInfo) {
+            textTrackInfo[key] = mediaInfo[key];
+        }
+
         textTrackInfo.labels = mediaInfo.labels;
         textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
-        textTrackInfo.index = mediaInfo.index; // AdaptationSet index in manifest
-        textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = !adapter.getIsTextTrack(mediaInfo.mimeType);
+        textTrackInfo.isFragmented = mediaInfo.isFragmented;
         textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;
+        textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.kind = _getKind(mediaInfo, trackKindMap);
-        textTrackInfo.roles = mediaInfo.roles;
-        textTrackInfo.accessibility = mediaInfo.accessibility;
 
         textTracks.addTextTrack(textTrackInfo);
     }
@@ -245,7 +243,7 @@ function TextSourceBuffer(config) {
     }
 
     function _getKind(mediaInfo, trackKindMap) {
-        let kind = (mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+        let kind = (mediaInfo.roles && mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
 
         kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
 
@@ -263,12 +261,12 @@ function TextSourceBuffer(config) {
             return;
         }
 
-        if (mediaType === Constants.FRAGMENTED_TEXT) {
+        if (mediaInfo.codec.indexOf('application/mp4') !== -1) {
             _appendFragmentedText(bytes, chunk, codecType);
-        } else if (mediaType === Constants.TEXT) {
-            _appendText(bytes, chunk, codecType);
         } else if (mediaType === Constants.VIDEO) {
             _appendEmbeddedText(bytes, chunk);
+        } else {
+            _appendText(bytes, chunk, codecType);
         }
     }
 
@@ -394,6 +392,9 @@ function TextSourceBuffer(config) {
         try {
             result = getParser(codecType).parse(ccContent, 0);
             textTracks.addCaptions(textTracks.getCurrentTrackIdx(), 0, result);
+            if (instance.buffered) {
+                instance.buffered.add(chunk.start, chunk.end);
+            }
         } catch (e) {
             errHandler.error(new DashJSError(Errors.TIMED_TEXT_ERROR_ID_PARSE_CODE, Errors.TIMED_TEXT_ERROR_MESSAGE_PARSE + e.message, ccContent));
         }

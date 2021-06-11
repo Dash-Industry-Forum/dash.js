@@ -155,13 +155,13 @@ describe('ScheduleController', function () {
 
         });
 
-        describe('for type fragmented text', () => {
+        describe('for type text', () => {
 
             beforeEach(() => {
                 scheduleController = ScheduleController(context).create({
                     streamInfo,
                     adapter,
-                    type: Constants.FRAGMENTED_TEXT,
+                    type: Constants.TEXT,
                     dashMetrics,
                     abrController,
                     mediaPlayerModel,
@@ -170,13 +170,13 @@ describe('ScheduleController', function () {
                 });
             })
 
-            it('should return 0 if current representation is fragmentedText, and subtitles are disabled', function () {
+            it('should return 0 if current representation is text, and subtitles are disabled', function () {
                 scheduleController.setCurrentRepresentation({});
                 const result = scheduleController.getBufferTarget();
                 expect(result).to.be.equal(0);
             });
 
-            it('should return 6 (value returns by currentRepresentationInfo.fragmentDuration) if current representation is fragmentedText, and subtitles are enabled', function () {
+            it('should return 6 (value returns by currentRepresentationInfo.fragmentDuration) if current representation is text, and subtitles are enabled', function () {
                 textController.enableText(true);
                 scheduleController.setCurrentRepresentation({fragmentDuration: 6});
                 const result = scheduleController.getBufferTarget();

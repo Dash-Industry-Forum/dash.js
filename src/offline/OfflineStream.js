@@ -111,7 +111,6 @@ function OfflineStream(config) {
     function getMediaInfos() {
         let mediaInfos = adapter.getAllMediaInfoForType(streamInfo, constants.VIDEO);
         mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.AUDIO));
-        mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.FRAGMENTED_TEXT));
         mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.TEXT));
 
         // mediaInfos = mediaInfos.concat(adapter.getAllMediaInfoForType(streamInfo, constants.MUXED));
@@ -139,9 +138,7 @@ function OfflineStream(config) {
     function initializeMedia(streamInfo) {
         createOfflineStreamProcessorFor(constants.VIDEO,streamInfo);
         createOfflineStreamProcessorFor(constants.AUDIO,streamInfo);
-        createOfflineStreamProcessorFor(constants.FRAGMENTED_TEXT,streamInfo);
         createOfflineStreamProcessorFor(constants.TEXT,streamInfo);
-
         createOfflineStreamProcessorFor(constants.MUXED,streamInfo);
         createOfflineStreamProcessorFor(constants.IMAGE,streamInfo);
     }
