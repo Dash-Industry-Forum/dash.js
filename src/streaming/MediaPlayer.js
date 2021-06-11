@@ -693,7 +693,8 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRWindowSize() {
-        let metric = dashMetrics.getCurrentDVRInfo();
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
         if (!metric) {
             return 0;
         }
@@ -712,7 +713,8 @@ function MediaPlayer() {
      * @instance
      */
     function getDVRSeekOffset(value) {
-        let metric = dashMetrics.getCurrentDVRInfo();
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
         if (!metric) {
             return 0;
         }
@@ -749,7 +751,8 @@ function MediaPlayer() {
         if (streamId !== undefined) {
             t = streamController.getTimeRelativeToStreamId(t, streamId);
         } else if (playbackController.getIsDynamic()) {
-            let metric = dashMetrics.getCurrentDVRInfo();
+            const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+            let metric = dashMetrics.getCurrentDVRInfo(type);
             t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
         }
 
@@ -771,7 +774,8 @@ function MediaPlayer() {
         let d = getVideoElement().duration;
 
         if (playbackController.getIsDynamic()) {
-            let metric = dashMetrics.getCurrentDVRInfo();
+            const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+            let metric = dashMetrics.getCurrentDVRInfo(type);
             d = metric ? (metric.range.end - metric.range.start) : 0;
         }
         return d;
@@ -2164,7 +2168,8 @@ function MediaPlayer() {
     }
 
     function _getAsUTC(valToConvert) {
-        let metric = dashMetrics.getCurrentDVRInfo();
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        let metric = dashMetrics.getCurrentDVRInfo(type);
         let availableFrom,
             utcValue;
 
