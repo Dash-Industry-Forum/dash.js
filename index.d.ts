@@ -43,7 +43,11 @@ declare namespace dashjs {
     interface ProtectionController {
         initializeForMedia(mediaInfo: ProtectionMediaInfo): void;
 
+        clearMediaInfoArrayByStreamId(streamId: string): void;
+
         createKeySession(initData: ArrayBuffer, cdmData: Uint8Array): void;
+
+        loadKeySession(sessionId: string, initData: ArrayBuffer): void;
 
         removeKeySession(session: SessionToken): void;
 
@@ -64,6 +68,10 @@ declare namespace dashjs {
         getKeySystems(): KeySystem[];
 
         setKeySystems(keySystems: KeySystem[]): void;
+
+        setLicenseRequestFilters(filters: RequestFilter[]): void;
+
+        setLicenseResponseFilters(filters: ResponseFilter[]): void;
 
         stop(): void;
 
@@ -108,7 +116,7 @@ declare namespace dashjs {
         scanType?: string;
     }
 
-    export type MediaType = 'video' | 'audio' | 'text' | 'fragmentedText' | 'embeddedText' | 'image';
+    export type MediaType = 'video' | 'audio' | 'text' | 'image';
 
     export class MediaInfo {
         id: string | null;
@@ -180,13 +188,13 @@ declare namespace dashjs {
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
                 useAppendWindow?: boolean,
-                setStallState?:boolean
+                setStallState?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
                 jumpLargeGaps?: boolean,
                 smallGapLimit?: number,
-                threshold?:number
+                threshold?: number
             },
             utcSynchronization?: {
                 useManifestDateHeaderTimeSource?: boolean,
@@ -311,15 +319,30 @@ declare namespace dashjs {
     }
 
     export interface Representation {
-        bandwidth: number
-        codecs: string
-        frameRate: number
-        height: number
-        id: string
-        mimeType: string
-        sar: string
-        scanType: string
-        width: number
+        id: string;
+        index: number;
+        adaptation: object;
+        segmentInfoType: string;
+        initialization: object;
+        codecs: string;
+        mimeType: string;
+        codecPrivateData: string;
+        segmentDuration: number;
+        timescale: number;
+        startNumber: number;
+        indexRange: string;
+        range: string;
+        presentationTimeOffset: number;
+        MSETimeOffset: number;
+        availableSegmentsNumber: number;
+        bandwidth: number;
+        width: number;
+        height: number;
+        scanType: string;
+        maxPlayoutRate: number;
+        availabilityTimeOffset: number;
+        availabilityTimeComplete: boolean;
+        frameRate: number;
     }
 
     export type CapabilitiesFilter = (representation: Representation) => boolean;
@@ -469,6 +492,8 @@ declare namespace dashjs {
 
         getSource(): string | object;
 
+        getCurrentLiveLatency(): number;
+
         getTopBitrateInfoFor(type: MediaType): BitrateInfo;
 
         setAutoPlay(value: boolean): void;
@@ -476,8 +501,6 @@ declare namespace dashjs {
         getAutoPlay(): boolean;
 
         getDashMetrics(): DashMetrics;
-
-        getDashAdapter(): DashAdapter;
 
         getQualityFor(type: MediaType): number;
 
@@ -487,9 +510,11 @@ declare namespace dashjs {
 
         enableText(enable: boolean): void;
 
-        setTextTrack(idx: number): void;
+        enableForcedTextStreaming(value: boolean): void;
 
-        provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
+        isTextEnabled(): boolean;
+
+        setTextTrack(idx: number): void;
 
         getBitrateInfoListFor(type: MediaType): BitrateInfo[];
 
@@ -506,6 +531,14 @@ declare namespace dashjs {
         getInitialMediaSettingsFor(type: MediaType): MediaSettings;
 
         setCurrentTrack(track: MediaInfo): void;
+
+        addABRCustomRule(type: string, rulename: string, rule: object): void;
+
+        removeABRCustomRule(rulename: string): void;
+
+        removeAllABRCustomRule(): void;
+
+        getAverageThroughput(value: number): void;
 
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
 
@@ -539,39 +572,26 @@ declare namespace dashjs {
 
         unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void,
 
-        getOfflineController(): OfflineController;
-
-        displayCaptionsOnTop(value: boolean): void;
-
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
 
         getCurrentTextTrackIndex(): number;
 
-        preload(): void;
+        provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
 
-        reset(): void;
+        getDashAdapter(): DashAdapter;
 
-        destroy(): void;
-
-        addABRCustomRule(type: string, rulename: string, rule: object): void;
-
-        removeABRCustomRule(rulename: string): void;
-
-        removeAllABRCustomRule(): void;
-
-        getCurrentLiveLatency(): number;
-
-        enableForcedTextStreaming(value: boolean): void;
-
-        isTextEnabled(): boolean;
-
-        getAverageThroughput(value: number): void;
+        getOfflineController(): OfflineController;
 
         getSettings(): MediaPlayerSettingClass;
 
         updateSettings(settings: MediaPlayerSettingClass): void;
 
         resetSettings(): void;
+
+        reset(): void;
+
+        destroy(): void;
+
     }
 
     export interface MediaPlayerFactory {
@@ -600,6 +620,7 @@ declare namespace dashjs {
         CAPABILITY_MEDIASOURCE_ERROR_CODE: 23;
         CAPABILITY_MEDIAKEYS_ERROR_CODE: 24;
         DOWNLOAD_ERROR_ID_MANIFEST_CODE: 25;
+        DOWNLOAD_ERROR_ID_SIDX_CODE: 26;
         DOWNLOAD_ERROR_ID_CONTENT_CODE: 27;
         DOWNLOAD_ERROR_ID_INITIALIZATION_CODE: 28;
         DOWNLOAD_ERROR_ID_XLINK_CODE: 29;
@@ -646,17 +667,22 @@ declare namespace dashjs {
     interface MediaPlayerEvents {
         AST_IN_FUTURE: 'astInFuture';
         BUFFER_EMPTY: 'bufferStalled';
-        BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
         BUFFER_LOADED: 'bufferLoaded';
+        BUFFER_LEVEL_STATE_CHANGED: 'bufferStateChanged';
+        BUFFER_LEVEL_UPDATED: 'bufferLevelUpdated';
         CAN_PLAY: 'canPlay';
+        CAN_PLAY_THROUGH: 'canPlayThrough';
         CAPTION_RENDERED: 'captionRendered';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
         CONFORMANCE_VIOLATION: 'conformanceViolation'
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
         ERROR: 'error';
-        FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
+        EVENT_MODE_ON_RECEIVE: 'eventModeOnReceive';
+        EVENT_MODE_ON_START: 'eventModeOnStart';
         FRAGMENT_LOADING_COMPLETED: 'fragmentLoadingCompleted';
+        FRAGMENT_LOADING_PROGRESS: 'fragmentLoadingProgress';
         FRAGMENT_LOADING_STARTED: 'fragmentLoadingStarted';
+        FRAGMENT_LOADING_ABANDONED: 'fragmentLoadingAbandoned';
         KEY_ADDED: 'public_keyAdded';
         KEY_ERROR: 'public_keyError';
         KEY_MESSAGE: 'public_keyMessage';
@@ -665,9 +691,13 @@ declare namespace dashjs {
         KEY_SESSION_REMOVED: 'public_keySessionRemoved';
         KEY_STATUSES_CHANGED: 'public_keyStatusesChanged';
         KEY_SYSTEM_SELECTED: 'public_keySystemSelected';
+        KEY_SYSTEM_ACCESS_COMPLETE: 'public_keySystemAccessComplete';
+        KEY_SESSION_UPDATED: 'public_keySessionUpdated';
         LICENSE_REQUEST_COMPLETE: 'public_licenseRequestComplete';
+        LICENSE_REQUEST_SENDING: 'public_licenseRequestSending';
         LOG: 'log';
         MANIFEST_LOADED: 'manifestLoaded';
+        MANIFEST_VALIDITY_CHANGED: 'manifestValidityChanged';
         METRICS_CHANGED: 'metricsChanged';
         METRIC_ADDED: 'metricAdded';
         METRIC_CHANGED: 'metricChanged';
@@ -680,12 +710,14 @@ declare namespace dashjs {
         PERIOD_SWITCH_STARTED: 'periodSwitchStarted';
         PLAYBACK_ENDED: 'playbackEnded';
         PLAYBACK_ERROR: 'playbackError';
+        PLAYBACK_LOADED_DATA: 'playbackLoadedData';
         PLAYBACK_METADATA_LOADED: 'playbackMetaDataLoaded';
         PLAYBACK_NOT_ALLOWED: 'playbackNotAllowed';
         PLAYBACK_PAUSED: 'playbackPaused';
         PLAYBACK_PLAYING: 'playbackPlaying';
         PLAYBACK_PROGRESS: 'playbackProgress';
         PLAYBACK_RATE_CHANGED: 'playbackRateChanged';
+        PLAYBACK_SEEK_ASKED: 'playbackSeekAsked';
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
@@ -694,10 +726,17 @@ declare namespace dashjs {
         PLAYBACK_WAITING: 'playbackWaiting';
         PROTECTION_CREATED: 'public_protectioncreated';
         PROTECTION_DESTROYED: 'public_protectiondestroyed';
+        REPRESENTATION_SWITCH: 'representationSwitch';
         TRACK_CHANGE_RENDERED: 'trackChangeRendered';
         QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
         QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
+        STREAM_ACTIVATED: 'streamActivated'
+        STREAM_DEACTIVATED: 'streamDeactivated';
         STREAM_INITIALIZED: 'streamInitialized';
+        STREAM_INITIALIZING: 'streamInitializing';
+        STREAM_SWITCH_STARTED: 'streamSwitchStarted';
+        STREAM_TEARDOWN_COMPLETE: 'streamTeardownComplete';
+        STREAM_UPDATED: 'streamUpdated';
         TEXT_TRACKS_ADDED: 'allTextTracksAdded';
         TEXT_TRACK_ADDED: 'textTrackAdded';
         TTML_PARSED: 'ttmlParsed';
@@ -1080,6 +1119,7 @@ declare namespace dashjs {
         firstByteDate: Date;
         index: number;
         mediaInfo: MediaInfo;
+        mediaStartTime: number;
         mediaType: MediaType;
         quality: number;
         representationId: string;
@@ -1091,6 +1131,7 @@ declare namespace dashjs {
         timescale: number;
         type: 'InitializationSegment' | 'MediaSegment';
         url: string;
+        wallStartTime: Date | null;
     }
 
     export interface MediaSettings {
@@ -1117,9 +1158,13 @@ declare namespace dashjs {
     export interface Stream {
         initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
 
-        activate(MediaSource: MediaSource): void;
+        getStreamId(): string;
 
-        deactivate(): void;
+        activate(mediaSource: MediaSource, previousBufferSinks: any[]): void;
+
+        deactivate(keepBuffers: boolean): void;
+
+        getIsActive(): boolean;
 
         getDuration(): number;
 
@@ -1129,11 +1174,45 @@ declare namespace dashjs {
 
         getStreamInfo(): StreamInfo | null;
 
+        getHasAudioTrack(): boolean;
+
+        getHasVideoTrack(): boolean;
+
+        startPreloading(mediaSource: MediaSource, previousBuffers: any[]): void;
+
+        getThumbnailController(): object;
+
         getBitrateListFor(type: MediaType): BitrateInfo[];
 
         updateData(updatedStreamInfo: StreamInfo): void;
 
         reset(): void;
+
+        getProcessors(): any[];
+
+        setMediaSource(mediaSource: MediaSource): void;
+
+        isMediaCodecCompatible(newStream: Stream, previousStream: Stream | null): boolean;
+
+        isProtectionCompatible(newStream: Stream): boolean
+
+        getPreloaded(): boolean
+
+        getIsEndedEventSignaled(): boolean
+
+        setIsEndedEventSignaled(value: boolean): void
+
+        getAdapter(): DashAdapter
+
+        getHasFinishedBuffering(): boolean
+
+        setPreloaded(value: boolean): void
+
+        startScheduleControllers(): void
+
+        prepareTrackChange(e: object): void
+
+        prepareQualityChange(e: object): void
     }
 
     export interface IManifestInfo {
