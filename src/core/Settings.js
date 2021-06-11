@@ -870,7 +870,7 @@ function Settings() {
                     audio: true,
                     video: true
                 },
-                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
+                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING
             },
             cmcd: {
                 enabled: false,
