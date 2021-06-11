@@ -100,12 +100,12 @@ function MssHandler(config) {
 
     function startFragmentInfoControllers() {
 
-        // Create MssFragmentInfoControllers for each StreamProcessor of active stream (only for audio, video or fragmentedText)
+        // Create MssFragmentInfoControllers for each StreamProcessor of active stream (only for audio, video or text)
         let processors = streamController.getActiveStreamProcessors();
         processors.forEach(function (processor) {
             if (processor.getType() === constants.VIDEO ||
                 processor.getType() === constants.AUDIO ||
-                processor.getType() === constants.FRAGMENTED_TEXT) {
+                processor.getType() === constants.TEXT) {
 
                 let fragmentInfoController = getFragmentInfoController(processor.getType());
                 if (!fragmentInfoController) {

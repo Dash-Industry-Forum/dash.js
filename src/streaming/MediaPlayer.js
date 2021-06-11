@@ -81,7 +81,7 @@ import TextController from './text/TextController';
 
 /**
  * The media types
- * @typedef {("video" | "audio" | "text" | "fragmentedText" | "embeddedText" | "image")} MediaType
+ * @typedef {("video" | "audio" | "text" | "image")} MediaType
  */
 
 /**
@@ -652,21 +652,21 @@ function MediaPlayer() {
 
     /**
      * The length of the buffer for a given media type, in seconds. Valid media
-     * types are "video", "audio" and "fragmentedText". If no type is passed
-     * in, then the minimum of video, audio and fragmentedText buffer length is
+     * types are "video", "audio" and "text". If no type is passed
+     * in, then the minimum of video, audio and text buffer length is
      * returned. NaN is returned if an invalid type is requested, the
      * presentation does not contain that type, or if no arguments are passed
      * and the presentation does not include any adaption sets of valid media
      * type.
      *
-     * @param {MediaType} type - 'video', 'audio' or 'fragmentedText'
+     * @param {MediaType} type - 'video', 'audio' or 'text'
      * @returns {number} The length of the buffer for the given media type, in
      *  seconds, or NaN
      * @memberof module:MediaPlayer
      * @instance
      */
     function getBufferLength(type) {
-        const types = [Constants.VIDEO, Constants.AUDIO, Constants.FRAGMENTED_TEXT];
+        const types = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT];
         if (!type) {
             const buffer = types.map(
                 t => getTracksFor(t).length > 0 ? getDashMetrics().getCurrentBufferLevel(t) : Number.MAX_VALUE

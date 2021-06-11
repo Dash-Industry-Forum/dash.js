@@ -439,7 +439,7 @@
                 "title": "TTML EBU timed text tracks",
                 "description": "Example showing content with TTML EBU timed text tracks.",
                 "href": "captioning/ttml-ebutt-sample.html",
-                "image": "lib/img/sintel-1.jpg",
+                "image": "lib/img/elephant-1.jpg",
                 "labels": [
                     "VoD",
                     "Fragmented text",
