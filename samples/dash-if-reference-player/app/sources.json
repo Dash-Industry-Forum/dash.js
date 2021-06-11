@@ -156,21 +156,6 @@
                     "provider": "streamroot"
                 },
                 {
-                    "name": "Clear Static SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Static SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd",
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Clear Static SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
-                    "provider": "wowza"
-                },
-                {
                     "name": "Caminandes 01, Llama Drama (25fps, 75gop, 1080p) ",
                     "url": "http://refapp.hbbtv.org/videos/01_llama_drama_1080p_25f75g6sv3/manifest.mpd",
                     "provider": "hbbtv"
@@ -898,66 +883,6 @@
                         }
                     },
                     "provider": "unified"
-                },
-                {
-                    "name": "Widevine Dynamic SegmentTimeline",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Dynamic SegmentTemplate",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Dynamic SegmentList",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Static SegmentTimeline",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Static SegmentTemplate",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Static SegmentList",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
                 },
                 {
                     "name": "Live Dash WV and PR with unencrypted ad breaks -- Always starts in encrypted content - Keys never change",
