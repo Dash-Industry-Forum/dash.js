@@ -1045,6 +1045,7 @@ function DashAdapter() {
         mediaInfo.type = constants.TEXT;
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
+        mediaInfo.isFragmented = false;
         mediaInfo.lang = lang;
         mediaInfo.roles = ['caption'];
     }
