@@ -279,6 +279,8 @@ function TextController(config) {
         } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
             _setNonFragmentedTextTrack(streamId, currentTrackInfo);
         }
+
+        mediaController.setTrack(currentTrackInfo);
     }
 
     function _setFragmentedTextTrack(streamId, currentTrackInfo, oldTrackIdx) {
@@ -292,12 +294,11 @@ function TextController(config) {
 
         for (let i = 0; i < fragmentedTracks.length; i++) {
             let mediaInfo = fragmentedTracks[i];
-            if (currentTrackInfo.lang === mediaInfo.lang && currentTrackInfo.index === mediaInfo.index &&
-                (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.id === mediaInfo.index)) {
+            if (currentTrackInfo.lang === mediaInfo.lang &&
+                (mediaInfo.id ? currentTrackInfo.id === mediaInfo.id : currentTrackInfo.index === mediaInfo.index)) {
                 let currentFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamId);
                 if (mediaInfo !== currentFragTrack) {
                     textTracks[streamId].deleteCuesFromTrackIdx(oldTrackIdx);
-                    mediaController.setTrack(mediaInfo);
                     textSourceBuffers[streamId].setCurrentFragmentedTrackIdx(i);
                 }  else if (oldTrackIdx === -1) {
                     //in fragmented use case, if the user selects the older track (the one selected before disabled text track)
