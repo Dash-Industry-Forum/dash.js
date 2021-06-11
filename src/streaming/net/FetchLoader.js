@@ -153,9 +153,9 @@ function FetchLoader(cfg) {
                         // If there is pending data, call progress so network metrics
                         // are correctly generated
                         // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
-                        let calculatedThroughput=null;
+                        let calculatedThroughput = null;
                         if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
-                            calculatedThroughput=calculateThroughputByChunkData(startTimeData, endTimeData);
+                            calculatedThroughput = calculateThroughputByChunkData(startTimeData, endTimeData);
                         }
 
                         httpRequest.progress({
