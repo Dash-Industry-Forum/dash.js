@@ -19,7 +19,7 @@ const player = require('./scripts/player.js');
 const NAME = 'AUDIO_SWITCH';
 
 // Test constants
-const SWITCH_WAIT = 3;
+const SWITCH_WAIT = 7;
 
 exports.register = function (stream) {
 
