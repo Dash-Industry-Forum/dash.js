@@ -593,8 +593,7 @@ function TextTracks(config) {
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
-                deleteTrackCues.call(this, track);
-                track.mode = 'disabled';
+                deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration);
             }
         }
         nativeTrackElementArr = [];
