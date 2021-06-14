@@ -283,7 +283,8 @@ describe('MediaController', function () {
                 viewpoint: 'viewpoint',
                 roles: 1,
                 accessibility: 1,
-                audioChannelConfiguration: 1
+                audioChannelConfiguration: 1,
+                isFragmented: true
             };
 
             let track2 = {
@@ -293,7 +294,8 @@ describe('MediaController', function () {
                 viewpoint: 'viewpoint',
                 roles: 1,
                 accessibility: 1,
-                audioChannelConfiguration: 1
+                audioChannelConfiguration: 1,
+                isFragmented: true
             };
 
             // add tracks

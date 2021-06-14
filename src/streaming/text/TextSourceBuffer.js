@@ -151,7 +151,6 @@ function TextSourceBuffer(config) {
         }
 
         textTrackInfo.labels = mediaInfo.labels;
-        textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
         textTrackInfo.isFragmented = mediaInfo.isFragmented;
         textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;
