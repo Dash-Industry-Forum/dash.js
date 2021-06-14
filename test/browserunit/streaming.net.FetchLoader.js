@@ -17,7 +17,7 @@ const patterns = {
         interval: 33,
         chunksPerInterval: 1,
         chunksAvailableOnRequest: 0,
-        expectedDLTimeMin: 2002 * 0.7 - 33,
+        expectedDLTimeMin: 2002 * 0.6 - 33,
         expectedDLTimeMax: 2002 * 1.1 - 33
     },
     pattern2: {
@@ -96,14 +96,14 @@ describe('FetchLoader implementation', () => {
                     }
                 });
                 const lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
-                lowLatencyThroughputModel.setConfig({
-                    dashMetrics: {
-                        getCurrentBufferLevel: function () { return 1; }
-                    }
-                });
                 const fetchLoader = FetchLoader(context).create({
                     lowLatencyThroughputModel,
                     boxParser: BoxParser(context).getInstance()
+                });
+                fetchLoader.setup({
+                    dashMetrics: {
+                        getCurrentBufferLevel: function () { return 1; }
+                    }
                 });
 
                 let lastEmittedDownloadtime = 0;
