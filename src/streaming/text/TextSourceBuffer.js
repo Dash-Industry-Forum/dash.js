@@ -121,7 +121,7 @@ function TextSourceBuffer(config) {
         if (type === Constants.TEXT && mInfos[0].isFragmented && !mInfos[0].isEmbedded) {
             fragmentModel = fModel;
             instance.buffered = CustomTimeRanges(context).create();
-            fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id);
+            fragmentedTracks = mediaController.getTracksFor(Constants.TEXT, streamInfo.id).filter(track => track.isFragmented);
             const currFragTrack = mediaController.getCurrentTrackFor(Constants.TEXT, streamInfo.id);
             for (let i = 0; i < fragmentedTracks.length; i++) {
                 if (fragmentedTracks[i] === currFragTrack) {
@@ -151,7 +151,6 @@ function TextSourceBuffer(config) {
         }
 
         textTrackInfo.labels = mediaInfo.labels;
-        textTrackInfo.id = mediaInfo.id ? mediaInfo.id : mediaInfo.index; // AdaptationSet id (an unsigned int) as it's optional parameter, use mediaInfo.index
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
         textTrackInfo.isFragmented = mediaInfo.isFragmented;
         textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;

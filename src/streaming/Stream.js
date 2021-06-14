@@ -342,6 +342,8 @@ function Stream(config) {
         }
 
         if (embeddedMediaInfos.length > 0) {
+            mediaController.setInitialMediaSettingsForType(type, streamInfo);
+            textController.setInitialSettings(mediaController.getInitialSettings(type));
             textController.addMediaInfosToBuffer(streamInfo, type, embeddedMediaInfos);
         }
 
@@ -370,16 +372,23 @@ function Stream(config) {
             return;
         }
 
-
-        mediaController.setInitialMediaSettingsForType(type, streamInfo);
-        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
-
         eventBus.trigger(Events.STREAM_INITIALIZING, {
             streamInfo: streamInfo,
             mediaInfo: mediaInfo
         });
 
-        _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource);
+        mediaController.setInitialMediaSettingsForType(type, streamInfo);
+
+        let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource);
+
+        initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
+
+        if (initialMediaInfo) {
+            abrController.updateTopQualityIndex(initialMediaInfo);
+            // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
+            streamProcessor.selectMediaInfo((type !== Constants.TEXT || !initialMediaInfo.isEmbedded) ? initialMediaInfo : allMediaForType[0]);
+        }
+
     }
 
     function _isMediaSupported(mediaInfo) {
@@ -412,12 +421,13 @@ function Stream(config) {
      * @param {object} mediaSource
      * @private
      */
-    function _createStreamProcessor(initialMediaInfo, allMediaForType, mediaSource) {
+    function _createStreamProcessor(allMediaForType, mediaSource) {
 
-        let fragmentModel = fragmentController.getModel(initialMediaInfo ? initialMediaInfo.type : null);
-        const type = initialMediaInfo ? initialMediaInfo.type : null;
-        const mimeType = initialMediaInfo ? initialMediaInfo.mimeType : null;
-        const isFragmented = initialMediaInfo ? initialMediaInfo.isFragmented : null;
+        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType[0] : null;
+        let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
+        const type = mediaInfo ? mediaInfo.type : null;
+        const mimeType = mediaInfo ? mediaInfo.mimeType : null;
+        const isFragmented = mediaInfo ? mediaInfo.isFragmented : null;
 
         let streamProcessor = StreamProcessor(context).create({
             streamInfo: streamInfo,
@@ -441,7 +451,6 @@ function Stream(config) {
         });
 
         streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
-        abrController.updateTopQualityIndex(initialMediaInfo);
         streamProcessors.push(streamProcessor);
 
         for (let i = 0; i < allMediaForType.length; i++) {
@@ -452,9 +461,7 @@ function Stream(config) {
             textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType, fragmentModel);
         }
 
-        if (initialMediaInfo) {
-            streamProcessor.selectMediaInfo(initialMediaInfo);
-        }
+        return streamProcessor;
     }
 
     /**

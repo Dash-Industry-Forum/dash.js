@@ -176,7 +176,8 @@ function PlaybackController() {
     }
 
     function seekToLive() {
-        const DVRMetrics = dashMetrics.getCurrentDVRInfo();
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const DVRMetrics = dashMetrics.getCurrentDVRInfo(type);
         const DVRWindow = DVRMetrics ? DVRMetrics.range : null;
 
         seek(DVRWindow.end - mediaPlayerModel.getLiveDelay(), true, false);
