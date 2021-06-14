@@ -840,7 +840,7 @@ function Settings() {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 additionalAbrRules: {
-                    insufficientBufferRule: false,
+                    insufficientBufferRule: true,
                     switchHistoryRule: true,
                     droppedFramesRule: true,
                     abandonRequestsRule: false
