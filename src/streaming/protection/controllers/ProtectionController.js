@@ -783,9 +783,10 @@ function ProtectionController(config) {
         const sessionId = sessionToken.getSessionID() || null;
 
         let licenseRequest = new LicenseRequest(url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
-        applyFilters(licenseRequestFilters, licenseRequest).then(() => {
-            doLicenseRequest(licenseRequest, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
-        });
+        const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE]) ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
+            applyFilters(licenseRequestFilters, licenseRequest).then(() => {
+                doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
+            });
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
@@ -838,9 +839,10 @@ function ProtectionController(config) {
         const retryRequest = function () {
             // fail silently and retry
             retriesCount--;
+            const retryInterval = !isNaN(settings.get().streaming.retryIntervals[HTTPRequest.LICENSE]) ? settings.get().streaming.retryIntervals[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRY_INTERVAL;
             setTimeout(function () {
                 doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
-            }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
+            }, retryInterval);
         };
 
         xhr.onload = function () {
