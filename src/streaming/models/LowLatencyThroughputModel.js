@@ -28,85 +28,138 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import Debug from '../../core/Debug';
 import FactoryMaker from '../../core/FactoryMaker';
 
 function LowLatencyThroughputModel() {
 
     const LLTM_MAX_MEASUREMENTS = 10;
     // factor (<1) is used to reduce the real needed download time when at very bleeding live edge
-    const LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR = 0.7;
+    const LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR = 0.8;
+    const LLTM_OPTIMISTIC_ESTIMATE_FACTOR = 0.6;
 
-    let dashMetrics;
+    const LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE = 1.05;
+    const LLTM_MAX_DELAY_MS = 250;
 
     let instance;
+    let logger;
     let measurements = {};
 
-    /**
-     *
-     * @param {*} config
-     */
-    function setConfig(config) {
-        dashMetrics = config.dashMetrics;
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     /**
-     *
-     * @param {*} request
-     * @returns
+     * Linear regression with least squares method to get a trend function for buffer lavel at chunk receive timestamps 
+     * @param {*} chunkMeasurements 
+     * @returns linear trend function
+     */
+    function createBufferLevelTrendFunction(chunkMeasurements) {
+        const result = {};
+
+        let sumX = 0
+        let sumY = 0
+        let sumXY = 0
+        let sumXSq = 0
+        const N = chunkMeasurements.length
+
+
+        for (var i = 0; i < N; ++i) {
+            sumX += chunkMeasurements[i].chunkDownloadTimeRelativeMS;
+            sumY += chunkMeasurements[i].bufferLevel;
+            sumXY += chunkMeasurements[i].chunkDownloadTimeRelativeMS * chunkMeasurements[i].bufferLevel;
+            sumXSq += chunkMeasurements[i].chunkDownloadTimeRelativeMS * chunkMeasurements[i].chunkDownloadTimeRelativeMS
+        }
+
+        result.m = ((sumXY - sumX * sumY / N)) / (sumXSq - sumX * sumX / N)
+        result.b = sumY / N - result.m * sumX / N
+
+        return function (x) {
+            return result.m * x + result.b
+        }
+    }
+
+    /**
+     * Based on the MPD, timing and buffer information of the last recent segments and their chunks
+     * the most stable download time (in milliseconds) is calculated.
+     * @param {*} request HTTPLoader request object
+     * @returns download time in milliseconds of last fetched segment
      */
     function getEstimatedDownloadDurationMS(request) {
         const lastMeasurement = measurements[request.mediaType].slice(-1).pop();
+        const lastThreeMeasurements = measurements[request.mediaType].slice(-3)
 
-        // fetch duration was longer than segment duration? 
-        if (lastMeasurement.segDurationMS < lastMeasurement.fetchDownloadDurationMS) {
+        // calculate and remember the buffer level trend during the last fetched segment
+        const lastChunkRelativeTimeMS = lastMeasurement.chunkMeasurements.slice(-1).pop().chunkDownloadTimeRelativeMS;
+        lastMeasurement.bufferLevelAtSegmentStart = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS / 2);
+        lastMeasurement.bufferLevelAtSegmentEnd = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS);
+
+        let isBufferStable = true;
+        const aveBufferLevelLastSegemtns = lastThreeMeasurements.reduce((prev, curr) => prev + curr.bufferLevelAtSegmentEnd, 0) / lastThreeMeasurements.length;
+        lastThreeMeasurements.forEach(m => {
+            if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95 || m.bufferLevelAtSegmentEnd / aveBufferLevelLastSegemtns < 0.8) {
+                isBufferStable = false;
+            }
+        });
+
+        console.log('TREND', lastMeasurement.bufferTrend);
+
+        const selectedOptimisticFactor = isBufferStable ? LLTM_OPTIMISTIC_ESTIMATE_FACTOR : LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
+
+        // fetch duration was longer than segment duration, but buffer was stable
+        if (lastMeasurement.isBufferStable && lastMeasurement.segDurationMS * LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE < lastMeasurement.fetchDownloadDurationMS) {
+            return lastMeasurement.fetchDownloadDurationMS;
+        }
+        // buffer is drying or fetch took too long
+        if (!isBufferStable || lastMeasurement.segDurationMS < lastMeasurement.fetchDownloadDurationMS) {
             return lastMeasurement.fetchDownloadDurationMS;
         }
 
-        // we have requested a fully available segment -> most accurate throughput calculation
-        // this usually happens at startup
-        // ... and if requests are delayed artificially
-        if (lastMeasurement.ast <= lastMeasurement.requestTime - lastMeasurement.segDurationMS) {
-            return lastMeasurement.fetchDownloadDurationMS;
+        // did we requested a fully available segment? -> most accurate throughput calculation
+        // we use adjusted availability start time to decide
+        // Note: this "download mode" usually happens at startup and if requests are delayed artificially
+        if (lastMeasurement.adjustedAvailabilityStartTimeMS <= (lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS) - lastMeasurement.segDurationMS) {
+            return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
 
         // get all chunks that have been downloaded before fetch reached bleeding live edge
         // the remaining chunks loaded at production rate we will approximated
-        const chunkAvailabePeriod = lastMeasurement.requestTime - lastMeasurement.ast;
+        const chunkAvailablePeriod = (lastMeasurement.requestTimeMS + lastMeasurement.throughputCapacityDelayMS) - lastMeasurement.adjustedAvailabilityStartTimeMS;
         let chunkBytesBBLE = 0; // BBLE -> Before bleeding live edge
         let chunkDownloadtimeMSBBLE = 0;
         let chunkCount = 0;
-        for (let index = 0; index < lastMeasurement.measurement.length; index++) {
-            const chunk = lastMeasurement.measurement[index];
-            if (chunkAvailabePeriod < chunkDownloadtimeMSBBLE + chunk.dur) {
+        for (let index = 0; index < lastMeasurement.chunkMeasurements.length; index++) {
+            const chunk = lastMeasurement.chunkMeasurements[index];
+            if (chunkAvailablePeriod < chunkDownloadtimeMSBBLE + chunk.chunkDownloadDurationMS) {
                 break;
             }
-            chunkDownloadtimeMSBBLE += chunk.dur;
-            chunkBytesBBLE += chunk.bytes;
+            chunkDownloadtimeMSBBLE += chunk.chunkDownloadDurationMS;
+            chunkBytesBBLE += chunk.chunkBytes;
             chunkCount++;
         }
-        // there have to be some chunks available (20% of max count)
-        // otherwise we are at bleeding live edge and the few chunks are insufficient to estimate correctly
-        if (chunkBytesBBLE && chunkDownloadtimeMSBBLE && chunkCount > lastMeasurement.measurement.length * 0.2) {
-            const downloadThroughput = chunkBytesBBLE / chunkDownloadtimeMSBBLE; // bytes per millesecond
-            const estimatedDownloadtimeMS = lastMeasurement.bytes / downloadThroughput;
-            // if real download was shorter then report this incl. semi optimistical estimate factor
-            if (lastMeasurement.fetchDownloadDurationMS < estimatedDownloadtimeMS) {
-                return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
-            }
 
-            return estimatedDownloadtimeMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
+        if (chunkAvailablePeriod < 0) {
+            logger.warn('request time was before adjusted availibitly time');
         }
 
-        lastMeasurement.bufferLevelBLE = dashMetrics.getCurrentBufferLevel(lastMeasurement.mediaType);
+        // keep the current bitrate
+        // return (lastMeasurement.segmentBytes * 8 * 1000 / lastMeasurement.bitrate) * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
+
+        // there have to be some chunks available (20% of max count)
+        // otherwise we are at bleeding live edge and the few chunks are insufficient to estimate correctly
+        if (chunkBytesBBLE && chunkDownloadtimeMSBBLE && chunkCount > lastMeasurement.chunkMeasurements.length * 0.2) {
+            const downloadThroughput = chunkBytesBBLE / chunkDownloadtimeMSBBLE; // bytes per millesecond
+            const estimatedDownloadtimeMS = lastMeasurement.segmentBytes / downloadThroughput;
+            // if real download was shorter then report this incl. semi optimistical estimate factor
+            if (lastMeasurement.fetchDownloadDurationMS < estimatedDownloadtimeMS) {
+                return lastMeasurement.fetchDownloadDurationMS * selectedOptimisticFactor;
+            }
+            return estimatedDownloadtimeMS * selectedOptimisticFactor;
+        }
 
         // when we are to tight at live edge and it's stable then
         // we start to optimistically estimate download time
         // in such a way that a switch to next rep will be possible
-        const lastThree = measurements[request.mediaType].slice(-3);
-        if (lastThree.length < 3 || lastThree.some(m => !m.bufferLevelBLE || m.bufferLevelBLE < 0.8)) {
-            // semi optimistical estimate factor
-            return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
-        }
         // optimistical estimate: assume download was fast enough for next higher rendition 
         let nextHigherBitrate = lastMeasurement.bitrate;
         lastMeasurement.bitrateList.some(b => {
@@ -116,10 +169,11 @@ function LowLatencyThroughputModel() {
             }
         });
         // already highest bitrate?
+
         if (nextHigherBitrate === lastMeasurement.bitrate) {
-            return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
+            return lastMeasurement.fetchDownloadDurationMS * selectedOptimisticFactor;
         }
-        return LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR * lastMeasurement.bytes * 8 * 1000 / nextHigherBitrate;
+        return selectedOptimisticFactor * lastMeasurement.segmentBytes * 8 * 1000 / nextHigherBitrate;
     }
 
     /**
@@ -128,23 +182,39 @@ function LowLatencyThroughputModel() {
      * @param {*} request
      * @returns
      */
-    function getThroughputCapacityDelay(request) {
-        // TODO: this concept is under construction
-        if (request) {
+    function getThroughputCapacityDelay(request, currentBufferLevel) {
+        const lastThreeMeasurements = measurements[request.mediaType] && measurements[request.mediaType].slice(-3);
+
+        if (!lastThreeMeasurements || lastThreeMeasurements.length < 3) {
             return 0;
         }
-        return 0;
+
+        let isBufferStable = true;
+        const aveBufferLevelLastSegemtns = lastThreeMeasurements.reduce((prev, curr) => prev + curr.bufferLevelAtSegmentEnd, 0) / lastThreeMeasurements.length;
+        lastThreeMeasurements.forEach(m => {
+            if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95 || m.bufferLevelAtSegmentEnd / aveBufferLevelLastSegemtns < 0.8) {
+                isBufferStable = false;
+            }
+        });
+
+        // in case buffer is not stable we will not artificially delay the next request
+        if (!isBufferStable) {
+            return 0;
+        }
+
+        // previously 100ms was the default scheduling delay in low latency mode
+        return currentBufferLevel / 4 > LLTM_MAX_DELAY_MS ? LLTM_MAX_DELAY_MS : currentBufferLevel / 4;
     }
 
     /**
      * Add some measurement data for bookkeeping and being able to derive decisions on estimated throughput.
-     * @param {*} request
-     * @param {*} fetchDownloadDurationMS
-     * @param {*} measurement
-     * @param {*} requestTime
-     * @param {*} throughputCapacityDelayMS
+     * @param {*} request HTTPLoader object to get MPD and media info from
+     * @param {*} fetchDownloadDurationMS Duration how long the fetch actually took
+     * @param {*} chunkMeasurements Array containing chunk timings and buffer levels
+     * @param {*} requestTimeMS Timestamp at which the fetch was initiated
+     * @param {*} throughputCapacityDelayMS An artificial delay that was used for this request
      */
-    function addMeasurement(request, fetchDownloadDurationMS, measurement, requestTime, throughputCapacityDelayMS) {
+    function addMeasurement(request, fetchDownloadDurationMS, chunkMeasurements, requestTimeMS, throughputCapacityDelayMS) {
         if (request && request.mediaType && !measurements[request.mediaType]) {
             measurements[request.mediaType] = [];
         }
@@ -153,16 +223,17 @@ function LowLatencyThroughputModel() {
             index: request.index,
             repId: request.representationId,
             mediaType: request.mediaType,
-            requestTime,
-            ast: request.availabilityStartTime.getTime(),
+            requestTimeMS,
+            adjustedAvailabilityStartTimeMS: request.availabilityStartTime.getTime(),
             segDurationMS: request.duration * 1000,
-            chunksDurationMS: measurement.reduce((prev, curr) => prev + curr.dur, 0),
-            bytes: measurement.reduce((prev, curr) => prev + curr.bytes, 0),
+            chunksDurationMS: chunkMeasurements.reduce((prev, curr) => prev + curr.chunkDownloadDurationMS, 0),
+            segmentBytes: chunkMeasurements.reduce((prev, curr) => prev + curr.chunkBytes, 0),
             bitrate: bitrateEntry && bitrateEntry.bandwidth,
             bitrateList: request.mediaInfo.bitrateList,
-            measurement,
+            chunkMeasurements,
             fetchDownloadDurationMS,
-            throughputCapacityDelayMS
+            throughputCapacityDelayMS,
+            getEstimatedBufferLevel: createBufferLevelTrendFunction(chunkMeasurements.slice(1)) // don't use first chunk's buffer level
         });
         // maintain only a maximum amount of most recent measurements
         if (measurements[request.mediaType].length > LLTM_MAX_MEASUREMENTS) {
@@ -171,7 +242,7 @@ function LowLatencyThroughputModel() {
     }
 
     instance = {
-        setConfig,
+        setup,
         addMeasurement,
         getThroughputCapacityDelay,
         getEstimatedDownloadDurationMS
