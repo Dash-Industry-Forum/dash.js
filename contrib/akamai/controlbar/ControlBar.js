@@ -428,16 +428,18 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     var enterFullscreen = function () {
         var element = videoContainer || video;
-
-        if (element.requestFullscreen) {
-            element.requestFullscreen();
-        } else if (element.msRequestFullscreen) {
-            element.msRequestFullscreen();
-        } else if (element.mozRequestFullScreen) {
-            element.mozRequestFullScreen();
-        } else {
-            element.webkitRequestFullScreen();
+        if(!document.fullscreenElement){
+            if (element.requestFullscreen) {
+                element.requestFullscreen();
+            } else if (element.msRequestFullscreen) {
+                element.msRequestFullscreen();
+            } else if (element.mozRequestFullScreen) {
+                element.mozRequestFullScreen();
+            } else {
+                element.webkitRequestFullScreen();
+            }
         }
+        
         videoController.classList.add('video-controller-fullscreen');
         window.addEventListener('mousemove', onFullScreenMouseMove);
         onFullScreenMouseMove();
@@ -460,16 +462,18 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         clearFullscreenState();
 
         if (document.fullscreenElement) {
+            
+            if (document.exitFullscreen) {
             document.exitFullscreen();
-        } else if (document.exitFullscreen) {
-            document.exitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-            document.mozCancelFullScreen();
-        } else if (document.msExitFullscreen) {
-            document.msExitFullscreen();
-        } else {
-            document.webkitCancelFullScreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else {
+                document.webkitCancelFullScreen();
+            }
         }
+
         videoController.classList.remove('video-controller-fullscreen');
     };
 

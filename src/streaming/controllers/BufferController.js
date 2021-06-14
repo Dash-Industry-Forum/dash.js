@@ -641,7 +641,7 @@ function BufferController(config) {
     function _updateBufferLevel() {
         if (playbackController) {
             const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
-            bufferLevel = getBufferLength(playbackController.getTime() || 0, tolerance);
+            bufferLevel = Math.max(getBufferLength(playbackController.getTime() || 0, tolerance), 0);
             triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
@@ -667,7 +667,7 @@ function BufferController(config) {
         if (((!settings.get().streaming.lowLatencyEnabled && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
         } else {
-            if (isBufferingCompleted || bufferLevel >= settings.get().streaming.buffer.stallThreshold) {
+            if (isBufferingCompleted || bufferLevel >= settings.get().streaming.buffer.stallThreshold || (settings.get().streaming.lowLatencyEnabled && bufferLevel > 0)) {
                 _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
             }
         }
