@@ -342,6 +342,8 @@ function Stream(config) {
         }
 
         if (embeddedMediaInfos.length > 0) {
+            mediaController.setInitialMediaSettingsForType(type, streamInfo);
+            textController.setInitialSettings(mediaController.getInitialSettings(type));
             textController.addMediaInfosToBuffer(streamInfo, type, embeddedMediaInfos);
         }
 
