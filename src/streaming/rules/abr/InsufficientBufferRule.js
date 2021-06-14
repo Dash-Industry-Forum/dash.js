@@ -40,7 +40,6 @@ import MediaPlayerEvents from '../../MediaPlayerEvents';
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.7;
     const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
