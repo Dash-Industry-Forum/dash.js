@@ -8,13 +8,17 @@ import BoxParser from '../../src/streaming/utils/BoxParser';
 const patterns = {
     pattern0: {
         url: 'http://localhost:9876/ll/pattern0',
+        text: 'download mode: request time after AAST + segment duration',
         interval: 0,
         chunksPerInterval: 0,
         chunksAvailableOnRequest: 60,
+        expectedDLTimeMin: 0.1,
+        expectedDLTimeMax: 250
     },
     pattern1: {
         url: 'http://localhost:9876/ll/pattern1',
         interval: 33,
+        text: 'ideal encoder: one frame per 1 / fps',
         chunksPerInterval: 1,
         chunksAvailableOnRequest: 0,
         expectedDLTimeMin: 2002 * 0.6 - 33,
@@ -24,51 +28,64 @@ const patterns = {
         url: 'http://localhost:9876/ll/pattern2',
         interval: 133,
         chunksPerInterval: 4,
-        chunksAvailableOnRequest: 0
+        chunksAvailableOnRequest: 0,
+        text: 'chunky encoder',
+        expectedDLTimeMin: 2002 * 0.6 - 133,
+        expectedDLTimeMax: 2002 * 1.1 - 133
     },
     pattern3: {
         url: 'http://localhost:9876/ll/pattern3',
         interval: 333,
         chunksPerInterval: 10,
-        chunksAvailableOnRequest: 0
+        chunksAvailableOnRequest: 0,
+        text: 'chunky encoder',
+        expectedDLTimeMin: 2002 * 0.6 - 333,
+        expectedDLTimeMax: 2002 * 1.1 - 333
     },
     pattern4: {
         url: 'http://localhost:9876/ll/pattern4',
         interval: 1000,
         chunksPerInterval: 30,
-        chunksAvailableOnRequest: 0
+        chunksAvailableOnRequest: 0,
+        text: 'chunky encoder',
+        expectedDLTimeMin: 2002 * 0.6 - 1000,
+        expectedDLTimeMax: 2002 * 1.1 - 1000
     },
     pattern5: {
         url: 'http://localhost:9876/ll/pattern5',
         interval: 33,
         chunksPerInterval: 1,
-        chunksAvailableOnRequest: 30
+        chunksAvailableOnRequest: 30,
+        text: 'chunky encoder with 50% chunks available on request',
+        expectedDLTimeMin: 0.1 + 2002 * 0.6 / 2 - 33,
+        expectedDLTimeMax: 250 + 2002 * 1.1 / 2 - 33
     },
     pattern6: {
         url: 'http://localhost:9876/ll/pattern6',
         interval: 133,
         chunksPerInterval: 4,
-        chunksAvailableOnRequest: 30
+        chunksAvailableOnRequest: 30,
+        text: 'chunky encoder with 50% chunks available on request',
+        expectedDLTimeMin: 0.1 + 2002 * 0.6 / 2 - 133,
+        expectedDLTimeMax: 250 + 2002 * 1.1 / 2 - 133
     },
     pattern7: {
         url: 'http://localhost:9876/ll/pattern7',
         interval: 333,
         chunksPerInterval: 10,
-        chunksAvailableOnRequest: 30
+        chunksAvailableOnRequest: 30,
+        text: 'chunky encoder with 50% chunks available on request',
+        expectedDLTimeMin: 0.1 + 2002 * 0.6 / 2 - 333,
+        expectedDLTimeMax: 250 + 2002 * 1.1 / 2 - 333
     },
     pattern8: {
         url: 'http://localhost:9876/ll/pattern8',
         interval: 1000,
         chunksPerInterval: 30,
-        chunksAvailableOnRequest: 30
-    },
-    pattern11: {
-        url: 'http://localhost:9876/ll/pattern11',
-        interval: 40,
-        chunksPerInterval: 1,
-        chunksAvailableOnRequest: 0,
-        expectedDLTimeMin: 2002,
-        expectedDLTimeMax: 40 * 61
+        chunksAvailableOnRequest: 30,
+        text: 'chunky encoder with 50% chunks available on request',
+        expectedDLTimeMin: 0.1 + 2002 * 0.6 / 2,
+        expectedDLTimeMax: 250 + 2002 * 1.1 / 2
     }
 }
 
@@ -78,10 +95,10 @@ describe('FetchLoader implementation', () => {
     [Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA,
     Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
     Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST].forEach(calculationMode => {
-        ['pattern1'].forEach((pname)=>{
+        ['pattern0', 'pattern1', 'pattern2', 'pattern3', 'pattern4', 'pattern5', 'pattern6', 'pattern7', 'pattern8'].forEach((pname)=>{
             let pattern = patterns[pname];
 
-            it(`should calculate the proper download time if near life edge, mode: ${calculationMode} and ${pname}`, (done) => {
+            it(`should calculate the proper download time if near life edge, mode: ${calculationMode} and ${pname} (${pattern.text})`, (done) => {
                 let isDone = false;
 
                 const context = {};
@@ -115,7 +132,6 @@ describe('FetchLoader implementation', () => {
 
                     },
                     onend: () => {
-                        console.log(calculationMode, pname, lastEmittedDownloadtime);
                         // with tolerance
                         expect(lastEmittedDownloadtime).to.be.within(pattern.expectedDLTimeMin, pattern.expectedDLTimeMax, `expected download time in ms`);
                         if (!isDone) {

@@ -5,7 +5,6 @@ const segmentData = fs.readFileSync(path.join(__dirname, 'data', 'chunk', 'chunk
 const segmentInfo = fs.readFileSync(path.join(__dirname, 'data', 'chunk', 'chunk-stream_0-00001.json')).toString();
 
 function sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDistances) {
-
     let chunksInBurst = 0;
     if (param.chunksAvailableAtReqTime) {
         chunksInBurst = param.chunksAvailableAtReqTime;
@@ -17,13 +16,15 @@ function sendChunks(res, segmentInfoData, param, interval, previousTs, chunkDist
     for (let index = 0; index < chunksInBurst; index++) {
         let mdatFound = false;
         let chunkSize = 0;
-        while (!mdatFound) {
+        while (!mdatFound && segmentInfoData.length) {
             let box = segmentInfoData.shift();
             mdatFound = box.name === 'mdat';
             chunkSize += box.size;
         }
-        res.write(segmentData.slice(param.pos, param.pos + chunkSize));
-        param.pos = param.pos + chunkSize;
+        if (chunkSize) {
+            res.write(segmentData.slice(param.pos, param.pos + chunkSize));
+            param.pos = param.pos + chunkSize;
+        }
     }
     if (!segmentInfoData.length) {
         if (chunkDistances && chunkDistances.length) {
@@ -90,9 +91,6 @@ module.exports = function (req, res) {
             break;
         case '/ll/pattern8':
             streamWithPattern(res, 1000, 30, 30);
-            break;
-        case '/ll/pattern11':
-            streamWithPattern(res, 0, 40, 0);
             break;
         default:
             console.log('unknown', req.url);
