@@ -393,7 +393,7 @@ function MediaController() {
 
         return result;
     }
-
+    
     function setCustomInitialTrackSelectionMode(customMode){
         customInitialTrackSelectionMode = customMode;
     }
@@ -403,7 +403,6 @@ function MediaController() {
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr = [];
-        console.log(customInitialTrackSelectionMode);
         if(typeof customInitialTrackSelectionMode === "function"){
             tmpArr = customInitialTrackSelectionMode(tracks);
         }
