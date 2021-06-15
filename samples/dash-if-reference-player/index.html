@@ -325,6 +325,13 @@
                                    ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationMoofParsing')">
                             moof parsing
                         </label>
+                        <label data-toggle="tooltip" data-placement="right"
+                            title="Further approach for measurement and estimation (FAME) for fetch throughput calculation for low latency streaming based on AAST decisioning / availability of chunk and optimistic estimation.">
+                            <input type="radio" id="abrFetchThroughputCalculationAAST" autocomplete="off"
+                                name="abrFetchThroughputCalculation"
+                                ng-click="changeFetchThroughputCalculation('abrFetchThroughputCalculationAAST')">
+                           AST decisioning
+                        </label>
                     </div>
                 </div>
             </div>

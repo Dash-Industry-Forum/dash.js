@@ -100,7 +100,8 @@ function ABRRulesCollection(config) {
                 if (settings.get().streaming.abr.additionalAbrRules.insufficientBufferRule) {
                     qualitySwitchRules.push(
                         InsufficientBufferRule(context).create({
-                            dashMetrics: dashMetrics
+                            dashMetrics: dashMetrics,
+                            settings
                         })
                     );
                 }
