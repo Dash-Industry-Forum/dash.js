@@ -140,8 +140,14 @@ describe('FetchLoader implementation', () => {
                     },
                     onerror: (e) => { console.error(e); isDone = true; done(e) },
                     progress: (p) => {
-                        if (p.loaded && p.loaded === p.total && p.time) {
-                            lastEmittedDownloadtime = p.time;
+                        if (p.loaded && p.loaded === p.total) {
+                            if (p.throughput) {
+                                // p.throughput is in kbps, download time is in milliseconds
+                                lastEmittedDownloadtime = (p.total * 8 * 1000) / (p.throughput * 1024);
+                            } else if (p.time) {
+                                lastEmittedDownloadtime = p.time;
+                            }
+
                         }
                     },
                     onabort: (p) => console.log('onabort', p),
