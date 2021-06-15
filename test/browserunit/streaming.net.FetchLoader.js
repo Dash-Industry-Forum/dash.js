@@ -77,7 +77,7 @@ describe('FetchLoader implementation', () => {
     // throughput calculation tests
     [Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA,
     Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
-    Constants.ABR_FETCH_THROUGHPUT_CALCULATION_FAME].forEach(calculationMode => {
+    Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST].forEach(calculationMode => {
         ['pattern1'].forEach((pname)=>{
             let pattern = patterns[pname];
 

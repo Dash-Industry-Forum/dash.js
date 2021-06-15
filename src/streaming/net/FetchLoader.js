@@ -105,15 +105,15 @@ function FetchLoader(cfg) {
 
         const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
         const requestTime = Date.now();
-        let throughputCapacityDelay = 0;
+        let throughputCapacityDelayMS = 0;
 
         new Promise((resolve) => {
-            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_FAME && lowLatencyThroughputModel) {
-                throughputCapacityDelay = lowLatencyThroughputModel.getThroughputCapacityDelay(request, dashMetrics.getCurrentBufferLevel(request.mediaType));
-                if (throughputCapacityDelay) {
+            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST && lowLatencyThroughputModel) {
+                throughputCapacityDelayMS = lowLatencyThroughputModel.getThroughputCapacityDelayMS(request, dashMetrics.getCurrentBufferLevel(request.mediaType) * 1000);
+                if (throughputCapacityDelayMS) {
                     // safely delay the "fetch" call a bit to be able to meassure the throughput capacity of the line.
                     // this will lead to first few chunks downloaded at max network speed
-                    return setTimeout(resolve, throughputCapacityDelay);
+                    return setTimeout(resolve, throughputCapacityDelayMS);
                 }
             }
             resolve();
@@ -163,7 +163,7 @@ function FetchLoader(cfg) {
                     let remaining = new Uint8Array();
                     let offset = 0;
 
-                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_FAME && lowLatencyThroughputModel) {
+                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST && lowLatencyThroughputModel) {
                         let markA = markBeforeFetch;
                         let markB = 0;
 
@@ -193,7 +193,7 @@ function FetchLoader(cfg) {
                                     const fetchDuration = markB - markBeforeFetch;
                                     const bytesAllChunks = measurement.reduce((prev, curr) => prev + curr.chunkBytes, 0);
 
-                                    lowLatencyThroughputModel.addMeasurement(request, fetchDuration, measurement, requestTime, throughputCapacityDelay, responseHeaders);
+                                    lowLatencyThroughputModel.addMeasurement(request, fetchDuration, measurement, requestTime, throughputCapacityDelayMS, responseHeaders);
 
                                     httpRequest.progress({
                                         loaded: bytesAllChunks,
@@ -226,7 +226,7 @@ function FetchLoader(cfg) {
                     const processResult = function ({ value, done }) { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
                         if (done) {
                             if (remaining) {
-                                if (calculationMode !== Constants.ABR_FETCH_THROUGHPUT_CALCULATION_FAME) {
+                                if (calculationMode !== Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST) {
                                     // If there is pending data, call progress so network metrics
                                     // are correctly generated
                                     // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/

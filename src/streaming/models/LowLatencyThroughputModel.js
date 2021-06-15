@@ -79,6 +79,31 @@ function LowLatencyThroughputModel() {
         }
     }
 
+    function isBufferSafeAndStable(lastMeasurements) {
+        let isBufferSafeAndStable = true;
+        let lastBitrate;
+        const aveBufferLevelLastSegements = lastMeasurements.reduce((prev, curr) => prev + curr.bufferLevelAtSegmentEnd, 0) / lastMeasurements.length;
+        lastMeasurements.forEach(m => {
+            // inner segment buffer stability
+            if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95) {
+                isBufferSafeAndStable = false;
+            }
+
+            // inter segment buffer stability
+            if (m.bufferLevelAtSegmentEnd / aveBufferLevelLastSegements < 0.8) {
+                isBufferSafeAndStable = false;
+            }
+
+            // representation bitrate remained at least constant
+            if (!lastBitrate) {
+                lastBitrate = m.bitrate;
+            } else if (lastBitrate > m.bitrate) {
+                isBufferSafeAndStable = false;
+            }
+        });
+        return isBufferSafeAndStable;
+    }
+
     /**
      * Based on the MPD, timing and buffer information of the last recent segments and their chunks
      * the most stable download time (in milliseconds) is calculated.
@@ -94,15 +119,7 @@ function LowLatencyThroughputModel() {
         lastMeasurement.bufferLevelAtSegmentStart = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS / 2);
         lastMeasurement.bufferLevelAtSegmentEnd = lastMeasurement.getEstimatedBufferLevel(lastChunkRelativeTimeMS);
 
-        let isBufferStable = true;
-        const aveBufferLevelLastSegemtns = lastThreeMeasurements.reduce((prev, curr) => prev + curr.bufferLevelAtSegmentEnd, 0) / lastThreeMeasurements.length;
-        lastThreeMeasurements.forEach(m => {
-            if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95 || m.bufferLevelAtSegmentEnd / aveBufferLevelLastSegemtns < 0.8) {
-                isBufferStable = false;
-            }
-        });
-
-        console.log('TREND', lastMeasurement.bufferTrend);
+        const isBufferStable = isBufferSafeAndStable(lastThreeMeasurements);
 
         const selectedOptimisticFactor = isBufferStable ? LLTM_OPTIMISTIC_ESTIMATE_FACTOR : LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
 
@@ -112,7 +129,7 @@ function LowLatencyThroughputModel() {
         }
         // buffer is drying or fetch took too long
         if (!isBufferStable || lastMeasurement.segDurationMS < lastMeasurement.fetchDownloadDurationMS) {
-            return lastMeasurement.fetchDownloadDurationMS;
+            return lastMeasurement.fetchDownloadDurationMS * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
         }
 
         // did we requested a fully available segment? -> most accurate throughput calculation
@@ -139,11 +156,8 @@ function LowLatencyThroughputModel() {
         }
 
         if (chunkAvailablePeriod < 0) {
-            logger.warn('request time was before adjusted availibitly time');
+            logger.warn('request time was before adjusted availibitly start time');
         }
-
-        // keep the current bitrate
-        // return (lastMeasurement.segmentBytes * 8 * 1000 / lastMeasurement.bitrate) * LLTM_SEMI_OPTIMISTIC_ESTIMATE_FACTOR;
 
         // there have to be some chunks available (20% of max count)
         // otherwise we are at bleeding live edge and the few chunks are insufficient to estimate correctly
@@ -177,33 +191,28 @@ function LowLatencyThroughputModel() {
     }
 
     /**
-     * Get calculated value to artificially and safely delay the next request to allow to accumulate some chunks
-     * This allows better line throughput measurement
+     * Get calculated value for a safe artificial delay of the next request to allow to accumulate some chunks.
+     * This allows better line throughput measurement.
      * @param {*} request
-     * @returns
+     * @param {*} currentBufferLevel current buffer level in milliseconds
+     * @returns delay in milliseconds
      */
-    function getThroughputCapacityDelay(request, currentBufferLevel) {
+    function getThroughputCapacityDelayMS(request, currentBufferLevelMS) {
         const lastThreeMeasurements = measurements[request.mediaType] && measurements[request.mediaType].slice(-3);
 
         if (!lastThreeMeasurements || lastThreeMeasurements.length < 3) {
             return 0;
         }
 
-        let isBufferStable = true;
-        const aveBufferLevelLastSegemtns = lastThreeMeasurements.reduce((prev, curr) => prev + curr.bufferLevelAtSegmentEnd, 0) / lastThreeMeasurements.length;
-        lastThreeMeasurements.forEach(m => {
-            if (Math.abs(m.bufferLevelAtSegmentEnd / m.bufferLevelAtSegmentStart) < 0.95 || m.bufferLevelAtSegmentEnd / aveBufferLevelLastSegemtns < 0.8) {
-                isBufferStable = false;
-            }
-        });
+        
 
-        // in case buffer is not stable we will not artificially delay the next request
-        if (!isBufferStable) {
+        // in case not stable buffer, no artificially delay for the next request
+        if (!isBufferSafeAndStable(lastThreeMeasurements)) {
             return 0;
         }
 
-        // previously 100ms was the default scheduling delay in low latency mode
-        return currentBufferLevel / 4 > LLTM_MAX_DELAY_MS ? LLTM_MAX_DELAY_MS : currentBufferLevel / 4;
+        // allowed artificial delay is the min of quater of buffer level in milliseconds and LLTM_MAX_DELAY_MS
+        return currentBufferLevelMS / 4 > LLTM_MAX_DELAY_MS ? LLTM_MAX_DELAY_MS : currentBufferLevelMS / 4;
     }
 
     /**
@@ -244,7 +253,7 @@ function LowLatencyThroughputModel() {
     instance = {
         setup,
         addMeasurement,
-        getThroughputCapacityDelay,
+        getThroughputCapacityDelayMS,
         getEstimatedDownloadDurationMS
     };
 
