@@ -45,6 +45,7 @@ function InsufficientBufferRule(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -102,7 +103,7 @@ function InsufficientBufferRule(config) {
     }
 
     function shouldIgnore(mediaType) {
-        return bufferStateDict[mediaType].ignoreCount > 0;
+        return !settings.get().streaming.lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
     }
 
     function resetInitialSettings() {
