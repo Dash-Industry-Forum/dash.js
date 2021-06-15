@@ -40,6 +40,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
+import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
 
 /**
  * @module HTTPLoader
@@ -69,6 +70,7 @@ function HTTPLoader(cfg) {
         retryRequests,
         downloadErrorToRequestTypeMap,
         cmcdModel,
+        lowLatencyThroughputModel,
         logger;
 
     function setup() {
@@ -77,6 +79,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -249,7 +252,11 @@ function HTTPLoader(cfg) {
         if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
                 requestModifier: requestModifier,
+                lowLatencyThroughputModel,
                 boxParser: boxParser
+            });
+            loader.setup({
+                dashMetrics
             });
         } else {
             loader = XHRLoader(context).create({
