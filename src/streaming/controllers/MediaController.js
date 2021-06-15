@@ -47,6 +47,8 @@ function MediaController() {
         lastSelectedTracks,
         domStorage;
 
+    let customInitialTrackSelectionMode = null;
+
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         reset();
@@ -392,40 +394,49 @@ function MediaController() {
         return result;
     }
 
+    function setCustomInitialTrackSelectionMode(customMode){
+        customInitialTrackSelectionMode = customMode;
+    }
+
     function selectInitialTrack(type, tracks) {
         if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr = [];
-
-        switch (mode) {
-            case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                tmpArr = getTracksWithHighestBitrate(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithWidestRange(tmpArr);
-                }
-                break;
-            case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                tmpArr.push(tracks[0]);
-                break;
-            case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                tmpArr = getTracksWithHighestEfficiency(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithHighestBitrate(tmpArr);
-                }
-                break;
-            case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                tmpArr = getTracksWithWidestRange(tracks);
-
-                if (tmpArr.length > 1) {
+        console.log(customInitialTrackSelectionMode);
+        if(typeof customInitialTrackSelectionMode === "function"){
+            tmpArr = customInitialTrackSelectionMode(tracks);
+        }
+        else{
+            switch (mode) {
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
                     tmpArr = getTracksWithHighestBitrate(tracks);
-                }
-                break;
-            default:
-                logger.warn('Track selection mode is not supported: ' + mode);
-                break;
+    
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithWidestRange(tmpArr);
+                    }
+                    break;
+                case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                    tmpArr.push(tracks[0]);
+                    break;
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                    tmpArr = getTracksWithHighestEfficiency(tracks);
+    
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithHighestBitrate(tmpArr);
+                    }
+                    break;
+                case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
+                    tmpArr = getTracksWithWidestRange(tracks);
+    
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithHighestBitrate(tracks);
+                    }
+                    break;
+                default:
+                    logger.warn('Track selection mode is not supported: ' + mode);
+                    break;
+            }
         }
 
         return tmpArr[0];
@@ -454,7 +465,7 @@ function MediaController() {
                 current: null
             }
         };
-    }
+    }    
 
     instance = {
         setInitialMediaSettingsForType,
@@ -464,6 +475,7 @@ function MediaController() {
         isCurrentTrack,
         setTrack,
         selectInitialTrack,
+        setCustomInitialTrackSelectionMode,
         setInitialSettings,
         getInitialSettings,
         getTracksWithHighestBitrate,
