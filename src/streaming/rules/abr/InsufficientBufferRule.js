@@ -40,12 +40,12 @@ import MediaPlayerEvents from '../../MediaPlayerEvents';
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.7;
     const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
+    const settings = config.settings;
 
     let instance,
         logger,
@@ -87,8 +87,6 @@ function InsufficientBufferRule(config) {
         const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
         const representationInfo = rulesContext.getRepresentationInfo();
         const fragmentDuration = representationInfo.fragmentDuration;
-        const streamInfo = rulesContext.getStreamInfo();
-        const streamId = streamInfo ? streamInfo.id : null;
 
         // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
         if (shouldIgnore(mediaType) || !fragmentDuration) {
@@ -99,24 +97,13 @@ function InsufficientBufferRule(config) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
             switchRequest.quality = 0;
             switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
-        } else {
-            const mediaInfo = rulesContext.getMediaInfo();
-            const abrController = rulesContext.getAbrController();
-            const throughputHistory = abrController.getThroughputHistory();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const throughput = throughputHistory.getAverageThroughput(mediaType);
-            const latency = throughputHistory.getAverageLatency(mediaType);
-            const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
-
-            switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
-            switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
         }
 
         return switchRequest;
     }
 
     function shouldIgnore(mediaType) {
-        return bufferStateDict[mediaType].ignoreCount > 0;
+        return !settings.get().streaming.lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
     }
 
     function resetInitialSettings() {

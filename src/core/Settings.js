@@ -150,6 +150,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
+ *                [HTTPRequest.LICENSE]: 1000,
  *                [HTTPRequest.OTHER_TYPE]: 1000,
  *                lowLatencyReductionFactor: 10
  *            },
@@ -161,6 +162,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
+ *                [HTTPRequest.LICENSE]: 3,
  *                [HTTPRequest.OTHER_TYPE]: 3,
  *                lowLatencyMultiplyFactor: 5
  *            },
@@ -777,7 +779,7 @@ function Settings() {
             },
             scheduling: {
                 defaultTimeout: 500,
-                lowLatencyTimeout: 100,
+                lowLatencyTimeout: 0,
                 scheduleWhilePaused: true
             },
             text: {
@@ -818,6 +820,7 @@ function Settings() {
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
+                [HTTPRequest.LICENSE]: 1000,
                 [HTTPRequest.OTHER_TYPE]: 1000,
                 lowLatencyReductionFactor: 10
             },
@@ -829,6 +832,7 @@ function Settings() {
                 [HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: 3,
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
                 [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
+                [HTTPRequest.LICENSE]: 3,
                 [HTTPRequest.OTHER_TYPE]: 3,
                 lowLatencyMultiplyFactor: 5
             },
@@ -836,7 +840,7 @@ function Settings() {
                 movingAverageMethod: Constants.MOVING_AVERAGE_SLIDING_WINDOW,
                 ABRStrategy: Constants.ABR_STRATEGY_DYNAMIC,
                 additionalAbrRules: {
-                    insufficientBufferRule: false,
+                    insufficientBufferRule: true,
                     switchHistoryRule: true,
                     droppedFramesRule: true,
                     abandonRequestsRule: false
