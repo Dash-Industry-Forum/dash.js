@@ -4,16 +4,21 @@ import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus.js';
 import Events from '../../src/core/events/Events';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 
 const context = {};
 let insufficientBufferRule;
 const eventBus = EventBus(context).getInstance();
+const settings = Settings(context).getInstance();
 
 describe('InsufficientBufferRule', function () {
     beforeEach(function () {
-        insufficientBufferRule = InsufficientBufferRule(context).create({});
+        settings.reset();
+        insufficientBufferRule = InsufficientBufferRule(context).create({
+            settings
+        });
     });
 
     it('should return an empty switchRequest when getMaxIndex function is called with an empty parameter', function () {
@@ -52,7 +57,8 @@ describe('InsufficientBufferRule', function () {
             }
         };
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
 
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
@@ -82,7 +88,8 @@ describe('InsufficientBufferRule', function () {
             }
         };
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
         dashMetricsMock.addBufferState('video', bufferState);
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
@@ -112,7 +119,8 @@ describe('InsufficientBufferRule', function () {
             }
         };
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
         dashMetricsMock.addBufferState('video', bufferState);
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
@@ -146,7 +154,8 @@ describe('InsufficientBufferRule', function () {
         dashMetricsMock.addBufferState('video', bufferState);
 
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
 
         let e = {mediaType: 'video', startTime: 0};
@@ -189,7 +198,8 @@ describe('InsufficientBufferRule', function () {
         };
 
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
 
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
