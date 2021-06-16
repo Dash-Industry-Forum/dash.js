@@ -41,6 +41,7 @@ function LowLatencyThroughputModel() {
     const LLTM_SLOW_SEGMENT_DOWNLOAD_TOLERANCE = 1.05;
     const LLTM_MAX_DELAY_MS = 250;
 
+    const context = this.context;
     let instance;
     let logger;
     let measurements = {};
@@ -50,8 +51,8 @@ function LowLatencyThroughputModel() {
     }
 
     /**
-     * Linear regression with least squares method to get a trend function for buffer lavel at chunk receive timestamps 
-     * @param {*} chunkMeasurements 
+     * Linear regression with least squares method to get a trend function for buffer lavel at chunk receive timestamps
+     * @param {*} chunkMeasurements
      * @returns linear trend function
      */
     function createBufferLevelTrendFunction(chunkMeasurements) {
@@ -174,7 +175,7 @@ function LowLatencyThroughputModel() {
         // when we are to tight at live edge and it's stable then
         // we start to optimistically estimate download time
         // in such a way that a switch to next rep will be possible
-        // optimistical estimate: assume download was fast enough for next higher rendition 
+        // optimistical estimate: assume download was fast enough for next higher rendition
         let nextHigherBitrate = lastMeasurement.bitrate;
         lastMeasurement.bitrateList.some(b => {
             if (b.bandwidth > lastMeasurement.bitrate) {
@@ -204,7 +205,7 @@ function LowLatencyThroughputModel() {
             return 0;
         }
 
-        
+
 
         // in case not stable buffer, no artificially delay for the next request
         if (!isBufferSafeAndStable(lastThreeMeasurements)) {
@@ -256,6 +257,8 @@ function LowLatencyThroughputModel() {
         getThroughputCapacityDelayMS,
         getEstimatedDownloadDurationMS
     };
+
+    setup()
 
     return instance;
 }
