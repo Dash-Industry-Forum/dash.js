@@ -1138,95 +1138,6 @@
         },
     };
 
-    /**
-     * Find ranges corresponding to SEA CEA-608 NALUS in sizeprepended NALU array.
-     * @param {raw} dataView of binary data
-     * @param {startPos} start position in raw
-     * @param {size} total size of data in raw to consider
-     * @returns
-     */
-    var findCea608Nalus = function(raw, startPos, size) {
-        var nalSize = 0,
-            cursor = startPos,
-            nalType = 0,
-            cea608NaluRanges = [],
-            // Check SEI data according to ANSI-SCTE 128
-            isCEA608SEI = function (payloadType, payloadSize, raw, pos) {
-                if (payloadType !== 4 || payloadSize < 8) {
-                    return null;
-                }
-                var countryCode = raw.getUint8(pos);
-                var providerCode = raw.getUint16(pos + 1);
-                var userIdentifier = raw.getUint32(pos + 3);
-                var userDataTypeCode = raw.getUint8(pos + 7);
-                return countryCode == 0xB5 && providerCode == 0x31 && userIdentifier == 0x47413934 && userDataTypeCode == 0x3;
-            };
-        while (cursor < startPos + size) {
-            nalSize = raw.getUint32(cursor);
-            nalType = raw.getUint8(cursor + 4) & 0x1F;
-            //console.log(time + "  NAL " + nalType);
-            if (nalType === 6) {
-                // SEI NAL Unit. The NAL header is the first byte
-                //console.log("SEI NALU of size " + nalSize + " at time " + time);
-                var pos = cursor + 5;
-                var payloadType = -1;
-                while (pos < cursor + 4 + nalSize - 1) { // The last byte should be rbsp_trailing_bits
-                    payloadType = 0;
-                    var b = 0xFF;
-                    while (b === 0xFF) {
-                        b = raw.getUint8(pos);
-                        payloadType += b;
-                        pos++;
-                    }
-                    var payloadSize = 0;
-                    b = 0xFF;
-                    while (b === 0xFF) {
-                        b = raw.getUint8(pos);
-                        payloadSize += b;
-                        pos++;
-                    }
-                    if (isCEA608SEI(payloadType, payloadSize, raw, pos)) {
-                        //console.log("CEA608 SEI " + time + " " + payloadSize);
-                        cea608NaluRanges.push([pos, payloadSize]);
-                    }
-                    pos += payloadSize;
-                }
-            }
-            cursor += nalSize + 4;
-        }
-        return cea608NaluRanges;
-    };
-
-    var extractCea608DataFromRange = function(raw, cea608Range) {
-        var pos = cea608Range[0];
-        var fieldData = [[], []];
-
-        pos += 8; // Skip the identifier up to userDataTypeCode
-        var ccCount = raw.getUint8(pos) & 0x1f;
-        pos += 2; // Advance 1 and skip reserved byte
-
-        for (var i = 0; i < ccCount; i++) {
-            var byte = raw.getUint8(pos);
-            var ccValid = byte & 0x4;
-            var ccType = byte & 0x3;
-            pos++;
-            var ccData1 = raw.getUint8(pos); // Keep parity bit
-            pos++;
-            var ccData2 = raw.getUint8(pos); // Keep parity bit
-            pos++;
-            if (ccValid && ((ccData1 & 0x7f) + (ccData2 & 0x7f) !== 0)) { //Check validity and non-empty data
-                if (ccType === 0) {
-                    fieldData[0].push(ccData1);
-                    fieldData[0].push(ccData2);
-                } else if (ccType === 1) {
-                    fieldData[1].push(ccData1);
-                    fieldData[1].push(ccData2);
-                }
-            }
-        }
-        return fieldData;
-    };
-
     var getSeiData = function(raw, startPos, endPos) {
         var data = [];
 
@@ -1343,9 +1254,6 @@
     exports.PenState = PenState;
     exports.CaptionScreen = CaptionScreen;
     exports.Cea608Parser = Cea608Parser;
-    // TODO: Remove findCea608Nalus and extractCea608DataFromRange
-    exports.findCea608Nalus = findCea608Nalus;
-    exports.extractCea608DataFromRange = extractCea608DataFromRange;
     exports.extractCea608DataFromSample = extractCea608DataFromSample;
 
 }(typeof exports === 'undefined' ? this.cea608parser = {} : exports));
