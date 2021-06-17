@@ -1,6 +1,6 @@
 var METRIC_INTERVAL = 200;
-var CHART_INTERVAL = 400;
-var NUMBER_OF_CHART_ENTRIES = 50;
+var CHART_INTERVAL = 200;
+var NUMBER_OF_CHART_ENTRIES = 300;
 
 var App = function () {
     this.player = null;
