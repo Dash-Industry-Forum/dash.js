@@ -9,6 +9,7 @@ var App = function () {
 };
 
 App.prototype.init = function () {
+    this._adjustSettingsByUrlParameters();
     this._registerEventHandler();
     this._startIntervalHandler();
     this._setupLineChart();
@@ -38,6 +39,95 @@ App.prototype._applyParameters = function () {
         return;
     }
 
+    var settings = this._getCurrentSettings();
+
+    this.player.updateSettings({
+        streaming: {
+            delay: {
+                liveDelay: settings.targetLatency
+            },
+            liveCatchup: {
+                minDrift: settings.minDrift,
+                maxDrift: settings.maxDrift,
+                playbackRate: settings.catchupPlaybackRate,
+                latencyThreshold: settings.liveCatchupLatencyThreshold,
+                mode: settings.catchupMechanism
+            },
+            abr: {
+                ABRStrategy: settings.abrGeneral,
+                additionalAbrRules: {
+                    insufficientBufferRule: settings.abrAdditionalInsufficientBufferRule,
+                    switchHistoryRule: settings.abrAdditionalSwitchHistoryRule,
+                    droppedFramesRule: settings.abrAdditionalDroppedFramesRule,
+                    abandonRequestsRule: settings.abrAdditionalAbandonRequestRule
+                },
+                fetchThroughputCalculationMode: settings.throughputCalculation
+            }
+        }
+    });
+}
+
+App.prototype._exportSettings = function () {
+    var settings = this._getCurrentSettings();
+    var url = document.location.origin + document.location.pathname;
+
+    url += '?';
+
+    for (var [key, value] of Object.entries(settings)) {
+        url += '&' + key + '=' + value
+    }
+
+    document.getElementById('export-settings-url').value = encodeURI(url);
+}
+
+App.prototype._adjustSettingsByUrlParameters = function () {
+    var urlSearchParams = new URLSearchParams(window.location.search);
+    var params = Object.fromEntries(urlSearchParams.entries());
+
+    console.log(params);
+
+    if (params) {
+        if (params.targetLatency !== undefined) {
+            document.getElementById('target-latency').value = parseFloat(params.targetLatency).toFixed(1);
+        }
+        if (params.maxDrift !== undefined) {
+            document.getElementById('max-drift').value = parseFloat(params.maxDrift).toFixed(1);
+        }
+        if (params.minDrift !== undefined) {
+            document.getElementById('min-drift').value = parseFloat(params.minDrift).toFixed(2);
+        }
+        if (params.catchupPlaybackRate !== undefined) {
+            document.getElementById('catchup-playback-rate').value = parseFloat(params.catchupPlaybackRate).toFixed(1);
+        }
+        if (params.liveCatchupLatencyThreshold !== undefined) {
+            document.getElementById('catchup-threshold').value = parseFloat(params.liveCatchupLatencyThreshold).toFixed(0);
+        }
+        if (params.abrAdditionalInsufficientBufferRule !== undefined) {
+            document.getElementById('abr-additional-insufficient').checked = params.abrAdditionalInsufficientBufferRule === 'true';
+        }
+        if (params.abrAdditionalAbandonRequestRule !== undefined) {
+            document.getElementById('abr-additional-abandon').checked = params.abrAdditionalAbandonRequestRule === 'true';
+        }
+        if (params.abrAdditionalSwitchHistoryRule !== undefined) {
+            document.getElementById('abr-additional-switch').checked = params.abrAdditionalSwitchHistoryRule === 'true';
+        }
+        if (params.abrAdditionalDroppedFramesRule !== undefined) {
+            document.getElementById('abr-additional-dropped').checked = params.abrAdditionalDroppedFramesRule === 'true';
+        }
+        if (params.abrGeneral !== undefined) {
+            document.getElementById(params.abrGeneral).checked = true;
+        }
+        if (params.catchupMechanism !== undefined) {
+            document.getElementById(params.catchupMechanism).checked = true;
+        }
+        if (params.throughputCalculation !== undefined) {
+            document.getElementById(params.throughputCalculation).checked = true;
+        }
+    }
+    //document.querySelector('input[name="gender"]:checked').value
+}
+
+App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
     var minDrift = parseFloat(document.getElementById('min-drift').value, 10);
     var maxDrift = parseFloat(document.getElementById('max-drift').value, 10);
@@ -51,31 +141,20 @@ App.prototype._applyParameters = function () {
     var catchupMechanism = document.querySelector('input[name="catchup"]:checked').value;
     var throughputCalculation = document.querySelector('input[name="throughput-calc"]:checked').value;
 
-
-    this.player.updateSettings({
-        streaming: {
-            delay: {
-                liveDelay: targetLatency
-            },
-            liveCatchup: {
-                minDrift: minDrift,
-                maxDrift: maxDrift,
-                playbackRate: catchupPlaybackRate,
-                latencyThreshold: liveCatchupLatencyThreshold,
-                mode: catchupMechanism
-            },
-            abr: {
-                ABRStrategy: abrGeneral,
-                additionalAbrRules: {
-                    insufficientBufferRule: abrAdditionalInsufficientBufferRule,
-                    switchHistoryRule: abrAdditionalSwitchHistoryRule,
-                    droppedFramesRule: abrAdditionalDroppedFramesRule,
-                    abandonRequestsRule: abrAdditionalAbandonRequestRule
-                },
-                fetchThroughputCalculationMode: throughputCalculation
-            }
-        }
-    });
+    return {
+        targetLatency,
+        minDrift,
+        maxDrift,
+        catchupPlaybackRate,
+        liveCatchupLatencyThreshold,
+        abrGeneral,
+        abrAdditionalInsufficientBufferRule,
+        abrAdditionalDroppedFramesRule,
+        abrAdditionalAbandonRequestRule,
+        abrAdditionalSwitchHistoryRule,
+        catchupMechanism,
+        throughputCalculation
+    }
 }
 
 App.prototype._setupLineChart = function () {
@@ -214,11 +293,16 @@ App.prototype._startIntervalHandler = function () {
 App.prototype._registerEventHandler = function () {
     var self = this;
 
-    document.getElementById('apply-settings-button').addEventListener('click', function (){
+    document.getElementById('apply-settings-button').addEventListener('click', function () {
         self._applyParameters();
     })
-    document.getElementById('load-button').addEventListener('click', function (){
+
+    document.getElementById('load-button').addEventListener('click', function () {
         self._load();
+    })
+
+    document.getElementById('export-settings-button').addEventListener('click', function () {
+        self._exportSettings();
     })
 }
 
@@ -238,8 +322,7 @@ App.prototype._onRepresentationSwitch = function (e) {
             var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
             document.getElementById('video-bitrate').innerHTML = bitrate;
         }
-    }
-    catch(e) {
+    } catch (e) {
 
     }
 }
