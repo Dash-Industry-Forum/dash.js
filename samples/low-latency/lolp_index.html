@@ -65,6 +65,9 @@
         }
 
         function applyParameters() {
+            if (!player) {
+                return;
+            }
             targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
             minDrift = parseFloat(document.getElementById('min-drift').value, 10);
             catchupPlaybackRate = parseFloat(document.getElementById('catchup-playback-rate').value, 10);
@@ -123,7 +126,8 @@
             <div class="col-md-12">
                 <div class=" p-5 bg-light border rounded-3">
                     <h3><i class="bi bi-info-square"></i> Live low-latency playback with LoL+</h3>
-                    Example showing how to use dash.js to play low latency streams with the LoL+ ABR algorithm. For a detailed documentation
+                    Example showing how to use dash.js to play low latency streams with the LoL+ ABR algorithm. For a
+                    detailed documentation
                     checkout the dash.js <a
                     href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming" target="_blank">Wiki</a>.
                     <div class="row mt-3">
