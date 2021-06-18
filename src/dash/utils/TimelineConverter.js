@@ -341,7 +341,7 @@ function TimelineConverter() {
     }
 
     function _onUpdateTimeSyncOffset(e) {
-        if (e.offset !== undefined) {
+        if (e.offset !== undefined && !isNaN(e.offset)) {
             setClientTimeOffset(e.offset / 1000);
         }
     }

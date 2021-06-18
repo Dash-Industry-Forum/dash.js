@@ -207,6 +207,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Low latency testplayer",
+                "description": "Example showing how to use dash.js to play low latency streams. All related settings are adjustable.",
+                "href": "low-latency/testplayer/testplayer.html",
+                "image": "lib/img/akamai-ll-4.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Settings",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

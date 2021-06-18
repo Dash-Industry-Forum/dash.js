@@ -42,6 +42,9 @@
         }
 
         function applyParameters() {
+            if (!player) {
+                return;
+            }
             targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
             minDrift = parseFloat(document.getElementById('min-drift').value, 10);
             catchupPlaybackRate = parseFloat(document.getElementById('catchup-playback-rate').value, 10);
@@ -272,7 +275,9 @@
 
                 document.getElementById('catchup-threshold-tag').innerHTML = settings.streaming.liveCatchup.latencyThreshold + ' secs';
 
-                document.getElementById('bitrate-tag').innerHTML = Math.round(rez[rid].bitrate) / 1000 + ' kbps'
+                if (rez && rez[rid]) {
+                    document.getElementById('bitrate-tag').innerHTML = Math.round(rez[rid].bitrate) / 1000 + ' kbps'
+                }
 
                 var d = new Date();
                 var seconds = d.getSeconds();

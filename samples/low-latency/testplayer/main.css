@@ -1,0 +1,32 @@
+video {
+    width: 100%;
+}
+
+#manifest {
+    width: 300px;
+}
+
+#fragmentsEntry, #secondsEntry {
+    position: relative;
+    display: none;
+    width: 50px;
+}
+
+#delayInFragments, #delayInSeconds {
+    width: 50px;
+}
+
+.clock {
+    color: #000;
+    font-size: 40pt
+}
+
+.metric-value {
+    color: #428bca;
+    font-weight: 500;
+}
+
+#metric-chart {
+    max-height: 400px;
+    min-height: 400px;
+}
