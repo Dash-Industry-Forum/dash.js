@@ -195,6 +195,31 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Low latency with AAST based decisioning",
+                "description": "Example showing how to use dash.js to play very low latency streams using AAST based throughput calculation.",
+                "href": "low-latency/aast_tp_calc.html",
+                "image": "lib/img/akamai-ll-3.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Low latency testplayer",
+                "description": "Example showing how to use dash.js to play low latency streams. All related settings are adjustable.",
+                "href": "low-latency/testplayer/testplayer.html",
+                "image": "lib/img/akamai-ll-4.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Settings",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },

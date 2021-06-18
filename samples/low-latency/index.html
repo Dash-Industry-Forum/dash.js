@@ -33,6 +33,9 @@
         }
 
         function applyParameters() {
+            if (!player) {
+                return;
+            }
             targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
             minDrift = parseFloat(document.getElementById('min-drift').value, 10);
             catchupPlaybackRate = parseFloat(document.getElementById('catchup-playback-rate').value, 10);
@@ -91,13 +94,16 @@
             <div class="col-md-12">
                 <div class=" p-5 bg-light border rounded-3">
                     <h3><i class="bi bi-info-square"></i> Live low-latency playback</h3>
-                    Example showing how to use dash.js to play low latency streams. For a detailed documentation checkout the dash.js <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming" target="_blank">Wiki</a>.
+                    Example showing how to use dash.js to play low latency streams. For a detailed documentation
+                    checkout the dash.js <a
+                    href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming" target="_blank">Wiki</a>.
                     <div class="row mt-3">
                         <div class="col-md-3">
                             <div class="card border-2 border-primary">
                                 <div class="card-body">
                                     <h5 class="card-title">Latency</h5>
-                                    <p class="card-text">Lowering this value will lower latency but may decrease the player's ability
+                                    <p class="card-text">Lowering this value will lower latency but may decrease the
+                                        player's ability
                                         to build a stable buffer.</p>
                                 </div>
                             </div>
@@ -106,7 +112,8 @@
                             <div class="card border-2 border-primary">
                                 <div class="card-body">
                                     <h5 class="card-title">Min drift</h5>
-                                    <p class="card-text">Minimum latency deviation allowed before activating catch-up mechanism.</p>
+                                    <p class="card-text">Minimum latency deviation allowed before activating catch-up
+                                        mechanism.</p>
                                 </div>
                             </div>
                         </div>
@@ -114,7 +121,8 @@
                             <div class="card border-2 border-primary">
                                 <div class="card-body">
                                     <h5 class="card-title">Catch-up playback rate</h5>
-                                    <p class="card-text">Maximum catch-up rate, as a percentage, for low latency live streams.</p>
+                                    <p class="card-text">Maximum catch-up rate, as a percentage, for low latency live
+                                        streams.</p>
                                 </div>
                             </div>
                         </div>
@@ -124,9 +132,12 @@
                                     <h5 class="card-title">Live catchup latency threshold</h5>
                                     <p class="card-text">Use this parameter to set the maximum threshold for
                                         which
-                                        live catch up is applied. For instance, if this value is set to 8 seconds, then live catchup
-                                        is only applied if the current live latency is equal or below 8 seconds. The reason behind
-                                        this parameter is to avoid an increase of the playback rate if the user seeks within the DVR
+                                        live catch up is applied. For instance, if this value is set to 8 seconds, then
+                                        live catchup
+                                        is only applied if the current live latency is equal or below 8 seconds. The
+                                        reason behind
+                                        this parameter is to avoid an increase of the playback rate if the user seeks
+                                        within the DVR
                                         window.</p>
                                 </div>
                             </div>

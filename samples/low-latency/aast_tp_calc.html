@@ -1,8 +1,9 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
-    <title>Low latency streaming with L2A</title>
+    <title>Low latency streaming</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -12,49 +13,30 @@
     <link href="../lib/main.css" rel="stylesheet">
 
     <script class="code">
-        var player, targetLatency, minDrift, catchupPlaybackRate, liveCatchupLatencyThreshold, qualitySwitchCallback;
+        var player, targetLatency, minDrift, catchupPlaybackRate, liveCatchupLatencyThreshold;
 
         function load() {
 
             if (player) {
                 player.reset();
-                if (qualitySwitchCallback) {
-                    player.off(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, qualitySwitchCallback);
-                    qualitySwitchCallback = null;
-                }
             }
 
-            var video,
-                url = 'https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd';
+            var video;
+            var url = document.getElementById('manifest').value;
 
             video = document.querySelector('video');
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
-            player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true } });
-            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
-
             player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'useDefaultABRRules': true,
-                        'ABRStrategy': 'abrL2A'
+                streaming: {
+                    lowLatencyEnabled: true,
+                    abr: {
+                        ABRStrategy: 'abrThroughput',
+                        fetchThroughputCalculationMode: 'abrFetchThroughputCalculationAAST'
                     }
                 }
             });
+            player.initialize(video, url, true);
             applyParameters();
-            qualitySwitchCallback = function (e) {
-                if (e.mediaType === 'video') {
-                    console.warn('Quality changed', e);
-                    const quality = player.getBitrateInfoListFor('video')[e.newQuality];
-                    if (!quality) {
-                        return;
-                    }
-                    document.querySelector('#quality-tag').innerText = `${quality.width}x${quality.height}, ${quality.bitrate / 1000}Kbps`;
-                }
-            }
-
-
-            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, qualitySwitchCallback);
 
             return player;
         }
@@ -92,13 +74,15 @@
             width: 300px;
         }
 
-        #fragmentsEntry, #secondsEntry {
+        #fragmentsEntry,
+        #secondsEntry {
             position: relative;
             display: none;
             width: 50px;
         }
 
-        #delayInFragments, #delayInSeconds {
+        #delayInFragments,
+        #delayInSeconds {
             width: 50px;
         }
 
@@ -108,22 +92,22 @@
         }
     </style>
 </head>
+
 <body>
 
 <main>
     <div class="container py-4">
         <header class="pb-3 mb-4 border-bottom">
-            <img class=""
-                 src="../lib/img/dashjs-logo.png"
-                 width="200">
+            <img class="" src="../lib/img/dashjs-logo.png" width="200">
         </header>
         <div class="row">
             <div class="col-md-12">
                 <div class=" p-5 bg-light border rounded-3">
-                    <h3><i class="bi bi-info-square"></i> Live low-latency playback with L2A</h3>
-                    Example showing how to use dash.js to play low latency streams with the L2A ABR algorithm. For a detailed documentation
-                    checkout the dash.js <a
-                    href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming" target="_blank">Wiki</a>.
+                    <h3><i class="bi bi-info-square"></i> Live low-latency playback</h3>
+                    Example showing how to use dash.js to play very low latency streams using AAST based throughput
+                    calculation<a
+                    href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming"
+                    target="_blank">Wiki</a>.
                     <div class="row mt-3">
                         <div class="col-md-3">
                             <div class="card border-2 border-primary">
@@ -139,8 +123,8 @@
                             <div class="card border-2 border-primary">
                                 <div class="card-body">
                                     <h5 class="card-title">Min drift</h5>
-                                    <p class="card-text">Minimum latency deviation allowed before activating catch-up
-                                        mechanism.</p>
+                                    <p class="card-text">Minimum latency deviation allowed before activating
+                                        catch-up mechanism.</p>
                                 </div>
                             </div>
                         </div>
@@ -148,8 +132,8 @@
                             <div class="card border-2 border-primary">
                                 <div class="card-body">
                                     <h5 class="card-title">Catch-up playback rate</h5>
-                                    <p class="card-text">Maximum catch-up rate, as a percentage, for low latency live
-                                        streams.</p>
+                                    <p class="card-text">Maximum catch-up rate, as a percentage, for low latency
+                                        live streams.</p>
                                 </div>
                             </div>
                         </div>
@@ -159,12 +143,12 @@
                                     <h5 class="card-title">Live catchup latency threshold</h5>
                                     <p class="card-text">Use this parameter to set the maximum threshold for
                                         which
-                                        live catch up is applied. For instance, if this value is set to 8 seconds, then
-                                        live catchup
+                                        live catch up is applied. For instance, if this value is set to 8 seconds,
+                                        then live catchup
                                         is only applied if the current live latency is equal or below 8 seconds. The
                                         reason behind
-                                        this parameter is to avoid an increase of the playback rate if the user seeks
-                                        within the DVR
+                                        this parameter is to avoid an increase of the playback rate if the user
+                                        seeks within the DVR
                                         window.</p>
                                 </div>
                             </div>
@@ -179,8 +163,7 @@
                     <span class="input-group-text" id="basic-addon1">Manifest URL</span>
                     <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
                            value="https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"
-                           aria-label="Username"
-                           aria-describedby="basic-addon1">
+                           aria-label="Username" aria-describedby="basic-addon1">
                     <button type="button" id="loadButton" class="btn btn-success" onclick="load(this)">Load stream
                     </button>
                 </div>
@@ -197,8 +180,8 @@
                                 Target Latency (sec)
                             </label>
                             <div class="col-sm-6">
-                                <input class="form-control form-control-sm" value="3" step="0.1" min="0" type="number"
-                                       id="target-latency">
+                                <input class="form-control form-control-sm" value="1.5" step="0.1" min="0"
+                                       type="number" id="target-latency">
                             </div>
                         </div>
                         <div class="form-group row">
@@ -207,8 +190,7 @@
                             </label>
                             <div class="col-sm-6">
                                 <input class="form-control form-control-sm" value="0.02" min="0.0" max="0.5"
-                                       step="0.01" type="number"
-                                       id="min-drift">
+                                       step="0.01" type="number" id="min-drift">
                             </div>
                         </div>
                         <div class="form-group row">
@@ -216,9 +198,8 @@
                                 Catch-up playback rate (%):
                             </label>
                             <div class="col-sm-6">
-                                <input class="form-control form-control-sm" value="0.5"
-                                       min="0.0" max="0.5" step="0.01" type="number"
-                                       id="catchup-playback-rate">
+                                <input class="form-control form-control-sm" value="0.5" min="0.0" max="0.5"
+                                       step="0.01" type="number" id="catchup-playback-rate">
                             </div>
                         </div>
                         <div class="form-group row">
@@ -247,13 +228,16 @@
                     <div>
                         <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
                             id="latency-tag"></span></div>
-                        <div><i class="bi bi-arrow-right-square"></i> Min. drift: <span id="mindrift-tag"></span></div>
-                        <div><i class="bi bi-arrow-right-square"></i> Playback rate: <span id="playbackrate-tag"></span>
+                        <div><i class="bi bi-arrow-right-square"></i> Min. drift: <span id="mindrift-tag"></span>
+                        </div>
+                        <div><i class="bi bi-arrow-right-square"></i> Playback rate: <span
+                            id="playbackrate-tag"></span>
                         </div>
                         <div><i class="bi bi-arrow-right-square"></i> Live catchup latency threshold: <span
                             id="catchup-threshold-tag"></span></div>
-                        <div><i class="bi bi-arrow-right-square"></i> Video Buffer: <span id="buffer-tag"></span></div>
-                        <div><i class="bi bi-arrow-right-square"></i> Current quality: <span id="quality-tag"></span>
+                        <div><i class="bi bi-arrow-right-square"></i> Video Buffer: <span id="buffer-tag"></span>
+                        </div>
+                        <div><i class="bi bi-arrow-right-square"></i> Current bitrate: <span id="bitrate-tag"></span>
                         </div>
                     </div>
                 </div>
@@ -272,9 +256,11 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         setInterval(function () {
-            if (player) {
+            if (player && player.isReady()) {
                 var dashMetrics = player.getDashMetrics();
                 var settings = player.getSettings();
+                var rez = player.getBitrateInfoListFor('video');
+                var rid = player.getQualityFor('video');
 
                 var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
                 document.getElementById('latency-tag').innerHTML = currentLatency + ' secs';
@@ -289,15 +275,21 @@
 
                 document.getElementById('catchup-threshold-tag').innerHTML = settings.streaming.liveCatchup.latencyThreshold + ' secs';
 
+                if (rez && rez[rid]) {
+                    document.getElementById('bitrate-tag').innerHTML = Math.round(rez[rid].bitrate) / 1000 + ' kbps'
+                }
+
                 var d = new Date();
                 var seconds = d.getSeconds();
                 document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
                 var minutes = d.getMinutes();
                 document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
             }
+
         }, 200);
     });
 </script>
 <script src="../highlighter.js"></script>
 </body>
+
 </html>
