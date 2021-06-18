@@ -54,13 +54,13 @@
                                     </div>
                                     <div class="input-group input-group-sm mb-3">
                                         <span class="input-group-text">Min drift (sec)</span>
-                                        <input id="min-drift" class="form-control" value="0.02" min="0.0" max="0.5"
+                                        <input id="min-drift" class="form-control" value="0.02" min="0" max="0.5"
                                                step="0.01" type="number">
                                     </div>
                                     <div class="input-group input-group-sm mb-3">
                                         <span class="input-group-text">Max drift (sec)</span>
                                         <input id="max-drift" class="form-control" value="0"
-                                               step="0.5" type="number">
+                                               step="0.5" min="0" type="number">
                                     </div>
                                     <div class="input-group input-group-sm mb-3">
                                         <span class="input-group-text">Catch-up playback rate (%)</span>
@@ -259,11 +259,33 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-12">
+        <div class="row mt-4">
+            <div class="col-lg-9">
                 <div>
                     <canvas id="metric-chart"></canvas>
                 </div>
+            </div>
+            <div class="col-lg-3">
+                <h5>Chart settings</h5>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chart-enabled"
+                           checked>
+                    <label class="form-check-label" for="chart-enabled">
+                        Enabled
+                    </label>
+                </div>
+                <div class="input-group input-group-sm mb-3 mt-2">
+                    <span class="input-group-text">Interval (ms)</span>
+                    <input type="number" id="chart-interval" class="form-control" value="300"
+                           step="50" min="200">
+                </div>
+                <div class="input-group input-group-sm mb-3 mt-2">
+                    <span class="input-group-text">Number of data points</span>
+                    <input type="number" id="chart-number-of-entries" class="form-control" value="30"
+                           step="1" >
+                </div>
+                <button type="button" id="chart-settings-button" class="btn btn-success">Apply
+                </button>
             </div>
         </div>
         <footer class="pt-3 mt-4 text-muted border-top">
