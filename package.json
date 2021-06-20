@@ -10,6 +10,7 @@
     "test": "mocha test/unit --require mochahook",
     "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
     "dev": "grunt dev",
+    "lint": "grunt jshint:src",
     "prepublish": "grunt githooks",
     "prepublishOnly": "grunt prepublish",
     "debug": "iron-mocha --require mochahook",

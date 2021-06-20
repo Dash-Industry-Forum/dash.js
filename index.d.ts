@@ -266,6 +266,7 @@ declare namespace dashjs {
         on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
         on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
         on(type: CaptionRenderedEvent['type'], listener: (e: CaptionRenderedEvent) => void, scope?: object): void;
+        on(type: CaptionUpdatedEvent['type'], listener: (e: CaptionUpdatedEvent) => void, scope?: object): void;
         on(type: CaptionContainerResizeEvent['type'], listener: (e: CaptionContainerResizeEvent) => void, scope?: object): void;
         on(type: DynamicToStaticEvent['type'], listener: (e: DynamicToStaticEvent) => void, scope?: object): void;
         on(type: ErrorEvent['type'], listener: (e: ErrorEvent) => void, scope?: object): void;
@@ -475,6 +476,7 @@ declare namespace dashjs {
         BUFFER_LOADED: 'bufferLoaded';
         CAN_PLAY: 'canPlay';
         CAPTION_RENDERED: 'captionRendered';
+        CAPTION_UPDATED: 'captionUpdated';
         CAPTION_CONTAINER_RESIZE: 'captionContainerResize';
         CONFORMANCE_VIOLATION: 'conformanceViolation'
         DYNAMIC_TO_STATIC: 'dynamicToStatic';
@@ -658,6 +660,12 @@ declare namespace dashjs {
 
     export interface CaptionRenderedEvent extends Event {
         type: MediaPlayerEvents['CAPTION_RENDERED'];
+        captionDiv: HTMLDivElement;
+        currentTrackIdx: number;
+    }
+
+    export interface CaptionUpdatedEvent extends Event {
+        type: MediaPlayerEvents['CAPTION_UPDATED'];
         captionDiv: HTMLDivElement;
         currentTrackIdx: number;
     }
