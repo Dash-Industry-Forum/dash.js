@@ -51166,7 +51166,7 @@ function TextTracks() {
                 captionContainer.style.height = actualVideoHeight + 'px';
 
                 cue.onenter = function () {
-                    eventBus.trigger(_coreEventsEvents2['default'].CAPTION_UPDATED, { currentTrackIdx: currentTrackIdx });
+                    eventBus.trigger(_coreEventsEvents2['default'].CAPTION_UPDATED, { cue: cue, currentTrackIdx: currentTrackIdx });
                     if (track.mode === _constantsConstants2['default'].TEXT_SHOWING) {
                         if (this.isd) {
                             renderCaption(this);

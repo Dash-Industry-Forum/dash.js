@@ -666,8 +666,8 @@ declare namespace dashjs {
 
     export interface CaptionUpdatedEvent extends Event {
         type: MediaPlayerEvents['CAPTION_UPDATED'];
-        captionDiv: HTMLDivElement;
         currentTrackIdx: number;
+        cue: VTTCue | TextTrackCue;
     }
 
     export interface CaptionContainerResizeEvent extends Event {
