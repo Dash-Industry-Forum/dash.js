@@ -23,8 +23,8 @@ const NAME = 'TEXT_SWITCH';
 
 // Test constants
 
-const SWITCH_WAIT = 7;
-const SWITCH_TIMEOUT = 60;
+const SWITCH_WAIT = 3;
+const SWITCH_TIMEOUT = 120;
 
 exports.register = function (stream) {
 

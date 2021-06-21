@@ -21,8 +21,8 @@ const player = require('./scripts/player.js');
 const NAME = 'INITIAL_TEXT';
 
 // test constants
-const SWITCH_WAIT = 7;
-const SWITCH_TIMEOUT = 60;
+const SWITCH_WAIT = 3;
+const SWITCH_TIMEOUT = 120;
 
 exports.register = function (stream) {
 
@@ -31,7 +31,6 @@ exports.register = function (stream) {
         before(() => {
             if (!stream.available || stream.textTracks.length < 1) suite.skip();
             utils.log(NAME, 'Load stream');
-
         });
 
         test('switch text track', async (test) => {
