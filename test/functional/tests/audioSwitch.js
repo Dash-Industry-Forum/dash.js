@@ -20,6 +20,7 @@ const NAME = 'AUDIO_SWITCH';
 
 // Test constants
 const SWITCH_WAIT = 3;
+const SWITCH_TIMEOUT = 120;
 
 exports.register = function (stream) {
 
@@ -33,7 +34,8 @@ exports.register = function (stream) {
             await command.executeAsync(player.isPlaying, [constants.EVENT_TIMEOUT]);
         });
 
-        test('switch audio track', async () => {
+        test('switch audio track', async (test) => {
+            test.timeout = SWITCH_TIMEOUT * 1000;
             // Wait
             await command.sleep(SWITCH_WAIT * 1000);
             // Select each other track and check if new selected track is correct
