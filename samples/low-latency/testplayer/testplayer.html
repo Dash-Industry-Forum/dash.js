@@ -24,7 +24,7 @@
                  width="200">
         </header>
         <div class="row">
-            <div class="col-lg-3">
+            <div class="col-lg-12">
                 <div class=" p-5 bg-light border rounded-3">
                     <h3><i class="bi bi-info-square"></i> Live low-latency playback</h3>
                     Example showing how to use dash.js to play low latency streams. The low-latency related parameters
@@ -32,13 +32,18 @@
                     href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming" target="_blank">Wiki</a>.
 
                     <div class="alert alert-warning mt-4" role="alert">
-                        Note: All the
-                        additional ABR rules defined in "ABR - Additional" will be automatically disabled for L2A-LL and
-                        LoL+. Both, L2A-LL and LoL+ are standalone rules.
+                        <ul>
+                            <li>All the
+                                additional ABR rules defined in "ABR - Additional" will be automatically disabled for L2A-LL and
+                                LoL+. Both, L2A-LL and LoL+ are standalone rules.</li>
+                            <li>It is not possible to switch between the ABR rules dynamically. In order change the ABR rule reload the stream.</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-9">
+        </div>
+        <div class="row mt-4">
+            <div class="col-lg-12">
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="p-5 border rounded-3">
