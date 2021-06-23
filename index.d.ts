@@ -540,7 +540,7 @@ declare namespace dashjs {
 
         removeAllABRCustomRule(): void;
 
-        getAverageThroughput(value: number): void;
+        getAverageThroughput(type: string): number;
 
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
 
@@ -1262,7 +1262,7 @@ declare namespace dashjs {
 
         getCurrentSchedulingInfo(type: MediaType): object;
 
-        getCurrentDVRInfo(type: MediaType): IDVRInfo[];
+        getCurrentDVRInfo(type: MediaType): IDVRInfo;
 
         getCurrentManifestUpdate(): any;
 
