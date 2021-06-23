@@ -223,6 +223,9 @@ App.prototype._setupLineChart = function () {
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 0
+            },
             scales: {
                 y: {
                     min: 0,
