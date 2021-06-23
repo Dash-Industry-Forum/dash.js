@@ -489,6 +489,20 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Multiple audio tracks with different codecs",
+                "description": "This example shows how content with multiple audio tracks with different codecs can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
+                "href": "multi-audio/multi-audio-drm-codec-change.html",
+                "image": "lib/img/google-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Multi Audio",
+                    "Fragmented Text",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -513,7 +527,7 @@
         "section": "Audio only",
         "samples": [
             {
-                "title": "Only audio stream",
+                "title": "Audio only stream",
                 "description": "This example shows how to play audio-only streams in dash.js.",
                 "href": "audio-only/index.html",
                 "labels": [

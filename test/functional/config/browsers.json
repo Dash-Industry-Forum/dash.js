@@ -26,7 +26,7 @@
             }
         },
         "edge": {
-            "browserName": "MicrosoftEdge",
+            "browserName": "edge",
             "platform": "WINDOWS",
             "keySystems": {
                 "com.widevine.alpha": false,
