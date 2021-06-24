@@ -72,7 +72,7 @@
         "google": {
             "acronym": "Google",
             "name": "Google",
-            "url": "https://www.google.com"    
+            "url": "https://www.google.com"
         },
         "vdms": {
             "acronym": "VDMS",
@@ -385,7 +385,7 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
-                },                
+                },
                 {
                     "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/2.mpd",
                     "name": "Subtitles in multi period live",
@@ -404,12 +404,12 @@
                             "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
                             "httpRequestHeaders": {
                                 "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                            },
-                            "com.microsoft.playready": {
-                                "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
-                                "httpRequestHeaders": {
-                                    "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                                }
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
                             }
                         }
                     },
@@ -423,12 +423,12 @@
                             "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
                             "httpRequestHeaders": {
                                 "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                            },
-                            "com.microsoft.playready": {
-                                "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
-                                "httpRequestHeaders": {
-                                    "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                                }
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
                             }
                         }
                     },
