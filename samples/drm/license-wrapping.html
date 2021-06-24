@@ -22,7 +22,8 @@
 
             const protData = {
                 "com.widevine.alpha": {
-                    "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense"
+                    "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+                    priority: 0
                 }
             };
             var video,
@@ -68,9 +69,11 @@
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>License wrapping example</h3>
-                    <p>This example shows how to use dash.js to modify the license request and the license repsonse. </p><p>For a detailed explanation on DRM playback in dash.js checkout the
-                    <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
-                       target="_blank">Wiki</a>.</p>
+                    <p>This example shows how to use dash.js to modify the license request and the license
+                        repsonse. </p>
+                    <p>For a detailed explanation on DRM playback in dash.js checkout the
+                        <a href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Digital-Rights-Management-(DRM)-and-license-acquisition"
+                           target="_blank">Wiki</a>.</p>
                 </div>
             </div>
             <div class="col-md-8">
