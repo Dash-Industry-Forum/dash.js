@@ -152,7 +152,6 @@ function EventController() {
                     }
                 }
             }
-            logger.debug(`Added ${values.length} inline events`);
         } catch (e) {
             throw e;
         }
@@ -423,13 +422,13 @@ function EventController() {
                 return;
             }
 
-            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value === MPD_RELOAD_VALUE) {
+            if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
                 if (event.duration !== 0 || event.presentationTimeDelta !== 0) { //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                     logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
                     _removeEvent(events, event);
                     _refreshManifest();
                 }
-            } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value === MPD_CALLBACK_VALUE) {
+            } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
                 logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
                 _removeEvent(events, event);
                 _sendCallbackRequest(event.messageData);

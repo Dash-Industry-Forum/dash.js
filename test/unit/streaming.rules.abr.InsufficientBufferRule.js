@@ -4,16 +4,21 @@ import Constants from '../../src/streaming/constants/Constants';
 import EventBus from '../../src/core/EventBus.js';
 import Events from '../../src/core/events/Events';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import Settings from '../../src/core/Settings';
 
 const expect = require('chai').expect;
 
 const context = {};
 let insufficientBufferRule;
 const eventBus = EventBus(context).getInstance();
+const settings = Settings(context).getInstance();
 
 describe('InsufficientBufferRule', function () {
     beforeEach(function () {
-        insufficientBufferRule = InsufficientBufferRule(context).create({});
+        settings.reset();
+        insufficientBufferRule = InsufficientBufferRule(context).create({
+            settings
+        });
     });
 
     it('should return an empty switchRequest when getMaxIndex function is called with an empty parameter', function () {
@@ -35,13 +40,25 @@ describe('InsufficientBufferRule', function () {
     it('should return an empty switch request when bufferState is empty', function () {
         const dashMetricsMock = new DashMetricsMock();
         const rulesContextMock = {
-            getMediaInfo: function () {},
-            getMediaType: function () { return 'video'; },
-            getAbrController: function () {},
-            getRepresentationInfo: function () { return { fragmentDuration: 4 };}
+            getMediaInfo: function () {
+            },
+            getMediaType: function () {
+                return 'video';
+            },
+            getAbrController: function () {
+            },
+            getStreamInfo: function () {
+                return {
+                    id: 'DUMMY_STREAM-01'
+                };
+            },
+            getRepresentationInfo: function () {
+                return {fragmentDuration: 4};
+            }
         };
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
 
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
@@ -54,13 +71,25 @@ describe('InsufficientBufferRule', function () {
             state: 'bufferStalled'
         };
         const rulesContextMock = {
-            getMediaInfo: function () {},
-            getMediaType: function () { return 'video'; },
-            getAbrController: function () {},
-            getRepresentationInfo: function () { return { fragmentDuration: 4 };}
+            getMediaInfo: function () {
+            },
+            getMediaType: function () {
+                return 'video';
+            },
+            getAbrController: function () {
+            },
+            getStreamInfo: function () {
+                return {
+                    id: 'DUMMY_STREAM-01'
+                };
+            },
+            getRepresentationInfo: function () {
+                return {fragmentDuration: 4};
+            }
         };
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
         dashMetricsMock.addBufferState('video', bufferState);
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
@@ -73,13 +102,25 @@ describe('InsufficientBufferRule', function () {
             state: 'bufferLoaded'
         };
         const rulesContextMock = {
-            getMediaInfo: function () {},
-            getMediaType: function () { return 'video'; },
-            getAbrController: function () {},
-            getRepresentationInfo: function () { return { fragmentDuration: NaN };}
+            getMediaInfo: function () {
+            },
+            getMediaType: function () {
+                return 'video';
+            },
+            getAbrController: function () {
+            },
+            getStreamInfo: function () {
+                return {
+                    id: 'DUMMY_STREAM-01'
+                };
+            },
+            getRepresentationInfo: function () {
+                return {fragmentDuration: NaN};
+            }
         };
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
         dashMetricsMock.addBufferState('video', bufferState);
         const maxIndexRequest = rule.getMaxIndex(rulesContextMock);
@@ -90,25 +131,37 @@ describe('InsufficientBufferRule', function () {
         let bufferState = {
             state: 'bufferLoaded'
         };
-        let representationInfo = { fragmentDuration: NaN };
+        let representationInfo = {fragmentDuration: NaN};
         const dashMetricsMock = new DashMetricsMock();
         const rulesContextMock = {
-            getMediaInfo: function () {},
-            getMediaType: function () { return 'video'; },
-            getAbrController: function () {},
-            getRepresentationInfo: function () { return representationInfo;}
+            getMediaInfo: function () {
+            },
+            getMediaType: function () {
+                return 'video';
+            },
+            getAbrController: function () {
+            },
+            getStreamInfo: function () {
+                return {
+                    id: 'DUMMY_STREAM-01'
+                };
+            },
+            getRepresentationInfo: function () {
+                return representationInfo;
+            }
         };
 
         dashMetricsMock.addBufferState('video', bufferState);
 
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
 
-        let e = { mediaType: 'video', startTime: 0 };
+        let e = {mediaType: 'video', startTime: 0};
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
 
-        e = { mediaType: 'video', startTime: 4 };//Event objects can't be reused because they get annotated by eventBus.
+        e = {mediaType: 'video', startTime: 4};//Event objects can't be reused because they get annotated by eventBus.
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
 
         bufferState.state = 'bufferStalled';
@@ -122,30 +175,42 @@ describe('InsufficientBufferRule', function () {
         const bufferState = {
             state: 'bufferStalled'
         };
-        const representationInfo = { fragmentDuration: 4 };
+        const representationInfo = {fragmentDuration: 4};
         const dashMetricsMock = new DashMetricsMock();
         dashMetricsMock.addBufferState('video', bufferState);
 
         const rulesContextMock = {
-            getMediaInfo: function () {},
-            getMediaType: function () { return 'video'; },
-            getAbrController: function () {},
-            getRepresentationInfo: function () { return representationInfo;}
+            getMediaInfo: function () {
+            },
+            getMediaType: function () {
+                return 'video';
+            },
+            getAbrController: function () {
+            },
+            getRepresentationInfo: function () {
+                return representationInfo;
+            },
+            getStreamInfo: function () {
+                return {
+                    id: 'DUMMY_STREAM-01'
+                };
+            }
         };
 
         const rule = InsufficientBufferRule(context).create({
-            dashMetrics: dashMetricsMock
+            dashMetrics: dashMetricsMock,
+            settings
         });
 
         let maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(-1);
 
-        let e = { mediaType: 'video', startTime: 0 };
+        let e = {mediaType: 'video', startTime: 0};
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
         maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(-1);
 
-        e = { mediaType: 'video', startTime: 4 };
+        e = {mediaType: 'video', startTime: 4};
         eventBus.trigger(Events.BYTES_APPENDED_END_FRAGMENT, e);
         maxIndexRequest = rule.getMaxIndex(rulesContextMock);
         expect(maxIndexRequest.quality).to.be.equal(0);

@@ -36,7 +36,7 @@ import ProtectionErrors from '../errors/ProtectionErrors';
 import DashJSError from '../../vo/DashJSError';
 import LicenseRequest from '../vo/LicenseRequest';
 import LicenseResponse from '../vo/LicenseResponse';
-import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest';
 import Utils from '../../../core/Utils';
 import Constants from '../../constants/Constants';
 
@@ -58,6 +58,7 @@ const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
  * @todo ProtectionController does almost all of its tasks automatically after init() is
  * called.  Applications might want more control over this process and want to go through
  * each step manually (key system selection, session creation, session maintenance).
+ * This module can be accessed using the MediaPlayer API getProtectionController()
  * @param {Object} config
  */
 
@@ -782,9 +783,10 @@ function ProtectionController(config) {
         const sessionId = sessionToken.getSessionID() || null;
 
         let licenseRequest = new LicenseRequest(url, reqMethod, responseType, reqHeaders, withCredentials, messageType, sessionId, reqPayload);
-        applyFilters(licenseRequestFilters, licenseRequest).then(() => {
-            doLicenseRequest(licenseRequest, LICENSE_SERVER_REQUEST_RETRIES, timeout, onLoad, onAbort, onError);
-        });
+        const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE]) ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRIES;
+            applyFilters(licenseRequestFilters, licenseRequest).then(() => {
+                doLicenseRequest(licenseRequest, retryAttempts, timeout, onLoad, onAbort, onError);
+            });
     }
 
     // Implement license requests with a retry mechanism to avoid temporary network issues to affect playback experience
@@ -837,9 +839,10 @@ function ProtectionController(config) {
         const retryRequest = function () {
             // fail silently and retry
             retriesCount--;
+            const retryInterval = !isNaN(settings.get().streaming.retryIntervals[HTTPRequest.LICENSE]) ? settings.get().streaming.retryIntervals[HTTPRequest.LICENSE] : LICENSE_SERVER_REQUEST_RETRY_INTERVAL;
             setTimeout(function () {
                 doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError);
-            }, LICENSE_SERVER_REQUEST_RETRY_INTERVAL);
+            }, retryInterval);
         };
 
         xhr.onload = function () {
@@ -935,15 +938,15 @@ function ProtectionController(config) {
         }
     }
 
-    function setLicenseRequestFilters (filters) {
+    function setLicenseRequestFilters(filters) {
         licenseRequestFilters = filters;
     }
 
-    function setLicenseResponseFilters (filters) {
+    function setLicenseResponseFilters(filters) {
         licenseResponseFilters = filters;
     }
 
-    function applyFilters (filters, param) {
+    function applyFilters(filters, param) {
         if (!filters) return Promise.resolve();
         return filters.reduce((prev, next) => {
             return prev.then(() => {
@@ -953,24 +956,24 @@ function ProtectionController(config) {
     }
 
     instance = {
-        initializeForMedia: initializeForMedia,
-        clearMediaInfoArrayByStreamId: clearMediaInfoArrayByStreamId,
-        createKeySession: createKeySession,
-        loadKeySession: loadKeySession,
-        removeKeySession: removeKeySession,
-        closeKeySession: closeKeySession,
-        setServerCertificate: setServerCertificate,
-        setMediaElement: setMediaElement,
-        setSessionType: setSessionType,
-        setRobustnessLevel: setRobustnessLevel,
-        setProtectionData: setProtectionData,
-        getSupportedKeySystemsFromContentProtection: getSupportedKeySystemsFromContentProtection,
-        getKeySystems: getKeySystems,
-        setKeySystems: setKeySystems,
-        setLicenseRequestFilters: setLicenseRequestFilters,
-        setLicenseResponseFilters: setLicenseResponseFilters,
-        stop: stop,
-        reset: reset
+        initializeForMedia,
+        clearMediaInfoArrayByStreamId,
+        createKeySession,
+        loadKeySession,
+        removeKeySession,
+        closeKeySession,
+        setServerCertificate,
+        setMediaElement,
+        setSessionType,
+        setRobustnessLevel,
+        setProtectionData,
+        getSupportedKeySystemsFromContentProtection,
+        getKeySystems,
+        setKeySystems,
+        setLicenseRequestFilters,
+        setLicenseResponseFilters,
+        stop,
+        reset
     };
 
     setup();

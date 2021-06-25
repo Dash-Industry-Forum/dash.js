@@ -20,11 +20,11 @@ function AdapterMock () {
     };
 
     this.getAllMediaInfoForType = function () {
-        return [{codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, isText: false, lang: 'eng',mimeType: 'audio/mp4', roles: ['main']},
-                {codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, isText: false, lang: 'deu',mimeType: 'audio/mp4', roles: ['main']}];
+        return [{codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 0, lang: 'eng',mimeType: 'audio/mp4', roles: ['main']},
+                {codec: 'audio/mp4;codecs="mp4a.40.2"', id: undefined, index: 1, lang: 'deu',mimeType: 'audio/mp4', roles: ['main']}];
     };
 
-    this.getDataForMedia = function () {
+    this.getAdaptationForMediaInfo = function () {
         return {};
     };
 
@@ -70,7 +70,7 @@ function AdapterMock () {
         };
     };
 
-    this.getIsTextTrack = function () {
+    this.getIsText = function () {
         return false;
     };
 
@@ -120,7 +120,7 @@ function AdapterMock () {
 
     this.applyPatchToManifest = function () {};
 
-    this.convertDataToRepresentationInfo = function () {
+    this.convertRepresentationToRepresentationInfo = function () {
         return null;
     };
 
@@ -168,6 +168,16 @@ function AdapterMock () {
     this.getPatchLocation = function () {
         return null;
     };
+
+    this.getRegularPeriods = function () {
+        return this.regularPeriods || [];
+    };
+
+    this.setRegularPeriods = function (periods) {
+        this.regularPeriods = periods;
+    };
+
+
 }
 
 export default AdapterMock;

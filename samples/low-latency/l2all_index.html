@@ -1,23 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Low latency live stream instantiation example with local execution</title>
-    <script src="../../dist/dash.all.debug.js"></script>
-    <script src="../../dist/dash.all.debug.js"></script>
-    <script src="http://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <meta charset="utf-8">
+    <title>Low latency streaming with L2A</title>
 
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <script class="code">
-        var player, targetLatency, minDrift, catchupPlaybackRate, liveCatchupLatencyThreshold;
+        var player, targetLatency, minDrift, catchupPlaybackRate, liveCatchupLatencyThreshold, qualitySwitchCallback;
 
-        function init() {
+        function load() {
+
+            if (player) {
+                player.reset();
+                if (qualitySwitchCallback) {
+                    player.off(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, qualitySwitchCallback);
+                    qualitySwitchCallback = null;
+                }
+            }
+
             var video,
                 url = 'https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd';
 
-            video = document.querySelector("video");
+            video = document.querySelector('video');
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
             player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true } });
             player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
 
@@ -30,19 +41,38 @@
                 }
             });
             applyParameters();
+            player.initialize(video, url, true);
+            qualitySwitchCallback = function (e) {
+                if (e.mediaType === 'video') {
+                    console.warn('Quality changed', e);
+                    const quality = player.getBitrateInfoListFor('video')[e.newQuality];
+                    if (!quality) {
+                        return;
+                    }
+                    document.querySelector('#quality-tag').innerText = `${quality.width}x${quality.height}, ${quality.bitrate / 1000}Kbps`;
+                }
+            }
+
+
+            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, qualitySwitchCallback);
 
             return player;
         }
 
         function applyParameters() {
-            targetLatency = parseFloat(document.getElementById("target-latency").value, 10);
-            minDrift = parseFloat(document.getElementById("min-drift").value, 10);
-            catchupPlaybackRate = parseFloat(document.getElementById("catchup-playback-rate").value, 10);
-            liveCatchupLatencyThreshold = parseFloat(document.getElementById("catchup-threshold").value, 10);
+            if (!player) {
+                return;
+            }
+            targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
+            minDrift = parseFloat(document.getElementById('min-drift').value, 10);
+            catchupPlaybackRate = parseFloat(document.getElementById('catchup-playback-rate').value, 10);
+            liveCatchupLatencyThreshold = parseFloat(document.getElementById('catchup-threshold').value, 10);
 
             player.updateSettings({
                 streaming: {
-                    liveDelay: targetLatency,
+                    delay: {
+                        liveDelay: targetLatency
+                    },
                     liveCatchup: {
                         minDrift: minDrift,
                         playbackRate: catchupPlaybackRate,
@@ -54,238 +84,220 @@
     </script>
 
     <style>
-        .video-wrapper {
-            display: flex;
-            flex-flow: row wrap;
-        }
-
-        .video-wrapper > div:nth-child(2) {
-            margin-left: 25px;
-        }
-
         video {
-            width: 640px;
-            height: 360px;
+            width: 100%;
         }
 
-        ul {
-            margin: 0;
+        #manifest {
+            width: 300px;
         }
 
-        input {
-            width: 5em;
-            border: 1px solid gray;
-            padding: 0 4px 0 8px;
+        #fragmentsEntry, #secondsEntry {
+            position: relative;
+            display: none;
+            width: 50px;
         }
 
-        .help-container {
-            display: flex;
-            flex-flow: row wrap;
-            margin-top: 1em;
-            align-content: center;
-            background: white;
-            border: solid 1px #ddd;
-            padding: 0.5em;
+        #delayInFragments, #delayInSeconds {
+            width: 50px;
         }
 
-        .help-container > div {
-            width: 33.3%;
-            padding: 1em;
-            box-sizing: border-box;
-        }
-
-        .help-container h3 {
-            margin-top: 0;
+        .clock {
+            color: #000;
+            font-size: 60pt
         }
     </style>
 </head>
 <body>
-<div>
-    <div class="video-wrapper">
-        <video controls="true" autoplay muted></video>
-        <div>
-            <div>
-                <form action="javascript:applyParameters()">
-                    <fieldset>
-                        <legend>Configurable parameters</legend>
-                        <p>Target Latency (secs): <input type="number" id="target-latency" value="2" min="0" step="0.1">
-                        </p>
-                        <p>Min. drift (secs): <input type="number" id="min-drift" value="0.3" min="0.0" max="0.5"
-                                                     step="0.01"></p>
-                        <p>Catch-up playback rate (%): <input type="number" id="catchup-playback-rate" value="0.3"
-                                                              min="0.0" max="0.5" step="0.01"></p>
-                        <p>Live catchup latency threshold (secs): <input type="number" id="catchup-threshold"
-                                                                         value="30">
-                        </p>
-                        <button type="submit">Apply</button>
-                    </fieldset>
-                </form>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class=" p-5 bg-light border rounded-3">
+                    <h3><i class="bi bi-info-square"></i> Live low-latency playback with L2A</h3>
+                    Example showing how to use dash.js to play low latency streams with the L2A ABR algorithm. For a detailed documentation
+                    checkout the dash.js <a
+                    href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming" target="_blank">Wiki</a>.
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <div class="card border-2 border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">Latency</h5>
+                                    <p class="card-text">Lowering this value will lower latency but may decrease the
+                                        player's ability
+                                        to build a stable buffer.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-2 border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">Min drift</h5>
+                                    <p class="card-text">Minimum latency deviation allowed before activating catch-up
+                                        mechanism.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-2 border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">Catch-up playback rate</h5>
+                                    <p class="card-text">Maximum catch-up rate, as a percentage, for low latency live
+                                        streams.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card border-2 border-primary">
+                                <div class="card-body">
+                                    <h5 class="card-title">Live catchup latency threshold</h5>
+                                    <p class="card-text">Use this parameter to set the maximum threshold for
+                                        which
+                                        live catch up is applied. For instance, if this value is set to 8 seconds, then
+                                        live catchup
+                                        is only applied if the current live latency is equal or below 8 seconds. The
+                                        reason behind
+                                        this parameter is to avoid an increase of the playback rate if the user seeks
+                                        within the DVR
+                                        window.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <br>
-            <fieldset>
-                <legend>Current values</legend>
-                <ul>
-                    <li>Latency: <span id="latency-tag"></span></li>
-                    <li>Min. drift: <span id="mindrift-tag"></span></li>
-                    <li>Playback rate: <span id="playbackrate-tag"></span></li>
-                    <li>Live catchup latency threshold : <span id="catchup-threshold-tag"></span></li>
-                    <li>Buffer: <b><span id="buffer-tag"></span></b></li>
-                    <li>Quality: <b><span id="quality-tag"></span></b></li>
-                </ul>
-                <div id="stats"></div>
-            </fieldset>
         </div>
+        <div class="row mt-2">
+            <div class="col-md-7">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">Manifest URL</span>
+                    <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
+                           value="https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"
+                           aria-label="Username"
+                           aria-describedby="basic-addon1">
+                    <button type="button" id="loadButton" class="btn btn-success" onclick="load(this)">Load stream
+                    </button>
+                </div>
+                <video controls="true"></video>
+
+            </div>
+            <div class="col-md-5">
+                <div class="p-5 border rounded-3">
+                    <h4>Settings</h4>
+                    <hr>
+                    <div>
+                        <div class="form-group row">
+                            <label class="col-sm-6 col-form-label" for="target-latency">
+                                Target Latency (sec)
+                            </label>
+                            <div class="col-sm-6">
+                                <input class="form-control form-control-sm" value="3" step="0.1" min="0" type="number"
+                                       id="target-latency">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-6 col-form-label" for="min-drift">
+                                Min drift (sec)
+                            </label>
+                            <div class="col-sm-6">
+                                <input class="form-control form-control-sm" value="0.02" min="0.0" max="0.5"
+                                       step="0.01" type="number"
+                                       id="min-drift">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-6 col-form-label" for="catchup-playback-rate">
+                                Catch-up playback rate (%):
+                            </label>
+                            <div class="col-sm-6">
+                                <input class="form-control form-control-sm" value="0.5"
+                                       min="0.0" max="0.5" step="0.01" type="number"
+                                       id="catchup-playback-rate">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-6 col-form-label" for="catchup-threshold">
+                                Live catchup latency threshold (sec):
+                            </label>
+                            <div class="col-sm-6">
+                                <input class="form-control form-control-sm" value="60" min="0" type="number"
+                                       id="catchup-threshold">
+                            </div>
+                        </div>
+                        <button type="button" id="apply-settings-button" class="btn btn-success"
+                                onclick="applyParameters(this)">Apply
+                        </button>
+                    </div>
+                </div>
+                <div class=" p-5 border rounded-3 mt-1">
+                    <h3>Wall Clock reference time</h3>
+                    <div class="clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
+                </div>
+                <div class="p-5 border rounded-3 mt-1">
+                    <h4>Debug information</h4>
+                    <hr>
+                    <div>
+                        <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
+                            id="latency-tag"></span></div>
+                        <div><i class="bi bi-arrow-right-square"></i> Min. drift: <span id="mindrift-tag"></span></div>
+                        <div><i class="bi bi-arrow-right-square"></i> Playback rate: <span id="playbackrate-tag"></span>
+                        </div>
+                        <div><i class="bi bi-arrow-right-square"></i> Live catchup latency threshold: <span
+                            id="catchup-threshold-tag"></span></div>
+                        <div><i class="bi bi-arrow-right-square"></i> Video Buffer: <span id="buffer-tag"></span></div>
+                        <div><i class="bi bi-arrow-right-square"></i> Current quality: <span id="quality-tag"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
     </div>
-
-    <p style="font-family:Arial,sans-serif; font-weight: bold; font-size: 1.1em">Concepts definition</p>
-    <div class="help-container">
-        <div id="latency-help">
-            <h3>Latency</h3>
-            <p>Lowering this value will lower latency but may decrease the player's ability to build a stable
-                buffer.</p>
-            <p><a href="http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setLiveDelay__anchor"
-                  target="_blank">setLiveDelay() doc</a></p>
-        </div>
-
-        <div id="min-drift-help">
-            <h3>Min. drift</h3>
-            <p>Minimum latency deviation allowed before activating catch-up mechanism.</p>
-            <p><a href="http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setLowLatencyMinDrift__anchor"
-                  target="_blank">setLowLatencyMinDrift() doc</a></p>
-        </div>
-
-        <div id="catch-up-playback-rate-help">
-            <h3>Catch-up playback rate</h3>
-            <p>Maximum catch-up rate, as a percentage, for low latency live streams.</p>
-            <p><a href="http://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setCatchUpPlaybackRate__anchor"
-                  target="_blank">setCatchUpPlaybackRate() doc</a></p>
-        </div>
-    </div>
-</div>
+</main>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const player = init();
-        const video = document.querySelector("video")
-        let stallingAt = null;
-        const CMA = function () {
-            let average = 0;
-            let count = 0;
-
-            return {
-                average(val) {
-                    if (isNaN(val)) {
-                        return 0;
-                    }
-                    average = average + ((val - average) / ++count);
-                    return average;
-                },
-            }
-        }
-
+    document.addEventListener('DOMContentLoaded', function () {
         setInterval(function () {
-            var dashMetrics = player.getDashMetrics();
-            var settings = player.getSettings();
+            if (player) {
+                var dashMetrics = player.getDashMetrics();
+                var settings = player.getSettings();
 
-            var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
-            document.getElementById("latency-tag").innerHTML = currentLatency + " secs";
+                var currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
+                document.getElementById('latency-tag').innerHTML = currentLatency + ' secs';
 
-            document.getElementById("mindrift-tag").innerHTML = settings.streaming.liveCatchup.minDrift + " secs";
+                document.getElementById('mindrift-tag').innerHTML = settings.streaming.liveCatchup.minDrift + ' secs';
 
-            var currentPlaybackRate = player.getPlaybackRate();
-            document.getElementById("playbackrate-tag").innerHTML = Math.round(currentPlaybackRate * 100) / 100;
+                var currentPlaybackRate = player.getPlaybackRate();
+                document.getElementById('playbackrate-tag').innerHTML = Math.round(currentPlaybackRate * 100) / 100;
 
-            var currentBuffer = dashMetrics.getCurrentBufferLevel("video");
-            document.getElementById("buffer-tag").innerHTML = currentBuffer + " secs";
+                var currentBuffer = dashMetrics.getCurrentBufferLevel('video');
+                document.getElementById('buffer-tag').innerHTML = currentBuffer + ' secs';
 
-            document.getElementById("catchup-threshold-tag").innerHTML = settings.streaming.liveCatchup.latencyThreshold + " secs";
+                document.getElementById('catchup-threshold-tag').innerHTML = settings.streaming.liveCatchup.latencyThreshold + ' secs';
+
+                var d = new Date();
+                var seconds = d.getSeconds();
+                document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
+                var minutes = d.getMinutes();
+                document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
+            }
         }, 200);
-
-        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) {
-            console.warn('Quality changed requested', e);
-        });
-
-        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
-            if (e.mediaType === 'video') {
-                console.warn('Quality changed', e);
-                const quality = player.getBitrateInfoListFor('video')[e.newQuality];
-                if (!quality) {
-                    return;
-                }
-                document.querySelector('#quality-tag').innerText = `${quality.width}x${quality.height}, ${quality.bitrate / 1000}Kbps`;
-            }
-        });
-
-        window.startRecording = function () {
-            console.info('Begin recording');
-
-            const latencyCMA = CMA();
-            const bufferCMA = CMA();
-            const history = window.abrHistory = {
-                switchHistory: [],
-                stallDuration: 0,
-                averageLatency: 0,
-                averageBufferLength: 0,
-            };
-
-            // Record the initial quality
-            recordSwitch(player.getBitrateInfoListFor('video')[player.getQualityFor('video')]);
-
-            let pollInterval = -1;
-            window.stopRecording = function () {
-                clearInterval(pollInterval);
-                checkStallResolution();
-                const lastQuality = history.switchHistory[history.switchHistory.length - 1];
-                if (lastQuality.end === null) {
-                    lastQuality.end = video.currentTime;
-                }
-                console.warn('Run ended. Please navigate back to node for results.');
-            }
-
-            pollInterval = setInterval(function () {
-                const currentLatency = parseFloat(player.getCurrentLiveLatency(), 10);
-                const currentBuffer = player.getDashMetrics().getCurrentBufferLevel("video");
-                history.averageLatency = latencyCMA.average(currentLatency);
-                history.averageBufferLength = bufferCMA.average(currentBuffer);
-                console.log(history);
-            }, 200);
-
-
-            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
-                recordSwitch(player.getBitrateInfoListFor('video')[e.newQuality]);
-            });
-
-            video.addEventListener('waiting', function (e) {
-                stallingAt = performance.now();
-            });
-
-            video.addEventListener('timeupdate', function () {
-                checkStallResolution();
-            });
-
-            function recordSwitch(quality) {
-                if (!quality) {
-                    return;
-                }
-                const switchHistory = history.switchHistory;
-                const prev = switchHistory[switchHistory.length - 1];
-                const videoNow = video.currentTime;
-                if (prev) {
-                    prev.end = videoNow;
-                }
-                switchHistory.push({ start: videoNow, end: null, quality });
-            }
-
-            function checkStallResolution() {
-                if (stallingAt !== null) {
-                    history.stallDuration += (performance.now() - stallingAt);
-                    stallingAt = null;
-                }
-            }
-        }
     });
 </script>
 <script src="../highlighter.js"></script>
 </body>
 </html>
-
-

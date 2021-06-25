@@ -66,6 +66,7 @@ function TimeSyncController() {
         lastOffset,
         lastTimingSource,
         internalTimeBetweenSyncAttempts,
+        errHandler,
         baseURLController;
 
     function setup() {
@@ -83,6 +84,10 @@ function TimeSyncController() {
 
         if (config.baseURLController) {
             baseURLController = config.baseURLController;
+        }
+
+        if (config.errHandler) {
+            errHandler = config.errHandler;
         }
 
         if (config.settings) {
@@ -138,8 +143,9 @@ function TimeSyncController() {
     /**
      * Sync against a timing source. T
      * @param {array} tSources
+     * @param {boolean} isDynamic
      */
-    function attemptSync(tSources) {
+    function attemptSync(tSources, isDynamic) {
 
         timingSources = tSources;
 
@@ -149,7 +155,7 @@ function TimeSyncController() {
         }
 
         // No synchronization required we can signal the completion immediately
-        if (!_shouldPerformSynchronization()) {
+        if (!_shouldPerformSynchronization(isDynamic)) {
             eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
             return;
         }
@@ -275,11 +281,15 @@ function TimeSyncController() {
 
     /**
      * Checks if a synchronization is required
+     * @param {boolean} isDynamic
      * @return {boolean}
      * @private
      */
-    function _shouldPerformSynchronization() {
+    function _shouldPerformSynchronization(isDynamic) {
         try {
+            if (!isDynamic) {
+                return false;
+            }
             const timeBetweenSyncAttempts = !isNaN(internalTimeBetweenSyncAttempts) ? internalTimeBetweenSyncAttempts : DEFAULT_TIME_BETWEEN_SYNC_ATTEMPTS;
 
             if (!timeOfLastSync || !timeBetweenSyncAttempts || isNaN(timeBetweenSyncAttempts)) {
@@ -299,7 +309,7 @@ function TimeSyncController() {
      */
     function _onComplete(offset = NaN) {
         let failed = isNaN(offset);
-        if (failed && settings.get().streaming.useManifestDateHeaderTimeSource) {
+        if (failed && settings.get().streaming.utcSynchronization.useManifestDateHeaderTimeSource) {
             //Before falling back to binary search , check if date header exists on MPD. if so, use for a time source.
             _checkForDateHeader();
         } else {
@@ -537,12 +547,13 @@ function TimeSyncController() {
 
         if (failed) {
             lastTimingSource = null;
+            isSynchronizing = false;
+            errHandler.error(new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE));
         }
 
         // Notify other classes
         eventBus.trigger(Events.UPDATE_TIME_SYNC_OFFSET, {
             offset: offset,
-            error: failed ? new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE) : null
         });
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
     }

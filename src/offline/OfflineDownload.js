@@ -55,6 +55,7 @@ function OfflineDownload(config) {
     const debug = config.debug;
     const manifestUpdater = config.manifestUpdater;
     const baseURLController = config.baseURLController;
+    const segmentBaseController = config.segmentBaseController;
     const constants = config.constants;
     const dashConstants = config.dashConstants;
     const urlUtils = config.urlUtils;
@@ -321,6 +322,7 @@ function OfflineDownload(config) {
                     baseURLController: baseURLController,
                     timelineConverter: timelineConverter,
                     adapter: adapter,
+                    segmentBaseController: segmentBaseController,
                     offlineStoreController: offlineStoreController
                 });
                 _streams.push(stream);
@@ -440,7 +442,6 @@ function OfflineDownload(config) {
         rep[constants.VIDEO] = [];
         rep[constants.AUDIO] = [];
         rep[constants.TEXT] = [];
-        rep[constants.FRAGMENTED_TEXT] = [];
 
         // selectedRepresentations.video.forEach(item => {
         //     ret[constants.VIDEO].push(item.id);

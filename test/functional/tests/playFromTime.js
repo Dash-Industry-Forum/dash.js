@@ -1,9 +1,9 @@
 /**
-PLAY:
-- load test page
-- load stream at start time ithing last period
-- check playing time
-**/
+ PLAY:
+ - load test page
+ - load stream at start time ithing last period
+ - check playing time
+ **/
 const intern = require('intern').default;
 const { suite, before, test, after } = intern.getPlugin('interface.tdd');
 const { assert } = intern.getPlugin('chai');
@@ -19,6 +19,7 @@ const NAME = 'PLAY_FROM_TIME';
 const TIME_OFFSET = 30; // time offset (in sec.) from the beginning of the period or before live edge (for live streams)
 
 let startTime;
+let originalUrl;
 
 exports.register = function (stream) {
 
@@ -28,18 +29,22 @@ exports.register = function (stream) {
             if (!stream.available) suite.skip();
             utils.log(NAME, 'Load stream');
             command = remote.get(intern.config.testPage);
-            let stream_ = stream;
+            originalUrl = stream.url;
             if (!stream.dynamic) {
                 let period = stream.periods[stream.periods.length - 1];
                 startTime = period.start + Math.min(TIME_OFFSET, period.duration - 5);
-                stream_.url += '#t=' + startTime;
+                stream.url += '#t=' + startTime;
             } else {
                 startTime = Math.floor(Date.now() / 1000) - TIME_OFFSET;
-                stream_.url += '#t=posix:' + startTime;
+                stream.url += '#t=posix:' + startTime;
             }
             utils.log(NAME, 'Playback start time: ' + startTime);
-            await command.execute(player.loadStream, [stream_]);
+            await command.execute(player.loadStream, [stream]);
         });
+
+        after(() => {
+            stream.url = originalUrl;
+        })
 
         test('play from url anchor time', async () => {
             utils.log(NAME, 'Play');

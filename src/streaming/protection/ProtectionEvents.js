@@ -179,6 +179,12 @@ class ProtectionEvents extends EventsBase {
          * @ignore
          */
         this.VIDEO_ELEMENT_SELECTED = 'videoElementSelected';
+
+        /**
+         * Triggered when the key session has been updated successfully
+         * @ignore
+         */
+        this.KEY_SESSION_UPDATED = 'public_keySessionUpdated';
     }
 }
 

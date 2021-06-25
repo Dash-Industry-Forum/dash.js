@@ -106,12 +106,6 @@ describe('DashManifestModel', function () {
             expect(availabilityStartTime).to.be.equal(now.getTime());  // jshint ignore:line
         });
 
-        it('should return false when getIsTextTrack is called and type is undefined', () => {
-            const isTextTrack = dashManifestModel.getIsTextTrack();
-
-            expect(isTextTrack).to.be.false;  // jshint ignore:line
-        });
-
         it('should return empty string when getLanguageForAdaptation is called and adaptation is undefined', () => {
             const language = dashManifestModel.getLanguageForAdaptation();
 

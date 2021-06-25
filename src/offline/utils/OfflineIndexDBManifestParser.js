@@ -29,6 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @ignore
+ */
 const Entities = require('html-entities').XmlEntities;
 const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
@@ -227,13 +230,13 @@ function OfflineIndexDBManifestParser(config) {
             return constants.AUDIO;
         } else if (getIsVideo(currentAdaptationSet)) {
             return constants.VIDEO;
-        } else if (getIsFragmentedText(currentAdaptationSet)) {
-            return constants.FRAGMENTED_TEXT;
+        } else if (getIsText(currentAdaptationSet)) {
+            return constants.TEXT;
         } else if (getIsImage(currentAdaptationSet)) {
             return constants.IMAGE;
         }
 
-        return constants.TEXT;
+        return null;
     }
 
     function getIsAudio(adaptation) {
@@ -244,8 +247,8 @@ function OfflineIndexDBManifestParser(config) {
         return getIsTypeOf(adaptation, constants.VIDEO);
     }
 
-    function getIsFragmentedText(adaptation) {
-        return getIsTypeOf(adaptation, constants.FRAGMENTED_TEXT);
+    function getIsText(adaptation) {
+        return getIsTypeOf(adaptation, constants.TEXT);
     }
 
     function getIsMuxed(adaptation) {
@@ -267,13 +270,6 @@ function OfflineIndexDBManifestParser(config) {
             throw new Error('type is not defined');
         }
 
-        // 1. check codecs for fragmented text
-        if (isFragmentedTextCodecFound(adaptation)) {
-            // fragmented text codec has been found for adaptation, let's check if tested type is fragmented text
-            return type === constants.FRAGMENTED_TEXT;
-        }
-
-        // 2. test mime type
         return testMimeType(adaptation, type);
     }
 
@@ -294,37 +290,6 @@ function OfflineIndexDBManifestParser(config) {
                 if (mimeType) {
                     return mimeTypeRegEx.test(mimeType);
                 }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Search for fragmented text codec in adaptation (STPP or WVTT)
-     * @param {Object} adaptation
-     */
-    function isFragmentedTextCodecFound (adaptation) {
-        let isFragmentedTextCodecFoundInTag = function (tag) {
-            let codecs = tag.getAttribute(dashConstants.CODECS);
-            if (codecs) {
-                if (codecs.search(constants.STPP) === 0 ||
-                    codecs.search(constants.WVTT) === 0 ) {
-                    return true;
-                }
-            }
-            return false;
-        };
-
-        if (isFragmentedTextCodecFoundInTag(adaptation)) {
-            return true;
-        }
-
-        // check in representations
-        let representations = findRepresentations(adaptation);
-        if (representations && representations.length > 0) {
-
-            if (isFragmentedTextCodecFoundInTag(representations[0])) {
-                return true;
             }
         }
         return false;

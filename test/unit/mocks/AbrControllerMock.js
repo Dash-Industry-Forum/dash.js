@@ -25,7 +25,7 @@ function AbrControllerMock () {
 
     this.setConfig = function () {};
 
-    this.getTopQualityIndexFor = function () {};
+    this.getMaxAllowedIndexFor = function () {};
 
 
     this.getTopBitrateInfoFor = function () {
@@ -119,6 +119,8 @@ function AbrControllerMock () {
 
 
     this.getMinAllowedIndexFor = function () {};
+
+    this.clearDataForStream = function () {};
 }
 
 export default AbrControllerMock;

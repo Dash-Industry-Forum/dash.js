@@ -13,6 +13,7 @@ import SpecHelper from './helpers/SpecHelper';
 import AbrControllerMock from './mocks/AbrControllerMock';
 import PlaybackControllerMock from './mocks/PlaybackControllerMock';
 import DashMetricsMock from './mocks/DashMetricsMock';
+import SegmentsControllerMock from './mocks/SegmentsControllerMock';
 
 const chai = require('chai');
 const spies = require('chai-spies');
@@ -42,6 +43,7 @@ describe('RepresentationController', function () {
     const abrControllerMock = new AbrControllerMock();
     const playbackControllerMock = new PlaybackControllerMock();
     const dashMetricsMock = new DashMetricsMock();
+    const segmentsController = new SegmentsControllerMock();
 
     abrControllerMock.registerStreamType();
 
@@ -78,6 +80,7 @@ describe('RepresentationController', function () {
             representationController = RepresentationController(context).create({
                 streamInfo: streamProcessor.getStreamInfo(),
                 abrController: abrControllerMock,
+                segmentsController,
                 timelineConverter: timelineConverter,
                 playbackController: playbackControllerMock,
                 dashMetrics: dashMetricsMock,
@@ -93,30 +96,10 @@ describe('RepresentationController', function () {
             representationController = null;
         });
 
-        describe('when data update started', function () {
-            let spy;
-
-            beforeEach(function () {
-                spy = chai.spy();
-                eventBus.on(Events.DATA_UPDATE_STARTED, spy);
-            });
-
-            afterEach(function () {
-                eventBus.off(Events.DATA_UPDATE_STARTED, spy);
-            });
-
-            it('should fire dataUpdateStarted event when new data is set', function () {
-                // Act
-                representationController.updateData(data, voRepresentations, testType, 0);
-
-                // Assert
-                expect(spy).to.have.been.called.exactly(1);
-            });
-        });
 
         describe('when data update completed', function () {
             beforeEach(function (done) {
-                representationController.updateData(data, voRepresentations, testType, 0);
+                representationController.updateData(data, voRepresentations, testType, true, 0);
                 setTimeout(function () {
                     done();
                 }, specHelper.getExecutionDelay());
@@ -141,6 +124,16 @@ describe('RepresentationController', function () {
                 expect(representationController.getRepresentationForQuality(150)).to.equal(null);
             });
 
+            it('should update current representation when preparing a quality change', function () {
+                let currentRepresentation = representationController.getCurrentRepresentation();
+                expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
+
+                representationController.prepareQualityChange(1);
+
+                currentRepresentation = representationController.getCurrentRepresentation();
+                expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
+            });
+
             it('when a MANIFEST_VALIDITY_CHANGED event occurs, should update current representation', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
                 expect(currentRepresentation.adaptation.period.duration).to.equal(100); // jshint ignore:line
@@ -149,40 +142,6 @@ describe('RepresentationController', function () {
                 expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
             });
 
-            it('when a WALLCLOCK_TIME_UPDATED event occurs, should update availability window for dynamic content', function () {
-                const firstRepresentation = representationController.getRepresentationForQuality(0);
-
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(undefined); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(undefined); // jshint ignore:line
-
-                timelineConverter.setRange({start: 0, end: 4});
-
-                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED, {
-                    isDynamic: true,
-                    time: new Date()
-                });
-
-                expect(firstRepresentation.segmentAvailabilityRange.start).to.equal(0); // jshint ignore:line
-                expect(firstRepresentation.segmentAvailabilityRange.end).to.equal(4); // jshint ignore:line
-            });
-
-            it('when a QUALITY_CHANGE_REQUESTED event occurs, should update current representation', function () {
-                let currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(0); // jshint ignore:line
-
-                eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED, {mediaType: testType, streamInfo: streamProcessor.getStreamInfo(), oldQuality: 0, newQuality: 1});
-
-                currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.index).to.equal(1); // jshint ignore:line
-            });
-
-            it('when a REPRESENTATION_UPDATE_COMPLETED event occurs, should notify data update completed', function () {
-                let spy = chai.spy();
-                eventBus.on(Events.DATA_UPDATE_COMPLETED, spy);
-
-                eventBus.trigger(Events.REPRESENTATION_UPDATE_COMPLETED, {sender: { getType() { return testType;}, getStreamInfo() { return streamProcessor.getStreamInfo(); }}, representation: voRepresentations[1]});
-                expect(spy).to.have.been.called.exactly(1);
-            });
         });
 
         describe('when a call to reset is done', function () {

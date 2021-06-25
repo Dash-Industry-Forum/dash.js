@@ -30,6 +30,10 @@
  */
 import EventsBase from '../../core/events/EventsBase';
 
+/**
+ * @class
+ * @implements EventsBase
+ */
 class MetricsReportingEvents extends EventsBase {
     constructor () {
         super();

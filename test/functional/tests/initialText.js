@@ -22,55 +22,51 @@ const NAME = 'INITIAL_TEXT';
 
 // test constants
 const SWITCH_WAIT = 3;
-const SWITCH_TIMEOUT = 60;
+const SWITCH_TIMEOUT = 120;
 
 exports.register = function (stream) {
 
     suite(utils.testName(NAME, stream), (suite) => {
 
         before(() => {
-            if (!stream.available || stream.textTracks.text.length < 1 && stream.textTracks.fragmentedText.length < 1) suite.skip();
+            if (!stream.available || stream.textTracks.length < 1) suite.skip();
             utils.log(NAME, 'Load stream');
-
         });
 
         test('switch text track', async (test) => {
             // Set test timeout
             test.timeout = SWITCH_TIMEOUT * 1000;
 
-            for(let textType in stream.textTracks){
-                for (let i = 0; i < stream.textTracks[textType].length ; i++) {
-                    // reload page
-                    command = test.remote.get(intern.config.testPage);
-                    await command.execute(player.setAutoPlay, [false]);
+            for (let i = 0; i < stream.textTracks.length ; i++) {
+                // reload page
+                command = test.remote.get(intern.config.testPage);
+                await command.execute(player.setAutoPlay, [false]);
 
-                    //Load needed elements into doc for Captions to function
-                    let ttml =  await command.findById('ttml-rendering-div');
-                    await command.execute(player.attachTTMLRenderingDiv, [ttml]);
-                    await command.execute(player.setTextDefaultEnabled, [true]);
+                //Load needed elements into doc for Captions to function
+                let ttml =  await command.findById('ttml-rendering-div');
+                await command.execute(player.attachTTMLRenderingDiv, [ttml]);
 
-                    // set initial track
-                    utils.log(NAME, 'set initial text track: ' + stream.textTracks[textType][i].lang);
-                    await command.execute(player.setInitialMediaSettingsFor, [textType, {
-                        lang: stream.textTracks[textType][i].lang,
-                        index: stream.textTracks[textType][i].index
-                    }]);
-                    await command.execute(player.loadStream, [stream]);
-                    await command.execute(player.play, []);
+                // set initial track
+                utils.log(NAME, 'set initial text track: ' + stream.textTracks[i].lang);
+                await command.execute(player.setInitialMediaSettingsFor, ['text', {
+                    lang: stream.textTracks[i].lang,
+                    index: stream.textTracks[i].index
+                }]);
+                await command.execute(player.loadStream, [stream]);
+                await command.execute(player.play, []);
 
-                    // Wait
-                    await command.sleep(SWITCH_WAIT * 1000);
+                // Wait
+                await command.sleep(SWITCH_WAIT * 1000);
 
-                    // Check if initial track is correct
-                    const newTrack = await command.execute(player.getCurrentTrackFor, [textType]);
-                    utils.log(NAME, 'current audio track: ' + newTrack.lang);
-                    assert.deepEqual(newTrack.lang, stream.textTracks[textType][i].lang);
-                    assert.deepEqual(newTrack.index, stream.textTracks[textType][i].index);
+                // Check if initial track is correct
+                const newTrack = await command.execute(player.getCurrentTrackFor, ['text']);
+                utils.log(NAME, 'current text track: ' + newTrack.lang);
+                assert.deepEqual(newTrack.lang, stream.textTracks[i].lang);
+                assert.deepEqual(newTrack.index, stream.textTracks[i].index);
 
-                    utils.log(NAME, 'Check if playing');
-                    const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
-                    assert.isTrue(progressing);
-                }
+                utils.log(NAME, 'Check if playing');
+                const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
+                assert.isTrue(progressing);
             }
         });
     });

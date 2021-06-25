@@ -40,6 +40,7 @@ import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
 import Settings from '../../core/Settings';
 import Constants from '../constants/Constants';
+import LowLatencyThroughputModel from '../models/LowLatencyThroughputModel';
 
 /**
  * @module HTTPLoader
@@ -69,6 +70,7 @@ function HTTPLoader(cfg) {
         retryRequests,
         downloadErrorToRequestTypeMap,
         cmcdModel,
+        lowLatencyThroughputModel,
         logger;
 
     function setup() {
@@ -77,6 +79,7 @@ function HTTPLoader(cfg) {
         delayedRequests = [];
         retryRequests = [];
         cmcdModel = CmcdModel(context).getInstance();
+        lowLatencyThroughputModel = LowLatencyThroughputModel(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -111,11 +114,12 @@ function HTTPLoader(cfg) {
             request.firstByteDate = request.firstByteDate || requestStartTime;
 
             if (!request.checkExistenceOnly) {
-                dashMetrics.addHttpRequest(request, httpRequest.response ? httpRequest.response.responseURL : null,
-                    httpRequest.response ? httpRequest.response.status : null,
-                    httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
-                        httpRequest.response ? httpRequest.response.responseHeaders : [],
-                    success ? traces : null);
+                const responseUrl = httpRequest.response ? httpRequest.response.responseURL : null;
+                const responseStatus = httpRequest.response ? httpRequest.response.status : null;
+                const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
+                    httpRequest.response ? httpRequest.response.responseHeaders : [];
+
+                dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null);
 
                 if (request.type === HTTPRequest.MPD_TYPE) {
                     dashMetrics.addManifestUpdate(request);
@@ -200,7 +204,8 @@ function HTTPLoader(cfg) {
                 traces.push({
                     s: lastTraceTime,
                     d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
-                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0]
+                    b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
+                    t: event.throughput
                 });
 
                 lastTraceTime = currentTime;
@@ -247,7 +252,11 @@ function HTTPLoader(cfg) {
         if (useFetch && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             loader = FetchLoader(context).create({
                 requestModifier: requestModifier,
+                lowLatencyThroughputModel,
                 boxParser: boxParser
+            });
+            loader.setup({
+                dashMetrics
             });
         } else {
             loader = XHRLoader(context).create({
@@ -262,8 +271,7 @@ function HTTPLoader(cfg) {
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);
                 modifiedUrl = Utils.addAditionalQueryParameterToUrl(modifiedUrl, additionalQueryParameter);
-            }
-            else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 headers = cmcdModel.getHeaderParameters(request);
             }
         }

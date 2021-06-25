@@ -67,20 +67,6 @@ class Constants {
         this.TEXT = 'text';
 
         /**
-         *  @constant {string} FRAGMENTED_TEXT Fragmented text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.FRAGMENTED_TEXT = 'fragmentedText';
-
-        /**
-         *  @constant {string} EMBEDDED_TEXT Embedded text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.EMBEDDED_TEXT = 'embeddedText';
-
-        /**
          *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
          *  @memberof Constants#
          *  @static
@@ -170,6 +156,13 @@ class Constants {
          *  @static
          */
         this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
+
+        /**
+        *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
+        *  @memberof Constants#
+        *  @static
+        */
+        this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
 
         /**
          *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
@@ -285,6 +278,13 @@ class Constants {
         this.ARRAY_BUFFER = 'ArrayBuffer';
         this.DVB_REPORTING_URL = 'dvb:reportingUrl';
         this.DVB_PROBABILITY = 'dvb:probability';
+        this.VIDEO_ELEMENT_READY_STATES = {
+            HAVE_NOTHING: 0,
+            HAVE_METADATA: 1,
+            HAVE_CURRENT_DATA: 2,
+            HAVE_FUTURE_DATA: 3,
+            HAVE_ENOUGH_DATA: 4
+        };
     }
 
     constructor() {

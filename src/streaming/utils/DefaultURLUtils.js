@@ -110,7 +110,7 @@ function DefaultURLUtils() {
 
     function setup() {
         try {
-            const u = new window.URL('x', 'http://y'); //jshint ignore:line
+            const u = new window.URL('x', 'http://y'); // eslint-disable-line
             resolveFunction = nativeURLResolver;
         } catch (e) {
             // must be IE11/Node etc

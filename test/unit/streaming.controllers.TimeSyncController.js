@@ -2,11 +2,12 @@ import TimeSyncController from '../../src/streaming/controllers/TimeSyncControll
 import Events from '../../src/core/events/Events';
 import EventBus from '../../src/core/EventBus';
 import Settings from '../../src/core/Settings';
-import Errors from '../../src/core/errors/Errors';
+import ErrorHandlerMock from './mocks/ErrorHandlerMock';
 
 const expect = require('chai').expect;
 const context = {};
 const eventBus = EventBus(context).getInstance();
+const errHandlerMock = new ErrorHandlerMock();
 
 const sinon = require('sinon');
 
@@ -24,7 +25,8 @@ describe('TimeSyncController', function () {
 
         timeSyncController = TimeSyncController(context).getInstance();
         timeSyncController.setConfig({
-            settings
+            settings,
+            errHandler: errHandlerMock
         });
     });
 
@@ -42,7 +44,7 @@ describe('TimeSyncController', function () {
         }
 
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, onCompleted, this);
-        settings.update({ streaming: { useManifestDateHeaderTimeSource: false } });
+        settings.update({ streaming: { utcSynchronization: {useManifestDateHeaderTimeSource: false }} });
         timeSyncController.initialize();
         timeSyncController.attemptSync([]);
     });
@@ -51,14 +53,14 @@ describe('TimeSyncController', function () {
         function onCompleted(e) {
             eventBus.off(Events.UPDATE_TIME_SYNC_OFFSET, onCompleted, this);
             check(done, function () {
-                expect(e.error.code).to.be.equal(Errors.TIME_SYNC_FAILED_ERROR_CODE);
+                expect(e.offset).to.be.NaN
             });
         }
 
         eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, onCompleted, this);
-        settings.update({ streaming: { useManifestDateHeaderTimeSource: false } });
+        settings.update({ streaming: { utcSynchronization: {useManifestDateHeaderTimeSource: false }} });
         timeSyncController.initialize();
-        timeSyncController.attemptSync([]);
+        timeSyncController.attemptSync([], true);
     });
 
 
@@ -76,7 +78,7 @@ describe('TimeSyncController', function () {
         timeSyncController.attemptSync([{
             schemeIdUri: 'urn:mpeg:dash:utc:http-xsdate:2014',
             value: 'https://time.akamai.com/?iso'
-        }]);
+        }], true);
 
         // simulate a response
         self.requests[0].respond(200, {
@@ -92,7 +94,6 @@ describe('TimeSyncController', function () {
             eventBus.off(Events.UPDATE_TIME_SYNC_OFFSET, onCompleted, this);
             check(done, function () {
                 expect(e.offset).to.be.a('number');
-                expect(e.error).to.be.null; // jshint ignore:line
             });
         }
 
@@ -101,7 +102,7 @@ describe('TimeSyncController', function () {
         timeSyncController.attemptSync([{
             schemeIdUri: 'urn:mpeg:dash:utc:http-xsdate:2014',
             value: 'https://time.akamai.com/?iso'
-        }]);
+        }], true);
 
         // simulate a response
         self.requests[0].respond(200, {

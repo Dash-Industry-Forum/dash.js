@@ -58,6 +58,26 @@
             "acronym": "AWS",
             "name": "AWS",
             "url": "https://www.elemental.com/"
+        },
+        "dvb": {
+            "acronym": "DVB",
+            "name": "DVB",
+            "url": "https://dvb-2017-dm.s3.eu-central-1.amazonaws.com/overview.html"
+        },
+        "hbbtv": {
+            "acronym": "HbbTV",
+            "name": "HbbTV",
+            "url": "https://www.hbbtv.org/"
+        },
+        "google": {
+            "acronym": "Google",
+            "name": "Google",
+            "url": "https://www.google.com"
+        },
+        "vdms": {
+            "acronym": "VDMS",
+            "name": "Verizon Media",
+            "url": "https://www.verizonmedia.com/"
         }
     },
     "items": [
@@ -136,19 +156,34 @@
                     "provider": "streamroot"
                 },
                 {
-                    "name": "Clear Static SegmentTimeline",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvtime.mpd",
-                    "provider": "wowza"
+                    "name": "Caminandes 01, Llama Drama (25fps, 75gop, 1080p) ",
+                    "url": "http://refapp.hbbtv.org/videos/01_llama_drama_1080p_25f75g6sv3/manifest.mpd",
+                    "provider": "hbbtv"
                 },
                 {
-                    "name": "Clear Static SegmentTemplate",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvnumber.mpd",
-                    "provider": "wowza"
+                    "name": "Caminandes 02, Gran Dillama (25fps, 75gop, 1080p, KID=1236, subob,evtib) v5 ",
+                    "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_25f75g6sv5/manifest_subob_evtib.mpd",
+                    "provider": "hbbtv"
                 },
                 {
-                    "name": "Clear Static SegmentList",
-                    "url": "//wowzaec2demo.streamlock.net/vod/_definst_/ElephantsDream/smil:ElephantsDream.smil/manifest_mvlist.mpd",
-                    "provider": "wowza"
+                    "name": "Tears of Steel (25fps, 75gop, 1080p, KID=1237) v3",
+                    "url": "http://refapp.hbbtv.org/videos/tears_of_steel_1080p_25f75g6sv3/manifest.mpd",
+                    "provider": "hbbtv"
+                },
+                {
+                    "name": "Caminandes 02, Gran Dillama (25fps, 75gop, 1080p, KID=1236), multiaudio v4",
+                    "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv4/manifest_subob_evtib.mpd",
+                    "provider": "hbbtv"
+                },
+                {
+                    "name": "Caminandes 02, Gran Dillama (25fps, 75gop, 1080p, KID=1236), multiaudio v5",
+                    "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv5/manifest.mpd",
+                    "provider": "hbbtv"
+                },
+                {
+                    "name": "Spring (25fps, 75gop, 1920x804(2.40) h264, KID=148D) v1",
+                    "url": "http://refapp.hbbtv.org/videos/spring_804p_v1/manifest.mpd",
+                    "provider": "hbbtv"
                 }
             ]
         },
@@ -205,6 +240,36 @@
                     "name": "Clear Dynamic SegmentList",
                     "url": "//wowzaec2demo.streamlock.net/live/bigbuckbunny/manifest_mvlist.mpd",
                     "provider": "wowza"
+                },
+                {
+                    "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - In-the-clear",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "Multiperiod - Number + Timeline - Full manifest - Thumbnails (1 track) - In-the-clear",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/ee565ea510cb4b4d8df5f48918c3d6dc/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "Multiperiod - Time + Timeline - Compact manifest - Thumbnails (1 track) - In-the-clear",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/91d37b0389de47e0b5266736d3633077/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "Multiperiod - Time + Timeline - Full manifest - Thumbnails (1 track) - In-the-clear",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/6ba06d17f65b4e1cbd1238eaa05c02c1/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "Single period - Number + Duration - Full manifest - Thumbnails (2 tracks: 174p/1080p) - In-the-clear",
+                    "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
+                    "provider": "aws"
+                },
+                {
+                    "name": "LiveSIM Caminandes 02, Gran Dillama (25fps, 25gop, 2sec, multi MOOF/MDAT, 1080p, KID=1236) v2",
+                    "url": "http://refapp.hbbtv.org/livesim/02_llamav2/manifest.mpd",
+                    "provider": "hbbtv"
                 }
             ]
         },
@@ -320,12 +385,66 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
+                },
+                {
+                    "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/2.mpd",
+                    "name": "Subtitles in multi period live",
+                    "provider": "unified"
                 }
             ]
         },
         {
             "name": "DRM (modern)",
             "submenu": [
+                {
+                    "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (1 key) PlayReady/Widevine (DRMtoday) - Key rotation (60s)",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/2fc23947945841b9b1be9768f9c13e75/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
+                            }
+                        }
+                    },
+                    "provider": "aws"
+                },
+                {
+                    "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (2 keys : audio + video) - No key rotation",
+                    "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams//6e16c26536564c2f9dbc5f725a820cff/index.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
+                            }
+                        }
+                    },
+                    "provider": "aws"
+                },
+                {
+                    "name": "Shaka Demo Assets: Angel-One Widevine",
+                    "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+                    "protData": {
+                        "com.widevine.alpha": {
+                            "serverURL": "https://widevine-proxy.appspot.com/proxy?video_id=&provider="
+                        }
+                    },
+                    "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+                    "provider": "google"
+                },
                 {
                     "name": "1080p with Widevine DRM, license expired after 60s",
                     "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
@@ -761,64 +880,34 @@
                     "provider": "unified"
                 },
                 {
-                    "name": "Widevine Dynamic SegmentTimeline",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvtime.mpd",
+                    "name": "Live Dash WV and PR with unencrypted ad breaks -- Always starts in encrypted content - Keys never change",
+                    "url": "https://content.uplynk.com/playlist/6c526d97954b41deb90fe64328647a71.mpd?ad=bbbads&delay=25",
                     "protData": {
                         "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                            "serverURL": "https://content.uplynk.com/wv",
+                            "httpTimeout": 5000
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://content.uplynk.com/pr",
+                            "httpTimeout": 5000
                         }
                     },
-                    "provider": "wowza"
+                    "provider": "vdms"
                 },
                 {
-                    "name": "Widevine Dynamic SegmentTemplate",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvnumber.mpd",
+                    "name": "Live Dash WV and PR - Starting in unencrypted ad (preroll) - Moving into encrypted content - Keys never change",
+                    "url": "https://content.uplynk.com/playlist/4f1a9815a1af43d5ba64465d85bf11cf.mpd?ad=sintelads",
                     "protData": {
                         "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
+                            "serverURL": "https://content.uplynk.com/wv",
+                            "httpTimeout": 5000
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://content.uplynk.com/pr",
+                            "httpTimeout": 5000
                         }
                     },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Dynamic SegmentList",
-                    "url": "https://wowzaec2demo.streamlock.net/live/bigbuckbunny-enc-wv.stream/manifest_mvlist.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Static SegmentTimeline",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvtime.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Static SegmentTemplate",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvnumber.mpd",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
-                },
-                {
-                    "name": "Widevine Static SegmentList",
-                    "url": "https://wowzaec2demo.streamlock.net/vod/elephantsdream_1100kbps-enc-wv.mp4/manifest_mvlist.mpd ",
-                    "protData": {
-                        "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy"
-                        }
-                    },
-                    "provider": "wowza"
+                    "provider": "vdms"
                 }
             ]
         },

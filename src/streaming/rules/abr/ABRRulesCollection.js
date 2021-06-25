@@ -96,25 +96,37 @@ function ABRRulesCollection(config) {
                         dashMetrics: dashMetrics
                     })
                 );
-                qualitySwitchRules.push(
-                    InsufficientBufferRule(context).create({
-                        dashMetrics: dashMetrics
-                    })
-                );
-                qualitySwitchRules.push(
-                    SwitchHistoryRule(context).create()
-                );
-                qualitySwitchRules.push(
-                    DroppedFramesRule(context).create()
-                );
 
-                abandonFragmentRules.push(
-                    AbandonRequestsRule(context).create({
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel,
-                        settings: settings
-                    })
-                );
+                if (settings.get().streaming.abr.additionalAbrRules.insufficientBufferRule) {
+                    qualitySwitchRules.push(
+                        InsufficientBufferRule(context).create({
+                            dashMetrics: dashMetrics,
+                            settings
+                        })
+                    );
+                }
+
+                if (settings.get().streaming.abr.additionalAbrRules.switchHistoryRule) {
+                    qualitySwitchRules.push(
+                        SwitchHistoryRule(context).create()
+                    );
+                }
+
+                if (settings.get().streaming.abr.additionalAbrRules.droppedFramesRule) {
+                    qualitySwitchRules.push(
+                        DroppedFramesRule(context).create()
+                    );
+                }
+
+                if (settings.get().streaming.abr.additionalAbrRules.abandonRequestsRule) {
+                    abandonFragmentRules.push(
+                        AbandonRequestsRule(context).create({
+                            dashMetrics: dashMetrics,
+                            mediaPlayerModel: mediaPlayerModel,
+                            settings: settings
+                        })
+                    );
+                }
             }
         }
 
@@ -131,7 +143,7 @@ function ABRRulesCollection(config) {
         });
     }
 
-    function getActiveRules(srArray) {
+    function _getRulesWithChange(srArray) {
         return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
     }
 
@@ -190,15 +202,15 @@ function ABRRulesCollection(config) {
 
     function getMaxQuality(rulesContext) {
         const switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
-        const activeRules = getActiveRules(switchRequestArray);
+        const activeRules = _getRulesWithChange(switchRequestArray);
         const maxQuality = getMinSwitchRequest(activeRules);
 
         return maxQuality || SwitchRequest(context).create();
     }
 
-    function shouldAbandonFragment(rulesContext) {
-        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
-        const activeRules = getActiveRules(abandonRequestArray);
+    function shouldAbandonFragment(rulesContext, streamId) {
+        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
+        const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
 
         return shouldAbandon || SwitchRequest(context).create();

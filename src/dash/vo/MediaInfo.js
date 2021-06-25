@@ -39,6 +39,7 @@ class MediaInfo {
         this.type = null;
         this.streamInfo = null;
         this.representationCount = 0;
+        this.labels = null;
         this.lang = null;
         this.viewpoint = null;
         this.accessibility = null;
@@ -47,9 +48,10 @@ class MediaInfo {
         this.codec = null;
         this.mimeType = null;
         this.contentProtection = null;
-        this.isText = false;
         this.KID = null;
         this.bitrateList = null;
+        this.isFragmented = null;
+        this.isEmbedded = null;
     }
 
 }

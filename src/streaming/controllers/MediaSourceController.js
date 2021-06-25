@@ -34,6 +34,7 @@ import Debug from '../../core/Debug';
 function MediaSourceController() {
 
     let instance,
+        mediaSource,
         logger;
 
     const context = this.context;
@@ -48,17 +49,17 @@ function MediaSourceController() {
         let hasMediaSource = ('MediaSource' in window);
 
         if (hasMediaSource) {
-            return new MediaSource();
+            mediaSource = new MediaSource();
         } else if (hasWebKit) {
-            return new WebKitMediaSource();
+            mediaSource = new WebKitMediaSource();
         }
 
-        return null;
+        return mediaSource;
     }
 
-    function attachMediaSource(source, videoModel) {
+    function attachMediaSource(videoModel) {
 
-        let objectURL = window.URL.createObjectURL(source);
+        let objectURL = window.URL.createObjectURL(mediaSource);
 
         videoModel.setSource(objectURL);
 
@@ -69,24 +70,24 @@ function MediaSourceController() {
         videoModel.setSource(null);
     }
 
-    function setDuration(source, value) {
-        if (!source || source.readyState !== 'open') return;
+    function setDuration(value) {
+        if (!mediaSource || mediaSource.readyState !== 'open') return;
         if (value === null && isNaN(value)) return;
-        if (source.duration === value) return;
+        if (mediaSource.duration === value) return;
 
-        if (!isBufferUpdating(source)) {
+        if (!isBufferUpdating(mediaSource)) {
             logger.info('Set MediaSource duration:' + value);
-            source.duration = value;
+            mediaSource.duration = value;
         } else {
-            setTimeout(setDuration.bind(null, source, value), 50);
+            setTimeout(setDuration.bind(null, value), 50);
         }
     }
 
-    function setSeekable(source, start, end) {
-        if (source && typeof source.setLiveSeekableRange === 'function' && typeof source.clearLiveSeekableRange === 'function' &&
-                source.readyState === 'open' && start >= 0 && start < end) {
-            source.clearLiveSeekableRange();
-            source.setLiveSeekableRange(start, end);
+    function setSeekable(start, end) {
+        if (mediaSource && typeof mediaSource.setLiveSeekableRange === 'function' && typeof mediaSource.clearLiveSeekableRange === 'function' &&
+            mediaSource.readyState === 'open' && start >= 0 && start < end) {
+            mediaSource.clearLiveSeekableRange();
+            mediaSource.setLiveSeekableRange(start, end);
         }
     }
 
@@ -120,12 +121,12 @@ function MediaSourceController() {
     }
 
     instance = {
-        createMediaSource: createMediaSource,
-        attachMediaSource: attachMediaSource,
-        detachMediaSource: detachMediaSource,
-        setDuration: setDuration,
-        setSeekable: setSeekable,
-        signalEndOfStream: signalEndOfStream
+        createMediaSource,
+        attachMediaSource,
+        detachMediaSource,
+        setDuration,
+        setSeekable,
+        signalEndOfStream
     };
 
     setup();

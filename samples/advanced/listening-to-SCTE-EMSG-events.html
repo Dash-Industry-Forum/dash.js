@@ -1,20 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Events example</title>
+    <meta charset="utf-8">
+    <title>Listening to SCTE-EMSG Events</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #start,#receive {
+            height:500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+    </style>
 
     <script class="code">
         var player;
         const URL = "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd";
         const SCHEMEIDURI = "urn:scte:scte35:2013:xml";
         const EVENT_MODE_ON_START = dashjs.MediaPlayer.events.EVENT_MODE_ON_START;
-        const EVENT_MODE_ON_RECEIVE = dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE; 
+        const EVENT_MODE_ON_RECEIVE = dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE;
 
         function init() {
             player = dashjs.MediaPlayer().create();
@@ -58,43 +72,60 @@
             console.log(msg);
         }
     </script>
+</head>
+<body>
 
-    <style>
-        video {
-            width: 640px;
-            height: 360px;
-        }
-        textarea {
-            width: 500px;
-            height:360px;
-            font-size: 10px;
-        }
-    </style>
-    </head>
-    <body>
-        <div>
-        This sample catches and displays SCTE-35 events embedded inside EMSG boxes. The live sample stream being used contains embedded events at 10s and 40s in to each minute of media time.
-        <p/>
-        </div>
-        <div>
-            <video controls="true">
-            </video>
-        </div>
-        <div style="display:flex">
-            <div>
-                <p>Received Events</p>
-                <textarea id="receive" placeholder="Trapped on_receive events will be displayed here"></textarea>
-            </div>
-            <div>
-                <p>Started Events</p>
-                <textarea id="start" placeholder="Trapped on_start events will be displayed here"></textarea>
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Listening to SCTE-EMSG Events</h3>
+                    <p>This sample catches and displays SCTE-35 events embedded inside EMSG boxes. The live sample stream being used contains embedded events at 10s and 40s in to each minute of media time.</p>
+                </div>
             </div>
         </div>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                init();
-            });
-        </script>
-        <script src="../highlighter.js"></script>
-    </body>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <video controls="true"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Trapped on_receive events will be displayed here" id="receive"></textarea>
+                    <label for="receive">Received Events</label>
+                </div>
+            </div>            
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Trapped on_start events will be displayed here" id="start"></textarea>
+                    <label for="start">Started Events</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
 </html>

@@ -1,17 +1,28 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8">
     <title>Multiple Language EBU Timed Text Sample</title>
-    <meta name="description" content="" />
+    <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
-    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
-    <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
 
+    <style>
+        video {
+            width: 100%;
+        }
+
+        .dash-video-player {
+            position: relative; /* This position relative is needed to position the menus */
+            margin: 0 auto;
+            line-height: 1.0;
+        }
+    </style>
 
     <script class="code">
         /* TEST CONTENT.
@@ -19,73 +30,95 @@
          https://livesim.dashif.org/dash/vod/testpic_2s/xml_subs.mpd
          https://livesim.dashif.org/livesim/testpic_2s/multi_subs.mpd
         */
-        var CAPTION_URL = "https://livesim.dashif.org/dash/vod/testpic_2s/multi_subs.mpd",
-            videoElement,
+        var CAPTION_URL = "http://rdmedia.bbc.co.uk/dash/ondemand/elephants_dream/1/client_manifest-all.mpd",
+            video,
             player;
 
-        function startVideo() {
+        function init() {
             var url = CAPTION_URL,
                 TTMLRenderingDiv;
 
-            videoElement = document.querySelector(".videoContainer video");
+            video = document.querySelector('video');
             TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
 
             player = dashjs.MediaPlayer().create();
-            player.initialize(videoElement, url, true);
-            player.setTextDefaultEnabled(true);
+            player.initialize(video, url, true);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
-            controlbar = new ControlBar(player); // Checkout ControlBar.js for more info on how to target/add text tracks to UI
+            controlbar = new ControlBar(player); 
             controlbar.initialize();
         }
 
     </script>
+</head>
+<body>
 
-    <style>
-        video {
-            width: 100%;
-        }
-        .dash-video-player {
-            width: 640px;
-        }
-    </style>
-
-    <body onload="startVideo()">
-        <div class="dash-video-player code">
-            <div class="videoContainer" id="videoContainer">
-                <video preload="auto" autoplay > </video>
-                <div id="ttml-rendering-div"></div>
-
-                <div id="videoController" class="video-controller unselectable">
-                    <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
-                        <span id="iconPlayPause" class="icon-play"></span>
-                    </div>
-                    <span id="videoTime" class="time-display">00:00:00</span>
-                    <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
-                        <span class="icon-fullscreen-enter"></span>
-                    </div>
-                    <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
-                        <span class="icon-bitrate"></span>
-                    </div>
-                    <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
-                    <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
-                        <span id="iconMute" class="icon-mute-off"></span>
-                    </div>
-                    <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
-                        <span class="icon-tracks"></span>
-                    </div>
-                    <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
-                        <span class="icon-caption"></span>
-                    </div>
-                    <span id="videoDuration" class="duration-display">00:00:00</span>
-                    <div class="seekContainer">
-                        <div id="seekbar" class="seekbar seekbar-complete">
-                            <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
-                            <div id="seekbar-play" class="seekbar seekbar-play"></div>
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Multiple Language EBU Timed Text Sample</h3>
+                    <p>Example showing content with TTML EBU timed text tracks.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="dash-video-player code">
+                    <div class="videoContainer" id="videoContainer">
+                        <video preload="auto" autoplay></video>
+                        <div id="ttml-rendering-div"></div>
+                        <div id="videoController" class="video-controller unselectable">
+                            <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                                <span id="iconPlayPause" class="icon-play"></span>
+                            </div>
+                            <span id="videoTime" class="time-display">00:00:00</span>
+                            <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                                <span class="icon-fullscreen-enter"></span>
+                            </div>
+                            <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                                <span class="icon-bitrate"></span>
+                            </div>
+                            <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                            <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                                <span id="iconMute" class="icon-mute-off"></span>
+                            </div>
+                            <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                                <span class="icon-tracks"></span>
+                            </div>
+                            <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                                <span class="icon-caption"></span>
+                            </div>
+                            <span id="videoDuration" class="duration-display">00:00:00</span>
+                            <div class="seekContainer">
+                                <div id="seekbar" class="seekbar seekbar-complete">
+                                    <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                                    <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <script src="../highlighter.js"></script>
-    </body>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
 </html>

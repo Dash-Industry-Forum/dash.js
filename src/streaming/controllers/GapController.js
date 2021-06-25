@@ -34,8 +34,8 @@ import Events from '../../core/events/Events';
 import EventBus from '../../core/EventBus';
 
 const GAP_HANDLER_INTERVAL = 100;
-const THRESHOLD_TO_STALLS = 30;
-const GAP_THRESHOLD = 0.1;
+const THRESHOLD_TO_STALLS = 10;
+const GAP_JUMP_WAITING_TIME_OFFSET = 0.1;
 
 function GapController() {
     const context = this.context;
@@ -50,9 +50,8 @@ function GapController() {
         playbackController,
         streamController,
         videoModel,
-        timelineConverter,
-        adapter,
         jumpTimeoutHandler,
+        trackSwitchByMediaType,
         logger;
 
     function initialize() {
@@ -76,6 +75,7 @@ function GapController() {
         lastGapJumpPosition = NaN;
         wallclockTicked = 0;
         jumpTimeoutHandler = null;
+        trackSwitchByMediaType = {};
     }
 
     function setConfig(config) {
@@ -94,36 +94,62 @@ function GapController() {
         if (config.videoModel) {
             videoModel = config.videoModel;
         }
-        if (config.timelineConverter) {
-            timelineConverter = config.timelineConverter;
-        }
-        if (config.adapter) {
-            adapter = config.adapter;
-        }
     }
 
     function registerEvents() {
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
+        eventBus.on(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
+        eventBus.on(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
+        eventBus.on(Events.TRACK_CHANGE_RENDERED, _onBufferReplacementEnded, instance);
     }
 
     function unregisterEvents() {
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
+        eventBus.off(Events.INITIAL_STREAM_SWITCH, _onInitialStreamSwitch, this);
         eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, this);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, onBytesAppended, instance);
-    }
-
-    function onBytesAppended() {
-        if (!gapHandlerInterval) {
-            startGapHandler();
-        }
+        eventBus.off(Events.BUFFER_REPLACEMENT_STARTED, _onBufferReplacementStarted, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBufferReplacementEnded, instance);
     }
 
     function _onPlaybackSeeking() {
         if (jumpTimeoutHandler) {
             clearTimeout(jumpTimeoutHandler);
             jumpTimeoutHandler = null;
+        }
+    }
+
+    /**
+     *  If the track was changed in the current active period and the player might aggressively replace segments the buffer will be empty for a short period of time. Avoid gap jumping at that time.
+     *  We wait until the next media fragment of the target type has been appended before activating again
+     * @param {object} e
+     * @private
+     */
+    function _onBufferReplacementStarted(e) {
+        try {
+            if (e.streamId !== streamController.getActiveStreamInfo().id || !e.mediaType) {
+                return;
+            }
+
+            if (e.streamId === streamController.getActiveStreamInfo().id) {
+                trackSwitchByMediaType[e.mediaType] = true;
+            }
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    function _onBufferReplacementEnded(e) {
+        if (!e || !e.mediaType) {
+            return;
+        }
+
+        trackSwitchByMediaType[e.mediaType] = false;
+    }
+
+    function _onInitialStreamSwitch() {
+        if (!gapHandlerInterval) {
+            startGapHandler();
         }
     }
 
@@ -146,9 +172,12 @@ function GapController() {
     }
 
     function _shouldCheckForGaps() {
-        return settings.get().streaming.jumpGaps && streamController.getActiveStreamProcessors().length > 0 &&
-            (!playbackController.isSeeking() || streamController.hasStreamFinishedBuffering(streamController.getActiveStream())) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
-            !streamController.getHasMediaOrIntialisationError();
+        const trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some((key) => {
+            return trackSwitchByMediaType[key];
+        });
+
+        return !trackSwitchInProgress && settings.get().streaming.gaps.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && !playbackController.isSeeking() && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
+            !streamController.getHasMediaOrInitialisationError();
     }
 
     function getNextRangeIndex(ranges, currentTime) {
@@ -162,7 +191,7 @@ function GapController() {
 
             while (isNaN(nextRangeIndex) && j < ranges.length) {
                 const rangeEnd = j > 0 ? ranges.end(j - 1) : 0;
-                if (currentTime < ranges.start(j) && rangeEnd - currentTime < GAP_THRESHOLD) {
+                if (currentTime < ranges.start(j) && rangeEnd - currentTime < settings.get().streaming.gaps.threshold) {
                     nextRangeIndex = j;
                 }
                 j += 1;
@@ -201,8 +230,8 @@ function GapController() {
     }
 
     function jumpGap(currentTime, playbackStalled = false) {
-        const smallGapLimit = settings.get().streaming.smallGapLimit;
-        const jumpLargeGaps = settings.get().streaming.jumpLargeGaps;
+        const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
+        const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
         const ranges = videoModel.getBufferRange();
         let nextRangeIndex;
         let seekToPosition = NaN;
@@ -231,23 +260,19 @@ function GapController() {
             const timeUntilGapEnd = seekToPosition - currentTime;
 
             if (jumpToStreamEnd) {
+                const nextStream = streamController.getStreamForTime(seekToPosition);
+                const internalSeek = nextStream && !!nextStream.getPreloaded();
+
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
-                eventBus.trigger(Events.GAP_CAUSED_SEEK_TO_PERIOD_END, {
-                    seekTime: seekToPosition,
-                    duration: timeUntilGapEnd
-                });
+                playbackController.seek(seekToPosition, true, internalSeek);
             } else {
                 const isDynamic = playbackController.getIsDynamic();
                 const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
-                const timeToWait = !isDynamic ? 0 : timeUntilGapEnd * 1000;
+                const timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
 
                 jumpTimeoutHandler = window.setTimeout(() => {
                     playbackController.seek(seekToPosition, true, true);
-                    logger.warn(`Jumping gap starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd}`);
-                    eventBus.trigger(Events.GAP_CAUSED_INTERNAL_SEEK, {
-                        seekTime: seekToPosition,
-                        duration: timeUntilGapEnd
-                    });
+                    logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd - (timeToWait / 1000)}`);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }

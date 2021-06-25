@@ -62,8 +62,11 @@ function ThroughputHistory(config) {
 
     function setup() {
         ewmaHalfLife = {
-            throughputHalfLife: { fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS, slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS },
-            latencyHalfLife:    { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT,      slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
+            throughputHalfLife: {
+                fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS,
+                slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS
+            },
+            latencyHalfLife: { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT, slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
         };
 
         reset();
@@ -86,14 +89,23 @@ function ThroughputHistory(config) {
         const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
-        let throughputMeasureTime;
+        let throughputMeasureTime = 0, throughput = 0;
         if (settings.get().streaming.lowLatencyEnabled) {
-            throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
+            const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
+            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
+                const sumOfThroughputValues = httpRequest.trace.reduce((a, b) => a + b.t, 0);
+                throughput = Math.round(sumOfThroughputValues / httpRequest.trace.length);
+            }
+            if (throughput === 0) {
+                throughputMeasureTime = httpRequest.trace.reduce((a, b) => a + b.d, 0);
+            }
         } else {
             throughputMeasureTime = useDeadTimeLatency ? downloadTimeInMilliseconds : latencyTimeInMilliseconds + downloadTimeInMilliseconds;
         }
 
-        const throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+        if (throughputMeasureTime !== 0) {
+            throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
+        }
 
         checkSettingsForMediaType(mediaType);
 
@@ -225,8 +237,12 @@ function ThroughputHistory(config) {
     function checkSettingsForMediaType(mediaType) {
         throughputDict[mediaType] = throughputDict[mediaType] || [];
         latencyDict[mediaType] = latencyDict[mediaType] || [];
-        ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || {fastEstimate: 0, slowEstimate: 0, totalWeight: 0};
-        ewmaLatencyDict[mediaType] = ewmaLatencyDict[mediaType] || {fastEstimate: 0, slowEstimate: 0, totalWeight: 0};
+        ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || {
+            fastEstimate: 0,
+            slowEstimate: 0,
+            totalWeight: 0
+        };
+        ewmaLatencyDict[mediaType] = ewmaLatencyDict[mediaType] || { fastEstimate: 0, slowEstimate: 0, totalWeight: 0 };
     }
 
     function clearSettingsForMediaType(mediaType) {
@@ -245,11 +261,11 @@ function ThroughputHistory(config) {
     }
 
     const instance = {
-        push: push,
-        getAverageThroughput: getAverageThroughput,
-        getSafeAverageThroughput: getSafeAverageThroughput,
-        getAverageLatency: getAverageLatency,
-        reset: reset
+        push,
+        getAverageThroughput,
+        getSafeAverageThroughput,
+        getAverageLatency,
+        reset
     };
 
     setup();

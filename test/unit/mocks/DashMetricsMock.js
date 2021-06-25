@@ -79,6 +79,10 @@ function DashMetricsMock() {
     this.getLatestMPDRequestHeaderValueByID = function (/*id*/) {
         return null;
     };
+
+    this.addManifestUpdateStreamInfo = function () {
+        return true;
+    };
 }
 
 export default DashMetricsMock;

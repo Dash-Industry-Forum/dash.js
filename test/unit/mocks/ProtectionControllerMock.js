@@ -1,10 +1,15 @@
-function ProtectionControllerMock () {
+class ProtectionControllerMock {
 
-    this.setMediaElement = function (/*elt*/) {
-    };
+    setMediaElement() {
+    }
 
-    this.setProtectionData = function (/*protectionData*/) {
-    };
+    setProtectionData() {
+    }
+
+    clearMediaInfoArrayByStreamId() {
+
+    }
+
 }
 
 export default ProtectionControllerMock;

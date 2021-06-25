@@ -105,18 +105,6 @@ describe('DashAdapter', function () {
             expect(mediaInfo).to.be.null;                // jshint ignore:line
         });
 
-        it('should return null when getDataForMedia is called and voPeriods is an empty array, mediaInfo parameter is undefined', function () {
-            const adaptation = dashAdapter.getDataForMedia();
-
-            expect(adaptation).to.be.null;                // jshint ignore:line
-        });
-
-        it('should return null when getDataForMedia is called and voPeriods is an empty array, mediaInfo parameter is an empty object', function () {
-            const adaptation = dashAdapter.getDataForMedia({});
-
-            expect(adaptation).to.be.null;                // jshint ignore:line
-        });
-
         it('should return null when getEvent is called and no parameter is set', function () {
             const event = dashAdapter.getEvent();
 
@@ -295,15 +283,15 @@ describe('DashAdapter', function () {
             });
         });
 
-        it('should return null when convertDataToRepresentationInfo is called and voRepresentation parameter is null or undefined', function () {
-            const representationInfo = dashAdapter.convertDataToRepresentationInfo();
+        it('should return null when convertRepresentationToRepresentationInfo is called and voRepresentation parameter is null or undefined', function () {
+            const representationInfo = dashAdapter.convertRepresentationToRepresentationInfo();
 
             expect(representationInfo).to.be.null;                // jshint ignore:line
         });
 
-        it('should return correct representationInfo when convertDataToRepresentationInfo is called and voRepresentation parameter is well defined', function () {
+        it('should return correct representationInfo when convertRepresentationToRepresentationInfo is called and voRepresentation parameter is well defined', function () {
             const voRepresentation = voHelper.getDummyRepresentation(Constants.VIDEO, 0);
-            const representationInfo = dashAdapter.convertDataToRepresentationInfo(voRepresentation);
+            const representationInfo = dashAdapter.convertRepresentationToRepresentationInfo(voRepresentation);
 
             expect(representationInfo).not.to.be.null;            // jshint ignore:line
             expect(representationInfo.quality).to.equal(0);         // jshint ignore:line
@@ -458,11 +446,11 @@ describe('DashAdapter', function () {
                 expect(mediaInfoArray).to.be.empty;                // jshint ignore:line
             });
 
-            it('should return an empty array when getAllMediaInfoForType is called and, embeddedText type and externalManifest are set', function () {
+            it('should return an empty array when getAllMediaInfoForType is called and, text type and externalManifest are set', function () {
                 const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                     id: 'defaultId_0',
                     index: 0
-                }, Constants.EMBEDDED_TEXT, manifest_with_video_with_embedded_subtitles);
+                }, Constants.TEXT, manifest_with_video_with_embedded_subtitles);
 
                 expect(mediaInfoArray).to.be.instanceOf(Array);    // jshint ignore:line
                 expect(mediaInfoArray.length).equals(2);           // jshint ignore:line

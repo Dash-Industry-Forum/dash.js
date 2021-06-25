@@ -1,23 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Thumbnails Dash Demo</title>
-    <meta name="viewport" content="width=device-width, height=device-height, user-scalable=no">
-    <meta name="description" content="" />
-    <link rel="icon" type="image/x-icon" href="http://dashif.org/wp-content/uploads/2014/12/dashif.ico" />
-    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
-
-    <script  class="code" src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+    <meta charset="utf-8">
+    <title>Thumbnails sample</title>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 100%;
+        }
+
+        .dash-video-player {
+            position: relative; /* This position relative is needed to position the menus */
+            margin: 0 auto;
+            line-height: 1.0;
+        }
+    </style>
 
     <script class="code">
-        function startVideo() {
-            var url = "http://dash.edgesuite.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
-                video = document.querySelector(".dash-video-player video"),
+        function init() {
+            var url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
+                video = document.querySelector("video"),
                 player,
                 controlbar;
 
@@ -28,61 +37,79 @@
             controlbar.initialize();
         }
     </script>
+</head>
+<body>
 
-    <style>
-        .dash-video-player {
-            position: relative;  /* This position relative is needed to position the thumbnails */
-            width: 640px;
-            margin: 0 auto;
-        }
-        .videoContainer video {
-            width: 100%;
-        }
-
-        .video-controller {
-            margin-top: -5px !important;
-        }
-    </style>
-
-    <body onload="startVideo()" >
-        <div class="dash-video-player code">
-            <div id="videoContainer" class="videoContainer">
-                <video></video>
-                <div id="videoController" class="video-controller unselectable" ng-cloak>
-                    <div id="playPauseBtn" class="btn-play-pause" data-toggle="tooltip" data-placement="bottom" title="Play/Pause">
-                        <span id="iconPlayPause" class="icon-play"></span>
-                    </div>
-                    <span id="videoTime" class="time-display">00:00:00</span>
-                    <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Fullscreen">
-                        <span class="icon-fullscreen-enter"></span>
-                    </div>
-                    <div id="bitrateListBtn" class="btn-bitrate control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Bitrate List">
-                        <span class="icon-bitrate"></span>
-                    </div>
-                    <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
-                    <div id="muteBtn" class="btn-mute control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Mute">
-                        <span id="iconMute" class="icon-mute-off"></span>
-                    </div>
-                    <div id="trackSwitchBtn" class="btn-track-switch control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Track List">
-                        <span class="icon-tracks"></span>
-                    </div>
-                    <div id="captionBtn" class="btn-caption control-icon-layout" data-toggle="tooltip" data-placement="bottom" title="Closed Caption / Subtitles">
-                        <span class="icon-caption"></span>
-                    </div>
-                    <span id="videoDuration" class="duration-display">00:00:00</span>
-                    <div class="seekContainer">
-                        <div id="seekbar" class="seekbar seekbar-complete">
-                            <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
-                            <div id="seekbar-play" class="seekbar seekbar-play"></div>
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Thumbnails</h3>
+                    <p>Example showing how to use streams with thumbnail representations. The thumbnail representation can be dynamically selected in the bitrate selection menu.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="dash-video-player code">
+                    <div class="videoContainer" id="videoContainer">
+                        <video preload="auto" autoplay></video>
+                        <div id="videoController" class="video-controller unselectable">
+                            <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                                <span id="iconPlayPause" class="icon-play"></span>
+                            </div>
+                            <span id="videoTime" class="time-display">00:00:00</span>
+                            <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                                <span class="icon-fullscreen-enter"></span>
+                            </div>
+                            <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                                <span class="icon-bitrate"></span>
+                            </div>
+                            <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                            <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                                <span id="iconMute" class="icon-mute-off"></span>
+                            </div>
+                            <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                                <span class="icon-tracks"></span>
+                            </div>
+                            <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                                <span class="icon-caption"></span>
+                            </div>
+                            <span id="videoDuration" class="duration-display">00:00:00</span>
+                            <div class="seekContainer">
+                                <div id="seekbar" class="seekbar seekbar-complete">
+                                    <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                                    <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                                </div>
+                            </div>
+                            <div id="thumbnail-container" class="thumbnail-container"> <!-- Thumbnails will be rendered here -->
+                                <div id="thumbnail-elem" class="thumbnail-elem"></div>
+                                <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
+                            </div>
                         </div>
-                    </div>
-                    <div id="thumbnail-container" class="thumbnail-container"> <!-- Thumbnails will be rendered here -->
-                        <div id="thumbnail-elem" class="thumbnail-elem"></div>
-                        <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
                     </div>
                 </div>
             </div>
         </div>
-        <script src="../highlighter.js"></script>
-    </body>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
 </html>

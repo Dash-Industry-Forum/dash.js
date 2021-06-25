@@ -38,6 +38,7 @@ import { HTTPRequest } from '../../vo/metrics/HTTPRequest';
 import EventBus from '../../../core/EventBus';
 import Events from '../../../core/events/Events';
 import Debug from '../../../core/Debug';
+import MediaPlayerEvents from '../../MediaPlayerEvents';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -71,12 +72,13 @@ function BolaRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(Events.BUFFER_EMPTY, onBufferEmpty, instance);
-        eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.BUFFER_EMPTY, onBufferEmpty, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
+        eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
+
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
-        eventBus.on(Events.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.on(Events.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
-        eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     }
 
     function utilitiesFromBitrates(bitrates) {
@@ -426,7 +428,7 @@ function BolaRule(config) {
 
         switch (bolaState.state) {
             case BOLA_STATE_STARTUP:
-                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
+                quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
 
                 switchRequest.quality = quality;
                 switchRequest.reason.throughput = safeThroughput;
@@ -453,7 +455,7 @@ function BolaRule(config) {
 
                 // we want to avoid oscillations
                 // We implement the "BOLA-O" variant: when network bandwidth lies between two encoded bitrate levels, stick to the lowest level.
-                const qualityForThroughput = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
+                const qualityForThroughput = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
                 if (quality > bolaState.lastQuality && quality > qualityForThroughput) {
                     // only intervene if we are trying to *increase* quality to an *unsustainable* level
                     // we are only avoid oscillations - do not drop below last quality
@@ -473,7 +475,7 @@ function BolaRule(config) {
                     delayS -= bolaState.placeholderBuffer;
                     bolaState.placeholderBuffer = 0;
 
-                    if (quality < abrController.getTopQualityIndexFor(mediaType, streamId)) {
+                    if (quality < abrController.getMaxAllowedIndexFor(mediaType, streamId)) {
                         // At top quality, allow schedule controller to decide how far to fill buffer.
                         scheduleController.setTimeToLoadDelay(1000 * delayS);
                     } else {
@@ -496,7 +498,7 @@ function BolaRule(config) {
             default:
                 logger.debug('BOLA ABR rule invoked in bad state.');
                 // should not arrive here, try to recover
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, latency);
+                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, safeThroughput, streamId, latency);
                 switchRequest.reason.state = bolaState.state;
                 switchRequest.reason.throughput = safeThroughput;
                 switchRequest.reason.latency = latency;
@@ -514,12 +516,13 @@ function BolaRule(config) {
     function reset() {
         resetInitialSettings();
 
-        eventBus.off(Events.BUFFER_EMPTY, onBufferEmpty, instance);
-        eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.BUFFER_EMPTY, onBufferEmpty, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.METRIC_ADDED, onMetricAdded, instance);
+        eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
+        eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
+
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
-        eventBus.off(Events.METRIC_ADDED, onMetricAdded, instance);
-        eventBus.off(Events.QUALITY_CHANGE_REQUESTED, onQualityChangeRequested, instance);
-        eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
     }
 
     instance = {

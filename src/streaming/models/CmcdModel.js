@@ -32,7 +32,6 @@ import EventBus from '../../core/EventBus';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents';
 import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
 import Settings from '../../core/Settings';
 import Constants from '../../streaming/constants/Constants';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest';
@@ -63,8 +62,7 @@ const RTP_SAFETY_FACTOR = 5;
 
 function CmcdModel() {
 
-    let logger,
-        dashManifestModel,
+    let dashManifestModel,
         instance,
         internalData,
         abrController,
@@ -80,7 +78,6 @@ function CmcdModel() {
     let settings = Settings(context).getInstance();
 
     function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
         dashManifestModel = DashManifestModel(context).getInstance();
 
         _resetInitialSettings();
@@ -256,7 +253,7 @@ function CmcdModel() {
         let ot;
         if (request.mediaType === Constants.VIDEO) ot = OBJECT_TYPES.VIDEO;
         if (request.mediaType === Constants.AUDIO) ot = OBJECT_TYPES.AUDIO;
-        if (request.mediaType === Constants.FRAGMENTED_TEXT) {
+        if (request.mediaType === Constants.TEXT) {
             if (request.mediaInfo.mimeType === 'application/mp4') {
                 ot = OBJECT_TYPES.ISOBMFF_TEXT_TRACK;
             } else {

@@ -13,6 +13,7 @@ import AdapterMock from './mocks/AdapterMock';
 
 const expect = require('chai').expect;
 const context = {};
+const sinon = require('sinon');
 
 const eventBus = EventBus(context).getInstance();
 
@@ -29,15 +30,15 @@ describe('PlaybackController', function () {
         settings;
 
     beforeEach(function () {
+        settings = Settings(context).getInstance();
         videoModelMock = new VideoModelMock();
         dashMetricsMock = new DashMetricsMock();
-        mediaPlayerModelMock = new MediaPlayerModelMock();
+        mediaPlayerModelMock = new MediaPlayerModelMock({ settings });
         streamMock = new StreamMock();
         streamControllerMock = new StreamControllerMock();
         uriFragmentModelMock = new URIFragmentModelMock();
         adapterMock = new AdapterMock();
         playbackController = PlaybackController(context).getInstance();
-        settings = Settings(context).getInstance();
 
         playbackController.setConfig({
             videoModel: videoModelMock,
@@ -103,6 +104,113 @@ describe('PlaybackController', function () {
             expect(playbackController.computeAndSetLiveDelay.bind(playbackController)).not.to.throw();
             expect(playbackController.getLiveDelay()).to.be.NaN; // jshint ignore:line
         });
+
+        describe('computeAndSetLiveDelay()', function () {
+            let manifestInfo;
+
+            beforeEach(function () {
+                settings.reset();
+                manifestInfo = {}
+            })
+
+            it('should return NaN if no values specified', function () {
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.be.NaN;
+            })
+
+            it('should return live delay if specified in the settings', function () {
+                settings.update({ streaming: { delay: { liveDelay: 20 } } });
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.equal(20);
+            })
+
+            it('should return live delay based on liveDelayFragmentCount if specified in the settings', function () {
+                settings.update({ streaming: { delay: { liveDelayFragmentCount: 5 } } });
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+
+                expect(liveDelay).to.equal(10);
+            })
+
+            it('should return live delay based on suggestedPresentationDelay', function () {
+                const adapterStub = sinon.stub(adapterMock, 'getSuggestedPresentationDelay').returns(12);
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.equal(12);
+                adapterStub.restore();
+            })
+
+            it('should return live delay based on fragment duration and FRAGMENT_DURATION_FACTOR', function () {
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+
+                expect(liveDelay).to.equal(8);
+            })
+
+            it('should return live delay based on minBufferTime', function () {
+                manifestInfo.minBufferTime = 8;
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.equal(32);
+            })
+
+            it('should prefer live delay based on liveDelay if both liveDelay and liveDelayFragmentCount are specified in the settings', function () {
+                settings.update({ streaming: { delay: { liveDelayFragmentCount: 5, liveDelay: 40 } } });
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+
+                expect(liveDelay).to.equal(40);
+            })
+
+            it('should return live delay based on ServiceDescription if correct scheme id is specified', function () {
+                manifestInfo.serviceDescriptions = [{
+                    schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019',
+                    latency: {
+                        target: 13000
+                    }
+                }]
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.equal(13);
+            })
+
+            it('should ignore live delay based on ServiceDescription if wrong scheme id is specified', function () {
+                manifestInfo.serviceDescriptions = [{
+                    schemeIdUri: 'urn:dvb:dash:somescheme',
+                    latency: {
+                        target: 13000
+                    }
+                }]
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.be.NaN
+            })
+
+            it('should not apply live delay based on ServiceDescription if live delay is already defined', function () {
+                settings.update({ streaming: { delay: { liveDelay: 20 } } });
+                manifestInfo.serviceDescriptions = [{
+                    schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019',
+                    latency: {
+                        target: 13000
+                    }
+                }]
+                const liveDelay = playbackController.computeAndSetLiveDelay(NaN, manifestInfo);
+
+                expect(liveDelay).to.equal(20);
+            })
+
+            it('should not apply live delay based on ServiceDescription if liveDelayFragmentCount is already defined', function () {
+                settings.update({ streaming: { delay: { liveDelayFragmentCount: 5 } } });
+                manifestInfo.serviceDescriptions = [{
+                    schemeIdUri: 'urn:dvb:dash:lowlatency:scope:2019',
+                    latency: {
+                        target: 13000
+                    }
+                }]
+                const liveDelay = playbackController.computeAndSetLiveDelay(2, manifestInfo);
+
+                expect(liveDelay).to.equal(10);
+            })
+        })
 
         describe('video management', function () {
 
@@ -293,7 +401,7 @@ describe('PlaybackController', function () {
                 };
 
                 eventBus.on(Events.PLAYBACK_ERROR, onError, this);
-                videoModelMock.fireEvent('error', [{target: { error: 'error'}}]);
+                videoModelMock.fireEvent('error', [{ target: { error: 'error' } }]);
             });
 
             it('should handle stalled event', function (done) {
@@ -325,201 +433,6 @@ describe('PlaybackController', function () {
                 eventBus.on(Events.PLAYBACK_WAITING, onPlaybackWaiting, this);
                 videoModelMock.fireEvent('waiting');
             });
-        });
-    });
-
-    describe('start time', function () {
-        let expectedSeekTime;
-        let doneFn;
-
-        let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600 };
-        let dynamicStreamInfo = { manifestInfo: { isDynamic: true }, start: 10, duration: Infinity };
-        let dvrWindowRange = { start: 70, end: 100 };
-        let liveStartTime = 85;
-
-        let onPlaybackSeeking = function (e) {
-            eventBus.off(Events.PLAYBACK_SEEKING, onPlaybackSeeking);
-            expect(e.seekTime).to.equal(expectedSeekTime);
-            doneFn();
-        };
-
-        beforeEach(function () {
-            videoModelMock.time = -1;
-            dashMetricsMock.addDVRInfo('video', Date.now(), null, dvrWindowRange);
-            eventBus.on(Events.PLAYBACK_SEEKING, onPlaybackSeeking, this);
-        });
-
-        it('should start static stream at period start', function (done) {
-            doneFn = done;
-
-            expectedSeekTime = staticStreamInfo.start;
-
-            playbackController.initialize(staticStreamInfo);
-            streamMock.initialize(staticStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {});
-        });
-
-        it('should start static stream at #t', function (done) {
-            doneFn = done;
-
-            let uriStartTime = 10;
-            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
-
-            expectedSeekTime = staticStreamInfo.start + uriStartTime;
-
-            playbackController.initialize(staticStreamInfo);
-            streamMock.initialize(staticStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {});
-        });
-
-        it('should start static stream at period start if #t is before period start', function (done) {
-            doneFn = done;
-
-            let uriStartTime = -20;
-            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
-
-            expectedSeekTime = staticStreamInfo.start;
-
-            playbackController.initialize(staticStreamInfo);
-            streamMock.initialize(staticStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {});
-        });
-
-        it('should start static stream at period start if #t is beyond period end', function (done) {
-            doneFn = done;
-
-            let uriStartTime = staticStreamInfo.duration + 100;
-            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
-
-            expectedSeekTime = staticStreamInfo.start;
-
-            playbackController.initialize(staticStreamInfo);
-            streamMock.initialize(staticStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {});
-        });
-
-        it('should start static stream at period start if #t=posix: notation is used', function (done) {
-            doneFn = done;
-
-            let uriStartTime = 10;
-            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
-
-            expectedSeekTime = staticStreamInfo.start;
-
-            playbackController.initialize(staticStreamInfo);
-            streamMock.initialize(staticStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {});
-        });
-
-        it('should start static stream at period start if #t= is not a valid', function (done) {
-            doneFn = done;
-
-            uriFragmentModelMock.setURIFragmentData({t: 'abcd'});
-
-            expectedSeekTime = staticStreamInfo.start;
-
-            playbackController.initialize(staticStreamInfo);
-            streamMock.initialize(staticStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {});
-        });
-
-        it('should start dynamic stream at live start time', function (done) {
-            doneFn = done;
-
-            expectedSeekTime = liveStartTime;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at #t', function (done) {
-            doneFn = done;
-
-            let uriStartTime = 70;
-            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
-
-            expectedSeekTime = dynamicStreamInfo.start + uriStartTime;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at live start time if #t is before DVR window range', function (done) {
-            doneFn = done;
-
-            let uriStartTime = -10;
-            uriFragmentModelMock.setURIFragmentData({t: uriStartTime.toString()});
-
-            expectedSeekTime = dvrWindowRange.start;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at live start time if #t is not valid', function (done) {
-            doneFn = done;
-
-            uriFragmentModelMock.setURIFragmentData({t: 'abcd'});
-
-            expectedSeekTime = liveStartTime;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at #t=posix', function (done) {
-            doneFn = done;
-
-            let uriStartTime = dvrWindowRange.start + 10;
-            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
-
-            expectedSeekTime = uriStartTime;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at DVR window start if #t=posix is before DVR window range', function (done) {
-            doneFn = done;
-
-            let uriStartTime = 0;
-            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
-
-            expectedSeekTime = dvrWindowRange.start;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at live start time if #t=posix is beyond DVR window range', function (done) {
-            doneFn = done;
-
-            let uriStartTime = dvrWindowRange + 10;
-            uriFragmentModelMock.setURIFragmentData({t: 'posix:' + uriStartTime.toString()});
-
-            expectedSeekTime = liveStartTime;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
-        });
-
-        it('should start dynamic stream at live start time if #t=posix is not valid', function (done) {
-            doneFn = done;
-
-            uriFragmentModelMock.setURIFragmentData({t: 'posix:abcd'});
-
-            expectedSeekTime = liveStartTime;
-
-            playbackController.initialize(dynamicStreamInfo);
-            streamMock.initialize(dynamicStreamInfo);
-            eventBus.trigger(Events.STREAM_INITIALIZED, {liveStartTime: liveStartTime});
         });
     });
 });

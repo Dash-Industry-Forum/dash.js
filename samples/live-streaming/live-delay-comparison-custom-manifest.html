@@ -1,77 +1,82 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <title>Live delay example</title>
+    <meta charset="utf-8">
+    <title>Live delay comparison custom manifest</title>
 
     <script src="../../dist/dash.all.debug.js"></script>
-    <!--dash.all.min.js should be used in production over dash.all.debug.js
-        Debug files are not compressed or obfuscated making the file size much larger compared with dash.all.min.js-->
-    <!--<script src="../../dist/dash.all.min.js"></script>-->
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link href="../lib/main.css" rel="stylesheet">
 
     <script class="code">
-        var player,firstLoad = true;
-        function init()
-        {
-            setInterval( function() {
-                if (player && player.isReady())
-                {
+        var player, firstLoad = true;
+
+        function init() {
+            setInterval(function () {
+                if (player && player.isReady()) {
                     var d = new Date();
                     var seconds = d.getSeconds();
-                    document.querySelector("#sec").innerHTML = ( seconds < 10 ? "0" : "" ) + seconds;
+                    document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
                     var minutes = d.getMinutes();
-                    document.querySelector("#min").innerHTML = ( minutes < 10 ? "0" : "" ) + minutes;
-                    document.querySelector("#videoDelay").innerHTML = Math.round((d.getTime()/1000) - Number(player.timeAsUTC()));
-                    document.querySelector("#videoBuffer").innerHTML = player.getBufferLength()+ "s";
+                    document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
+                    document.querySelector('#videoDelay').innerHTML = Math.round((d.getTime() / 1000) - Number(player.timeAsUTC()));
+                    document.querySelector('#videoBuffer').innerHTML = player.getBufferLength() + 's';
                 }
-            },1000);
+            }, 1000);
         }
-        function load(button)
-        {
-            if (!firstLoad)
-            {
+
+        function load(button) {
+            if (!firstLoad) {
                 player.reset();
             }
             firstLoad = false;
-            var url =  document.getElementById("manifest").value;
+            var url = document.getElementById('manifest').value;
             player = dashjs.MediaPlayer().create();
-            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE }});
+            player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_NONE } });
 
             switch (document.querySelector('input[name="delay"]:checked').value) {
-                case "segments":
+                case 'segments':
                     player.updateSettings({
                         'streaming':
-                        {
-                            'liveDelayFragmentCount': document.querySelector("#delayInFragments").value
-                        }
+                            {
+                                'delay': {
+                                    'liveDelayFragmentCount': document.querySelector('#delayInFragments').value
+                                }
+
+                            }
                     });
 
                     break;
-                case "time":
+                case 'time':
                     player.updateSettings({
                         'streaming':
-                        {
-                            'liveDelay': document.querySelector("#delayInSeconds").value
-                        }
+                            {
+                                'delay': {
+                                    'liveDelay': document.querySelector('#delayInSeconds').value
+                                }
+                            }
                     });
                     break;
             }
-            player.initialize(document.querySelector("video"), url, true);
+            player.initialize(document.querySelector('video'), url, true);
         }
-        function delaySelect(obj)
-        {
+
+        function delaySelect(obj) {
             switch (obj.value) {
-                case "default":
-                    document.querySelector("#fragmentsEntry").style.display = "none";
-                    document.querySelector("#secondsEntry").style.display = "none";
+                case 'default':
+                    document.querySelector('#fragmentsEntry').style.display = 'none';
+                    document.querySelector('#secondsEntry').style.display = 'none';
                     break;
-                case "segments":
-                    document.querySelector("#fragmentsEntry").style.display = "inline";
-                    document.querySelector("#secondsEntry").style.display = "none";
+                case 'segments':
+                    document.querySelector('#fragmentsEntry').style.display = 'inline';
+                    document.querySelector('#secondsEntry').style.display = 'none';
                     break;
-                case "time":
-                    document.querySelector("#fragmentsEntry").style.display = "none";
-                    document.querySelector("#secondsEntry").style.display = "inline";
+                case 'time':
+                    document.querySelector('#fragmentsEntry').style.display = 'none';
+                    document.querySelector('#secondsEntry').style.display = 'inline';
                     break;
             }
         }
@@ -79,66 +84,140 @@
 
     <style>
         video {
-            width: 640px;
-            height: 360px;
+            width: 100%;
         }
+
         #manifest {
-            width:300px;
+            width: 300px;
         }
-        #loadButton {
-            background-color: orange;
-        }
-        .clock {
-            color:#000; font-size: 40pt
-        }
-        #fragmentsEntry,#secondsEntry {
-            position:relative;
+
+        #fragmentsEntry, #secondsEntry {
+            position: relative;
             display: none;
-            width:50px;
+            width: 50px;
         }
-        #delayInFragments,#delayInSeconds {
-            width:50px;
+
+        #delayInFragments, #delayInSeconds {
+            width: 50px;
+        }
+
+        .clock {
+            color: #000;
+            font-size: 60pt
         }
     </style>
-    </head>
+</head>
 <body>
 
-This sample allows you to explore the two MediaPlayer APIS which control live delay - setLiveDelay and setLiveDelayFragmentCount.<br/>
-The first takes the desired delay in seconds. The second takes the delay in terms of fragment count.
-If you use both together, setLiveDelay <br/> will take priority. If you set neither, the default delay of 4 segment durations will be used.
-Note that using either method will not result in the <br/> offset exactly matching the requested setings. The final achieved delay is a function of the segment duration, when the
-stream is requested <br/>with respect to the segment boundaries, as well as the amount of data the source buffers need to begin decoding.
-Enter the URL to a live (dynamic) stream manifest :
-<input class="code" id="manifest" type="text" value="https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd"/><br/>
-<form class="code">
-    Set the live delay at stream start-up using one of the three possible methods:<br/>
-    <input type="radio" onclick="delaySelect(this)" name="delay" value="default" checked> Default<br/>
-    <input type="radio" onclick="delaySelect(this)" name="delay" value="segments"> Fragment Count<br/>
-    <div id="fragmentsEntry">
-        Enter the desired value for setLiveDelayFragmentCount in number of fragments <input id="delayInFragments" type="text"/> <br/>
-    </div>
-    <input type="radio" onclick="delaySelect(this)" name="delay" value="time"> Time in seconds<br/>
-    <div id="secondsEntry">
-        Enter the desired value for setLiveDelay in seconds <input id="delayInSeconds" type="text"/><br/>
-    </div>
-    <input id="loadButton" type="button" value="LOAD PLAYER" onclick="load(this)"/>
-</form>
-
-<div class="code">
-    <video controls="true">
-    </video>
-    Playhead seconds behind live: <span id="videoDelay"></span><br/>
-    Buffer length: <span id="videoBuffer"></span>
-    <div>Wall clock time
-        <div class="clock">
-            <span id="min"> </span>:<span id="sec"></span>
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="p-5 bg-light border rounded-3">
+                    <h3><i class="bi bi-info-square"></i> Live delay comparison custom manifest</h3>
+                    <p>This sample allows you to explore the two MediaPlayer APIS which control live delay - <b>setLiveDelay</b>
+                        and
+                        <b>setLiveDelayFragmentCount.</b></p>
+                    <p>The first takes the desired delay in seconds. The second takes the delay in terms of fragment
+                        count.
+                        If you use both together, setLiveDelay will take priority. If you set neither, the default delay
+                        of 4 segment
+                        durations will be used.
+                    </p>
+                    <p>
+                        Note that using either method will not result in the <br/> offset exactly matching the requested
+                        setings. The final
+                        delay depends on the time to fill the source buffers and the amound of data required to begin
+                        decoding.</p>
+                </div>
+            </div>
         </div>
+        <div class="row mt-2">
+            <div class="col-md-7">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">Manifest URL</span>
+                    <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
+                           value="https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd" aria-label="Username"
+                           aria-describedby="basic-addon1">
+                    <button type="button" id="loadButton" class="btn btn-success" onclick="load(this)">Load stream
+                    </button>
+                </div>
+                <video controls="true"></video>
+
+            </div>
+            <div class="col-md-5">
+                <div class="p-5 border rounded-3">
+                    <h4>Settings</h4>
+                    <div>
+                        <div class="form-check">
+                            <input class="form-check-input" onclick="delaySelect(this)" value="default" type="radio"
+                                   name="delay" id="default" checked>
+                            <label class="form-check-label" for="default">
+                                Default
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" onclick="delaySelect(this)" value="segments" type="radio"
+                                   name="delay" id="segments">
+                            <label class="form-check-label" for="segments">
+                                Fragment Count:
+                            </label>
+                            <div id="fragmentsEntry">
+                                <input
+                                    id="delayInFragments"
+                                    type="text"/> <br/>
+                            </div>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" onclick="delaySelect(this)" value="time" type="radio"
+                                   name="delay" id="time">
+                            <label class="form-check-label" for="time">
+                                Time in seconds:
+                            </label>
+                            <div id="secondsEntry"><input id="delayInSeconds"
+                                                          type="text"/><br/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-5 border rounded-3 mt-1">
+                    <h3>Wall Clock reference time</h3>
+                    <div class="clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
+                </div>
+                <div class="p-5 border rounded-3 mt-1" >
+                    <h4>Debug information</h4>
+                    <div>
+                        <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span id="videoDelay"></span>
+                        </div>
+                        <div><i class="bi bi-arrow-right-square"></i> Video Buffer: <span id="videoBuffer"></span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
     </div>
-</div>
-<script class="code">
-    document.addEventListener("DOMContentLoaded", function () {
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
         init();
     });
 </script>
+<script src="../highlighter.js"></script>
 </body>
 </html>

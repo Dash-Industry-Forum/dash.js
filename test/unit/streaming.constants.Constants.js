@@ -9,8 +9,6 @@ describe('Constants', function () {
         expect(Constants.VIDEO).to.equal('video');
         expect(Constants.AUDIO).to.equal('audio');
         expect(Constants.TEXT).to.equal('text');
-        expect(Constants.FRAGMENTED_TEXT).to.equal('fragmentedText');
-        expect(Constants.EMBEDDED_TEXT).to.equal('embeddedText');
         expect(Constants.MUXED).to.equal('muxed');
         expect(Constants.LOCATION).to.equal('Location');
         expect(Constants.INITIALIZE).to.equal('initialize');

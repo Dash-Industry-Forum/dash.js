@@ -30,6 +30,7 @@
  */
 import EventBus from '../core/EventBus';
 import Events from '../core/events/Events';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents';
 import FactoryMaker from '../core/FactoryMaker';
 import Debug from '../core/Debug';
 import Errors from '../core/errors/Errors';
@@ -83,8 +84,8 @@ function ManifestUpdater() {
         resetInitialSettings();
 
         eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-        eventBus.on(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.on(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
     }
 
@@ -102,8 +103,8 @@ function ManifestUpdater() {
 
     function reset() {
 
-        eventBus.off(Events.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.off(Events.PLAYBACK_PAUSED, onPlaybackPaused, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, onPlaybackStarted, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
         eventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
 
@@ -251,7 +252,7 @@ function ManifestUpdater() {
     }
 
     function onPlaybackPaused(/*e*/) {
-        isPaused = !settings.get().streaming.scheduleWhilePaused;
+        isPaused = !settings.get().streaming.scheduling.scheduleWhilePaused;
 
         if (isPaused) {
             stopManifestRefreshTimer();
