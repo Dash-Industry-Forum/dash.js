@@ -29,7 +29,7 @@
             player.updateSettings({
                 streaming: {
                     abr: {
-                        maxBitrate: { audio: -1, video: 8000 },
+                        maxBitrate: { audio: -1, video: 5000 },
                         minBitrate: { audio: -1, video: 2000 },
                     }
                 }
@@ -53,7 +53,11 @@
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>Max/min bitrate</h3>
-                    <p>Example showing how to set the maximum and minimum bitrate in dash.js.</p>
+                    <p>Example showing how to set the maximum and minimum bitrate in dash.js.
+                    </p>
+                    <p>Note that the content used
+                        in this sample has video representations with 4Mbit/s and 8Mbit/s. By setting the maximum
+                        allowed bitrate to 5Mbit/s dash.js will never go above the 4Mbit/s representation.</p>
                 </div>
             </div>
             <div class="col-md-8">

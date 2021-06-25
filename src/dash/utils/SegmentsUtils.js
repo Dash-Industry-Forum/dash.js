@@ -207,7 +207,7 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
 
 export function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index, tManifest) {
     const scaledTime = time / fTimescale;
-    const scaledDuration = Math.min(duration / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration);
+    const scaledDuration = duration / fTimescale;
 
     let presentationStartTime,
         presentationEndTime,

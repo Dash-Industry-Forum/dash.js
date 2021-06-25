@@ -3,19 +3,19 @@
         {
             "browserName":"chrome",
             "maxInstances":5,
-            "plateform":"WINDOWS",
+            "platform":"WINDOWS",
             "seleniumProtocol":"WebDriver"
         },
         {
             "browserName":"MicrosoftEdge",
             "maxInstances":5,
-            "plateform":"WINDOWS",
+            "platform":"WINDOWS",
             "seleniumProtocol":"WebDriver"
         },
         {
             "browserName":"firefox",
             "maxInstances":5,
-            "plateform":"WINDOWS",
+            "platform":"WINDOWS",
             "seleniumProtocol":"WebDriver",
             "acceptSslCerts":true,
             "trustAllSSLCertificates":true,

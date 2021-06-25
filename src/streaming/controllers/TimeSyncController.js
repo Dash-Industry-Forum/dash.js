@@ -547,6 +547,7 @@ function TimeSyncController() {
 
         if (failed) {
             lastTimingSource = null;
+            isSynchronizing = false;
             errHandler.error(new DashJSError(Errors.TIME_SYNC_FAILED_ERROR_CODE, Errors.TIME_SYNC_FAILED_ERROR_MESSAGE));
         }
 
