@@ -171,11 +171,13 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
-        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        if (Events.KEY_SESSION_UPDATED) {
+            eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        }
+
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
@@ -192,11 +194,13 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
-        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        if (Events.KEY_SESSION_UPDATED) {
+            eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        }
+
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
@@ -276,39 +280,39 @@ function StreamController() {
      * @private
      */
     function _initializeOrUpdateStream(streamInfo) {
-            let stream = getStreamById(streamInfo.id);
+        let stream = getStreamById(streamInfo.id);
 
-            // If the Stream object does not exist we probably loaded the manifest the first time or it was
-            // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-            if (!stream) {
-                stream = Stream(context).create({
-                    manifestModel,
-                    mediaPlayerModel,
-                    dashMetrics,
-                    manifestUpdater,
-                    adapter,
-                    timelineConverter,
-                    capabilities,
-                    capabilitiesFilter,
-                    errHandler,
-                    baseURLController,
-                    segmentBaseController,
-                    textController,
-                    abrController,
-                    playbackController,
-                    eventController,
-                    mediaController,
-                    protectionController,
-                    videoModel,
-                    streamInfo,
-                    settings
-                });
-                streams.push(stream);
-                stream.initialize();
-                return Promise.resolve();
-            } else {
-                return stream.updateData(streamInfo);
-            }
+        // If the Stream object does not exist we probably loaded the manifest the first time or it was
+        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+        if (!stream) {
+            stream = Stream(context).create({
+                manifestModel,
+                mediaPlayerModel,
+                dashMetrics,
+                manifestUpdater,
+                adapter,
+                timelineConverter,
+                capabilities,
+                capabilitiesFilter,
+                errHandler,
+                baseURLController,
+                segmentBaseController,
+                textController,
+                abrController,
+                playbackController,
+                eventController,
+                mediaController,
+                protectionController,
+                videoModel,
+                streamInfo,
+                settings
+            });
+            streams.push(stream);
+            stream.initialize();
+            return Promise.resolve();
+        } else {
+            return stream.updateData(streamInfo);
+        }
     }
 
     /**

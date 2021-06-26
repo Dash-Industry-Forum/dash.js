@@ -641,5 +641,21 @@
                 ]
             }
         ]
+    },
+    {
+        "section": "Module builds",
+        "samples": [
+            {
+                "title": "Mediaplayer only",
+                "description": "A sample showing how to use the dash.mediaplayer bundle. This bundle does not contain any code for playback of DRM protected content.",
+                "href": "module-builds/mediaplayer-only.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Module",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
     }
 ]
