@@ -58,7 +58,6 @@ function HTTPLoader(cfg) {
     const mediaPlayerModel = cfg.mediaPlayerModel;
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
-    const useFetch = cfg.useFetch || false;
     const errors = cfg.errors;
     const requestTimeout = cfg.requestTimeout || 0;
     const eventBus = EventBus(context).getInstance();
