@@ -964,7 +964,6 @@ function Settings() {
             return defaultSettings
         } else {
             let mergedSettings = Utils.clone(defaultSettings);
-            mergedSettings.type = Constants.SETTINGS_TYPES.MERGED;
             _mergeSettings(mergedSettings, appSettings, mpdSettings);
 
             return mergedSettings

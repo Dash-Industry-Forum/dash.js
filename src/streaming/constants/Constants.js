@@ -288,8 +288,7 @@ class Constants {
         this.SETTINGS_TYPES = {
             DEFAULT: 'settingsTypeDefault',
             APP: 'settingsTypeApp',
-            MPD: 'settingsTypeMpd',
-            MERGED: 'settingsTypeMerged'
+            MPD: 'settingsTypeMpd'
         }
     }
 
