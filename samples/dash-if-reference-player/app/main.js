@@ -183,7 +183,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.drmLicenseURL = '';
     $scope.drmRequestHeader = '';
 
-    
+
     $scope.protectionData = {};
     $scope.prioritiesEnabled = false;
 
@@ -775,16 +775,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
 
         var config = {
-            'streaming': {
-                'buffer': {
-                    'stableBufferTime': $scope.defaultStableBufferDelay,
-                    'bufferTimeAtTopQuality': $scope.defaultBufferTimeAtTopQuality,
-                    'bufferTimeAtTopQualityLongForm': $scope.defaultBufferTimeAtTopQualityLongForm,
-                },
-                'delay': {
-                    'liveDelay': $scope.defaultLiveDelay
-                },
-                'lowLatencyEnabled': $scope.lowLatencyModeSelected,
+            streaming: {
+                buffer: {},
+                delay: {},
                 abr: {},
                 cmcd: {}
             }
@@ -981,14 +974,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         };
                         if(this.prioritiesEnabled){
                             for(let key in input.clearkeys){
-                                protectionData[input.drmKeySystem]['clearkeys'][key] = input.clearkeys[key];   
+                                protectionData[input.drmKeySystem]['clearkeys'][key] = input.clearkeys[key];
                             }
                             protectionData[input.drmKeySystem]['priority'] = parseInt(input.priority);
                         }
-                        
+
                         else {
                             for(let key in input.clearkeys){
-                                protectionData[input.drmKeySystem]['clearkeys'][key] = input.clearkeys[key];   
+                                protectionData[input.drmKeySystem]['clearkeys'][key] = input.clearkeys[key];
                             }
                         }
 
@@ -1006,15 +999,15 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         }
 
                         if(!angular.equals(input.httpRequestHeaders, {})){
-                            protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders; 
+                            protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                          }
                     }
                     else {
                         alert("Kid and Key must be specified!");
                     }
- 
+
                 }
-      
+
                 else{
                   // Validate URL. If the provided information is not a valid url, the DRM is skipped.
                   if(this.isValidURL(input.licenseServerUrl)){
@@ -1026,12 +1019,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         }
                         if(!angular.equals(input.httpRequestHeaders, {}))
                         protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
-                         
+
                     }
                     else {
                     protectionData[input.drmKeySystem] = {
                         "serverURL": input.licenseServerUrl,
-                      }  
+                      }
                     }
 
                     for(let key in input){
@@ -1046,18 +1039,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
                     // Only set request header if any have been specified
                     if(!angular.equals(input.httpRequestHeaders, {})){
-                       protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders; 
-                    } 
-                      
+                       protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
+                    }
+
                   }
                   else {
                     console.log(input.licenseServerUrl, "is not a valid url!")
                   }
-      
+
                 }
             }
         }
-        
+
         $scope.protectionData = protectionData;
         $scope.player.setProtectionData(protectionData);
     }
@@ -1110,7 +1103,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 $scope.additionalClearkeyPairs.splice(index, 1);
                 break;
         }
-        
+
     }
 
     $scope.handleRequestHeaders = function (){
@@ -1255,7 +1248,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     /** Toggle between KID=KEY and Licenseserver Clearkey specification */
     $scope.toggleInputMode = function (){
         $scope.drmClearkey.inputMode = !$scope.drmClearkey.inputMode;
-    }    
+    }
 
     // from: https://gist.github.com/siongui/4969449
     $scope.safeApply = function (fn) {
@@ -1530,10 +1523,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     function setLatencyAttributes() {
         // get buffer default value
         var currentConfig = $scope.player.getSettings();
-        $scope.defaultLiveDelay = currentConfig.streaming.delay.liveDelay;
-        $scope.defaultStableBufferDelay = currentConfig.streaming.buffer.stableBufferTime;
-        $scope.defaultBufferTimeAtTopQuality = currentConfig.streaming.buffer.bufferTimeAtTopQuality;
-        $scope.defaultBufferTimeAtTopQualityLongForm = currentConfig.streaming.buffer.bufferTimeAtTopQualityLongForm;
         $scope.lowLatencyModeSelected = currentConfig.streaming.lowLatencyEnabled;
         $scope.liveCatchupEnabled = currentConfig.streaming.liveCatchup.enabled;
     }
