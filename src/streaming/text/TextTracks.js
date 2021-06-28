@@ -490,7 +490,9 @@ function TextTracks(config) {
             }
             try {
                 if (cue) {
-                    track.addCue(cue);
+                    if (!cueInTrack(track, cue)) {
+                        track.addCue(cue);
+                    }
                 } else {
                     logger.error('impossible to display subtitles.');
                 }
@@ -564,6 +566,17 @@ function TextTracks(config) {
         }
     }
 
+    function cueInTrack(track, cue) {
+        if (!track.cues) return false;
+        for (let i = 0; i < track.cues.length; i++) {
+            if ((track.cues[i].startTime === cue.startTime) &&
+                (track.cues[i].endTime === cue.endTime)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     function cueInRange(cue, start, end) {
         return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
     }
@@ -575,6 +588,9 @@ function TextTracks(config) {
 
             for (let r = lastIdx; r >= 0; r--) {
                 if (cueInRange(cues[r], start, end)) {
+                    if (cues[r].onexit) {
+                        cues[r].onexit();
+                    }
                     track.removeCue(cues[r]);
                 }
             }
