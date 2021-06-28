@@ -983,7 +983,7 @@ function BufferController(config) {
 
     function hasEnoughSpaceToAppend() {
         const totalBufferedTime = getTotalBufferedTime();
-        return (totalBufferedTime < criticalBufferLevel);
+        return (isNaN(totalBufferedTime) || totalBufferedTime < criticalBufferLevel);
     }
 
     function setSeekTarget(value) {
