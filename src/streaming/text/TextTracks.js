@@ -575,6 +575,9 @@ function TextTracks(config) {
 
             for (let r = lastIdx; r >= 0; r--) {
                 if (cueInRange(cues[r], start, end)) {
+                    if (cues[r].onexit) {
+                        cues[r].onexit();
+                    }
                     track.removeCue(cues[r]);
                 }
             }
