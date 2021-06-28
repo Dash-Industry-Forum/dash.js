@@ -1002,10 +1002,15 @@ function Settings() {
         _resetInitialSettings();
     }
 
+    function resetMpdSettings() {
+        mpdSettings = {};
+    }
+
     instance = {
         get,
         update,
-        reset
+        reset,
+        resetMpdSettings
     };
 
     _setup();

@@ -1896,6 +1896,7 @@ function MediaPlayer() {
     function _resetPlaybackControllers() {
         playbackInitialized = false;
         streamingInitialized = false;
+        settings.resetMpdSettings();
         adapter.reset();
         streamController.reset();
         gapController.reset();
