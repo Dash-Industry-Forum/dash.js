@@ -886,13 +886,16 @@ function Settings() {
             }
         }
     };
+    let appSettings = {}; // Settings defined directly by the application
+    let mpdSettings = {}; // Settings defined by MPD attributes
 
-    let appSettings = {}
-    let mpdSettings = {};
-
-    //Merge in the settings. If something exists in the new config that doesn't match the schema of the default config,
-    //regard it as an error and log it.
-    function mixinSettings(source, def, dest, path) {
+    /**
+     *
+     * @param {object} source - Settings to be added
+     * @param {object} def - Default settings
+     * @param {object} dest - Settings object to be changed
+     */
+    function _mixinSettings(source, def, dest) {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
                 if (def.hasOwnProperty(n)) {
@@ -900,7 +903,7 @@ function Settings() {
                         if (!dest[n]) {
                             dest[n] = {};
                         }
-                        mixinSettings(source[n], def[n], dest[n], path.slice() + n + '.');
+                        _mixinSettings(source[n], def[n], dest[n]);
                     } else {
                         dest[n] = Utils.clone(source[n]);
                     }
@@ -911,12 +914,15 @@ function Settings() {
 
     /**
      * Create a merged settings object. This combines the default,MPD and app settings. We merge by priority App > Mpd > Default
+     * @param {object} mergedSettings
+     * @param {object} appSettings
+     * @param {object} mpdSettings
      * @private
      */
     function _mergeSettings(mergedSettings, appSettings, mpdSettings) {
         for (let n in mergedSettings) {
             if (mergedSettings.hasOwnProperty(n)) {
-                // we only need to proceed if either the mpdSettings or the appSettings have this attribute. Otherwise we use the default one anyways.
+                // We only need to proceed if either the mpdSettings or the appSettings have this attribute. Otherwise we use the default one anyways.
                 if (typeof mergedSettings[n] === 'object' && mergedSettings[n] !== null) {
                     const currentAppSettings = appSettings && appSettings[n] && typeof appSettings[n] === 'object' ? appSettings[n] : undefined;
                     const currentMpdSettings = mpdSettings && mpdSettings[n] && typeof mpdSettings[n] === 'object' ? mpdSettings[n] : undefined;
@@ -967,15 +973,15 @@ function Settings() {
     function update(settingsObj, type) {
         if (typeof settingsObj === 'object') {
             if (type === Constants.SETTINGS_TYPES.MPD) {
-                mixinSettings(settingsObj, defaultSettings, mpdSettings, '');
+                _mixinSettings(settingsObj, defaultSettings, mpdSettings);
             } else {
-                mixinSettings(settingsObj, defaultSettings, appSettings, '');
+                _mixinSettings(settingsObj, defaultSettings, appSettings);
             }
         }
     }
 
     /**
-     * Resets the settings object. Everything is set to its default value.
+     * Resets the settings. App and MPD settings are reset in order to reset to default settings.
      * @func
      * @instance
      *
