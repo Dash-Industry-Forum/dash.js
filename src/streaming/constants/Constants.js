@@ -286,8 +286,10 @@ class Constants {
             HAVE_ENOUGH_DATA: 4
         };
         this.SETTINGS_TYPES = {
+            DEFAULT: 'settingsTypeDefault',
             APP: 'settingsTypeApp',
-            MPD: 'settingsTypeMpd'
+            MPD: 'settingsTypeMpd',
+            MERGED: 'settingsTypeMerged'
         }
     }
 

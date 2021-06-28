@@ -886,8 +886,17 @@ function Settings() {
             }
         }
     };
-    let appSettings = {}; // Settings defined directly by the application
-    let mpdSettings = {}; // Settings defined by MPD attributes
+    let appSettings;
+    let mpdSettings;
+
+    function _setup() {
+        _resetInitialSettings();
+    }
+
+    function _resetInitialSettings() {
+        appSettings = {};
+        mpdSettings = {};
+    }
 
     /**
      *
@@ -951,9 +960,13 @@ function Settings() {
             return appSettings
         } else if (type === Constants.SETTINGS_TYPES.MPD) {
             return mpdSettings
+        } else if (type === Constants.SETTINGS_TYPES.DEFAULT) {
+            return defaultSettings
         } else {
             let mergedSettings = Utils.clone(defaultSettings);
+            mergedSettings.type = Constants.SETTINGS_TYPES.MERGED;
             _mergeSettings(mergedSettings, appSettings, mpdSettings);
+
             return mergedSettings
         }
     }
@@ -987,8 +1000,7 @@ function Settings() {
      *
      */
     function reset() {
-        appSettings = {};
-        mpdSettings = {};
+        _resetInitialSettings();
     }
 
     instance = {
@@ -996,6 +1008,8 @@ function Settings() {
         update,
         reset
     };
+
+    _setup();
 
     return instance;
 }
