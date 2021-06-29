@@ -247,7 +247,7 @@ function BufferController(config) {
                 _onAppended(e);
             })
             .catch((e) => {
-                _onAppended({ error: e });
+                _onAppended(e);
             });
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {

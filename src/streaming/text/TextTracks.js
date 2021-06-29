@@ -417,7 +417,7 @@ function TextTracks(config) {
             track.cellResolution = currentItem.cellResolution;
             track.isFromCEA608 = currentItem.isFromCEA608;
 
-            if (currentItem.type === 'html' && captionContainer) {
+            if (currentItem.type === 'html' && captionContainer && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                 cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
                 cue.cueHTMLElement = currentItem.cueHTMLElement;
                 cue.isd = currentItem.isd;
@@ -465,7 +465,7 @@ function TextTracks(config) {
                     }
                 };
             } else {
-                if (currentItem.data) {
+                if (currentItem.data && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
                     cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
                     if (currentItem.styles) {
                         if (currentItem.styles.align !== undefined && 'align' in cue) {
