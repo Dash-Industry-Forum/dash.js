@@ -247,7 +247,7 @@ function BufferController(config) {
                 _onAppended(e);
             })
             .catch((e) => {
-                _onAppended({ error: e });
+                _onAppended(e);
             });
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
@@ -527,7 +527,8 @@ function BufferController(config) {
     function _getRangeAheadForPruning(targetTime, ranges) {
         // if we do a seek behind the current play position we do need to prune ahead of the new play position
         const endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
-        const bufferToKeepAhead = settings.get().streaming.buffer.bufferTimeAtTopQuality;
+        const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
+        const bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
         const aheadDiff = endOfBuffer - targetTime;
 
         if (aheadDiff > bufferToKeepAhead) {
@@ -983,7 +984,7 @@ function BufferController(config) {
 
     function hasEnoughSpaceToAppend() {
         const totalBufferedTime = getTotalBufferedTime();
-        return (totalBufferedTime < criticalBufferLevel);
+        return (isNaN(totalBufferedTime) || totalBufferedTime < criticalBufferLevel);
     }
 
     function setSeekTarget(value) {
