@@ -124,12 +124,12 @@ jobs:
             - run:
                 name: Run functional tests (chrome / https)
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=https
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=https
             - run:
                 name: Run functional tests (chrome / http)
                 when: always # run tests even if some previous tests failed
                 command:
-                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=chrome --protocol=http
+                    node test/functional/runTests.js --selenium=remote --reporters=junit --app=remote --browsers=edge --protocol=http
             - store_test_results:
                 path: test/functional/reports
 
