@@ -78,48 +78,44 @@ function InsufficientBufferRule(config) {
     function getMaxIndex(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
 
-        try {
-
-            if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
-                return switchRequest;
-            }
-
-            checkConfig();
-
-            const mediaType = rulesContext.getMediaType();
-            const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
-            const representationInfo = rulesContext.getRepresentationInfo();
-            const fragmentDuration = representationInfo.fragmentDuration;
-            const streamInfo = rulesContext.getStreamInfo();
-            const streamId = streamInfo ? streamInfo.id : null;
-
-            // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-            if (shouldIgnore(mediaType) || !fragmentDuration) {
-                return switchRequest;
-            }
-
-            if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
-                logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
-                switchRequest.quality = 0;
-                switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
-            } else {
-                const mediaInfo = rulesContext.getMediaInfo();
-                const abrController = rulesContext.getAbrController();
-                const throughputHistory = abrController.getThroughputHistory();
-
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-                const throughput = throughputHistory.getAverageThroughput(mediaType);
-                const latency = throughputHistory.getAverageLatency(mediaType);
-                const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
-
-                switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
-                switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
-            }
-
-            return switchRequest;
-        } catch (e) {
+        if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
             return switchRequest;
         }
+
+        checkConfig();
+
+        const mediaType = rulesContext.getMediaType();
+        const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
+        const representationInfo = rulesContext.getRepresentationInfo();
+        const fragmentDuration = representationInfo.fragmentDuration;
+        const streamInfo = rulesContext.getStreamInfo();
+        const streamId = streamInfo ? streamInfo.id : null;
+
+        // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
+        if (shouldIgnore(mediaType) || !fragmentDuration) {
+            return switchRequest;
+        }
+
+        if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
+            logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
+            switchRequest.quality = 0;
+            switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
+        } else {
+            const mediaInfo = rulesContext.getMediaInfo();
+            const abrController = rulesContext.getAbrController();
+            const throughputHistory = abrController.getThroughputHistory();
+
+            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+            const throughput = throughputHistory.getAverageThroughput(mediaType);
+            const latency = throughputHistory.getAverageLatency(mediaType);
+            const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
+
+            switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
+            switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
+        }
+
+        return switchRequest;
+
     }
 
     function shouldIgnore(mediaType) {
