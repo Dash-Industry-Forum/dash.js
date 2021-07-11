@@ -580,6 +580,38 @@ describe('MediaController', function () {
                 );
             });
         });
+
+        describe('"custom" mode', function() {
+            beforeEach(function(){
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_WIDEST_RANGE }});
+                function customSelectionMode(tracks) {
+                    let result = [];
+                    result.push(tracks[0]);
+                    if(tracks.length > 1){
+                        result.push(tracks[1]);
+                        result = mediaController.getTracksWithWidestRange(result);
+                    }
+                    return result;
+                }
+                mediaController.setCustomInitialTrackSelectionMode(customSelectionMode);
+            });
+
+            it('should return the first track', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 3000 }],
+                    [ { bandwidth: 2000 }]
+                )
+            });
+
+            it('should tie break using "widestRange"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ],
+                    [ { bandwidth: 2000 } ]
+                );
+            });
+        });
     });
 
 });
