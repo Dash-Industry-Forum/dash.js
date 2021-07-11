@@ -109,6 +109,7 @@ function PlaybackController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this, { priority: EventBus.EVENT_PRIORITY_HIGH });
         eventBus.on(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
+        eventBus.on(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, this);
 
         if (playOnceInitialized) {
             playOnceInitialized = false;
@@ -353,6 +354,7 @@ function PlaybackController() {
             eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
             eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this);
             eventBus.off(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
+            eventBus.off(MediaPlayerEvents.REPRESENTATION_SWITCH, _onRepresentationSwitch, this);
             stopPlaybackCatchUp();
             stopUpdatingWallclockTime();
             removeAllListeners();
@@ -915,6 +917,26 @@ function PlaybackController() {
     function _onStreamInitializing(e) {
         _checkEnableLowLatency(e.mediaInfo);
     }
+
+    /**
+     * We enable low latency playback if for the current representation availabilityTimeComplete is set to false
+     * @param e
+     * @private
+     */
+    function _onRepresentationSwitch(e) {
+        const activeStreamInfo = streamController.getActiveStreamInfo();
+        if (!e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
+            return;
+        }
+
+        const lowLatencyEnabled = !e.currentRepresentation.availabilityTimeComplete;
+        settings.update({
+            streaming: {
+                lowLatencyEnabled: lowLatencyEnabled
+            }
+        });
+    }
+
 
     function _checkEnableLowLatency(mediaInfo) {
         if (mediaInfo && mediaInfo.supplementalProperties &&

@@ -50,7 +50,6 @@ function XlinkLoader(config) {
         dashMetrics: config.dashMetrics,
         mediaPlayerModel: config.mediaPlayerModel,
         requestModifier: config.requestModifier,
-        useFetch: config.settings ? config.settings.get().streaming.lowLatencyEnabled : null,
         errors: Errors
     });
 
