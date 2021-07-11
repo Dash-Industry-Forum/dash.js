@@ -1017,7 +1017,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
       
                 else{
                   // Validate URL. If the provided information is not a valid url, the DRM is skipped.
-                  if(this.isValidURL(input.licenseServerUrl)){
+                  if(this.isValidURL(input.licenseServerUrl) || input.drmKeySystem === 'com.microsoft.playready'){
                     // Check if DRM-Priorisation is enabled
                     if(this.prioritiesEnabled){
                         protectionData[input.drmKeySystem] = {
@@ -1248,8 +1248,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     /** Test if provided string is a URL */
     $scope.isValidURL = function (str) {
-        let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
-        return (res !== null)
+        if(str !== undefined){
+            let res = str.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
+            return (res !== null);
+        }
+        else return false;
       };
 
     /** Toggle between KID=KEY and Licenseserver Clearkey specification */
