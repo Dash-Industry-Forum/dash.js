@@ -156,7 +156,9 @@ module.exports = {
 
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
+    },
+    getMemoryHeap: function(){
+        return performance.memory.usedJSHeapSize
     }
-
 
 };
