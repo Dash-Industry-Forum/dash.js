@@ -886,17 +886,33 @@ function Settings() {
             }
         }
     };
+    let appSettings;
+    let mpdSettings;
 
-    let settings = Utils.clone(defaultSettings);
+    function _setup() {
+        _resetInitialSettings();
+    }
 
-    //Merge in the settings. If something exists in the new config that doesn't match the schema of the default config,
-    //regard it as an error and log it.
-    function mixinSettings(source, dest, path) {
+    function _resetInitialSettings() {
+        appSettings = {};
+        mpdSettings = {};
+    }
+
+    /**
+     *
+     * @param {object} source - Settings to be added
+     * @param {object} def - Default settings
+     * @param {object} dest - Settings object to be changed
+     */
+    function _mixinSettings(source, def, dest) {
         for (let n in source) {
             if (source.hasOwnProperty(n)) {
-                if (dest.hasOwnProperty(n)) {
+                if (def.hasOwnProperty(n)) {
                     if (typeof source[n] === 'object' && source[n] !== null) {
-                        mixinSettings(source[n], dest[n], path.slice() + n + '.');
+                        if (!dest[n]) {
+                            dest[n] = {};
+                        }
+                        _mixinSettings(source[n], def[n], dest[n]);
                     } else {
                         dest[n] = Utils.clone(source[n]);
                     }
@@ -906,12 +922,52 @@ function Settings() {
     }
 
     /**
-     * Return the settings object. Don't copy/store this object, you won't get updates.
+     * Create a merged settings object. This combines the default,MPD and app settings. We merge by priority App > Mpd > Default
+     * @param {object} mergedSettings
+     * @param {object} appSettings
+     * @param {object} mpdSettings
+     * @private
+     */
+    function _mergeSettings(mergedSettings, appSettings, mpdSettings) {
+        for (let n in mergedSettings) {
+            if (mergedSettings.hasOwnProperty(n)) {
+                // We only need to proceed if either the mpdSettings or the appSettings have this attribute. Otherwise we use the default one anyways.
+                if (typeof mergedSettings[n] === 'object' && mergedSettings[n] !== null) {
+                    const currentAppSettings = appSettings && appSettings[n] && typeof appSettings[n] === 'object' ? appSettings[n] : undefined;
+                    const currentMpdSettings = mpdSettings && mpdSettings[n] && typeof mpdSettings[n] === 'object' ? mpdSettings[n] : undefined;
+                    _mergeSettings(mergedSettings[n], currentAppSettings, currentMpdSettings);
+                } else {
+                    // merge by priority
+                    if (appSettings && appSettings[n] !== undefined) {
+                        mergedSettings[n] = appSettings[n];
+                    } else if (mpdSettings && mpdSettings[n] !== undefined) {
+                        mergedSettings[n] = mpdSettings[n];
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * @param {string} type - Defines the type of the settings that should be returned. If no type is specified the settings are merged by priority (App > MPD > Default)
+     * Per default returns the merged settings object by priority. Don't copy/store this object, you won't get updates.
      * @func
      * @instance
      */
-    function get() {
-        return settings;
+    function get(type) {
+        if (type === Constants.SETTINGS_TYPES.APP) {
+            return appSettings
+        } else if (type === Constants.SETTINGS_TYPES.MPD) {
+            return mpdSettings
+        } else if (type === Constants.SETTINGS_TYPES.DEFAULT) {
+            return defaultSettings
+        } else {
+            let mergedSettings = Utils.clone(defaultSettings);
+            _mergeSettings(mergedSettings, appSettings, mpdSettings);
+
+            return mergedSettings
+        }
     }
 
     /**
@@ -920,32 +976,44 @@ function Settings() {
      * @param {object} settingsObj - This should be a partial object of the Settings.Schema type. That is, fields defined should match the path (e.g.
      * settingsObj.streaming.abr.autoSwitchBitrate.audio -> defaultSettings.streaming.abr.autoSwitchBitrate.audio). Where an element's path does
      * not match it is ignored, and a warning is logged.
+     * @param {string} type - Defines which settings type should be changed. Per default the new settings are defined by the application. For settings that are coming from the MPD use the type "settingsTypeMpd"
      *
      * Use to change the settings object. Any new values defined will overwrite the settings and anything undefined will not change.
      * Implementers of new settings should add it in an approriate namespace to the defaultSettings object and give it a default value (that is not undefined).
      *
      */
-    function update(settingsObj) {
+    function update(settingsObj, type) {
         if (typeof settingsObj === 'object') {
-            mixinSettings(settingsObj, settings, '');
+            if (type === Constants.SETTINGS_TYPES.MPD) {
+                _mixinSettings(settingsObj, defaultSettings, mpdSettings);
+            } else {
+                _mixinSettings(settingsObj, defaultSettings, appSettings);
+            }
         }
     }
 
     /**
-     * Resets the settings object. Everything is set to its default value.
+     * Resets the settings. App and MPD settings are reset in order to reset to default settings.
      * @func
      * @instance
      *
      */
     function reset() {
-        settings = Utils.clone(defaultSettings);
+        _resetInitialSettings();
+    }
+
+    function resetMpdSettings() {
+        mpdSettings = {};
     }
 
     instance = {
-        get: get,
-        update: update,
-        reset: reset
+        get,
+        update,
+        reset,
+        resetMpdSettings
     };
+
+    _setup();
 
     return instance;
 }

@@ -285,6 +285,11 @@ class Constants {
             HAVE_FUTURE_DATA: 3,
             HAVE_ENOUGH_DATA: 4
         };
+        this.SETTINGS_TYPES = {
+            DEFAULT: 'settingsTypeDefault',
+            APP: 'settingsTypeApp',
+            MPD: 'settingsTypeMpd'
+        }
     }
 
     constructor() {
