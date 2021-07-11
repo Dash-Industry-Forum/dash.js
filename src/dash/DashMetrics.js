@@ -411,6 +411,10 @@ function DashMetrics(config) {
      * @instance
      */
     function getLatestMPDRequestHeaderValueByID(id) {
+        if (!id) {
+            return null;
+        }
+
         let headers = {};
         let httpRequestList,
             httpRequest,
@@ -427,7 +431,8 @@ function DashMetrics(config) {
             }
         }
 
-        return headers[id] === undefined ? null :  headers[id];
+        const value = headers[id.toLowerCase()];
+        return value === undefined ? null : value;
     }
 
     /**
@@ -439,12 +444,18 @@ function DashMetrics(config) {
      * @instance
      */
     function getLatestFragmentRequestHeaderValueByID(mediaType, id) {
+        if (!id) {
+            return null;
+        }
+
         let headers = {};
-        let httpRequest = getCurrentHttpRequest(mediaType, true);
+        let httpRequest = getCurrentHttpRequest(mediaType);
         if (httpRequest) {
             headers = Utils.parseHttpHeaders(httpRequest._responseHeaders);
         }
-        return headers[id] === undefined ? null :  headers[id];
+
+        const value = headers[id.toLowerCase()];
+        return value === undefined ? null : value;
     }
 
     /**
