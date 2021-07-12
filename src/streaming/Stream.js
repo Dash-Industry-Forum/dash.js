@@ -855,12 +855,11 @@ function Stream(config) {
 
                     if (trackChangedEvent) {
                         let mediaInfo = trackChangedEvent.newMediaInfo;
-                        if (mediaInfo.type !== Constants.TEXT) {
-                            let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-                            if (!processor) return;
-                            promises.push(processor.prepareTrackSwitch());
-                            trackChangedEvent = undefined;
-                        }
+                        let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                        if (!processor) return;
+                        promises.push(processor.prepareTrackSwitch());
+                        processor.selectMediaInfo(mediaInfo);
+                        trackChangedEvent = undefined;
                     }
 
                     return Promise.all(promises)
