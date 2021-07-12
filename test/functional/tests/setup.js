@@ -23,7 +23,7 @@ exports.register = function (stream) {
             var browserName = remote.session.capabilities.browserName;
             var browsersConf = intern.config.environments.filter(conf => {
                 // special case if chosen browser is msedge
-                if(conf.browserName === "MicrosoftEdge" && browserName === "msedge") return true;
+                if((conf.browserName === "edge" || conf.browserName === "MicrosoftEdge") && browserName === "msedge") return true;
                 return conf.browserName === browserName;     
             })[0];
 
