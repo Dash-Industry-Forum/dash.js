@@ -38,19 +38,6 @@ import FactoryMaker from '../../core/FactoryMaker';
 function ThroughputHistory(config) {
 
     config = config || {};
-    // sliding window constants
-    const MAX_MEASUREMENTS_TO_KEEP = 20;
-    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE = 3;
-    const AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD = 4;
-    const AVERAGE_LATENCY_SAMPLE_AMOUNT = 4;
-    const THROUGHPUT_DECREASE_SCALE = 1.3;
-    const THROUGHPUT_INCREASE_SCALE = 1.3;
-
-    // EWMA constants
-    const EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS = 8;
-    const EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS = 3;
-    const EWMA_LATENCY_SLOW_HALF_LIFE_COUNT = 2;
-    const EWMA_LATENCY_FAST_HALF_LIFE_COUNT = 1;
 
     const settings = config.settings;
 
@@ -63,16 +50,71 @@ function ThroughputHistory(config) {
     function setup() {
         ewmaHalfLife = {
             throughputHalfLife: {
-                fast: EWMA_THROUGHPUT_FAST_HALF_LIFE_SECONDS,
-                slow: EWMA_THROUGHPUT_SLOW_HALF_LIFE_SECONDS
+                fast: settings.get().streaming.abr.throughputHistory.ewma.throughputFastHalfLifeSeconds,
+                slow: settings.get().streaming.abr.throughputHistory.ewma.throughputSlowHalfLifeSeconds
             },
-            latencyHalfLife: { fast: EWMA_LATENCY_FAST_HALF_LIFE_COUNT, slow: EWMA_LATENCY_SLOW_HALF_LIFE_COUNT }
+            latencyHalfLife: { fast: settings.get().streaming.abr.throughputHistory.ewma.latencyFastHalfLifeCount, slow: settings.get().streaming.abr.throughputHistory.ewma.latencySlowHalfLifeCount }
         };
 
         reset();
     }
 
-    function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
+    /**
+     * Use the provided request to add new entries for throughput and latency. Update the Ewma state as well.
+     * @param {MediaType} mediaType
+     * @param {object} httpRequest
+     * @param {boolean} useDeadTimeLatency
+     */
+    function push(mediaType, httpRequest, useDeadTimeLatency) {
+        if (!httpRequest.trace || !httpRequest.trace.length) {
+            return;
+        }
+
+        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1; // Time between first byte received and start time of the request
+        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
+
+        let throughput = _calculateThroughput(httpRequest, useDeadTimeLatency, latencyTimeInMilliseconds, downloadTimeInMilliseconds);
+
+
+        _createSettingsForMediaType(mediaType);
+
+        if (_isCachedResponse(mediaType, downloadTimeInMilliseconds)) {
+            if (throughputDict[mediaType].length > 0 && !throughputDict[mediaType].hasCachedEntries) {
+                // already have some entries which are not cached entries
+                // prevent cached fragment loads from skewing the average values
+                return;
+            } else { // have no entries || have cached entries
+                // no uncached entries yet, rely on cached entries because ABR rules need something to go by
+                throughputDict[mediaType].hasCachedEntries = true;
+            }
+        } else if (throughputDict[mediaType] && throughputDict[mediaType].hasCachedEntries) {
+            // if we are here then we have some entries already, but they are cached, and now we have a new uncached entry
+            _clearSettingsForMediaType(mediaType);
+            _createSettingsForMediaType(mediaType);
+        }
+
+        throughputDict[mediaType].push(throughput);
+        if (throughputDict[mediaType].length > settings.get().streaming.abr.throughputHistory.maxMeasurementsToKeep) {
+            throughputDict[mediaType].shift();
+        }
+
+        latencyDict[mediaType].push(latencyTimeInMilliseconds);
+        if (latencyDict[mediaType].length > settings.get().streaming.abr.throughputHistory.maxMeasurementsToKeep) {
+            latencyDict[mediaType].shift();
+        }
+
+        _updateEwmaEstimate(ewmaThroughputDict[mediaType], throughput, 0.001 * downloadTimeInMilliseconds, ewmaHalfLife.throughputHalfLife);
+        _updateEwmaEstimate(ewmaLatencyDict[mediaType], latencyTimeInMilliseconds, 1, ewmaHalfLife.latencyHalfLife);
+    }
+
+    /**
+     * Check if the response was cached.
+     * @param {MediaType} mediaType
+     * @param {number} downloadTimeMs
+     * @return {boolean}
+     * @private
+     */
+    function _isCachedResponse(mediaType, downloadTimeMs) {
         if (mediaType === Constants.VIDEO) {
             return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
         } else if (mediaType === Constants.AUDIO) {
@@ -80,16 +122,21 @@ function ThroughputHistory(config) {
         }
     }
 
-    function push(mediaType, httpRequest, useDeadTimeLatency) {
-        if (!httpRequest.trace || !httpRequest.trace.length) {
-            return;
-        }
+    /**
+     * Calculates the throughput for an HTTP request
+     * @param {object} httpRequest
+     * @param {boolean} useDeadTimeLatency
+     * @param {number} latencyTimeInMilliseconds
+     * @param {number} downloadTimeInMilliseconds
+     * @return {number}
+     * @private
+     */
+    function _calculateThroughput(httpRequest, useDeadTimeLatency, latencyTimeInMilliseconds, downloadTimeInMilliseconds) {
+        let throughputMeasureTime = 0;
+        let throughput = 0;
 
-        const latencyTimeInMilliseconds = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) || 1;
-        const downloadTimeInMilliseconds = (httpRequest._tfinish.getTime() - httpRequest.tresponse.getTime()) || 1; //Make sure never 0 we divide by this value. Avoid infinity!
         const downloadBytes = httpRequest.trace.reduce((a, b) => a + b.b[0], 0);
 
-        let throughputMeasureTime = 0, throughput = 0;
         if (settings.get().streaming.lowLatencyEnabled) {
             const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
             if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
@@ -107,37 +154,18 @@ function ThroughputHistory(config) {
             throughput = Math.round((8 * downloadBytes) / throughputMeasureTime); // bits/ms = kbits/s
         }
 
-        checkSettingsForMediaType(mediaType);
-
-        if (isCachedResponse(mediaType, latencyTimeInMilliseconds, downloadTimeInMilliseconds)) {
-            if (throughputDict[mediaType].length > 0 && !throughputDict[mediaType].hasCachedEntries) {
-                // already have some entries which are not cached entries
-                // prevent cached fragment loads from skewing the average values
-                return;
-            } else { // have no entries || have cached entries
-                // no uncached entries yet, rely on cached entries because ABR rules need something to go by
-                throughputDict[mediaType].hasCachedEntries = true;
-            }
-        } else if (throughputDict[mediaType] && throughputDict[mediaType].hasCachedEntries) {
-            // if we are here then we have some entries already, but they are cached, and now we have a new uncached entry
-            clearSettingsForMediaType(mediaType);
-        }
-
-        throughputDict[mediaType].push(throughput);
-        if (throughputDict[mediaType].length > MAX_MEASUREMENTS_TO_KEEP) {
-            throughputDict[mediaType].shift();
-        }
-
-        latencyDict[mediaType].push(latencyTimeInMilliseconds);
-        if (latencyDict[mediaType].length > MAX_MEASUREMENTS_TO_KEEP) {
-            latencyDict[mediaType].shift();
-        }
-
-        updateEwmaEstimate(ewmaThroughputDict[mediaType], throughput, 0.001 * downloadTimeInMilliseconds, ewmaHalfLife.throughputHalfLife);
-        updateEwmaEstimate(ewmaLatencyDict[mediaType], latencyTimeInMilliseconds, 1, ewmaHalfLife.latencyHalfLife);
+        return throughput;
     }
 
-    function updateEwmaEstimate(ewmaObj, value, weight, halfLife) {
+    /**
+     *
+     * @param {object} ewmaObj
+     * @param {number} value
+     * @param {number} weight
+     * @param {object} halfLife
+     * @private
+     */
+    function _updateEwmaEstimate(ewmaObj, value, weight, halfLife) {
         // Note about startup:
         // Estimates start at 0, so early values are underestimated.
         // This effect is countered in getAverageEwma() by dividing the estimates by:
@@ -152,16 +180,24 @@ function ThroughputHistory(config) {
         ewmaObj.totalWeight += weight;
     }
 
-    function getSampleSize(isThroughput, mediaType, isLive) {
+    /**
+     *
+     * @param isThroughput
+     * @param mediaType
+     * @param isLive
+     * @return {number}
+     * @private
+     */
+    function _getSampleSize(isThroughput, mediaType, isLive) {
         let arr,
             sampleSize;
 
         if (isThroughput) {
             arr = throughputDict[mediaType];
-            sampleSize = isLive ? AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_LIVE : AVERAGE_THROUGHPUT_SAMPLE_AMOUNT_VOD;
+            sampleSize = isLive ? settings.get().streaming.abr.throughputHistory.averageThroughputSampleAmount.live : settings.get().streaming.abr.throughputHistory.averageThroughputSampleAmount.vod;
         } else {
             arr = latencyDict[mediaType];
-            sampleSize = AVERAGE_LATENCY_SAMPLE_AMOUNT;
+            sampleSize = settings.get().streaming.abr.throughputHistory.averageLatencySampleAmount;
         }
 
         if (!arr) {
@@ -172,7 +208,7 @@ function ThroughputHistory(config) {
             // if throughput samples vary a lot, average over a wider sample
             for (let i = 1; i < sampleSize; ++i) {
                 const ratio = arr[arr.length - i] / arr[arr.length - i - 1];
-                if (ratio >= THROUGHPUT_INCREASE_SCALE || ratio <= 1 / THROUGHPUT_DECREASE_SCALE) {
+                if (ratio >= settings.get().streaming.abr.throughputHistory.throughputIncreaseScale || ratio <= 1 / settings.get().streaming.abr.throughputHistory.throughputDecreaseScale) {
                     sampleSize += 1;
                     if (sampleSize === arr.length) { // cannot increase sampleSize beyond arr.length
                         break;
@@ -184,14 +220,14 @@ function ThroughputHistory(config) {
         return sampleSize;
     }
 
-    function getAverage(isThroughput, mediaType, isDynamic) {
+    function _getAverage(isThroughput, mediaType, isDynamic) {
         // only two moving average methods defined at the moment
         return settings.get().streaming.abr.movingAverageMethod !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
             getAverageEwma(isThroughput, mediaType) : getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
     }
 
     function getAverageSlidingWindow(isThroughput, mediaType, isDynamic) {
-        const sampleSize = getSampleSize(isThroughput, mediaType, isDynamic);
+        const sampleSize = _getSampleSize(isThroughput, mediaType, isDynamic);
         const dict = isThroughput ? throughputDict : latencyDict;
         let arr = dict[mediaType];
 
@@ -219,7 +255,7 @@ function ThroughputHistory(config) {
     }
 
     function getAverageThroughput(mediaType, isDynamic) {
-        return getAverage(true, mediaType, isDynamic);
+        return _getAverage(true, mediaType, isDynamic);
     }
 
     function getSafeAverageThroughput(mediaType, isDynamic) {
@@ -231,10 +267,15 @@ function ThroughputHistory(config) {
     }
 
     function getAverageLatency(mediaType) {
-        return getAverage(false, mediaType);
+        return _getAverage(false, mediaType);
     }
 
-    function checkSettingsForMediaType(mediaType) {
+    /**
+     * Setup the dict objects for a specific media type
+     * @param mediaType
+     * @private
+     */
+    function _createSettingsForMediaType(mediaType) {
         throughputDict[mediaType] = throughputDict[mediaType] || [];
         latencyDict[mediaType] = latencyDict[mediaType] || [];
         ewmaThroughputDict[mediaType] = ewmaThroughputDict[mediaType] || {
@@ -245,12 +286,11 @@ function ThroughputHistory(config) {
         ewmaLatencyDict[mediaType] = ewmaLatencyDict[mediaType] || { fastEstimate: 0, slowEstimate: 0, totalWeight: 0 };
     }
 
-    function clearSettingsForMediaType(mediaType) {
+    function _clearSettingsForMediaType(mediaType) {
         delete throughputDict[mediaType];
         delete latencyDict[mediaType];
         delete ewmaThroughputDict[mediaType];
         delete ewmaLatencyDict[mediaType];
-        checkSettingsForMediaType(mediaType);
     }
 
     function reset() {

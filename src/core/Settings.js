@@ -845,6 +845,22 @@ function Settings() {
                     droppedFramesRule: true,
                     abandonRequestsRule: false
                 },
+                throughputHistory: {
+                    maxMeasurementsToKeep : 20,
+                    averageThroughputSampleAmount: {
+                        live: 3,
+                        vod: 4
+                    },
+                    averageLatencySampleAmount: 4,
+                    throughputDecreaseScale: 1.3,
+                    throughputIncreaseScale: 1.3,
+                    ewma: {
+                        throughputSlowHalfLifeSeconds: 8,
+                        throughputFastHalfLifeSeconds: 3,
+                        latencySlowHalfLifeCount: 2,
+                        latencyFastHalfLifeCount: 1
+                    }
+                },
                 bandwidthSafetyFactor: 0.9,
                 useDefaultABRRules: true,
                 useDeadTimeLatency: true,
