@@ -41,6 +41,7 @@ exports.register = function (stream) {
         });
 
         after(async () => {
+            stream.settings = await command.execute(player.getSettings);
             stream.dynamic = await command.execute(player.isDynamic);
             stream.duration = await command.execute(player.getDuration);
             stream.audioTracks = await command.execute(player.getTracksFor, ['audio']);

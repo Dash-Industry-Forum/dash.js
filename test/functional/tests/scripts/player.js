@@ -156,7 +156,21 @@ module.exports = {
 
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
-    }
+    },
 
+    getSettings: function(){
+        return player.getSettings();
+    },
 
+    updateSettings: function(settings){
+        player.updateSettings(settings);
+    },
+
+    getBitrateInfoListFor: function(type){
+        return player.getBitrateInfoListFor(type);
+    },
+
+    getQualityFor: function(type){
+        return player.getQualityFor(type);
+    },
 };
