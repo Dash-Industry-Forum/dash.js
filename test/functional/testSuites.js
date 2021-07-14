@@ -13,10 +13,11 @@ const textSwitch = require('./tests/textSwitch');
 const initialAudio = require('./tests/initialAudio');
 const initialText = require('./tests/initialText');
 const initialABR = require('./tests/initialABR');
+const bitrateMaxMin = require('./tests/bitrateMaxMin');
 const ended = require('./tests/ended');
 
 var registerSuites = function (stream) {
-    var suites = intern.config.testSuites || ['playFromTime', 'pause', 'seek', 'seekPeriods', 'audioSwitch', 'textSwitch','initialAudio' , 'initialText','initialABR','ended'];
+    var suites = intern.config.testSuites || ['playFromTime', 'pause', 'seek', 'seekPeriods', 'audioSwitch', 'textSwitch','initialAudio' , 'initialText','initialABR','bitrateMaxMin', 'ended'];
   
     setup.register(stream);
     play.register(stream);
@@ -30,6 +31,7 @@ var registerSuites = function (stream) {
     if (suites.indexOf('initialAudio') !== -1) initialAudio.register(stream);
     if (suites.indexOf('initialText') !== -1) initialText.register(stream);
     if (suites.indexOf('initialABR') !== -1) initialABR.register(stream);
+    if (suites.indexOf('bitrateMaxMin') !== -1) bitrateMaxMin.register(stream);
     if (suites.indexOf('ended') !== -1) ended.register(stream);
 };
 
