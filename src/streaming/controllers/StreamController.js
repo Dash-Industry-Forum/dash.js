@@ -642,20 +642,13 @@ function StreamController() {
             return null;
         }
 
-        let streamDuration = 0;
-        let stream = null;
-
         const ln = streams.length;
 
-        if (ln > 0) {
-            streamDuration += streams[0].getStartTime();
-        }
-
         for (let i = 0; i < ln; i++) {
-            stream = streams[i];
-            streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
+            const stream = streams[i];
+            const streamEnd = parseFloat((stream.getStartTime() + stream.getDuration()).toFixed(5));
 
-            if (time < streamDuration) {
+            if (time < streamEnd) {
                 return stream;
             }
         }
