@@ -466,15 +466,15 @@ function Stream(config) {
 
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
-     * @param {array} previousBuffers
+     * @param {array} previousBuffersSinks
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousBuffers) {
+    function _createBufferSinks(previousBuffersSinks) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                return sp.createBufferSinks(previousBuffers);
+                return sp.createBufferSinks(previousBuffersSinks);
             });
 
             Promise.all(promises)
