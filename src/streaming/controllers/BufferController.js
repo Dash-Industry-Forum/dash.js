@@ -469,7 +469,7 @@ function BufferController(config) {
         }
 
         // if no target time is provided we clear everyhing
-        if (!seekTime || isNaN(seekTime)) {
+        if ((!seekTime && seekTime !== 0) || isNaN(seekTime)) {
             clearRanges.push({
                 start: ranges.start(0),
                 end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
