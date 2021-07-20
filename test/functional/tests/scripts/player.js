@@ -156,7 +156,9 @@ module.exports = {
 
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
+    },
+
+    containsThumbnails: function(){
+        return containsThumbnails();
     }
-
-
 };

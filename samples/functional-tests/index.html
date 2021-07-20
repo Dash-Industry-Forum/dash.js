@@ -46,6 +46,14 @@
             return playing;
         }
 
+        async function containsThumbnails(){
+            var promise = new Promise(function(resolve,reject){
+                player.provideThumbnail(0, resolve)
+            })
+            if(await promise) return true;
+            return false;
+        }
+
     </script>
 
     <style>
@@ -58,7 +66,8 @@
             height: 100%;
         }
         .seekbar{
-            width: 201px;
+            width: 220px;
+            height: 7px;
         }
     </style>
 
