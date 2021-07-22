@@ -552,8 +552,12 @@ function MediaPlayer() {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
 
-        let s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
-        playbackController.seek(s);
+        const s = playbackController.getIsDynamic() ? getDVRSeekOffset(value) : value;
+        const nextPlayableTime = gapController.getNextPlayableTime(s);
+        if (nextPlayableTime !== s) {
+            logger.info(`Requested seek time ${s} is in a gap, seeking to ${nextPlayableTime} instead`);
+        }
+        playbackController.seek(nextPlayableTime);
     }
 
     /**

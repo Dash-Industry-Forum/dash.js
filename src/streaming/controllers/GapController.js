@@ -284,10 +284,35 @@ function GapController() {
         }
     }
 
+    /**
+     * Checks whether `time` is inside or near a gap.
+     * If so, it returns the next playable position. Otherwise, it returns `time`.
+     * If `time` is before the beginning of the timeline, beginning of the timeline
+     * is returned as it is the nearest next playable time.
+     * @param {number} time
+     */
+     function getNextPlayableTime(time) {
+        const stream = streamController.getStreamForTime(time);
+        if (!stream) {
+            logger.warn(`No stream found for time ${time}`);
+            return time;
+        }
+
+        const streamStart = parseFloat(stream.getStartTime()).toFixed(5);
+        const streamEnd = parseFloat(playbackController.getStreamEndTime(stream.getStreamInfo()).toFixed(5));
+        const trimmedTime = Math.max(time, streamStart);
+        const timeToEnd = streamEnd - trimmedTime;
+
+        return (timeToEnd !== 0 && timeToEnd < settings.get().streaming.gaps.threshold)
+            ? getNextPlayableTime(streamEnd)
+            : trimmedTime;
+    }
+
     instance = {
         reset,
         setConfig,
-        initialize
+        initialize,
+        getNextPlayableTime
     };
 
     setup();
