@@ -21,6 +21,7 @@ const NAME = 'LIVE_DELAY';
 
 // Test constants
 const LIVE_DELAY = 20; // Live delay in seconds
+const LIVE_DELAY_DELTA = 3; // Defines interval in which actual live delay is tolerable in seconds
 
 /** Live Delay is being set in dash.js settings object */
 function getSettings(defaultSettings){
@@ -76,8 +77,8 @@ exports.register = function (stream) {
             // check if live delay is approx. correct
             var timestampStream = await command.execute(player.timeAsUTC,[]);
             var timestampClient = new Date().getTime()/1000;
-            let liveDelay = Math.floor(timestampClient - timestampStream);
-            console.log(liveDelay);
+            let actualLiveDelay = Math.floor(timestampClient - timestampStream);
+            assert.approximately(actualLiveDelay,LIVE_DELAY, LIVE_DELAY_DELTA);
         });
     });
 }
