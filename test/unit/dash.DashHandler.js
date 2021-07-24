@@ -46,7 +46,7 @@ describe('DashHandler', function () {
     };
 
     const dashHandler = DashHandler(context).create(config);
-    dashHandler.initialize(streamProcessor);
+    dashHandler.initialize(false);
 
     it('should generate an init segment for a representation', () => {
         const representation = voHelper.getDummyRepresentation(testType);
