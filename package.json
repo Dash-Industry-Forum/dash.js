@@ -16,7 +16,7 @@
         "test": "mocha test/unit --require mochahook",
         "test-browserunit": "karma start build/karma.conf.js",
         "test-functional": "node test/functional/runTests.js --selenium=remote --app=remote",
-        "postinstall": "node githook.js",
+        "prepare": "node githook.js",
         "prepack": "npm run build"
     },
     "devDependencies": {
