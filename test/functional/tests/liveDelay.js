@@ -21,12 +21,16 @@ const NAME = 'LIVE_DELAY';
 
 // Test constants
 const LIVE_DELAY = 20; // Live delay in seconds
-const LIVE_DELAY_DELTA = 3; // Defines interval in which actual live delay is tolerable in seconds
+const LIVE_DELAY_DELTA = 0.2; // Defines interval in which actual live delay is tolerable in fractions
+const INITIALBITRATE_VIDEO = 0;
+const AUTOSWITCHBITRATE_VIDEO = false;
 
-/** Live Delay is being set in dash.js settings object */
+/** Live Delay is being set and lowest quality will be chosen in dash.js settings object */
 function getSettings(defaultSettings){
     let settings = lodash.cloneDeep(defaultSettings);
     settings.streaming.delay.liveDelay = LIVE_DELAY;
+    settings.streaming.abr.initialBitrate.video = INITIALBITRATE_VIDEO;
+    settings.streaming.abr.autoSwitchBitrate.video = AUTOSWITCHBITRATE_VIDEO;
 
     return settings;
 };
@@ -78,7 +82,7 @@ exports.register = function (stream) {
             var timestampStream = await command.execute(player.timeAsUTC,[]);
             var timestampClient = new Date().getTime()/1000;
             let actualLiveDelay = Math.floor(timestampClient - timestampStream);
-            assert.approximately(actualLiveDelay,LIVE_DELAY, LIVE_DELAY_DELTA);
+            assert.approximately(actualLiveDelay,LIVE_DELAY, LIVE_DELAY * LIVE_DELAY_DELTA);
         });
     });
 }
