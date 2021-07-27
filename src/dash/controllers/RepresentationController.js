@@ -192,7 +192,6 @@ function RepresentationController(config) {
         }
 
         if (segments.length > 0) {
-            representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
         }
 

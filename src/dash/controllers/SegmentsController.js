@@ -93,7 +93,7 @@ function SegmentsController(config) {
 
     function getAvailableSegments(representation) {
         const getter = getSegmentsGetter(representation);
-        getter.getAvailableSegments(representation);
+        return getter ? getter.getAvailableSegments(representation) : 0;
     }
 
     instance = {

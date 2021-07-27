@@ -85,8 +85,6 @@ function ListSegmentsGetter(config, isDynamic) {
             }
         }
 
-        representation.availableSegmentsNumber = len;
-
         return segment;
     }
 
@@ -110,8 +108,9 @@ function ListSegmentsGetter(config, isDynamic) {
     }
 
     instance = {
-        getSegmentByIndex: getSegmentByIndex,
-        getSegmentByTime: getSegmentByTime
+        getSegmentByIndex,
+        getSegmentByTime,
+        getAvailableSegments
     };
 
     return instance;

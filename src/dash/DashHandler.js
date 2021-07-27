@@ -208,11 +208,10 @@ function DashHandler(config) {
             return false;
         }
 
-        representation.availableSegmentsNumber = _calculateAvailableSegments();
+        representation.availableSegmentsNumber = _calculateAvailableSegments(representation);
 
         // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled
         if (!isNaN(representation.availableSegmentsNumber) && segmentIndex >= representation.availableSegmentsNumber && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
-            console.log()
             return true;
         }
 
@@ -230,7 +229,7 @@ function DashHandler(config) {
     }
 
     function _calculateAvailableSegments(representation) {
-        segmentsController.getAvailableSegments(representation)
+        return segmentsController.getAvailableSegments(representation)
     }
 
     function getSegmentRequestForTime(mediaInfo, representation, time) {

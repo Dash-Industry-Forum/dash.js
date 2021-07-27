@@ -53,9 +53,9 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
         const duration = representation.segmentDuration;
         if (isNaN(duration)) {
-            representation.availableSegmentsNumber = 1;
+            return 1;
         } else {
-            representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
+            return Math.ceil(representation.adaptation.period.duration / duration);
         }
     }
 
@@ -104,7 +104,8 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
     instance = {
         getSegmentByIndex,
-        getSegmentByTime
+        getSegmentByTime,
+        getAvailableSegments
     };
 
     return instance;

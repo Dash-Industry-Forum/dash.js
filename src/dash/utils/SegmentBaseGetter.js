@@ -46,6 +46,14 @@ function SegmentBaseGetter(config) {
         }
     }
 
+    function getAvailableSegments(representation) {
+        if (!representation || !representation.segments) {
+            return 0;
+        }
+
+        return representation.segments.length;
+    }
+
     function getSegmentByIndex(representation, index) {
         checkConfig();
 
@@ -115,8 +123,9 @@ function SegmentBaseGetter(config) {
     }
 
     instance = {
-        getSegmentByIndex: getSegmentByIndex,
-        getSegmentByTime: getSegmentByTime
+        getSegmentByIndex,
+        getSegmentByTime,
+        getAvailableSegments
     };
 
     return instance;
