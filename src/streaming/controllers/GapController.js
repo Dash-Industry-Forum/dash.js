@@ -230,6 +230,10 @@ function GapController() {
     }
 
     function jumpGap(currentTime, playbackStalled = false) {
+        if (jumpTimeoutHandler) {
+            // Gap jump in progress...
+            return;
+        }
         const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
         const ranges = videoModel.getBufferRange();
@@ -256,7 +260,7 @@ function GapController() {
             jumpToStreamEnd = true;
         }
 
-        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime && !jumpTimeoutHandler) {
+        if (seekToPosition > 0 && lastGapJumpPosition !== seekToPosition && seekToPosition > currentTime) {
             const timeUntilGapEnd = seekToPosition - currentTime;
 
             if (jumpToStreamEnd) {
