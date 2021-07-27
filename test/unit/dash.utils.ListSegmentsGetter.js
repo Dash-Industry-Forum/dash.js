@@ -101,8 +101,8 @@ describe('ListSegmentsGetter', () => {
         it('should calculate representation segment range correctly', () => {
             const representation = createRepresentationMock();
 
-            listSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(5);
+            const availableSegmentsNumber = listSegmentsGetter.getAvailableSegments(representation);
+            expect(availableSegmentsNumber).to.equal(5);
         });
     });
 

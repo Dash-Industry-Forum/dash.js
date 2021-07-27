@@ -83,8 +83,8 @@ describe('TimelineSegmentsGetter', () => {
         it('should calculate representation segment range correctly', () => {
             const representation = createRepresentationMock();
 
-            timelineSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(25);
+            const availableSegmentsNumber = timelineSegmentsGetter.getAvailableSegments(representation);
+            expect(availableSegmentsNumber).to.equal(26);
         });
     });
 

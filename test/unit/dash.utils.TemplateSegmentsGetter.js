@@ -45,8 +45,8 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = undefined;
 
-            templateSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(1);
+            const availableSegmentsNumber = templateSegmentsGetter.getAvailableSegments(representation);
+            expect(availableSegmentsNumber).to.equal(1);
         });
 
         it('should calculate representation segment range correctly', () => {
@@ -54,8 +54,8 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
-            templateSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(20);
+            const availableSegmentsNumber = templateSegmentsGetter.getAvailableSegments(representation);
+            expect(availableSegmentsNumber).to.equal(20);
         });
     });
 
