@@ -142,6 +142,7 @@ function RepresentationController(config) {
                     if (data[1] && !data[1].error) {
                         currentRep = _onSegmentsLoaded(currentRep, data[1]);
                     }
+                    _calculateAvailableSegments(currentRep);
                     _onRepresentationUpdated(currentRep);
                     resolve();
                 })
@@ -149,6 +150,10 @@ function RepresentationController(config) {
                     reject(e);
                 });
         });
+    }
+
+    function _calculateAvailableSegments(representation) {
+        representation.availableSegmentsNumber = segmentsController.getAvailableSegments(representation);
     }
 
     function _onInitLoaded(representation, e) {

@@ -208,8 +208,6 @@ function DashHandler(config) {
             return false;
         }
 
-        representation.availableSegmentsNumber = _calculateAvailableSegments(representation);
-
         // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled
         if (!isNaN(representation.availableSegmentsNumber) && segmentIndex >= representation.availableSegmentsNumber && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
             return true;
@@ -226,10 +224,6 @@ function DashHandler(config) {
         }
 
         return isFinished;
-    }
-
-    function _calculateAvailableSegments(representation) {
-        return segmentsController.getAvailableSegments(representation)
     }
 
     function getSegmentRequestForTime(mediaInfo, representation, time) {
@@ -293,7 +287,7 @@ function DashHandler(config) {
 
         // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
-        if (!segment && isEndlessMedia(representation) && !dynamicStreamCompleted) {
+        if (!segment && !isFinite(representation.adaptation.period.duration) && !dynamicStreamCompleted) {
             logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
             return null;
         } else {
@@ -314,10 +308,6 @@ function DashHandler(config) {
         }
 
         return request;
-    }
-
-    function isEndlessMedia(representation) {
-        return !isFinite(representation.adaptation.period.duration);
     }
 
     function onDynamicToStatic() {

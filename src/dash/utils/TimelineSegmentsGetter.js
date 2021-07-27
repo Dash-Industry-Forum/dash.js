@@ -209,8 +209,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 scaledTime = time / fTimescale;
             }
         }
-
-        representation.availableSegmentsNumber = availabilityIdx;
     }
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {
