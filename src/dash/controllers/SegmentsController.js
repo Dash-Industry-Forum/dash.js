@@ -91,12 +91,18 @@ function SegmentsController(config) {
         return getter ? getter.getSegmentByTime(representation, time) : null;
     }
 
+    function getAvailableSegments(representation) {
+        const getter = getSegmentsGetter(representation);
+        getter.getAvailableSegments(representation);
+    }
+
     instance = {
         initialize,
         updateInitData,
         updateSegmentData,
         getSegmentByIndex,
-        getSegmentByTime
+        getSegmentByTime,
+        getAvailableSegments
     };
 
     setup();

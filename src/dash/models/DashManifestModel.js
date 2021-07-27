@@ -689,6 +689,10 @@ function DashManifestModel() {
                     voPeriod.duration = realPeriod.duration;
                 }
 
+                if (voPreviousPeriod) {
+                    voPreviousPeriod.nextPeriodId = voPeriod.id;
+                }
+
                 voPeriods.push(voPeriod);
                 realPreviousPeriod = realPeriod;
                 voPreviousPeriod = voPeriod;

@@ -47,6 +47,15 @@ function ListSegmentsGetter(config, isDynamic) {
         }
     }
 
+    function getAvailableSegments(representation) {
+        if (!representation) {
+            return 0;
+        }
+
+        const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        return list.SegmentURL_asArray.length;
+    }
+
     function getSegmentByIndex(representation, index) {
         checkConfig();
 

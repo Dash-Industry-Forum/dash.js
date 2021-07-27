@@ -46,6 +46,19 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
     }
 
+    function getAvailableSegments(representation) {
+        if (!representation) {
+            return 0;
+        }
+
+        const duration = representation.segmentDuration;
+        if (isNaN(duration)) {
+            representation.availableSegmentsNumber = 1;
+        } else {
+            representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
+        }
+    }
+
     function getSegmentByIndex(representation, index) {
         checkConfig();
 
@@ -65,14 +78,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
             url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
             url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
             seg.media = url;
-        }
-
-        const duration = representation.segmentDuration;
-
-        if (isNaN(duration)) {
-            representation.availableSegmentsNumber = 1;
-        } else {
-            representation.availableSegmentsNumber = Math.ceil(representation.adaptation.period.duration / duration);
         }
 
         return seg;

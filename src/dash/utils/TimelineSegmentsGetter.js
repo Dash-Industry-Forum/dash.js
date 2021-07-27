@@ -134,6 +134,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
 
         representation.availableSegmentsNumber = availabilityIdx;
+
+        console.log(`Available segments for ${representation.mimeType} ${representation.availableSegmentsNumber}`);
     }
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {
