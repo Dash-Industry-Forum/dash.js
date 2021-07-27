@@ -197,13 +197,9 @@ function DashHandler(config) {
     }
 
     function isMediaFinished(representation, bufferingTime) {
-        let isFinished = false;
+        if (!representation || !lastSegment) return false;
 
-        if (!representation || !lastSegment) return isFinished;
-
-        // if the buffer is filled up we are done
-
-        // we are replacing existing stuff.
+        // we are replacing existing stuff in the buffer for instance after a track switch
         if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
             return false;
         }
@@ -213,8 +209,9 @@ function DashHandler(config) {
             return true;
         }
 
+        // Transition from dynamic to static was done
         if (isDynamicManifest && dynamicStreamCompleted) {
-            isFinished = true;
+            return true;
         } else if (lastSegment) {
             const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
             const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
@@ -223,7 +220,7 @@ function DashHandler(config) {
             return isFinite(duration) && endTime >= duration - 0.05;
         }
 
-        return isFinished;
+        return false;
     }
 
     function getSegmentRequestForTime(mediaInfo, representation, time) {
