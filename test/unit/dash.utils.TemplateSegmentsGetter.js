@@ -45,7 +45,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = undefined;
 
-            const availableSegmentsNumber = templateSegmentsGetter.getAvailableSegments(representation);
+            const availableSegmentsNumber = templateSegmentsGetter.getNumberOfSegments(representation);
             expect(availableSegmentsNumber).to.equal(1);
         });
 
@@ -54,7 +54,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentAvailabilityWindow = {start: 0, end: 100};
             representation.segmentDuration = 5;
 
-            const availableSegmentsNumber = templateSegmentsGetter.getAvailableSegments(representation);
+            const availableSegmentsNumber = templateSegmentsGetter.getNumberOfSegments(representation);
             expect(availableSegmentsNumber).to.equal(20);
         });
     });

@@ -91,9 +91,9 @@ function SegmentsController(config) {
         return getter ? getter.getSegmentByTime(representation, time) : null;
     }
 
-    function getAvailableSegments(representation) {
+    function getNumberOfSegments(representation) {
         const getter = getSegmentsGetter(representation);
-        return getter ? getter.getAvailableSegments(representation) : 0;
+        return getter ? getter.getNumberOfSegments(representation) : 0;
     }
 
     instance = {
@@ -102,7 +102,7 @@ function SegmentsController(config) {
         updateSegmentData,
         getSegmentByIndex,
         getSegmentByTime,
-        getAvailableSegments
+        getNumberOfSegments
     };
 
     setup();

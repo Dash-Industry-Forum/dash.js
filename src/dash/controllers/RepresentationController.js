@@ -153,7 +153,7 @@ function RepresentationController(config) {
     }
 
     function _calculateAvailableSegments(representation) {
-        representation.availableSegmentsNumber = segmentsController.getAvailableSegments(representation);
+        representation.numberOfSegments = segmentsController.getNumberOfSegments(representation);
     }
 
     function _onInitLoaded(representation, e) {

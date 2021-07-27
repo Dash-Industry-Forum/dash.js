@@ -48,7 +48,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getAvailableSegments(representation) {
+    function getNumberOfSegments(representation) {
         if (!representation) {
             return 0;
         }
@@ -307,7 +307,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
     instance = {
         getSegmentByIndex,
         getSegmentByTime,
-        getAvailableSegments
+        getNumberOfSegments
     };
 
     return instance;

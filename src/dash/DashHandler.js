@@ -209,7 +209,7 @@ function DashHandler(config) {
         }
 
         // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled
-        if (!isNaN(representation.availableSegmentsNumber) && segmentIndex >= representation.availableSegmentsNumber && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
+        if (!isNaN(representation.numberOfSegments) && segmentIndex >= (representation.numberOfSegments - 1) && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
             return true;
         }
 
