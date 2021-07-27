@@ -208,7 +208,7 @@ function DashHandler(config) {
             return false;
         }
 
-        // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled
+        // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled. Account for -1 based segmentIndex by subtracting one from numberOfSegments
         if (!isNaN(representation.numberOfSegments) && segmentIndex >= (representation.numberOfSegments - 1) && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
             return true;
         }
