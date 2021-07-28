@@ -314,7 +314,7 @@ function ProtectionModel_01b(config) {
                             }
                             msg += '  System Code = ' + event.systemCode;
                             // TODO: Build error string based on key error
-                            eventBus.trigger(events.KEY_ERROR, { data: new DashJSError(code, msg, sessionToken) });
+                            eventBus.trigger(events.KEY_ERROR, { error: new DashJSError(code, msg, sessionToken) });
                         } else {
                             logger.error('No session token found for key error');
                         }

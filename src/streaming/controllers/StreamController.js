@@ -642,20 +642,13 @@ function StreamController() {
             return null;
         }
 
-        let streamDuration = 0;
-        let stream = null;
-
         const ln = streams.length;
 
-        if (ln > 0) {
-            streamDuration += streams[0].getStartTime();
-        }
-
         for (let i = 0; i < ln; i++) {
-            stream = streams[i];
-            streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
+            const stream = streams[i];
+            const streamEnd = parseFloat((stream.getStartTime() + stream.getDuration()).toFixed(5));
 
-            if (time < streamDuration) {
+            if (time < streamEnd) {
                 return stream;
             }
         }
@@ -896,7 +889,7 @@ function StreamController() {
     function _onPlaybackEnded(e) {
         if (activeStream && !activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
-            const nextStream = getNextStream();
+            const nextStream = _getNextStream();
             if (nextStream) {
                 logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}. Switching from ${activeStream.getStreamInfo().id} to ${nextStream.getStreamInfo().id}`);
                 _switchStream(nextStream, activeStream, NaN);
@@ -913,36 +906,38 @@ function StreamController() {
 
     /**
      * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active stream.
+     * In order to avoid rounding issues we should not use the duration of the periods. Instead find the stream with starttime closest to startTime of the previous stream.
      * @param {object} stream
      * @return {null|object}
      */
-    function getNextStream(stream = null) {
+    function _getNextStream(stream = null) {
         const refStream = stream ? stream : activeStream ? activeStream : null;
-        if (refStream) {
-            const start = refStream.getStreamInfo().start;
-            const duration = refStream.getStreamInfo().duration;
-            const streamEnd = parseFloat((start + duration).toFixed(5));
 
-            let i = 0;
-            let targetIndex = -1;
-            let lastDiff = NaN;
-            while (i < streams.length) {
-                const s = streams[i];
-                const diff = s.getStreamInfo().start - streamEnd;
-
-                if (diff >= 0 && (isNaN(lastDiff) || diff < lastDiff)) {
-                    lastDiff = diff;
-                    targetIndex = i;
-                }
-
-                i += 1;
-            }
-
-            if (targetIndex >= 0) {
-                return streams[targetIndex];
-            }
-
+        if (!refStream) {
             return null;
+        }
+
+        const refStreamInfo = refStream.getStreamInfo();
+        const start = refStreamInfo.start;
+        let i = 0;
+        let targetIndex = -1;
+        let lastDiff = NaN;
+
+        while (i < streams.length) {
+            const s = streams[i];
+            const sInfo = s.getStreamInfo();
+            const diff = sInfo.start - start;
+
+            if (diff > 0 && (isNaN(lastDiff) || diff < lastDiff) && refStreamInfo.id !== sInfo.id) {
+                lastDiff = diff;
+                targetIndex = i;
+            }
+
+            i += 1;
+        }
+
+        if (targetIndex >= 0) {
+            return streams[targetIndex];
         }
 
         return null;
@@ -1479,7 +1474,6 @@ function StreamController() {
         switchToVideoElement,
         getHasMediaOrInitialisationError,
         getStreams,
-        getNextStream,
         getActiveStream,
         reset
     };
