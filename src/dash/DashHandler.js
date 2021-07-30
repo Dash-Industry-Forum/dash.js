@@ -54,22 +54,21 @@ function DashHandler(config) {
 
     let instance,
         logger,
-        segmentIndex,
         lastSegment,
         requestedTime,
         isDynamicManifest,
-        dynamicStreamCompleted;
+        mediaHasFinished;
 
     function setup() {
         logger = debug.getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
+        eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
     }
 
     function initialize(isDynamic) {
         isDynamicManifest = isDynamic;
-        dynamicStreamCompleted = false;
+        mediaHasFinished = false;
         segmentsController.initialize(isDynamic);
     }
 
@@ -85,30 +84,17 @@ function DashHandler(config) {
         return streamInfo;
     }
 
-    function setCurrentIndex(value) {
-        segmentIndex = value;
-    }
-
-    function getCurrentIndex() {
-        return segmentIndex;
-    }
-
-    function resetIndex() {
-        segmentIndex = -1;
-        lastSegment = null;
-    }
-
     function resetInitialSettings() {
-        resetIndex();
         requestedTime = null;
+        lastSegment = null;
     }
 
     function reset() {
         resetInitialSettings();
-        eventBus.off(MediaPlayerEvents.DYNAMIC_TO_STATIC, onDynamicToStatic, instance);
+        eventBus.off(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
     }
 
-    function setRequestUrl(request, destination, representation) {
+    function _setRequestUrl(request, destination, representation) {
         const baseURL = baseURLController.resolve(representation.path);
         let url,
             serviceLocation;
@@ -153,7 +139,7 @@ function DashHandler(config) {
         request.mediaInfo = mediaInfo;
         request.representationId = representation.id;
 
-        if (setRequestUrl(request, representation.initialization, representation)) {
+        if (_setRequestUrl(request, representation.initialization, representation)) {
             request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
             return request;
         }
@@ -191,36 +177,55 @@ function DashHandler(config) {
         request.adaptationIndex = representation.adaptation.index;
         request.representationId = representation.id;
 
-        if (setRequestUrl(request, url, representation)) {
+        if (_setRequestUrl(request, url, representation)) {
             return request;
         }
     }
 
     function isMediaFinished(representation, bufferingTime) {
-        if (!representation || !lastSegment) return false;
+        if (!representation || !lastSegment) {
+            return false;
+        }
+
+        // Either transition from dynamic to static was done or no next static segment found
+        if (mediaHasFinished) {
+            return true;
+        }
 
         // we are replacing existing stuff in the buffer for instance after a track switch
         if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
             return false;
         }
 
-        // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled. Account for -1 based segmentIndex by subtracting one from numberOfSegments
-        if (!isNaN(representation.numberOfSegments) && segmentIndex >= (representation.numberOfSegments - 1) && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
-            return true;
+        // The relative index of the last requested segment is higher than the number of available segments
+        if (!isNaN(representation.numberOfSegments) && !isNaN(lastSegment.availabilityIdx) && lastSegment.availabilityIdx >= (representation.numberOfSegments - 1)) {
+
+            // for static manifests the relative position of the last segment does not change since we do not update the MPD. We are done with this period.
+            if (!isDynamicManifest) {
+                return true
+            }
+
+            // Dynamic manifest: The relative position of the last segment can change after an MPD update
+            else {
+                if (representation.adaptation.period.nextPeriodId) {
+                    return true;
+                }
+            }
         }
 
-        // Transition from dynamic to static was done
-        if (isDynamicManifest && dynamicStreamCompleted) {
+
+        // for dynamic manifests and SegmentTimeline the relative position of the last segment can change after an MPD update.
+
+        // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled. Account for -1 based segmentIndex by subtracting one from numberOfSegments
+        if (!isNaN(representation.numberOfSegments) && !isNaN(lastSegment.availabilityIdx) && lastSegment.availabilityIdx >= (representation.numberOfSegments - 1) && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
             return true;
-        } else if (lastSegment) {
+        } else {
             const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
             const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
             const duration = representation.adaptation.period.duration;
 
             return isFinite(duration) && endTime >= duration - 0.05;
         }
-
-        return false;
     }
 
     function getSegmentRequestForTime(mediaInfo, representation, time) {
@@ -237,9 +242,8 @@ function DashHandler(config) {
 
         const segment = segmentsController.getSegmentByTime(representation, time);
         if (segment) {
-            segmentIndex = segment.availabilityIdx;
             lastSegment = segment;
-            logger.debug('Index for time ' + time + ' is ' + segmentIndex);
+            logger.debug('Index for time ' + time + ' is ' + segment.availabilityIdx);
             request = _getRequestForSegment(mediaInfo, segment);
         }
 
@@ -254,7 +258,7 @@ function DashHandler(config) {
      */
     function getNextSegmentRequestIdempotent(mediaInfo, representation) {
         let request = null;
-        let indexToRequest = segmentIndex + 1;
+        let indexToRequest = lastSegment ? lastSegment.availabilityIdx + 1 : 0;
         const segment = segmentsController.getSegmentByIndex(
             representation,
             indexToRequest,
@@ -280,36 +284,34 @@ function DashHandler(config) {
 
         requestedTime = null;
 
-        let indexToRequest = segmentIndex + 1;
+        let indexToRequest = lastSegment ? lastSegment.availabilityIdx + 1 : 0;
 
-        // check that there is a segment in this index
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
-        if (!segment && !isFinite(representation.adaptation.period.duration) && !dynamicStreamCompleted) {
-            logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
-            return null;
-        } else {
-            if (segment) {
-                request = _getRequestForSegment(mediaInfo, segment);
-                segmentIndex = segment.availabilityIdx;
-            } else {
-                if (isDynamicManifest) {
-                    segmentIndex = indexToRequest - 1;
-                } else {
-                    segmentIndex = indexToRequest;
-                }
-            }
-        }
 
-        if (segment) {
+        // No segment found
+        if (!segment) {
+            // Dynamic manifest there might be something available in the next iteration
+            if (isDynamicManifest && !mediaHasFinished) {
+                logger.debug(getType() + ' No segment found at index: ' + indexToRequest + '. Wait for next loop');
+                return null;
+            } else {
+                mediaHasFinished = true;
+            }
+        } else {
+            request = _getRequestForSegment(mediaInfo, segment);
             lastSegment = segment;
         }
 
         return request;
     }
 
-    function onDynamicToStatic() {
+    function getCurrentIndex() {
+        return lastSegment ? lastSegment.availabilityIdx : -1;
+    }
+
+    function _onDynamicToStatic() {
         logger.debug('Dynamic stream complete');
-        dynamicStreamCompleted = true;
+        mediaHasFinished = true;
     }
 
     instance = {
@@ -319,12 +321,10 @@ function DashHandler(config) {
         getStreamInfo,
         getInitRequest,
         getSegmentRequestForTime,
-        getNextSegmentRequest,
-        setCurrentIndex,
         getCurrentIndex,
+        getNextSegmentRequest,
         isMediaFinished,
         reset,
-        resetIndex,
         getNextSegmentRequestIdempotent
     };
 
