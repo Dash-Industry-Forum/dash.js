@@ -19333,7 +19333,7 @@ var Utils = /*#__PURE__*/function () {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getVersionString", function() { return getVersionString; });
-var VERSION = '4.0.0';
+var VERSION = '4.0.1';
 function getVersionString() {
   return VERSION;
 }
@@ -21895,6 +21895,10 @@ function DashMetrics(config) {
 
 
   function getLatestMPDRequestHeaderValueByID(id) {
+    if (!id) {
+      return null;
+    }
+
     var headers = {};
     var httpRequestList, httpRequest, i;
     httpRequestList = getHttpRequests(_streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].STREAM);
@@ -21908,7 +21912,8 @@ function DashMetrics(config) {
       }
     }
 
-    return headers[id] === undefined ? null : headers[id];
+    var value = headers[id.toLowerCase()];
+    return value === undefined ? null : value;
   }
   /**
    * Returns the value for a specific request headers used in the latest fragment request
@@ -21921,14 +21926,19 @@ function DashMetrics(config) {
 
 
   function getLatestFragmentRequestHeaderValueByID(mediaType, id) {
+    if (!id) {
+      return null;
+    }
+
     var headers = {};
-    var httpRequest = getCurrentHttpRequest(mediaType, true);
+    var httpRequest = getCurrentHttpRequest(mediaType);
 
     if (httpRequest) {
       headers = _core_Utils__WEBPACK_IMPORTED_MODULE_6__["default"].parseHttpHeaders(httpRequest._responseHeaders);
     }
 
-    return headers[id] === undefined ? null : headers[id];
+    var value = headers[id.toLowerCase()];
+    return value === undefined ? null : value;
   }
   /**
    * @memberof module:DashMetrics
@@ -23718,14 +23728,14 @@ function DashManifestModel() {
       throw new Error('adaptation is not defined');
     }
 
-    if (adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST)) {
+    if (adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
       return true;
     }
 
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
       var representation = adaptation.Representation_asArray[0];
 
-      if (representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST)) {
+      if (representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
         return true;
       }
     }
@@ -26912,7 +26922,7 @@ function TimelineConverter() {
         availabilityTime = mpd.availabilityEndTime;
       }
     } else {
-      if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
+      if (isDynamic) {
         // SAST = Period@start + seg@presentationStartTime + seg@duration
         // ASAST = SAST - ATO
         var availabilityTimeOffset = representation.availabilityTimeOffset; // presentationEndTime = Period@start + seg@presentationStartTime + Segment@duration
@@ -33294,17 +33304,17 @@ function Stream(config) {
   }
   /**
    * Creates the SourceBufferSink objects for all StreamProcessors
-   * @param {array} previousBuffers
+   * @param {array} previousBuffersSinks
    * @return {Promise<object>}
    * @private
    */
 
 
-  function _createBufferSinks(previousBuffers) {
+  function _createBufferSinks(previousBuffersSinks) {
     return new Promise(function (resolve) {
       var buffers = {};
       var promises = streamProcessors.map(function (sp) {
-        return sp.createBufferSinks(previousBuffers);
+        return sp.createBufferSinks(previousBuffersSinks);
       });
       Promise.all(promises).then(function (bufferSinks) {
         bufferSinks.forEach(function (sink) {
@@ -33688,13 +33698,11 @@ function Stream(config) {
 
         if (trackChangedEvent) {
           var mediaInfo = trackChangedEvent.newMediaInfo;
-
-          if (mediaInfo.type !== _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT) {
-            var processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-            if (!processor) return;
-            promises.push(processor.prepareTrackSwitch());
-            trackChangedEvent = undefined;
-          }
+          var processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+          if (!processor) return;
+          promises.push(processor.prepareTrackSwitch());
+          processor.selectMediaInfo(mediaInfo);
+          trackChangedEvent = undefined;
         }
 
         return Promise.all(promises);
@@ -33880,6 +33888,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_BoxParser__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./utils/BoxParser */ "./src/streaming/utils/BoxParser.js");
 /* harmony import */ var _vo_metrics_PlayList__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./vo/metrics/PlayList */ "./src/streaming/vo/metrics/PlayList.js");
 /* harmony import */ var _dash_controllers_SegmentsController__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../dash/controllers/SegmentsController */ "./src/dash/controllers/SegmentsController.js");
+/* harmony import */ var _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -33910,6 +33919,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -34197,11 +34207,13 @@ function StreamProcessor(config) {
   /**
    * ScheduleController indicates that an init segment needs to be fetched.
    * @param {object} e
+   * @param {boolean} rescheduleIfNoRequest - Defines whether we reschedule in case no valid request could be generated
    * @private
    */
 
 
   function _onInitFragmentNeeded(e) {
+    var rescheduleIfNoRequest = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
     // Event propagation may have been stopped (see MssHandler)
     if (!e.sender) return;
 
@@ -34228,7 +34240,7 @@ function StreamProcessor(config) {
 
         if (request) {
           fragmentModel.executeRequest(request);
-        } else {
+        } else if (rescheduleIfNoRequest) {
           scheduleController.setInitSegmentRequired(true);
 
           _noValidRequest();
@@ -34238,11 +34250,14 @@ function StreamProcessor(config) {
   }
   /**
    * ScheduleController indicates that a media segment is needed
+   * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
    * @private
    */
 
 
-  function _onMediaFragmentNeeded() {
+  function _onMediaFragmentNeeded(e) {
+    var rescheduleIfNoRequest = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
     if (manifestUpdateInProgress) {
       _noValidRequest();
 
@@ -34285,7 +34300,7 @@ function StreamProcessor(config) {
     if (request) {
       logger.debug("Next fragment request url for stream id ".concat(streamInfo.id, " and media type ").concat(type, " is ").concat(request.url));
       fragmentModel.executeRequest(request);
-    } else {
+    } else if (rescheduleIfNoRequest) {
       // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
       _noValidRequest();
     }
@@ -34509,10 +34524,36 @@ function StreamProcessor(config) {
     }
 
     if (e.error && e.request.serviceLocation) {
-      logger.info("Fragment loading completed with an error");
-      setExplicitBufferingTime(e.request.startTime + e.request.duration / 2);
-      scheduleController.startScheduleTimer(0);
+      _handleFragmentLoadingError(e);
     }
+  }
+  /**
+   * If we encountered an error when loading the fragment we need to handle it according to the segment type
+   * @private
+   */
+
+
+  function _handleFragmentLoadingError(e) {
+    logger.info("Fragment loading completed with an error");
+
+    if (!e || !e.request || !e.request.type) {
+      return;
+    } // In case there are baseUrls that can still be tried a valid request can be generated. If no valid request can be generated we ran out of baseUrls.
+    // Consequently, we need to signal that we dont want to retry in case no valid request could be generated otherwise we keep trying with the same url infinitely.
+    // Init segment could not be loaded. If we have multiple baseUrls we still have a chance to get a valid segment.
+
+
+    if (e.request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_21__["HTTPRequest"].INIT_SEGMENT_TYPE) {
+      _onInitFragmentNeeded({
+        representationId: e.request.representationId,
+        sender: {}
+      }, false);
+    } // Media segment could not be loaded
+    else if (e.request.type === _vo_metrics_HTTPRequest__WEBPACK_IMPORTED_MODULE_21__["HTTPRequest"].MEDIA_SEGMENT_TYPE) {
+        setExplicitBufferingTime(e.request.startTime + e.request.duration / 2);
+
+        _onMediaFragmentNeeded({}, false);
+      }
   }
   /**
    * Callback function triggered by the TextController whenever a track is changed for fragmented text. Will only be triggered if textracks have previously been disabled.
@@ -34713,7 +34754,9 @@ function StreamProcessor(config) {
           quality: quality,
           index: chunk.index
         })[0];
-        var events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+
+        var events = _handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+
         eventBus.trigger(_core_events_Events__WEBPACK_IMPORTED_MODULE_11__["default"].INBAND_EVENTS, {
           events: events
         }, {
@@ -34723,7 +34766,7 @@ function StreamProcessor(config) {
     }
   }
 
-  function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+  function _handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
     try {
       var eventStreams = {};
       var events = [];
@@ -34761,8 +34804,14 @@ function StreamProcessor(config) {
     }
   }
 
-  function createBufferSinks(previousBuffers) {
-    return getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfo, previousBuffers) : Promise.resolve(null);
+  function createBufferSinks(previousBufferSinks) {
+    var buffer = getBuffer();
+
+    if (buffer) {
+      return Promise.resolve(buffer);
+    }
+
+    return bufferController ? bufferController.createBufferSink(mediaInfo, previousBufferSinks) : Promise.resolve(null);
   }
 
   function prepareTrackSwitch() {
@@ -37077,9 +37126,7 @@ function BufferController(config) {
     sourceBufferSink.append(chunk).then(function (e) {
       _onAppended(e);
     })["catch"](function (e) {
-      _onAppended({
-        error: e
-      });
+      _onAppended(e);
     });
 
     if (chunk.mediaInfo.type === _constants_Constants__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO) {
@@ -37297,7 +37344,7 @@ function BufferController(config) {
     } // if no target time is provided we clear everyhing
 
 
-    if (!seekTime || isNaN(seekTime)) {
+    if (!seekTime && seekTime !== 0 || isNaN(seekTime)) {
       clearRanges.push({
         start: ranges.start(0),
         end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
@@ -37353,7 +37400,8 @@ function BufferController(config) {
   function _getRangeAheadForPruning(targetTime, ranges) {
     // if we do a seek behind the current play position we do need to prune ahead of the new play position
     var endOfBuffer = ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD;
-    var bufferToKeepAhead = settings.get().streaming.buffer.bufferTimeAtTopQuality;
+    var isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
+    var bufferToKeepAhead = isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
     var aheadDiff = endOfBuffer - targetTime;
 
     if (aheadDiff > bufferToKeepAhead) {
@@ -37809,7 +37857,7 @@ function BufferController(config) {
 
   function hasEnoughSpaceToAppend() {
     var totalBufferedTime = getTotalBufferedTime();
-    return totalBufferedTime < criticalBufferLevel;
+    return isNaN(totalBufferedTime) || totalBufferedTime < criticalBufferLevel;
   }
 
   function setSeekTarget(value) {
@@ -39154,7 +39202,7 @@ function MediaController() {
 
 
   function getCurrentTrackFor(type, streamId) {
-    if (!type || !tracks[streamId]) return null;
+    if (!type || !tracks[streamId] || !tracks[streamId][type]) return null;
     return tracks[streamId][type].current;
   }
   /**
@@ -41311,11 +41359,14 @@ function StreamController() {
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_11__["default"].MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_11__["default"].BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     eventBus.on(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_11__["default"].QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+
+    if (_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED) {
+      eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+    }
+
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-    eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
     eventBus.on(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
   }
@@ -41331,11 +41382,14 @@ function StreamController() {
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_11__["default"].MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_11__["default"].BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
     eventBus.off(_MediaPlayerEvents__WEBPACK_IMPORTED_MODULE_11__["default"].QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+
+    if (_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED) {
+      eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+    }
+
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].MANIFEST_UPDATED, _onManifestUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-    eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
     eventBus.off(_core_events_Events__WEBPACK_IMPORTED_MODULE_5__["default"].CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
   }
@@ -41804,19 +41858,13 @@ function StreamController() {
       return null;
     }
 
-    var streamDuration = 0;
-    var stream = null;
     var ln = streams.length;
 
-    if (ln > 0) {
-      streamDuration += streams[0].getStartTime();
-    }
-
     for (var i = 0; i < ln; i++) {
-      stream = streams[i];
-      streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
+      var stream = streams[i];
+      var streamEnd = parseFloat((stream.getStartTime() + stream.getDuration()).toFixed(5));
 
-      if (time < streamDuration) {
+      if (time < streamEnd) {
         return stream;
       }
     }
@@ -42080,7 +42128,8 @@ function StreamController() {
   function _onPlaybackEnded(e) {
     if (activeStream && !activeStream.getIsEndedEventSignaled()) {
       activeStream.setIsEndedEventSignaled(true);
-      var nextStream = getNextStream();
+
+      var nextStream = _getNextStream();
 
       if (nextStream) {
         logger.debug("StreamController onEnded, found next stream with id ".concat(nextStream.getStreamInfo().id, ". Switching from ").concat(activeStream.getStreamInfo().id, " to ").concat(nextStream.getStreamInfo().id));
@@ -42100,40 +42149,41 @@ function StreamController() {
   }
   /**
    * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active stream.
+   * In order to avoid rounding issues we should not use the duration of the periods. Instead find the stream with starttime closest to startTime of the previous stream.
    * @param {object} stream
    * @return {null|object}
    */
 
 
-  function getNextStream() {
+  function _getNextStream() {
     var stream = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
     var refStream = stream ? stream : activeStream ? activeStream : null;
 
-    if (refStream) {
-      var start = refStream.getStreamInfo().start;
-      var duration = refStream.getStreamInfo().duration;
-      var streamEnd = parseFloat((start + duration).toFixed(5));
-      var i = 0;
-      var targetIndex = -1;
-      var lastDiff = NaN;
-
-      while (i < streams.length) {
-        var s = streams[i];
-        var diff = s.getStreamInfo().start - streamEnd;
-
-        if (diff >= 0 && (isNaN(lastDiff) || diff < lastDiff)) {
-          lastDiff = diff;
-          targetIndex = i;
-        }
-
-        i += 1;
-      }
-
-      if (targetIndex >= 0) {
-        return streams[targetIndex];
-      }
-
+    if (!refStream) {
       return null;
+    }
+
+    var refStreamInfo = refStream.getStreamInfo();
+    var start = refStreamInfo.start;
+    var i = 0;
+    var targetIndex = -1;
+    var lastDiff = NaN;
+
+    while (i < streams.length) {
+      var s = streams[i];
+      var sInfo = s.getStreamInfo();
+      var diff = sInfo.start - start;
+
+      if (diff > 0 && (isNaN(lastDiff) || diff < lastDiff) && refStreamInfo.id !== sInfo.id) {
+        lastDiff = diff;
+        targetIndex = i;
+      }
+
+      i += 1;
+    }
+
+    if (targetIndex >= 0) {
+      return streams[targetIndex];
     }
 
     return null;
@@ -42701,7 +42751,6 @@ function StreamController() {
     switchToVideoElement: switchToVideoElement,
     getHasMediaOrInitialisationError: getHasMediaOrInitialisationError,
     getStreams: getStreams,
-    getNextStream: getNextStream,
     getActiveStream: getActiveStream,
     reset: reset
   };
@@ -53640,7 +53689,7 @@ function ProtectionModel_01b(config) {
               msg += '  System Code = ' + event.systemCode; // TODO: Build error string based on key error
 
               eventBus.trigger(events.KEY_ERROR, {
-                data: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](code, msg, sessionToken)
+                error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](code, msg, sessionToken)
               });
             } else {
               logger.error('No session token found for key error');
@@ -54024,7 +54073,7 @@ function ProtectionModel_21Jan2015(config) {
       eventBus.trigger(events.KEY_SESSION_UPDATED);
     })["catch"](function (error) {
       eventBus.trigger(events.KEY_ERROR, {
-        data: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)
+        error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)
       });
     });
   }
@@ -54677,7 +54726,7 @@ function ProtectionModel_3Feb2014(config) {
             var errorStr = 'KeyError'; // TODO: Make better string from event
 
             eventBus.trigger(events.KEY_ERROR, {
-              data: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEYERR_CODE, errorStr, this)
+              error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEYERR_CODE, errorStr, this)
             });
             break;
 
@@ -57771,6 +57820,7 @@ __webpack_require__.r(__webpack_exports__);
 
 function InsufficientBufferRule(config) {
   config = config || {};
+  var INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
   var SEGMENT_IGNORE_COUNT = 2;
   var context = this.context;
   var eventBus = Object(_core_EventBus__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
@@ -57812,7 +57862,9 @@ function InsufficientBufferRule(config) {
     var mediaType = rulesContext.getMediaType();
     var currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
     var representationInfo = rulesContext.getRepresentationInfo();
-    var fragmentDuration = representationInfo.fragmentDuration; // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
+    var fragmentDuration = representationInfo.fragmentDuration;
+    var streamInfo = rulesContext.getStreamInfo();
+    var streamId = streamInfo ? streamInfo.id : null; // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
 
     if (shouldIgnore(mediaType) || !fragmentDuration) {
       return switchRequest;
@@ -57822,6 +57874,16 @@ function InsufficientBufferRule(config) {
       logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
       switchRequest.quality = 0;
       switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
+    } else {
+      var mediaInfo = rulesContext.getMediaInfo();
+      var abrController = rulesContext.getAbrController();
+      var throughputHistory = abrController.getThroughputHistory();
+      var bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+      var throughput = throughputHistory.getAverageThroughput(mediaType);
+      var latency = throughputHistory.getAverageLatency(mediaType);
+      var bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
+      switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
+      switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
     }
 
     return switchRequest;
@@ -61572,6 +61634,7 @@ function TextSourceBuffer(config) {
     }
 
     instance.buffered.remove(start, end);
+    textTracks.deleteCuesFromTrackIdx(currFragmentedTrackIdx, start, end);
   }
 
   function onVideoBufferCleared(e) {
@@ -62049,7 +62112,7 @@ function TextTracks(config) {
       track.cellResolution = currentItem.cellResolution;
       track.isFromCEA608 = currentItem.isFromCEA608;
 
-      if (currentItem.type === 'html' && captionContainer) {
+      if (currentItem.type === 'html' && captionContainer && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
         cue = new Cue(currentItem.start + timeOffset, currentItem.end + timeOffset, '');
         cue.cueHTMLElement = currentItem.cueHTMLElement;
         cue.isd = currentItem.isd;
@@ -62097,7 +62160,7 @@ function TextTracks(config) {
           }
         };
       } else {
-        if (currentItem.data) {
+        if (currentItem.data && !isNaN(currentItem.start) && !isNaN(currentItem.end)) {
           cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
 
           if (currentItem.styles) {
@@ -62130,7 +62193,9 @@ function TextTracks(config) {
 
       try {
         if (cue) {
-          track.addCue(cue);
+          if (!cueInTrack(track, cue)) {
+            track.addCue(cue);
+          }
         } else {
           logger.error('impossible to display subtitles.');
         }
@@ -62209,6 +62274,18 @@ function TextTracks(config) {
     }
   }
 
+  function cueInTrack(track, cue) {
+    if (!track.cues) return false;
+
+    for (var i = 0; i < track.cues.length; i++) {
+      if (track.cues[i].startTime === cue.startTime && track.cues[i].endTime === cue.endTime) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   function cueInRange(cue, start, end) {
     return (isNaN(start) || cue.startTime >= start) && (isNaN(end) || cue.endTime <= end);
   }
@@ -62220,6 +62297,10 @@ function TextTracks(config) {
 
       for (var r = lastIdx; r >= 0; r--) {
         if (cueInRange(cues[r], start, end)) {
+          if (cues[r].onexit) {
+            cues[r].onexit();
+          }
+
           track.removeCue(cues[r]);
         }
       }

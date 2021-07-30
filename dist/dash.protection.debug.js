@@ -4320,7 +4320,7 @@ function ProtectionModel_01b(config) {
               msg += '  System Code = ' + event.systemCode; // TODO: Build error string based on key error
 
               eventBus.trigger(events.KEY_ERROR, {
-                data: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](code, msg, sessionToken)
+                error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](code, msg, sessionToken)
               });
             } else {
               logger.error('No session token found for key error');
@@ -4704,7 +4704,7 @@ function ProtectionModel_21Jan2015(config) {
       eventBus.trigger(events.KEY_SESSION_UPDATED);
     })["catch"](function (error) {
       eventBus.trigger(events.KEY_ERROR, {
-        data: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)
+        error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_2__["default"].MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)
       });
     });
   }
@@ -5357,7 +5357,7 @@ function ProtectionModel_3Feb2014(config) {
             var errorStr = 'KeyError'; // TODO: Make better string from event
 
             eventBus.trigger(events.KEY_ERROR, {
-              data: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEYERR_CODE, errorStr, this)
+              error: new _vo_DashJSError__WEBPACK_IMPORTED_MODULE_2__["default"](_errors_ProtectionErrors__WEBPACK_IMPORTED_MODULE_3__["default"].MEDIA_KEYERR_CODE, errorStr, this)
             });
             break;
 

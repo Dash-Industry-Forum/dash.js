@@ -8805,14 +8805,14 @@ function DashManifestModel() {
       throw new Error('adaptation is not defined');
     }
 
-    if (adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST)) {
+    if (adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST) || adaptation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
       return true;
     }
 
     if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
       var representation = adaptation.Representation_asArray[0];
 
-      if (representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST)) {
+      if (representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TIMELINE) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST) || representation.hasOwnProperty(_constants_DashConstants__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE)) {
         return true;
       }
     }
