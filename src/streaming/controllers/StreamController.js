@@ -171,11 +171,13 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
-        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        if (Events.KEY_SESSION_UPDATED) {
+            eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        }
+
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.on(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
@@ -192,11 +194,13 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
 
-        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        if (Events.KEY_SESSION_UPDATED) {
+            eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
+        }
+
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAM_BUFFERING_COMPLETED, _onStreamBufferingCompleted, instance);
         eventBus.off(Events.TIME_SYNCHRONIZATION_COMPLETED, _onTimeSyncCompleted, instance);
-        eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
     }
@@ -276,39 +280,39 @@ function StreamController() {
      * @private
      */
     function _initializeOrUpdateStream(streamInfo) {
-            let stream = getStreamById(streamInfo.id);
+        let stream = getStreamById(streamInfo.id);
 
-            // If the Stream object does not exist we probably loaded the manifest the first time or it was
-            // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
-            if (!stream) {
-                stream = Stream(context).create({
-                    manifestModel,
-                    mediaPlayerModel,
-                    dashMetrics,
-                    manifestUpdater,
-                    adapter,
-                    timelineConverter,
-                    capabilities,
-                    capabilitiesFilter,
-                    errHandler,
-                    baseURLController,
-                    segmentBaseController,
-                    textController,
-                    abrController,
-                    playbackController,
-                    eventController,
-                    mediaController,
-                    protectionController,
-                    videoModel,
-                    streamInfo,
-                    settings
-                });
-                streams.push(stream);
-                stream.initialize();
-                return Promise.resolve();
-            } else {
-                return stream.updateData(streamInfo);
-            }
+        // If the Stream object does not exist we probably loaded the manifest the first time or it was
+        // introduced in the updated manifest, so we need to create a new Stream and perform all the initialization operations
+        if (!stream) {
+            stream = Stream(context).create({
+                manifestModel,
+                mediaPlayerModel,
+                dashMetrics,
+                manifestUpdater,
+                adapter,
+                timelineConverter,
+                capabilities,
+                capabilitiesFilter,
+                errHandler,
+                baseURLController,
+                segmentBaseController,
+                textController,
+                abrController,
+                playbackController,
+                eventController,
+                mediaController,
+                protectionController,
+                videoModel,
+                streamInfo,
+                settings
+            });
+            streams.push(stream);
+            stream.initialize();
+            return Promise.resolve();
+        } else {
+            return stream.updateData(streamInfo);
+        }
     }
 
     /**
@@ -638,20 +642,13 @@ function StreamController() {
             return null;
         }
 
-        let streamDuration = 0;
-        let stream = null;
-
         const ln = streams.length;
 
-        if (ln > 0) {
-            streamDuration += streams[0].getStartTime();
-        }
-
         for (let i = 0; i < ln; i++) {
-            stream = streams[i];
-            streamDuration = parseFloat((streamDuration + stream.getDuration()).toFixed(5));
+            const stream = streams[i];
+            const streamEnd = parseFloat((stream.getStartTime() + stream.getDuration()).toFixed(5));
 
-            if (time < streamDuration) {
+            if (time < streamEnd) {
                 return stream;
             }
         }
@@ -892,7 +889,7 @@ function StreamController() {
     function _onPlaybackEnded(e) {
         if (activeStream && !activeStream.getIsEndedEventSignaled()) {
             activeStream.setIsEndedEventSignaled(true);
-            const nextStream = getNextStream();
+            const nextStream = _getNextStream();
             if (nextStream) {
                 logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}. Switching from ${activeStream.getStreamInfo().id} to ${nextStream.getStreamInfo().id}`);
                 _switchStream(nextStream, activeStream, NaN);
@@ -909,36 +906,38 @@ function StreamController() {
 
     /**
      * Returns the next stream to be played relative to the stream provided. If no stream is provided we use the active stream.
+     * In order to avoid rounding issues we should not use the duration of the periods. Instead find the stream with starttime closest to startTime of the previous stream.
      * @param {object} stream
      * @return {null|object}
      */
-    function getNextStream(stream = null) {
+    function _getNextStream(stream = null) {
         const refStream = stream ? stream : activeStream ? activeStream : null;
-        if (refStream) {
-            const start = refStream.getStreamInfo().start;
-            const duration = refStream.getStreamInfo().duration;
-            const streamEnd = parseFloat((start + duration).toFixed(5));
 
-            let i = 0;
-            let targetIndex = -1;
-            let lastDiff = NaN;
-            while (i < streams.length) {
-                const s = streams[i];
-                const diff = s.getStreamInfo().start - streamEnd;
-
-                if (diff >= 0 && (isNaN(lastDiff) || diff < lastDiff)) {
-                    lastDiff = diff;
-                    targetIndex = i;
-                }
-
-                i += 1;
-            }
-
-            if (targetIndex >= 0) {
-                return streams[targetIndex];
-            }
-
+        if (!refStream) {
             return null;
+        }
+
+        const refStreamInfo = refStream.getStreamInfo();
+        const start = refStreamInfo.start;
+        let i = 0;
+        let targetIndex = -1;
+        let lastDiff = NaN;
+
+        while (i < streams.length) {
+            const s = streams[i];
+            const sInfo = s.getStreamInfo();
+            const diff = sInfo.start - start;
+
+            if (diff > 0 && (isNaN(lastDiff) || diff < lastDiff) && refStreamInfo.id !== sInfo.id) {
+                lastDiff = diff;
+                targetIndex = i;
+            }
+
+            i += 1;
+        }
+
+        if (targetIndex >= 0) {
+            return streams[targetIndex];
         }
 
         return null;
@@ -1475,7 +1474,6 @@ function StreamController() {
         switchToVideoElement,
         getHasMediaOrInitialisationError,
         getStreams,
-        getNextStream,
         getActiveStream,
         reset
     };

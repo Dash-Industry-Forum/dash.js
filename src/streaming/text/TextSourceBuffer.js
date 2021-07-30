@@ -579,6 +579,7 @@ function TextSourceBuffer(config) {
             end = instance.buffered.end(instance.buffered.length - 1);
         }
         instance.buffered.remove(start, end);
+        textTracks.deleteCuesFromTrackIdx(currFragmentedTrackIdx, start, end);
     }
 
     function onVideoBufferCleared(e) {

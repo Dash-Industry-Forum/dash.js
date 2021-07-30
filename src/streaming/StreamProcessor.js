@@ -49,6 +49,7 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
 
 function StreamProcessor(config) {
 
@@ -353,9 +354,10 @@ function StreamProcessor(config) {
     /**
      * ScheduleController indicates that an init segment needs to be fetched.
      * @param {object} e
+     * @param {boolean} rescheduleIfNoRequest - Defines whether we reschedule in case no valid request could be generated
      * @private
      */
-    function _onInitFragmentNeeded(e) {
+    function _onInitFragmentNeeded(e, rescheduleIfNoRequest = true) {
         // Event propagation may have been stopped (see MssHandler)
         if (!e.sender) return;
 
@@ -378,7 +380,7 @@ function StreamProcessor(config) {
                 const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
-                } else {
+                } else if (rescheduleIfNoRequest) {
                     scheduleController.setInitSegmentRequired(true);
                     _noValidRequest();
                 }
@@ -388,9 +390,10 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that a media segment is needed
+     * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
      * @private
      */
-    function _onMediaFragmentNeeded() {
+    function _onMediaFragmentNeeded(e, rescheduleIfNoRequest = true) {
 
         if (manifestUpdateInProgress) {
             _noValidRequest();
@@ -430,7 +433,7 @@ function StreamProcessor(config) {
         if (request) {
             logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
             fragmentModel.executeRequest(request);
-        } else {
+        } else if (rescheduleIfNoRequest) {
             // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
             _noValidRequest();
         }
@@ -662,9 +665,36 @@ function StreamProcessor(config) {
         }
 
         if (e.error && e.request.serviceLocation) {
-            logger.info(`Fragment loading completed with an error`);
+            _handleFragmentLoadingError(e);
+        }
+    }
+
+    /**
+     * If we encountered an error when loading the fragment we need to handle it according to the segment type
+     * @private
+     */
+    function _handleFragmentLoadingError(e) {
+        logger.info(`Fragment loading completed with an error`);
+
+        if (!e || !e.request || !e.request.type) {
+            return;
+        }
+
+        // In case there are baseUrls that can still be tried a valid request can be generated. If no valid request can be generated we ran out of baseUrls.
+        // Consequently, we need to signal that we dont want to retry in case no valid request could be generated otherwise we keep trying with the same url infinitely.
+
+        // Init segment could not be loaded. If we have multiple baseUrls we still have a chance to get a valid segment.
+        if (e.request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+            _onInitFragmentNeeded({
+                representationId: e.request.representationId,
+                sender: {}
+            }, false)
+        }
+
+        // Media segment could not be loaded
+        else if (e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2));
-            scheduleController.startScheduleTimer(0);
+            _onMediaFragmentNeeded({}, false);
         }
     }
 
@@ -870,7 +900,7 @@ function StreamProcessor(config) {
                     index: chunk.index
                 })[0];
 
-                const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+                const events = _handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
                 eventBus.trigger(Events.INBAND_EVENTS,
                     { events: events },
                     { streamId: streamInfo.id }
@@ -879,7 +909,7 @@ function StreamProcessor(config) {
         }
     }
 
-    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+    function _handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
         try {
             const eventStreams = {};
             const events = [];
@@ -916,8 +946,14 @@ function StreamProcessor(config) {
         }
     }
 
-    function createBufferSinks(previousBuffers) {
-        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfo, previousBuffers) : Promise.resolve(null));
+    function createBufferSinks(previousBufferSinks) {
+        const buffer = getBuffer();
+
+        if (buffer) {
+            return Promise.resolve(buffer);
+        }
+
+        return bufferController ? bufferController.createBufferSink(mediaInfo, previousBufferSinks) : Promise.resolve(null);
     }
 
     function prepareTrackSwitch() {
