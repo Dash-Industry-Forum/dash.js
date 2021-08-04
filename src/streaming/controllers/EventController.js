@@ -337,7 +337,7 @@ function EventController() {
 
             };
 
-            _iterateAndTriggerCallback(events, callback());
+            _iterateAndTriggerCallback(events, callback);
 
         } catch (e) {
 
