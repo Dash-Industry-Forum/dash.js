@@ -37,6 +37,7 @@ import {
     replaceTokenForTemplate,
     unescapeDollarsInTemplate
 } from './utils/SegmentsUtils';
+import DashConstants from './constants/DashConstants';
 
 
 function DashHandler(config) {
@@ -55,7 +56,6 @@ function DashHandler(config) {
     let instance,
         logger,
         lastSegment,
-        requestedTime,
         isDynamicManifest,
         mediaHasFinished;
 
@@ -85,7 +85,6 @@ function DashHandler(config) {
     }
 
     function resetInitialSettings() {
-        requestedTime = null;
         lastSegment = null;
     }
 
@@ -172,7 +171,7 @@ function DashHandler(config) {
         request.availabilityEndTime = segment.availabilityEndTime;
         request.wallStartTime = segment.wallStartTime;
         request.quality = representation.index;
-        request.index = segment.availabilityIdx;
+        request.index = segment.index;
         request.mediaInfo = mediaInfo;
         request.adaptationIndex = representation.adaptation.index;
         request.representationId = representation.id;
@@ -182,7 +181,7 @@ function DashHandler(config) {
         }
     }
 
-    function isMediaFinished(representation, bufferingTime) {
+    function lastSegmentRequested(representation, bufferingTime) {
         if (!representation || !lastSegment) {
             return false;
         }
@@ -192,41 +191,40 @@ function DashHandler(config) {
             return true;
         }
 
+        // Period is endless
+        if (!isFinite(representation.adaptation.period.duration)) {
+            return false;
+        }
+
         // we are replacing existing stuff in the buffer for instance after a track switch
         if (lastSegment.presentationStartTime + lastSegment.duration > bufferingTime) {
             return false;
         }
 
-        // The relative index of the last requested segment is higher than the number of available segments
-        if (!isNaN(representation.numberOfSegments) && !isNaN(lastSegment.availabilityIdx) && lastSegment.availabilityIdx >= (representation.numberOfSegments - 1)) {
-
-            // for static manifests the relative position of the last segment does not change since we do not update the MPD. We are done with this period.
-            if (!isDynamicManifest) {
+        // Additional segment references may be added to the last period.
+        // Additional periods may be added to the end of the MPD.
+        // Segment references SHALL NOT be added to any period other than the last period.
+        // An MPD update MAY combine adding segment references to the last period with adding of new periods. An MPD update that adds content MAY be combined with an MPD update that removes content.
+        // The index of the last requested segment is higher than the number of available segments.
+        // For SegmentTimeline and SegmentTemplate the index does not include the startNumber.
+        // For SegmentList the index includes the startnumber which is why the numberOfSegments includes this as well
+        if (representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.numberOfSegments) && !isNaN(lastSegment.index) && lastSegment.index >= (representation.mediaFinishedInformation.numberOfSegments - 1)) {
+            // For static manifests and Template addressing we can compare the index against the number of available segments
+            if (!isDynamicManifest || representation.segmentInfoType === DashConstants.SEGMENT_TEMPLATE) {
+                return true;
+            }
+            // For SegmentList we need to check if the next period is signaled
+            else if (isDynamicManifest && representation.segmentInfoType === DashConstants.SEGMENT_LIST && representation.adaptation.period.nextPeriodId) {
                 return true
             }
-
-            // Dynamic manifest: The relative position of the last segment can change after an MPD update
-            else {
-                if (representation.adaptation.period.nextPeriodId) {
-                    return true;
-                }
-            }
         }
 
-
-        // for dynamic manifests and SegmentTimeline the relative position of the last segment can change after an MPD update.
-
-        // last segment of that period in a static manifest || last segment of that period in a dynamic manifest and the next period is already signaled. Account for -1 based segmentIndex by subtracting one from numberOfSegments
-        if (!isNaN(representation.numberOfSegments) && !isNaN(lastSegment.availabilityIdx) && lastSegment.availabilityIdx >= (representation.numberOfSegments - 1) && (!isDynamicManifest || representation.adaptation.period.nextPeriodId)) {
-            return true;
-        } else {
-            const time = parseFloat((lastSegment.presentationStartTime - representation.adaptation.period.start).toFixed(5));
-            const endTime = lastSegment.duration > 0 ? time + lastSegment.duration : time;
-            const duration = representation.adaptation.period.duration;
-
-            return isFinite(duration) && endTime >= duration - 0.05;
-        }
+        // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the segment we fetched before is the last one that is signaled.
+        // We can not simply use the index, as numberOfSegments might have decreased after an MPD update
+        return !!(isDynamicManifest && representation.adaptation.period.nextPeriodId && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE && representation.mediaFinishedInformation &&
+            !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) && lastSegment && !isNaN(lastSegment.mediaStartTime) && !isNaN(lastSegment.duration) && lastSegment.mediaStartTime + lastSegment.duration >= representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment);
     }
+
 
     function getSegmentRequestForTime(mediaInfo, representation, time) {
         let request = null;
@@ -235,15 +233,10 @@ function DashHandler(config) {
             return request;
         }
 
-        if (requestedTime !== time) { // When playing at live edge with 0 delay we may loop back with same time and index until it is available. Reduces verboseness of logs.
-            requestedTime = time;
-            logger.debug('Getting the request for time : ' + time);
-        }
-
         const segment = segmentsController.getSegmentByTime(representation, time);
         if (segment) {
             lastSegment = segment;
-            logger.debug('Index for time ' + time + ' is ' + segment.availabilityIdx);
+            logger.debug('Index for time ' + time + ' is ' + segment.index);
             request = _getRequestForSegment(mediaInfo, segment);
         }
 
@@ -258,7 +251,7 @@ function DashHandler(config) {
      */
     function getNextSegmentRequestIdempotent(mediaInfo, representation) {
         let request = null;
-        let indexToRequest = lastSegment ? lastSegment.availabilityIdx + 1 : 0;
+        let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
         const segment = segmentsController.getSegmentByIndex(
             representation,
             indexToRequest,
@@ -282,9 +275,7 @@ function DashHandler(config) {
             return null;
         }
 
-        requestedTime = null;
-
-        let indexToRequest = lastSegment ? lastSegment.availabilityIdx + 1 : 0;
+        let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
 
         const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
 
@@ -306,7 +297,7 @@ function DashHandler(config) {
     }
 
     function getCurrentIndex() {
-        return lastSegment ? lastSegment.availabilityIdx : -1;
+        return lastSegment ? lastSegment.index : -1;
     }
 
     function _onDynamicToStatic() {
@@ -323,7 +314,7 @@ function DashHandler(config) {
         getSegmentRequestForTime,
         getCurrentIndex,
         getNextSegmentRequest,
-        isMediaFinished,
+        lastSegmentRequested,
         reset,
         getNextSegmentRequestIdempotent
     };

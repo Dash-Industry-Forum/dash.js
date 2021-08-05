@@ -47,13 +47,20 @@ function ListSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getNumberOfSegments(representation) {
+    function getMediaFinishedInformation(representation) {
+        const mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN }
+
         if (!representation) {
-            return 0;
+            return mediaFinishedInformation;
         }
 
         const list = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
-        return list.SegmentURL_asArray.length;
+        const startNumber = representation && !isNaN(representation.startNumber) ? representation.startNumber : 1;
+        const offset = Math.max(startNumber - 1, 0);
+
+        mediaFinishedInformation.numberOfSegments = offset + list.SegmentURL_asArray.length;
+
+        return mediaFinishedInformation
     }
 
     function getSegmentByIndex(representation, index) {
@@ -80,7 +87,6 @@ function ListSegmentsGetter(config, isDynamic) {
                 segment.replacementTime = (startNumber + index - 1) * representation.segmentDuration;
                 segment.media = s.media ? s.media : '';
                 segment.mediaRange = s.mediaRange;
-                segment.index = index;
                 segment.indexRange = s.indexRange;
             }
         }
@@ -110,7 +116,7 @@ function ListSegmentsGetter(config, isDynamic) {
     instance = {
         getSegmentByIndex,
         getSegmentByTime,
-        getNumberOfSegments
+        getMediaFinishedInformation
     };
 
     return instance;

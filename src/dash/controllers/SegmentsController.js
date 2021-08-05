@@ -91,9 +91,12 @@ function SegmentsController(config) {
         return getter ? getter.getSegmentByTime(representation, time) : null;
     }
 
-    function getNumberOfSegments(representation) {
+    function getMediaFinishedInformation(representation) {
         const getter = getSegmentsGetter(representation);
-        return getter ? getter.getNumberOfSegments(representation) : 0;
+        return getter ? getter.getMediaFinishedInformation(representation) : {
+            numberOfSegments: 0,
+            mediaTimeOfLastSignaledSegment: NaN
+        };
     }
 
     instance = {
@@ -102,7 +105,7 @@ function SegmentsController(config) {
         updateSegmentData,
         getSegmentByIndex,
         getSegmentByTime,
-        getNumberOfSegments
+        getMediaFinishedInformation
     };
 
     setup();

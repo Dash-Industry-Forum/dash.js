@@ -142,7 +142,7 @@ function RepresentationController(config) {
                     if (data[1] && !data[1].error) {
                         currentRep = _onSegmentsLoaded(currentRep, data[1]);
                     }
-                    _calculateAvailableSegments(currentRep);
+                    _setMediaFinishedInformation(currentRep);
                     _onRepresentationUpdated(currentRep);
                     resolve();
                 })
@@ -152,8 +152,8 @@ function RepresentationController(config) {
         });
     }
 
-    function _calculateAvailableSegments(representation) {
-        representation.numberOfSegments = segmentsController.getNumberOfSegments(representation);
+    function _setMediaFinishedInformation(representation) {
+        representation.mediaFinishedInformation = segmentsController.getMediaFinishedInformation(representation);
     }
 
     function _onInitLoaded(representation, e) {

@@ -48,7 +48,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getNumberOfSegments(representation) {
+    function getMediaFinishedInformation(representation) {
         if (!representation) {
             return 0;
         }
@@ -96,10 +96,14 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
             for (j = 0; j <= repeat; j++) {
                 availableSegments++;
+
+                time += frag.d;
+                scaledTime = time / fTimescale;
             }
         }
 
-        return availableSegments;
+        // We need to account for the index of the segments starting at 0. We subtract 1
+        return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: scaledTime };
     }
 
     function iterateSegments(representation, iterFunc) {
@@ -110,7 +114,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         let time = 0;
         let scaledTime = 0;
-        let availabilityIdx = -1;
+        let relativeIdx = -1;
 
         let fragments,
             frag,
@@ -146,17 +150,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
-                availabilityIdx++;
+                relativeIdx++;
 
-                breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i);
+                breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, relativeIdx, i);
 
                 if (breakIterator) {
                     representation.segmentDuration = frag.d / fTimescale;
-
-                    // check if there is at least one more segment
-                    if (j < repeat - 1 || i < len - 1) {
-                        availabilityIdx++;
-                    }
                 }
 
                 time += frag.d;
@@ -202,7 +201,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         let found = false;
 
-        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
             if (found || lastSegmentTime < 0) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
@@ -221,7 +220,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     fTimescale,
                     media,
                     mediaRange,
-                    availabilityIdx,
+                    relativeIdx,
                     frag.tManifest);
 
                 return true;
@@ -250,7 +249,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
 
-        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
             // In some cases when requiredMediaTime = actual end time of the last segment
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list.
@@ -272,7 +271,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     fTimescale,
                     media,
                     mediaRange,
-                    availabilityIdx,
+                    relativeIdx,
                     frag.tManifest);
 
                 return true;
@@ -288,7 +287,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
     instance = {
         getSegmentByIndex,
         getSegmentByTime,
-        getNumberOfSegments
+        getMediaFinishedInformation
     };
 
     return instance;

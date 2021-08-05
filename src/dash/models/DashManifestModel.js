@@ -582,6 +582,9 @@ function DashManifestModel() {
     }
 
     function calcSegmentDuration(segmentTimeline) {
+        if (!segmentTimeline || !segmentTimeline.S_asArray) {
+            return NaN;
+        }
         let s0 = segmentTimeline.S_asArray[0];
         let s1 = segmentTimeline.S_asArray[1];
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
