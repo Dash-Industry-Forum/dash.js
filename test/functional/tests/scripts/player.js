@@ -156,7 +156,15 @@ module.exports = {
 
     attachTTMLRenderingDiv: function(ttmlDiv){
         player.attachTTMLRenderingDiv(ttmlDiv);
-    }
+    },
+
+    getSettings: function(){
+        return player.getSettings();
+    },
+
+    updateSettings: function(settings){
+        player.updateSettings(settings);
+    },
 
 
 };
