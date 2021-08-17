@@ -232,7 +232,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} Buffer
- * @property {boolean} [fastSwitchEnabled=false]
+ * @property {boolean} [fastSwitchEnabled=true]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
  * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).

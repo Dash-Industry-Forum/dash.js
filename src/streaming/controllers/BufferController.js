@@ -100,7 +100,6 @@ function BufferController(config) {
 
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.on(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
@@ -875,9 +874,9 @@ function BufferController(config) {
         return Promise.resolve();
     }
 
-    function _onStreamRequestingCompleted(e) {
-        if (!isNaN(e.segmentIndex)) {
-            maximumIndex = e.segmentIndex;
+    function segmentRequestingCompleted(segmentIndex) {
+        if (!isNaN(segmentIndex)) {
+            maximumIndex = segmentIndex;
             _checkIfBufferingCompleted();
         }
     }
@@ -1029,7 +1028,6 @@ function BufferController(config) {
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
-        eventBus.off(Events.STREAM_REQUESTING_COMPLETED, _onStreamRequestingCompleted, this);
 
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, this);
@@ -1067,7 +1065,8 @@ function BufferController(config) {
         clearBuffers,
         pruneAllSafely,
         updateBufferTimestampOffset,
-        setSeekTarget
+        setSeekTarget,
+        segmentRequestingCompleted
     };
 
     setup();

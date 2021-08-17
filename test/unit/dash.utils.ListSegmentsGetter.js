@@ -97,12 +97,19 @@ describe('ListSegmentsGetter', () => {
         });
     });
 
-    describe('availableSegmentsNumber calculation', () => {
-        it('should calculate representation segment range correctly', () => {
+    describe('mediaFinishedInformation calculation', () => {
+        it('should calculate the right number of segments', () => {
             const representation = createRepresentationMock();
 
-            listSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(representation.availableSegmentsNumber).to.equal(5);
+            const mediaFinishedInformation = listSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.numberOfSegments).to.equal(5);
+        });
+
+        it('mediaTimeOfLastSignaledSegments should be NaN', () => {
+            const representation = createRepresentationMock();
+
+            const mediaFinishedInformation = listSegmentsGetter.getMediaFinishedInformation(representation);
+            expect(mediaFinishedInformation.mediaTimeOfLastSignaledSegment).to.be.NaN;
         });
     });
 
@@ -111,17 +118,17 @@ describe('ListSegmentsGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = listSegmentsGetter.getSegmentByIndex(representation, 0);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(10);
 
             seg = listSegmentsGetter.getSegmentByIndex(representation, 1);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(10);
             expect(seg.duration).to.equal(10);
 
             seg = listSegmentsGetter.getSegmentByIndex(representation, 2);
-            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(20);
             expect(seg.duration).to.equal(10);
         });
@@ -147,17 +154,17 @@ describe('ListSegmentsGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = listSegmentsGetter.getSegmentByTime(representation, 0);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(10);
 
             seg = listSegmentsGetter.getSegmentByTime(representation, 22);
-            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(20);
             expect(seg.duration).to.equal(10);
 
             seg = listSegmentsGetter.getSegmentByTime(representation, 32);
-            expect(seg.availabilityIdx).to.equal(3);
+            expect(seg.index).to.equal(3);
             expect(seg.presentationStartTime).to.equal(30);
             expect(seg.duration).to.equal(10);
         });
