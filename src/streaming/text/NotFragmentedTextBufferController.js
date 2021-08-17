@@ -200,6 +200,10 @@ function NotFragmentedTextBufferController(config) {
 
     }
 
+    function segmentRequestingCompleted() {
+
+    }
+
     function pruneAllSafely() {
         return Promise.resolve();
     }
@@ -233,7 +237,8 @@ function NotFragmentedTextBufferController(config) {
         setSeekTarget,
         updateAppendWindow,
         pruneAllSafely,
-        updateBufferTimestampOffset
+        updateBufferTimestampOffset,
+        segmentRequestingCompleted
     };
 
     setup();

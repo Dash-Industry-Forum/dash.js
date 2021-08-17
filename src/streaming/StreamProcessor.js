@@ -403,16 +403,17 @@ function StreamProcessor(config) {
         let request = null;
 
         const representation = representationController.getCurrentRepresentation();
-        const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
+        const lastSegmentRequested = dashHandler.lastSegmentRequested(representation, bufferingTime);
 
         // Check if the media is finished. If so, no need to schedule another request
-        if (isMediaFinished) {
+        if (lastSegmentRequested) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
             eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
                 streamId: streamInfo.id,
                 mediaType: type
             });
+            bufferController.segmentRequestingCompleted(segmentIndex);
             scheduleController.clearScheduleTimer();
             return;
         }

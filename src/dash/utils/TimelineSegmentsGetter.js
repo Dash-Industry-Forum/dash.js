@@ -48,6 +48,64 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
+    function getMediaFinishedInformation(representation) {
+        if (!representation) {
+            return 0;
+        }
+
+        const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
+        const timeline = base.SegmentTimeline;
+
+        let time = 0;
+        let scaledTime = 0;
+        let availableSegments = 0;
+
+        let fragments,
+            frag,
+            i,
+            len,
+            j,
+            repeat,
+            fTimescale;
+
+        fTimescale = representation.timescale;
+        fragments = timeline.S_asArray;
+
+        len = fragments.length;
+
+        for (i = 0; i < len; i++) {
+            frag = fragments[i];
+            repeat = 0;
+            if (frag.hasOwnProperty('r')) {
+                repeat = frag.r;
+            }
+
+            // For a repeated S element, t belongs only to the first segment
+            if (frag.hasOwnProperty('t')) {
+                time = frag.t;
+                scaledTime = time / fTimescale;
+            }
+
+            // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
+            // next MPD update."
+            if (repeat < 0) {
+                const nextFrag = fragments[i + 1];
+                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
+            }
+
+            for (j = 0; j <= repeat; j++) {
+                availableSegments++;
+
+                time += frag.d;
+                scaledTime = time / fTimescale;
+            }
+        }
+
+        // We need to account for the index of the segments starting at 0. We subtract 1
+        return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: scaledTime };
+    }
+
     function iterateSegments(representation, iterFunc) {
         const base = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentList;
@@ -56,7 +114,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
         let time = 0;
         let scaledTime = 0;
-        let availabilityIdx = -1;
+        let relativeIdx = -1;
 
         let fragments,
             frag,
@@ -64,8 +122,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
             len,
             j,
             repeat,
-            repeatEndTime,
-            nextFrag,
             fTimescale;
 
         fTimescale = representation.timescale;
@@ -89,52 +145,51 @@ function TimelineSegmentsGetter(config, isDynamic) {
             // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
-                nextFrag = fragments[i + 1];
-
-                if (nextFrag && nextFrag.hasOwnProperty('t')) {
-                    repeatEndTime = nextFrag.t / fTimescale;
-                } else {
-                    try {
-                        let availabilityEnd = 0;
-                        if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
-                            // use end of the Period
-                            availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
-                        } else {
-                            // use DVR window
-                            const dvrWindow = dashMetrics.getCurrentDVRInfo();
-                            availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
-                        }
-                        repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
-                        representation.segmentDuration = frag.d / fTimescale;
-                    } catch (e) {
-                        repeatEndTime = 0;
-                    }
-                }
-
-                repeat = Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
+                const nextFrag = fragments[i + 1];
+                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
-                availabilityIdx++;
+                relativeIdx++;
 
-                breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i);
+                breakIterator = iterFunc(time, scaledTime, base, list, frag, fTimescale, relativeIdx, i);
 
                 if (breakIterator) {
                     representation.segmentDuration = frag.d / fTimescale;
-
-                    // check if there is at least one more segment
-                    if (j < repeat - 1 || i < len - 1) {
-                        availabilityIdx++;
-                    }
                 }
 
                 time += frag.d;
                 scaledTime = time / fTimescale;
             }
         }
-
-        representation.availableSegmentsNumber = availabilityIdx;
     }
+
+    function _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime) {
+        let repeatEndTime;
+
+        if (nextFrag && nextFrag.hasOwnProperty('t')) {
+            repeatEndTime = nextFrag.t / fTimescale;
+        } else {
+            try {
+                let availabilityEnd = 0;
+                if (!isNaN(representation.adaptation.period.start) && !isNaN(representation.adaptation.period.duration) && isFinite(representation.adaptation.period.duration)) {
+                    // use end of the Period
+                    availabilityEnd = representation.adaptation.period.start + representation.adaptation.period.duration;
+                } else {
+                    // use DVR window
+                    const dvrWindow = dashMetrics.getCurrentDVRInfo();
+                    availabilityEnd = !isNaN(dvrWindow.end) ? dvrWindow.end : 0;
+                }
+                repeatEndTime = timelineConverter.calcMediaTimeFromPresentationTime(availabilityEnd, representation);
+                representation.segmentDuration = frag.d / fTimescale;
+            } catch (e) {
+                repeatEndTime = 0;
+            }
+        }
+
+        return Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
+    }
+
 
     function getSegmentByIndex(representation, index, lastSegmentTime) {
         checkConfig();
@@ -146,7 +201,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         let found = false;
 
-        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
             if (found || lastSegmentTime < 0) {
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
@@ -165,7 +220,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     fTimescale,
                     media,
                     mediaRange,
-                    availabilityIdx,
+                    relativeIdx,
                     frag.tManifest);
 
                 return true;
@@ -194,7 +249,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
 
-        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, availabilityIdx, i) {
+        iterateSegments(representation, function (time, scaledTime, base, list, frag, fTimescale, relativeIdx, i) {
             // In some cases when requiredMediaTime = actual end time of the last segment
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list.
@@ -216,7 +271,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     fTimescale,
                     media,
                     mediaRange,
-                    availabilityIdx,
+                    relativeIdx,
                     frag.tManifest);
 
                 return true;
@@ -230,8 +285,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
 
     instance = {
-        getSegmentByIndex: getSegmentByIndex,
-        getSegmentByTime: getSegmentByTime
+        getSegmentByIndex,
+        getSegmentByTime,
+        getMediaFinishedInformation
     };
 
     return instance;
