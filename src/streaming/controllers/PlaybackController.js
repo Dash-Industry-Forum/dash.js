@@ -353,7 +353,7 @@ function PlaybackController() {
             eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, this);
             eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, this);
             eventBus.off(MediaPlayerEvents.STREAM_INITIALIZING, _onStreamInitializing, this);
-            stopPlaybackCatchUp();
+            videoModel.setPlaybackRate(1.0, true);
             stopUpdatingWallclockTime();
             removeAllListeners();
         }
