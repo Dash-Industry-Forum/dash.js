@@ -323,7 +323,7 @@
             "name": "Subtitles and Captions",
             "submenu": [
                 {
-                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd",
                     "name": "External VTT subtitle file",
                     "provider": "dashif"
                 },
