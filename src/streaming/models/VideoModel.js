@@ -76,9 +76,9 @@ function VideoModel() {
         }
     }
 
-    function setPlaybackRate(value) {
+    function setPlaybackRate(value, ignoreReadyState = false) {
         if (!element) return;
-        if (element.readyState <= 2 && value > 0) {
+        if (!ignoreReadyState && element.readyState <= 2 && value > 0) {
             // If media element hasn't loaded enough data to play yet, wait until it has
             element.addEventListener('canplay', onPlaybackCanPlay);
         } else {
