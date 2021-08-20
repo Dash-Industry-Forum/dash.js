@@ -444,7 +444,7 @@
                     "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
                     "protData": {
                         "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy?video_id=&provider="
+                            "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
