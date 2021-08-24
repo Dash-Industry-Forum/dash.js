@@ -1195,7 +1195,7 @@ function MediaPlayer() {
             return false;
         }
 
-        return textController.enableForcedTextStreaming(activeStreamInfo.id, enable);
+        return textController.enableForcedTextStreaming(enable);
     }
 
     /**
