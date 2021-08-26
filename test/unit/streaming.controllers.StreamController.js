@@ -122,6 +122,7 @@ describe('StreamController', function () {
     describe('Well initialized', () => {
 
         beforeEach(function () {
+            settings.reset();
             streamController.setConfig({
                 adapter: adapterMock,
                 manifestLoader: manifestLoaderMock,
@@ -176,6 +177,7 @@ describe('StreamController', function () {
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_DECODE', function () {
+                settings.update({ errors: { recoverAttempts: { mediaErrorDecode: 0 } } })
                 eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 3 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_DECODE');
