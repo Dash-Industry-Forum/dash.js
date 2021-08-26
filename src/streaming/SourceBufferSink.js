@@ -149,17 +149,17 @@ function SourceBufferSink(config) {
         // use updateend event if possible
         if (typeof buffer.addEventListener === 'function') {
             try {
-                buffer.addEventListener('updateend', updateEndHandler, false);
-                buffer.addEventListener('error', errHandler, false);
-                buffer.addEventListener('abort', errHandler, false);
+                buffer.addEventListener('updateend', _updateEndHandler, false);
+                buffer.addEventListener('error', _errHandler, false);
+                buffer.addEventListener('abort', _errHandler, false);
 
             } catch (err) {
                 // use setInterval to periodically check if updating has been completed
-                intervalId = setInterval(updateEndHandler, CHECK_INTERVAL);
+                intervalId = setInterval(_updateEndHandler, CHECK_INTERVAL);
             }
         } else {
             // use setInterval to periodically check if updating has been completed
-            intervalId = setInterval(updateEndHandler, CHECK_INTERVAL);
+            intervalId = setInterval(_updateEndHandler, CHECK_INTERVAL);
         }
     }
 
@@ -170,9 +170,9 @@ function SourceBufferSink(config) {
     function _removeEventListeners() {
         try {
             if (typeof buffer.removeEventListener === 'function') {
-                buffer.removeEventListener('updateend', updateEndHandler, false);
-                buffer.removeEventListener('error', errHandler, false);
-                buffer.removeEventListener('abort', errHandler, false);
+                buffer.removeEventListener('updateend', _updateEndHandler, false);
+                buffer.removeEventListener('error', _errHandler, false);
+                buffer.removeEventListener('abort', _errHandler, false);
             }
             clearInterval(intervalId);
         } catch (e) {
@@ -283,7 +283,7 @@ function SourceBufferSink(config) {
                 return;
             }
             appendQueue.push({ data: chunk, promise: { resolve, reject } });
-            waitForUpdateEnd(appendNextInQueue.bind(this));
+            waitForUpdateEnd(_appendNextInQueue.bind(this));
         });
     }
 
@@ -342,7 +342,7 @@ function SourceBufferSink(config) {
         });
     }
 
-    function appendNextInQueue() {
+    function _appendNextInQueue() {
         if (isAppendingInProgress) {
             return;
         }
@@ -355,7 +355,7 @@ function SourceBufferSink(config) {
             const afterSuccess = function () {
                 isAppendingInProgress = false;
                 if (appendQueue.length > 0) {
-                    appendNextInQueue.call(this);
+                    _appendNextInQueue.call(this);
                 }
                 // Init segments are cached. In any other case we dont need the chunk bytes anymore and can free the memory
                 if (nextChunk && nextChunk.data && nextChunk.data.segmentType && nextChunk.data.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
@@ -379,7 +379,7 @@ function SourceBufferSink(config) {
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
                 if (appendQueue.length > 0) {
-                    appendNextInQueue();
+                    _appendNextInQueue();
                 } else {
                     isAppendingInProgress = false;
                 }
@@ -412,28 +412,28 @@ function SourceBufferSink(config) {
 
     }
 
-    function executeCallback() {
+    function _executeCallback() {
         if (callbacks.length > 0) {
             if (!buffer.updating) {
                 const cb = callbacks.shift();
                 cb();
                 // Try to execute next callback if still not updating
-                executeCallback();
+                _executeCallback();
             }
         }
     }
 
-    function updateEndHandler() {
+    function _updateEndHandler() {
         // if updating is still in progress do nothing and wait for the next check again.
         if (buffer.updating) {
             return;
         }
 
         // updating is completed, now we can stop checking and resolve the promise
-        executeCallback();
+        _executeCallback();
     }
 
-    function errHandler() {
+    function _errHandler() {
         logger.error('SourceBufferSink error');
     }
 
@@ -441,7 +441,7 @@ function SourceBufferSink(config) {
         callbacks.push(callback);
 
         if (!buffer.updating) {
-            executeCallback();
+            _executeCallback();
         }
     }
 
