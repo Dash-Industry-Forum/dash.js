@@ -257,105 +257,107 @@ function MediaPlayer() {
             })
         }
 
-        errHandler = ErrorHandler(context).getInstance();
+        if (!errHandler) {
+            errHandler = ErrorHandler(context).getInstance();
+        }
 
         if (!capabilities.supportsMediaSource()) {
             errHandler.error(new DashJSError(Errors.CAPABILITY_MEDIASOURCE_ERROR_CODE, Errors.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
             return;
         }
 
-        if (mediaPlayerInitialized) return;
-        mediaPlayerInitialized = true;
+        if (!mediaPlayerInitialized) {
+            mediaPlayerInitialized = true;
 
-        // init some controllers and models
-        timelineConverter = TimelineConverter(context).getInstance();
-        if (!abrController) {
-            abrController = AbrController(context).getInstance();
-            abrController.setConfig({
+            // init some controllers and models
+            timelineConverter = TimelineConverter(context).getInstance();
+            if (!abrController) {
+                abrController = AbrController(context).getInstance();
+                abrController.setConfig({
+                    settings: settings
+                });
+            }
+
+            if (!schemeLoaderFactory) {
+                schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+            }
+
+            if (!playbackController) {
+                playbackController = PlaybackController(context).getInstance();
+            }
+
+            if (!mediaController) {
+                mediaController = MediaController(context).getInstance();
+            }
+
+            if (!streamController) {
+                streamController = StreamController(context).getInstance();
+            }
+
+            if (!gapController) {
+                gapController = GapController(context).getInstance();
+            }
+
+            if (!capabilitiesFilter) {
+                capabilitiesFilter = CapabilitiesFilter(context).getInstance();
+            }
+
+            adapter = DashAdapter(context).getInstance();
+
+            manifestModel = ManifestModel(context).getInstance();
+
+            cmcdModel = CmcdModel(context).getInstance();
+
+            dashMetrics = DashMetrics(context).getInstance({
                 settings: settings
             });
+
+            domStorage = DOMStorage(context).getInstance({
+                settings: settings
+            });
+
+            adapter.setConfig({
+                constants: Constants,
+                cea608parser: cea608parser,
+                errHandler: errHandler,
+                BASE64: BASE64
+            });
+
+            if (!baseURLController) {
+                baseURLController = BaseURLController(context).create();
+            }
+
+            baseURLController.setConfig({
+                adapter: adapter
+            });
+
+            if (!segmentBaseController) {
+                segmentBaseController = SegmentBaseController(context).getInstance({
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel,
+                    errHandler: errHandler,
+                    baseURLController: baseURLController,
+                    events: Events,
+                    eventBus: eventBus,
+                    debug: debug,
+                    boxParser: BoxParser(context).getInstance(),
+                    requestModifier: RequestModifier(context).getInstance(),
+                    errors: Errors
+                });
+            }
+
+            // configure controllers
+            mediaController.setConfig({
+                domStorage: domStorage,
+                settings: settings
+            });
+
+            restoreDefaultUTCTimingSources();
+            setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
+
+            // Detect and initialize offline module to support offline contents playback
+            _detectOffline();
         }
-
-        if (!schemeLoaderFactory) {
-            schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
-        }
-
-        if (!playbackController) {
-            playbackController = PlaybackController(context).getInstance();
-        }
-
-        if (!mediaController) {
-            mediaController = MediaController(context).getInstance();
-        }
-
-        if (!streamController) {
-            streamController = StreamController(context).getInstance();
-        }
-
-        if (!gapController) {
-            gapController = GapController(context).getInstance();
-        }
-
-        if (!capabilitiesFilter) {
-            capabilitiesFilter = CapabilitiesFilter(context).getInstance();
-        }
-
-        adapter = DashAdapter(context).getInstance();
-
-        manifestModel = ManifestModel(context).getInstance();
-
-        cmcdModel = CmcdModel(context).getInstance();
-
-        dashMetrics = DashMetrics(context).getInstance({
-            settings: settings
-        });
-
-        domStorage = DOMStorage(context).getInstance({
-            settings: settings
-        });
-
-        adapter.setConfig({
-            constants: Constants,
-            cea608parser: cea608parser,
-            errHandler: errHandler,
-            BASE64: BASE64
-        });
-
-        if (!baseURLController) {
-            baseURLController = BaseURLController(context).create();
-        }
-
-        baseURLController.setConfig({
-            adapter: adapter
-        });
-
-
-        segmentBaseController = SegmentBaseController(context).getInstance({
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            errHandler: errHandler,
-            baseURLController: baseURLController,
-            events: Events,
-            eventBus: eventBus,
-            debug: debug,
-            boxParser: BoxParser(context).getInstance(),
-            requestModifier: RequestModifier(context).getInstance(),
-            errors: Errors
-        });
-
-        segmentBaseController.initialize();
-
-        // configure controllers
-        mediaController.setConfig({
-            domStorage: domStorage,
-            settings: settings
-        });
-
-        restoreDefaultUTCTimingSources();
-        setAutoPlay(AutoPlay !== undefined ? AutoPlay : true);
-
-        // Detect and initialize offline module to support offline contents playback
-        _detectOffline();
 
         if (view) {
             attachView(view);
@@ -390,8 +392,6 @@ function MediaPlayer() {
             metricsReportingController.reset();
             metricsReportingController = null;
         }
-
-        segmentBaseController.reset();
 
         settings.reset();
 
@@ -1195,7 +1195,7 @@ function MediaPlayer() {
             return false;
         }
 
-        return textController.enableForcedTextStreaming(activeStreamInfo.id, enable);
+        return textController.enableForcedTextStreaming(enable);
     }
 
     /**
@@ -1902,6 +1902,7 @@ function MediaPlayer() {
         playbackController.reset();
         abrController.reset();
         mediaController.reset();
+        segmentBaseController.reset();
         if (protectionController) {
             if (settings.get().streaming.protection.keepProtectionMediaKeys) {
                 protectionController.stop();
@@ -2006,6 +2007,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         cmcdModel.initialize();
+        segmentBaseController.initialize();
     }
 
     function _createManifestLoader() {
