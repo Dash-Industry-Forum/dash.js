@@ -884,6 +884,11 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY
             }
+        },
+        errors: {
+            recoverAttempts: {
+                mediaErrorDecode: 3
+            }
         }
     };
 

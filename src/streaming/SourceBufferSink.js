@@ -35,6 +35,7 @@ import Errors from '../core/errors/Errors';
 import Settings from '../core/Settings';
 import constants from './constants/Constants';
 import {HTTPRequest} from './vo/metrics/HTTPRequest';
+import Events from '../core/events/Events';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -51,6 +52,7 @@ function SourceBufferSink(config) {
     const context = this.context;
     const settings = Settings(context).getInstance();
     const textController = config.textController;
+    const eventBus = config.eventBus;
 
     let instance,
         type,
@@ -63,6 +65,7 @@ function SourceBufferSink(config) {
     let appendQueue = [];
     let isAppendingInProgress = false;
     let mediaSource = config.mediaSource;
+    let lastRequestAppended = null;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -91,7 +94,7 @@ function SourceBufferSink(config) {
 
     function changeType(codec) {
         return new Promise((resolve) => {
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 if (buffer.changeType) {
                     buffer.changeType(codec);
                 }
@@ -188,7 +191,7 @@ function SourceBufferSink(config) {
                 return;
             }
 
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 try {
                     if (!buffer) {
                         resolve();
@@ -227,7 +230,7 @@ function SourceBufferSink(config) {
                 return;
             }
 
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 try {
                     if (buffer.timestampOffset !== MSETimeOffset && !isNaN(MSETimeOffset)) {
                         buffer.timestampOffset = MSETimeOffset;
@@ -258,6 +261,7 @@ function SourceBufferSink(config) {
             }
             buffer = null;
         }
+        lastRequestAppended = null;
     }
 
     function getBuffer() {
@@ -273,7 +277,7 @@ function SourceBufferSink(config) {
         }
     }
 
-    function append(chunk) {
+    function append(chunk, request = null) {
         return new Promise((resolve, reject) => {
             if (!chunk) {
                 reject({
@@ -282,14 +286,14 @@ function SourceBufferSink(config) {
                 });
                 return;
             }
-            appendQueue.push({ data: chunk, promise: { resolve, reject } });
-            waitForUpdateEnd(_appendNextInQueue.bind(this));
+            appendQueue.push({ data: chunk, promise: { resolve, reject }, request });
+            _waitForUpdateEnd(_appendNextInQueue.bind(this));
         });
     }
 
     function _abortBeforeAppend() {
         return new Promise((resolve) => {
-            waitForUpdateEnd(() => {
+            _waitForUpdateEnd(() => {
                 // Save the append window, which is reset on abort().
                 const appendWindowStart = buffer.appendWindowStart;
                 const appendWindowEnd = buffer.appendWindowEnd;
@@ -313,11 +317,11 @@ function SourceBufferSink(config) {
                 return;
             }
 
-            waitForUpdateEnd(function () {
+            _waitForUpdateEnd(function () {
                 try {
                     buffer.remove(start, end);
                     // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                    waitForUpdateEnd(function () {
+                    _waitForUpdateEnd(function () {
                         resolve({
                             from: start,
                             to: end,
@@ -365,6 +369,7 @@ function SourceBufferSink(config) {
             };
 
             try {
+                lastRequestAppended = nextChunk.request;
                 if (nextChunk.data.bytes.byteLength === 0) {
                     afterSuccess.call(this);
                 } else {
@@ -374,7 +379,7 @@ function SourceBufferSink(config) {
                         buffer.append(nextChunk.data.bytes, nextChunk.data);
                     }
                     // updating is in progress, we should wait for it to complete before signaling that this operation is done
-                    waitForUpdateEnd(afterSuccess.bind(this));
+                    _waitForUpdateEnd(afterSuccess.bind(this));
                 }
             } catch (err) {
                 logger.fatal('SourceBuffer append failed "' + err + '"');
@@ -395,7 +400,7 @@ function SourceBufferSink(config) {
             try {
                 appendQueue = [];
                 if (mediaSource.readyState === 'open') {
-                    waitForUpdateEnd(() => {
+                    _waitForUpdateEnd(() => {
                         buffer.abort();
                         resolve();
                     });
@@ -433,11 +438,17 @@ function SourceBufferSink(config) {
         _executeCallback();
     }
 
-    function _errHandler() {
-        logger.error('SourceBufferSink error');
+    function _errHandler(e) {
+        const error = e.target || {};
+        _triggerEvent(Events.SOURCE_BUFFER_ERROR, { error, lastRequestAppended })
     }
 
-    function waitForUpdateEnd(callback) {
+    function _triggerEvent(eventType, data) {
+        let payload = data || {};
+        eventBus.trigger(eventType, payload, { streamId: mediaInfo.streamInfo.id, mediaType: type });
+    }
+
+    function _waitForUpdateEnd(callback) {
         callbacks.push(callback);
 
         if (!buffer.updating) {
@@ -454,7 +465,6 @@ function SourceBufferSink(config) {
         abort,
         reset,
         updateTimestampOffset,
-        waitForUpdateEnd,
         initializeForStreamSwitch,
         initializeForFirstUse,
         updateAppendWindow,

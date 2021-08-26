@@ -100,7 +100,8 @@ function StreamController() {
         supportsChangeType,
         settings,
         firstLicenseIsFetched,
-        waitForPlaybackStartTimeout;
+        waitForPlaybackStartTimeout,
+        errorInformation;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -162,7 +163,7 @@ function StreamController() {
     function registerEvents() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_ERROR, _onPlaybackError, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
@@ -185,7 +186,7 @@ function StreamController() {
     function unRegisterEvents() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_ERROR, _onPlaybackError, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_ENDED, _onPlaybackEnded, instance);
@@ -1216,7 +1217,7 @@ function StreamController() {
         dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
-    function onPlaybackError(e) {
+    function _onPlaybackError(e) {
         if (!e.error) return;
 
         let msg = '';
@@ -1242,6 +1243,13 @@ function StreamController() {
                 break;
         }
 
+
+        if (msg === 'MEDIA_ERR_DECODE' && settings.get().errors.recoverAttempts.mediaErrorDecode > errorInformation.counts.mediaErrorDecode) {
+            errorInformation.counts.mediaErrorDecode += 1;
+            _handleMediaErrorDecode();
+            return;
+        }
+
         hasMediaError = true;
 
         if (e.error.message) {
@@ -1258,6 +1266,21 @@ function StreamController() {
         }
         errHandler.error(new DashJSError(e.error.code, msg));
         reset();
+    }
+
+    /**
+     * Handles mediaError
+     * @private
+     */
+    function _handleMediaErrorDecode() {
+        logger.warn('A MEDIA_ERR_DECODE occured: Resetting the MediaSource');
+        const time = playbackController.getTime();
+        // Deactivate the current stream.
+        activeStream.deactivate(false);
+
+        // Reset MSE
+        logger.warn(`MediaSource has been resetted. Resuming playback from time ${time}`);
+        _openMediaSource(time, false);
     }
 
     function getActiveStreamInfo() {
@@ -1395,6 +1418,11 @@ function StreamController() {
         supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
+        errorInformation = {
+            counts: {
+                mediaErrorDecode: 0
+            }
+        }
     }
 
     function reset() {

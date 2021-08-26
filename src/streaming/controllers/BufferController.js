@@ -167,7 +167,8 @@ function BufferController(config) {
             const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
-                textController
+                textController,
+                eventBus
             });
             _initializeSink(mediaInfo, oldBufferSinks, requiredQuality)
                 .then(() => {
@@ -235,7 +236,7 @@ function BufferController(config) {
      * @param {object} e
      */
     function _onMediaFragmentLoaded(e) {
-        _appendToBuffer(e.chunk);
+        _appendToBuffer(e.chunk, e.request);
     }
 
     /**
@@ -243,8 +244,8 @@ function BufferController(config) {
      * @param {object} chunk
      * @private
      */
-    function _appendToBuffer(chunk) {
-        sourceBufferSink.append(chunk)
+    function _appendToBuffer(chunk, request = null) {
+        sourceBufferSink.append(chunk, request)
             .then((e) => {
                 _onAppended(e);
             })
