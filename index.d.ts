@@ -317,6 +317,11 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header'
             }
+        };
+        errors?: {
+            recoverAttempts?: {
+                mediaErrorDecode?: number
+            }
         }
     }
 
