@@ -1218,7 +1218,7 @@ declare namespace dashjs {
     }
 
     export interface IManifestInfo {
-        DVRWindowSize: number;
+        dvrWindowSize: number;
         availableFrom: Date;
         duration: number;
         isDynamic: boolean;
