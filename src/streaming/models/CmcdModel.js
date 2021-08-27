@@ -188,7 +188,8 @@ function CmcdModel() {
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
-                    cmcdData
+                    cmcdData,
+                    headers
                 });
                 return headers;
             }
