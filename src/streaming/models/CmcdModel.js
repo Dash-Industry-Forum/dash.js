@@ -526,6 +526,9 @@ function CmcdModel() {
 
             cmcdString = cmcdString.replace(/=true/g, '');
 
+            // Remove last comma at the end
+            cmcdString = cmcdString.replace(/,\s*$/, '');
+
             return cmcdString;
         } catch (e) {
             return null;
