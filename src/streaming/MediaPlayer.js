@@ -698,7 +698,7 @@ function MediaPlayer() {
         if (!metric) {
             return 0;
         }
-        return metric.manifestInfo.DVRWindowSize;
+        return metric.manifestInfo.dvrWindowSize;
     }
 
     /**

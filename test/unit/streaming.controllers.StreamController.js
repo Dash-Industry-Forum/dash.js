@@ -219,7 +219,7 @@ describe('StreamController', function () {
 
             let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600, id: '1' };
             let dynamicStreamInfo = {
-                manifestInfo: { isDynamic: true, DVRWindowSize: 30, minBufferTime: 4 },
+                manifestInfo: { isDynamic: true, dvrWindowSize: 30, minBufferTime: 4 },
                 start: 10,
                 duration: Infinity,
                 id: '1'
