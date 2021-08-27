@@ -887,7 +887,7 @@ function Settings() {
         },
         errors: {
             recoverAttempts: {
-                mediaErrorDecode: 3
+                mediaErrorDecode: 5
             }
         }
     };

@@ -435,7 +435,7 @@ function StreamProcessor(config) {
         }
 
         if (request) {
-            if (!_shouldIgnoreRequest(request.url)) {
+            if (!_shouldIgnoreRequest(request)) {
                 logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
                 fragmentModel.executeRequest(request);
             } else {
@@ -452,8 +452,14 @@ function StreamProcessor(config) {
      * In certain situations we need to ignore a request. For instance, if a segment is blacklisted because it caused an MSE error.
      * @private
      */
-    function _shouldIgnoreRequest(url) {
-        return segmentBlacklistController.contains(url)
+    function _shouldIgnoreRequest(request) {
+        let blacklistUrl = request.url;
+
+        if (request.range) {
+            blacklistUrl = blacklistUrl.concat('_', request.range);
+        }
+
+        return segmentBlacklistController.contains(blacklistUrl)
     }
 
     /**
@@ -542,17 +548,21 @@ function StreamProcessor(config) {
     }
 
     /**
-     * This function is called when the corresponding SourceBuffer encounterd an error.
+     * This function is called when the corresponding SourceBuffer encountered an error.
      * We blacklist the last segment assuming it caused the error
      * @param {object} e
      * @private
      */
     function _onSourceBufferError(e) {
-        if (!e || !e.lastRequestAppended) {
+        if (!e || !e.lastRequestAppended || !e.lastRequestAppended.url) {
             return;
         }
 
-        const blacklistUrl = e.lastRequestAppended.url;
+        let blacklistUrl = e.lastRequestAppended.url;
+
+        if (e.lastRequestAppended.range) {
+            blacklistUrl = blacklistUrl.concat('_', e.lastRequestAppended.range);
+        }
         logger.warn(`Blacklisting segment with url ${blacklistUrl}`);
         segmentBlacklistController.add(blacklistUrl);
     }

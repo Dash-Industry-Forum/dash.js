@@ -1231,6 +1231,7 @@ function StreamController() {
                 break;
             case 3:
                 msg = 'MEDIA_ERR_DECODE';
+                errorInformation.counts.mediaErrorDecode += 1;
                 break;
             case 4:
                 msg = 'MEDIA_ERR_SRC_NOT_SUPPORTED';
@@ -1244,8 +1245,7 @@ function StreamController() {
         }
 
 
-        if (msg === 'MEDIA_ERR_DECODE' && settings.get().errors.recoverAttempts.mediaErrorDecode > errorInformation.counts.mediaErrorDecode) {
-            errorInformation.counts.mediaErrorDecode += 1;
+        if (msg === 'MEDIA_ERR_DECODE' && settings.get().errors.recoverAttempts.mediaErrorDecode >= errorInformation.counts.mediaErrorDecode) {
             _handleMediaErrorDecode();
             return;
         }
