@@ -262,11 +262,11 @@ function PlaybackController() {
             availabilityStartTime = startTime;
         }
 
-        if (manifestInfo && manifestInfo.dvrWindowSize > 0) {
+        if (manifestInfo && manifestInfo.DVRWindowSize > 0) {
             // cap target latency to:
-            // - dvrWindowSize / 2 for short playlists
-            // - dvrWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
-            const targetDelayCapping = Math.max(manifestInfo.dvrWindowSize - END_OF_PLAYLIST_PADDING, manifestInfo.dvrWindowSize / 2);
+            // - DVRWindowSize / 2 for short playlists
+            // - DVRWindowSize - END_OF_PLAYLIST_PADDING for longer playlists
+            const targetDelayCapping = Math.max(manifestInfo.DVRWindowSize - END_OF_PLAYLIST_PADDING, manifestInfo.DVRWindowSize / 2);
             ret = Math.min(delay, targetDelayCapping);
         } else {
             ret = delay;
