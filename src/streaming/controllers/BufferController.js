@@ -165,7 +165,11 @@ function BufferController(config) {
             }
 
             const requiredQuality = abrController.getQualityFor(type, streamInfo.id);
-            sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
+            sourceBufferSink = SourceBufferSink(context).create({
+                mediaSource,
+                textController,
+                eventBus
+            });
             _initializeSink(mediaInfo, oldBufferSinks, requiredQuality)
                 .then(() => {
                     return updateBufferTimestampOffset(_getRepresentationInfo(requiredQuality));
@@ -232,7 +236,7 @@ function BufferController(config) {
      * @param {object} e
      */
     function _onMediaFragmentLoaded(e) {
-        _appendToBuffer(e.chunk);
+        _appendToBuffer(e.chunk, e.request);
     }
 
     /**
@@ -240,8 +244,8 @@ function BufferController(config) {
      * @param {object} chunk
      * @private
      */
-    function _appendToBuffer(chunk) {
-        sourceBufferSink.append(chunk)
+    function _appendToBuffer(chunk, request = null) {
+        sourceBufferSink.append(chunk, request)
             .then((e) => {
                 _onAppended(e);
             })
@@ -250,7 +254,7 @@ function BufferController(config) {
             });
 
         if (chunk.mediaInfo.type === Constants.VIDEO) {
-            triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
+            _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
     }
 
@@ -271,7 +275,7 @@ function BufferController(config) {
             if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 // Notify ScheduleController to stop scheduling until buffer has been pruned
-                triggerEvent(Events.QUOTA_EXCEEDED, {
+                _triggerEvent(Events.QUOTA_EXCEEDED, {
                     criticalBufferLevel: criticalBufferLevel,
                     quotaExceededTime: e.chunk.start
                 });
@@ -302,7 +306,7 @@ function BufferController(config) {
         }
 
         if (appendedBytesInfo) {
-            triggerEvent(Events.BYTES_APPENDED_END_FRAGMENT, {
+            _triggerEvent(Events.BYTES_APPENDED_END_FRAGMENT, {
                 quality: appendedBytesInfo.quality,
                 startTime: appendedBytesInfo.start,
                 index: appendedBytesInfo.index,
@@ -642,7 +646,7 @@ function BufferController(config) {
         if (playbackController) {
             const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
             bufferLevel = Math.max(getBufferLength(playbackController.getTime() || 0, tolerance), 0);
-            triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
+            _triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
     }
@@ -682,8 +686,8 @@ function BufferController(config) {
 
         bufferState = state;
 
-        triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, { state: state });
-        triggerEvent(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY);
+        _triggerEvent(Events.BUFFER_LEVEL_STATE_CHANGED, { state: state });
+        _triggerEvent(state === MetricsConstants.BUFFER_LOADED ? Events.BUFFER_LOADED : Events.BUFFER_EMPTY);
         logger.debug(state === MetricsConstants.BUFFER_LOADED ? 'Got enough buffer to start' : 'Waiting for more buffer before starting playback');
     }
 
@@ -827,7 +831,7 @@ function BufferController(config) {
 
         if (e.unintended) {
             logger.warn('Detected unintended removal from:', e.from, 'to', e.to, 'setting streamprocessor time to', e.from);
-            triggerEvent(Events.SEEK_TARGET, { time: e.from });
+            _triggerEvent(Events.SEEK_TARGET, { time: e.from });
         }
 
         if (isPruningInProgress) {
@@ -838,7 +842,7 @@ function BufferController(config) {
             } else {
                 replacingBuffer = false;
             }
-            triggerEvent(Events.BUFFER_CLEARED, {
+            _triggerEvent(Events.BUFFER_CLEARED, {
                 from: e.from,
                 to: e.to,
                 unintended: e.unintended,
@@ -918,7 +922,7 @@ function BufferController(config) {
         isBufferingCompleted = value;
 
         if (isBufferingCompleted) {
-            triggerEvent(Events.BUFFERING_COMPLETED);
+            _triggerEvent(Events.BUFFERING_COMPLETED);
         } else {
             maximumIndex = Number.POSITIVE_INFINITY;
         }
@@ -990,7 +994,7 @@ function BufferController(config) {
         seekTarget = value;
     }
 
-    function triggerEvent(eventType, data) {
+    function _triggerEvent(eventType, data) {
         let payload = data || {};
         eventBus.trigger(eventType, payload, { streamId: streamInfo.id, mediaType: type });
     }
