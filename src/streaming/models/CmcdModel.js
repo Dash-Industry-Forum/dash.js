@@ -233,7 +233,7 @@ function CmcdModel() {
     function _getCmcdDataForMpd() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.MANIFEST}`;
+        data.ot = OBJECT_TYPES.MANIFEST;
 
         return data;
     }
@@ -340,7 +340,7 @@ function CmcdModel() {
     function _getCmcdDataForInitSegment() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.INIT}`;
+        data.ot = OBJECT_TYPES.INIT;
         data.su = true;
 
         return data;
@@ -349,7 +349,7 @@ function CmcdModel() {
     function _getCmcdDataForOther() {
         const data = _getGenericCmcdData();
 
-        data.ot = `${OBJECT_TYPES.OTHER}`;
+        data.ot = OBJECT_TYPES.OTHER;
 
         return data;
     }
@@ -460,8 +460,8 @@ function CmcdModel() {
     function _onManifestLoaded(data) {
         try {
             const isDynamic = dashManifestModel.getIsDynamic(data.data);
-            const st = isDynamic ? `${STREAM_TYPES.LIVE}` : `${STREAM_TYPES.VOD}`;
-            const sf = data.protocol && data.protocol === 'MSS' ? `${STREAMING_FORMATS.MSS}` : `${STREAMING_FORMATS.DASH}`;
+            const st = isDynamic ? STREAM_TYPES.LIVE : STREAM_TYPES.VOD;
+            const sf = data.protocol && data.protocol === 'MSS' ? STREAMING_FORMATS.MSS : STREAMING_FORMATS.DASH;
 
             internalData.st = `${st}`;
             internalData.sf = `${sf}`;
@@ -511,7 +511,7 @@ function CmcdModel() {
 
             let cmcdString = keys.reduce((acc, key, index) => {
                 if (key === 'v' && cmcdData[key] === 1) return acc; // Version key should only be reported if it is != 1
-                if (typeof cmcdData[key] === 'string' && (key !== 'ot' || key !== 'sf' || key !== 'st')) {
+                if (typeof cmcdData[key] === 'string' && key !== 'ot' && key !== 'sf' && key !== 'st') {
                     let string = cmcdData[key].replace(/"/g, '\"');
                     acc += `${key}="${string}"`;
                 } else {
