@@ -17,7 +17,7 @@
         }
 
         #trace {
-            height:500px;
+            height: 500px;
             margin-top: 20px;
             font-size: 10px;
         }
@@ -27,17 +27,17 @@
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
 
         /* possible modes of attach cmcd data */
-        var CMCD_MODE_QUERY = "query"; /* as query parameters */
-        var CMCD_MODE_HEADER = "header"; /* as HTTP headers */
+        var CMCD_MODE_QUERY = 'query'; /* as query parameters */
+        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        var player;
 
         function init() {
             var video,
-                player,
-                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
                 version;
 
             player = dashjs.MediaPlayer().create();
-            video = document.querySelector("video");
+            video = document.querySelector('video');
             player.initialize();
             version = player.getVersion();
 
@@ -56,48 +56,65 @@
             player.setAutoPlay(false);
             player.attachView(video);
             player.attachSource(url);
-
-            var TTMLRenderingDiv = document.querySelector("#ttml-rendering-div");
-            player.attachTTMLRenderingDiv(TTMLRenderingDiv);
         }
 
         function handleCmcdDataGeneratedEvent(event) {
-            log("type: " +  event.mediaType);
-            log("file: " + event.url.split("/").pop())
-            var keys = Object.keys(event.cmcdData);
+            log('type: ' + event.mediaType);
+            log('file: ' + event.url.split('/').pop())
+            var mode = player.getSettings().streaming.cmcd.mode;
+            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            var keys = Object.keys(data);
             keys = keys.sort();
             for (var key of keys) {
-                log(key.padEnd(4) + ": " + event.cmcdData[key]);
+                log(key.padEnd(4) + ': ' + event.cmcdData[key]);
             }
-            log("");
+            log('');
+        }
+
+        function getKeysForQueryMode(event) {
+            var cmcdData = {};
+            var cmcdString = event.cmcdString;
+
+            extractKeyValuePairs(cmcdString, cmcdData);
+
+            return cmcdData;
+        }
+
+        function getKeysForHeaderMode(event) {
+            var cmcdData = {};
+            var keys = Object.keys(event.headers);
+
+            for (var key of keys) {
+                extractKeyValuePairs(event.headers[key], cmcdData)
+            }
+            
+            return cmcdData
+        }
+
+        function extractKeyValuePairs(cmcdString, cmcdData) {
+            if (cmcdString === '') {
+                return;
+            }
+            var keyValuePairs = cmcdString.split(',');
+
+            keyValuePairs.forEach(function (keyValuePair) {
+                var data = keyValuePair.split('=');
+                var key = data[0];
+                var value = data[1];
+
+                cmcdData[key] = value;
+            })
+
         }
 
         function log(msg) {
-            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; /* to avoid repeated wrapping with large objects */
-            var tracePanel = document.getElementById("trace");
-            tracePanel.innerHTML += msg + "\n";
+            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+            var tracePanel = document.getElementById('trace');
+            tracePanel.innerHTML += msg + '\n';
             tracePanel.scrollTop = tracePanel.scrollHeight;
             console.log(msg);
         }
 
-        function handleCmcdDataGeneratedEvent(event) {
-            log("type: " +  event.mediaType);
-            log("file: " + event.url.split("/").pop())
-            var keys = Object.keys(event.cmcdData);
-            keys = keys.sort();
-            for (var key of keys) {
-                log(key.padEnd(4) + ": " + event.cmcdData[key]);
-            }
-            log("");
-        }
-
-        function log(msg) {
-            msg = msg.length > 200 ? msg.substring(0, 200) + "..." : msg; /* to avoid repeated wrapping with large objects */
-            var tracePanel = document.getElementById("trace");
-            tracePanel.innerHTML += msg + "\n";
-            tracePanel.scrollTop = tracePanel.scrollHeight;
-            console.log(msg);
-        }
     </script>
 </head>
 <body>
@@ -113,7 +130,8 @@
             <div class="col-md-12">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>CMCD Reporting</h3>
-                    <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5004).</p>
+                    <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media
+                        Client Data (CMCD - CTA 5004).</p>
                 </div>
             </div>
         </div>
@@ -123,7 +141,8 @@
             </div>
             <div class="col-md-6">
                 <div class="form-floating">
-                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here" id="trace"></textarea>
+                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                              id="trace"></textarea>
                     <label for="trace">CMCD Data</label>
                 </div>
             </div>

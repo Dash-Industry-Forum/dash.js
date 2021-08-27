@@ -1071,7 +1071,7 @@ function DashAdapter() {
     function convertMpdToManifestInfo(mpd) {
         let manifestInfo = new ManifestInfo();
 
-        manifestInfo.DVRWindowSize = mpd.timeShiftBufferDepth;
+        manifestInfo.dvrWindowSize = mpd.timeShiftBufferDepth;
         manifestInfo.loadedTime = mpd.manifest.loadedTime;
         manifestInfo.availableFrom = mpd.availabilityStartTime;
         manifestInfo.minBufferTime = mpd.manifest.minBufferTime;

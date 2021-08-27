@@ -14,13 +14,6 @@ All information can be found [here](https://github.com/Dash-Industry-Forum/dash.
 ### Migration from v3.x to v4.0
 If you are migrating from dash.js v3.x to dash.js v4.x please read the migration document found [here](https://github.com/Dash-Industry-Forum/dash.js/wiki/Migration-to-dash.js-4.0).
 
-**Important**: Due to a configuration error we had to republish version 4.0.0 to npm.js. Since the 4.0.0 tag could not be reused for this purpose we had to rename the release on npm.js to 4.0.0-npm
-
-When installing dash.js 4.0.0 via npm please make sure to use
-
-````
-npm install dashjs@4.0.0-npm
-````
 
 ## Overview
 A reference client implementation for the playback of MPEG DASH via JavaScript and [compliant browsers](http://caniuse.com/#feat=mediasource). Learn more about DASH IF Reference Client on our [wiki](https://github.com/Dash-Industry-Forum/dash.js/wiki).
