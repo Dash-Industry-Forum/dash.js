@@ -184,7 +184,7 @@ function MssHandler(config) {
 
         // Start MssFragmentInfoControllers in case of start-over streams
         let manifestInfo = e.request.mediaInfo.streamInfo.manifestInfo;
-        if (!manifestInfo.isDynamic && manifestInfo.DVRWindowSize !== Infinity) {
+        if (!manifestInfo.isDynamic && manifestInfo.dvrWindowSize !== Infinity) {
             startFragmentInfoControllers();
         }
     }

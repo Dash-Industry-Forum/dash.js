@@ -231,7 +231,7 @@ function ProtectionModel_21Jan2015(config) {
                 eventBus.trigger(events.KEY_SESSION_UPDATED);
             })
             .catch(function (error) {
-                eventBus.trigger(events.KEY_ERROR, {data: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
+                eventBus.trigger(events.KEY_ERROR, {error: new DashJSError(ProtectionErrors.MEDIA_KEYERR_CODE, 'Error sending update() message! ' + error.name, sessionToken)});
             });
     }
 

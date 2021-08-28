@@ -275,6 +275,7 @@ function HTTPLoader(cfg) {
                 headers = cmcdModel.getHeaderParameters(request);
             }
         }
+        request.url = modifiedUrl;
         const verb = request.checkExistenceOnly ? HTTPRequest.HEAD : HTTPRequest.GET;
         const withCredentials = mediaPlayerModel.getXHRWithCredentialsForType(request.type);
 

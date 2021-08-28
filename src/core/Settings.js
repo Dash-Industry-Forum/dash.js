@@ -44,13 +44,15 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @typedef {Object} PlayerSettings
  * @property {module:Settings~DebugSettings} [debug]
  * Debug related settings.
+ * @property {module:Settings~ErrorSettings} [errors]
+ * Error related settings
  * @property {module:Settings~StreamingSettings} [streaming]
  * Streaming related settings.
  * @example
  *
  * // Full settings object
  * settings = {
- *  debug: {
+ *        debug: {
  *            logLevel: Debug.LOG_LEVEL_WARNING,
  *            dispatchEvent: false
  *        },
@@ -196,7 +198,12 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY
  *            }
- *      }
+ *          },
+ *          errors: {
+ *            recoverAttempts: {
+ *                mediaErrorDecode: 5
+ *             }
+ *          }
  * }
  */
 
@@ -232,7 +239,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} Buffer
- * @property {boolean} [fastSwitchEnabled=false]
+ * @property {boolean} [fastSwitchEnabled=true]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
  * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
@@ -324,6 +331,14 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * Enable to trigger a Events.LOG event whenever log output is generated.
  *
  * Note this will be dispatched regardless of log level.
+ */
+
+/**
+ * @typedef {Object} module:Settings~ErrorSettings
+ * @property {object} [recoverAttempts={mediaErrorDecode: 5}]
+ * Defines the maximum number of recover attempts for specific media errors.
+ *
+ * For mediaErrorDecode the player will reset the MSE and skip the blacklisted segment that caused the decode error. The resulting gap will be handled by the GapController.
  */
 
 /**
@@ -899,6 +914,11 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY
+            }
+        },
+        errors: {
+            recoverAttempts: {
+                mediaErrorDecode: 5
             }
         }
     };

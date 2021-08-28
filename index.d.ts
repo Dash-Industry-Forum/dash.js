@@ -317,6 +317,11 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header'
             }
+        };
+        errors?: {
+            recoverAttempts?: {
+                mediaErrorDecode?: number
+            }
         }
     }
 
@@ -1218,7 +1223,7 @@ declare namespace dashjs {
     }
 
     export interface IManifestInfo {
-        DVRWindowSize: number;
+        dvrWindowSize: number;
         availableFrom: Date;
         duration: number;
         isDynamic: boolean;

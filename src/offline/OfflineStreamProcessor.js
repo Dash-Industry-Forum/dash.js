@@ -333,7 +333,7 @@ function OfflineStreamProcessor(config) {
     }
 
     function getAvailableSegmentsNumber() {
-        return representationController.getCurrentRepresentation().availableSegmentsNumber + 1; // do not forget init segment
+        return representationController.getCurrentRepresentation().numberOfSegments + 1; // do not forget init segment
     }
 
     function updateProgression () {
