@@ -223,10 +223,10 @@ function ThroughputHistory(config) {
     function _getAverage(isThroughput, mediaType, isDynamic) {
         // only two moving average methods defined at the moment
         return settings.get().streaming.abr.movingAverageMethod !== Constants.MOVING_AVERAGE_SLIDING_WINDOW ?
-            getAverageEwma(isThroughput, mediaType) : getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
+            _getAverageEwma(isThroughput, mediaType) : _getAverageSlidingWindow(isThroughput, mediaType, isDynamic);
     }
 
-    function getAverageSlidingWindow(isThroughput, mediaType, isDynamic) {
+    function _getAverageSlidingWindow(isThroughput, mediaType, isDynamic) {
         const sampleSize = _getSampleSize(isThroughput, mediaType, isDynamic);
         const dict = isThroughput ? throughputDict : latencyDict;
         let arr = dict[mediaType];
@@ -240,7 +240,7 @@ function ThroughputHistory(config) {
         return arr.reduce((total, elem) => total + elem) / arr.length;
     }
 
-    function getAverageEwma(isThroughput, mediaType) {
+    function _getAverageEwma(isThroughput, mediaType) {
         const halfLife = isThroughput ? ewmaHalfLife.throughputHalfLife : ewmaHalfLife.latencyHalfLife;
         const ewmaObj = isThroughput ? ewmaThroughputDict[mediaType] : ewmaLatencyDict[mediaType];
 
