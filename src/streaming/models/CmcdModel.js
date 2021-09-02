@@ -270,7 +270,7 @@ function CmcdModel() {
 
         if (nextRequest) {
             if (request.url !== nextRequest.url) {
-                data.nor = Utils.getRelativeUrl(request.url, nextRequest.url);
+                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
             } else if (nextRequest.range) {
                 data.nrr = nextRequest.range;
             }
