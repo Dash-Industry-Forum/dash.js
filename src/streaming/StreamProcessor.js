@@ -405,22 +405,6 @@ function StreamProcessor(config) {
 
         let request = null;
 
-        const representation = representationController.getCurrentRepresentation();
-        const lastSegmentRequested = dashHandler.lastSegmentRequested(representation, bufferingTime);
-
-        // Check if the media is finished. If so, no need to schedule another request
-        if (lastSegmentRequested) {
-            const segmentIndex = dashHandler.getCurrentIndex();
-            logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
-            eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
-                streamId: streamInfo.id,
-                mediaType: type
-            });
-            bufferController.segmentRequestingCompleted(segmentIndex);
-            scheduleController.clearScheduleTimer();
-            return;
-        }
-
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
             request = _getFragmentRequest();
@@ -442,9 +426,29 @@ function StreamProcessor(config) {
                 logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
                 _noValidRequest();
             }
-        } else if (rescheduleIfNoRequest) {
-            // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-            _noValidRequest();
+        }
+        else {
+            // Check if the media is finished. If so, no need to schedule another request
+            const representation = representationController.getCurrentRepresentation();
+            const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
+
+            if (isLastSegmentRequested) {
+                const segmentIndex = dashHandler.getCurrentIndex();
+                logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
+                eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
+                    streamId: streamInfo.id,
+                    mediaType: type
+                });
+                bufferController.segmentRequestingCompleted(segmentIndex);
+                scheduleController.clearScheduleTimer();
+                return;
+            }
+
+            // Reschedule
+            if (rescheduleIfNoRequest) {
+                // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+                _noValidRequest();
+            }
         }
     }
 
