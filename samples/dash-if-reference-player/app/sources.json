@@ -323,7 +323,7 @@
             "name": "Subtitles and Captions",
             "submenu": [
                 {
-                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd",
                     "name": "External VTT subtitle file",
                     "provider": "dashif"
                 },
@@ -444,7 +444,7 @@
                     "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
                     "protData": {
                         "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy?video_id=&provider="
+                            "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",

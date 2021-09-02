@@ -73,6 +73,7 @@ function StreamProcessor(config) {
     let dashMetrics = config.dashMetrics;
     let settings = config.settings;
     let boxParser = config.boxParser;
+    let segmentBlacklistController = config.segmentBlacklistController;
 
     let instance,
         logger,
@@ -107,6 +108,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack, isFragmented) {
@@ -253,6 +255,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
 
         resetInitialSettings();
         type = null;
@@ -403,16 +406,17 @@ function StreamProcessor(config) {
         let request = null;
 
         const representation = representationController.getCurrentRepresentation();
-        const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
+        const lastSegmentRequested = dashHandler.lastSegmentRequested(representation, bufferingTime);
 
         // Check if the media is finished. If so, no need to schedule another request
-        if (isMediaFinished) {
+        if (lastSegmentRequested) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
             eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
                 streamId: streamInfo.id,
                 mediaType: type
             });
+            bufferController.segmentRequestingCompleted(segmentIndex);
             scheduleController.clearScheduleTimer();
             return;
         }
@@ -431,12 +435,31 @@ function StreamProcessor(config) {
         }
 
         if (request) {
-            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
-            fragmentModel.executeRequest(request);
+            if (!_shouldIgnoreRequest(request)) {
+                logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
+                fragmentModel.executeRequest(request);
+            } else {
+                logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
+                _noValidRequest();
+            }
         } else if (rescheduleIfNoRequest) {
             // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
             _noValidRequest();
         }
+    }
+
+    /**
+     * In certain situations we need to ignore a request. For instance, if a segment is blacklisted because it caused an MSE error.
+     * @private
+     */
+    function _shouldIgnoreRequest(request) {
+        let blacklistUrl = request.url;
+
+        if (request.range) {
+            blacklistUrl = blacklistUrl.concat('_', request.range);
+        }
+
+        return segmentBlacklistController.contains(blacklistUrl)
     }
 
     /**
@@ -522,7 +545,26 @@ function StreamProcessor(config) {
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             scheduleController.startScheduleTimer();
         }
+    }
 
+    /**
+     * This function is called when the corresponding SourceBuffer encountered an error.
+     * We blacklist the last segment assuming it caused the error
+     * @param {object} e
+     * @private
+     */
+    function _onSourceBufferError(e) {
+        if (!e || !e.lastRequestAppended || !e.lastRequestAppended.url) {
+            return;
+        }
+
+        let blacklistUrl = e.lastRequestAppended.url;
+
+        if (e.lastRequestAppended.range) {
+            blacklistUrl = blacklistUrl.concat('_', e.lastRequestAppended.range);
+        }
+        logger.warn(`Blacklisting segment with url ${blacklistUrl}`);
+        segmentBlacklistController.add(blacklistUrl);
     }
 
     /**

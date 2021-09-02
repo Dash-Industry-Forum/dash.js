@@ -77,7 +77,7 @@ function NotFragmentedTextBufferController(config) {
     function createBufferSink(mediaInfo) {
         return new Promise((resolve, reject) => {
             try {
-                sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController });
+                sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController, eventBus });
                 sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo);
                 if (!initialized) {
                     if (sourceBufferSink.getBuffer() && typeof sourceBufferSink.getBuffer().initialize === 'function') {
@@ -200,6 +200,10 @@ function NotFragmentedTextBufferController(config) {
 
     }
 
+    function segmentRequestingCompleted() {
+
+    }
+
     function pruneAllSafely() {
         return Promise.resolve();
     }
@@ -233,7 +237,8 @@ function NotFragmentedTextBufferController(config) {
         setSeekTarget,
         updateAppendWindow,
         pruneAllSafely,
-        updateBufferTimestampOffset
+        updateBufferTimestampOffset,
+        segmentRequestingCompleted
     };
 
     setup();

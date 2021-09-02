@@ -122,6 +122,7 @@ describe('StreamController', function () {
     describe('Well initialized', () => {
 
         beforeEach(function () {
+            settings.reset();
             streamController.setConfig({
                 adapter: adapterMock,
                 manifestLoader: manifestLoaderMock,
@@ -176,6 +177,7 @@ describe('StreamController', function () {
             });
 
             it('should return the correct error when a playback error occurs : MEDIA_ERR_DECODE', function () {
+                settings.update({ errors: { recoverAttempts: { mediaErrorDecode: 0 } } })
                 eventBus.trigger(Events.PLAYBACK_ERROR, { error: { code: 3 } });
 
                 expect(errHandlerMock.errorValue).to.include('MEDIA_ERR_DECODE');
@@ -217,7 +219,7 @@ describe('StreamController', function () {
 
             let staticStreamInfo = { manifestInfo: { isDynamic: false }, start: 10, duration: 600, id: '1' };
             let dynamicStreamInfo = {
-                manifestInfo: { isDynamic: true, DVRWindowSize: 30, minBufferTime: 4 },
+                manifestInfo: { isDynamic: true, dvrWindowSize: 30, minBufferTime: 4 },
                 start: 10,
                 duration: Infinity,
                 id: '1'
