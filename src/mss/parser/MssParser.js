@@ -350,6 +350,9 @@ function MssParser(config) {
 
         segmentTemplate.SegmentTimeline = mapSegmentTimeline(streamIndex, segmentTemplate.timescale);
 
+        // Patch: set availabilityTimeOffset to Infinity since segments are available as long as they are present in timeline
+        segmentTemplate.availabilityTimeOffset = 'INF';
+
         return segmentTemplate;
     }
 
