@@ -181,7 +181,7 @@ function DashHandler(config) {
         }
     }
 
-    function lastSegmentRequested(representation, bufferingTime) {
+    function isLastSegmentRequested(representation, bufferingTime) {
         if (!representation || !lastSegment) {
             return false;
         }
@@ -314,7 +314,7 @@ function DashHandler(config) {
         getSegmentRequestForTime,
         getCurrentIndex,
         getNextSegmentRequest,
-        lastSegmentRequested,
+        isLastSegmentRequested,
         reset,
         getNextSegmentRequestIdempotent
     };
