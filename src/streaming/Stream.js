@@ -90,7 +90,7 @@ function Stream(config) {
         boxParser,
         debug,
         isEndedEventSignaled,
-        trackChangedEvent;
+        trackChangedEvents;
 
     /**
      * Setup the stream
@@ -555,6 +555,7 @@ function Stream(config) {
         updateError = {};
         isUpdating = false;
         isEndedEventSignaled = false;
+        trackChangedEvents = [];
     }
 
     function reset(keepBuffers) {
@@ -671,7 +672,7 @@ function Stream(config) {
         // Applies only for MSS streams
         if (manifest.refreshManifestOnSwitchTrack) {
             logger.debug('Stream -  Refreshing manifest for switch track');
-            trackChangedEvent = e;
+            trackChangedEvents.push(e);
             manifestUpdater.refreshManifest();
         } else {
             processor.selectMediaInfo(mediaInfo)
@@ -866,13 +867,13 @@ function Stream(config) {
                 .then(() => {
                     promises = [];
 
-                    if (trackChangedEvent) {
+                    while (trackChangedEvents.length > 0) {
+                        let trackChangedEvent = trackChangedEvents.pop();
                         let mediaInfo = trackChangedEvent.newMediaInfo;
                         let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
                         if (!processor) return;
                         promises.push(processor.prepareTrackSwitch());
                         processor.selectMediaInfo(mediaInfo);
-                        trackChangedEvent = undefined;
                     }
 
                     return Promise.all(promises)
