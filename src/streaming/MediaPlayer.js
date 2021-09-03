@@ -1637,7 +1637,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Registers a custom initial track selection
+     * Resets the custom initial track selection
      */
     function resetCustomInitialTrackSelectionFunction() {
         if (mediaController) {
