@@ -31,16 +31,31 @@ module.exports = {
     },
 
     checkIfFileExits: function (url, done) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, false);
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status <= 299) {
+        try {
+            var xhr = new XMLHttpRequest();
+
+            xhr.addEventListener("load", transferComplete);
+            xhr.addEventListener("error", transferFailed);
+            xhr.addEventListener("abort", transferCanceled);
+
+            xhr.open("GET", url);
+            xhr.send();
+
+
+            function transferComplete() {
                 done(true);
-            } else {
+            }
+
+            function transferFailed() {
                 done(false);
             }
+
+            function transferCanceled() {
+                done(false);
+            }
+        } catch (e) {
+            done(false);
         }
-        xhr.send();
     },
 
     generateSeekPos: function(duration) {

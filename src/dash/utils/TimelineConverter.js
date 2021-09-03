@@ -83,7 +83,7 @@ function TimelineConverter() {
                 availabilityTime = mpd.availabilityEndTime;
             }
         } else {
-            if (isDynamic && mpd.timeShiftBufferDepth !== Number.POSITIVE_INFINITY) {
+            if (isDynamic) {
                 // SAST = Period@start + seg@presentationStartTime + seg@duration
                 // ASAST = SAST - ATO
                 const availabilityTimeOffset = representation.availabilityTimeOffset;
@@ -341,7 +341,7 @@ function TimelineConverter() {
     }
 
     function _onUpdateTimeSyncOffset(e) {
-        if (e.offset !== undefined) {
+        if (e.offset !== undefined && !isNaN(e.offset)) {
             setClientTimeOffset(e.offset / 1000);
         }
     }

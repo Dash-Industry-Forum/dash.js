@@ -72,7 +72,7 @@
         "google": {
             "acronym": "Google",
             "name": "Google",
-            "url": "https://www.google.com"    
+            "url": "https://www.google.com"
         },
         "vdms": {
             "acronym": "VDMS",
@@ -219,6 +219,11 @@
                     "url": "https://livesim.dashif.org/livesim/ato_inf/testpic_2s/Manifest.mpd",
                     "name": "Infinite offset - all segments available at availability start (livesim)",
                     "provider": "dashif"
+                },                
+                {
+                    "url": "https://livesim.dashif.org/livesim/scte35_2/testpic_2s/Manifest.mpd",
+                    "name": "SCTE35 events",
+                    "provider": "dashif"
                 },
                 {
                     "url": "https://live.unified-streaming.com/scte35/scte35.isml/.mpd",
@@ -265,11 +270,6 @@
                     "name": "Single period - Number + Duration - Full manifest - Thumbnails (2 tracks: 174p/1080p) - In-the-clear",
                     "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
                     "provider": "aws"
-                },
-                {
-                    "name": " Multiperiod DVB 2017 0.mpd Live Clear AVC + AAC",
-                    "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/0.mpd",
-                    "provider": "dvb"
                 },
                 {
                     "name": "LiveSIM Caminandes 02, Gran Dillama (25fps, 25gop, 2sec, multi MOOF/MDAT, 1080p, KID=1236) v2",
@@ -323,7 +323,7 @@
             "name": "Subtitles and Captions",
             "submenu": [
                 {
-                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1.mpd",
+                    "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd",
                     "name": "External VTT subtitle file",
                     "provider": "dashif"
                 },
@@ -390,7 +390,7 @@
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
                     "provider": "cta"
-                },                
+                },
                 {
                     "url": "https://pl8q5ug7b6.execute-api.eu-central-1.amazonaws.com/2.mpd",
                     "name": "Subtitles in multi period live",
@@ -409,12 +409,12 @@
                             "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
                             "httpRequestHeaders": {
                                 "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                            },
-                            "com.microsoft.playready": {
-                                "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
-                                "httpRequestHeaders": {
-                                    "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                                }
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
                             }
                         }
                     },
@@ -428,12 +428,12 @@
                             "serverURL": "https://lic.staging.drmtoday.com/license-proxy-widevine/cenc/?specConform=true",
                             "httpRequestHeaders": {
                                 "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                            },
-                            "com.microsoft.playready": {
-                                "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
-                                "httpRequestHeaders": {
-                                    "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
-                                }
+                            }
+                        },
+                        "com.microsoft.playready": {
+                            "serverURL": "https://lic.staging.drmtoday.com/license-proxy-headerauth/drmtoday/RightsManager.asmx",
+                            "httpRequestHeaders": {
+                                "x-dt-custom-data": "ewogICAgInVzZXJJZCI6ICJhd3MtZWxlbWVudGFsOjpzcGVrZS10ZXN0aW5nIiwKICAgICJzZXNzaW9uSWQiOiAiZWxlbWVudGFsLXJlZnN0cmVhbSIsCiAgICAibWVyY2hhbnQiOiAiYXdzLWVsZW1lbnRhbCIKfQo="
                             }
                         }
                     },
@@ -444,7 +444,7 @@
                     "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
                     "protData": {
                         "com.widevine.alpha": {
-                            "serverURL": "https://widevine-proxy.appspot.com/proxy?video_id=&provider="
+                            "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",

@@ -41,6 +41,7 @@ import FactoryMaker from '../core/FactoryMaker';
 import DashJSError from './vo/DashJSError';
 import BoxParser from './utils/BoxParser';
 import URLUtils from './utils/URLUtils';
+import BlacklistController from './controllers/BlacklistController';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -84,6 +85,7 @@ function Stream(config) {
         isUpdating,
         fragmentController,
         thumbnailController,
+        segmentBlacklistController,
         preloaded,
         boxParser,
         debug,
@@ -100,6 +102,11 @@ function Stream(config) {
             resetInitialSettings();
 
             boxParser = BoxParser(context).getInstance();
+
+            segmentBlacklistController = BlacklistController(context).create({
+                updateEventName: Events.SEGMENT_LOCATION_BLACKLIST_CHANGED,
+                addBlacklistEventName: Events.SEGMENT_LOCATION_BLACKLIST_ADD
+            });
 
             fragmentController = FragmentController(context).create({
                 streamInfo: streamInfo,
@@ -430,24 +437,25 @@ function Stream(config) {
         const isFragmented = mediaInfo ? mediaInfo.isFragmented : null;
 
         let streamProcessor = StreamProcessor(context).create({
-            streamInfo: streamInfo,
-            type: type,
-            mimeType: mimeType,
-            timelineConverter: timelineConverter,
-            adapter: adapter,
-            manifestModel: manifestModel,
-            mediaPlayerModel: mediaPlayerModel,
-            fragmentModel: fragmentModel,
+            streamInfo,
+            type,
+            mimeType,
+            timelineConverter,
+            adapter,
+            manifestModel,
+            mediaPlayerModel,
+            fragmentModel,
             dashMetrics: config.dashMetrics,
             baseURLController: config.baseURLController,
             segmentBaseController: config.segmentBaseController,
-            abrController: abrController,
-            playbackController: playbackController,
-            mediaController: mediaController,
-            textController: textController,
-            errHandler: errHandler,
-            settings: settings,
-            boxParser: boxParser
+            abrController,
+            playbackController,
+            mediaController,
+            textController,
+            errHandler,
+            settings,
+            boxParser,
+            segmentBlacklistController
         });
 
         streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
@@ -466,15 +474,15 @@ function Stream(config) {
 
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
-     * @param {array} previousBuffers
+     * @param {array} previousBuffersSinks
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousBuffers) {
+    function _createBufferSinks(previousBuffersSinks) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                return sp.createBufferSinks(previousBuffers);
+                return sp.createBufferSinks(previousBuffersSinks);
             });
 
             Promise.all(promises)
@@ -558,6 +566,11 @@ function Stream(config) {
 
         if (abrController && streamInfo) {
             abrController.clearDataForStream(streamInfo.id);
+        }
+
+        if (segmentBlacklistController) {
+            segmentBlacklistController.reset();
+            segmentBlacklistController = null;
         }
 
         resetInitialSettings(keepBuffers);
@@ -855,12 +868,11 @@ function Stream(config) {
 
                     if (trackChangedEvent) {
                         let mediaInfo = trackChangedEvent.newMediaInfo;
-                        if (mediaInfo.type !== Constants.TEXT) {
-                            let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
-                            if (!processor) return;
-                            promises.push(processor.prepareTrackSwitch());
-                            trackChangedEvent = undefined;
-                        }
+                        let processor = getProcessorForMediaInfo(trackChangedEvent.oldMediaInfo);
+                        if (!processor) return;
+                        promises.push(processor.prepareTrackSwitch());
+                        processor.selectMediaInfo(mediaInfo);
+                        trackChangedEvent = undefined;
                     }
 
                     return Promise.all(promises)

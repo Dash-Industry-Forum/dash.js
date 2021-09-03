@@ -35,13 +35,16 @@
                     }
                 }
             });
-            player.initialize(video, url, true);
             applyParameters();
+            player.initialize(video, url, true);
 
             return player;
         }
 
         function applyParameters() {
+            if (!player) {
+                return;
+            }
             targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
             minDrift = parseFloat(document.getElementById('min-drift').value, 10);
             catchupPlaybackRate = parseFloat(document.getElementById('catchup-playback-rate').value, 10);
@@ -102,9 +105,7 @@
                 <div class=" p-5 bg-light border rounded-3">
                     <h3><i class="bi bi-info-square"></i> Live low-latency playback</h3>
                     Example showing how to use dash.js to play very low latency streams using AAST based throughput
-                    calculation<a
-                    href="https://github.com/Dash-Industry-Forum/dash.js/wiki/Low-Latency-streaming"
-                    target="_blank">Wiki</a>.
+                    calculation.
                     <div class="row mt-3">
                         <div class="col-md-3">
                             <div class="card border-2 border-primary">
@@ -272,7 +273,9 @@
 
                 document.getElementById('catchup-threshold-tag').innerHTML = settings.streaming.liveCatchup.latencyThreshold + ' secs';
 
-                document.getElementById('bitrate-tag').innerHTML = Math.round(rez[rid].bitrate) / 1000 + ' kbps'
+                if (rez && rez[rid]) {
+                    document.getElementById('bitrate-tag').innerHTML = Math.round(rez[rid].bitrate) / 1000 + ' kbps'
+                }
 
                 var d = new Date();
                 var seconds = d.getSeconds();

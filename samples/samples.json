@@ -207,6 +207,19 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Low latency testplayer",
+                "description": "Example showing how to use dash.js to play low latency streams. All related settings are adjustable.",
+                "href": "low-latency/testplayer/testplayer.html",
+                "image": "lib/img/akamai-ll-4.jpg",
+                "labels": [
+                    "Live",
+                    "Low Latency",
+                    "Settings",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -476,6 +489,20 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Multiple audio tracks with different codecs",
+                "description": "This example shows how content with multiple audio tracks with different codecs can be played back by the dash.js player. dash.js allows a switch of the audio track during playback.",
+                "href": "multi-audio/multi-audio-drm-codec-change.html",
+                "image": "lib/img/google-1.jpg",
+                "labels": [
+                    "VoD",
+                    "DRM",
+                    "Multi Audio",
+                    "Fragmented Text",
+                    "Video",
+                    "Audio"
+                ]
             }
         ]
     },
@@ -500,7 +527,7 @@
         "section": "Audio only",
         "samples": [
             {
-                "title": "Only audio stream",
+                "title": "Audio only stream",
                 "description": "This example shows how to play audio-only streams in dash.js.",
                 "href": "audio-only/index.html",
                 "labels": [
@@ -609,6 +636,22 @@
                 "image": "lib/img/mss-1.jpg",
                 "labels": [
                     "MSS",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
+    },
+    {
+        "section": "Module builds",
+        "samples": [
+            {
+                "title": "Mediaplayer only",
+                "description": "A sample showing how to use the dash.mediaplayer bundle. This bundle does not contain any code for playback of DRM protected content.",
+                "href": "module-builds/mediaplayer-only.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Module",
                     "Video",
                     "Audio"
                 ]

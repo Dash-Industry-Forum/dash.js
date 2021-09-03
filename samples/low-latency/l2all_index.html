@@ -29,7 +29,6 @@
 
             video = document.querySelector('video');
             player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, true);
             player.updateSettings({ 'streaming': { 'lowLatencyEnabled': true } });
             player.updateSettings({ 'debug': { 'logLevel': dashjs.Debug.LOG_LEVEL_WARNING } });
 
@@ -42,6 +41,7 @@
                 }
             });
             applyParameters();
+            player.initialize(video, url, true);
             qualitySwitchCallback = function (e) {
                 if (e.mediaType === 'video') {
                     console.warn('Quality changed', e);
@@ -60,6 +60,9 @@
         }
 
         function applyParameters() {
+            if (!player) {
+                return;
+            }
             targetLatency = parseFloat(document.getElementById('target-latency').value, 10);
             minDrift = parseFloat(document.getElementById('min-drift').value, 10);
             catchupPlaybackRate = parseFloat(document.getElementById('catchup-playback-rate').value, 10);

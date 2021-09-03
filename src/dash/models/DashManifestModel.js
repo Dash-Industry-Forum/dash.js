@@ -126,14 +126,16 @@ function DashManifestModel() {
         }
         if (adaptation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
             adaptation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
-            adaptation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||
+            adaptation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
             return true;
         }
         if (adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
             const representation = adaptation.Representation_asArray[0];
             if (representation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) ||
                 representation.hasOwnProperty(DashConstants.SEGMENT_TIMELINE) ||
-                representation.hasOwnProperty(DashConstants.SEGMENT_LIST)) {
+                representation.hasOwnProperty(DashConstants.SEGMENT_LIST) ||
+                representation.hasOwnProperty(DashConstants.SEGMENT_BASE)) {
                 return true;
             }
         }
@@ -580,6 +582,9 @@ function DashManifestModel() {
     }
 
     function calcSegmentDuration(segmentTimeline) {
+        if (!segmentTimeline || !segmentTimeline.S_asArray) {
+            return NaN;
+        }
         let s0 = segmentTimeline.S_asArray[0];
         let s1 = segmentTimeline.S_asArray[1];
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
@@ -685,6 +690,10 @@ function DashManifestModel() {
 
                 if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
                     voPeriod.duration = realPeriod.duration;
+                }
+
+                if (voPreviousPeriod) {
+                    voPreviousPeriod.nextPeriodId = voPeriod.id;
                 }
 
                 voPeriods.push(voPeriod);

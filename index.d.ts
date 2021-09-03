@@ -317,6 +317,11 @@ declare namespace dashjs {
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header'
             }
+        };
+        errors?: {
+            recoverAttempts?: {
+                mediaErrorDecode?: number
+            }
         }
     }
 
@@ -540,7 +545,7 @@ declare namespace dashjs {
 
         removeAllABRCustomRule(): void;
 
-        getAverageThroughput(value: number): void;
+        getAverageThroughput(type: MediaType): number;
 
         retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
 
@@ -1218,7 +1223,7 @@ declare namespace dashjs {
     }
 
     export interface IManifestInfo {
-        DVRWindowSize: number;
+        dvrWindowSize: number;
         availableFrom: Date;
         duration: number;
         isDynamic: boolean;
@@ -1262,7 +1267,7 @@ declare namespace dashjs {
 
         getCurrentSchedulingInfo(type: MediaType): object;
 
-        getCurrentDVRInfo(type: MediaType): IDVRInfo[];
+        getCurrentDVRInfo(type: MediaType): IDVRInfo;
 
         getCurrentManifestUpdate(): any;
 
@@ -1299,8 +1304,32 @@ declare namespace dashjs {
          */
         serverURL?: string | { [P in MediaKeyMessageType]: string };
 
-        /** headers to add to the http request */
+        /** HTTP headers to add to the license request */
         httpRequestHeaders?: object;
+
+        /** Wether license request is made using credentials */
+        withCredentials?: Boolean;
+
+        /** Timeout (in ms) for the license requests */
+        httpTimeout?: number;
+
+        /** The licenser server certificate as a BASE64 string representation of the binary stream (see https://www.w3.org/TR/encrypted-media/#dom-mediakeys-setservercertificate) */
+        serverCertificate?: string;
+
+        /** The audio robustness level (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability-robustness) */
+        audioRobustness?: string;
+
+        /** The video robustness level (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemmediacapability-robustness) */
+        videoRobustness?: string;
+
+        /** Distinctive identifier (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-distinctiveidentifier) */
+        distinctiveIdentifier?: string;
+
+        /** The session type (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysessiontype) */
+        sessionType?: string;
+
+        /** The session id (see https://www.w3.org/TR/encrypted-media/#session-id) */
+        sessionId?: string;
 
         /**
          * Defines a set of clear keys that are available to the key system.

@@ -22,7 +22,7 @@ const NAME = 'INITIAL_AUDIO';
 
 // test constants
 const SWITCH_WAIT = 3;
-const SWITCH_TIMEOUT = 60;
+const SWITCH_TIMEOUT = 120;
 
 exports.register = function (stream) {
 
@@ -31,7 +31,7 @@ exports.register = function (stream) {
         before(() => {
             if (!stream.available || stream.audioTracks.length <= 1) suite.skip();
             utils.log(NAME, 'Load stream');
-            
+
         });
 
         test('switch audio track', async (test) => {
@@ -50,10 +50,10 @@ exports.register = function (stream) {
                 }]);
                 await command.execute(player.loadStream, [stream]);
                 await command.execute(player.play, []);
-                
+
                 // Wait
                 await command.sleep(SWITCH_WAIT * 1000);
-                
+
                 // Check if initial track is correct
                 const newTrack = await command.execute(player.getCurrentTrackFor, ['audio']);
                 utils.log(NAME, 'current audio track: ' + newTrack.lang);
@@ -65,7 +65,7 @@ exports.register = function (stream) {
                 utils.log(NAME, 'Check if playing');
                 const progressing = await command.executeAsync(player.isProgressing, [constants.PROGRESS_DELAY, constants.EVENT_TIMEOUT]);
                 assert.isTrue(progressing);
-            }           
+            }
         });
     });
 }

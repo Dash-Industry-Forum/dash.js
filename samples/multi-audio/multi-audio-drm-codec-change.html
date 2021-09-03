@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Thumbnails sample</title>
+    <title>Multiple audio tracks sample</title>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
     <script src="../../dist/dash.all.debug.js"></script>
 
@@ -25,17 +25,20 @@
 
     <script class="code">
         function init() {
-            var url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
-                video = document.querySelector("video"),
-                player,
-                controlbar;
+            var url = 'https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd';
+            var videoElement = document.querySelector('video');
 
-            player = dashjs.MediaPlayer({}).create();
-            player.initialize(video, url, true);
-
-            controlbar = new ControlBar(player);
+            var player = dashjs.MediaPlayer().create();
+            player.setProtectionData({
+                'com.widevine.alpha': {
+                    serverURL: 'https://widevine-proxy.appspot.com/proxy?video_id=&provider='
+                }
+            });
+            player.initialize(videoElement, url, true);
+            var controlbar = new ControlBar(player);
             controlbar.initialize();
         }
+
     </script>
 </head>
 <body>
@@ -50,8 +53,10 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>Thumbnails</h3>
-                    <p>Example showing how to use streams with thumbnail representations. The thumbnail representation can be dynamically selected in the bitrate selection menu.</p>
+                    <h3>Multiple audio tracks with different codecs</h3>
+                    <p>This example shows how content with multiple audio tracks with different codecs can be played
+                        back by the dash.js
+                        player. dash.js allows a switch of the audio track during playback.</p>
                 </div>
             </div>
             <div class="col-md-8">
@@ -85,10 +90,6 @@
                                     <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
                                     <div id="seekbar-play" class="seekbar seekbar-play"></div>
                                 </div>
-                            </div>
-                            <div id="thumbnail-container" class="thumbnail-container"> <!-- Thumbnails will be rendered here -->
-                                <div id="thumbnail-elem" class="thumbnail-elem"></div>
-                                <div id="thumbnail-time-label" class="thumbnail-time-label"></div>
                             </div>
                         </div>
                     </div>

@@ -58,6 +58,23 @@
                 "com.widevine.alpha": true,
                 "com.microsoft.playready": false,
                 "org.w3.clearkey": true
+            },
+            "moz:firefoxOptions": {
+                "media.eme.enabled": true,
+                "media.gmp-widevinecdm.visible": true,
+                "media.gmp-manager.updateEnabled": true,
+                "media.gmp-widevinecdm.enabled": true,
+                "media.allowed-to-play.enabled": true,
+                "media.mediasource.mp4.enabled": true,
+                "media.mediasource.enabled": true,
+                "media.gmp-widevinecdm.allow-x64-plugin-on-arm64": true,
+                "media.eme.chromium-api.video-shmems": 6,
+                "media.eme.hdcp-policy-check.enabled": false,
+                "media.eme.require-app-approval": false,
+                "media.eme.video.blank": false,
+                "media.gmp-widevinecdm.abi": "x86_64-gcc3",
+                "media.gmp-widevinecdm.version": "4.10.2209.1",
+                "media.gmp-widevinecdm.lastUpdate": "1620220879"
             }
         }        
     }

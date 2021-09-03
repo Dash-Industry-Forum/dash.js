@@ -129,7 +129,7 @@ export function replaceTokenForTemplate(url, token, value) {
     }
 }
 
-function getSegment(representation, duration, presentationStartTime, mediaStartTime, availabilityStartTime,
+function getSegment(representation, duration, presentationStartTime, mediaStartTime,
                     timelineConverter, presentationEndTime, isDynamic, index) {
     let seg = new Segment();
 
@@ -137,11 +137,11 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
     seg.duration = duration;
     seg.presentationStartTime = presentationStartTime;
     seg.mediaStartTime = mediaStartTime;
-    seg.availabilityStartTime = availabilityStartTime;
+    seg.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
     seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime + duration, representation, isDynamic);
     seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
     seg.replacementNumber = getNumberForSegment(seg, index);
-    seg.availabilityIdx = index;
+    seg.index = index;
 
     return seg;
 }
@@ -193,9 +193,8 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
 
     const mediaTime = timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation);
-    const availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
 
-    const segment = getSegment(representation, duration, presentationStartTime, mediaTime, availabilityStartTime,
+    const segment = getSegment(representation, duration, presentationStartTime, mediaTime,
         timelineConverter, presentationEndTime, isDynamic, index);
 
     if (!isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
@@ -207,7 +206,7 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
 
 export function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index, tManifest) {
     const scaledTime = time / fTimescale;
-    const scaledDuration = Math.min(duration / fTimescale, representation.adaptation.period.mpd.maxSegmentDuration);
+    const scaledDuration = duration / fTimescale;
 
     let presentationStartTime,
         presentationEndTime,
@@ -216,11 +215,8 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
     presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
     presentationEndTime = presentationStartTime + scaledDuration;
 
-    const availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
-
     seg = getSegment(representation, scaledDuration, presentationStartTime,
         scaledTime,
-        availabilityStartTime,
         timelineConverter, presentationEndTime, isDynamic, index);
 
     if (!isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
