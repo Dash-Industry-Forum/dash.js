@@ -580,6 +580,40 @@ describe('MediaController', function () {
                 );
             });
         });
+
+        describe('custom initial track selection function', function() {
+            beforeEach(function(){
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE }});
+                function getTrackWithLowestBitrate(trackArr) {
+                    let min = Infinity;
+                    let result = [];
+                    let tmp;
+
+                    trackArr.forEach(function (track) {
+                        tmp = Math.min.apply(Math, track.bitrateList.map(function (obj) {
+                            return obj.bandwidth;
+                        }));
+
+                        if (tmp < min) {
+                            min = tmp;
+                            result = [track];
+                        }
+                    });
+
+                    return result;
+                }
+                mediaController.setCustomInitialTrackSelectionFunction(getTrackWithLowestBitrate);
+            });
+
+            it('should return the track with the lowest bitrate', function () {
+                testSelectInitialTrack(
+                    'video',
+                    [ { bandwidth: 1000 }, { bandwidth: 5000 }],
+                    [ { bandwidth: 2000 }, { bandwidth: 8000 }]
+                )
+            });
+
+        });
     });
 
 });

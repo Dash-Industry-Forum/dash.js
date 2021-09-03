@@ -45,7 +45,8 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
-        domStorage;
+        domStorage,
+        customInitialTrackSelectionFunction;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -285,6 +286,7 @@ function MediaController() {
     function reset() {
         tracks = {};
         lastSelectedTracks = {};
+        customInitialTrackSelectionFunction = null;
         resetInitialSettings();
     }
 
@@ -392,40 +394,48 @@ function MediaController() {
         return result;
     }
 
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        customInitialTrackSelectionFunction = customFunc;
+    }
+
     function selectInitialTrack(type, tracks) {
         if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr = [];
 
-        switch (mode) {
-            case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                tmpArr = getTracksWithHighestBitrate(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithWidestRange(tmpArr);
-                }
-                break;
-            case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                tmpArr.push(tracks[0]);
-                break;
-            case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                tmpArr = getTracksWithHighestEfficiency(tracks);
-
-                if (tmpArr.length > 1) {
-                    tmpArr = getTracksWithHighestBitrate(tmpArr);
-                }
-                break;
-            case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                tmpArr = getTracksWithWidestRange(tracks);
-
-                if (tmpArr.length > 1) {
+        if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
+            tmpArr = customInitialTrackSelectionFunction(tracks);
+        } else {
+            switch (mode) {
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
                     tmpArr = getTracksWithHighestBitrate(tracks);
-                }
-                break;
-            default:
-                logger.warn('Track selection mode is not supported: ' + mode);
-                break;
+
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithWidestRange(tmpArr);
+                    }
+                    break;
+                case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                    tmpArr.push(tracks[0]);
+                    break;
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                    tmpArr = getTracksWithHighestEfficiency(tracks);
+
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithHighestBitrate(tmpArr);
+                    }
+                    break;
+                case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
+                    tmpArr = getTracksWithWidestRange(tracks);
+
+                    if (tmpArr.length > 1) {
+                        tmpArr = getTracksWithHighestBitrate(tracks);
+                    }
+                    break;
+                default:
+                    logger.warn('Track selection mode is not supported: ' + mode);
+                    break;
+            }
         }
 
         return tmpArr[0];
@@ -464,6 +474,7 @@ function MediaController() {
         isCurrentTrack,
         setTrack,
         selectInitialTrack,
+        setCustomInitialTrackSelectionFunction,
         setInitialSettings,
         getInitialSettings,
         getTracksWithHighestBitrate,
