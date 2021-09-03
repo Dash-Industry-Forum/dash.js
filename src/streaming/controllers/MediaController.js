@@ -45,9 +45,8 @@ function MediaController() {
         settings,
         initialSettings,
         lastSelectedTracks,
-        domStorage;
-
-    let customInitialTrackSelectionMode = null;
+        domStorage,
+        customInitialTrackSelectionFunction;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -287,6 +286,7 @@ function MediaController() {
     function reset() {
         tracks = {};
         lastSelectedTracks = {};
+        customInitialTrackSelectionFunction = null;
         resetInitialSettings();
     }
 
@@ -393,9 +393,9 @@ function MediaController() {
 
         return result;
     }
-    
-    function setCustomInitialTrackSelectionMode(customMode){
-        customInitialTrackSelectionMode = customMode;
+
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        customInitialTrackSelectionFunction = customFunc;
     }
 
     function selectInitialTrack(type, tracks) {
@@ -403,14 +403,14 @@ function MediaController() {
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr = [];
-        if(typeof customInitialTrackSelectionMode === "function"){
-            tmpArr = customInitialTrackSelectionMode(tracks);
-        }
-        else{
+
+        if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
+            tmpArr = customInitialTrackSelectionFunction(tracks);
+        } else {
             switch (mode) {
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
                     tmpArr = getTracksWithHighestBitrate(tracks);
-    
+
                     if (tmpArr.length > 1) {
                         tmpArr = getTracksWithWidestRange(tmpArr);
                     }
@@ -420,14 +420,14 @@ function MediaController() {
                     break;
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
                     tmpArr = getTracksWithHighestEfficiency(tracks);
-    
+
                     if (tmpArr.length > 1) {
                         tmpArr = getTracksWithHighestBitrate(tmpArr);
                     }
                     break;
                 case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
                     tmpArr = getTracksWithWidestRange(tracks);
-    
+
                     if (tmpArr.length > 1) {
                         tmpArr = getTracksWithHighestBitrate(tracks);
                     }
@@ -464,7 +464,7 @@ function MediaController() {
                 current: null
             }
         };
-    }    
+    }
 
     instance = {
         setInitialMediaSettingsForType,
@@ -474,7 +474,7 @@ function MediaController() {
         isCurrentTrack,
         setTrack,
         selectInitialTrack,
-        setCustomInitialTrackSelectionMode,
+        setCustomInitialTrackSelectionFunction,
         setInitialSettings,
         getInitialSettings,
         getTracksWithHighestBitrate,

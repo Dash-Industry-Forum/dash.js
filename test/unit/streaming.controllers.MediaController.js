@@ -581,36 +581,38 @@ describe('MediaController', function () {
             });
         });
 
-        describe('"custom" mode', function() {
+        describe('custom initial track selection function', function() {
             beforeEach(function(){
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_WIDEST_RANGE }});
-                function customSelectionMode(tracks) {
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE }});
+                function getTrackWithLowestBitrate(trackArr) {
+                    let min = Infinity;
                     let result = [];
-                    result.push(tracks[0]);
-                    if(tracks.length > 1){
-                        result.push(tracks[1]);
-                        result = mediaController.getTracksWithWidestRange(result);
-                    }
+                    let tmp;
+
+                    trackArr.forEach(function (track) {
+                        tmp = Math.min.apply(Math, track.bitrateList.map(function (obj) {
+                            return obj.bandwidth;
+                        }));
+
+                        if (tmp < min) {
+                            min = tmp;
+                            result = [track];
+                        }
+                    });
+
                     return result;
                 }
-                mediaController.setCustomInitialTrackSelectionMode(customSelectionMode);
+                mediaController.setCustomInitialTrackSelectionFunction(getTrackWithLowestBitrate);
             });
 
-            it('should return the first track', function () {
+            it('should return the track with the lowest bitrate', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 3000 }],
-                    [ { bandwidth: 2000 }]
+                    [ { bandwidth: 1000 }, { bandwidth: 5000 }],
+                    [ { bandwidth: 2000 }, { bandwidth: 8000 }]
                 )
             });
 
-            it('should tie break using "widestRange"', function () {
-                testSelectInitialTrack(
-                    'video',
-                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ],
-                    [ { bandwidth: 2000 } ]
-                );
-            });
         });
     });
 
