@@ -1475,7 +1475,7 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY' | 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
+    export type TrackSelectionMode = 'highestSelectionPriority' | 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
 
     export function supportsMediaSource(): boolean;
 
