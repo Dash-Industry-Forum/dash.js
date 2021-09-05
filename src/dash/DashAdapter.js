@@ -1023,6 +1023,7 @@ function DashAdapter() {
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
+        mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
         if (mediaInfo.contentProtection) {
             mediaInfo.contentProtection.forEach(function (item) {
