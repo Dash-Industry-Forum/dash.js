@@ -406,6 +406,16 @@ function DashManifestModel() {
         });
     }
 
+    function getSelectionPriority(realAdaption) {
+        try {
+            const priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
+
+            return isNaN(priority) ? 1 : priority;
+        } catch (e) {
+            return 1;
+        }
+    }
+
     function getEssentialPropertiesForRepresentation(realRepresentation) {
         if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
 
@@ -1169,6 +1179,7 @@ function DashManifestModel() {
         getRealPeriods,
         getRealPeriodForIndex,
         getCodec,
+        getSelectionPriority,
         getMimeType,
         getKID,
         getLabelsForAdaptation,

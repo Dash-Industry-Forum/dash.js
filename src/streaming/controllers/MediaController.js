@@ -330,6 +330,28 @@ function MediaController() {
         };
     }
 
+    function getTracksWithHighestSelectionPriority(trackArr) {
+        let max = 0;
+        let result = [];
+
+        trackArr.forEach((track) => {
+            if(!isNaN(track.selectionPriority)) {
+                // Higher max value. Reset list and add new entry
+                if (track.selectionPriority > max) {
+                    max = track.selectionPriority;
+                    result = [track];
+                }
+                // Same max value add to list
+                else if (track.selectionPriority === max) {
+                    result.push(track);
+                }
+
+            }
+        })
+
+        return result;
+    }
+
     function getTracksWithHighestBitrate(trackArr) {
         let max = 0;
         let result = [];
@@ -402,44 +424,86 @@ function MediaController() {
         if (type === Constants.TEXT) return tracks[0];
 
         let mode = settings.get().streaming.selectionModeForInitialTrack;
-        let tmpArr = [];
+        let tmpArr;
 
         if (customInitialTrackSelectionFunction && typeof customInitialTrackSelectionFunction === 'function') {
             tmpArr = customInitialTrackSelectionFunction(tracks);
         } else {
             switch (mode) {
+                case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
+                    tmpArr = _trackSelectionModeHighestSelectionPriority(tracks);
+                    break;
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                    tmpArr = getTracksWithHighestBitrate(tracks);
-
-                    if (tmpArr.length > 1) {
-                        tmpArr = getTracksWithWidestRange(tmpArr);
-                    }
+                    tmpArr = _trackSelectionModeHighestBitrate(tracks);
                     break;
                 case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                    tmpArr.push(tracks[0]);
+                    tmpArr = _trackSelectionModeFirstTrack(tracks);
                     break;
                 case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                    tmpArr = getTracksWithHighestEfficiency(tracks);
-
-                    if (tmpArr.length > 1) {
-                        tmpArr = getTracksWithHighestBitrate(tmpArr);
-                    }
+                    tmpArr = _trackSelectionModeHighestEfficiency(tracks);
                     break;
                 case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                    tmpArr = getTracksWithWidestRange(tracks);
-
-                    if (tmpArr.length > 1) {
-                        tmpArr = getTracksWithHighestBitrate(tracks);
-                    }
+                    tmpArr = _trackSelectionModeWidestRange(tracks);
                     break;
                 default:
-                    logger.warn('Track selection mode is not supported: ' + mode);
+                    logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
+                    tmpArr = _trackSelectionModeFirstTrack(tracks);
                     break;
             }
         }
 
-        return tmpArr[0];
+        return tmpArr.length > 0 ? tmpArr[0] : tracks[0];
     }
+
+
+    function _trackSelectionModeHighestSelectionPriority(tracks) {
+        let tmpArr = getTracksWithHighestSelectionPriority(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestBitrate(tmpArr);
+        }
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithWidestRange(tmpArr);
+        }
+
+        return tmpArr;
+    }
+
+    function _trackSelectionModeHighestBitrate(tracks) {
+        let tmpArr = getTracksWithHighestBitrate(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithWidestRange(tmpArr);
+        }
+
+        return tmpArr;
+    }
+
+    function _trackSelectionModeFirstTrack(tracks) {
+        return tracks[0];
+    }
+
+    function _trackSelectionModeHighestEfficiency(tracks) {
+        let tmpArr = getTracksWithHighestEfficiency(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestBitrate(tmpArr);
+        }
+
+        return tmpArr;
+    }
+
+    function _trackSelectionModeWidestRange(tracks) {
+        let tmpArr = getTracksWithWidestRange(tracks);
+
+        if (tmpArr.length > 1) {
+            tmpArr = getTracksWithHighestBitrate(tracks);
+        }
+
+        return tmpArr;
+    }
+
 
     function createTrackInfo() {
         return {
