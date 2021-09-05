@@ -169,7 +169,7 @@ describe('MediaController', function () {
         });
 
         it('getTracksFor should return an empty array if parameters are defined, but internal tracks array is empty', function () {
-            const trackArray = mediaController.getTracksFor(Constants.VIDEO, {id: 'id'});
+            const trackArray = mediaController.getTracksFor(Constants.VIDEO, { id: 'id' });
 
             expect(trackArray).to.be.instanceOf(Array);    // jshint ignore:line
             expect(trackArray).to.be.empty;                // jshint ignore:line
@@ -450,135 +450,217 @@ describe('MediaController', function () {
 
     describe('Initial Track Selection', function () {
 
-        function testSelectInitialTrack(type, expectedBitrateList, otherBitrateList) {
-            const tracks = [ expectedBitrateList, otherBitrateList ].map(function (bitrateList) {
+        function testSelectInitialTrack(type, expectedTrack, otherTrack) {
+            const tracks = [expectedTrack, otherTrack].map(function (track) {
                 return {
-                    bitrateList: bitrateList,
-                    representationCount: bitrateList.length
+                    bitrateList: track.bitrateList,
+                    representationCount: track.bitrateList.length,
+                    selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1
                 };
             });
             const selection = mediaController.selectInitialTrack(type, tracks);
-            expect(objectUtils.areEqual(selection.bitrateList, expectedBitrateList)).to.be.true; // jshint ignore:line
+            expect(objectUtils.areEqual(selection.bitrateList, expectedTrack.bitrateList)).to.be.true; // jshint ignore:line
         }
 
-        describe('"highestBitrate" mode', function () {
+        describe('"highestSelectionPriority" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE }});
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY } });
             });
 
-            it('should select track with highest bitrate', function () {
+            it('should select track with highest priority', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 2000 } ],
-                    [ { bandwidth: 1000 } ]
+                    { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 }
+                );
+            });
+
+            it('should select track with highest bitrate if both tracks have same priority', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }, { bandwidth: 3000 }], selectionPriority: 1 },
+                    { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 }
+                );
+            });
+
+            it('should select track with highest bitrate if no priority is given', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }, { bandwidth: 3000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
                 );
             });
 
             it('should tie break using "widestRange"', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ],
-                    [ { bandwidth: 2000 } ]
+                    { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 1000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
+                );
+            });
+
+        });
+
+        describe('"highestBitrate" mode', function () {
+            beforeEach(function () {
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+            });
+
+            it('should select track with highest bitrate', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }] },
+                    { bitrateList: [{ bandwidth: 1000 }] }
+                );
+            });
+
+            it('should tie break using "widestRange"', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 1000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
                 );
             });
 
             it('should select track with highest bitrate, expected list only one entry"', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 2100 } ],
-                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ]
+                    { bitrateList: [{ bandwidth: 2100 }] },
+                    { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 1000 }] },
                 );
             });
         });
 
         describe('"firstTrack" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_FIRST_TRACK }});
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_FIRST_TRACK } });
             });
 
             it('should select first track', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 1000 } ],
-                    [ { bandwidth: 2000 } ]
+                    { bitrateList: [{ bandwidth: 1000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
                 );
             });
 
             it('should select first track, other bitrate list more than one entry"', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 2000 }],
-                    [ { bandwidth: 3000 }, { bandwidth: 1000 } ]
+                    { bitrateList: [{ bandwidth: 2000 }] },
+                    { bitrateList: [{ bandwidth: 3000 }, { bandwidth: 1000 }] }
                 );
             });
 
             it('should select first track, expected bitrate list more than one entry"', function () {
                 testSelectInitialTrack(
                     'video',
-                    [{ bandwidth: 3000 }, { bandwidth: 1000 }],
-                    [ { bandwidth: 2000 } ]
+                    { bitrateList: [{ bandwidth: 3000 }, { bandwidth: 1000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
                 );
             });
         });
 
         describe('"highestEfficiency" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY }});
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
             });
 
             it('should select video track with lowest bitrate among equal resolutions', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 1000, width: 1920, height: 1280 } ],
-                    [ { bandwidth: 2000, width: 1920, height: 1280 } ]
+                    { bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }] },
+                    { bitrateList: [{ bandwidth: 2000, width: 1920, height: 1280 }] }
                 );
             });
 
             it('should select video track with lowest bitrate among different resolutions', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 1000, width: 1920, height: 1280 } ],
-                    [ { bandwidth: 1000, width: 1080, height: 720 } ]
+                    { bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }] },
+                    { bitrateList: [{ bandwidth: 1000, width: 1280, height: 720 }] }
                 );
             });
 
             it('should select audio track with lowest avg bitrate', function () {
                 testSelectInitialTrack(
                     'audio',
-                    [ { bandwidth: 1000, width: 0, height: 0 } ],
-                    [ { bandwidth: 2000, width: 0, height: 0 } ]
+                    { bitrateList: [{ bandwidth: 1000, width: 0, height: 0 }] },
+                    { bitrateList: [{ bandwidth: 2000, width: 0, height: 0 }] }
                 );
             });
 
             it('should tie break using "highestBitrate"', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 1500, width: 1920, height: 1280 }, { bandwidth: 1000, width: 1080, height: 720 } ],
-                    [ { bandwidth: 1000, width: 1080, height: 720 } ]
+                    {
+                        bitrateList: [{ bandwidth: 1500, width: 1920, height: 1280 }, {
+                            bandwidth: 1000,
+                            width: 1080,
+                            height: 720
+                        }]
+                    },
+                    { bitrateList: [{ bandwidth: 1000, width: 1080, height: 720 }] }
                 );
             });
         });
 
         describe('"widestRange" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_WIDEST_RANGE }});
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_WIDEST_RANGE } });
             });
 
             it('should select track with most bitrates', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ],
-                    [ { bandwidth: 2000 } ]
+                    { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 1000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
                 );
             });
 
             it('should tie break using "highestBitrate"', function () {
                 testSelectInitialTrack(
                     'video',
-                    [ { bandwidth: 3000 }, { bandwidth: 2000 } ],
-                    [ { bandwidth: 2000 }, { bandwidth: 1000 } ]
+                    { bitrateList: [{ bandwidth: 3000 }, { bandwidth: 2000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 1000 }] }
                 );
             });
+        });
+
+        describe('custom initial track selection function', function () {
+            beforeEach(function () {
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+
+                function getTrackWithLowestBitrate(trackArr) {
+                    let min = Infinity;
+                    let result = [];
+                    let tmp;
+
+                    trackArr.forEach(function (track) {
+                        tmp = Math.min.apply(Math, track.bitrateList.map(function (obj) {
+                            return obj.bandwidth;
+                        }));
+
+                        if (tmp < min) {
+                            min = tmp;
+                            result = [track];
+                        }
+                    });
+
+                    return result;
+                }
+
+                mediaController.setCustomInitialTrackSelectionFunction(getTrackWithLowestBitrate);
+            });
+
+            it('should return the track with the lowest bitrate', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }, { bandwidth: 5000 }] },
+                    { bitrateList: [{ bandwidth: 2000 }, { bandwidth: 8000 }] }
+                )
+            });
+
         });
     });
 

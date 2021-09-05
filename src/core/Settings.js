@@ -142,7 +142,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
- *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+ *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
  *            fragmentRequestTimeout: 0,
  *            retryIntervals: {
  *                [HTTPRequest.MPD_TYPE]: 500,
@@ -682,8 +682,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *
  * Possible values
  *
+ * - Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY
+ * This mode makes the player select the track with the highest selectionPriority as defined in the manifest. If not selectionPriority is given we fallback to TRACK_SELECTION_MODE_HIGHEST_BITRATE. This mode is a default mode.
+ *
  * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
- * This mode makes the player select the track with a highest bitrate. This mode is a default mode.
+ * This mode makes the player select the track with a highest bitrate.
  *
  * - Constants.TRACK_SELECTION_MODE_FIRST_TRACK
  * This mode makes the player select the first track found in the manifest.
@@ -825,7 +828,7 @@ function Settings() {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
-            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
             fragmentRequestTimeout: 0,
             retryIntervals: {
                 [HTTPRequest.MPD_TYPE]: 500,

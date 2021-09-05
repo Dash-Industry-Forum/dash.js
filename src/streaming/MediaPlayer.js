@@ -1626,6 +1626,26 @@ function MediaPlayer() {
         filters.splice(index, 1);
     }
 
+    /**
+     * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
+     * @param {function} customFunc - the custom function that returns the initial track
+     */
+    function setCustomInitialTrackSelectionFunction(customFunc) {
+        if (mediaController) {
+            mediaController.setCustomInitialTrackSelectionFunction(customFunc);
+        }
+    }
+
+    /**
+     * Resets the custom initial track selection
+     */
+    function resetCustomInitialTrackSelectionFunction() {
+        if (mediaController) {
+            mediaController.setCustomInitialTrackSelectionFunction(null);
+        }
+    }
+
+
     /*
     ---------------------------------------------------------------------------
 
@@ -2283,6 +2303,8 @@ function MediaPlayer() {
         unregisterLicenseResponseFilter,
         registerCustomCapabilitiesFilter,
         unregisterCustomCapabilitiesFilter,
+        setCustomInitialTrackSelectionFunction,
+        resetCustomInitialTrackSelectionFunction,
         attachTTMLRenderingDiv,
         getCurrentTextTrackIndex,
         provideThumbnail,
