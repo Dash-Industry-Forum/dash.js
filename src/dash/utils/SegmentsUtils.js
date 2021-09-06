@@ -164,8 +164,8 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
         // SAST = Period@start + seg@presentationStartTime + seg@duration
         // ASAST = SAST - ATO
         // SAET = SAST + TSBD + seg@duration
-
-        const refTime = timelineConverter.getAvailabilityWindowAnchorTime();
+        // refTime serves as an anchor time to compare the availability time of the segments against. Note that we already compensated for the client/server drift when calculating the availability time of a segment. Thats why we do not subtract clientServerTimeShift here again.
+        const refTime = Date.now() - ((timelineConverter.getTimelineAnchorAvailabilityOffset()) * 1000);
         return segment.availabilityStartTime.getTime() <= refTime && (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
     }
 

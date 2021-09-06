@@ -67,7 +67,7 @@ function TimelineConverter() {
         clientServerTimeShift = value;
     }
 
-    function calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateAvailabilityEndTime) {
+    function _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, calculateAvailabilityEndTime) {
         let availabilityTime;
         let mpd = representation.adaptation.period.mpd;
         const availabilityStartTime = mpd.availabilityStartTime;
@@ -99,15 +99,15 @@ function TimelineConverter() {
     }
 
     function calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic) {
-        return calcAvailabilityTimeFromPresentationTime.call(this, presentationEndTime, representation, isDynamic);
+        return _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
     }
 
     function calcAvailabilityEndTimeFromPresentationTime(presentationEndTime, representation, isDynamic) {
-        return calcAvailabilityTimeFromPresentationTime.call(this, presentationEndTime, representation, isDynamic, true);
+        return _calcAvailabilityTimeFromPresentationTime(presentationEndTime, representation, isDynamic, true);
     }
 
     function calcPresentationTimeFromWallTime(wallTime, period) {
-        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() - clientServerTimeShift * 1000) / 1000);
+        return ((wallTime.getTime() - period.mpd.availabilityStartTime.getTime() + clientServerTimeShift * 1000) / 1000);
     }
 
     function calcPresentationTimeFromMediaTime(mediaTime, representation) {
@@ -136,10 +136,6 @@ function TimelineConverter() {
         }
 
         return wallTime;
-    }
-
-    function getAvailabilityWindowAnchorTime() {
-        return Date.now() - ((timelineAnchorAvailabilityOffset + clientServerTimeShift) * 1000);
     }
 
     /**
@@ -272,6 +268,10 @@ function TimelineConverter() {
         timelineAnchorAvailabilityOffset = now - range.end;
     }
 
+    function getTimelineAnchorAvailabilityOffset() {
+        return timelineAnchorAvailabilityOffset;
+    }
+
     function _adjustTimeBasedOnPeriodRanges(streams, time, isEndOfDvrWindow = false) {
         try {
             let i = 0;
@@ -360,7 +360,7 @@ function TimelineConverter() {
         initialize,
         getClientTimeOffset,
         setClientTimeOffset,
-        getAvailabilityWindowAnchorTime,
+        getTimelineAnchorAvailabilityOffset,
         calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
         calcPresentationTimeFromWallTime,
