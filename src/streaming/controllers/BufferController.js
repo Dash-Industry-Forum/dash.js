@@ -284,12 +284,15 @@ function BufferController(config) {
             return;
         }
 
+        // Check if session has not been stopped in the meantime (while last segment was being appended)
+        if (!sourceBufferSink) return;
+
         _updateBufferLevel();
 
         isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
 
-        if (!appendedBytesInfo.endFragment) {
+        if (!appendedBytesInfo || !appendedBytesInfo.endFragment) {
             return;
         }
 
