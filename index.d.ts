@@ -1267,7 +1267,7 @@ declare namespace dashjs {
 
         getCurrentSchedulingInfo(type: MediaType): object;
 
-        getCurrentDVRInfo(type: MediaType): IDVRInfo;
+        getCurrentDVRInfo(type?: MediaType): IDVRInfo;
 
         getCurrentManifestUpdate(): any;
 
@@ -1288,6 +1288,8 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
+
+        getMpd(externalManifest?: object): object;
     }
 
     export interface ProtectionDataSet {
