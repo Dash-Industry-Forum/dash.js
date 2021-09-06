@@ -1289,7 +1289,7 @@ declare namespace dashjs {
          */
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
 
-        getMpd(): object;
+        getMpd(externalManifest?: object): object;
     }
 
     export interface ProtectionDataSet {
