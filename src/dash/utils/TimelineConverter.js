@@ -138,10 +138,6 @@ function TimelineConverter() {
         return wallTime;
     }
 
-    function getAvailabilityWindowAnchorTime() {
-        return Date.now() - ((timelineAnchorAvailabilityOffset) * 1000);
-    }
-
     /**
      * Calculates the timeshiftbuffer range. This range might overlap multiple periods and is not limited to period boundaries. However, we make sure that the range is potentially covered by period.
      * @param {Array} streams
@@ -272,6 +268,10 @@ function TimelineConverter() {
         timelineAnchorAvailabilityOffset = now - range.end;
     }
 
+    function getTimelineAnchorAvailabilityOffset() {
+        return timelineAnchorAvailabilityOffset;
+    }
+
     function _adjustTimeBasedOnPeriodRanges(streams, time, isEndOfDvrWindow = false) {
         try {
             let i = 0;
@@ -360,7 +360,7 @@ function TimelineConverter() {
         initialize,
         getClientTimeOffset,
         setClientTimeOffset,
-        getAvailabilityWindowAnchorTime,
+        getTimelineAnchorAvailabilityOffset,
         calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
         calcPresentationTimeFromWallTime,
