@@ -346,7 +346,7 @@ function BufferController(config) {
         range = getRangeAt(seekTarget, segmentDuration);
         if (!range) return;
 
-        if (Math.abs(currentTime - seekTarget) > segmentDuration) {
+        if (settings.get().streaming.buffer.enableSeekDecorrelationFix && Math.abs(currentTime - seekTarget) > segmentDuration) {
             // If current video model time is decorrelated from seek target (and appended buffer) then seek video element
             // (in case of live streams on some browsers/devices for which we can't set video element time at unavalaible range)
 
