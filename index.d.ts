@@ -152,6 +152,7 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
+            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,
@@ -176,6 +177,7 @@ declare namespace dashjs {
                 keepProtectionMediaKeys?: boolean,
             },
             buffer?: {
+                enableSeekDecorrelationFix?: boolean,
                 fastSwitchEnabled?: boolean,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,
@@ -1267,7 +1269,7 @@ declare namespace dashjs {
 
         getCurrentSchedulingInfo(type: MediaType): object;
 
-        getCurrentDVRInfo(type: MediaType): IDVRInfo;
+        getCurrentDVRInfo(type?: MediaType): IDVRInfo;
 
         getCurrentManifestUpdate(): any;
 
@@ -1288,6 +1290,8 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
+
+        getMpd(externalManifest?: object): object;
     }
 
     export interface ProtectionDataSet {

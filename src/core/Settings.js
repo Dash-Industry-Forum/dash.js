@@ -60,6 +60,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            lowLatencyEnabled: false,
+ *            lowLatencyEnabledByManifest: true,
  *            manifestUpdateRetryInterval: 100,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
@@ -84,6 +85,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                keepProtectionMediaKeys: false
  *            },
  *            buffer: {
+                  enableSeekDecorrelationFix: true,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -128,7 +130,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            },
  *            liveCatchup: {
  *                minDrift: 0.02,
- *                maxDrift: 0,
+ *                maxDrift: 12,
  *                playbackRate: 0.5,
  *                latencyThreshold: 60,
  *                playbackBufferMin: 0.5,
@@ -239,6 +241,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} Buffer
+ * @property {boolean} [enableSeekDecorrelationFix=true]
+ * Enables a workaround for playback start on some devices, e.g. WebOS 4.9.
+ * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside of current buffer.
+ *
+ * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
  * @property {boolean} [fastSwitchEnabled=true]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
@@ -371,6 +378,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
+ * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {number} [backgroundAttempts=2]
  * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
  *
@@ -428,7 +436,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [maxDrift=0]
+ * @property {number} [maxDrift=12]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
  * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
@@ -638,9 +646,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {boolean} [lowLatencyEnabled=false]
- * Enable or disable low latency mode.
+ * Manually enable or disable low latency mode.
  *
- * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+ * @property {boolean} [lowLatencyEnabledByManifest=true]
+ * If this value is set to true we enable the low latency mode based on MPD attributes:  Specifically in case "availabilityTimeComplete" of the current representation is set to false.
+ *
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {boolean} [cacheInitSegments=true]
@@ -737,6 +747,7 @@ function Settings() {
             abandonLoadTimeout: 10000,
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
+            lowLatencyEnabledByManifest: true,
             manifestUpdateRetryInterval: 100,
             cacheInitSegments: false,
             eventControllerRefreshDelay: 150,
@@ -761,6 +772,7 @@ function Settings() {
                 keepProtectionMediaKeys: false
             },
             buffer: {
+                enableSeekDecorrelationFix: true,
                 fastSwitchEnabled: true,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
@@ -805,7 +817,7 @@ function Settings() {
             },
             liveCatchup: {
                 minDrift: 0.02,
-                maxDrift: 0,
+                maxDrift: 12,
                 playbackRate: 0.5,
                 latencyThreshold: 60,
                 playbackBufferMin: 0.5,

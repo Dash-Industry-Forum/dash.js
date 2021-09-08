@@ -68,7 +68,6 @@ function ManifestLoader(config) {
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
             requestModifier: config.requestModifier,
-            useFetch: config.settings.get().streaming.lowLatencyEnabled,
             urlUtils: urlUtils,
             constants: Constants,
             dashConstants: DashConstants,
