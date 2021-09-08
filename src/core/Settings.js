@@ -130,7 +130,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            },
  *            liveCatchup: {
  *                minDrift: 0.02,
- *                maxDrift: 0,
+ *                maxDrift: 12,
  *                playbackRate: 0.5,
  *                latencyThreshold: 60,
  *                playbackBufferMin: 0.5,
@@ -436,7 +436,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * LowLatencyMinDrift should be provided in seconds, and it uses values between 0.0 and 0.5.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
- * @property {number} [maxDrift=0]
+ * @property {number} [maxDrift=12]
  * Use this method to set the maximum latency deviation allowed before dash.js to do a seeking to live position.
  *
  * In low latency mode, when the difference between the measured latency and the target one, as an absolute number, is higher than the one sets with this method, then dash.js does a seek to live edge position minus the target live delay.
@@ -817,7 +817,7 @@ function Settings() {
             },
             liveCatchup: {
                 minDrift: 0.02,
-                maxDrift: 0,
+                maxDrift: 12,
                 playbackRate: 0.5,
                 latencyThreshold: 60,
                 playbackBufferMin: 0.5,
