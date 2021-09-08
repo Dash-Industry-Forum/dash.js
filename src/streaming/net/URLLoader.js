@@ -55,7 +55,6 @@ function URLLoader(cfg) {
             errHandler: cfg.errHandler,
             mediaPlayerModel: cfg.mediaPlayerModel,
             requestModifier: cfg.requestModifier,
-            useFetch: cfg.useFetch || null,
             dashMetrics: cfg.dashMetrics,
             boxParser: cfg.boxParser ? cfg.boxParser : null,
             constants: cfg.constants ? cfg.constants : null,
