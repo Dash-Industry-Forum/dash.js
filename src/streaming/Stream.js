@@ -647,7 +647,6 @@ function Stream(config) {
         if (event.error) {
             errHandler.error(event.error);
             logger.fatal(event.error.message);
-            reset();
         }
     }
 
