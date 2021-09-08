@@ -176,6 +176,7 @@ declare namespace dashjs {
                 keepProtectionMediaKeys?: boolean,
             },
             buffer?: {
+                enableSeekDecorrelationFix?: boolean,
                 fastSwitchEnabled?: boolean,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,
@@ -316,6 +317,11 @@ declare namespace dashjs {
                 rtp?: number,
                 rtpSafetyFactor?: number,
                 mode?: 'query' | 'header'
+            }
+        };
+        errors?: {
+            recoverAttempts?: {
+                mediaErrorDecode?: number
             }
         }
     }
@@ -1218,7 +1224,7 @@ declare namespace dashjs {
     }
 
     export interface IManifestInfo {
-        DVRWindowSize: number;
+        dvrWindowSize: number;
         availableFrom: Date;
         duration: number;
         isDynamic: boolean;
@@ -1262,7 +1268,7 @@ declare namespace dashjs {
 
         getCurrentSchedulingInfo(type: MediaType): object;
 
-        getCurrentDVRInfo(type: MediaType): IDVRInfo;
+        getCurrentDVRInfo(type?: MediaType): IDVRInfo;
 
         getCurrentManifestUpdate(): any;
 
@@ -1283,6 +1289,8 @@ declare namespace dashjs {
          * @param periodIdx Make sure this is the period index not id
          */
         getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
+
+        getMpd(externalManifest?: object): object;
     }
 
     export interface ProtectionDataSet {
@@ -1470,7 +1478,7 @@ declare namespace dashjs {
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
     export type TrackSwitchMode = 'alwaysReplace' | 'neverReplace';
-    export type TrackSelectionMode = 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
+    export type TrackSelectionMode = 'highestSelectionPriority' | 'highestBitrate' | 'firstTrack' | 'highestEfficiency' | 'widestRange';
 
     export function supportsMediaSource(): boolean;
 

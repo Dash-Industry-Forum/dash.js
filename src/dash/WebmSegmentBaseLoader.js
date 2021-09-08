@@ -391,8 +391,10 @@ function WebmSegmentBaseLoader() {
     }
 
     function reset() {
-        errHandler = null;
-        requestModifier = null;
+        if (urlLoader) {
+            urlLoader.abort();
+            urlLoader = null;
+        }
     }
 
     instance = {

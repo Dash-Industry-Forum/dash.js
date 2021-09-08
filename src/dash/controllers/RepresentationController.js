@@ -143,6 +143,7 @@ function RepresentationController(config) {
                     if (data[1] && !data[1].error) {
                         currentRep = _onSegmentsLoaded(currentRep, data[1]);
                     }
+                    _setMediaFinishedInformation(currentRep);
                     _onRepresentationUpdated(currentRep);
                     resolve();
                 })
@@ -150,6 +151,10 @@ function RepresentationController(config) {
                     reject(e);
                 });
         });
+    }
+
+    function _setMediaFinishedInformation(representation) {
+        representation.mediaFinishedInformation = segmentsController.getMediaFinishedInformation(representation);
     }
 
     function _onInitLoaded(representation, e) {
@@ -193,7 +198,6 @@ function RepresentationController(config) {
         }
 
         if (segments.length > 0) {
-            representation.availableSegmentsNumber = segments.length;
             representation.segments = segments;
         }
 

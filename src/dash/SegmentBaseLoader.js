@@ -292,9 +292,6 @@ function SegmentBaseLoader() {
             urlLoader.abort();
             urlLoader = null;
         }
-        errHandler = null;
-        boxParser = null;
-        requestModifier = null;
     }
 
     function getSegmentsForSidx(sidx, info) {

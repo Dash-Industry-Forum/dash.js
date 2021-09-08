@@ -12,7 +12,7 @@ function createRepresentationMock() {
 
     for (let i = 0; i < 5; i++) {
         representation.segments.push({
-            availabilityIdx: i,
+            index: i,
             duration: 5,
             mediaStartTime: i * 5,
             presentationStartTime: i * 5,
@@ -63,17 +63,17 @@ describe('SegmentBaseGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = segmentBaseGetter.getSegmentByIndex(representation, 0);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(5);
 
             seg = segmentBaseGetter.getSegmentByIndex(representation, 1);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(5);
             expect(seg.duration).to.equal(5);
 
             seg = segmentBaseGetter.getSegmentByIndex(representation, 2);
-            expect(seg.availabilityIdx).to.equal(2);
+            expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(10);
             expect(seg.duration).to.equal(5);
         });
@@ -91,17 +91,17 @@ describe('SegmentBaseGetter', () => {
             const representation = createRepresentationMock();
 
             let seg = segmentBaseGetter.getSegmentByTime(representation, 0);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(5);
 
             seg = segmentBaseGetter.getSegmentByTime(representation, 6);
-            expect(seg.availabilityIdx).to.equal(0);
+            expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(5);
 
             seg = segmentBaseGetter.getSegmentByTime(representation, 12);
-            expect(seg.availabilityIdx).to.equal(1);
+            expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(5);
             expect(seg.duration).to.equal(5);
         });

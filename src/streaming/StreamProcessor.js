@@ -49,6 +49,7 @@ import URLUtils from '../streaming/utils/URLUtils';
 import BoxParser from './utils/BoxParser';
 import {PlayListTrace} from './vo/metrics/PlayList';
 import SegmentsController from '../dash/controllers/SegmentsController';
+import {HTTPRequest} from './vo/metrics/HTTPRequest';
 
 function StreamProcessor(config) {
 
@@ -72,6 +73,7 @@ function StreamProcessor(config) {
     let dashMetrics = config.dashMetrics;
     let settings = config.settings;
     let boxParser = config.boxParser;
+    let segmentBlacklistController = config.segmentBlacklistController;
 
     let instance,
         logger,
@@ -106,6 +108,7 @@ function StreamProcessor(config) {
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.on(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack, isFragmented) {
@@ -252,6 +255,7 @@ function StreamProcessor(config) {
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.off(Events.MANIFEST_UPDATED, _onManifestUpdated, instance);
         eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, instance);
+        eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
 
         resetInitialSettings();
         type = null;
@@ -353,9 +357,10 @@ function StreamProcessor(config) {
     /**
      * ScheduleController indicates that an init segment needs to be fetched.
      * @param {object} e
+     * @param {boolean} rescheduleIfNoRequest - Defines whether we reschedule in case no valid request could be generated
      * @private
      */
-    function _onInitFragmentNeeded(e) {
+    function _onInitFragmentNeeded(e, rescheduleIfNoRequest = true) {
         // Event propagation may have been stopped (see MssHandler)
         if (!e.sender) return;
 
@@ -378,7 +383,7 @@ function StreamProcessor(config) {
                 const request = dashHandler ? dashHandler.getInitRequest(getMediaInfo(), rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
-                } else {
+                } else if (rescheduleIfNoRequest) {
                     scheduleController.setInitSegmentRequired(true);
                     _noValidRequest();
                 }
@@ -388,9 +393,10 @@ function StreamProcessor(config) {
 
     /**
      * ScheduleController indicates that a media segment is needed
+     * @param {boolean} rescheduleIfNoRequest -  Defines whether we reschedule in case no valid request could be generated
      * @private
      */
-    function _onMediaFragmentNeeded() {
+    function _onMediaFragmentNeeded(e, rescheduleIfNoRequest = true) {
 
         if (manifestUpdateInProgress) {
             _noValidRequest();
@@ -398,21 +404,6 @@ function StreamProcessor(config) {
         }
 
         let request = null;
-
-        const representation = representationController.getCurrentRepresentation();
-        const isMediaFinished = dashHandler.isMediaFinished(representation, bufferingTime);
-
-        // Check if the media is finished. If so, no need to schedule another request
-        if (isMediaFinished) {
-            const segmentIndex = dashHandler.getCurrentIndex();
-            logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
-            eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
-                streamId: streamInfo.id,
-                mediaType: type
-            });
-            scheduleController.clearScheduleTimer();
-            return;
-        }
 
         // Don't schedule next fragments while pruning to avoid buffer inconsistencies
         if (!bufferController.getIsPruningInProgress()) {
@@ -428,12 +419,51 @@ function StreamProcessor(config) {
         }
 
         if (request) {
-            logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
-            fragmentModel.executeRequest(request);
-        } else {
-            // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
-            _noValidRequest();
+            if (!_shouldIgnoreRequest(request)) {
+                logger.debug(`Next fragment request url for stream id ${streamInfo.id} and media type ${type} is ${request.url}`);
+                fragmentModel.executeRequest(request);
+            } else {
+                logger.warn(`Fragment request url ${request.url} for stream id ${streamInfo.id} and media type ${type} is on the ignore list and will be skipped`);
+                _noValidRequest();
+            }
         }
+        else {
+            // Check if the media is finished. If so, no need to schedule another request
+            const representation = representationController.getCurrentRepresentation();
+            const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
+
+            if (isLastSegmentRequested) {
+                const segmentIndex = dashHandler.getCurrentIndex();
+                logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
+                eventBus.trigger(Events.STREAM_REQUESTING_COMPLETED, { segmentIndex }, {
+                    streamId: streamInfo.id,
+                    mediaType: type
+                });
+                bufferController.segmentRequestingCompleted(segmentIndex);
+                scheduleController.clearScheduleTimer();
+                return;
+            }
+
+            // Reschedule
+            if (rescheduleIfNoRequest) {
+                // Use case - Playing at the bleeding live edge and frag is not available yet. Cycle back around.
+                _noValidRequest();
+            }
+        }
+    }
+
+    /**
+     * In certain situations we need to ignore a request. For instance, if a segment is blacklisted because it caused an MSE error.
+     * @private
+     */
+    function _shouldIgnoreRequest(request) {
+        let blacklistUrl = request.url;
+
+        if (request.range) {
+            blacklistUrl = blacklistUrl.concat('_', request.range);
+        }
+
+        return segmentBlacklistController.contains(blacklistUrl)
     }
 
     /**
@@ -519,7 +549,26 @@ function StreamProcessor(config) {
         if (e.hasEnoughSpaceToAppend && e.quotaExceeded) {
             scheduleController.startScheduleTimer();
         }
+    }
 
+    /**
+     * This function is called when the corresponding SourceBuffer encountered an error.
+     * We blacklist the last segment assuming it caused the error
+     * @param {object} e
+     * @private
+     */
+    function _onSourceBufferError(e) {
+        if (!e || !e.lastRequestAppended || !e.lastRequestAppended.url) {
+            return;
+        }
+
+        let blacklistUrl = e.lastRequestAppended.url;
+
+        if (e.lastRequestAppended.range) {
+            blacklistUrl = blacklistUrl.concat('_', e.lastRequestAppended.range);
+        }
+        logger.warn(`Blacklisting segment with url ${blacklistUrl}`);
+        segmentBlacklistController.add(blacklistUrl);
     }
 
     /**
@@ -662,9 +711,36 @@ function StreamProcessor(config) {
         }
 
         if (e.error && e.request.serviceLocation) {
-            logger.info(`Fragment loading completed with an error`);
+            _handleFragmentLoadingError(e);
+        }
+    }
+
+    /**
+     * If we encountered an error when loading the fragment we need to handle it according to the segment type
+     * @private
+     */
+    function _handleFragmentLoadingError(e) {
+        logger.info(`Fragment loading completed with an error`);
+
+        if (!e || !e.request || !e.request.type) {
+            return;
+        }
+
+        // In case there are baseUrls that can still be tried a valid request can be generated. If no valid request can be generated we ran out of baseUrls.
+        // Consequently, we need to signal that we dont want to retry in case no valid request could be generated otherwise we keep trying with the same url infinitely.
+
+        // Init segment could not be loaded. If we have multiple baseUrls we still have a chance to get a valid segment.
+        if (e.request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+            _onInitFragmentNeeded({
+                representationId: e.request.representationId,
+                sender: {}
+            }, false)
+        }
+
+        // Media segment could not be loaded
+        else if (e.request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             setExplicitBufferingTime(e.request.startTime + (e.request.duration / 2));
-            scheduleController.startScheduleTimer(0);
+            _onMediaFragmentNeeded({}, false);
         }
     }
 
@@ -870,7 +946,7 @@ function StreamProcessor(config) {
                     index: chunk.index
                 })[0];
 
-                const events = handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
+                const events = _handleInbandEvents(bytes, request, eventStreamMedia, eventStreamTrack);
                 eventBus.trigger(Events.INBAND_EVENTS,
                     { events: events },
                     { streamId: streamInfo.id }
@@ -879,7 +955,7 @@ function StreamProcessor(config) {
         }
     }
 
-    function handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
+    function _handleInbandEvents(data, request, mediaInbandEvents, trackInbandEvents) {
         try {
             const eventStreams = {};
             const events = [];
@@ -916,8 +992,14 @@ function StreamProcessor(config) {
         }
     }
 
-    function createBufferSinks(previousBuffers) {
-        return (getBuffer() || bufferController ? bufferController.createBufferSink(mediaInfo, previousBuffers) : Promise.resolve(null));
+    function createBufferSinks(previousBufferSinks) {
+        const buffer = getBuffer();
+
+        if (buffer) {
+            return Promise.resolve(buffer);
+        }
+
+        return bufferController ? bufferController.createBufferSink(mediaInfo, previousBufferSinks) : Promise.resolve(null);
     }
 
     function prepareTrackSwitch() {

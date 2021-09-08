@@ -21,7 +21,11 @@ exports.register = function (stream) {
 
             // Check key systems support
             var browserName = remote.session.capabilities.browserName;
-            var browsersConf = intern.config.environments.filter(conf => conf.browserName === browserName)[0];
+            var browsersConf = intern.config.environments.filter(conf => {
+                // special case if chosen browser is msedge
+                if((conf.browserName === "edge" || conf.browserName === "MicrosoftEdge") && browserName === "msedge") return true;
+                return conf.browserName === browserName;     
+            })[0];
 
             if (stream.protData) {
                 stream.available = false;

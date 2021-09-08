@@ -606,6 +606,19 @@
                     "Video",
                     "Audio"
                 ]
+            },            
+            {
+                "title": "Custom initial track selection example",
+                "description": "This sample shows how to define your own initial track selection function.",
+                "href": "advanced/custom-initial-track-selection.html",
+                "image": "lib/img/google-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "DRM",
+                    "Widevine"
+                ]
             }
         ]
     },
