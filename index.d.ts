@@ -152,6 +152,7 @@ declare namespace dashjs {
             abandonLoadTimeout?: number,
             wallclockTimeUpdateInterval?: number,
             lowLatencyEnabled?: boolean,
+            lowLatencyEnabledByManifest?: boolean,
             manifestUpdateRetryInterval?: number,
             cacheInitSegments?: boolean,
             eventControllerRefreshDelay?: number,

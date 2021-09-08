@@ -925,16 +925,19 @@ function PlaybackController() {
      */
     function _onRepresentationSwitch(e) {
         const activeStreamInfo = streamController.getActiveStreamInfo();
-        if (!e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
+        if (!settings.get().streaming.lowLatencyEnabledByManifest || !e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || (e.mediaType !== Constants.VIDEO && e.mediaType !== Constants.AUDIO)) {
             return;
         }
 
         const lowLatencyEnabled = !e.currentRepresentation.availabilityTimeComplete;
-        settings.update({
-            streaming: {
-                lowLatencyEnabled: lowLatencyEnabled
-            }
-        });
+
+        if (lowLatencyEnabled) {
+            settings.update({
+                streaming: {
+                    lowLatencyEnabled: lowLatencyEnabled
+                }
+            });
+        }
     }
 
 

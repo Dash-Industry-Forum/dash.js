@@ -60,6 +60,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *            abandonLoadTimeout: 10000,
  *            wallclockTimeUpdateInterval: 100,
  *            lowLatencyEnabled: false,
+ *            lowLatencyEnabledByManifest: true,
  *            manifestUpdateRetryInterval: 100,
  *            cacheInitSegments: true,
  *            eventControllerRefreshDelay: 100,
@@ -377,6 +378,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {boolean} [useManifestDateHeaderTimeSource=true]
  * Allows you to enable the use of the Date Header, if exposed with CORS, as a timing source for live edge detection.
  *
+ * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
  * @property {number} [backgroundAttempts=2]
  * Number of synchronization attempts to perform in the background after an initial synchronization request has been done. This is used to verify that the derived client-server offset is correct.
  *
@@ -644,9 +646,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * @property {number} [wallclockTimeUpdateInterval=50]
  * How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
  * @property {boolean} [lowLatencyEnabled=false]
- * Enable or disable low latency mode.
+ * Manually enable or disable low latency mode.
  *
- * The use of the date header will happen only after the other timing source that take precedence fail or are omitted as described.
+ * @property {boolean} [lowLatencyEnabledByManifest=true]
+ * If this value is set to true we enable the low latency mode based on MPD attributes:  Specifically in case "availabilityTimeComplete" of the current representation is set to false.
+ *
  * @property {number} [manifestUpdateRetryInterval=100]
  * For live streams, set the interval-frequency in milliseconds at which dash.js will check if the current manifest is still processed before downloading the next manifest once the minimumUpdatePeriod time has.
  * @property {boolean} [cacheInitSegments=true]
@@ -743,6 +747,7 @@ function Settings() {
             abandonLoadTimeout: 10000,
             wallclockTimeUpdateInterval: 100,
             lowLatencyEnabled: false,
+            lowLatencyEnabledByManifest: true,
             manifestUpdateRetryInterval: 100,
             cacheInitSegments: false,
             eventControllerRefreshDelay: 150,
