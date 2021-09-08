@@ -176,6 +176,7 @@ declare namespace dashjs {
                 keepProtectionMediaKeys?: boolean,
             },
             buffer?: {
+                enableSeekDecorrelationFix?: boolean,
                 fastSwitchEnabled?: boolean,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,

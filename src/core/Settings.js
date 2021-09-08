@@ -84,6 +84,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *                keepProtectionMediaKeys: false
  *            },
  *            buffer: {
+                  enableSeekDecorrelationFix: true,
  *                fastSwitchEnabled: true,
  *                flushBufferAtTrackSwitch: false,
  *                reuseExistingSourceBuffers: true,
@@ -239,6 +240,11 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
 
 /**
  * @typedef {Object} Buffer
+ * @property {boolean} [enableSeekDecorrelationFix=true]
+ * Enables a workaround for playback start on some devices, e.g. WebOS 4.9.
+ * It is necessary because some browsers do not support setting currentTime on video element to a value that is outside of current buffer.
+ *
+ * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
  * @property {boolean} [fastSwitchEnabled=true]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
@@ -761,6 +767,7 @@ function Settings() {
                 keepProtectionMediaKeys: false
             },
             buffer: {
+                enableSeekDecorrelationFix: true,
                 fastSwitchEnabled: true,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
