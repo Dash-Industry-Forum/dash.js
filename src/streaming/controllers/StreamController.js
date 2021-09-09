@@ -560,7 +560,7 @@ function StreamController() {
      */
     function _handleOuterPeriodSeek(e, seekToStream) {
         // Stop segment requests
-        const seekTime = e && e.seekTime && !isNaN(e.seekTime) ? e.seekTime : NaN;
+        const seekTime = e && !isNaN(e.seekTime) ? e.seekTime : NaN;
         const streamProcessors = activeStream.getProcessors();
 
         const promises = streamProcessors.map((sp) => {
