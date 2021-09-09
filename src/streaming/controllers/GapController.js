@@ -275,8 +275,8 @@ function GapController() {
                 const timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
 
                 jumpTimeoutHandler = window.setTimeout(() => {
-                    playbackController.seek(seekToPosition, true, true);
                     logger.warn(`Jumping gap occuring in period ${streamController.getActiveStream().getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${timeUntilGapEnd - (timeToWait / 1000)}`);
+                    playbackController.seek(seekToPosition, true, true);
                     jumpTimeoutHandler = null;
                 }, timeToWait);
             }
